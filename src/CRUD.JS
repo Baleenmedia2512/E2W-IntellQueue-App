@@ -1,8 +1,8 @@
-import React,{useState, useEffect, Fragment} from "react";
+import React, {useState, useEffect, Fragment} from "react";
 import Table from 'react-bootstrap/Table';
 
 const CRUD = () =>
-    {
+{
     const OrderData = [
         {
             OrderNumber : 1,
@@ -58,8 +58,8 @@ return(
                     <tr key={index}>
                     <td>{index+ 1}</td>
                     <td>{item.OrderNumber}</td>
-                    <td>{item.OrderNumber}</td>
                     <td>{item.ClientName}</td>
+                    <td>{item.VendorName}</td>
                     <td>{item.AdMedium}</td>
                     <td>{item.isActive}</td>
                   </tr>                
@@ -75,6 +75,7 @@ return(
     </Fragment>
 )
 
+   
 }
 
 export default CRUD;
