@@ -28,8 +28,8 @@ namespace BaleenWebAPI.Controllers
         {
             return Ok(Enquiries);
         }
-        [HttpPost]
-        public async 
+       // [HttpPost]
+       // public async 
 
     }
 }
