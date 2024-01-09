@@ -14,7 +14,7 @@ const RatesListPage = () => {
   const [modal, setModal] = useState(false);
   const [showInputError, setShowInputError] = useState(false);
   const [validityDays, setValidityDays] = useState();
-  const [selectedRateId, setSelectedRateID] = useState();
+  const [selectedRateId, setSelectedRateID] = useState([]);
   const [showFilter , setShowFilter] = useState(false);
   const [showFilter2 , setShowFilter2] = useState(false);
   const [filters, setFilters] = useState({
@@ -100,23 +100,13 @@ const RatesListPage = () => {
       setModal(false);
       const validityDate = addDaysToDate(validityDays); // Parse as an integer
       try {
-        const response = await fetch('https://www.orders.baleenmedia.com/API/Media/UpdateRates.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            JsonUserName: 'Siva',
-            JsonRateId: selectedRateId,
-            JsonValidity: validityDate,
-          }),
-        });
-  
-        const data = await response.json();
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRates.php/?JsonUserName=Siva&
+        JsonRateId=${selectedItems.map(item => item.rateId)}&JsonValidity=${validityDate}`)
+        const data = await response.text();
         if (data.success === true) {
           alert(data.message);
         } else {
-          alert("The following error occurred while inserting data: " + data.message);
+          alert("The following error occurred while inserting data: " + data);
         }
       } catch (error) {
         console.error('Error updating rate:', error);
@@ -259,7 +249,7 @@ const RatesListPage = () => {
         {/* Validate Selected Button (Right) */}
         {selectedItems.length > 0 && (
           <button
-            className="bg-green-500 text-white px-4 py-2 rounded">
+            className="bg-green-500 text-white px-4 py-2 rounded" onClick={() => setModal(true)}>
             Validate Selected
           </button>
         )}
@@ -301,7 +291,7 @@ const RatesListPage = () => {
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded mx-4"
                 onClick={() => {
-                  setModal(true, item.rateId);
+                  setModal(true);
                   setSelectedRateID(item.rateId);
                 }}
               >
