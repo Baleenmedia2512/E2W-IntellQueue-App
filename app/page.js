@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
+//import styles from './/styles.css';
 
 const today = new Date();
 const twoDaysFromNow = new Date();
@@ -12,14 +13,16 @@ const RatesListPage = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [modal, setModal] = useState(false);
   const [showInputError, setShowInputError] = useState(false);
-  const [validityDays, setValidityDays] = useState()
-  const [selectedRateId, setSelectedRateID] = useState()
+  const [validityDays, setValidityDays] = useState();
+  const [selectedRateId, setSelectedRateID] = useState();
+  const [showFilter , setShowFilter] = useState(false);
+  const [showFilter2 , setShowFilter2] = useState(false);
   const [filters, setFilters] = useState({
     rateName: '',
     adType: '',
     adCategory: '',
     VendorName: '',
-    LastUsedUser: '',
+    LastUsedUser: ''
   });
 
   // Filtered rates based on selected options
@@ -79,6 +82,15 @@ const RatesListPage = () => {
       const allItems = ratesData.map((item) => item);
       setSelectedItems(allItems);
     }
+  };
+
+  const handleFilter = () => {
+    setShowFilter((showFilter) => !showFilter
+    );
+  };
+
+  const handleFilter2 = () => {
+    setShowFilter2((showFilter2) => !showFilter2);
   };
 
   const updateRateValidation = async () => {
@@ -149,9 +161,12 @@ const RatesListPage = () => {
       <h1 className="text-3xl font-bold mb-4 text-black">Rates List</h1>
       <button
         className="bg-transparent border border-black px-4 py-2 rounded-full absolute top-4 right-4 text-black"
-        onClick={() => {
-          console.log('button clicked');
-        }}
+        onClick={() => { handleFilter() 
+          filters.rateName = ''
+          filters.adType = ''
+          filters.adCategory = ''
+          filters.VendorName = ''
+          filters.LastUsedUser = ''}}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -168,68 +183,93 @@ const RatesListPage = () => {
           />
         </svg>
       </button>
-      <div className="flex justify-between items-center">
+      
+      {showFilter &&
+      <div class="filtering" className="d-flex px-20 justify-content-center">
+        {/* Add your filter inputs using react-select */}
+        <label>Ad Medium</label><br/>
+        <Select className='mb-8'
+          id='AdMedium'
+          instanceId="AdMedium"
+          placeholder="Ad Medium"
+          value={{ placeholder:"Ad Medium", label: filters.rateName, value: filters.rateName}}
+          options={createSelectOptions([...new Set(filteredRates.map((item) => item.rateName))])}
+          onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
+       //   placeholder = 'Ad Medium'
+        />
+        <label>Ad Type</label><br/>
+        <Select className='mb-8'
+          id='AdType'
+          instanceId="AdType"
+          options={createSelectOptions([...new Set(filteredRates.map((item) => item.adType))])}
+          onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+          value={{ label: filters.adType, value: filters.adType }}
+          placeholder = 'Ad Type' 
+        />
+        <label>Ad Category</label><br/>
+        <Select className='mb-8'
+          id='AdCategory'
+          instanceId="AdCategory"
+          options={createSelectOptions([...new Set(filteredRates.map((item) => item.adCategory))])}
+          onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
+          value={{ label: filters.adCategory, value: filters.adCategory }}
+          placeholder = 'Ad Category' 
+        />
+        <label>Vendor</label><br/>
+        <Select className='mb-8'
+          id='Vendor'
+          instanceId="Vendor"
+          options={createSelectOptions([...new Set(filteredRates.map((item) => item.VendorName))])}
+          onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
+          value={{ label: filters.VendorName, value: filters.VendorName }}
+          placeholder="Vendor" />
+          <label>CSE</label><br/>
+        <Select className='mb-8'
+          id='CSE'
+          instanceId="CSE"
+          options={createSelectOptions([...new Set(filteredRates.map((item) => item.LastUsedUser))])}
+          onChange={(selectedOption) => handleSelectChange(selectedOption, 'LastUsedUser')}
+          value={{ label: filters.LastUsedUser, value: filters.LastUsedUser }}
+          placeholder="CSE"
+        />
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded align-item-center mb-4"
+          onClick={() => { 
+            handleFilter2() 
+            console.log(showFilter2)
+          }}>
+          Filter
+        </button>
+      </div>
+    }
+    <div className="flex justify-between items-center" >
         {/* Select All Button (Left) */}
+        {(showFilter === false || (showFilter2 && ( filters.rateName !== '' ||
+        filters.adType !== '' || 
+        filters.adCategory !== '' ||
+        filters.VendorName !== '' ||
+        filters.LastUsedUser !== '')))  &&
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded"
           onClick={handleSelectAllClick}
         >
           {selectedItems.length === ratesData.length ? 'Unselect All' : 'Select All'}
         </button>
-
+        }
         {/* Validate Selected Button (Right) */}
         {selectedItems.length > 0 && (
           <button
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
+            className="bg-green-500 text-white px-4 py-2 rounded">
             Validate Selected
           </button>
         )}
       </div>
-      <br></br>
-      <div className="flex space-x-4 mb-4">
-        {/* Add your filter inputs using react-select */}
-        <Select
-          id='AdMedium'
-          instanceId="AdMedium"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.rateName))])}
-          onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
-          value={{ label: filters.rateName, value: filters.rateName }}
-          placeholder="Ad Medium"
-        />
-        <Select
-          id='AdType'
-          instanceId="AdType"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.adType))])}
-          onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-          value={{ label: filters.adType, value: filters.adType }}
-          placeholder="Ad Type"
-        />
-        <Select
-          id='AdCategory'
-          instanceId="AdCategory"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.adCategory))])}
-          onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
-          value={{ label: filters.adCategory, value: filters.adCategory }}
-          placeholder="Ad Category"
-        />
-        <Select
-          id='Vendor'
-          instanceId="Vendor"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.VendorName))])}
-          onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
-          value={{ label: filters.VendorName, value: filters.VendorName }}
-          placeholder="Vendor"
-        />
-        <Select
-          id='CSE'
-          instanceId="CSE"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.LastUsedUser))])}
-          onChange={(selectedOption) => handleSelectChange(selectedOption, 'LastUsedUser')}
-          value={{ label: filters.LastUsedUser, value: filters.LastUsedUser }}
-          placeholder='CSE'
-        />
-      </div>
+      <br/>
+    {(showFilter === false || (showFilter2 && ( filters.rateName !== '' ||
+      filters.adType !== '' || 
+      filters.adCategory !== '' ||
+      filters.VendorName !== '' ||
+      filters.LastUsedUser !== '')))  &&
       <ul className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {filteredRates.map((item) => (
           <li
@@ -270,7 +310,7 @@ const RatesListPage = () => {
             </div>
           </li>
         ))}
-      </ul>
+      </ul>}
     </div>
   );
 };
