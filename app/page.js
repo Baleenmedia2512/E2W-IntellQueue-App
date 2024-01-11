@@ -13,7 +13,6 @@ const RatesListPage = () => {
   const [modal, setModal] = useState(false);
   const [showInputError, setShowInputError] = useState(false);
   const [validityDays, setValidityDays] = useState();
-  const [selectedRateId, setSelectedRateID] = useState();
   const [showFilter , setShowFilter] = useState(false);
   const [filters, setFilters] = useState({
     rateName: '',
@@ -102,7 +101,7 @@ const RatesListPage = () => {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRates.php/?JsonUserName=Siva&
         JsonRateId=${selectedItems.map(item => item.rateId)}&JsonValidity=${validityDate}`)
         console.log(validityDate)
-        const data = await response.text();
+        const data = await response.json();
         if (data.success === true) {
           alert(data.message);
         } else {
@@ -112,16 +111,19 @@ const RatesListPage = () => {
         console.error('Error updating rate:', error);
       }
     }
+    if(setSelectedItems.length === 1){
+      setSelectedItems([])
+    }
   };
 
 
   function addDaysToDate(days) {
     const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(today.getDate() + days);
-
+    const futureDate = new Date(new Date(today).setDate(today.getDate()+ parseInt(days)));
+    console.log(futureDate)
     //Formatted Date
     const formattedDate = futureDate.toISOString().split('T')[0];
+    console.log(formattedDate)
     return formattedDate;
   }
 
@@ -279,7 +281,7 @@ const RatesListPage = () => {
             />
             <div
               className={`${
-                new Date(item.ValidityDate) <= today
+                new Date(item.ValidityDate) <= today || item.ValidityDate === '0000-00-00'
                   ? 'mb-2 font-bold text-red-600'
                   : new Date(item.ValidityDate) > today && new Date(item.ValidityDate) <= twoDaysFromNow
                   ? 'mb-2 font-bold text-orange-500'
@@ -290,13 +292,20 @@ const RatesListPage = () => {
             </div>
             <div className="mb-2 text-black">{item.adType}</div>
             <div className="mb-2 text-black">{item.adCategory}</div>
+            <div className={`${
+                new Date(item.ValidityDate) <= today || item.ValidityDate === '0000-00-00'
+                  ? 'mb-2 font-bold text-red-600'
+                  : new Date(item.ValidityDate) > today && new Date(item.ValidityDate) <= twoDaysFromNow
+                  ? 'mb-2 font-bold text-orange-500'
+                  : 'mb-2 font-bold text-black'
+              }`}>Validity: {item.ValidityDate}</div>
             <div className="mb-2 text-black">
               Vendor: {item.VendorName}
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded mx-4"
                 onClick={() => {
                   setModal(true, item.rateId);
-                  setSelectedRateID(item.rateId);
+                  setSelectedItems([item]);
                 }}
               >
                 Validate
