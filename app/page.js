@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
-//import styles from './/styles.css';
 
 const today = new Date();
 const twoDaysFromNow = new Date();
@@ -14,15 +13,15 @@ const RatesListPage = () => {
   const [modal, setModal] = useState(false);
   const [showInputError, setShowInputError] = useState(false);
   const [validityDays, setValidityDays] = useState();
-  const [selectedRateId, setSelectedRateID] = useState([]);
+  const [selectedRateId, setSelectedRateID] = useState();
   const [showFilter , setShowFilter] = useState(false);
-  const [showFilter2 , setShowFilter2] = useState(false);
   const [filters, setFilters] = useState({
     rateName: '',
     adType: '',
     adCategory: '',
     VendorName: '',
-    LastUsedUser: ''
+    LastUsedUser: '',
+    ValidityDate: ''
   });
 
   // Filtered rates based on selected options
@@ -46,7 +45,7 @@ const RatesListPage = () => {
   const handleSelectChange = (selectedOption, filterName) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
-      [filterName]: selectedOption.label,
+      [filterName]: selectedOption.label
     }));
   };
 
@@ -76,10 +75,10 @@ const RatesListPage = () => {
 
   const handleSelectAllClick = () => {
     // Select all items
-    if (selectedItems.length === ratesData.length) {
+    if (selectedItems.length === filteredRates.length) {
       setSelectedItems([]);
     } else {
-      const allItems = ratesData.map((item) => item);
+      const allItems = filteredRates.map((item) => item);
       setSelectedItems(allItems);
     }
   };
@@ -89,9 +88,9 @@ const RatesListPage = () => {
     );
   };
 
-  const handleFilter2 = () => {
-    setShowFilter2((showFilter2) => !showFilter2);
-  };
+  // const handleFilter2 = () => {
+  //   setShowFilter2((showFilter2) => !showFilter2);
+  // };
 
   const updateRateValidation = async () => {
     if (!intRegex.test(validityDays)) {
@@ -102,6 +101,7 @@ const RatesListPage = () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRates.php/?JsonUserName=Siva&
         JsonRateId=${selectedItems.map(item => item.rateId)}&JsonValidity=${validityDate}`)
+        console.log(validityDate)
         const data = await response.text();
         if (data.success === true) {
           alert(data.message);
@@ -112,7 +112,7 @@ const RatesListPage = () => {
         console.error('Error updating rate:', error);
       }
     }
-};
+  };
 
 
   function addDaysToDate(days) {
@@ -151,12 +151,14 @@ const RatesListPage = () => {
       <h1 className="text-3xl font-bold mb-4 text-black">Rates List</h1>
       <button
         className="bg-transparent border border-black px-4 py-2 rounded-full absolute top-4 right-4 text-black"
-        onClick={() => { handleFilter() 
-          filters.rateName = ''
-          filters.adType = ''
-          filters.adCategory = ''
-          filters.VendorName = ''
-          filters.LastUsedUser = ''}}
+        onClick={() => { handleFilter()
+          {showFilter === true &&
+          (filters.rateName = '',
+          filters.adType = '',
+          filters.adCategory = '',
+          filters.VendorName = '',
+          filters.LastUsedUser = '')}
+        }}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -183,15 +185,14 @@ const RatesListPage = () => {
           instanceId="AdMedium"
           placeholder="Ad Medium"
           value={{ placeholder:"Ad Medium", label: filters.rateName, value: filters.rateName}}
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.rateName))])}
+          options={createSelectOptions([...new Set(ratesData.flatMap((item) => item.rateName))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
-       //   placeholder = 'Ad Medium'
         />
         <label>Ad Type</label><br/>
         <Select className='mb-8'
           id='AdType'
           instanceId="AdType"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.adType))])}
+          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName).map((item) => item.adType))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
           value={{ label: filters.adType, value: filters.adType }}
           placeholder = 'Ad Type' 
@@ -200,7 +201,7 @@ const RatesListPage = () => {
         <Select className='mb-8'
           id='AdCategory'
           instanceId="AdCategory"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.adCategory))])}
+          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType).map((item) => item.adCategory))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
           value={{ label: filters.adCategory, value: filters.adCategory }}
           placeholder = 'Ad Category' 
@@ -209,7 +210,7 @@ const RatesListPage = () => {
         <Select className='mb-8'
           id='Vendor'
           instanceId="Vendor"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.VendorName))])}
+          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType && item.adCategory === filters.adCategory).map((item) => item.VendorName))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
           value={{ label: filters.VendorName, value: filters.VendorName }}
           placeholder="Vendor" />
@@ -217,7 +218,7 @@ const RatesListPage = () => {
         <Select className='mb-8'
           id='CSE'
           instanceId="CSE"
-          options={createSelectOptions([...new Set(filteredRates.map((item) => item.LastUsedUser))])}
+          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType && item.adCategory === filters.adCategory && item.VendorName === filters.VendorName).map((item) => item.LastUsedUser))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'LastUsedUser')}
           value={{ label: filters.LastUsedUser, value: filters.LastUsedUser }}
           placeholder="CSE"
@@ -225,8 +226,8 @@ const RatesListPage = () => {
         <button
           className="bg-green-500 text-white px-4 py-2 rounded align-item-center mb-4"
           onClick={() => { 
-            handleFilter2() 
-            console.log(showFilter2)
+            handleFilter() 
+          //  console.log(showFilter2)
           }}>
           Filter
         </button>
@@ -234,32 +235,35 @@ const RatesListPage = () => {
     }
     <div className="flex justify-between items-center" >
         {/* Select All Button (Left) */}
-        {(showFilter === false || (showFilter2 && ( filters.rateName !== '' ||
-        filters.adType !== '' || 
-        filters.adCategory !== '' ||
-        filters.VendorName !== '' ||
-        filters.LastUsedUser !== '')))  &&
+        {showFilter === false 
+        // || (showFilter2 && ( filters.rateName !== '' ||
+        // filters.adType !== '' || 
+        // filters.adCategory !== '' ||
+        // filters.VendorName !== '' ||
+        // filters.LastUsedUser !== '')))  
+        &&
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded"
           onClick={handleSelectAllClick}
         >
-          {selectedItems.length === ratesData.length ? 'Unselect All' : 'Select All'}
+          {selectedItems.length === filteredRates.length ? 'Unselect All' : 'Select All'}
         </button>
         }
         {/* Validate Selected Button (Right) */}
         {selectedItems.length > 0 && (
-          <button
-            className="bg-green-500 text-white px-4 py-2 rounded" onClick={() => setModal(true)}>
+          <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={() => setModal(true)}>
             Validate Selected
           </button>
         )}
       </div>
       <br/>
-    {(showFilter === false || (showFilter2 && ( filters.rateName !== '' ||
-      filters.adType !== '' || 
-      filters.adCategory !== '' ||
-      filters.VendorName !== '' ||
-      filters.LastUsedUser !== '')))  &&
+    {showFilter === false 
+    // || (showFilter2 && ( filters.rateName !== '' ||
+    //   filters.adType !== '' || 
+    //   filters.adCategory !== '' ||
+    //   filters.VendorName !== '' ||
+    //   filters.LastUsedUser !== '')))  
+    &&
       <ul className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {filteredRates.map((item) => (
           <li
@@ -291,7 +295,7 @@ const RatesListPage = () => {
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded mx-4"
                 onClick={() => {
-                  setModal(true);
+                  setModal(true, item.rateId);
                   setSelectedRateID(item.rateId);
                 }}
               >
