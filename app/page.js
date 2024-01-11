@@ -1,6 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+//import Link from 'next/link';
 
 const today = new Date();
 const twoDaysFromNow = new Date();
@@ -15,7 +18,7 @@ const RatesListPage = () => {
   const [validityDays, setValidityDays] = useState();
   const [showFilter , setShowFilter] = useState(false);
   const [filters, setFilters] = useState({
-    rateName: '',
+    rateName: [],
     adType: '',
     adCategory: '',
     VendorName: '',
@@ -26,7 +29,7 @@ const RatesListPage = () => {
   // Filtered rates based on selected options
   const filteredRates = ratesData.filter((item) => {
     return (
-      (filters.rateName === '' || item.rateName === filters.rateName) &&
+      (filters.rateName.length === 0 || filters.rateName.filter(items => item === item.rateName)) &&
       (filters.adType === '' || item.adType === filters.adType) &&
       (filters.adCategory === '' || item.adCategory === filters.adCategory) &&
       (filters.VendorName === '' || item.VendorName === filters.VendorName) &&
@@ -37,14 +40,14 @@ const RatesListPage = () => {
   const createSelectOptions = (data) => {
     return data.map((item) => ({
       value: item,
-      label: item,
+      label: item
     }));
   };
 
   const handleSelectChange = (selectedOption, filterName) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
-      [filterName]: selectedOption.label
+      [filterName]: selectedOption.map((option) => option.label)
     }));
   };
 
@@ -151,15 +154,24 @@ const RatesListPage = () => {
         </div>
       )}
       <h1 className="text-3xl font-bold mb-4 text-black">Rates List</h1>
-      <button
-        className="bg-transparent border border-black px-4 py-2 rounded-full absolute top-4 right-4 text-black"
-        onClick={() => { handleFilter()
-          {showFilter === true &&
+      {showFilter &&
+      <button onClick={() => { handleFilter()
           (filters.rateName = '',
           filters.adType = '',
           filters.adCategory = '',
           filters.VendorName = '',
-          filters.LastUsedUser = '')}
+          filters.LastUsedUser = '')
+        }}> <FontAwesomeIcon icon={faArrowLeft} /> </button>}
+      {showFilter === false &&
+      <button
+        className="bg-transparent border border-black px-4 py-2 rounded-full absolute top-4 right-4 text-black"
+        onClick={() => { handleFilter()
+          // {showFilter === true &&
+          // (filters.rateName = '',
+          // filters.adType = '',
+          // filters.adCategory = '',
+          // filters.VendorName = '',
+          // filters.LastUsedUser = '')}
         }}
       >
         <svg
@@ -176,7 +188,7 @@ const RatesListPage = () => {
             d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
           />
         </svg>
-      </button>
+      </button>}
       
       {showFilter &&
       <div class="filtering" className="d-flex px-20 justify-content-center">
@@ -186,7 +198,8 @@ const RatesListPage = () => {
           id='AdMedium'
           instanceId="AdMedium"
           placeholder="Ad Medium"
-          value={{ placeholder:"Ad Medium", label: filters.rateName, value: filters.rateName}}
+          isMulti
+          value={createSelectOptions(filters.rateName)}
           options={createSelectOptions([...new Set(ratesData.flatMap((item) => item.rateName))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
         />
