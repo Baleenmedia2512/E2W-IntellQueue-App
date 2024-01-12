@@ -18,26 +18,24 @@ const RatesListPage = () => {
   const [showInputError, setShowInputError] = useState(false);
   const [validityDays, setValidityDays] = useState();
   const [showFilter , setShowFilter] = useState(false);
-  const [message , setMessage] = useState('');
   const [visible, setVisible] =useState(false);
   const [filters, setFilters] = useState({
-    rateName: '',
-    adType: '',
+    rateName: [],
+    adType: [],
     adCategory: '',
     edition: '',
     remarks: '',
     VendorName: '',
-    //LastUsedUser: '',
     ValidityDate: ''
   });
 
   // Filtered rates based on selected options
   const filteredRates = ratesData.filter((item) => {
     return (
-      (filters.rateName === '' || item.rateName === filters.rateName) &&
-      (filters.adType === '' || item.adType === filters.adType) &&
-      (filters.adCategory === '' || item.adCategory === filters.adCategory) &&
-      (filters.VendorName === '' || item.VendorName === filters.VendorName) 
+      (filters.rateName.length === 0 || filters.rateName.includes(item.rateName)) &&
+      (filters.adType.length === 0 || filters.adType.includes(item.adType)) &&
+      (filters.adCategory.length === 0 || item.adCategory === filters.adCategory) &&
+      (filters.VendorName.length === 0 || item.VendorName === filters.VendorName) 
       //&&(filters.LastUsedUser === '' || item.LastUsedUser === filters.LastUsedUser)
     );
   });
@@ -45,14 +43,14 @@ const RatesListPage = () => {
   const createSelectOptions = (data) => {
     return data.map((item) => ({
       value: item,
-      label: item,
+      label: item
     }));
   };
 
   const handleSelectChange = (selectedOption, filterName) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
-      [filterName]: selectedOption.label
+      [filterName]: selectedOption.map((option) => option.label)
     }));
   };
 
@@ -200,8 +198,9 @@ const RatesListPage = () => {
         <Select className='mb-8'
           id='AdMedium'
           instanceId="AdMedium"
-          placeholder="Ad Medium"
-          value={{ placeholder:"Ad Medium", label: filters.rateName, value: filters.rateName}}
+          placeholder="Ex: Automobile"
+          isMulti
+          value={createSelectOptions(filters.rateName)}
           options={createSelectOptions([...new Set(ratesData.flatMap((item) => item.rateName))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
         />
@@ -209,10 +208,11 @@ const RatesListPage = () => {
         <Select className='mb-8'
           id='AdType'
           instanceId="AdType"
-          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName).map((item) => item.adType))])}
+          isMulti
+          options={createSelectOptions([...new Set(ratesData.filter((item) => filters.rateName.includes(item.rateName)).map((item) => item.adType))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-          value={{ label: filters.adType, value: filters.adType }}
-          placeholder = 'Ad Type' 
+          value={createSelectOptions(filters.adType)}
+          placeholder = 'Ex: Bus' 
         />
         <label>Ad Category</label><br/>
         <Select className='mb-8'
@@ -263,11 +263,10 @@ const RatesListPage = () => {
           onClick={() => { 
             handleFilter() 
             {showFilter === true &&
-              (filters.rateName = '',
+              (filters.rateName = [],
               filters.adType = '',
               filters.adCategory = '',
-              filters.VendorName = '',
-              filters.LastUsedUser = '')}
+              filters.VendorName = '')}
           }}>
           Clear
         </button></div>
