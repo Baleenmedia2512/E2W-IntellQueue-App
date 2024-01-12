@@ -1,6 +1,10 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { Dialog } from 'primereact/dialog';
+
 
 const today = new Date();
 const twoDaysFromNow = new Date();
@@ -13,14 +17,17 @@ const RatesListPage = () => {
   const [modal, setModal] = useState(false);
   const [showInputError, setShowInputError] = useState(false);
   const [validityDays, setValidityDays] = useState();
-  const [selectedRateId, setSelectedRateID] = useState();
   const [showFilter , setShowFilter] = useState(false);
+  const [message , setMessage] = useState('');
+  const [visible, setVisible] =useState(false);
   const [filters, setFilters] = useState({
     rateName: '',
     adType: '',
     adCategory: '',
+    edition: '',
+    remarks: '',
     VendorName: '',
-    LastUsedUser: '',
+    //LastUsedUser: '',
     ValidityDate: ''
   });
 
@@ -30,8 +37,8 @@ const RatesListPage = () => {
       (filters.rateName === '' || item.rateName === filters.rateName) &&
       (filters.adType === '' || item.adType === filters.adType) &&
       (filters.adCategory === '' || item.adCategory === filters.adCategory) &&
-      (filters.VendorName === '' || item.VendorName === filters.VendorName) &&
-      (filters.LastUsedUser === '' || item.LastUsedUser === filters.LastUsedUser)
+      (filters.VendorName === '' || item.VendorName === filters.VendorName) 
+      //&&(filters.LastUsedUser === '' || item.LastUsedUser === filters.LastUsedUser)
     );
   });
 
@@ -102,26 +109,32 @@ const RatesListPage = () => {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRates.php/?JsonUserName=Siva&
         JsonRateId=${selectedItems.map(item => item.rateId)}&JsonValidity=${validityDate}`)
         console.log(validityDate)
-        const data = await response.text();
+        const data = await response.json();
+        setVisible(true);
         if (data.success === true) {
-          alert(data.message);
+          alert(data.message)
+          //setMessage(data.message);
         } else {
           alert("The following error occurred while inserting data: " + data);
+          //setMessage("The following error occurred while inserting data: " + data);
         }
       } catch (error) {
         console.error('Error updating rate:', error);
       }
+    }
+    if(setSelectedItems.length === 1){
+      setSelectedItems([])
     }
   };
 
 
   function addDaysToDate(days) {
     const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(today.getDate() + days);
-
+    const futureDate = new Date(new Date(today).setDate(today.getDate()+ parseInt(days)));
+    console.log(futureDate)
     //Formatted Date
     const formattedDate = futureDate.toISOString().split('T')[0];
+    console.log(formattedDate)
     return formattedDate;
   }
 
@@ -145,19 +158,22 @@ const RatesListPage = () => {
             />
             <button className="bg-green-500 text-white px-4 py-2 rounded mx-4" onClick={() => { updateRateValidation() }}>Submit</button>
             {showInputError && (<p className="error-message">Please enter a valid Input!</p>)}
+            {/* <Dialog className='border rounded-lg' visible={visible} position='bottom' style={{ width: '50vw' }} onHide={()=>setVisible(false)}>
+        <p>{message}</p>
+      </Dialog> */}
+
           </div>
         </div>
       )}
       <h1 className="text-3xl font-bold mb-4 text-black">Rates List</h1>
+      {showFilter &&
+      <button onClick={() => { handleFilter()
+        }}> <FontAwesomeIcon icon={faArrowLeft} /> </button>}
+
+{showFilter === false &&
       <button
         className="bg-transparent border border-black px-4 py-2 rounded-full absolute top-4 right-4 text-black"
         onClick={() => { handleFilter()
-          {showFilter === true &&
-          (filters.rateName = '',
-          filters.adType = '',
-          filters.adCategory = '',
-          filters.VendorName = '',
-          filters.LastUsedUser = '')}
         }}
       >
         <svg
@@ -175,6 +191,7 @@ const RatesListPage = () => {
           />
         </svg>
       </button>
+}
       
       {showFilter &&
       <div class="filtering" className="d-flex px-20 justify-content-center">
@@ -206,6 +223,24 @@ const RatesListPage = () => {
           value={{ label: filters.adCategory, value: filters.adCategory }}
           placeholder = 'Ad Category' 
         />
+        <label>Edition</label><br/>
+        <Select className='mb-8'
+          id='Edition'
+          instanceId="Edition"
+          options={createSelectOptions([...new Set(ratesData.map((item) => item.edition))])}
+          onChange={(selectedOption) => handleSelectChange(selectedOption, 'edition')}
+          value={{ label: filters.LastUsedUser, value: filters.edition }}
+          placeholder="Edition"
+        />
+        <label>Remarks</label><br/>
+        <Select className='mb-8'
+          id='Remarks'
+          instanceId="Remarks"
+          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType && item.adCategory === filters.adCategory && item.VendorName === filters.VendorName).map((item) => item.remarks))])}
+          onChange={(selectedOption) => handleSelectChange(selectedOption, 'remarks')}
+          value={{ label: filters.LastUsedUser, value: filters.remarks }}
+          placeholder="Remarks"
+        />
         <label>Vendor</label><br/>
         <Select className='mb-8'
           id='Vendor'
@@ -214,15 +249,7 @@ const RatesListPage = () => {
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
           value={{ label: filters.VendorName, value: filters.VendorName }}
           placeholder="Vendor" />
-          <label>CSE</label><br/>
-        <Select className='mb-8'
-          id='CSE'
-          instanceId="CSE"
-          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType && item.adCategory === filters.adCategory && item.VendorName === filters.VendorName).map((item) => item.LastUsedUser))])}
-          onChange={(selectedOption) => handleSelectChange(selectedOption, 'LastUsedUser')}
-          value={{ label: filters.LastUsedUser, value: filters.LastUsedUser }}
-          placeholder="CSE"
-        />
+        <div class="flex space-x-4 ...">
         <button
           className="bg-green-500 text-white px-4 py-2 rounded align-item-center mb-4"
           onClick={() => { 
@@ -231,6 +258,19 @@ const RatesListPage = () => {
           }}>
           Filter
         </button>
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded align-item-center mb-4"
+          onClick={() => { 
+            handleFilter() 
+            {showFilter === true &&
+              (filters.rateName = '',
+              filters.adType = '',
+              filters.adCategory = '',
+              filters.VendorName = '',
+              filters.LastUsedUser = '')}
+          }}>
+          Clear
+        </button></div>
       </div>
     }
     <div className="flex justify-between items-center" >
@@ -257,6 +297,10 @@ const RatesListPage = () => {
         )}
       </div>
       <br/>
+      {showFilter === false && filteredRates.length === 0 &&
+      <p>No Details Available</p>
+
+      }
     {showFilter === false 
     // || (showFilter2 && ( filters.rateName !== '' ||
     //   filters.adType !== '' || 
@@ -264,7 +308,8 @@ const RatesListPage = () => {
     //   filters.VendorName !== '' ||
     //   filters.LastUsedUser !== '')))  
     &&
-      <ul className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    //sm:grid-cols-2 lg:grid-cols-3
+      <ul className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ">
         {filteredRates.map((item) => (
           <li
             key={item.rateId}
@@ -279,7 +324,7 @@ const RatesListPage = () => {
             />
             <div
               className={`${
-                new Date(item.ValidityDate) <= today
+                new Date(item.ValidityDate) <= today || item.ValidityDate === '0000-00-00'
                   ? 'mb-2 font-bold text-red-600'
                   : new Date(item.ValidityDate) > today && new Date(item.ValidityDate) <= twoDaysFromNow
                   ? 'mb-2 font-bold text-orange-500'
@@ -290,13 +335,20 @@ const RatesListPage = () => {
             </div>
             <div className="mb-2 text-black">{item.adType}</div>
             <div className="mb-2 text-black">{item.adCategory}</div>
+            <div className={`${
+                new Date(item.ValidityDate) <= today || item.ValidityDate === '0000-00-00'
+                  ? 'mb-2 font-bold text-red-600'
+                  : new Date(item.ValidityDate) > today && new Date(item.ValidityDate) <= twoDaysFromNow
+                  ? 'mb-2 font-bold text-orange-500'
+                  : 'mb-2 font-bold text-black'
+              }`}>Validity: {item.ValidityDate}</div>
             <div className="mb-2 text-black">
               Vendor: {item.VendorName}
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded mx-4"
                 onClick={() => {
                   setModal(true, item.rateId);
-                  setSelectedRateID(item.rateId);
+                  setSelectedItems([item]);
                 }}
               >
                 Validate
