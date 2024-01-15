@@ -3,8 +3,11 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { Dialog } from 'primereact/dialog';
-
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+// import Snackbar from '@mui/material/Snackbar';
+// import MuiAlert from '@mui/material/Alert'
+// pages/_app.js or a specific component
 
 const today = new Date();
 const twoDaysFromNow = new Date();
@@ -22,26 +25,40 @@ const RatesListPage = () => {
   const [filters, setFilters] = useState({
     rateName: [],
     adType: [],
-    adCategory: '',
-    edition: '',
-    remarks: '',
-    VendorName: '',
+    adCategory: [],
+    edition: [],
+    remarks: [],
+    VendorName: [],
     ValidityDate: ''
   });
+  // const [toast, setToast] = useState(false);
+  //const [severity, setSeverity] = useState('');
+  // const [toastMessage, setToastMessage] = useState('');
+
+  const router = useRouter();
+
+  // const showToastMessage = (severityStatus, toastMessageContent) => {
+  //   setSeverity(severityStatus)
+  //   setToastMessage(toastMessageContent)
+  //   setToast(true)
+  // }
 
   // Filtered rates based on selected options
   const filteredRates = ratesData.filter((item) => {
     return (
       (filters.rateName.length === 0 || filters.rateName.includes(item.rateName)) &&
       (filters.adType.length === 0 || filters.adType.includes(item.adType)) &&
-      (filters.adCategory.length === 0 || item.adCategory === filters.adCategory) &&
-      (filters.VendorName.length === 0 || item.VendorName === filters.VendorName) 
+      (filters.adCategory.length === 0 || filters.adCategory.includes(item.adCategory)) &&
+      (filters.VendorName.length === 0 || filters.VendorName.includes(item.VendorName)) 
       //&&(filters.LastUsedUser === '' || item.LastUsedUser === filters.LastUsedUser)
     );
   });
 
   const createSelectOptions = (data) => {
-    return data.map((item) => ({
+    return data
+    .filter((item) => item)  // Filter out undefined or null values
+    .sort((a, b) => a.localeCompare(b))
+    .map((item) => ({
       value: item,
       label: item
     }));
@@ -54,16 +71,58 @@ const RatesListPage = () => {
     }));
   };
 
-  useEffect(() => {
-    const fetchRates = async () => {
+  const fetchRates = async () => {
+    const storedETag = localStorage.getItem('ratesETag');
+    const headers = {};
+    
+    if (storedETag) {
+      headers['If-None-Match'] = storedETag;
+    }
+  
+    try {
       const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php', {
-        next: { revalidate: 10 },
+        headers,
       });
+  
+      if (res.status === 304) {
+        // No changes since last request, use cached data
+        const cachedRates = JSON.parse(localStorage.getItem('cachedRates'));
+        setRatesData(cachedRates);
+        return;
+      }
+  
+      const newETag = res.headers.get('ETag');
+      localStorage.setItem('ratesETag', newETag);
+  
       const data = await res.json();
       setRatesData(data);
-    };
+  
+      // Cache the new rates data
+      localStorage.setItem('cachedRates', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error fetching rates:', error);
+    }
+  };
+  
 
-    fetchRates();
+  // const fetchRates = async () => {
+  //   const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php', {
+  //     next: { revalidate: 10 },
+  //   });
+  //   const data = await res.json();
+  //   setRatesData(data);
+  // };
+
+  useEffect(() => {
+     // Check if localStorage contains a username
+     const username = Cookies.get('username');
+
+     // If no username is found, redirect to the login page
+     if (!username) {
+       router.push('/login');
+     } else{
+      fetchRates();
+    }
   }, []);
 
   const handleCheckboxChange = (item) => {
@@ -111,10 +170,14 @@ const RatesListPage = () => {
         setVisible(true);
         if (data.success === true) {
           alert(data.message)
+          setValidityDays()
+          fetchRates()
           //setMessage(data.message);
         } else {
-          alert("The following error occurred while inserting data: " + data);
+          alert(`The following error occurred while inserting data: ${data}`);
           //setMessage("The following error occurred while inserting data: " + data);
+          // Update ratesData and filteredRates locally
+        
         }
       } catch (error) {
         console.error('Error updating rate:', error);
@@ -146,13 +209,13 @@ const RatesListPage = () => {
         <div className="fixed top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center modal">
           <div onClick={toggleModal} className="fixed top-0 left-0 right-0 bottom-0 bg-gray-800 opacity-75 overlay"></div>
           <div className="absolute top-2/5 left-1/2 transform -translate-x-1/2 -translate-y-1/2 line-clamp-4 bg-gradient-to-r from-gray-200 to-gray-300 p-4 rounded-lg w-auto min-w-80 z-50 modal-content">
-            <h3 className="text-xl font-semibold">Fill in the necessary details</h3>
+            <h3 className="text-xl font-semibold">Enter the validity in Days</h3>
             <input
               className="border border-gray-300 rounded px-4 py-2 w-64 focus:outline-none focus:border-blue-500 my-4"
               type='number'
               defaultValue={validityDays}
               onChange={e => setValidityDays(e.target.value)}
-              placeholder="Validity Date"
+              placeholder="Ex: 5"
             />
             <button className="bg-green-500 text-white px-4 py-2 rounded mx-4" onClick={() => { updateRateValidation() }}>Submit</button>
             {showInputError && (<p className="error-message">Please enter a valid Input!</p>)}
@@ -163,14 +226,14 @@ const RatesListPage = () => {
           </div>
         </div>
       )}
-      <h1 className="text-3xl font-bold mb-4 text-black">Rates List</h1>
+      <h1 className="text-3xl font-bold mb-4 text-black">Rates Validity</h1>
       {showFilter &&
       <button onClick={() => { handleFilter()
         }}> <FontAwesomeIcon icon={faArrowLeft} /> </button>}
 
 {showFilter === false &&
       <button
-        className="bg-transparent border border-black px-4 py-2 rounded-full absolute top-4 right-4 text-black"
+        className="bg-transparent border border-black px-4 py-2 absolute top-4 right-4 text-black"
         onClick={() => { handleFilter()
         }}
       >
@@ -188,67 +251,74 @@ const RatesListPage = () => {
             d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
           />
         </svg>
+        
       </button>
 }
       
       {showFilter &&
       <div class="filtering" className="d-flex px-20 justify-content-center">
         {/* Add your filter inputs using react-select */}
-        <label>Ad Medium</label><br/>
-        <Select className='mb-8'
+        <label className='text-black'>Ad Medium</label><br/>
+        <Select className='mb-8 text-black'
           id='AdMedium'
           instanceId="AdMedium"
-          placeholder="Ex: Automobile"
+          placeholder="Select Ad Medium"
           isMulti
           value={createSelectOptions(filters.rateName)}
           options={createSelectOptions([...new Set(ratesData.flatMap((item) => item.rateName))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
         />
-        <label>Ad Type</label><br/>
-        <Select className='mb-8'
+        <label className='text-black'>Ad Type</label><br/>
+        <Select className='mb-8 text-black'
           id='AdType'
           instanceId="AdType"
           isMulti
           options={createSelectOptions([...new Set(ratesData.filter((item) => filters.rateName.includes(item.rateName)).map((item) => item.adType))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
           value={createSelectOptions(filters.adType)}
-          placeholder = 'Ex: Bus' 
+          placeholder = 'Select Ad Type' 
         />
-        <label>Ad Category</label><br/>
-        <Select className='mb-8'
+        <label className='text-black'>Ad Category</label><br/>
+        <Select className='mb-8 text-black'
           id='AdCategory'
           instanceId="AdCategory"
-          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType).map((item) => item.adCategory))])}
+          isMulti
+          options={createSelectOptions([...new Set(ratesData.filter((item) => filters.rateName.includes(item.rateName) && filters.adType.includes(item.adType)).map((item) => item.adCategory))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
-          value={{ label: filters.adCategory, value: filters.adCategory }}
-          placeholder = 'Ad Category' 
+          value={createSelectOptions(filters.adCategory)}
+          placeholder = 'Select Ad Category' 
         />
-        <label>Edition</label><br/>
+        {/* <label>Edition</label><br/>
         <Select className='mb-8'
           id='Edition'
           instanceId="Edition"
+          isMulti
           options={createSelectOptions([...new Set(ratesData.map((item) => item.edition))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'edition')}
           value={{ label: filters.LastUsedUser, value: filters.edition }}
-          placeholder="Edition"
+          placeholder="Select Edition"
         />
         <label>Remarks</label><br/>
         <Select className='mb-8'
           id='Remarks'
           instanceId="Remarks"
+          isMulti
           options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType && item.adCategory === filters.adCategory && item.VendorName === filters.VendorName).map((item) => item.remarks))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'remarks')}
           value={{ label: filters.LastUsedUser, value: filters.remarks }}
-          placeholder="Remarks"
-        />
-        <label>Vendor</label><br/>
-        <Select className='mb-8'
+          placeholder="Select Remarks"
+        /> */}
+        <label className='text-black'>Vendor</label><br/>
+        <Select
+          className='mb-8 text-black'
           id='Vendor'
           instanceId="Vendor"
-          options={createSelectOptions([...new Set(ratesData.filter((item) => item.rateName === filters.rateName && item.adType === filters.adType && item.adCategory === filters.adCategory).map((item) => item.VendorName))])}
+          isMulti
+          options={createSelectOptions([...new Set(ratesData.filter((item) => filters.rateName.includes(item.rateName) && filters.adType.includes(item.adType) && filters.adCategory.includes(item.adCategory)).map((item) => item.VendorName))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
-          value={{ label: filters.VendorName, value: filters.VendorName }}
-          placeholder="Vendor" />
+          value={createSelectOptions(filters.VendorName)}
+          placeholder="Select Vendor"
+        />
         <div class="flex space-x-4 ...">
         <button
           className="bg-green-500 text-white px-4 py-2 rounded align-item-center mb-4"
@@ -264,15 +334,38 @@ const RatesListPage = () => {
             handleFilter() 
             {showFilter === true &&
               (filters.rateName = [],
-              filters.adType = '',
-              filters.adCategory = '',
-              filters.VendorName = '')}
+              filters.adType = [],
+              filters.adCategory = [],
+              filters.VendorName = [])}
           }}>
           Clear
         </button></div>
       </div>
     }
     <div className="flex justify-between items-center" >
+        {/* Select All Button (Left) */}
+        {showFilter === false 
+        // || (showFilter2 && ( filters.rateName !== '' ||
+        // filters.adType !== '' || 
+        // filters.adCategory !== '' ||
+        // filters.VendorName !== '' ||
+        // filters.LastUsedUser !== '')))  
+        &&
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+          onClick={() => router.push('/addenquiry')}
+        >
+          Go to Enquiry
+        </button>
+        }
+        {/* Validate Selected Button (Right) */}
+        {showFilter === false  && (
+          <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => {Cookies.remove('username'); router.push('/login')}}>
+            Logout
+          </button>
+        )}
+      </div>
+      <div className="flex justify-between items-center" >
         {/* Select All Button (Left) */}
         {showFilter === false 
         // || (showFilter2 && ( filters.rateName !== '' ||
@@ -289,7 +382,7 @@ const RatesListPage = () => {
         </button>
         }
         {/* Validate Selected Button (Right) */}
-        {selectedItems.length > 0 && (
+        {selectedItems.length > 1 && (
           <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={() => setModal(true)}>
             Validate Selected
           </button>
@@ -308,7 +401,7 @@ const RatesListPage = () => {
     //   filters.LastUsedUser !== '')))  
     &&
     //sm:grid-cols-2 lg:grid-cols-3
-      <ul className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ">
+      <ul className="grid gap-4 grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 ">
         {filteredRates.map((item) => (
           <li
             key={item.rateId}
@@ -340,10 +433,12 @@ const RatesListPage = () => {
                   : new Date(item.ValidityDate) > today && new Date(item.ValidityDate) <= twoDaysFromNow
                   ? 'mb-2 font-bold text-orange-500'
                   : 'mb-2 font-bold text-black'
-              }`}>Validity: {item.ValidityDate}</div>
+              }`}>Valid Till: {item.ValidityDate}</div>
             <div className="mb-2 text-black">
+            <div className="mb-2 text-black"> Rate ID: {item.rateId}</div>
               Vendor: {item.VendorName}
-              <button
+              {selectedItems.length < 2 && (
+                <button
                 className="bg-green-500 text-white px-4 py-2 rounded mx-4"
                 onClick={() => {
                   setModal(true, item.rateId);
@@ -352,10 +447,19 @@ const RatesListPage = () => {
               >
                 Validate
               </button>
+              )}
+              
             </div>
           </li>
         ))}
       </ul>}
+      {/* <div className='bg-surface-card p-8 rounded-2xl mb-4'>
+          <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
+            <MuiAlert severity={severity} onClose={() => setToast(false)}>
+              {toastMessage}
+            </MuiAlert>
+          </Snackbar>
+          </div> */}
     </div>
   );
 };
