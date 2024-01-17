@@ -3,16 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
-
-const radioOptions = [
-  { id: 1, label: 'Option 1', description: 'Description for Option 1' },
-  { id: 2, label: 'Option 2', description: 'Description for Option 2' },
-  { id: 3, label: 'Option 3', description: 'Description for Option 3' },
-  { id: 4, label: 'Option 4', description: 'Description for Option 4' },
-  { id: 5, label: 'Option 5', description: 'Description for Option 5' },
-  { id: 6, label: 'Option 6', description: 'Description for Option 6' },
-];
-
+import Image from 'next/image';
 
 const AdMediumPage = () => {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -26,10 +17,39 @@ const AdMediumPage = () => {
   );
   };
 
-  const handleNextButtonClick = () => {
-    // Handle the logic for the "Next" button click
-    console.log("Next button clicked. Selected option:", selectedOption);
-  };
+  const datasOptions = datas
+  .filter((value, index, self) => 
+    self.findIndex(obj => obj.rateName === value.rateName) === index
+  )
+  .sort((a, b) => a.rateName.localeCompare(b.rateName));
+//   .map((option) => ({
+//    // if(option.rateName === 'Automobile'){
+//     ...option,
+//     icon: `https://t3.ftcdn.net/jpg/01/71/13/24/360_F_171132449_uK0OO5XHrjjaqx5JUbJOIoCC3GZP84Mt.jpg`
+//  // }
+//   }));
+
+  const icons = (iconValue) =>{
+    if (iconValue === 'Automobile') {
+      return (<Image  src="/images/school-bus.png" alt="car Icon" width={60} height={60} />);
+    } else if(iconValue === 'Newspaper'){
+      return (<Image  src="/images/newspaper.png" alt="car Icon" width={60} height={60} />);
+    } else if(iconValue === 'Print Services'){
+      return (<Image  src="/images/printer.png" alt="car Icon" width={60} height={60} />);
+    }else if(iconValue === 'Production'){
+      return (<Image  src="/images/smart-tv.png" alt="car Icon" width={60} height={60} />);
+    }else if(iconValue === 'Radio Ads'){
+      return (<Image  src="/images/radio.png" alt="car Icon" width={60} height={60} />);
+    }else if(iconValue === 'Road Side'){
+      return (<Image  src="/images/road-map.png" alt="car Icon" width={60} height={60} />);
+    }else if(iconValue === 'Screen Branding'){
+      return (<Image  src="/images/branding.png" alt="car Icon" width={60} height={60} />);
+    }else if(iconValue === 'Test'){
+      return (<Image  src="/images/test.png" alt="car Icon" width={60} height={60} />);
+    }else if(iconValue === 'TV'){
+      return (<Image  src="/images/tv-monitor.png" alt="car Icon" width={60} height={60} />);
+    }
+  }
 
   useEffect(() => {
     const username = Cookies.get('username');
@@ -37,7 +57,7 @@ const AdMediumPage = () => {
     if (!username) {
       routers.push('/login');
     } else {
-      fetch('')
+      fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
         .then((response) => response.json())
         .then((data) => setDatas(data))
         .catch((error) => console.error(error));
@@ -73,34 +93,38 @@ const AdMediumPage = () => {
       <div><h1 className='font-semibold text-center mb-4'>Select any one</h1></div>
       <div className="flex flex-wrap justify-center">
         <ul className="grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
-          {radioOptions.map((option) => (
+          {datasOptions.map((option) => (
             <label
-              key={option.id}
-              className={`relative px-10 w-full h-64 p-4 border m-4 cursor-pointer transition duration-300 rounded-lg ${
+              key={option.rateName}
+              className={`relative  flex flex-col items-center justify-center px-10 w-full h-64 p-4 border m-4 cursor-pointer transition duration-300 rounded-lg  ${
                 selectedOption === option ? 'border-lime-500 bg-stone-100' : 'border-gray-300 hover:bg-gray-100'
               }`}
           //    htmlFor={`option-${option.id}`}
+          onClick={() =>{
+            routers.push('../adType');
+          }}
             >
-              <input
+              {/* <input
                 type="radio"
-                id={`option-${option.id}`}
+                id={`option-${option.rateName}`}
                 name="big-radio-selector"
                 className="hidden"
                 checked={selectedOption === option}
                 onChange={() => handleOptionChange(option)}
               />
-              {/* Radio button on the top right corner */}
+              {/* Radio button on the top right corner }
               <div className="absolute top-2 right-2">
                 <div className="w-4 h-4 border border-gray-500 rounded-full flex items-center justify-center">
                   {selectedOption === option && (
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   )}
                 </div>
-              </div>
-              <div className="text-lg font-bold mb-2">{option.label}</div>
-              <div className="text-gray-700">{option.description}</div>
+              </div> */}
+              <div className="text-lg font-bold mb-2 flex items-center justify-center">{option.rateName}</div>
+              <div className='mb-2 flex items-center justify-center'>{icons(option.rateName)}</div>
             </label>
-          ))}
+          ))
+        }
         </ul>
       </div>
       {selectedOption && (
