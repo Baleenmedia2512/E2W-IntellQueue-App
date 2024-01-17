@@ -231,11 +231,17 @@ const ClientsData = () => {
             placeholder="Select Source"
           />
           <button
-            className="bg-green-500 text-white px-4 py-2 rounded-full mt-4 transition-all duration-300 ease-in-out hover:bg-green-600"
+            className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full mt-4 transition-all duration-300 ease-in-out hover:bg-green-600"
             onClick={SaveEntry}
           >
             Submit
           </button>
+          <button
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+              onClick={() => router.push('../adMedium')}
+            >
+              Choose AD
+            </button>
         </div>
       </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>
