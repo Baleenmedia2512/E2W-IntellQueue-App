@@ -116,7 +116,6 @@ const RatesListPage = () => {
   useEffect(() => {
      // Check if localStorage contains a username
      const username = Cookies.get('username');
-
      // If no username is found, redirect to the login page
      if (!username) {
        router.push('/login');

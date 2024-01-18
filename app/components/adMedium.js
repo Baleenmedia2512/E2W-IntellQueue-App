@@ -4,18 +4,20 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import AdTypePage from './adType';
 
 const AdMediumPage = () => {
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedAdMedium, setSelectedAdMedium] = useState('');
   const [datas, setDatas] = useState([]);
+  const [type, setType] = useState(false);
   const routers = useRouter();
 
-  const handleOptionChange = (option) => {
-    //setSelectedOption(option);
-    setSelectedOption((prevSelectedOption) => 
-    prevSelectedOption === option ? null : option
-  );
-  };
+  // const handleOptionChange = (option) => {
+  //   //setSelectedOption(option);
+  //   setSelectedOption((prevSelectedOption) => 
+  //   prevSelectedOption === option ? null : option
+  // );
+  // };
 
   const datasOptions = datas
   .filter((value, index, self) => 
@@ -65,15 +67,19 @@ const AdMediumPage = () => {
   }, [routers]);
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative flex items-center">
-      <h1 className='text-2xl font-bold text-center mt-8 mb-4'>Select AD Medium</h1>
-      <button
-          className="text-black px-2 py-1 rounded"
+    <div>
+        {type && (<AdTypePage data={selectedAdMedium}/>)}
+       {!type && (
+        <div>
+       <div className="flex flex-row justify-between mx-[8%] mt-8">
+        
+         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
+          <button
+          className="text-black px-2 py-1 rounded text-center"
           onClick={() => {
-            routers.push('../addenquiry');
+            routers.push('../addenquiry')
           }}
-        >
+          >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -88,56 +94,30 @@ const AdMediumPage = () => {
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
+        </button></>
         </div>
-      <div><h1 className='font-semibold text-center mb-4'>Select any one</h1></div>
-      <div className="flex flex-wrap justify-center">
-        <ul className="grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
-          {datasOptions.map((option) => (
+        <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
+        <ul className="mx-[8%] mb-8 flex flex-wrap justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
+        {datasOptions.map((option) => (
             <label
               key={option.rateName}
-              className={`relative  flex flex-col items-center justify-center px-10 w-full h-64 p-4 border m-4 cursor-pointer transition duration-300 rounded-lg  ${
-                selectedOption === option ? 'border-lime-500 bg-stone-100' : 'border-gray-300 hover:bg-gray-100'
+              className={`relative flex flex-col items-center justify-center px-[-10] w-full h-64 border cursor-pointer transition duration-300 rounded-lg  ${
+                selectedAdMedium === option ? 'border-lime-500 bg-stone-100' : 'border-gray-300 hover:bg-gray-100'
               }`}
           //    htmlFor={`option-${option.id}`}
           onClick={() =>{
-            routers.push('../adType');
+            setSelectedAdMedium(option.rateName);
+            setType(true);
           }}
             >
-              {/* <input
-                type="radio"
-                id={`option-${option.rateName}`}
-                name="big-radio-selector"
-                className="hidden"
-                checked={selectedOption === option}
-                onChange={() => handleOptionChange(option)}
-              />
-              {/* Radio button on the top right corner }
-              <div className="absolute top-2 right-2">
-                <div className="w-4 h-4 border border-gray-500 rounded-full flex items-center justify-center">
-                  {selectedOption === option && (
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  )}
-                </div>
-              </div> */}
               <div className="text-lg font-bold mb-2 flex items-center justify-center">{option.rateName}</div>
               <div className='mb-2 flex items-center justify-center'>{icons(option.rateName)}</div>
             </label>
           ))
         }
         </ul>
-      </div>
-      {selectedOption && (
-        <div className="fixed bottom-8 mt-8 mx-auto">
-          <button
-            className="bg-lime-500 text-black font-bold py-2 px-16 rounded-lg cursor-pointer"
-            onClick={handleNextButtonClick}
-          >
-            Next
-          </button>
         </div>
-      )}
-    </div>
+)}</div>
   );
 };
 

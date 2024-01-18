@@ -6,9 +6,12 @@ import Cookies from 'js-cookie';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { useRouter } from 'next/navigation';
+import AdMediumPage from '../components/adMedium';
+import AdCategoryPage from '../components/adCategory';
 
 const ClientsData = () => {
   const [datas, setDatas] = useState([]);
+  const [adDatas, setAdDatas] = useState([]);
   const userName = Cookies.get('username');
   const sources = [
     '1.JustDial',
@@ -30,6 +33,7 @@ const ClientsData = () => {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+  const [showAd, setShowAd] = useState(false);
   const router = useRouter()
 
   const handleSearchTermChange = (event) => {
@@ -162,6 +166,8 @@ const ClientsData = () => {
   }, [router]);
 
   return (
+    <div>
+    {showAd === false && (
     <div className="container mx-auto mt-28">
       
       <div className="flex justify-center">
@@ -238,7 +244,7 @@ const ClientsData = () => {
           </button>
           <button
               className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-              onClick={() => router.push('../adMedium')}
+              onClick={() => setShowAd(true)}
             >
               Choose AD
             </button>
@@ -251,7 +257,12 @@ const ClientsData = () => {
             </MuiAlert>
           </Snackbar>
           </div>
+    </div>)}
+    {showAd === true && (<AdMediumPage  />)}
     </div>
+    
+
+   // (showAd === true && (<AdMediumPage/>))
   );
 };
 
