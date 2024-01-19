@@ -165,17 +165,38 @@ const ClientsData = () => {
 
   return (
     <div>
-    <div className="container mx-auto mt-28">
-      
-      <div className="flex justify-center">
         
-        <div className="w-1/1 p-4 flex flex-col items-center">
-          <div className='flex-row space-x-4 justify-between mb-4'>
+        <div className="flex flex-col items-center justify-center mt-12 mx-12">
+        <div>
+        {/* Plus Icon SVG */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="60"
+          height="60"
+          viewBox="0 0 60 60"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </div>
+          <div className="flex justify-between">
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded top-2 justify-self-start"
+              className="bg-blue-500 text-white px-4 py-2 rounded"
               onClick={() => router.push('/')}
             >
               Move to Rates Validation
+            </button>
+            
+          <button
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+              onClick={() => router.push('../adDetails')}
+            >
+              Choose AD
             </button>
             <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => {Cookies.remove('username'); router.push('/login')}}>
               Logout
@@ -239,14 +260,7 @@ const ClientsData = () => {
           >
             Submit
           </button>
-          <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-              onClick={() => router.push('../adDetails')}
-            >
-              Choose AD
-            </button>
         </div>
-      </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>
           <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
             <MuiAlert severity={severity} onClose={() => setToast(false)}>
@@ -254,7 +268,6 @@ const ClientsData = () => {
             </MuiAlert>
           </Snackbar>
           </div>
-    </div>
     </div>
     
 

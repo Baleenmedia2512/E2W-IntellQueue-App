@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
+import VendorPage from './vendor';
 
 const categoryOptions = [
   { id: 1, label: 'Category 1', description: 'Description for Option 1' },
@@ -14,7 +15,7 @@ const categoryOptions = [
 const AdCategoryPage = ({categories}) => {
   const [selectedAdCategory, setSelectedAdCategory] = useState(null);
   const [datas, setDatas] = useState([]);
-//  const [cat, set] = useState(false);
+  const [vend, setVend] = useState(false);
   const routers = useRouter();
 
   const filteredData = datas
@@ -51,6 +52,7 @@ const AdCategoryPage = ({categories}) => {
 
   return (
     <div>
+      {!vend && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Category</h1>
           <button
@@ -88,9 +90,10 @@ const AdCategoryPage = ({categories}) => {
               {splitNames.filter(item => item.firstName === option.firstName).map((options) => (
           <label
             key={options.adCategory}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-orange-200 bg-gray-100'
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-blue-100 bg-neutral-200'
             onClick={() => {
-              setSelectedAdCategory(options.adCategory);
+              setSelectedAdCategory(options);
+              setVend(true)
             }}
           >
             <div className="text-lg font-bold flex items-center justify-center">{options.lastName}</div>
@@ -99,28 +102,9 @@ const AdCategoryPage = ({categories}) => {
             </ul>
           </label>
         ))}
-      </ul>
+      </ul></div>)}
+      {vend && <VendorPage details ={selectedAdCategory}/>}
 
-{/* <div>
-      
-      {groupedData.map((first) => (
-        <div key={first}>
-          <h2>first.firstName</h2>
-      <ul className="flex flex-wrap items-center justify-center mx-[8%]">
-        {groupedData[first.firstName].map((option) => (
-          <label
-            key={option.adCategory}
-            className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-gray-100'
-            onClick={() => {
-              setSelectedAdCategory(option.adCategory);
-            }}
-          >
-            <div className="text-lg font-bold flex items-center justify-center">{option.lastName}</div>
-          </label>
-        ))}
-      </ul></div>
-      ))}
-      </div> */}
       </div>
   )
 };
