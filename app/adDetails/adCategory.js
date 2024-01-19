@@ -25,11 +25,22 @@ const AdCategoryPage = ({categories}) => {
   .sort((a, b) => a.adCategory.localeCompare(b.adCategory))
   ;
 
+  const splitNames = filteredData.map(item => {
+    const [firstPart, secondPart] = item.adCategory.split(':');
+    return { ...item, firstName: firstPart, lastName: secondPart || firstPart};
+  });
+
+  const filteredDataone = splitNames
+  .filter((value, index, self) => 
+    self.findIndex(obj => obj.firstName === value.firstName) === index
+  )
+  ;
+
   useEffect(() => {
     const username = Cookies.get('username');
 
     if (!username) {
-      routers.push('/login');
+      routers.push('../login');
     } else {
       fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
         .then((response) => response.json())
@@ -65,8 +76,38 @@ const AdCategoryPage = ({categories}) => {
           </button></>
       </div>
       <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1>
+
+      
+      <ul className="flex flex-col mx-[8%]">
+        {filteredDataone.map((option) => (
+          <label
+            key={option.firstName}
+          >
+            <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.firstName):(categories)}</div>
+            <ul className="flex flex-col items-center">
+              {splitNames.filter(item => item.firstName === option.firstName).map((options) => (
+          <label
+            key={options.adCategory}
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-orange-200 bg-gray-100'
+            onClick={() => {
+              setSelectedAdCategory(options.adCategory);
+            }}
+          >
+            <div className="text-lg font-bold flex items-center justify-center">{options.lastName}</div>
+</label>))
+              }
+            </ul>
+          </label>
+        ))}
+      </ul>
+
+{/* <div>
+      
+      {groupedData.map((first) => (
+        <div key={first}>
+          <h2>first.firstName</h2>
       <ul className="flex flex-wrap items-center justify-center mx-[8%]">
-        {filteredData.map((option) => (
+        {groupedData[first.firstName].map((option) => (
           <label
             key={option.adCategory}
             className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-gray-100'
@@ -74,10 +115,13 @@ const AdCategoryPage = ({categories}) => {
               setSelectedAdCategory(option.adCategory);
             }}
           >
-            <div className="text-lg font-bold flex items-center justify-center">{option.adCategory}</div>
+            <div className="text-lg font-bold flex items-center justify-center">{option.lastName}</div>
           </label>
         ))}
       </ul></div>
+      ))}
+      </div> */}
+      </div>
   )
 };
 
