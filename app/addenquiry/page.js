@@ -164,43 +164,40 @@ const ClientsData = () => {
   }, [router]);
 
   return (
-    <div>
+    <div><div className='mb-8 mx-[8%] mt-8' onClick={() => router.push('../adDetails')}>
+    {/* Plus Icon SVG */}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="48"
+      height="48"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </div>
         
-        <div className="flex flex-col items-center justify-center mt-12 mx-12">
-        <div>
-        {/* Plus Icon SVG */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="60"
-          height="60"
-          viewBox="0 0 60 60"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </div>
-          <div className="flex justify-between">
+        <div className="flex flex-col items-center justify-center mt-8 mx-[8%]">
+          <div className="flex justify-between mb-4 w-full space-x-28">
             <button
               className="bg-blue-500 text-white px-4 py-2 rounded"
               onClick={() => router.push('/')}
             >
-              Move to Rates Validation
+              Rates Validation
             </button>
             
-          <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-              onClick={() => router.push('../adDetails')}
-            >
-              Choose AD
-            </button>
+          
             <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => {Cookies.remove('username'); router.push('/login')}}>
               Logout
             </button>
+          </div>
+          <div>
+          
           </div>
           <h1 className="font-bold text-black mb-4">BME - Enquiry. Enter enquiry details!</h1>
           <label className="flex flex-col items-left">Client Name</label>
@@ -238,14 +235,6 @@ const ClientsData = () => {
             value={clientEmail}
             onChange={(e) => setClientEmail(e.target.value)}
           />
-          <label>CSE</label>
-          <Select
-            className="w-full mb-4"
-            value={{ label: cses, value: cses }}
-            onChange={(selectedOption) => setCses(selectedOption.value)}
-            options={datas.map((cse) => ({ label: cse, value: cse }))}
-            placeholder="Select CSE"
-          />
           <label>Source</label>
           <Select
             className="w-full mb-4"
@@ -260,6 +249,10 @@ const ClientsData = () => {
           >
             Submit
           </button>
+          <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
+            is higher
+          </p>
+          <p className='font-bold'>Quote Valid till 13/01/2024</p>
         </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>
           <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
