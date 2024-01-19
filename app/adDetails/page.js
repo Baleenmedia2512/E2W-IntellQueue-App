@@ -97,7 +97,7 @@ const AdMediumPage = () => {
         </button></>
         </div>
         <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
-        <ul className="mx-[8%] mb-8 flex flex-wrap justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
+        <ul className="mx-[8%] mb-8 justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
         {datasOptions.map((option) => (
             <label
               key={option.rateName}
@@ -121,4 +121,44 @@ const AdMediumPage = () => {
   );
 };
 
-export default AdMediumPage;
+const AdDetailsPage = () => {
+  const [qtySlab, setQtySlab] = useState('')
+  const greater = ">"
+  return(
+    <div className="flex flex-col items-center justify-center mt-8 mx-[8%]">
+      <label className="flex flex-col items-left">Quantity Slab ({greater})</label>
+      <input
+        className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+        type="text"
+        placeholder="Client Name"
+        value={qtySlab}
+        onChange={e => setQtySlab(e.target.value)}
+      />
+
+      <label className="flex flex-col items-left">Client Name</label>
+      <input
+        className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+        type="text"
+        placeholder="Client Name"
+        value={qtySlab}
+        onChange={e => setQtySlab(e.target.value)}
+      />
+    </div>
+  )
+}
+
+const AdDetails = () => {
+  const [adDetailsSelected, setAdDetailsSelected] = useState(false)
+
+  useEffect(() => {
+      setAdDetailsSelected(Cookies.get('adDetailsSelected'))
+  }, [])
+  
+  return(
+    <div>
+      {adDetailsSelected === false ? <AdMediumPage /> : <AdDetailsPage />}
+    </div>
+  )
+}
+
+export default AdDetails;

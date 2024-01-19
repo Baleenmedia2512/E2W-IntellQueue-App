@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 const VendorPage = ({details}) => {
   const [selectedVendor, setSelectedVendor] = useState();
   const [datas, setDatas] = useState([]);
-  const [cat, setCat] = useState(false);
   const routers = useRouter();
 
   useEffect(() => {
@@ -60,7 +59,8 @@ const VendorPage = ({details}) => {
       </div>
       <h1 className='mx-[8%] mb-14 font-semibold'>Select any one</h1>
       <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {details.rateName}</h1>
-      <h1 className='mx-[8%] mb-8 font-semibold'>Ad Type : {details.adType}</h1>
+      <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {details.adType}</h1>
+      <h1 className='mx-[8%] mb-8 font-semibold'>Ad Category : {details.adCategory}</h1>
       <ul className="flex flex-wrap items-center justify-center mx-[8%]">
         {filteredData.map((option) => (
           <label
@@ -68,6 +68,8 @@ const VendorPage = ({details}) => {
             className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-gray-100'
             onClick={() => {
               setSelectedVendor(option);
+              
+              Cookies.set('adMediumSelected', true);
             }}
           >
             <div className="text-lg font-bold flex items-center justify-center">{option.VendorName}</div>

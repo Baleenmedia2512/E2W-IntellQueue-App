@@ -164,7 +164,7 @@ const ClientsData = () => {
   }, [router]);
 
   return (
-    <div><div className='mb-8 mx-[8%] mt-8' onClick={() => router.push('../adDetails')}>
+    <div><div className='mb-8 mx-[8%] mt-8 cursor-pointer' onClick={() => {router.push('../adDetails'); Cookies.set('adMediumSelected', false);}}>
     {/* Plus Icon SVG */}
     <svg
       xmlns="http://www.w3.org/2000/svg"
