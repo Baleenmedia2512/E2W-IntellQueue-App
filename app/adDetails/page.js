@@ -123,26 +123,96 @@ const AdMediumPage = () => {
 
 const AdDetailsPage = () => {
   const [qtySlab, setQtySlab] = useState('')
+  const [qty, setQty] = useState('')
+  const [selectedDayRange, setSelectedDayRange] = useState('');
+  const [campaignDuration, setCampaignDuration] = useState('');
+  const [unit, setUnit] = useState('')
+  const [margin, setMargin] = useState(0);
+  const [marginPercentage, setMarginPercentage] = useState(0)
+  const [extraDiscount, setExtraDiscount] = useState(0)
+  const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
+  const units = ['Unit', 'Line', 'SCM', 'Sec', 'Spot', 'Million Views', 'Minutes', 'SQFT'];
+
   const greater = ">"
   return(
-    <div className="flex flex-col items-center justify-center mt-8 mx-[8%]">
-      <label className="flex flex-col items-left">Quantity Slab ({greater})</label>
+    <div className=" mt-8 mx-[8%]">
+      <label className="font-bold">Quantity Slab ({greater})</label>
       <input
         className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-        type="text"
-        placeholder="Client Name"
+        type="number"
+        placeholder="Ex: 1 (meaning quantity > 1)"
         value={qtySlab}
         onChange={e => setQtySlab(e.target.value)}
       />
 
-      <label className="flex flex-col items-left">Client Name</label>
+      <label className="font-bold">Quantity</label>
+      <div className="flex w-full mb-4">
+        <input
+          className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+          type="number"
+          placeholder="Ex: 15"
+          value={qty}
+          onChange={e => setQty(e.target.value)}
+        />
+        <div className="relative">
+          <select
+            className="border-l border-gray-300 rounded-r-lg p-2"
+            value={unit}
+            onChange={e => setUnit(e.target.value)}
+          >
+            {units.map((option, index) => (
+              <option key={index} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <label className="font-bold">Campaign Duration</label>
+      <div className="flex w-full mb-4">
       <input
-        className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-        type="text"
-        placeholder="Client Name"
-        value={qtySlab}
-        onChange={e => setQtySlab(e.target.value)}
+        className="w-full border border-gray-300 p-2 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+        type="number"
+        placeholder="Ex: 3"
+        value={campaignDuration}
+        onChange={e => setCampaignDuration(e.target.value)}
       />
+      <div className="relative">
+        <select
+          className="border-l border-gray-300 rounded-r-lg p-2"
+          value={selectedDayRange}
+          onChange={e => setSelectedDayRange(e.target.value)}
+        >
+          {dayRange.map((option, index) => (
+            <option key={index} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <label className="font-bold">Margin Amount(Rs)</label>
+    <input className='w-full border border-gray-300 p-2 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
+        type='number'
+        placeholder='Ex: 4000'
+        value={margin}
+        onChange={e => setMargin(e)}
+    />
+    <label className="mt-1 text-sm mb-4">Margin Percentage: {marginPercentage}%</label>
+
+    <br></br>
+    <br></br>
+    <label className="font-bold">Extra Discount(Rs)</label>
+    <input className='w-full border border-gray-300 p-2 mb-4 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
+        type='number'
+        placeholder='Ex: 1000'
+        value={extraDiscount}
+        onChange={e => setExtraDiscount(e)}
+    />
+    <label className="font-bold">Price(Rs): </label>
+    <label className="mt-1 text-sm mb-4">Qty x QtyPrice x CampaignDuration = All3 + Rs. {margin} Margin Amount - Rs. {extraDiscount} Discount Amount + 18% GST = Receivable (incl. GST)</label>
     </div>
   )
 }
@@ -151,12 +221,12 @@ const AdDetails = () => {
   const [adDetailsSelected, setAdDetailsSelected] = useState(false)
 
   useEffect(() => {
-      setAdDetailsSelected(Cookies.get('adDetailsSelected'))
+      setAdDetailsSelected(Cookies.get('adMediumSelected'))
   }, [])
   
   return(
     <div>
-      {adDetailsSelected === false ? <AdMediumPage /> : <AdDetailsPage />}
+      {adDetailsSelected ?  <AdDetailsPage /> : <AdMediumPage />}
     </div>
   )
 }

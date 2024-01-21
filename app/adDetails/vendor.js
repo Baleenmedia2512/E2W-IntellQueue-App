@@ -68,8 +68,8 @@ const VendorPage = ({details}) => {
             className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-gray-100'
             onClick={() => {
               setSelectedVendor(option);
-              
               Cookies.set('adMediumSelected', true);
+              window.location.reload()
             }}
           >
             <div className="text-lg font-bold flex items-center justify-center">{option.VendorName}</div>
