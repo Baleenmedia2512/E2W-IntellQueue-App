@@ -81,10 +81,7 @@ const ClientsData = () => {
     var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
     var result = regex.test(clientEmail);
     var Check_Phone = clientNumber.match('[0-9]{10}');
-    Cookies.set('clientname', clientName);
-    Cookies.set('clientnumber', clientNumber);
-    Cookies.set('clientemail', clientEmail);
-    Cookies.set('selectedsource', selectedSource);
+    
   
     if (clientName === '' || clientNumber === '' || cses === '' || selectedSource === '') {
       showToastMessage('warning', 'Please enter the required details!')
@@ -156,6 +153,11 @@ const ClientsData = () => {
     // Check if localStorage contains a username
     const username = Cookies.get('username');
 
+    Cookies.set('clientname', clientName);
+    Cookies.set('clientnumber', clientNumber);
+    Cookies.set('clientemail', clientEmail);
+    Cookies.set('selectedsource', selectedSource);
+
     // If no username is found, redirect to the login page
     if (!username) {
       router.push('/login');
@@ -169,21 +171,28 @@ const ClientsData = () => {
 
   return (
     <div><div className='mb-8 mx-[8%] mt-8 cursor-pointer' onClick={() => {router.push('../adDetails'); Cookies.remove('adMediumSelected');}}>
-    {/* Plus Icon SVG */}
+   
     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="48"
-      height="48"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
+  xmlns="http://www.w3.org/2000/svg"
+  width="60"
+  height="60" 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="#3498db"
+  strokeWidth="2"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <rect x="1" y="1" width="22" height="22" stroke="#3498db" strokeWidth="2" fill="transparent" />
+
+  {/* Horizontal line of the plus symbol */}
+  <line x1="7" y1="12" x2="17" y2="12" />
+
+  {/* Vertical line of the plus symbol */}
+  <line x1="12" y1="7" x2="12" y2="17" />
+</svg>
+
+
   </div>
         
         <div className="flex flex-col items-center justify-center mt-8 mx-[8%]">
@@ -253,10 +262,7 @@ const ClientsData = () => {
           >
             Submit
           </button>
-          <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
-            is higher
-          </p>
-          <p className='font-bold'>Quote Valid till 13/01/2024</p>
+          
         </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>
           <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>

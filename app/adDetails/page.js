@@ -149,14 +149,14 @@ const AdDetailsPage = () => {
       {checkout === true &&
         (
           <div className='mx-[8%]'>
-            <label className="font-bold">Quantity Slab ({greater})</label>
+            {/* <label className="font-bold">Quantity Slab ({greater})</label>
             <input
               className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
               type="number"
               placeholder="Ex: 1 (meaning quantity > 1)"
               value={qtySlab}
               onChange={e => setQtySlab(e.target.value)}
-            />
+            /> */}
 
             <label className="font-bold">Quantity</label>
             <div className="flex w-full mb-4">
@@ -224,8 +224,9 @@ const AdDetailsPage = () => {
               value={extraDiscount}
               onChange={e => setExtraDiscount(e.target.value)}
             />
-             <label className="font-bold">Price(Rs): </label>
-            <label className="mt-1 text-sm mb-4">Qty x QtyPrice x CampaignDuration = All3 + Rs. {margin} Margin Amount - Rs. {extraDiscount} Discount Amount + 18% GST = Receivable (incl. GST)</label>
+             <label className="font-bold">Price(Rs): {((qty * 15 * campaignDuration)+(margin - extraDiscount))*(1.18)} </label>
+            <label className="mt-1 text-sm mb-4">(Qty x QtyPrice x CampaignDuration = All3 + Rs. {margin} Margin Amount - Rs. {extraDiscount} Discount Amount + 18% GST = Receivable (incl. GST))</label>
+            
             <br /><br /><div className='flex flex-col items-center justify-center'>
             <button className=' bg-green-500 hover:bg-green-600 px-4 py-2 rounded-full transition-all duration-300 ease-in-out'
             onClick={() => setCheckout(false)}
@@ -268,23 +269,27 @@ Checkout
           <h1 className='mb-2 text-red-400 font-semibold'>Ad Type : {adType}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Ad Category : {adCategory}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Vendor Name : {VendorName}</h1>
-          <h1 className='mb-2 text-red-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1>
-          <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {units}</h1>
+          {/* <h1 className='mb-2 text-red-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
+          <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {units[1]}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Campaign Duration : {campaignDuration} {selectedDayRange}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {margin}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {extraDiscount}</h1>
-          <h1 className='mb-14 text-red-400 font-semibold'>Price : {}</h1>
+          <h1 className='mb-14 text-red-400 font-semibold'>Price : {((qty * 15 * campaignDuration)+(margin - extraDiscount))*(1.18)}</h1>
 
 
           <h1 className='mb-4 font-semibold'>Client Details</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Client Name : {clientName}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Client Number : {clientNumber}</h1>
-          <h1 className='mb-2 text-red-400 font-semibold'>Client E-MAil: {clientEmail}</h1>
+          <h1 className='mb-2 text-red-400 font-semibold'>Client E-Mail: {clientEmail}</h1>
           <h1 className='mb-24 text-red-400 font-semibold'>Source : {selectedSource}</h1>
 
           </div>
           <div className='flex flex-col justify-center items-center'>
+          <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
+            is higher
+          </p>
+          <p className='font-bold'>Quote Valid till 13/01/2024</p>
           <button
               className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full fixed bottom-8 mt-4 transition-all duration-300 ease-in-out hover:bg-green-600"
             >

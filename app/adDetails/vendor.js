@@ -34,7 +34,6 @@ const VendorPage = ({details}) => {
 
   return (
       <div>
-        {!page && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select Vendor</h1>
           <button
@@ -84,8 +83,6 @@ const VendorPage = ({details}) => {
           </label>
         ))}
       </ul>
-      </div>)}
-      {/*page && <AdDetails selection={selectedVendor}/>*/}
       </div>
   )
 };
