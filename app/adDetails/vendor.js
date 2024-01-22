@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
+import AdDetails from './page';
 
 const VendorPage = ({details}) => {
   const [selectedVendor, setSelectedVendor] = useState();
   const [datas, setDatas] = useState([]);
+  const [page, setPage] = useState(false);
   const routers = useRouter();
 
   useEffect(() => {
@@ -32,6 +34,7 @@ const VendorPage = ({details}) => {
 
   return (
       <div>
+        {!page && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select Vendor</h1>
           <button
@@ -69,13 +72,20 @@ const VendorPage = ({details}) => {
             onClick={() => {
               setSelectedVendor(option);
               Cookies.set('adMediumSelected', true);
+              Cookies.set('ratename', selectedVendor.rateName);
+              Cookies.set('adtype', selectedVendor.adType);
+              Cookies.set('adcategory', selectedVendor.adCategory);
+              Cookies.set('vendorname', selectedVendor.VendorName);
               window.location.reload()
+              setPage(true);
             }}
           >
             <div className="text-lg font-bold flex items-center justify-center">{option.VendorName}</div>
           </label>
         ))}
       </ul>
+      </div>)}
+      {/*page && <AdDetails selection={selectedVendor}/>*/}
       </div>
   )
 };

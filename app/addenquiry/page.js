@@ -81,6 +81,10 @@ const ClientsData = () => {
     var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
     var result = regex.test(clientEmail);
     var Check_Phone = clientNumber.match('[0-9]{10}');
+    Cookies.set('clientname', clientName);
+    Cookies.set('clientnumber', clientNumber);
+    Cookies.set('clientemail', clientEmail);
+    Cookies.set('selectedsource', selectedSource);
   
     if (clientName === '' || clientNumber === '' || cses === '' || selectedSource === '') {
       showToastMessage('warning', 'Please enter the required details!')
