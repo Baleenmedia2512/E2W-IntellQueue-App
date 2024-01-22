@@ -122,9 +122,9 @@ const AdMediumPage = () => {
 
 const AdDetailsPage = () => {
   const [qtySlab, setQtySlab] = useState('')
-  const [qty, setQty] = useState('')
+  const [qty, setQty] = useState(1)
   const [selectedDayRange, setSelectedDayRange] = useState('');
-  const [campaignDuration, setCampaignDuration] = useState('');
+  const [campaignDuration, setCampaignDuration] = useState(0);
   const [unit, setUnit] = useState('')
   const [margin, setMargin] = useState(0);
   const [marginPercentage, setMarginPercentage] = useState(0)
@@ -142,6 +142,7 @@ const AdDetailsPage = () => {
   const adType =Cookies.get('adtype');
   const adCategory =Cookies.get('adcategory');
   const VendorName =Cookies.get('vendorname');
+  const ratePerUnit = Cookies.get('rateperunit')
 
   const greater = ">"
   return (
@@ -157,7 +158,7 @@ const AdDetailsPage = () => {
               value={qtySlab}
               onChange={e => setQtySlab(e.target.value)}
             /> */}
-
+            
             <label className="font-bold">Quantity</label>
             <div className="flex w-full mb-4">
               <input
@@ -224,21 +225,30 @@ const AdDetailsPage = () => {
               value={extraDiscount}
               onChange={e => setExtraDiscount(e.target.value)}
             />
-             <label className="font-bold">Price(Rs): {((qty * 15 * campaignDuration)+(margin - extraDiscount))*(1.18)} </label>
-            <label className="mt-1 text-sm mb-4">(Qty x QtyPrice x CampaignDuration = All3 + Rs. {margin} Margin Amount - Rs. {extraDiscount} Discount Amount + 18% GST = Receivable (incl. GST))</label>
+             <label className="font-bold">Price(Rs): {((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))+(margin - extraDiscount))*(1.18)} </label>
+            <label className="mt-1 text-sm mb-4">({qty} x {ratePerUnit} x {campaignDuration === 0 ? 1 : campaignDuration} = {qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)} + Rs. {margin} Margin Amount - Rs. {extraDiscount} Discount Amount + 18% GST = Receivable (incl. GST))</label>
             
             <br /><br /><div className='flex flex-col items-center justify-center'>
-            <button className=' bg-green-500 hover:bg-green-600 px-4 py-2 rounded-full transition-all duration-300 ease-in-out'
+            <button className=' bg-green-500 hover:bg-green-600 px-4 py-2 rounded-full transition-all duration-300 ease-in-out text-white'
             onClick={() => setCheckout(false)}
            >
 Checkout
-            </button></div>
+            </button>
+            <label className="text-sm mb-4">Ad Medium: {rateName}</label>
+            <label className="mt-1 text-sm mb-4">Ad Type: {adType}</label>
+            <label className="mt-1 text-sm mb-4">Ad Category: {adCategory}</label>
+            <label className="mt-1 text-sm mb-4">Vendor Name: {VendorName}</label>
+            <label className="font-bold mr-4">Rate Per Unit:</label>
+            <label className="mt-1 text-sm mb-4">Rs. {ratePerUnit}</label>
+            <br></br>
+            <br></br>
+            </div>
           </div>)
       }
       {checkout === false && (
         <div>
           <div className="flex flex-row justify-between mt-8">
-            <> <h1 className='text-2xl font-bold text-center  mb-4'>Checkout</h1>
+            <> <h1 className='text-2xl font-bold text-center mb-4'>Checkout</h1>
               <button
                 className="text-black px-2 py-1 rounded text-center"
                 onClick={() => {
@@ -275,7 +285,7 @@ Checkout
           <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {margin}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {extraDiscount}</h1>
-          <h1 className='mb-14 text-red-400 font-semibold'>Price : {((qty * 15 * campaignDuration)+(margin - extraDiscount))*(1.18)}</h1>
+          <h1 className='mb-14 text-red-400 font-semibold'>Price : {((qty * ratePerUnit * campaignDuration === 0 ? 1 : campaignDuration)+(margin - extraDiscount))*(1.18)}</h1>
 
 
           <h1 className='mb-4 font-semibold'>Client Details</h1>

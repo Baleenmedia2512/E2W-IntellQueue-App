@@ -8,9 +8,9 @@ import MuiAlert from '@mui/material/Alert';
 import { useRouter } from 'next/navigation';
 
 const ClientsData = () => {
-  const [datas, setDatas] = useState([]);
-  const [adDatas, setAdDatas] = useState([]);
-  const userName = Cookies.get('username');
+  //const [datas, setDatas] = useState([]);
+  //const [adDatas, setAdDatas] = useState([]);
+  //const userName = Cookies.get('username');
   const sources = [
     '1.JustDial',
     '2.IndiaMart',
@@ -21,7 +21,7 @@ const ClientsData = () => {
     '7.WebApp DB',
     '8.Online'
   ];
-  const [cses, setCses] = useState('');
+  //const [cses, setCses] = useState('');
   const [selectedSource, setSelectedSource] = useState('');
   const [clientName, setClientName] = useState('');
   const [clientNumber, setClientNumber] = useState('');
@@ -76,101 +76,112 @@ const ClientsData = () => {
       });
   };
 
-  const SaveEntry = () => {
-    clientNumber.toString();
-    var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
-    var result = regex.test(clientEmail);
-    var Check_Phone = clientNumber.match('[0-9]{10}');
+  // const SaveEntry = () => {
+  //   clientNumber.toString();
+  //   var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
+  //   var result = regex.test(clientEmail);
+  //   var Check_Phone = clientNumber.match('[0-9]{10}');
     
   
-    if (clientName === '' || clientNumber === '' || cses === '' || selectedSource === '') {
-      showToastMessage('warning', 'Please enter the required details!')
-    } else if (clientNumber.length !== 10 || !Check_Phone) {
-      showToastMessage('warning', 'Enter valid 10 digit mobile number!')
-    } else if (result === false) {
-      showToastMessage('warning', 'Check the email address!')
-    } else {
-      fetch('https://orders.baleenmedia.com/API/InsertTestEnquiryAPI.php', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          JsonUserName: userName,
-          JsonClientContact: clientNumber,
-          JsonCSE: cses,
-          JsonSource: selectedSource,
-          JsonClientName: clientName,
-          JsonClientEmail: clientEmail
-        })
-      })
-      .then((response) => response.json())
-        .then((responseJson) => {
-          showToastMessage('success', 'Details Entered Successfully!')
+  //   if (clientName === '' || clientNumber === '' || cses === '' || selectedSource === '') {
+  //     showToastMessage('warning', 'Please enter the required details!')
+  //   } else if (clientNumber.length !== 10 || !Check_Phone) {
+  //     showToastMessage('warning', 'Enter valid 10 digit mobile number!')
+  //   } else if (result === false) {
+  //     showToastMessage('warning', 'Check the email address!')
+  //   } else {
+  //     fetch('https://orders.baleenmedia.com/API/InsertTestEnquiryAPI.php', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Accept': 'application/json',
+  //         'Content-type': 'application/json'
+  //       },
+  //       body: JSON.stringify({
+  //         JsonUserName: userName,
+  //         JsonClientContact: clientNumber,
+  //         JsonCSE: cses,
+  //         JsonSource: selectedSource,
+  //         JsonClientName: clientName,
+  //         JsonClientEmail: clientEmail
+  //       })
+  //     })
+  //     .then((response) => response.json())
+  //       .then((responseJson) => {
+  //         showToastMessage('success', 'Details Entered Successfully!')
 
-          // Send email
-          fetch('https://orders.baleenmedia.com/API/PwaEnquiryEmail.php', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          JsonClientContact: clientNumber,
-          JsonCSE: cses,
-          JsonSource: selectedSource,
-          JsonClientName: clientName,
-         // JsonClientEmail: clientEmail
-        })
-      })
-        .then((response) => response.json())
-        .then((responseJson) => {
-          if(responseJson === 'Email sent successfully!'){
-            showToastMessage('success', responseJson)
-          } else{
-            showToastMessage('warning', responseJson)
-          }
-            })
-            .catch((error) => {
-              showToastMessage('error', 'Error in sending email. ' + error)
-            });
-        })
-        .catch((error) => {
-          showToastMessage('error', 'Error is saving data. ' + error)
-        });
+  //         // Send email
+  //         fetch('https://orders.baleenmedia.com/API/PwaEnquiryEmail.php', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Accept': 'application/json',
+  //         'Content-type': 'application/json'
+  //       },
+  //       body: JSON.stringify({
+  //         JsonClientContact: clientNumber,
+  //         JsonCSE: cses,
+  //         JsonSource: selectedSource,
+  //         JsonClientName: clientName,
+  //        // JsonClientEmail: clientEmail
+  //       })
+  //     })
+  //       .then((response) => response.json())
+  //       .then((responseJson) => {
+  //         if(responseJson === 'Email sent successfully!'){
+  //           showToastMessage('success', responseJson)
+  //         } else{
+  //           showToastMessage('warning', responseJson)
+  //         }
+  //           })
+  //           .catch((error) => {
+  //             showToastMessage('error', 'Error in sending email. ' + error)
+  //           });
+  //       })
+  //       .catch((error) => {
+  //         showToastMessage('error', 'Error is saving data. ' + error)
+  //       });
   
-      setClientName('');
-      setSearchTerm('');
-      setClientEmail('');
-      setClientNumber('');
-      setCses('');
-      setSelectedSource('');
-    }
-  };  
+  //     setClientName('');
+  //     setSearchTerm('');
+  //     setClientEmail('');
+  //     setClientNumber('');
+  //     setCses('');
+  //     setSelectedSource('');
+  //   }
+  // };  
 
   useEffect(() => {
     // Check if localStorage contains a username
     const username = Cookies.get('username');
 
-    Cookies.set('clientname', clientName);
-    Cookies.set('clientnumber', clientNumber);
-    Cookies.set('clientemail', clientEmail);
-    Cookies.set('selectedsource', selectedSource);
-
     // If no username is found, redirect to the login page
     if (!username) {
       router.push('/login');
-    } else {
-      fetch('https://orders.baleenmedia.com/API/CSENamesAPI.php')
-        .then((response) => response.json())
-        .then((data) => setDatas(data))
-        .catch((error) => console.error(error));
-    }
+    } 
+    // else {
+    //   fetch('https://orders.baleenmedia.com/API/CSENamesAPI.php')
+    //     .then((response) => response.json())
+    //     .then((data) => setDatas(data))
+    //     .catch((error) => console.error(error));
+    // }
   }, [router]);
 
+  useEffect(() => {Cookies.set('clientname', clientName);}, [clientName]);
+  useEffect(() => {Cookies.set('clientnumber', clientNumber);}, [clientNumber])
+  useEffect(() => {Cookies.set('clientemail', clientEmail);}, [clientEmail])
+  useEffect(() => {Cookies.set('selectedsource', selectedSource);}, [selectedSource])
+
+  const moveToAdDetails = () => {
+    if (clientName !== '' && clientEmail !== '' && clientNumber !== '' && selectedSource !== '') 
+    {
+      router.push('../adDetails'); 
+      Cookies.remove('adMediumSelected')
+    }
+    else{
+      showToastMessage('warning', 'Please fill all the Client Details!')
+    }
+  }
   return (
-    <div><div className='mb-8 mx-[8%] mt-8 cursor-pointer' onClick={() => {router.push('../adDetails'); Cookies.remove('adMediumSelected');}}>
+    <div><div className='mb-8 mx-[8%] mt-8 cursor-pointer w-fit hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => {moveToAdDetails()}}>
    
     <svg
   xmlns="http://www.w3.org/2000/svg"
@@ -256,12 +267,12 @@ const ClientsData = () => {
             options={sources.map((source) => ({ label: source, value: source }))}
             placeholder="Select Source"
           />
-          <button
+          {/* <button
             className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full mt-4 transition-all duration-300 ease-in-out hover:bg-green-600"
             onClick={SaveEntry}
           >
             Submit
-          </button>
+          </button> */}
           
         </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>

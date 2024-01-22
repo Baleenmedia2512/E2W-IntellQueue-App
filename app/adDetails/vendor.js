@@ -71,10 +71,11 @@ const VendorPage = ({details}) => {
             onClick={() => {
               setSelectedVendor(option);
               Cookies.set('adMediumSelected', true);
-              Cookies.set('ratename', selectedVendor.rateName);
-              Cookies.set('adtype', selectedVendor.adType);
-              Cookies.set('adcategory', selectedVendor.adCategory);
-              Cookies.set('vendorname', selectedVendor.VendorName);
+              Cookies.set('ratename', option.rateName);
+              Cookies.set('adtype', option.adType);
+              Cookies.set('adcategory', option.adCategory);
+              Cookies.set('vendorname', option.VendorName);
+              Cookies.set('rateperunit', option.ratePerUnit)
               window.location.reload()
               setPage(true);
             }}
