@@ -1,5 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -70,11 +72,14 @@ const AdTypePage = ({data}) => {
           </button></>
       </div>
       <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
+
+      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('vendo', false)
+    }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
       <ul className="flex flex-wrap items-center justify-center mx-[8%]">
         {filteredData.map((option) => (
           <label
             key={option.adType}
-            className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-gray-100'
+            className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
               setSelectedAdType(option.adType);
               setCat(true);

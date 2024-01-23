@@ -1,5 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -75,7 +78,7 @@ const AdMediumPage = () => {
 
             <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
               <button
-                className="text-black px-2 py-1 rounded text-center"
+                className="px-2 py-1 rounded text-center"
                 onClick={() => {
                   routers.push('../addenquiry')
                 }}
@@ -97,11 +100,15 @@ const AdMediumPage = () => {
               </button></>
           </div>
           <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
+
+          <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
+    }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
           <ul className="mx-[8%] mb-8 justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
-            {datasOptions.map((option) => (
+            {datasOptions.map((option) => (<>
+              { option.rateName !== 'Newspaper' && (
               <label
                 key={option.rateName}
-                className={`relative flex flex-col items-center justify-center px-[-10] w-full h-64 border cursor-pointer transition duration-300 rounded-lg  ${selectedAdMedium === option ? 'border-lime-500 bg-stone-100' : 'border-gray-300 hover:bg-gray-100'
+                className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg  ${selectedAdMedium === option ? 'border-lime-500 bg-stone-100' : 'border-gray-300 bg-sky-400 hover:bg-violet-800'
                   }`}
                 //    htmlFor={`option-${option.id}`}
                 onClick={() => {
@@ -111,7 +118,7 @@ const AdMediumPage = () => {
               >
                 <div className="text-lg font-bold mb-2 flex items-center justify-center">{option.rateName}</div>
                 <div className='mb-2 flex items-center justify-center'>{icons(option.rateName)}</div>
-              </label>
+              </label>)}</>
             ))
             }
           </ul>
@@ -143,6 +150,8 @@ const AdDetailsPage = () => {
   const adCategory =Cookies.get('adcategory');
   const VendorName =Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit')
+
+  useEffect(() => setMarginPercentage((margin/qty)*100))
 
   const greater = ">"
   return (
@@ -190,7 +199,7 @@ const AdDetailsPage = () => {
                 type="number"
                 placeholder="Ex: 3"
                 value={campaignDuration}
-                onChange={e => setCampaignDuration(e.target.value)}
+                onChange={e => (setCampaignDuration(e.target.value))}
               />
               <div className="relative">
                 <select
@@ -212,7 +221,8 @@ const AdDetailsPage = () => {
               type='number'
               placeholder='Ex: 4000'
               value={margin}
-              onChange={e => setMargin(e.target.value)}
+              onChange={e => (setMargin(e.target.value))
+              }
             />
             <label className="mt-1 text-sm mb-4">Margin Percentage: {marginPercentage}%</label>
 
@@ -292,19 +302,20 @@ Checkout
           <h1 className='mb-2 text-red-400 font-semibold'>Client Name : {clientName}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Client Number : {clientNumber}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Client E-Mail: {clientEmail}</h1>
-          <h1 className='mb-24 text-red-400 font-semibold'>Source : {selectedSource}</h1>
+          <h1 className='mb-4 text-red-400 font-semibold'>Source : {selectedSource}</h1>
 
           </div>
           <div className='flex flex-col justify-center items-center'>
-          <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
-            is higher
-          </p>
-          <p className='font-bold'>Quote Valid till 13/01/2024</p>
+          
           <button
-              className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full fixed bottom-8 mt-4 transition-all duration-300 ease-in-out hover:bg-green-600"
+              className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full transition-all duration-300 ease-in-out hover:bg-green-600"
             >
               Send Quote
-            </button></div>
+            </button>
+            <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
+            is higher
+          </p>
+          <p className='font-bold'>Quote Valid till 13/01/2024</p></div>
          </div>
       )}
     </div>

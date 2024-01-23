@@ -1,5 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -39,7 +41,10 @@ const AdCategoryPage = ({categories}) => {
 
   useEffect(() => {
     const username = Cookies.get('username');
-
+    if(selectedAdCategory){
+    setVend((vend) => Cookies.get('vendo'))
+    setSelectedAdCategory(null)
+    }
     if (!username) {
       routers.push('../login');
     } else {
@@ -79,7 +84,8 @@ const AdCategoryPage = ({categories}) => {
       </div>
       <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1>
 
-      
+      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('categ', false)
+    }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
       <ul className="flex flex-col mx-[8%]">
         {filteredDataone.map((option) => (
           <label
@@ -90,7 +96,7 @@ const AdCategoryPage = ({categories}) => {
               {splitNames.filter(item => item.firstName === option.firstName).map((options) => (
           <label
             key={options.adCategory}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-blue-100 bg-neutral-200'
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
               setSelectedAdCategory(options);
               setVend(true)

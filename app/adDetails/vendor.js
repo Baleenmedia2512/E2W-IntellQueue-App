@@ -1,5 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -37,7 +39,7 @@ const VendorPage = ({details}) => {
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select Vendor</h1>
           <button
-            className="text-black px-2 py-1 rounded text-center"
+            className="text-black px-2 py-1 rounded text-center hover:scale-110"
             onClick={() => {
               routers.push('../addenquiry');
               
@@ -60,6 +62,9 @@ const VendorPage = ({details}) => {
           </button></>
       </div>
       <h1 className='mx-[8%] mb-14 font-semibold'>Select any one</h1>
+
+      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('vendo', false)
+        }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
       <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {details.rateName}</h1>
       <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {details.adType}</h1>
       <h1 className='mx-[8%] mb-8 font-semibold'>Ad Category : {details.adCategory}</h1>
@@ -67,7 +72,7 @@ const VendorPage = ({details}) => {
         {filteredData.map((option) => (
           <label
             key={option.VendorName}
-            className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 hover:bg-gray-100'
+            className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
               setSelectedVendor(option);
               Cookies.set('adMediumSelected', true);
