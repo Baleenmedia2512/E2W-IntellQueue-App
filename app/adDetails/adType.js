@@ -22,6 +22,10 @@ const AdTypePage = ({data}) => {
 
   useEffect(() => {
     const username = Cookies.get('username');
+
+    if(selectedAdType !== ""){
+      setCat((cat) => Cookies.get('categ'))
+      }
     console.log(data);
     if (!username) {
       routers.push('/login');
@@ -73,7 +77,7 @@ const AdTypePage = ({data}) => {
       </div>
       <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
 
-      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('vendo', false)
+      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('typ', false)
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
       <ul className="flex flex-wrap items-center justify-center mx-[8%]">
         {filteredData.map((option) => (

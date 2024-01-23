@@ -59,6 +59,10 @@ const AdMediumPage = () => {
   useEffect(() => {
     const username = Cookies.get('username');
 
+    if(selectedAdMedium !== ''){
+      setType((type) => Cookies.get('typ'))
+      }
+
     if (!username) {
       routers.push('/login');
     } else {
@@ -101,7 +105,7 @@ const AdMediumPage = () => {
           </div>
           <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
 
-          <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
+          <button className='mx-[8%] mb-6 hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
           <ul className="mx-[8%] mb-8 justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
             {datasOptions.map((option) => (<>
@@ -123,7 +127,8 @@ const AdMediumPage = () => {
             }
           </ul>
         </div>
-      )}</div>
+      )}
+      </div>
   );
 };
 

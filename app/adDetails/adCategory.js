@@ -43,7 +43,6 @@ const AdCategoryPage = ({categories}) => {
     const username = Cookies.get('username');
     if(selectedAdCategory){
     setVend((vend) => Cookies.get('vendo'))
-    setSelectedAdCategory(null)
     }
     if (!username) {
       routers.push('../login');
