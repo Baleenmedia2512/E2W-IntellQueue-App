@@ -65,7 +65,7 @@ const VendorPage = ({details}) => {
 
       <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('vendo', false)
         }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-        
+
       <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {details.rateName}</h1>
       <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {details.adType}</h1>
       <h1 className='mx-[8%] mb-8 font-semibold'>Ad Category : {details.adCategory}</h1>
@@ -82,7 +82,9 @@ const VendorPage = ({details}) => {
               Cookies.set('adcategory', option.adCategory);
               Cookies.set('vendorname', option.VendorName);
               Cookies.set('rateperunit', option.ratePerUnit)
-              window.location.reload()
+              Cookies.set('minimumunit', option.minimumUnit);
+              Cookies.set('defunit', option.Units);
+              window.location.reload() //minimumUnit
             //  setPage(true);
             }}
           >

@@ -142,7 +142,7 @@ const AdDetailsPage = () => {
   const [marginPercentage, setMarginPercentage] = useState(0)
   const [extraDiscount, setExtraDiscount] = useState(0)
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
-  const units = ['Unit', 'Line', 'SCM', 'Sec', 'Spot', 'Million Views', 'Minutes', 'SQFT'];
+  const units = ['Unit', 'Sec', 'Spot', 'Million Views', 'Minutes', 'SQFT'];
   const [checkout, setCheckout] = useState(true);
 
   const clientName = Cookies.get('clientname');
@@ -154,9 +154,25 @@ const AdDetailsPage = () => {
   const adType =Cookies.get('adtype');
   const adCategory =Cookies.get('adcategory');
   const VendorName =Cookies.get('vendorname');
-  const ratePerUnit = Cookies.get('rateperunit')
+  const ratePerUnit = Cookies.get('rateperunit');
+  //const minimumUnit = Cookies.get('minimumunit');
+  const minimumUnit = 15;
+  const defUnits =Cookies.get('defunit');
 
-  useEffect(() => setMarginPercentage((margin/qty)*100))
+  useEffect(() => {
+  //setMargin((margin/1).toFixed(2))
+  setMarginPercentage(((margin/(qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)))*100).toFixed(2))
+})
+  useEffect(() =>{
+  if(selectedDayRange === ""){
+    setSelectedDayRange(dayRange[0]);
+  }
+  if(unit === ""){
+    setUnit(defUnits);
+  }
+}
+  )
+
 
   const greater = ">"
   return (
@@ -172,19 +188,23 @@ const AdDetailsPage = () => {
               value={qtySlab}
               onChange={e => setQtySlab(e.target.value)}
             /> */}
-            
-            <label className="font-bold">Quantity</label>
-            <div className="flex w-full mb-4">
+            {/*qty<minimumUnit ? 'Quantity is lesser than minimum' : ''*/}
+
+            <label className="font-bold">Quantity </label>
+            <div className="flex w-full">
               <input
-                className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                className="w-full border border-gray-300 p-2 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                 type="number"
                 placeholder="Ex: 15"
                 value={qty}
-                onChange={e => setQty(e.target.value)}
+                //value={minimumUnit > qty ? minimumUnit : qty}
+                onChange={e => {setQty(e.target.value)}}
               />
+              
               <div className="relative">
                 <select
                   className="border-l border-gray-300 rounded-r-lg p-2"
+                  defaultValue={defUnits}
                   value={unit}
                   onChange={e => setUnit(e.target.value)}
                 >
@@ -196,8 +216,9 @@ const AdDetailsPage = () => {
                 </select>
               </div>
             </div>
-
-            <label className="font-bold">Campaign Duration</label>
+            <label className='text-red-300'>{qty<minimumUnit ? 'Quantity is lesser than minimum' : ''}</label>
+<br/>
+            <label className="font-bold mt-12 mb-4">Campaign Duration</label>
             <div className="flex w-full mb-4">
               <input
                 className="w-full border border-gray-300 p-2 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
@@ -240,8 +261,8 @@ const AdDetailsPage = () => {
               value={extraDiscount}
               onChange={e => setExtraDiscount(e.target.value)}
             />
-             <label className="font-bold">Price(Rs): {((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))+(margin - extraDiscount))*(1.18)} </label>
-            <label className="mt-1 text-sm mb-4">({qty} x {ratePerUnit} x {campaignDuration === 0 ? 1 : campaignDuration} = {qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)} + Rs. {margin} Margin Amount - Rs. {extraDiscount} Discount Amount + 18% GST = Receivable (incl. GST))</label>
+             <label className="font-bold">Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))+(margin - extraDiscount))*(1.18)).toFixed(2)} </label>
+            <label className="mt-1 text-sm mb-4">({qty} x {(ratePerUnit/1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} = {((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))/1).toFixed(2)} + Rs. {(margin/1).toFixed(2)} Margin Amount - Rs. {(extraDiscount/1).toFixed(2)} Discount Amount + 18% GST = Receivable (incl. GST))</label>
             
             <br /><br /><div className='flex flex-col items-center justify-center'>
             <button className=' bg-green-500 hover:bg-green-600 px-4 py-2 rounded-full transition-all duration-300 ease-in-out text-white'
@@ -249,12 +270,11 @@ const AdDetailsPage = () => {
            >
 Checkout
             </button>
-            <label className="text-sm mb-4">Ad Medium: {rateName}</label>
-            <label className="mt-1 text-sm mb-4">Ad Type: {adType}</label>
-            <label className="mt-1 text-sm mb-4">Ad Category: {adCategory}</label>
-            <label className="mt-1 text-sm mb-4">Vendor Name: {VendorName}</label>
-            <label className="font-bold mr-4">Rate Per Unit:</label>
-            <label className="mt-1 text-sm mb-4">Rs. {ratePerUnit}</label>
+            <label className="text-sm mb-1">Ad Medium: {rateName}</label>
+            <label className="mt-1 text-sm mb-1">Ad Type: {adType}</label>
+            <label className="mt-1 text-sm mb-1">Ad Category: {adCategory}</label>
+            <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
+            <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit/1).toFixed(2)}</label>
             <br></br>
             <br></br>
             </div>
@@ -268,7 +288,7 @@ Checkout
                 className="text-black px-2 py-1 rounded text-center"
                 onClick={() => {
                   //routers.push('../addenquiry');
-
+                  window.location.reload()
                 }}
               >
                 <svg
@@ -295,12 +315,12 @@ Checkout
           <h1 className='mb-2 text-red-400 font-semibold'>Ad Category : {adCategory}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Vendor Name : {VendorName}</h1>
           {/* <h1 className='mb-2 text-red-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-          <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {units[1]}</h1>
+          <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {unit}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Campaign Duration : {campaignDuration} {selectedDayRange}</h1>
-          <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {margin}</h1>
+          <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {(margin/1).toFixed(2)}</h1>
           <h1 className='mb-2 text-red-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
-          <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {extraDiscount}</h1>
-          <h1 className='mb-14 text-red-400 font-semibold'>Price : {((qty * ratePerUnit * campaignDuration === 0 ? 1 : campaignDuration)+(margin - extraDiscount))*(1.18)}</h1>
+          <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {(extraDiscount/1).toFixed(2)}</h1>
+          <h1 className='mb-14 text-red-400 font-semibold'>Price : {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))+(margin - extraDiscount))*(1.18)).toFixed(2)}</h1>
 
 
           <h1 className='mb-4 font-semibold'>Client Details</h1>
