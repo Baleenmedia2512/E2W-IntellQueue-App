@@ -2,23 +2,23 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import AdCategoryPage from './adCategory';
 
-const radioOptions = [
-  { id: 1, label: 'Option 1', description: 'Description for Option 1' },
-  { id: 4, label: 'Option 4', description: 'Description for Option 4' },
-  { id: 5, label: 'Option 5', description: 'Description for Option 5' },
-  { id: 6, label: 'Option 6', description: 'Description for Option 6' },
-];
-
 const AdTypePage = ({data}) => {
-  const [selectedAdType, setSelectedAdType] = useState('');
+  const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const [cat, setCat] = useState(false);
   const routers = useRouter();
+
+  const [searchInput, setSearchInput] = useState('');
+
+  const handleSearchInputChange = (event) => {
+    setSearchInput(event.target.value);
+  };
 
   useEffect(() => {
     const username = Cookies.get('username');
@@ -37,13 +37,24 @@ const AdTypePage = ({data}) => {
     }
   }, [routers]);
 
-  const filteredData = datas
+  const filteredTypeofAd = datas
   .filter(item => item.rateName === data)
+  .filter((value, index, self) => 
+    self.findIndex(obj => obj.typeOfAd === value.typeOfAd) === index
+  )
+  .sort((a, b) => a.typeOfAd.localeCompare(b.typeOfAd))
+  ;
+
+  const filteredData = datas
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adType === value.adType) === index
   )
   .sort((a, b) => a.adType.localeCompare(b.adType))
   ;
+
+  const searchedType = filteredData.filter((optionn) =>
+    optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
+  );
 
   return (
     <div>
@@ -76,16 +87,36 @@ const AdTypePage = ({data}) => {
           </button></>
       </div>
       <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
+      
 
       <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('typ', false)
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-      <ul className="flex flex-wrap items-center justify-center mx-[8%]">
-        {filteredData.map((option) => (
+    <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {data}</h1>
+    <div className='mx-[8%] relative'>
+          <input
+          className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+        type="text"
+        value={searchInput}
+        onChange={handleSearchInputChange}
+        placeholder="Search"
+      />
+      <div className="absolute top-0 right-0 mt-2 mr-3">
+          <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
+        </div></div>
+        <div className="flex flex-col mx-[8%]">
+        {filteredTypeofAd.map((optionss) => (
+          <label
+            key={optionss.typeOfAd}
+          >
+            <div className="text-lg font-bold mt-8">{searchedType.filter(item => item.typeOfAd === optionss.typeOfAd).length>0 && (optionss.typeOfAd)}</div>
+
+            <ul className="flex flex-col items-center">
+        {searchedType.filter(item => item.typeOfAd === optionss.typeOfAd).map((option) => (
           <label
             key={option.adType}
-            className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
-              setSelectedAdType(option.adType);
+              setSelectedAdType(option);
               setCat(true);
             }}
           >
@@ -93,6 +124,11 @@ const AdTypePage = ({data}) => {
           </label>
         ))}
       </ul>
+          </label>
+        ))}
+      </div>
+
+      
       </div>)}
       </div>
   )

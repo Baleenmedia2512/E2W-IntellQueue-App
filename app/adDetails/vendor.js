@@ -76,15 +76,16 @@ const VendorPage = ({details}) => {
             className='relative flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
               setSelectedVendor(option);
-              Cookies.set('adMediumSelected', true);
-              Cookies.set('ratename', option.rateName);
-              Cookies.set('adtype', option.adType);
-              Cookies.set('adcategory', option.adCategory);
-              Cookies.set('vendorname', option.VendorName);
-              Cookies.set('rateperunit', option.ratePerUnit)
-              Cookies.set('minimumunit', option.minimumUnit);
-              Cookies.set('defunit', option.Units);
-              window.location.reload() //minimumUnit
+              //Cookies.set('adMediumSelected', true);
+              // Cookies.set('ratename', option.rateName);
+              // Cookies.set('adtype', option.adType);
+              // Cookies.set('adcategory', option.adCategory);
+              // Cookies.set('vendorname', option.VendorName);
+              // Cookies.set('rateperunit', option.ratePerUnit)
+              // Cookies.set('minimumunit', option.minimumUnit);
+              // Cookies.set('defunit', option.Units);
+              window.location.reload() 
+              //minimumUnit
             //  setPage(true);
             }}
           >

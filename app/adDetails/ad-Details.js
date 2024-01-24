@@ -7,156 +7,10 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import AdTypePage from './adType';
-
-const AdMediumPage = () => {
-  const [selectedAdMedium, setSelectedAdMedium] = useState('');
-  const [datas, setDatas] = useState([]);
-  const [type, setType] = useState(false);
-  const routers = useRouter();
-
-  const [searchInput, setSearchInput] = useState('');
-
-  const handleSearchInputChange = (event) => {
-    setSearchInput(event.target.value);
-  };
-
-  // const handleOptionChange = (option) => {
-  //   //setSelectedOption(option);
-  //   setSelectedOption((prevSelectedOption) => 
-  //   prevSelectedOption === option ? null : option
-  // );
-  // };
-
-  const datasOptions = datas
-    .filter((value, index, self) =>
-      self.findIndex(obj => obj.rateName === value.rateName) === index
-    )
-    .sort((a, b) => a.rateName.localeCompare(b.rateName));
-  //   .map((option) => ({
-  //    // if(option.rateName === 'Automobile'){
-  //     ...option,
-  //     icon: `https://t3.ftcdn.net/jpg/01/71/13/24/360_F_171132449_uK0OO5XHrjjaqx5JUbJOIoCC3GZP84Mt.jpg`
-  //  // }
-  //   }));
-
-  // Filtered options based on the search input
-  const searchedOptions = datasOptions.filter((option) =>
-    option.rateName.toLowerCase().includes(searchInput.toLowerCase())
-  );
-
-  const icons = (iconValue) => {
-    if (iconValue === 'Automobile') {
-      return (<Image src="/images/school-bus.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Newspaper') {
-      return (<Image src="/images/newspaper.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Print Services') {
-      return (<Image src="/images/printer.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Production') {
-      return (<Image src="/images/smart-tv.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Radio Ads') {
-      return (<Image src="/images/radio.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Road Side') {
-      return (<Image src="/images/road-map.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Screen Branding') {
-      return (<Image src="/images/branding.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Test') {
-      return (<Image src="/images/test.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'TV') {
-      return (<Image src="/images/tv-monitor.png" alt="car Icon" width={60} height={60} />);
-    }
-  }
-
-  useEffect(() => {
-    const username = Cookies.get('username');
-
-    if (selectedAdMedium !== '') {
-      setType((type) => Cookies.get('typ'))
-    }
-
-    if (!username) {
-      routers.push('/login');
-    } else {
-      fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
-        .then((response) => response.json())
-        .then((data) => setDatas(data))
-        .catch((error) => console.error(error));
-    }
-  }, [routers]);
-
-  return (
-    <div>
-      {type && (<AdTypePage data={selectedAdMedium} />)}
-      {!type && (
-        <div>
-          <div className="flex flex-row justify-between mx-[8%] mt-8">
-
-            <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
-              <button
-                className="px-2 py-1 rounded text-center"
-                onClick={() => {
-                  routers.push('../addenquiry')
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="h-6 w-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button></>
-          </div>
-          <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
-
-          <button className='mx-[8%] mb-6 hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
-          }> <FontAwesomeIcon icon={faArrowLeft} /> </button><br/>
-          <div className='mx-[8%] relative'>
-          <input
-          className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
-        type="text"
-        value={searchInput}
-        onChange={handleSearchInputChange}
-        placeholder="Search"
-      />
-      <div className="absolute top-0 right-0 mt-2 mr-3">
-          <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
-        </div></div>
-          <ul className="mx-[8%] mb-8 justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
-            {searchedOptions.map((option) => (<>
-              {option.rateName !== 'Newspaper' && (
-                <label
-                  key={option.rateName}
-                  className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg  ${selectedAdMedium === option ? 'border-lime-500 bg-stone-100' : 'border-gray-300 bg-sky-400 hover:bg-violet-800'
-                    }`}
-                  //    htmlFor={`option-${option.id}`}
-                  onClick={() => {
-                    setSelectedAdMedium(option.rateName);
-                    setType(true);
-                  }}
-                >
-                  <div className="text-lg font-bold mb-2 flex items-center justify-center">{option.rateName}</div>
-                  <div className='mb-2 flex items-center justify-center'>{icons(option.rateName)}</div>
-                </label>)}</>
-            ))
-            }
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const minimumUnit = Cookies.get('minimumunit');
 const AdDetailsPage = () => {
+    const [selectedVendor, setSelectedVendor] = useState("");
   const [qtySlab, setQtySlab] = useState('')
   const [qty, setQty] = useState(minimumUnit)
   const [selectedDayRange, setSelectedDayRange] = useState('');
@@ -165,15 +19,17 @@ const AdDetailsPage = () => {
   const [margin, setMargin] = useState(0);
   const [marginPercentage, setMarginPercentage] = useState(0)
   const [extraDiscount, setExtraDiscount] = useState(0)
+  const [slabData, setSlabData] = useState([])
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const units = ['Unit', 'Sec', 'Spot', 'Million Views', 'Minutes', 'SQFT'];
   const [checkout, setCheckout] = useState(true);
+  const [datas, setDatas] = useState([]);
 
   const clientName = Cookies.get('clientname');
   const clientNumber = Cookies.get('clientnumber');
   const clientEmail = Cookies.get('clientemail');
   const selectedSource = Cookies.get('selectedsource');
-
+  const rateId = Cookies.get('rateId');
   const rateName = Cookies.get('ratename');
   const adType = Cookies.get('adtype');
   const adCategory = Cookies.get('adcategory');
@@ -194,8 +50,40 @@ const AdDetailsPage = () => {
     if (unit === "") {
       setUnit(defUnits);
     }
+    if (margin === 0){
+      setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
+    }
   }
   )
+
+  const fetchAdQtySlab = () => {
+    fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRatesId=${rateId}`)
+      .then((response) => response.json())
+      .then((data) => console.log(data))
+      .catch((error) => console.error(error))
+  }
+
+  useEffect(() => {
+    const username = Cookies.get('username');
+    //console.log(data);
+    if (!username) {
+      routers.push('/login');
+    } else {
+      fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php') //FetchQtySlab.php
+        .then((response) => response.json())
+        .then((data) => setDatas(data))
+        .catch((error) => console.error(error));
+        //fetchAdQtySlab()
+    }
+  }, );
+
+  const filteredData = datas
+  .filter(item => item.adCategory === adCategory && item.adType === adType)
+  .filter((value, index, self) => 
+    self.findIndex(obj => obj.VendorName === value.VendorName) === index
+  )
+  .sort((a, b) => a.VendorName.localeCompare(b.VendorName))
+  ;
 
 
   const greater = ">"
@@ -204,6 +92,28 @@ const AdDetailsPage = () => {
       {checkout === true &&
         (
           <div className='mx-[8%]'>
+            <div className='flex flex-col'>
+            <label className=" mb-1">Ad Medium: {rateName}</label>
+              <label className="mt-1 mb-1">Ad Type: {adType}</label>
+              <label className="mt-1 mb-1">Ad Category: {adCategory}</label>
+              {/* <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
+              <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label> */}
+            </div>
+            <br></br>
+            <label className="font-bold">Vendor</label>
+            <select
+                  className="border w-full border-gray-300 rounded-lg mb-4 p-2"
+                 
+                  value={selectedVendor}
+                  onChange={e => setSelectedVendor(e.target.value)}
+                >
+                  {filteredData.map((option, index) => (
+                    <option className='rounded-lg' key={index} value={option.VendorName}>
+                     Rs.{(ratePerUnit/1).toFixed(2)} - 7 days - {option.VendorName}
+                    </option>
+                  ))}
+                </select>
+                <br/>
             <label className="font-bold">Quantity Slab ({greater})</label>
             <input
               className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
@@ -226,7 +136,7 @@ const AdDetailsPage = () => {
               />
 
               <div className="relative">
-                <select
+                {/* <select
                   className="border-l border-gray-300 rounded-r-lg p-2"
                   defaultValue={defUnits}
                   value={unit}
@@ -237,7 +147,8 @@ const AdDetailsPage = () => {
                       {option}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <label className='border-1'>{defUnits}</label>
               </div>
             </div>
             <label className='text-red-300'>{qty < minimumUnit ? 'Quantity is lesser than minimum' : ''}</label>
@@ -294,13 +205,6 @@ const AdDetailsPage = () => {
               >
                 Checkout
               </button>
-              <label className="text-sm mb-1">Ad Medium: {rateName}</label>
-              <label className="mt-1 text-sm mb-1">Ad Type: {adType}</label>
-              <label className="mt-1 text-sm mb-1">Ad Category: {adCategory}</label>
-              <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
-              <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label>
-              <br></br>
-              <br></br>
             </div>
           </div>)
       }
@@ -312,7 +216,7 @@ const AdDetailsPage = () => {
                 className="text-black px-2 py-1 rounded text-center"
                 onClick={() => {
                   //routers.push('../addenquiry');
-                  window.location.reload()
+                  setCheckout(true);
                 }}
               >
                 <svg
@@ -337,13 +241,13 @@ const AdDetailsPage = () => {
             <h1 className='mb-2 text-red-400 font-semibold'>Ad Medium : {rateName}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Ad Type : {adType}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Ad Category : {adCategory}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Vendor Name : {VendorName}</h1>
+            {/* <h1 className='mb-2 text-red-400 font-semibold'>Vendor Name : {VendorName}</h1> */}
             {/* <h1 className='mb-2 text-red-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-            <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {unit}</h1>
+            <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {defUnits}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Campaign Duration : {campaignDuration} {selectedDayRange}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
+            {/* <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1>
+            <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
             <h1 className='mb-14 text-red-400 font-semibold'>Price : {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</h1>
 
 
@@ -361,29 +265,15 @@ const AdDetailsPage = () => {
             >
               Send Quote
             </button>
-            <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
+            </div>
+        </div>
+      )}
+      <div className='flex flex-col justify-center items-center'>
+      <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
               is higher
             </p>
             <p className='font-bold'>Quote Valid till 13/01/2024</p></div>
-        </div>
-      )}
     </div>
   )
 }
-
-const AdDetails = () => {
-  const [adDetailsSelected, setAdDetailsSelected] = useState(false);
-
-  useEffect(() => {
-    setAdDetailsSelected(Cookies.get('adMediumSelected'))
-
-  }, [])
-
-  return (
-    <div>
-      {adDetailsSelected ? <AdDetailsPage /> : <AdMediumPage />}
-    </div>
-  )
-}
-
-export default AdMediumPage;
+export default AdDetailsPage;
