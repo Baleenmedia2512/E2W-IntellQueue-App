@@ -114,7 +114,7 @@ export const AdMediumPage = () => {
                 </svg>
               </button></>
           </div>
-          <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
+          {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
 
           <button className='mx-[8%] mb-6 hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
           }> <FontAwesomeIcon icon={faArrowLeft} /> </button><br/>

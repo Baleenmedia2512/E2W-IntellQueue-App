@@ -70,7 +70,7 @@ const AdCategoryPage = () => {
       {showAdTypePage && (<AdTypePage />)}
       {(!vend && showAdTypePage === false) && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
-        <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Edition-Remarks</h1>
+        <> <h1 className='text-2xl font-bold text-center  mb-4'>Select Edition-Remarks</h1>
           <button
             className="text-black px-2 py-1 rounded text-center"
             onClick={() => {
@@ -93,12 +93,12 @@ const AdCategoryPage = () => {
             </svg>
           </button></>
       </div>
-      <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1>
+      {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
 
       <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adtype'); setShowAdTypePage(true)}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-    <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {Cookies.get('ratename')}</h1>
-      <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1>
+    <h1 className='mx-[8%] mb-2 font-semibold'>{Cookies.get('ratename')} - {adType}</h1>
+      {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
           <input
           className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
@@ -128,6 +128,7 @@ const AdCategoryPage = () => {
               Cookies.set('adMediumSelected', true);
               //Cookies.set('ratename', options.rateName);
               //Cookies.set('adtype', options.adType);
+              Cookies.set('typeofad', options.typeOfAd);
               Cookies.set('adcategory', options.adCategory);
               Cookies.set('rateperunit', options.ratePerUnit)
               Cookies.set('minimumunit', options.minimumUnit);
@@ -136,7 +137,7 @@ const AdCategoryPage = () => {
               setVend(true)
             }}
           >
-            <div className="text-lg font-bold flex items-center justify-center">{options.lastName}</div>
+            <div className="text-lg font-bold text-nowrap items-center justify-center">{options.lastName}</div>
 </label>))
               }
             </ul>

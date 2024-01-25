@@ -27,7 +27,6 @@ const AdTypePage = () => {
 
     if(Cookies.get('adtype')){
       setCat(true)
-      
       } else{
         setCat(false)
       }
@@ -60,6 +59,13 @@ const AdTypePage = () => {
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
 
+  const moveToPreviousPage = (adMedium) => {
+    if(adMedium){
+      Cookies.remove('ratename'); setShowAdMedium(true)
+    } else {
+      setSelectedAdType2(null)
+    }
+  }
   const searchedType2 = filteredData.filter((optionn) =>
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
@@ -94,12 +100,12 @@ const AdTypePage = () => {
             </svg>
           </button></>
       </div>
-      <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
+      {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
       
 
-      <button className='mx-[8%] mb-6 hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => {Cookies.remove('ratename'); setShowAdMedium(true)}
+      <button className='mx-[8%] mb-6 hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => {moveToPreviousPage(!selectedAdType2)}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-    <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {Cookies.get('ratename')}</h1>
+    <h1 className='mx-[8%] mb-2 font-semibold'>{Cookies.get('ratename')}</h1>
     <div className='mx-[8%] relative'>
           <input
           className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
@@ -112,7 +118,7 @@ const AdTypePage = () => {
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
         <div>
-          {!selectedAdType2 ? (
+          {!selectedAdType2? (
         <div className="flex flex-col mx-[8%]">
         {searchedType.map((optionss) => (
           <label
@@ -124,12 +130,12 @@ const AdTypePage = () => {
               setSelectedAdType2(optionss);
           }}}
           >
-            <div className="text-lg font-bold mt-8">{optionss.typeOfAd}</div>
+            <div className="text-lg font-bold flex items-center justify-center">{optionss.typeOfAd}</div>
 
           </label>
         ))}
-      </div>): (searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1) ? (
-      <ul className="flex flex-col items-center">
+      </div>): (searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1)? (
+      <ul className="flex flex-col items-center mx-[8%]">
         {console.log(selectedAdType2)}
           {searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).map((option) => (
             <label
