@@ -9,18 +9,13 @@ import { useRouter } from 'next/navigation';
 import VendorPage from './vendor';
 import AdDetailsPage from './ad-Details';
 
-const categoryOptions = [
-  { id: 1, label: 'Category 1', description: 'Description for Option 1' },
-  { id: 4, label: 'Category 4', description: 'Description for Option 4' },
-  { id: 5, label: 'Category 5', description: 'Description for Option 5' },
-  { id: 6, label: 'Category 6', description: 'Description for Option 6' },
-];
 
 const AdCategoryPage = ({categories}) => {
   const [selectedAdCategory, setSelectedAdCategory] = useState(null);
   const [datas, setDatas] = useState([]);
   const [vend, setVend] = useState(false);
   const routers = useRouter();
+  
 
   const [searchInput, setSearchInput] = useState('');
 
@@ -136,6 +131,7 @@ const AdCategoryPage = ({categories}) => {
               Cookies.set('rateperunit', options.ratePerUnit)
               Cookies.set('minimumunit', options.minimumUnit);
               Cookies.set('defunit', options.Units);
+              Cookies.set('rateId', options.rateId)
               setVend(true)
             }}
           >

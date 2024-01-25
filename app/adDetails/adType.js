@@ -7,11 +7,14 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import AdCategoryPage from './adCategory';
+import AdType2Page from './ad-Type-2';
 
 const AdTypePage = ({data}) => {
   const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const [cat, setCat] = useState(false);
+  const [ty, setTy] = useState(false);
+  const [selectedAdType2, setSelectedAdType2] = useState(null);
   const routers = useRouter();
 
   const [searchInput, setSearchInput] = useState('');
@@ -23,9 +26,9 @@ const AdTypePage = ({data}) => {
   useEffect(() => {
     const username = Cookies.get('username');
 
-    if(selectedAdType !== ""){
-      setCat((cat) => Cookies.get('categ'))
-      }
+    // if(selectedAdType !== ""){
+    //   setCat((cat) => Cookies.get('categ'))
+    //   }
     console.log(data);
     if (!username) {
       routers.push('/login');
@@ -52,7 +55,11 @@ const AdTypePage = ({data}) => {
   .sort((a, b) => a.adType.localeCompare(b.adType))
   ;
 
-  const searchedType = filteredData.filter((optionn) =>
+  const searchedType = filteredTypeofAd.filter((optionn) =>
+    optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
+  const searchedType2 = filteredData.filter((optionn) =>
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
 
@@ -103,31 +110,40 @@ const AdTypePage = ({data}) => {
       <div className="absolute top-0 right-0 mt-2 mr-3">
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
+        <div>
+          {!selectedAdType2 ? (
         <div className="flex flex-col mx-[8%]">
         {filteredTypeofAd.map((optionss) => (
           <label
             key={optionss.typeOfAd}
-          >
-            <div className="text-lg font-bold mt-8">{searchedType.filter(item => item.typeOfAd === optionss.typeOfAd).length>0 && (optionss.typeOfAd)}</div>
-
-            <ul className="flex flex-col items-center">
-        {searchedType.filter(item => item.typeOfAd === optionss.typeOfAd).map((option) => (
-          <label
-            key={option.adType}
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
-              setSelectedAdType(option);
-              setCat(true);
-            }}
+            {
+              setSelectedAdType2(optionss);
+          }}}
           >
-            <div className="text-lg font-bold flex items-center justify-center">{option.adType}</div>
-          </label>
-        ))}
-      </ul>
-          </label>
-        ))}
-      </div>
+            <div className="text-lg font-bold mt-8">{optionss.typeOfAd}</div>
 
+          </label>
+        ))}
+      </div>): (searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1) ? (
+      <ul className="flex flex-col items-center">
+        {console.log(selectedAdType2)}
+          {searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).map((option) => (
+            <label
+              key={option.adType}
+              className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
+              onClick={() => {
+                setSelectedAdType(option);
+                setTy(false);
+                 setCat(true);
+              }}
+            >
+              <div className="text-lg font-bold flex items-center justify-center">{option.adType}</div>
+            </label>
+          ))}
+        </ul>):setCat(true)}
+</div>
       
       </div>)}
       </div>

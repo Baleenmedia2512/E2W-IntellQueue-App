@@ -8,18 +8,20 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 
-const minimumUnit = Cookies.get('minimumunit');
+//const minimumUnit = Cookies.get('minimumunit');
 const AdDetailsPage = () => {
     const [selectedVendor, setSelectedVendor] = useState("");
+  const [slabData, setSlabData] = useState([])
   const [qtySlab, setQtySlab] = useState('')
-  const [qty, setQty] = useState(minimumUnit)
+  // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
+  const [qty, setQty] = useState(qtySlab)
   const [selectedDayRange, setSelectedDayRange] = useState('');
   const [campaignDuration, setCampaignDuration] = useState(0);
   const [unit, setUnit] = useState('')
-  
+  //const [datas, setDatas] = useState()
+
   const [marginPercentage, setMarginPercentage] = useState(15)
   const [extraDiscount, setExtraDiscount] = useState(0)
-  const [slabData, setSlabData] = useState([])
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const units = ['Unit', 'Sec', 'Spot', 'Million Views', 'Minutes', 'SQFT'];
   const [checkout, setCheckout] = useState(true);
@@ -33,7 +35,7 @@ const AdDetailsPage = () => {
   const rateName = Cookies.get('ratename');
   const adType = Cookies.get('adtype');
   const adCategory = Cookies.get('adcategory');
-  const VendorName = Cookies.get('vendorname');
+  //const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
   const [margin, setMargin] = useState((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * 15)/100);
 
@@ -44,7 +46,7 @@ const AdDetailsPage = () => {
     const multipliedAmount = (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))
     //setMargin((margin/1).toFixed(2))
     //setMarginPercentage(((margin / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
-  })
+  },[])
   useEffect(() => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[0]);
@@ -55,8 +57,23 @@ const AdDetailsPage = () => {
     // if (margin === 0){
     //   setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
     // }
+  },
+  [])
+
+  useEffect(() =>{
+    fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`)
+        .then((response) => {
+          // if (!response.ok) {
+          //   throw new Error(HTTP error! Status: ${response.status});
+          // }
+          return response.json();
+        })
+        .then((data) => setSlabData(data))
+        //.then((data) => console.log)
+        .catch((error) => console.error(error));
   }
-  )
+  ,[rateId])
+
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
@@ -88,7 +105,7 @@ const AdDetailsPage = () => {
         .catch((error) => console.error(error));
         //fetchAdQtySlab()
     }
-  }, );
+  }, []);
 
   const filteredData = datas
   .filter(item => item.adCategory === adCategory && item.adType === adType)
@@ -98,6 +115,8 @@ const AdDetailsPage = () => {
   .sort((a, b) => a.VendorName.localeCompare(b.VendorName))
   ;
 
+  const filteredData2 = slabData
+  .filter(item => item.StartQty === qtySlab)
 
   const greater = ">"
   return (
@@ -123,19 +142,25 @@ const AdDetailsPage = () => {
                 >
                   {filteredData.map((option, index) => (
                     <option className='rounded-lg' key={index} value={option.VendorName}>
-                     Rs.{(ratePerUnit/1).toFixed(2)} - 7 days - {option.VendorName}
+                     Rs.{(filteredData2.UnitPrice)} - 7 days - {option.VendorName}
                     </option>
                   ))}
                 </select>
                 <br/>
             <label className="font-bold">Quantity Slab ({greater})</label>
-            <input
-              className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-              type="number"
-              placeholder="Ex: 1 (meaning quantity > 1)"
-              value={qtySlab}
-              onChange={e => setQtySlab(e.target.value)}
-            />
+            <select
+                  className="border w-full border-gray-300 rounded-lg mb-4 p-2"
+                 
+                  value={qtySlab}
+                  onChange={e => {setQtySlab(e.target.value)
+                  setQty(e.target.value)}}
+                >
+                  {slabData.map((option, index) => (
+                    <option className='rounded-lg' key={index} value={option.StartQty}>
+                     {option.StartQty}
+                    </option>
+                  ))}
+                </select>
             {/*qty<minimumUnit ? 'Quantity is lesser than minimum' : ''*/}
 
             <label className="font-bold">Quantity </label>
@@ -144,6 +169,7 @@ const AdDetailsPage = () => {
                 className="w-full border border-gray-300 p-2 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                 type="number"
                 placeholder="Ex: 15"
+                defaultValue={qtySlab}
                 value={qty}
                 //value={minimumUnit > qty ? minimumUnit : qty}
                 onChange={e => { setQty(e.target.value) }}
@@ -166,7 +192,7 @@ const AdDetailsPage = () => {
                 <label className='border-1'>{defUnits}</label>
               </div>
             </div>
-            <label className='text-red-300'>{qty < minimumUnit ? 'Quantity is lesser than minimum' : ''}</label>
+            <label className='text-red-300'>{qty < qtySlab ? 'Quantity is lesser than minimum' : ''}</label>
             <br />
             <label className="font-bold mt-12 mb-4">Campaign Duration</label>
             <div className="flex w-full mb-4">
