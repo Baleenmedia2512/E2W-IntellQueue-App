@@ -1,14 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
 import Cookies from 'js-cookie';
-import { useRouter } from 'next/navigation';
+import AdCategoryPage from './adCategory';
 
 const minimumUnit = Cookies.get('minimumunit');
+
 const AdDetailsPage = () => {
     const [selectedVendor, setSelectedVendor] = useState("");
   const [qtySlab, setQtySlab] = useState('')
@@ -16,12 +12,11 @@ const AdDetailsPage = () => {
   const [selectedDayRange, setSelectedDayRange] = useState('');
   const [campaignDuration, setCampaignDuration] = useState(0);
   const [unit, setUnit] = useState('')
-  
+  const [showAdCategoryPage, setShowAdCategoryPage] = useState(false);
   const [marginPercentage, setMarginPercentage] = useState(15)
   const [extraDiscount, setExtraDiscount] = useState(0)
   const [slabData, setSlabData] = useState([])
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
-  const units = ['Unit', 'Sec', 'Spot', 'Million Views', 'Minutes', 'SQFT'];
   const [checkout, setCheckout] = useState(true);
   const [datas, setDatas] = useState([]);
 
@@ -33,7 +28,6 @@ const AdDetailsPage = () => {
   const rateName = Cookies.get('ratename');
   const adType = Cookies.get('adtype');
   const adCategory = Cookies.get('adcategory');
-  const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
   const [margin, setMargin] = useState((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * 15)/100);
 
@@ -45,6 +39,7 @@ const AdDetailsPage = () => {
     //setMargin((margin/1).toFixed(2))
     //setMarginPercentage(((margin / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
   })
+
   useEffect(() => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[0]);
@@ -57,6 +52,7 @@ const AdDetailsPage = () => {
     // }
   }
   )
+
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
@@ -102,9 +98,11 @@ const AdDetailsPage = () => {
   const greater = ">"
   return (
     <div className=" mt-8 mx-[8%]">
-      {checkout === true &&
+      {showAdCategoryPage && (<AdCategoryPage />)}
+      {(checkout === true && showAdCategoryPage === false) && 
         (
           <div className='mx-[8%]'>
+            <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button>
             <label className="text-center mb-1">{rateName} - {adType} - {adCategory}</label><br/>
               {/* <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
               <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label> */}
@@ -229,6 +227,12 @@ const AdDetailsPage = () => {
                 Checkout
               </button>
             </div>
+            <div className='flex flex-col justify-center items-center'>
+      <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
+              is higher
+            </p>
+            <p className='font-bold'>Quote Valid till 13/01/2024</p></div>
+    
           </div>)
       }
       {checkout === false && (
@@ -291,12 +295,8 @@ const AdDetailsPage = () => {
             </div>
         </div>
       )}
-      <div className='flex flex-col justify-center items-center'>
-      <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
-              is higher
-            </p>
-            <p className='font-bold'>Quote Valid till 13/01/2024</p></div>
-    </div>
+     </div> 
   )
+  
 }
 export default AdDetailsPage;

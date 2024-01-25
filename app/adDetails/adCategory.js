@@ -3,11 +3,10 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
-import VendorPage from './vendor';
 import AdDetailsPage from './ad-Details';
+import AdTypePage from './adType';
 
 const categoryOptions = [
   { id: 1, label: 'Category 1', description: 'Description for Option 1' },
@@ -16,11 +15,12 @@ const categoryOptions = [
   { id: 6, label: 'Category 6', description: 'Description for Option 6' },
 ];
 
-const AdCategoryPage = ({categories}) => {
+const AdCategoryPage = () => {
   const [selectedAdCategory, setSelectedAdCategory] = useState(null);
   const [datas, setDatas] = useState([]);
   const [vend, setVend] = useState(false);
   const routers = useRouter();
+  const [showAdTypePage, setShowAdTypePage] = useState(false)
 
   const [searchInput, setSearchInput] = useState('');
 
@@ -29,7 +29,7 @@ const AdCategoryPage = ({categories}) => {
   };
 
   const filteredData = datas
-  .filter(item => item.adType === categories.adType)
+  .filter(item => item.adType === Cookies.get('adtype'))
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adCategory === value.adCategory) === index
   )
@@ -38,7 +38,7 @@ const AdCategoryPage = ({categories}) => {
 
   const splitNames = filteredData.map(item => {
     const [firstPart, secondPart] = item.adCategory.split(':');
-    const updatedFirstPart = (secondPart === undefined? categories.adType : firstPart);
+    const updatedFirstPart = (secondPart === undefined? Cookies.get('adtype') : firstPart);
     // console.log(updatedFirstPart)
     // console.log(secondPart)
     // console.log(firstPart)
@@ -58,7 +58,7 @@ const AdCategoryPage = ({categories}) => {
   useEffect(() => {
     const username = Cookies.get('username');
     if(selectedAdCategory){
-    setVend((vend) => Cookies.get('vendo'))
+    setVend(Cookies.get('vendo'))
     }
     if (!username) {
       routers.push('../login');
@@ -72,7 +72,8 @@ const AdCategoryPage = ({categories}) => {
 
   return (
     <div>
-      {!vend && (<div>
+      {showAdTypePage && (<AdTypePage />)}
+      {(!vend && showAdTypePage === false) && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Edition-Remarks</h1>
           <button
@@ -99,10 +100,10 @@ const AdCategoryPage = ({categories}) => {
       </div>
       <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1>
 
-      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('categ', false)
+      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adtype'); setShowAdTypePage(true)}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-    <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {categories.rateName}</h1>
-      <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {categories.adType}</h1>
+    <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {Cookies.get('ratename')}</h1>
+      <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {Cookies.get('adtype')}</h1>
       <div className='mx-[8%] relative'>
           <input
           className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
@@ -129,9 +130,9 @@ const AdCategoryPage = ({categories}) => {
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
               setSelectedAdCategory(options);
-              // Cookies.set('adMediumSelected', true);
-              Cookies.set('ratename', options.rateName);
-              Cookies.set('adtype', options.adType);
+              Cookies.set('adMediumSelected', true);
+              //Cookies.set('ratename', options.rateName);
+              //Cookies.set('adtype', options.adType);
               Cookies.set('adcategory', options.adCategory);
               Cookies.set('rateperunit', options.ratePerUnit)
               Cookies.set('minimumunit', options.minimumUnit);

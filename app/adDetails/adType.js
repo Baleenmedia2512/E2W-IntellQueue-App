@@ -3,17 +3,17 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
 import Cookies from 'js-cookie';
-import { useRouter } from 'next/navigation';
 import AdCategoryPage from './adCategory';
+import { useRouter } from 'next/navigation';
+import { AdMediumPage } from './page';
 
-const AdTypePage = ({data}) => {
+const AdTypePage = () => {
   const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const [cat, setCat] = useState(false);
   const routers = useRouter();
-
+  const [showAdMedium, setShowAdMedium] = useState(false);
   const [searchInput, setSearchInput] = useState('');
 
   const handleSearchInputChange = (event) => {
@@ -23,10 +23,11 @@ const AdTypePage = ({data}) => {
   useEffect(() => {
     const username = Cookies.get('username');
 
-    if(selectedAdType !== ""){
-      setCat((cat) => Cookies.get('categ'))
+    if(Cookies.get('adtype')){
+      setCat(true)
+      } else{
+        setCat(false)
       }
-    console.log(data);
     if (!username) {
       routers.push('/login');
     } else {
@@ -38,7 +39,7 @@ const AdTypePage = ({data}) => {
   }, [routers]);
 
   const filteredTypeofAd = datas
-  .filter(item => item.rateName === data)
+  .filter(item => item.rateName === Cookies.get('ratename'))
   .filter((value, index, self) => 
     self.findIndex(obj => obj.typeOfAd === value.typeOfAd) === index
   )
@@ -58,8 +59,9 @@ const AdTypePage = ({data}) => {
 
   return (
     <div>
-      {cat && (<AdCategoryPage categories={selectedAdType} />)}
-      {!cat && (
+      {cat && (<AdCategoryPage />)}
+      {showAdMedium && (<AdMediumPage />)}
+      {(!cat && !showAdMedium) && (
       <div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Type</h1>
@@ -67,7 +69,6 @@ const AdTypePage = ({data}) => {
             className="text-black px-2 py-1 rounded text-center"
             onClick={() => {
               routers.push('../addenquiry');
-              
             }}
           >
             <svg
@@ -89,9 +90,9 @@ const AdTypePage = ({data}) => {
       <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1>
       
 
-      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => Cookies.set('typ', false)
+      <button className='mx-[8%] mb-6 hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => {Cookies.remove('ratename'); setShowAdMedium(true)}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-    <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {data}</h1>
+    <h1 className='mx-[8%] mb-2 font-semibold'>Ad Medium : {Cookies.get('ratename')}</h1>
     <div className='mx-[8%] relative'>
           <input
           className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
@@ -116,6 +117,7 @@ const AdTypePage = ({data}) => {
             key={option.adType}
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
             onClick={() => {
+              Cookies.set('adtype', option.adType);
               setSelectedAdType(option);
               setCat(true);
             }}
@@ -127,9 +129,8 @@ const AdTypePage = ({data}) => {
           </label>
         ))}
       </div>
-
-      
-      </div>)}
+      </div>
+       )} 
       </div>
   )
 };
