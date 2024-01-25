@@ -16,8 +16,8 @@ const AdDetailsPage = () => {
   const [selectedDayRange, setSelectedDayRange] = useState('');
   const [campaignDuration, setCampaignDuration] = useState(0);
   const [unit, setUnit] = useState('')
-  const [margin, setMargin] = useState(0);
-  const [marginPercentage, setMarginPercentage] = useState(0)
+  
+  const [marginPercentage, setMarginPercentage] = useState(15)
   const [extraDiscount, setExtraDiscount] = useState(0)
   const [slabData, setSlabData] = useState([])
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
@@ -35,13 +35,15 @@ const AdDetailsPage = () => {
   const adCategory = Cookies.get('adcategory');
   const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
+  const [margin, setMargin] = useState((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * 15)/100);
 
   //const minimumUnit = 15;
   const defUnits = Cookies.get('defunit');
 
   useEffect(() => {
+    const multipliedAmount = (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))
     //setMargin((margin/1).toFixed(2))
-    setMarginPercentage(((margin / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
+    //setMarginPercentage(((margin / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
   })
   useEffect(() => {
     if (selectedDayRange === "") {
@@ -50,11 +52,22 @@ const AdDetailsPage = () => {
     if (unit === "") {
       setUnit(defUnits);
     }
-    if (margin === 0){
-      setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
-    }
+    // if (margin === 0){
+    //   setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
+    // }
   }
   )
+  const handleMarginChange = (event) => {
+    //const newValue = parseFloat(event.target.value);
+    setMargin(event.target.value);
+    setMarginPercentage(((event.target.value * 100) / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))))
+  };
+
+  const handleMarginPercentageChange = (event) => {
+    //const newPercentage = parseFloat(event.target.value);
+    setMarginPercentage(event.target.value);
+    setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value)/100);
+  };
 
   const fetchAdQtySlab = () => {
     fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRatesId=${rateId}`)
@@ -92,15 +105,16 @@ const AdDetailsPage = () => {
       {checkout === true &&
         (
           <div className='mx-[8%]'>
-            <div className='flex flex-col'>
-            <label className=" mb-1">Ad Medium: {rateName}</label>
-              <label className="mt-1 mb-1">Ad Type: {adType}</label>
-              <label className="mt-1 mb-1">Ad Category: {adCategory}</label>
+            <label className="text-center mb-1">{rateName} - {adType} - {adCategory}</label><br/>
               {/* <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
               <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label> */}
-            </div>
+              <label className="mt-1 font-semibold mb-4">Amount(Rs): {((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) / 1).toFixed(2)} = ({qty} {defUnits} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange})</label><br/>
+            <label className="font-semibold">Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Amount + {(margin / 1).toFixed(2)} Margin Amount - Rs. {(extraDiscount / 1).toFixed(2)} Discount Amount) </label><br/>
+            <label className="font-bold">Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST) </label>
+            <br/>
             <br></br>
             <label className="font-bold">Vendor</label>
+            
             <select
                   className="border w-full border-gray-300 rounded-lg mb-4 p-2"
                  
@@ -133,6 +147,7 @@ const AdDetailsPage = () => {
                 value={qty}
                 //value={minimumUnit > qty ? minimumUnit : qty}
                 onChange={e => { setQty(e.target.value) }}
+                onFocus={(e) => e.target.select()}
               />
 
               <div className="relative">
@@ -182,11 +197,20 @@ const AdDetailsPage = () => {
               type='number'
               placeholder='Ex: 4000'
               value={margin}
-              onChange={e => (setMargin(e.target.value))
-              }
+              onChange={handleMarginChange}
+              
             />
             <label className="mt-1 text-sm mb-4">Margin Percentage: {marginPercentage}%</label>
-
+            <input className='w-full'
+        type="range"
+        id="marginPercentage"
+        name="marginPercentage"
+        min="0"
+        max="100"
+        step="1"
+        value={marginPercentage}
+        onChange={handleMarginPercentageChange}
+      />
             <br></br>
             <br></br>
             <label className="font-bold">Extra Discount(Rs)</label>
@@ -196,10 +220,9 @@ const AdDetailsPage = () => {
               value={extraDiscount}
               onChange={e => setExtraDiscount(e.target.value)}
             />
-            <label className="font-bold">Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} </label>
-            <label className="mt-1 text-sm mb-4">({qty} x {(ratePerUnit / 1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} = {((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) / 1).toFixed(2)} + Rs. {(margin / 1).toFixed(2)} Margin Amount - Rs. {(extraDiscount / 1).toFixed(2)} Discount Amount + 18% GST = Receivable (incl. GST))</label>
-
-            <br /><br /><div className='flex flex-col items-center justify-center'>
+            
+            
+            <br /><div className='flex flex-col items-center justify-center'>
               <button className=' bg-green-500 hover:bg-green-600 px-4 py-2 rounded-full transition-all duration-300 ease-in-out text-white'
                 onClick={() => setCheckout(false)}
               >
