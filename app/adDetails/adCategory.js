@@ -66,13 +66,13 @@ const AdCategoryPage = () => {
   }, [routers]);
 
   return (
-    <div>
+    <div className='text-gray-200'>
       {showAdTypePage && (<AdTypePage />)}
       {(!vend && showAdTypePage === false) && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select Edition-Remarks</h1>
           <button
-            className="text-black px-2 py-1 rounded text-center"
+            className=" px-2 py-1 rounded text-center"
             onClick={() => {
               routers.push('../addenquiry');
             }}
@@ -101,7 +101,7 @@ const AdCategoryPage = () => {
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
           <input
-          className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+          className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
         type="text"
         value={searchInput}
         onChange={handleSearchInputChange}
@@ -122,7 +122,7 @@ const AdCategoryPage = () => {
               {searchedType.filter(item => item.firstName === option.firstName).map((options) => (
           <label
             key={options.adCategory}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
               setSelectedAdCategory(options);
               Cookies.set('adMediumSelected', true);

@@ -71,7 +71,7 @@ const AdTypePage = () => {
   );
 
   return (
-    <div>
+    <div className='text-white'>
       {cat && (<AdCategoryPage />)}
       {showAdMedium && (<AdMediumPage />)}
       {(!cat && !showAdMedium) && (
@@ -79,7 +79,7 @@ const AdTypePage = () => {
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Type</h1>
           <button
-            className="text-black px-2 py-1 rounded text-center"
+            className=" px-2 py-1 rounded text-center"
             onClick={() => {
               routers.push('../addenquiry');
             }}
@@ -108,7 +108,7 @@ const AdTypePage = () => {
     <h1 className='mx-[8%] mb-2 font-semibold'>{Cookies.get('ratename')}</h1>
     <div className='mx-[8%] relative'>
           <input
-          className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+          className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
         type="text"
         value={searchInput}
         onChange={handleSearchInputChange}
@@ -123,7 +123,7 @@ const AdTypePage = () => {
         {searchedType.map((optionss) => (
           <label
             key={optionss.typeOfAd}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
             {
               Cookies.set('adtype', optionss.adType)
@@ -140,7 +140,7 @@ const AdTypePage = () => {
           {searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).map((option) => (
             <label
               key={option.adType}
-              className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 bg-sky-400 hover:text-white hover:bg-violet-800'
+              className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
               onClick={() => {
                 Cookies.set('adtype', option.adType)
                 setSelectedAdType(option);

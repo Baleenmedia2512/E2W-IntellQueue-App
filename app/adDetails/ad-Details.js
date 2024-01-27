@@ -136,13 +136,13 @@ const AdDetailsPage = () => {
 
   const greater = ">"
   return (
-    <div className=" mt-8 mx-[8%]">
+    <div className=" mt-8 mx-[8%] text-gray-200">
       {showAdCategoryPage && (<AdCategoryPage />)}
       {(checkout === true && showAdCategoryPage === false) && 
         (
           <div className='lg:mx-[8%]'>
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
-          <div className='fixed top-2 bg-white'>
+          <div className='fixed top-2'>
             <button className='mb-6 mr-5 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
 
@@ -157,7 +157,7 @@ const AdDetailsPage = () => {
             <label className="font-bold">Vendor</label>
             
             <select
-                  className="border w-full border-gray-300 rounded-lg mb-4 p-2"
+                  className="border w-full border-gray-300 bg-purple-400 text-black rounded-lg mb-4 p-2"
                  
                   value={selectedVendor}
                   onChange={e => setSelectedVendor(e.target.value)}
@@ -171,7 +171,7 @@ const AdDetailsPage = () => {
                 <br/>
             <label className="font-bold">Quantity Slab ({greater})</label>
             <select
-              className="border w-full border-gray-300 rounded-lg mb-4 p-2"
+              className="border w-full border-gray-300 bg-purple-400 text-black rounded-lg mb-4 p-2"
               value={qtySlab}
               onChange={(e) => {
                 setQtySlab(e.target.value);
@@ -193,7 +193,7 @@ const AdDetailsPage = () => {
             <label className="font-bold">Quantity </label>
             <div className="flex w-full">
               <input
-                className="w-full border border-gray-300 p-2 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                className="w-full border border-gray-300 bg-purple-400 text-black p-2 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                 type="number"
                 placeholder="Ex: 15"
                 defaultValue={qtySlab}
@@ -224,7 +224,7 @@ const AdDetailsPage = () => {
             <label className="font-bold mt-12 mb-4">Campaign Duration</label>
             <div className="flex w-full mb-4">
               <input
-                className="w-full border border-gray-300 p-2 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                className="w-full border border-gray-300 bg-purple-400 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                 type="number"
                 placeholder="Ex: 3"
                 value={campaignDuration}
@@ -232,7 +232,7 @@ const AdDetailsPage = () => {
               />
               <div className="relative">
                 <select
-                  className="border-l border-gray-300 rounded-r-lg p-2"
+                  className="border-l border-gray-300 bg-purple-400 text-black rounded-lg p-2"
                   value={selectedDayRange}
                   onChange={e => setSelectedDayRange(e.target.value)}
                 >
@@ -246,7 +246,7 @@ const AdDetailsPage = () => {
             </div>
 
             <label className="font-bold">Margin Amount(Rs)</label>
-            <input className='w-full border border-gray-300 p-2 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
+            <input className='w-full border border-gray-300 bg-purple-400 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
               type='number'
               placeholder='Ex: 4000'
               value={margin}
@@ -267,7 +267,7 @@ const AdDetailsPage = () => {
             <br></br>
             <br></br>
             <label className="font-bold">Extra Discount(Rs)</label>
-            <input className='w-full border border-gray-300 p-2 mb-4 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
+            <input className='w-full border border-gray-300 bg-purple-400 text-black p-2 mb-4 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
               type='number'
               placeholder='Ex: 1000'
               value={extraDiscount}
@@ -276,7 +276,7 @@ const AdDetailsPage = () => {
             
             
             <br /><div className='flex flex-col items-center justify-center'>
-              <button className=' bg-green-500 hover:bg-green-600 px-4 py-2 rounded-full transition-all duration-300 ease-in-out text-white'
+              <button className=' bg-purple-500 hover:bg-lime-500 text-black px-4 py-2 rounded-full transition-all duration-300 ease-in-out'
                 onClick={() => setCheckout(false)}
               >
                 Checkout
@@ -295,7 +295,7 @@ const AdDetailsPage = () => {
           <div className="flex flex-row justify-between mt-8">
             <> <h1 className='text-2xl font-bold text-center mb-4'>Checkout</h1>
               <button
-                className="text-black px-2 py-1 rounded text-center"
+                className=" px-2 py-1 rounded text-center"
                 onClick={() => {
                   //routers.push('../addenquiry');
                   setCheckout(true);
@@ -319,25 +319,25 @@ const AdDetailsPage = () => {
           </div>
           <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
           <div className='lg:mx-[40%] w-full'>
-            <h1 className='mb-4 font-semibold'>AD Details</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Ad Medium : {rateName}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Ad Type : {adType}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Ad Category : {adCategory}</h1>
-            {/* <h1 className='mb-2 text-red-400 font-semibold'>Vendor Name : {VendorName}</h1> */}
-            {/* <h1 className='mb-2 text-red-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-            <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {unit}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Campaign Duration : {campaignDuration} {selectedDayRange}</h1>
-            {/* <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
-            <h1 className='mb-14 text-red-400 font-semibold'>Price : {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</h1>
+            <h1 className='mb-4 font-bold'>AD Details</h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Medium : <p className='text-gray-200'>{rateName}</p></h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Type : <div className='text-gray-200'>{adType}</div></h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Edition : <div className='text-gray-200'>{adCategory}</div></h1>
+            {/* <h1 className='mb-2 text-lime-400 font-semibold'>Vendor Name : {VendorName}</h1> */}
+            {/* <h1 className='mb-2 text-lime-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
+            <h1 className='mb-2 text-lime-400 font-semibold'>Quantity : <div className='text-gray-200'>{qty} {unit}</div></h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Campaign Duration : <div className='text-gray-200'>{campaignDuration} {selectedDayRange}</div></h1>
+            {/* <h1 className='mb-2 text-lime-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
+            <h1 className='mb-14 text-lime-400 font-semibold'>Price : <div className='text-gray-200'>{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div></h1>
 
 
-            <h1 className='mb-4 font-semibold'>Client Details</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Client Name : {clientName}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Client Number : {clientNumber}</h1>
-            <h1 className='mb-2 text-red-400 font-semibold'>Client E-Mail: {clientEmail}</h1>
-            <h1 className='mb-4 text-red-400 font-semibold'>Source : {selectedSource}</h1>
+            <h1 className='mb-4 font-bold'>Client Details</h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Client Name : <div className='text-gray-200'>{clientName}</div></h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Client Number : <div className='text-gray-200'>{clientNumber}</div></h1>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Client E-Mail: <div className='text-gray-200'>{clientEmail}</div></h1>
+            <h1 className='mb-4 text-lime-400 font-semibold'>Source : <div className='text-gray-200'>{selectedSource}</div></h1>
 
           </div>
           <div className='flex flex-col justify-center items-center'>

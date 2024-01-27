@@ -85,7 +85,7 @@ export const AdMediumPage = () => {
   }, [routers]);
 
   return (
-    <div>
+    <div className='text-white'>
       {type && (<AdTypePage data={selectedAdMedium} />)}
       {!type && (
         <div>
@@ -120,7 +120,7 @@ export const AdMediumPage = () => {
           }> <FontAwesomeIcon icon={faArrowLeft} /> </button><br/>
           <div className='mx-[8%] relative'>
           <input
-          className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+          className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
         type="text"
         value={searchInput}
         onChange={handleSearchInputChange}
@@ -130,11 +130,11 @@ export const AdMediumPage = () => {
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
           <ul className="mx-[8%] mb-8 justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
-            {searchedOptions.map((option) => (<>
+            {searchedOptions.map((option,index) => (<>
               {option.rateName !== 'Newspaper' && (
                 <label
                   key={option.rateName}
-                  className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg  ${selectedAdMedium === option ? 'border-lime-500 bg-stone-100' : 'border-gray-300 bg-sky-400 hover:bg-violet-800'
+                  className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg hover:bg-teal-300 ${(index)%4==0 || (index)%4==1 ? 'border-lime-400 bg-purple-400' : 'border-purple-400 bg-lime-400 '
                     }`}
                   //    htmlFor={`option-${option.id}`}
                   onClick={() => {
@@ -143,7 +143,7 @@ export const AdMediumPage = () => {
                     setType(true);
                   }}
                 >
-                  <div className="text-lg font-bold mb-2 flex items-center justify-center">{option.rateName}</div>
+                  <div className="text-lg font-bold mb-2 text-black flex items-center justify-center">{option.rateName}</div>
                   <div className='mb-2 flex items-center justify-center'>{icons(option.rateName)}</div>
                 </label>)}</>
             ))

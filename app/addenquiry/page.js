@@ -285,8 +285,9 @@ const ClientsData = () => {
     //   </div>
     // </div>
 
-    <div className="flex flex-col items-center justify-center mt-8 mx-[8%]">
+    <div className="flex flex-col justify-center mt-8 mx-[8%] text-white">
       <div className="mb-8 mt-8 cursor-pointer w-fit hover:transform hover:scale-110 transition-transform duration-300 ease-in-out" onClick={() => { moveToAdDetails() }}>
+      <h1 className='text-3x1'>Ad Details</h1>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="60"
@@ -329,9 +330,10 @@ const ClientsData = () => {
 
       <div className='w-full justify-center items-center'>
         <h1 className="font-bold text-3xl text-center mb-4 mt-4">BME - Enquiry. Enter enquiry details!</h1>
-        <label className="flex flex-col items-left text-lg text-gray-600 mb-2">Client Name</label>
+        {/* <h1 className='text-3xl'>Client Details</h1> */}
+        <label className="flex flex-col items-left text-lg mb-2">Client Name</label>
         <input
-          className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+          className="w-full border border-purple-400 bg-gray-600 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
           type="text"
           placeholder="Client Name"
           value={searchTerm}
@@ -356,7 +358,7 @@ const ClientsData = () => {
 
 <label className='mt-4'>Client Contact</label>
   <input
-    className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+    className="w-full border border-purple-400 bg-gray-600 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
     type="text"
     placeholder="Client Contact"
     value={clientNumber}
@@ -365,7 +367,7 @@ const ClientsData = () => {
 
   <label>Client Email</label>
   <input
-    className="w-full border border-purple-500 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+    className="w-full border border-purple-400 bg-gray-600 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
     type="email"
     placeholder="Client Email (optional)"
     value={clientEmail}
@@ -374,7 +376,7 @@ const ClientsData = () => {
 
   <label>Source</label>
   <Select
-    className="w-full mb-4 rounded-lg"
+    className="w-full mb-4 text-black bg-gray-500"
     value={{ label: selectedSource, value: selectedSource }}
     onChange={(selectedOption) => setSelectedSource(selectedOption.value)}
     options={sources.map((source) => ({ label: source, value: source }))}

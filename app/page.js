@@ -203,7 +203,7 @@ const RatesListPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 text-white">
       {modal && (
         <div className="fixed top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center modal">
           <div onClick={toggleModal} className="fixed top-0 left-0 right-0 bottom-0 bg-gray-800 opacity-75 overlay"></div>
@@ -225,14 +225,14 @@ const RatesListPage = () => {
           </div>
         </div>
       )}
-      <h1 className="text-3xl font-bold mb-4 text-black">Rates Validity</h1>
+      <h1 className="text-3xl font-bold mb-4 ">Rates Validity</h1>
       {showFilter &&
       <button onClick={() => { handleFilter()
         }}> <FontAwesomeIcon icon={faArrowLeft} /> </button>}
 
 {showFilter === false &&
       <button
-        className="bg-transparent border border-black px-4 py-2 absolute top-4 right-4 text-black"
+        className="bg-transparent border px-4 py-2 absolute top-4 right-4 "
         onClick={() => { handleFilter()
         }}
       >
@@ -257,7 +257,7 @@ const RatesListPage = () => {
       {showFilter &&
       <div class="filtering" className="d-flex px-20 justify-content-center">
         {/* Add your filter inputs using react-select */}
-        <label className='text-black'>Ad Medium</label><br/>
+        <label className=''>Ad Medium</label><br/>
         <Select className='mb-8 text-black'
           id='AdMedium'
           instanceId="AdMedium"
@@ -267,7 +267,7 @@ const RatesListPage = () => {
           options={createSelectOptions([...new Set(ratesData.flatMap((item) => item.rateName))])}
           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
         />
-        <label className='text-black'>Ad Type</label><br/>
+        <label className=''>Ad Type</label><br/>
         <Select className='mb-8 text-black'
           id='AdType'
           instanceId="AdType"
@@ -277,7 +277,7 @@ const RatesListPage = () => {
           value={createSelectOptions(filters.adType)}
           placeholder = 'Select Ad Type' 
         />
-        <label className='text-black'>Ad Category</label><br/>
+        <label className=''>Ad Category</label><br/>
         <Select className='mb-8 text-black'
           id='AdCategory'
           instanceId="AdCategory"
@@ -307,9 +307,9 @@ const RatesListPage = () => {
           value={{ label: filters.LastUsedUser, value: filters.remarks }}
           placeholder="Select Remarks"
         /> */}
-        <label className='text-black'>Vendor</label><br/>
+        <label className=''>Vendor</label><br/>
         <Select
-          className='mb-8 text-black'
+          className='mb-8 text-black bg-purple-400'
           id='Vendor'
           instanceId="Vendor"
           isMulti
@@ -404,7 +404,7 @@ const RatesListPage = () => {
         {filteredRates.map((item) => (
           <li
             key={item.rateId}
-            className={`border p-4 rounded-lg shadow-md ${
+            className={`border p-4 rounded-lg shadow-md bg-purple-400 ${
               selectedItems.includes(item) ? 'border-blue-500' : ''
             }`}
           >
