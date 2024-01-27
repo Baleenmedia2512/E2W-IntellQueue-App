@@ -134,7 +134,7 @@ const AdTypePage = () => {
 
           </label>
         ))}
-      </div>): (searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1)? (
+      </div>): (filteredData.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1)? (
       <ul className="flex flex-col items-center mx-[8%]">
         {console.log(selectedAdType2)}
           {searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).map((option) => (

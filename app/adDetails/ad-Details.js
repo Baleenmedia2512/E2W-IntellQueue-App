@@ -137,13 +137,13 @@ const AdDetailsPage = () => {
 
   const greater = ">"
   return (
-    <div className=" mt-8 mx-[8%] text-gray-200">
+    <div className=" mt-8 text-gray-200">
       {showAdCategoryPage && (<AdCategoryPage />)}
       {(checkout === true && showAdCategoryPage === false) && 
         (
-          <div className='lg:mx-[8%]'>
+          <div className='mx-[8%]'>
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
-          <div className='fixed top-2'>
+          <div className=''>
             <button className='mb-6 mr-5 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
 
@@ -153,8 +153,8 @@ const AdDetailsPage = () => {
               <label className="mt-1 font-semibold mb-4">* Amount(Rs): {((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) / 1).toFixed(2)} = ({qty} X {(unitPrice/1).toFixed(2)} {unit} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange})</label><br/>
             <label className="font-semibold">* Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Amount + {(margin / 1).toFixed(2)} Margin Amount - Rs. {(extraDiscount / 1).toFixed(2)} Discount Amount) </label><br/>
             <label className="font-bold">* Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST) </label>
-            <br/></div>
-            <div className='mt-36'>
+            <br/><br/></div>
+            <div className='mb-8 overflow-y-auto h-[calc(100vh-300px)]'>
             <label className="font-bold">Vendor</label>
             
             <select
@@ -292,7 +292,7 @@ const AdDetailsPage = () => {
           </div>)
       }
       {checkout === false && (
-        <div>
+        <div className='mx-[8%]'>
           <div className="flex flex-row justify-between mt-8">
             <> <h1 className='text-2xl font-bold text-center mb-4'>Checkout</h1>
               <button

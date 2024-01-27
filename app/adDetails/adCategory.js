@@ -44,6 +44,10 @@ const AdCategoryPage = () => {
   )
   ;
 
+  const searchedEdition = filteredDataone.filter((option) =>
+  option.firstName.toLowerCase().includes(searchInput.toLowerCase())
+);
+
   const searchedType = splitNames.filter((option) =>
   option.lastName.toLowerCase().includes(searchInput.toLowerCase())
 );
@@ -108,22 +112,22 @@ const AdCategoryPage = () => {
       <div className="absolute top-0 right-0 mt-2 mr-3">
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
-
+<div>{!selectedFirstName ?(
       <ul className="flex flex-col mx-[8%]">
-        {filteredDataone.map((option) => (
+        {searchedEdition.map((option) => (
           <label
             key={option.firstName}
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={()=> setSelectedFirstName(option)}
           >
             {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.firstName):(categories.adType)}</div> */}
-            <div className="text-lg font-bold mt-8">{option.firstName}</div>
+            <div className="text-lg font-bold items-center justify-center">{option.firstName}</div>
             
           </label>
         ))}
-      </ul>
-      
-      <ul className="flex flex-col flex-wrap items-center list-disc list-inside">
+      </ul>): splitNames.filter(item => item.firstName === selectedFirstName.firstName).length>1 ?
+      (
+       <ul className="flex flex-col flex-wrap items-center list-disc list-inside">
               {searchedType.filter(item => item.firstName === selectedFirstName.firstName).map((options) => (
           <label
             key={options.adCategory}
@@ -145,7 +149,12 @@ const AdCategoryPage = () => {
             <div className="text-sm font-bold items-center justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.lastName}</div>
 </label>))
               }
-            </ul>
+            </ul> 
+            ):(
+            setVend(true),
+            Cookies.set('adcategory', selectedFirstName.adCategory))
+            }
+            </div>
       
       </div>)}
       {/* {vend && <VendorPage details ={selectedAdCategory}/>} */}
