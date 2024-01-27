@@ -11,12 +11,13 @@ const minimumUnit = Cookies.get('minimumunit');
 const AdDetailsPage = () => {
     const [selectedVendor, setSelectedVendor] = useState("");
   const [slabData, setSlabData] = useState([])
-  const [qtySlab, setQtySlab] = useState('')
+  const [qtySlab, setQtySlab] = useState()
   // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
   const [qty, setQty] = useState(qtySlab)
   const [selectedDayRange, setSelectedDayRange] = useState('');
   const [campaignDuration, setCampaignDuration] = useState(0);
   const [unit, setUnit] = useState('')
+  const [unitPrice, setUnitPrice] = useState('')
   //const [datas, setDatas] = useState()
 
   const [showAdCategoryPage, setShowAdCategoryPage] = useState(false);
@@ -43,6 +44,8 @@ const AdDetailsPage = () => {
   //const minimumUnit = 15;
   const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
 
+  const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
+
   useEffect(() => {
     const multipliedAmount = (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))
     //setMargin((margin/1).toFixed(2))
@@ -52,9 +55,6 @@ const AdDetailsPage = () => {
   useEffect(() => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
-    }
-    if (unit === "") {
-      setUnit(defUnits);
     }
     // if (margin === 0){
     //   setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
@@ -70,12 +70,36 @@ const AdDetailsPage = () => {
           // }
           return response.json();
         })
-        .then((data) => setSlabData(data))
+        .then((data) => {
+          setSlabData(data);
+          const firstSelectedSlab = data[0];
+          setQtySlab(firstSelectedSlab.StartQty);
+          setUnitPrice(firstSelectedSlab.UnitPrice);
+        })
         //.then((data) => console.log)
         .catch((error) => console.error(error));
   }
   ,[rateId])
 
+  const handleQtySlabChange = () => {
+    const qtySlabNumber = parseInt(qtySlab)
+    // Find the corresponding slabData for the selected QtySlab
+    const selectedSlab = slabData.filter(item => item.StartQty === qtySlabNumber);
+
+    console.log(selectedSlab)
+    // Update UnitPrice based on the selected QtySlab
+    if (selectedSlab) {
+      const firstSelectedSlab = selectedSlab[0];
+      setUnitPrice(firstSelectedSlab.UnitPrice);
+      setUnit(firstSelectedSlab.Unit)
+    }
+  };
+
+  useEffect(() => {
+    if(qtySlab){
+      handleQtySlabChange();
+    }
+  },[qtySlab])
 
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
@@ -88,13 +112,6 @@ const AdDetailsPage = () => {
     setMarginPercentage(event.target.value);
     setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value)/100);
   };
-
-  const fetchAdQtySlab = () => {
-    fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRatesId=${rateId}`)
-      .then((response) => response.json())
-      .then((data) => console.log(data))
-      .catch((error) => console.error(error))
-  }
 
   useEffect(() => {
     const username = Cookies.get('username');
@@ -115,12 +132,7 @@ const AdDetailsPage = () => {
   .filter((value, index, self) => 
     self.findIndex(obj => obj.VendorName === value.VendorName) === index
   )
-  .sort((a, b) => a.VendorName.localeCompare(b.VendorName))
-  ;
-
-  const filteredData2 = slabData
-  .filter(item => item.StartQty === qtySlab)
-  console.log(slabData)
+  .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
 
   const greater = ">"
   return (
@@ -130,19 +142,18 @@ const AdDetailsPage = () => {
         (
           <div className='lg:mx-[8%]'>
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
-          <div className='fixed top-2'>
+          <div className='fixed top-2 bg-white'>
             <button className='mb-6 mr-5 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
 
             <label className="text-center mb-1"> {rateName} - {adType} - {adCategory}</label><br/>
               {/* <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
               <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label> */}
-              <label className="mt-1 font-semibold mb-4">* Amount(Rs): {((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) / 1).toFixed(2)} = ({qty} {(ratePerUnit/1).toFixed(2)} {defUnits} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange})</label><br/>
+              <label className="mt-1 font-semibold mb-4">* Amount(Rs): {((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) / 1).toFixed(2)} = ({qty} X {(unitPrice/1).toFixed(2)} {unit} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange})</label><br/>
             <label className="font-semibold">* Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Amount + {(margin / 1).toFixed(2)} Margin Amount - Rs. {(extraDiscount / 1).toFixed(2)} Discount Amount) </label><br/>
             <label className="font-bold">* Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST) </label>
             <br/></div>
-            <br></br>
-            <div className='mt-40'>
+            <div className='mt-36'>
             <label className="font-bold">Vendor</label>
             
             <select
@@ -153,31 +164,30 @@ const AdDetailsPage = () => {
                 >
                   {filteredData.map((option, index) => (
                     <option className='rounded-lg' key={index} value={option.VendorName}>
-                     Rs.{ratePerUnit} - 7 days - {option.VendorName}
+                     Rs.{unitPrice} - 7 days - {option.VendorName}
                     </option>
                   ))}
                 </select>
                 <br/>
             <label className="font-bold">Quantity Slab ({greater})</label>
             <select
-                  className="border w-full border-gray-300 rounded-lg mb-4 p-2"
-                 defaultValue={null}
-                  value={qtySlab}
-                  onChange={e => {setQtySlab(e.target.value)
-                  setQty(e.target.value)}}
-                  //onClick={() => setQty(e.target.value)}
+              className="border w-full border-gray-300 rounded-lg mb-4 p-2"
+              value={qtySlab}
+              onChange={(e) => {
+                setQtySlab(e.target.value);
+                setQty(e.target.value);
+              }}
+            >
+              {slabData.map((opt, index) => (
+                <option
+                  className="rounded-lg"
+                  key={index}
+                  value={opt.StartQty}
                 >
-                  <option className='rounded-lg' value={null}>
-    Select Qty Slab
-  </option>
-                  {slabData.map((opt, index) => (
-                    <option className='rounded-lg' key={index} value={opt.StartQty}
-                    
-                    >
-                     Min. {opt.StartQty} {defUnits} per {selectedDayRange}
-                    </option>
-                  ))}
-                </select>
+                  {opt.StartQty}+ {unit} per {selectedDayRange}
+                </option>
+              ))}
+            </select>
             {/*qty<minimumUnit ? 'Quantity is lesser than minimum' : ''*/}
 
             <label className="font-bold">Quantity </label>
@@ -193,7 +203,7 @@ const AdDetailsPage = () => {
                 onFocus={(e) => e.target.select()}
               />
 
-              <div className="relative">
+              <div className="relative mt-2">
                 {/* <select
                   className="border-l border-gray-300 rounded-r-lg p-2"
                   defaultValue={defUnits}
@@ -206,7 +216,7 @@ const AdDetailsPage = () => {
                     </option>
                   ))}
                 </select> */}
-                <label className='border-1 ml-5 mt-2'>{defUnits}</label>
+                <label className='ml-5'>{unit}</label>
               </div>
             </div>
             <label className='text-red-300'>{qty < qtySlab ? 'Quantity is lesser than minimum' : ''}</label>
@@ -308,14 +318,14 @@ const AdDetailsPage = () => {
               </button></>
           </div>
           <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
-          <div className='lg:mx-[40%]'>
+          <div className='lg:mx-[40%] w-full'>
             <h1 className='mb-4 font-semibold'>AD Details</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Ad Medium : {rateName}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Ad Type : {adType}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Ad Category : {adCategory}</h1>
             {/* <h1 className='mb-2 text-red-400 font-semibold'>Vendor Name : {VendorName}</h1> */}
             {/* <h1 className='mb-2 text-red-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-            <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {defUnits}</h1>
+            <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {unit}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Campaign Duration : {campaignDuration} {selectedDayRange}</h1>
             {/* <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
             <h1 className='mb-2 text-red-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
