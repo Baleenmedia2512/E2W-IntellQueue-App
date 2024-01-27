@@ -86,7 +86,8 @@ const AdDetailsPage = () => {
     // Find the corresponding slabData for the selected QtySlab
     const selectedSlab = slabData.filter(item => item.StartQty === qtySlabNumber);
 
-    console.log(selectedSlab)
+    setQty(qtySlab)
+    setMargin((qtySlab * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage)/100);
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
@@ -318,27 +319,45 @@ const AdDetailsPage = () => {
               </button></>
           </div>
           <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
-          <div className='lg:mx-[40%] w-full'>
+          <div className='lg:mx-[20%] w-full'>
             <h1 className='mb-4 font-bold'>AD Details</h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Medium : <p className='text-gray-200'>{rateName}</p></h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Type : <div className='text-gray-200'>{adType}</div></h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Edition : <div className='text-gray-200'>{adCategory}</div></h1>
+            <span className='flex flex-row'>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Medium : </h1><p className='text-gray-200'>{rateName}</p>
+            </span>
+            <span className='flex flex-row'>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Type : </h1><div className='text-gray-200'>{adType}</div>
+            </span>
+            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Edition : </h1><div className='text-gray-200'>{adCategory}</div></span>
+            
             {/* <h1 className='mb-2 text-lime-400 font-semibold'>Vendor Name : {VendorName}</h1> */}
             {/* <h1 className='mb-2 text-lime-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-            <h1 className='mb-2 text-lime-400 font-semibold'>Quantity : <div className='text-gray-200'>{qty} {unit}</div></h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Campaign Duration : <div className='text-gray-200'>{campaignDuration} {selectedDayRange}</div></h1>
+            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Quantity : </h1><div className='text-gray-200'>{qty} {unit}</div></span>
+            
+            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Campaign Duration : </h1><div className='text-gray-200'>{campaignDuration} {selectedDayRange}</div></span>
+            
             {/* <h1 className='mb-2 text-lime-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
             <h1 className='mb-2 text-lime-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
             <h1 className='mb-2 text-lime-400 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
-            <h1 className='mb-14 text-lime-400 font-semibold'>Price : <div className='text-gray-200'>{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div></h1>
+            <span className='flex flex-row'>
+            <h1 className='mb-14 text-lime-400 font-semibold'>Price : </h1><div className='text-gray-200'>{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div>
+            </span>
+            
 
 
             <h1 className='mb-4 font-bold'>Client Details</h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Client Name : <div className='text-gray-200'>{clientName}</div></h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Client Number : <div className='text-gray-200'>{clientNumber}</div></h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Client E-Mail: <div className='text-gray-200'>{clientEmail}</div></h1>
-            <h1 className='mb-4 text-lime-400 font-semibold'>Source : <div className='text-gray-200'>{selectedSource}</div></h1>
-
+            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Client Name : </h1><div className='text-gray-200'>{clientName}</div></span>
+            
+            <span className='flex flex-row'>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Client Number : </h1><div className='text-gray-200'>{clientNumber}</div>
+            </span>
+            
+            <span className='flex flex-row'>
+            <h1 className='mb-2 text-lime-400 font-semibold'>Client E-Mail: </h1><div className='text-gray-200'>{clientEmail}</div>
+            </span>
+            
+            <span className='flex flex-row'>
+            <h1 className='mb-4 text-lime-400 font-semibold'>Source : </h1><div className='text-gray-200'>{selectedSource}</div>
+            </span>
           </div>
           <div className='flex flex-col justify-center items-center'>
 

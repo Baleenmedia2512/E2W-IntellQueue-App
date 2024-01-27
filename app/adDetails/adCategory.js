@@ -16,6 +16,7 @@ const AdCategoryPage = () => {
   const routers = useRouter();
   const adType = Cookies.get('adtype')
   const [showAdTypePage, setShowAdTypePage] = useState(false)
+  const [selectedFirstName, setSelectedFirstName] = useState(null)
 
   const [searchInput, setSearchInput] = useState('');
 
@@ -34,10 +35,7 @@ const AdCategoryPage = () => {
   const splitNames = filteredData.map(item => {
     const [firstPart, secondPart] = item.adCategory.split(':');
     const updatedFirstPart = (secondPart === undefined? adType : firstPart);
-    // console.log(updatedFirstPart)
-    // console.log(secondPart)
-    // console.log(firstPart)
-    return { ...item, firstName: updatedFirstPart, lastName: secondPart || firstPart};
+    return { ...item, firstName: firstPart, lastName: secondPart || ''};
   });
 
   const filteredDataone = splitNames
@@ -115,11 +113,18 @@ const AdCategoryPage = () => {
         {filteredDataone.map((option) => (
           <label
             key={option.firstName}
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
+            onClick={()=> setSelectedFirstName(option)}
           >
             {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.firstName):(categories.adType)}</div> */}
-            <div className="text-lg font-bold mt-8">{searchedType.filter(item => item.firstName === option.firstName).length>0 && option.firstName}</div>
-            <ul className="flex flex-col items-center">
-              {searchedType.filter(item => item.firstName === option.firstName).map((options) => (
+            <div className="text-lg font-bold mt-8">{option.firstName}</div>
+            
+          </label>
+        ))}
+      </ul>
+      
+      <ul className="flex flex-col flex-wrap items-center list-disc list-inside">
+              {searchedType.filter(item => item.firstName === selectedFirstName.firstName).map((options) => (
           <label
             key={options.adCategory}
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
@@ -137,13 +142,12 @@ const AdCategoryPage = () => {
               setVend(true)
             }}
           >
-            <div className="text-lg font-bold text-nowrap items-center justify-center">{options.lastName}</div>
+            <div className="text-sm font-bold items-center justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.lastName}</div>
 </label>))
               }
             </ul>
-          </label>
-        ))}
-      </ul></div>)}
+      
+      </div>)}
       {/* {vend && <VendorPage details ={selectedAdCategory}/>} */}
       {vend && <AdDetailsPage />}
 
