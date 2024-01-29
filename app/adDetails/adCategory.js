@@ -68,7 +68,7 @@ const AdCategoryPage = () => {
   }, [routers]);
   const greater = ">>"
   return (
-    <div className='text-gray-200'>
+    <div>
       {showAdTypePage && (<AdTypePage />)}
       {(!vend && showAdTypePage === false) && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
@@ -120,7 +120,7 @@ const AdCategoryPage = () => {
         {searchedEdition.map((option) => (
           <label
             key={option.firstName}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={()=> setSelectedFirstName(option)}
           >
             {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.firstName):(categories.adType)}</div> */}
@@ -134,7 +134,7 @@ const AdCategoryPage = () => {
               {searchedType.filter(item => item.firstName === selectedFirstName.firstName).map((options) => (
           <label
             key={options.adCategory}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
               setSelectedAdCategory(options);
               Cookies.set('adMediumSelected', true);

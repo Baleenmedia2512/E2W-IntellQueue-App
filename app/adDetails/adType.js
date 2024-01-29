@@ -71,7 +71,7 @@ const AdTypePage = () => {
   );
 const greater = '>>'
   return (
-    <div className='text-white'>
+    <div >
       {cat && (<AdCategoryPage />)}
       {showAdMedium && (<AdMediumPage />)}
       {(!cat && !showAdMedium) && (
@@ -125,7 +125,7 @@ const greater = '>>'
         {searchedType.map((optionss) => (
           <label
             key={optionss.typeOfAd}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
+            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
             {
               Cookies.set('adtype', optionss.adType)
@@ -142,7 +142,7 @@ const greater = '>>'
           {searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).map((option) => (
             <label
               key={option.adType}
-              className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-purple-400  to-lime-400 hover:bg-gradient-to-r hover:from-purple-500 '
+              className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
               onClick={() => {
                 Cookies.set('adtype', option.adType)
                 setSelectedAdType(option);

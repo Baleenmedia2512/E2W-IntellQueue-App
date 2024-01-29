@@ -203,7 +203,7 @@ const RatesListPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 text-white">
+    <div className="container mx-auto p-4">
       {modal && (
         <div className="fixed top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center modal">
           <div onClick={toggleModal} className="fixed top-0 left-0 right-0 bottom-0 bg-gray-800 opacity-75 overlay"></div>
@@ -374,7 +374,7 @@ const RatesListPage = () => {
         // filters.LastUsedUser !== '')))  
         &&
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
           onClick={handleSelectAllClick}
         >
           {selectedItems.length === filteredRates.length ? 'Unselect All' : 'Select All'}

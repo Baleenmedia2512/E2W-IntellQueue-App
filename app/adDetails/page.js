@@ -86,7 +86,7 @@ export const AdMediumPage = () => {
   }, [routers]);
 
   return (
-    <div className='text-white'>
+    <div>
       {type && (<AdTypePage data={selectedAdMedium} />)}
       {!type && (
         <div>
@@ -138,7 +138,7 @@ export const AdMediumPage = () => {
               {option.rateName !== 'Newspaper' && (
                 <label
                   key={option.rateName}
-                  className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg hover:bg-teal-300 ${(index)%4==0 || (index)%4==1 ? 'border-lime-400 bg-purple-400' : 'border-purple-400 bg-lime-400 '
+                  className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg hover:bg-purple-500 ${(index)%4==0 || (index)%4==1 ? ' bg-blue-300' : ' bg-gray-500 '
                     }`}
                   //    htmlFor={`option-${option.id}`}
                   onClick={() => {

@@ -42,7 +42,7 @@ const AdDetailsPage = () => {
   const [margin, setMargin] = useState((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * 15)/100);
 
   //const minimumUnit = 15;
-  const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
+  // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
 
   const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
 
@@ -137,7 +137,7 @@ const AdDetailsPage = () => {
 
   const greater = ">>"
   return (
-    <div className=" mt-8 text-gray-200">
+    <div className=" mt-8 ">
       {showAdCategoryPage && (<AdCategoryPage />)}
       {(checkout === true && showAdCategoryPage === false) && 
         (
@@ -157,7 +157,7 @@ const AdDetailsPage = () => {
             <label className="font-bold">Vendor</label>
             
             <select
-                  className="border w-full border-gray-300 bg-purple-400 text-black rounded-lg mb-4 p-2"
+                  className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg mb-4 p-2"
                  
                   value={selectedVendor}
                   onChange={e => setSelectedVendor(e.target.value)}
@@ -171,7 +171,7 @@ const AdDetailsPage = () => {
                 <br/>
             <label className="font-bold">Quantity Slab wise rates</label>
             <select
-              className="border w-full border-gray-300 bg-purple-400 text-black rounded-lg mb-4 p-2"
+              className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg mb-4 p-2"
               value={qtySlab}
               onChange={(e) => {
                 setQtySlab(e.target.value);
@@ -193,7 +193,7 @@ const AdDetailsPage = () => {
             <label className="font-bold">Quantity </label>
             <div className="flex w-full">
               <input
-                className="w-full border border-gray-300 bg-purple-400 text-black p-2 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                 type="number"
                 placeholder="Ex: 15"
                 defaultValue={qtySlab}
@@ -225,7 +225,7 @@ const AdDetailsPage = () => {
             <label className="font-bold mt-12 mb-4">Campaign Duration</label>
             <div className="flex w-full mb-4">
               <input
-                className="w-full border border-gray-300 bg-purple-400 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                 type="number"
                 placeholder="Ex: 3"
                 value={campaignDuration}
@@ -233,7 +233,7 @@ const AdDetailsPage = () => {
               />
               <div className="relative">
                 <select
-                  className="border-l border-gray-300 bg-purple-400 text-black rounded-lg p-2"
+                  className="border-l border-gray-300 bg-blue-300 text-black rounded-lg p-2"
                   value={selectedDayRange}
                   onChange={e => setSelectedDayRange(e.target.value)}
                 >
@@ -247,7 +247,7 @@ const AdDetailsPage = () => {
             </div>
 
             <label className="font-bold">Margin Amount(Rs)</label>
-            <input className='w-full border border-gray-300 bg-purple-400 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
+            <input className='w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
               type='number'
               placeholder='Ex: 4000'
               value={margin}
@@ -268,7 +268,7 @@ const AdDetailsPage = () => {
             <br></br>
             <br></br>
             <label className="font-bold">Extra Discount(Rs)</label>
-            <input className='w-full border border-gray-300 bg-purple-400 text-black p-2 mb-4 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
+            <input className='w-full border border-gray-300 bg-blue-300 text-black p-2 mb-4 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
               type='number'
               placeholder='Ex: 1000'
               value={extraDiscount}
@@ -277,7 +277,7 @@ const AdDetailsPage = () => {
             
             
             <br /><div className='flex flex-col items-center justify-center'>
-              <button className=' bg-purple-500 hover:bg-lime-500 text-black px-4 py-2 rounded-full transition-all duration-300 ease-in-out'
+              <button className=' bg-blue-500 hover:bg-purple-500 text-black px-4 py-2 rounded-full transition-all duration-300 ease-in-out'
                 onClick={() => setCheckout(false)}
               >
                 Checkout
@@ -322,41 +322,44 @@ const AdDetailsPage = () => {
           <div className='lg:mx-[20%] w-full'>
             <h1 className='mb-4 font-bold'>AD Details</h1>
             <span className='flex flex-row'>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Medium : </h1><p className='text-gray-200'>{rateName}</p>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Ad Medium &nbsp; : </h1><p className=''>{rateName}</p>
             </span>
             <span className='flex flex-row'>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Ad Type : </h1><div className='text-gray-200'>{adType}</div>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Ad Type           : </h1><div className=''>{adType}</div>
             </span>
-            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Edition : </h1><div className='text-gray-200'>{adCategory}</div></span>
-            
-            {/* <h1 className='mb-2 text-lime-400 font-semibold'>Vendor Name : {VendorName}</h1> */}
-            {/* <h1 className='mb-2 text-lime-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Quantity : </h1><div className='text-gray-200'>{qty} {unit}</div></span>
-            
-            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Campaign Duration : </h1><div className='text-gray-200'>{campaignDuration} {selectedDayRange}</div></span>
-            
-            {/* <h1 className='mb-2 text-lime-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
             <span className='flex flex-row'>
-            <h1 className='mb-14 text-lime-400 font-semibold'>Price : </h1><div className='text-gray-200'>{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Edition           : </h1><div className=''>{adCategory}</div></span>
+            
+            {/* <h1 className='mb-2 text-blue-600 font-semibold'>Vendor Name : {VendorName}</h1> */}
+            {/* <h1 className='mb-2 text-blue-600 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
+            <span className='flex flex-row'>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Quantity          : </h1><div className=''>{qty} {unit}</div></span>
+            
+            <span className='flex flex-row'>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Campaign Duration : </h1><div className=''>{campaignDuration} {selectedDayRange}</div></span>
+            
+            {/* <h1 className='mb-2 text-blue-600 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Margin Percentage : {marginPercentage}</h1>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
+            <span className='flex flex-row'>
+            <h1 className='mb-14 text-blue-600 font-semibold'>Price            : </h1><div className=''>{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div>
             </span>
             
 
 
             <h1 className='mb-4 font-bold'>Client Details</h1>
-            <span className='flex flex-row'><h1 className='mb-2 text-lime-400 font-semibold'>Client Name : </h1><div className='text-gray-200'>{clientName}</div></span>
+            <span className='flex flex-row'><h1 className='mb-2 text-blue-600 font-semibold'>Client Name : </h1><div className=''>{clientName}</div></span>
             
             <span className='flex flex-row'>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Client Number : </h1><div className='text-gray-200'>{clientNumber}</div>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Client Number : </h1><div className=''>{clientNumber}</div>
             </span>
             
             <span className='flex flex-row'>
-            <h1 className='mb-2 text-lime-400 font-semibold'>Client E-Mail: </h1><div className='text-gray-200'>{clientEmail}</div>
+            <h1 className='mb-2 text-blue-600 font-semibold'>Client E-Mail: </h1><div className=''>{clientEmail}</div>
             </span>
             
             <span className='flex flex-row'>
-            <h1 className='mb-4 text-lime-400 font-semibold'>Source : </h1><div className='text-gray-200'>{selectedSource}</div>
+            <h1 className='mb-4 text-blue-600 font-semibold'>Source : </h1><div className=''>{selectedSource}</div>
             </span>
           </div>
           <div className='flex flex-col justify-center items-center'>
@@ -364,7 +367,7 @@ const AdDetailsPage = () => {
             <button
               className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full transition-all duration-300 ease-in-out hover:bg-green-600"
             >
-              Send Quote
+              Download Quote
             </button>
             </div>
         </div>
