@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AdDetailsPage from './ad-Details';
 import AdTypePage from './adType';
+import BottomBar from '../BottomBar';
 
 export const AdMediumPage = () => {
   const [selectedAdMedium, setSelectedAdMedium] = useState('');
@@ -91,7 +92,10 @@ export const AdMediumPage = () => {
         <div>
           <div className="flex flex-row justify-between mx-[8%] mt-8">
 
-            <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
+            <> 
+            <button className='hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
+          }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
+            
               <button
                 className="px-2 py-1 rounded text-center"
                 onClick={() => {
@@ -116,8 +120,8 @@ export const AdMediumPage = () => {
           </div>
           {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
 
-          <button className='mx-[8%] mb-6 hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
-          }> <FontAwesomeIcon icon={faArrowLeft} /> </button><br/>
+          <br/>
+          <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
           <div className='mx-[8%] relative'>
           <input
           className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
@@ -149,6 +153,7 @@ export const AdMediumPage = () => {
             ))
             }
           </ul>
+          {/* < BottomBar /> */}
         </div>
       )}
     </div>

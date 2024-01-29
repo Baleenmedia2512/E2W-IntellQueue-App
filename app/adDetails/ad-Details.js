@@ -15,7 +15,7 @@ const AdDetailsPage = () => {
   // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
   const [qty, setQty] = useState(qtySlab)
   const [selectedDayRange, setSelectedDayRange] = useState('');
-  const [campaignDuration, setCampaignDuration] = useState(0);
+  const [campaignDuration, setCampaignDuration] = useState(1);
   const [unit, setUnit] = useState('')
   const [unitPrice, setUnitPrice] = useState('')
   //const [datas, setDatas] = useState()
@@ -105,7 +105,7 @@ const AdDetailsPage = () => {
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
-    setMarginPercentage(((event.target.value * 100) / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))))
+    setMarginPercentage(((event.target.value * 100) / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2))
   };
 
   const handleMarginPercentageChange = (event) => {
@@ -135,7 +135,7 @@ const AdDetailsPage = () => {
   )
   .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
 
-  const greater = ">"
+  const greater = ">>"
   return (
     <div className=" mt-8 text-gray-200">
       {showAdCategoryPage && (<AdCategoryPage />)}
@@ -147,12 +147,11 @@ const AdDetailsPage = () => {
             <button className='mb-6 mr-5 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
 
-            <label className="text-center mb-1"> {rateName} - {adType} - {adCategory}</label><br/>
+            <label className="text-center mb-1"> {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory}</label><br/>
               {/* <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
               <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label> */}
-              <label className="mt-1 font-semibold mb-4">* Amount(Rs): {((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) / 1).toFixed(2)} = ({qty} X {(unitPrice/1).toFixed(2)} {unit} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange})</label><br/>
-            <label className="font-semibold">* Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Amount + {(margin / 1).toFixed(2)} Margin Amount - Rs. {(extraDiscount / 1).toFixed(2)} Discount Amount) </label><br/>
-            <label className="font-bold">* Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST) </label>
+            <label className="font-semibold text-sm">* Price: Rs.{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Rs.{qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice/1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{(margin / 1).toFixed(2)} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount) </label><br/>
+            <label className="font-bold text-sm">* Price: Rs.{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST) </label>
             <br/><br/></div>
             <div className='mb-8 overflow-y-auto h-[calc(100vh-300px)]'>
             <label className="font-bold">Vendor</label>
@@ -165,12 +164,12 @@ const AdDetailsPage = () => {
                 >
                   {filteredData.map((option, index) => (
                     <option className='rounded-lg' key={index} value={option.VendorName}>
-                     Rs.{unitPrice} - 7 days - {option.VendorName}
+                     Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)} - 7 days - {option.VendorName}
                     </option>
                   ))}
                 </select>
                 <br/>
-            <label className="font-bold">Quantity Slab ({greater})</label>
+            <label className="font-bold">Quantity Slab wise rates</label>
             <select
               className="border w-full border-gray-300 bg-purple-400 text-black rounded-lg mb-4 p-2"
               value={qtySlab}
@@ -185,7 +184,7 @@ const AdDetailsPage = () => {
                   key={index}
                   value={opt.StartQty}
                 >
-                  {opt.StartQty}+ {unit} per {selectedDayRange}
+                  {opt.StartQty}+ {unit} Rs.{unitPrice} per {selectedDayRange}
                 </option>
               ))}
             </select>
@@ -200,7 +199,8 @@ const AdDetailsPage = () => {
                 defaultValue={qtySlab}
                 value={qty}
                 //value={minimumUnit > qty ? minimumUnit : qty}
-                onChange={e => { setQty(e.target.value)}}
+                onChange={(e) => { setQty(e.target.value)
+                  setMarginPercentage(((margin * 100) / (e.target.value * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2))}}
                 onFocus={(e) => e.target.select()}
               />
 

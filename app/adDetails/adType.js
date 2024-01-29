@@ -69,7 +69,7 @@ const AdTypePage = () => {
   const searchedType2 = filteredData.filter((optionn) =>
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
-
+const greater = '>>'
   return (
     <div className='text-white'>
       {cat && (<AdCategoryPage />)}
@@ -77,7 +77,10 @@ const AdTypePage = () => {
       {(!cat && !showAdMedium) && (
       <div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
-        <> <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Type</h1>
+        <>
+        <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => {moveToPreviousPage(!selectedAdType2)}
+    }> <FontAwesomeIcon icon={faArrowLeft} /> </button> 
+    {Cookies.get('ratename')} {selectedAdType2 ? greater : ''} {selectedAdType2 ? selectedAdType2.typeOfAd : ''}</h1>
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -101,11 +104,10 @@ const AdTypePage = () => {
           </button></>
       </div>
       {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
-      
+      <br />
 
-      <button className='mx-[8%] mb-6 hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => {moveToPreviousPage(!selectedAdType2)}
-    }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-    <h1 className='mx-[8%] mb-2 font-semibold'>{Cookies.get('ratename')}</h1>
+      <h1 className='text-2xl font-bold text-center  mb-4'>Select AD {!selectedAdType2 ? 'Type' : 'Category'}</h1>
+    
     <div className='mx-[8%] relative'>
           <input
           className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"

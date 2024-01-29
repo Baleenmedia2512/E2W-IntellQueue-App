@@ -66,13 +66,18 @@ const AdCategoryPage = () => {
         .catch((error) => console.error(error));
     }
   }, [routers]);
-
+  const greater = ">>"
   return (
     <div className='text-gray-200'>
       {showAdTypePage && (<AdTypePage />)}
       {(!vend && showAdTypePage === false) && (<div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
-        <> <h1 className='text-2xl font-bold text-center  mb-4'>Select Edition-Remarks</h1>
+        <>
+      
+    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adtype'); setShowAdTypePage(true)}
+    }> <FontAwesomeIcon icon={faArrowLeft} /> </button> {Cookies.get('ratename')} {greater} {adType} {selectedFirstName ? greater : ''} {selectedFirstName ? selectedFirstName.firstName : ''}</h1>
+
+        
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -96,10 +101,8 @@ const AdCategoryPage = () => {
           </button></>
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
-
-      <button className='mx-[8%] mb-6  hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adtype'); setShowAdTypePage(true)}
-    }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-    <h1 className='mx-[8%] mb-2 font-semibold'>{Cookies.get('ratename')} - {adType}</h1>
+      <br />
+<h1 className='text-2xl font-bold text-center  mb-4'>Select {!selectedFirstName ? "Edition": "position"}</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
           <input
@@ -127,7 +130,7 @@ const AdCategoryPage = () => {
         ))}
       </ul>): splitNames.filter(item => item.firstName === selectedFirstName.firstName).length>1 ?
       (
-       <ul className="flex flex-col flex-wrap items-center list-disc list-inside">
+       <ul className="flex flex-col flex-wrap items-center list-disc list-inside mx-[8%]">
               {searchedType.filter(item => item.firstName === selectedFirstName.firstName).map((options) => (
           <label
             key={options.adCategory}
