@@ -148,6 +148,7 @@ const AdCategoryPage = () => {
               Cookies.set('minimumunit', options.minimumUnit);
               Cookies.set('defunit', options.Units);
               Cookies.set('rateId', options.rateId)
+              Cookies.set('validitydate', options.ValidityDate);
               setVend(true)
             }}
           >
@@ -162,7 +163,8 @@ const AdCategoryPage = () => {
               Cookies.set('rateperunit', selectedFirstName.ratePerUnit),
               Cookies.set('minimumunit', selectedFirstName.minimumUnit),
               Cookies.set('defunit', selectedFirstName.Units),
-              Cookies.set('rateId', selectedFirstName.rateId)
+              Cookies.set('rateId', selectedFirstName.rateId),
+              Cookies.set('validitydate', selectedFirstName.ValidityDate)
             )
             }
             </div>

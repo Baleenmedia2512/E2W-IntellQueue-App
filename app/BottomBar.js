@@ -1,40 +1,39 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { useState , useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 const BottomBar = () => {
     const routers = useRouter();
-    const pathname = routers;
+    const [buttonPressed, setButtonPressed] = useState();
+    const currentPath = usePathname();
+    const username = Cookies.get('username')
 
-  const isActive = (path) =>
-   {path === pathname};
-
-   useEffect(()=>{
-    console.log(pathname,"h" );
-   })
+    if (currentPath === '/login') {
+      return null;
+    }
 
   return (
-    // <div className="">
-      <div className="flex justify-around bg-white border p-2 fixed bottom-0 left-0 w-full">
-        <div className={`flex flex-grow hover:bg-gray-600 w-1/3 rounded-lg items-center justify-center ${
-            isActive('/') ? 'bg-lime-200' : ''
+      <nav className="flex justify-around bg-white border p-2 fixed bottom-0 left-0 w-full">
+        <button className={` flex-grow hover:bg-gray-600 w-1/3 rounded-lg ${
+            // buttonPressed === "Rates Validation" ? 'bg-lime-200' : ''
+            '/' === currentPath ? 'bg-lime-200' : ''
           }`}
-        onClick={() => routers.push('/')}
-        >Rates Validation</div>
-        <div
-        className={`flex items-center justify-center flex-grow hover:bg-gray-600 w-1/3 rounded-lg ${
-            isActive('/addenquiry') ? 'bg-lime-200' : ''
+        onClick={() => {routers.push('/'); setButtonPressed("Rates Validation")}}
+        >Rates Validation</button>
+        <button
+        className={`flex-grow hover:bg-gray-600 w-1/3 rounded-lg ${
+            (currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-lime-200' : ''
           }`}
         onClick={() => routers.push('/addenquiry')}
-        >Add Enquiry</div>
-        <div
-        className={` flex items-center justify-center flex-grow hover:bg-gray-600 w-1/3 py-3 rounded-lg ${
-            isActive('/adDetails') ? 'bg-lime-200' : ''
-          }`}
-        onClick={() => routers.push('/adDetails')}
-        >Quote Sender</div>
-      </div>
-    // </div>
+        >Quote Sender</button>
+        <button
+        className='flex-grow hover:bg-gray-600 w-1/3 py-3 rounded-lg'
+        onClick={() => {routers.push('/login')
+      Cookies.remove('username')}}
+        >Logout</button>
+      </nav>
   );
 };
 

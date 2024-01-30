@@ -40,9 +40,26 @@ const AdDetailsPage = () => {
   //const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
   const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15)/100).toFixed(2));
+  const ValidityDate = Cookies.get('validitydate')
 
   //const minimumUnit = 15;
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
+
+
+  const parts = ValidityDate.split('-');
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1])-1 ; // Months are zero-based in JavaScript
+  const day = parseInt(parts[2]);
+
+  // Create a new Date object with the parsed components
+  const dateObject = new Date(year, month, day);
+
+  // Format the date using the "MMM dd, yyyy" format
+  const formattedDate = dateObject.toLocaleDateString('en-US', {
+    month: 'short', // Three-letter month name
+    day: 'numeric', // Day of the month
+    year: 'numeric', // Four-digit year
+  });
 
   const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
 
@@ -134,7 +151,6 @@ const AdDetailsPage = () => {
     self.findIndex(obj => obj.VendorName === value.VendorName) === index
   )
   .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
-
   const greater = ">>"
   return (
     <div className=" mt-8 ">
@@ -233,7 +249,7 @@ const AdDetailsPage = () => {
               />
               <div className="relative">
                 <select
-                  className="border-l border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                  className="border border-gray-300 bg-blue-300 text-black rounded-lg p-2 ml-4"
                   value={selectedDayRange}
                   onChange={e => setSelectedDayRange(e.target.value)}
                 >
@@ -287,7 +303,7 @@ const AdDetailsPage = () => {
       <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
               is higher
             </p>
-            <p className='font-bold'>Quote Valid till Jan 13,2024</p></div></div>
+            <p className='font-bold'>Quote Valid till {formattedDate}</p></div></div>
     
           </div>)
       }
@@ -319,36 +335,37 @@ const AdDetailsPage = () => {
               </button></>
           </div>
           <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
-          <div className='lg:mx-[20%] w-full'>
+          <div className='lg:mx-[30%] w-full'>
             <h1 className='mb-4 font-bold'>AD Details</h1>
-            <span className='flex flex-row'>
-            <h1 className='mb-2 text-blue-600 font-semibold'>Ad Medium &nbsp; : </h1><p className=''>{rateName}</p>
-            </span>
-            <span className='flex flex-row'>
-            <h1 className='mb-2 text-blue-600 font-semibold'>Ad Type           : </h1><div className=''>{adType}</div>
-            </span>
-            <span className='flex flex-row'>
-            <h1 className='mb-2 text-blue-600 font-semibold'>Edition           : </h1><div className=''>{adCategory}</div></span>
-            
-            {/* <h1 className='mb-2 text-blue-600 font-semibold'>Vendor Name : {VendorName}</h1> */}
-            {/* <h1 className='mb-2 text-blue-600 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-            <span className='flex flex-row'>
-            <h1 className='mb-2 text-blue-600 font-semibold'>Quantity          : </h1><div className=''>{qty} {unit}</div></span>
-            
-            <span className='flex flex-row'>
-            <h1 className='mb-2 text-blue-600 font-semibold'>Campaign Duration : </h1><div className=''>{campaignDuration} {selectedDayRange}</div></span>
-            
-            {/* <h1 className='mb-2 text-blue-600 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
-            <h1 className='mb-2 text-blue-600 font-semibold'>Margin Percentage : {marginPercentage}</h1>
-            <h1 className='mb-2 text-blue-600 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
-            <span className='flex flex-row'>
-            <h1 className='mb-14 text-blue-600 font-semibold'>Price            : </h1><div className=''>{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div>
-            </span>
-            
-
+            <table className='mb-8'>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Ad Medium</td>
+                <td>: {rateName}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Ad Type</td>
+                <td>: {adType}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Edition</td>
+                <td>: {adCategory}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Quantity</td>
+                <td>: {qty} {unit}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Campaign Duration</td>
+                <td>: {campaignDuration} {selectedDayRange}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Price</td>
+                <td>: {(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</td>
+              </tr>
+            </table>
 
             <h1 className='mb-4 font-bold'>Client Details</h1>
-            <span className='flex flex-row'><h1 className='mb-2 text-blue-600 font-semibold'>Client Name : </h1><div className=''>{clientName}</div></span>
+            {/* <span className='flex flex-row'><h1 className='mb-2 text-blue-600 font-semibold'>Client Name : </h1><div className=''>{clientName}</div></span>
             
             <span className='flex flex-row'>
             <h1 className='mb-2 text-blue-600 font-semibold'>Client Number : </h1><div className=''>{clientNumber}</div>
@@ -360,7 +377,26 @@ const AdDetailsPage = () => {
             
             <span className='flex flex-row'>
             <h1 className='mb-4 text-blue-600 font-semibold'>Source : </h1><div className=''>{selectedSource}</div>
-            </span>
+            </span> */}
+
+            <table className='mb-6'>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Client Name</td>
+                <td>: {clientName}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Client Number</td>
+                <td>: {clientNumber}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Client E-Mail</td>
+                <td>: {clientEmail}</td>
+              </tr>
+              <tr>
+                <td className='py-1 text-blue-600 font-semibold'>Source</td>
+                <td>: {selectedSource}</td>
+              </tr>
+              </table>
           </div>
           <div className='flex flex-col justify-center items-center'>
 

@@ -341,8 +341,7 @@ const RatesListPage = () => {
         </button></div>
       </div>
     }
-    <div className="flex justify-between items-center" >
-        {/* Select All Button (Left) */}
+    {/* <div className="flex justify-between items-center" >
         {showFilter === false 
         // || (showFilter2 && ( filters.rateName !== '' ||
         // filters.adType !== '' || 
@@ -357,24 +356,19 @@ const RatesListPage = () => {
           Go to Enquiry
         </button>
         }
-        {/* Validate Selected Button (Right) */}
         {showFilter === false  && (
           <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => {Cookies.remove('username'); router.push('/login')}}>
             Logout
           </button>
         )}
-      </div>
+      </div> */}
+
       <div className="flex justify-between items-center" >
         {/* Select All Button (Left) */}
         {showFilter === false 
-        // || (showFilter2 && ( filters.rateName !== '' ||
-        // filters.adType !== '' || 
-        // filters.adCategory !== '' ||
-        // filters.VendorName !== '' ||
-        // filters.LastUsedUser !== '')))  
         &&
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
           onClick={handleSelectAllClick}
         >
           {selectedItems.length === filteredRates.length ? 'Unselect All' : 'Select All'}
@@ -382,7 +376,7 @@ const RatesListPage = () => {
         }
         {/* Validate Selected Button (Right) */}
         {selectedItems.length > 1 && (
-          <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={() => setModal(true)}>
+          <button className="bg-green-500 text-white px-4 py-2 rounded-lg" onClick={() => setModal(true)}>
             Validate Selected
           </button>
         )}

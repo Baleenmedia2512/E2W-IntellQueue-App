@@ -182,111 +182,8 @@ const ClientsData = () => {
 
 
   return (
-    // <div><div className='mb-8 mx-[8%] mt-8 cursor-pointer w-fit hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => { moveToAdDetails() }}>
-
-    //   <svg
-    //     xmlns="http://www.w3.org/2000/svg"
-    //     width="60"
-    //     height="60"
-    //     viewBox="0 0 24 24"
-    //     fill="none"
-    //     stroke="#3498db"
-    //     strokeWidth="2"
-    //     strokeLinecap="round"
-    //     strokeLinejoin="round"
-    //   >
-    //     <rect x="1" y="1" width="22" height="22" stroke="#3498db" strokeWidth="2" fill="transparent" />
-
-    //     {/* Horizontal line of the plus symbol */}
-    //     <line x1="7" y1="12" x2="17" y2="12" />
-
-    //     {/* Vertical line of the plus symbol */}
-    //     <line x1="12" y1="7" x2="12" y2="17" />
-    //   </svg>
-
-
-    // </div>
-
-    //   <div className="flex flex-col items-center justify-center mt-8 mx-[8%]">
-    //     <div className="flex justify-between mb-4 w-full space-x-28">
-    //       <button
-    //         className="bg-blue-500 text-white px-4 py-2 rounded"
-    //         onClick={() => router.push('/')}
-    //       >
-    //         Rates Validation
-    //       </button>
-
-
-    //       <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => { Cookies.remove('username'); router.push('/login') }}>
-    //         Logout
-    //       </button>
-    //     </div>
-    //     <div>
-
-    //     </div>
-    //     <h1 className="font-bold text-black mb-4">BME - Enquiry. Enter enquiry details!</h1>
-    //     <label className="flex flex-col items-left">Client Name</label>
-    //     <input
-    //       className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-    //       type="text"
-    //       placeholder="Client Name"
-    //       value={searchTerm}
-    //       onChange={handleSearchTermChange}
-    //     />
-    //     {clientNameSuggestions.length > 0 && (
-    //       <ul>
-    //         {clientNameSuggestions.map((name, index) => (
-    //           <li key={index}>
-    //             <button type="button" onClick={handleClientNameSelection} value={name}>
-    //               {name}
-    //             </button>
-    //           </li>
-    //         ))}
-    //       </ul>
-    //     )}
-    //     <label>Client Contact</label>
-    //     <input
-    //       className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-    //       type="text"
-    //       placeholder="Client Contact"
-    //       value={clientNumber}
-    //       onChange={(e) => setClientNumber(e.target.value)}
-    //     />
-    //     <label>Client Email</label>
-    //     <input
-    //       className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-    //       type="email"
-    //       placeholder="Client Email (optional)"
-    //       value={clientEmail}
-    //       onChange={(e) => setClientEmail(e.target.value)}
-    //     />
-    //     <label>Source</label>
-    //     <Select
-    //       className="w-full mb-4"
-    //       value={{ label: selectedSource, value: selectedSource }}
-    //       onChange={(selectedOption) => setSelectedSource(selectedOption.value)}
-    //       options={sources.map((source) => ({ label: source, value: source }))}
-    //       placeholder="Select Source"
-    //     />
-    //     {/* <button
-    //         className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full mt-4 transition-all duration-300 ease-in-out hover:bg-green-600"
-    //         onClick={SaveEntry}
-    //       >
-    //         Submit
-    //       </button> */}
-
-    //   </div>
-    //   <div className='bg-surface-card p-8 rounded-2xl mb-4'>
-    //     <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
-    //       <MuiAlert severity={severity} onClose={() => setToast(false)}>
-    //         {toastMessage}
-    //       </MuiAlert>
-    //     </Snackbar>
-    //   </div>
-    // </div>
-
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
-      <div className="mb-8 mt-8 cursor-pointer w-fit hover:transform hover:scale-110 transition-transform duration-300 ease-in-out" onClick={() => { moveToAdDetails() }}>
+      {/* <div className="mb-8 mt-8 cursor-pointer w-fit hover:transform hover:scale-110 transition-transform duration-300 ease-in-out" onClick={() => { moveToAdDetails() }}>
       <h1 className='text-3x1'>Ad Details</h1>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -301,10 +198,10 @@ const ClientsData = () => {
         >
           <rect x="1" y="1" width="22" height="22" stroke="#3498db" strokeWidth="2" fill="transparent" />
 
-          {/* Horizontal line of the plus symbol */}
+          // Horizontal line of the plus symbol 
           <line x1="7" y1="12" x2="17" y2="12" />
 
-          {/* Vertical line of the plus symbol */}
+          // Vertical line of the plus symbol 
           <line x1="12" y1="7" x2="12" y2="17" />
         </svg>
       </div>
@@ -326,9 +223,9 @@ const ClientsData = () => {
         >
           Logout
         </button>
-      </div>
+      </div> */}
 
-      <div className='w-full justify-center items-center'>
+      <div className='w-full mt-8 justify-center items-center'>
         <h1 className="font-bold text-3xl text-center mb-4 mt-4">BME - Enquiry. Enter enquiry details!</h1>
         {/* <h1 className='text-3xl'>Client Details</h1> */}
         <label className="flex flex-col items-left text-lg mb-2">Client Name</label>
@@ -382,6 +279,14 @@ const ClientsData = () => {
     options={sources.map((source) => ({ label: source, value: source }))}
     placeholder="Select Source"
   />
+      </div>
+      <div className='flex flex-col items-center justify-center'>
+      <button
+          className="bg-purple-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-purple-600"
+          onClick={() => { moveToAdDetails() }}
+        >
+          Submit
+        </button>
       </div>
 
       <div className="bg-surface-card p-8 rounded-2xl mb-4">
