@@ -12,7 +12,6 @@ const AdTypePage = () => {
   const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const [cat, setCat] = useState(false);
-  const [ty, setTy] = useState(false);
   const [selectedAdType2, setSelectedAdType2] = useState(null);
   const routers = useRouter();
   const [showAdMedium, setShowAdMedium] = useState(false);
@@ -78,7 +77,7 @@ const greater = '>>'
       <div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
-        <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out' onClick={() => {moveToPreviousPage(!selectedAdType2)}
+        <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' onClick={() => {moveToPreviousPage(!selectedAdType2)}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button> 
     {Cookies.get('ratename')} {selectedAdType2 ? greater : ''} {selectedAdType2 ? selectedAdType2.typeOfAd : ''}</h1>
           <button
@@ -128,6 +127,7 @@ const greater = '>>'
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
             {
+              Cookies.set('typeofad', optionss.typeOfAd)
               Cookies.set('adtype', optionss.adType)
               setSelectedAdType2(optionss);
           }}}
@@ -144,9 +144,9 @@ const greater = '>>'
               key={option.adType}
               className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
               onClick={() => {
+                Cookies.set('typeofad', option.typeOfAd)
                 Cookies.set('adtype', option.adType)
                 setSelectedAdType(option);
-                setTy(false);
                  setCat(true);
               }}
             >

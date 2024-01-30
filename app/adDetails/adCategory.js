@@ -14,6 +14,7 @@ const AdCategoryPage = () => {
   const [datas, setDatas] = useState([]);
   const [vend, setVend] = useState(false);
   const routers = useRouter();
+  const typeOfAd = Cookies.get('typeofad');
   const adType = Cookies.get('adtype')
   const [showAdTypePage, setShowAdTypePage] = useState(false)
   const [selectedFirstName, setSelectedFirstName] = useState(null)
@@ -74,8 +75,9 @@ const AdCategoryPage = () => {
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
       
-    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adtype'); setShowAdTypePage(true)}
-    }> <FontAwesomeIcon icon={faArrowLeft} /> </button> {Cookies.get('ratename')} {greater} {adType} {selectedFirstName ? greater : ''} {selectedFirstName ? selectedFirstName.firstName : ''}</h1>
+    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' onClick={() => {Cookies.remove('adtype'); setShowAdTypePage(true)}
+    }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
+    {Cookies.get('ratename')} {!(typeOfAd === adType) ? greater : ''} {!(typeOfAd === adType) ? typeOfAd : ''} {greater} {adType} {selectedFirstName ? greater : ''} {selectedFirstName ? selectedFirstName.firstName : ''}</h1>
 
         
           <button
@@ -155,7 +157,13 @@ const AdCategoryPage = () => {
             </ul> 
             ):(
             setVend(true),
-            Cookies.set('adcategory', selectedFirstName.adCategory))
+            Cookies.set('adcategory', selectedFirstName.adCategory),
+            Cookies.set('typeofad', selectedFirstName.typeOfAd),
+              Cookies.set('rateperunit', selectedFirstName.ratePerUnit),
+              Cookies.set('minimumunit', selectedFirstName.minimumUnit),
+              Cookies.set('defunit', selectedFirstName.Units),
+              Cookies.set('rateId', selectedFirstName.rateId)
+            )
             }
             </div>
       

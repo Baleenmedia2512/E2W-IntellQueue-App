@@ -15,25 +15,25 @@ const BottomBar = () => {
 
   return (
     // <div className="">
-      <nav className="flex justify-around bg-gray-800 text-white p-4 fixed bottom-0 left-0 w-full">
-        <button className={`flex-grow hover:bg-gray-600 w-1/3 rounded-lg border ${
-            isActive('/') ? 'bg-lime-200' : 'bg-sky-700'
+      <div className="flex justify-around bg-white border p-2 fixed bottom-0 left-0 w-full">
+        <div className={`flex flex-grow hover:bg-gray-600 w-1/3 rounded-lg items-center justify-center ${
+            isActive('/') ? 'bg-lime-200' : ''
           }`}
         onClick={() => routers.push('/')}
-        >Rates Validation</button>
-        <button
-        className={`flex-grow hover:bg-gray-600 w-1/3 rounded-lg border ${
-            isActive('/addenquiry') ? 'bg-lime-200' : 'bg-sky-700'
+        >Rates Validation</div>
+        <div
+        className={`flex items-center justify-center flex-grow hover:bg-gray-600 w-1/3 rounded-lg ${
+            isActive('/addenquiry') ? 'bg-lime-200' : ''
           }`}
         onClick={() => routers.push('/addenquiry')}
-        >Add Enquiry</button>
-        <button
-        className={`flex-grow hover:bg-gray-600 w-1/3 py-3 rounded-lg border ${
-            isActive('/adDetails') ? 'bg-lime-200' : 'bg-sky-700'
+        >Add Enquiry</div>
+        <div
+        className={` flex items-center justify-center flex-grow hover:bg-gray-600 w-1/3 py-3 rounded-lg ${
+            isActive('/adDetails') ? 'bg-lime-200' : ''
           }`}
         onClick={() => routers.push('/adDetails')}
-        >Quote Sender</button>
-      </nav>
+        >Quote Sender</div>
+      </div>
     // </div>
   );
 };

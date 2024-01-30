@@ -39,7 +39,7 @@ const AdDetailsPage = () => {
   const typeOfAd = Cookies.get('typeofad');
   //const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
-  const [margin, setMargin] = useState((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * 15)/100);
+  const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15)/100).toFixed(2));
 
   //const minimumUnit = 15;
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
@@ -47,9 +47,9 @@ const AdDetailsPage = () => {
   const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
 
   useEffect(() => {
-    const multipliedAmount = (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))
+    const multipliedAmount = (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
     //setMargin((margin/1).toFixed(2))
-    //setMarginPercentage(((margin / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
+    //setMarginPercentage(((margin / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
   },[])
 
   useEffect(() => {
@@ -57,7 +57,7 @@ const AdDetailsPage = () => {
       setSelectedDayRange(dayRange[1]);
     }
     // if (margin === 0){
-    //   setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
+    //   setMargin((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
     // }
   },
   [])
@@ -87,7 +87,7 @@ const AdDetailsPage = () => {
     const selectedSlab = slabData.filter(item => item.StartQty === qtySlabNumber);
 
     setQty(qtySlab)
-    setMargin((qtySlab * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage)/100);
+    setMargin((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage)/100);
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
@@ -105,13 +105,13 @@ const AdDetailsPage = () => {
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
-    setMarginPercentage(((event.target.value * 100) / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2))
+    setMarginPercentage(((event.target.value * 100) / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2))
   };
 
   const handleMarginPercentageChange = (event) => {
     //const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
-    setMargin((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value)/100);
+    setMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value)/100).toFixed(2));
   };
 
   useEffect(() => {
@@ -144,14 +144,14 @@ const AdDetailsPage = () => {
           <div className='mx-[8%]'>
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
           <div className=''>
-            <button className='mb-6 mr-5 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
+            <button className='mb-6 mr-8 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
 
-            <label className="text-center mb-1"> {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory}</label><br/>
+            <label className="text-center font-semibold mb-1">{rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory}</label><br/>
               {/* <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
-              <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label> */}
-            <label className="font-semibold text-sm">* Price: Rs.{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Rs.{qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice/1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{(margin / 1).toFixed(2)} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount) </label><br/>
-            <label className="font-bold text-sm">* Price: Rs.{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST) </label>
+              <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(unitPrice / 1).toFixed(2)}</label> */}
+            <label className="font-semibold text-sm">* Price: Rs.{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice/1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{(margin / 1).toFixed(2)} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount) </label><br/>
+            <label className="font-bold text-sm">* Price: Rs.{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST) </label>
             <br/><br/></div>
             <div className='mb-8 overflow-y-auto h-[calc(100vh-300px)]'>
             <label className="font-bold">Vendor</label>
@@ -200,7 +200,7 @@ const AdDetailsPage = () => {
                 value={qty}
                 //value={minimumUnit > qty ? minimumUnit : qty}
                 onChange={(e) => { setQty(e.target.value)
-                  setMarginPercentage(((margin * 100) / (e.target.value * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2))}}
+                  setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2))}}
                 onFocus={(e) => e.target.select()}
               />
 
@@ -342,7 +342,7 @@ const AdDetailsPage = () => {
             <h1 className='mb-2 text-blue-600 font-semibold'>Margin Percentage : {marginPercentage}</h1>
             <h1 className='mb-2 text-blue-600 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1> */}
             <span className='flex flex-row'>
-            <h1 className='mb-14 text-blue-600 font-semibold'>Price            : </h1><div className=''>{(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div>
+            <h1 className='mb-14 text-blue-600 font-semibold'>Price            : </h1><div className=''>{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</div>
             </span>
             
 
