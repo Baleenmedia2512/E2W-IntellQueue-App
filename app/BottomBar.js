@@ -1,39 +1,74 @@
 'use client'
-import React, { useState , useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import Cookies from 'js-cookie';
 
 const BottomBar = () => {
-    const routers = useRouter();
-    const [buttonPressed, setButtonPressed] = useState();
-    const currentPath = usePathname();
-    const username = Cookies.get('username')
+  const routers = useRouter();
+  const currentPath = usePathname();
+  const username = Cookies.get('username')
+  const [isHovered, setIsHovered] = useState('')
+  const clientName = Cookies.get('clientname');
+  const clientNumber = Cookies.get('clientnumber');
+  const clientEmail = Cookies.get('clientemail');
+  const selectedSource = Cookies.get('selectedsource');
 
-    if (currentPath === '/login') {
-      return null;
+  if (currentPath === '/login') {
+    return null;
+  }
+
+  const moveToQuoteSender = () => {
+    if (clientName !== '' && clientEmail !== '' && clientNumber !== '' && selectedSource !== '') {
+      routers.push('../adDetails');
     }
+    else {
+      routers.push('/addenquiry')
+    }
+  }
 
   return (
-      <nav className="flex justify-around bg-white border p-2 fixed bottom-0 left-0 w-full">
-        <button className={` flex-grow hover:bg-gray-600 w-1/3 rounded-lg ${
-            // buttonPressed === "Rates Validation" ? 'bg-lime-200' : ''
-            '/' === currentPath ? 'bg-lime-200' : ''
+    <nav className="flex justify-around bg-white border p-2 fixed bottom-0 left-0 w-full">
+      <button className={` flex flex-col items-center justify-center h-20 w-1/3 py-2 rounded-lg ${
+        '/' === currentPath ? 'bg-white' : ''
+        }`}
+        onClick={() => { routers.push('/'); }}
+        onMouseEnter={() => setIsHovered('Rates')}
+        onMouseLeave={() => setIsHovered(null)}
+      >
+        <div className={` ${'/' === currentPath ? 'rounded-full border p-6 px-20 border-purple-500 bg-purple-500':''}`}>
+        <Image src="/images/approval.png" alt="Validation Icon" width={40} height={40} />
+        </div>
+        <label>{isHovered==='Rates'  ? 'Rates Validation' : ''}</label>
+      
+      </button>
+      <button
+        className={`flex flex-col items-center justify-center py-2 h-20 w-1/3 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
           }`}
-        onClick={() => {routers.push('/'); setButtonPressed("Rates Validation")}}
-        >Rates Validation</button>
-        <button
-        className={`flex-grow hover:bg-gray-600 w-1/3 rounded-lg ${
-            (currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-lime-200' : ''
-          }`}
-        onClick={() => routers.push('/addenquiry')}
-        >Quote Sender</button>
-        <button
-        className='flex-grow hover:bg-gray-600 w-1/3 py-3 rounded-lg'
-        onClick={() => {routers.push('/login')
-      Cookies.remove('username')}}
-        >Logout</button>
-      </nav>
+        onClick={() => moveToQuoteSender()}
+        onMouseEnter={() => setIsHovered('Quotes')}
+        onMouseLeave={() => setIsHovered(null)}
+      >
+        <div className={` ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'rounded-full border p-6 px-20 border-purple-500 bg-purple-500':''}`}>
+        <Image src="/images/profiles.png" alt="Quote Sender Icon" width={40} height={40} />
+        </div>
+      <label>{isHovered==='Quotes' ? 'Quote Sender' : ''}</label>
+      </button>
+
+
+      <button
+        className='flex flex-col items-center justify-center py-2 h-20 w-1/3 rounded-lg'
+        onClick={() => {
+          routers.push('/login')
+          Cookies.remove('username')
+        }}
+        onMouseEnter={() => setIsHovered('log')}
+        onMouseLeave={() => setIsHovered(null)}
+      ><Image src="/images/exit.png" alt="Logout Icon" width={40} height={40} />
+      <label>{isHovered==='log' ? 'Logout' : ''}</label>
+      </button>
+    </nav>
   );
 };
 

@@ -160,10 +160,10 @@ const AdDetailsPage = () => {
           <div className='mx-[8%]'>
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
           <div className=''>
-            <button className='mb-6 mr-8 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
+            <button className='mr-8 hover:scale-110 hover:text-orange-900' onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
 
-            <label className="text-center font-semibold mb-1">{rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory}</label><br/>
+            <label className="font-semibold text-wrap mb-1">{rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory}</label><br/><br/>
               {/* <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
               <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(unitPrice / 1).toFixed(2)}</label> */}
             <label className="font-semibold text-sm">* Price: Rs.{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) = (Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice/1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{(margin / 1).toFixed(2)} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount) </label><br/>

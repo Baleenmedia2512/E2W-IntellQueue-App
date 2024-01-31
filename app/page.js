@@ -419,7 +419,7 @@ const RatesListPage = () => {
               {item.rateName}
             </div>
             <div className="mb-2 text-black">{item.adType}</div>
-            <div className="mb-2 text-black">{item.adCategory}</div>
+            <div className="mb-2 text-black text-wrap">{item.adCategory.split("|").join(" | ").split(",").join(", ")}</div>
             <div className={`${
                 new Date(item.ValidityDate) <= today || item.ValidityDate === '0000-00-00'
                   ? 'mb-2 font-bold text-red-600'

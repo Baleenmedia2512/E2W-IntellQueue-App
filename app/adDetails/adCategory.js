@@ -75,7 +75,12 @@ const AdCategoryPage = () => {
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
       
-    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' onClick={() => {Cookies.remove('adtype'); setShowAdTypePage(true)}
+    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' onClick={() => {
+      if(!selectedFirstName){
+      Cookies.remove('adtype'); setShowAdTypePage(true)
+    }else{
+      setSelectedFirstName(false)
+    }}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
     {Cookies.get('ratename')} {!(typeOfAd === adType) ? greater : ''} {!(typeOfAd === adType) ? typeOfAd : ''} {greater} {adType} {selectedFirstName ? greater : ''} {selectedFirstName ? selectedFirstName.firstName : ''}</h1>
 
@@ -122,11 +127,11 @@ const AdCategoryPage = () => {
         {searchedEdition.map((option) => (
           <label
             key={option.firstName}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
+            className='flex flex-col items-center justify-center w-full min-h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={()=> setSelectedFirstName(option)}
           >
             {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.firstName):(categories.adType)}</div> */}
-            <div className="text-lg font-bold items-center justify-center">{option.firstName}</div>
+            <div className="text-lg font-bold items-center text-wrap text-center justify-center">{option.firstName.split('|').join(' | ').split(",").join(", ")}</div>
             
           </label>
         ))}
