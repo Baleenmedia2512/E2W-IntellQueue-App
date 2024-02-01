@@ -198,7 +198,7 @@ const AdDetailsPage = () => {
               </button>
 
               <h2 className="font-semibold text-wrap mb-1">
-                {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory}
+                {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory.split('|').join(' | ').split(",").join(", ")}
               </h2>
             </div><div>
               <div className="mb-4">
@@ -333,7 +333,7 @@ const AdDetailsPage = () => {
                 </div>
                 <div className="flex flex-col justify-center items-center mt-4">
                   <p className="font-semibold text-red-500">
-                    *Lead time is {leadDay.LeadDays} days from the date of payment received or the date of design approved, whichever is higher
+                    *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays: ''} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>

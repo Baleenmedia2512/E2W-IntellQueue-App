@@ -60,7 +60,10 @@ const AdTypePage = () => {
 
   const moveToPreviousPage = (adMedium) => {
     if(adMedium || filteredTypeofAd.length === 1){
-      Cookies.remove('ratename'); setShowAdMedium(true)
+      Cookies.remove('ratename'); 
+      Cookies.remove('typeofad'); 
+      Cookies.remove('adType'); 
+      setShowAdMedium(true)
     } else {
       Cookies.remove('selecteds');
       setSelectedAdType2(null)
@@ -79,8 +82,6 @@ const AdTypePage = () => {
 
     if (!selectedAdType2 && filteredTypeofAd.length === 1) {
       setSelectedAdType2(filteredTypeofAd[0]);
-      Cookies.set('typeofad', filteredTypeofAd[0].typeOfAd)
-      Cookies.set('adtype', filteredTypeofAd[0].adType)
     }
   },[filteredTypeofAd] );
 
@@ -170,7 +171,10 @@ const greater = '>>'
               <div className="text-lg font-bold flex items-center justify-center">{option.adType}</div>
             </label>
           ))}
-        </ul>):setCat(true)}
+        </ul>):(setCat(true),
+      Cookies.set('typeofad', selectedAdType2.typeOfAd),
+      Cookies.set('adtype', selectedAdType2.adType)
+        )}
 </div>
       
       </div>)}
