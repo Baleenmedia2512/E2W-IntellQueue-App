@@ -59,15 +59,31 @@ const AdTypePage = () => {
   );
 
   const moveToPreviousPage = (adMedium) => {
-    if(adMedium){
+    if(adMedium || filteredTypeofAd.length === 1){
       Cookies.remove('ratename'); setShowAdMedium(true)
     } else {
+      Cookies.remove('selecteds');
       setSelectedAdType2(null)
     }
   }
   const searchedType2 = filteredData.filter((optionn) =>
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
+  useEffect(() => {
+  //   if(Cookies.get('selecteds')!==undefined){
+  //   const selected = JSON.parse(Cookies.get('selecteds'));
+  //   console.log(selected,"ep")
+  //   setSelectedAdType2(selected);
+  //   // console.log(selectedAdType2,"ee")
+  // }
+
+    if (!selectedAdType2 && filteredTypeofAd.length === 1) {
+      setSelectedAdType2(filteredTypeofAd[0]);
+      Cookies.set('typeofad', filteredTypeofAd[0].typeOfAd)
+      Cookies.set('adtype', filteredTypeofAd[0].adType)
+    }
+  },[filteredTypeofAd] );
+
 const greater = '>>'
   return (
     <div >
@@ -119,7 +135,7 @@ const greater = '>>'
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
         <div>
-          {!selectedAdType2? (
+          {!selectedAdType2 ? (
         <div className="flex flex-col mx-[8%]">
         {searchedType.map((optionss) => (
           <label
@@ -130,15 +146,16 @@ const greater = '>>'
               Cookies.set('typeofad', optionss.typeOfAd)
               Cookies.set('adtype', optionss.adType)
               setSelectedAdType2(optionss);
+              Cookies.set('selecteds' ,JSON.stringify(optionss));
           }}}
           >
             <div className="text-lg font-bold flex items-center justify-center">{optionss.typeOfAd}</div>
 
           </label>
         ))}
-      </div>): (filteredData.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1)? (
+      </div>):  (filteredData.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1)? (
       <ul className="flex flex-col items-center mx-[8%]">
-        {console.log(selectedAdType2)}
+        
           {searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).map((option) => (
             <label
               key={option.adType}

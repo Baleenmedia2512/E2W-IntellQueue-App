@@ -44,7 +44,7 @@ const BottomBar = () => {
       
       </button>
       <button
-        className={`flex flex-col items-center justify-center py-2 h-16 w-1/3 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
+        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/3 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
           }`}
         onClick={() => moveToQuoteSender()}
         onMouseEnter={() => setIsHovered('Quotes')}

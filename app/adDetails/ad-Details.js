@@ -41,7 +41,7 @@ const AdDetailsPage = () => {
   const ratePerUnit = Cookies.get('rateperunit');
   const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15) / 100).toFixed(2));
   const ValidityDate = Cookies.get('validitydate')
-
+  const [ changing , setChanging ] = useState(false);
   //const minimumUnit = 15;
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
 
@@ -105,7 +105,7 @@ const AdDetailsPage = () => {
     // Find the corresponding slabData for the selected QtySlab
     const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
 
-    setQty(qtySlab)
+    // setQty(qtySlab)
     setMargin((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100);
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
@@ -144,9 +144,10 @@ const AdDetailsPage = () => {
         .then((data) => setDatas(data))
         .catch((error) => console.error(error));
       //fetchAdQtySlab()
+     
     }
   }, []);
-
+  
   const filteredData = datas
     .filter(item => item.adCategory === adCategory && item.adType === adType)
     .filter((value, index, self) =>
@@ -154,9 +155,27 @@ const AdDetailsPage = () => {
     )
     .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
 
+  const newData =datas.filter(item => Number(item.rateId) === Number(rateId));
+   const leadDay = newData[0];
 
   const sortedSlabData = slabData
     .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+
+    const findMatchingQtySlab = (value) => {
+      let matchingStartQty = '';
+    
+      for (const slab of sortedSlabData) {
+        if (value >= slab.StartQty) {
+          matchingStartQty = slab.StartQty;
+        } else {
+          break;  // Stop searching once the condition is not met
+        }
+      }
+    
+      return matchingStartQty;
+    };
+    
+    
 
   const greater = ">>"
   return (
@@ -213,7 +232,7 @@ const AdDetailsPage = () => {
                     value={qtySlab}
                     onChange={(e) => {
                       setQtySlab(e.target.value);
-                      setQty(e.target.value);
+                      {changing && setQty(e.target.value);}
                     }}
                   >
                     {sortedSlabData.map((opt, index) => (
@@ -235,6 +254,8 @@ const AdDetailsPage = () => {
                       onChange={(e) => {
                         setQty(e.target.value);
                         setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
+                        setQtySlab(findMatchingQtySlab(e.target.value));
+                        setChanging(true);
                       }}
                       onFocus={(e) => e.target.select()}
                     />
@@ -312,7 +333,7 @@ const AdDetailsPage = () => {
                 </div>
                 <div className="flex flex-col justify-center items-center mt-4">
                   <p className="font-semibold text-red-500">
-                    *Lead time is 7 days from the date of payment received or the date of design approved, whichever is higher
+                    *Lead time is {leadDay.LeadDays} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>

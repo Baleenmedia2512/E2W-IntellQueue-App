@@ -67,6 +67,13 @@ const AdCategoryPage = () => {
         .catch((error) => console.error(error));
     }
   }, [routers]);
+
+  // useEffect(() => {
+  //     if (!selectedFirstName && filteredDataone.length === 1) {
+  //       setSelectedFirstName(filteredDataone[0]);
+  //     }
+  //   },[filteredDataone] );
+
   const greater = ">>"
   return (
     <div>
@@ -75,8 +82,9 @@ const AdCategoryPage = () => {
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
       
-    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' onClick={() => {
-      if(!selectedFirstName){
+    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' 
+    onClick={() => {
+      if(!selectedFirstName || filteredDataone.length === 1){
       Cookies.remove('adtype'); setShowAdTypePage(true)
     }else{
       setSelectedFirstName(false)

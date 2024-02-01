@@ -93,17 +93,17 @@ const Login = () => {
             >
               {showPassword ? (
                 <FontAwesomeIcon
+                className="far fa-eye"
+                icon={faEye}
+                style={{ color: 'black', fontSize: '14px' }}
+                alt="Show Password"
+              />
+              ) : (
+                <FontAwesomeIcon
                   className="far fa-eye-slash"
                   icon={faEyeSlash}
                   style={{ color: 'black', fontSize: '14px' }}
                   alt="Hide Password"
-                />
-              ) : (
-                <FontAwesomeIcon
-                  className="far fa-eye"
-                  icon={faEye}
-                  style={{ color: 'black', fontSize: '14px' }}
-                  alt="Show Password"
                 />
               )}
             </span>
