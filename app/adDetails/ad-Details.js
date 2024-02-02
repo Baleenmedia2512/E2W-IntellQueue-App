@@ -6,7 +6,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
-const minimumUnit = Cookies.get('minimumunit');
+import { generatePdf } from '../generatePDF/generatePDF';
+//const minimumUnit = Cookies.get('minimumunit');
 
 const AdDetailsPage = () => {
   const [selectedVendor, setSelectedVendor] = useState("");
@@ -194,7 +195,13 @@ const handleSubmit = () => {
       return matchingStartQty;
     };
     
-    
+const pdfGeneration = () => {
+  const AmountExclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2);
+  const AmountInclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2);
+  const PDFArray = [rateName, adType, adCategory, '', qty, unitPrice, AmountExclGST, '18%', AmountInclGST, leadDay.LeadDays]
+
+  generatePdf(PDFArray)
+}
 
   const greater = ">>"
   return (
@@ -464,6 +471,7 @@ const handleSubmit = () => {
 
             <button
               className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full transition-all duration-300 ease-in-out hover:bg-green-600"
+              onClick={pdfGeneration}
             >
               Download Quote
             </button>
