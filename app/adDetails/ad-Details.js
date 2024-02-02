@@ -4,21 +4,21 @@ import Cookies from 'js-cookie';
 import AdCategoryPage from './adCategory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-
-//const minimumUnit = Cookies.get('minimumunit');
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 const minimumUnit = Cookies.get('minimumunit');
 
 const AdDetailsPage = () => {
   const [selectedVendor, setSelectedVendor] = useState("");
   const [slabData, setSlabData] = useState([])
   const [qtySlab, setQtySlab] = useState()
+  const [unitPrice, setUnitPrice] = useState('')
   // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
   const [qty, setQty] = useState(qtySlab)
   const [selectedDayRange, setSelectedDayRange] = useState('');
   const [campaignDuration, setCampaignDuration] = useState(1);
   const [unit, setUnit] = useState('')
-  const [unitPrice, setUnitPrice] = useState('')
-  //const [datas, setDatas] = useState()
+  
 
   const [showAdCategoryPage, setShowAdCategoryPage] = useState(false);
   const [marginPercentage, setMarginPercentage] = useState(15)
@@ -105,7 +105,8 @@ const AdDetailsPage = () => {
     // Find the corresponding slabData for the selected QtySlab
     const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
 
-    // setQty(qtySlab)
+    {!changing && setQty(qtySlab);}
+    {changing && setChanging(false)}
     setMargin((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100);
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
@@ -120,6 +121,24 @@ const AdDetailsPage = () => {
       handleQtySlabChange();
     }
   }, [qtySlab])
+  const [toastMessage, setToastMessage] = useState('');
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
+const handleSubmit = () => {
+    if (qty === '' || campaignDuration === '' || margin === '' || extraDiscount === '') {
+      setSeverity('warning');
+      setToastMessage('Please fill all the Client Details!');
+      setToast(true);
+    }
+    else if (qty < qtySlab) {
+      setSeverity('warning');
+      setToastMessage('Quantity should not be lesser than the slab!');
+      setToast(true);
+    }
+    else {
+      setCheckout(false);
+    }
+  }
 
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
@@ -232,7 +251,8 @@ const AdDetailsPage = () => {
                     value={qtySlab}
                     onChange={(e) => {
                       setQtySlab(e.target.value);
-                      {changing && setQty(e.target.value);}
+                     // {changing && setQty(e.target.value);}
+                     setQty(e.target.value)
                     }}
                   >
                     {sortedSlabData.map((opt, index) => (
@@ -326,7 +346,7 @@ const AdDetailsPage = () => {
                 <div className="flex flex-col items-center justify-center">
                   <button
                     className="bg-blue-500 hover:bg-purple-500 text-black px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    onClick={() => setCheckout(false)}
+                    onClick={() => handleSubmit()}
                   >
                     Checkout
                   </button>
@@ -337,6 +357,13 @@ const AdDetailsPage = () => {
                   </p>
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>
+              </div>
+              <div className="bg-surface-card p-8 rounded-2xl mb-4">
+                <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
+                  <MuiAlert severity={severity} onClose={() => setToast(false)}>
+                    {toastMessage}
+                  </MuiAlert>
+                </Snackbar>
               </div>
             </div>
           </div>
