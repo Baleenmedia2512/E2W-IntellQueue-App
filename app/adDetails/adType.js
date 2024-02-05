@@ -63,6 +63,7 @@ const AdTypePage = () => {
       Cookies.remove('ratename'); 
       Cookies.remove('typeofad'); 
       Cookies.remove('adType'); 
+      Cookies.remove('selecteds');
       setShowAdMedium(true)
     } else {
       Cookies.remove('selecteds');
@@ -73,15 +74,16 @@ const AdTypePage = () => {
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
   useEffect(() => {
-  //   if(Cookies.get('selecteds')!==undefined){
-  //   const selected = JSON.parse(Cookies.get('selecteds'));
-  //   console.log(selected,"ep")
-  //   setSelectedAdType2(selected);
-  //   // console.log(selectedAdType2,"ee")
-  // }
+      if(Cookies.get('selecteds')){
+        const selected = JSON.parse(Cookies.get('selecteds'))
+        if(filteredData.filter(item => item.typeOfAd === selected.typeOfAd).length>1){
+          setSelectedAdType2(selected);
+        }
+      }
 
     if (!selectedAdType2 && filteredTypeofAd.length === 1) {
       setSelectedAdType2(filteredTypeofAd[0]);
+      Cookies.set('selecteds' ,JSON.stringify(filteredTypeofAd[0]));
     }
   },[filteredTypeofAd] );
 
@@ -100,6 +102,10 @@ const greater = '>>'
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
+              Cookies.remove('ratename'); 
+              Cookies.remove('typeofad'); 
+              Cookies.remove('adType'); 
+              Cookies.remove('selecteds');
               routers.push('../addenquiry');
             }}
           >

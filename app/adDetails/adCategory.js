@@ -42,8 +42,7 @@ const AdCategoryPage = () => {
   const filteredDataone = splitNames
   .filter((value, index, self) => 
     self.findIndex(obj => obj.firstName === value.firstName) === index
-  )
-  ;
+  );
 
   const searchedEdition = filteredDataone.filter((option) =>
   option.firstName.toLowerCase().includes(searchInput.toLowerCase())
@@ -73,6 +72,22 @@ const AdCategoryPage = () => {
   //       setSelectedFirstName(filteredDataone[0]);
   //     }
   //   },[filteredDataone] );
+  useEffect(() => {
+      if(Cookies.get('firstname')){
+        const selected = JSON.parse(Cookies.get('firstname'))
+        if(splitNames.filter(item => item.firstName === selected.firstName).length>1){
+          setSelectedFirstName(selected);
+        }
+      }
+      // if(Cookies.get('back1')){
+      //   console.log(filteredDataone.length)
+      //   if(filteredDataone.length === 1 && splitNames.filter(item => item.firstName === selectedFirstName.firstName).length <=1){
+      //       setShowAdTypePage(true);
+      //       setVend(true);
+      //     }
+      //   Cookies.remove('back1')
+      // }
+  },[splitNames])
 
   const greater = ">>"
   return (
@@ -85,9 +100,18 @@ const AdCategoryPage = () => {
     <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' 
     onClick={() => {
       if(!selectedFirstName || filteredDataone.length === 1){
-      Cookies.remove('adtype'); setShowAdTypePage(true)
+      Cookies.remove('adtype'); 
+      Cookies.remove('firstname')
+      Cookies.remove('adcategory');
+      // Cookies.remove('rateperunit')
+      // Cookies.remove('minimumunit');
+      // Cookies.remove('defunit');
+      // Cookies.remove('rateId')
+      // Cookies.remove('validitydate');
+      setShowAdTypePage(true);
     }else{
       setSelectedFirstName(false)
+      Cookies.remove('firstname')
     }}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
     {Cookies.get('ratename')} {!(typeOfAd === adType) ? greater : ''} {!(typeOfAd === adType) ? typeOfAd : ''} {greater} {adType} {selectedFirstName ? greater : ''} {selectedFirstName ? selectedFirstName.firstName : ''}</h1>
@@ -96,6 +120,9 @@ const AdCategoryPage = () => {
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
+              Cookies.remove('adtype'); 
+      Cookies.remove('firstname')
+      Cookies.remove('adcategory');
               routers.push('../addenquiry');
             }}
           >
@@ -136,10 +163,12 @@ const AdCategoryPage = () => {
           <label
             key={option.firstName}
             className='flex flex-col items-center justify-center w-full min-h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
-            onClick={()=> setSelectedFirstName(option)}
+            onClick={()=> {setSelectedFirstName(option);
+            Cookies.set('firstname',JSON.stringify(option));
+          }}
           >
             {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.firstName):(categories.adType)}</div> */}
-            <div className="text-lg font-bold items-center text-wrap text-center justify-center">{option.firstName.split('|').join(' | ').split(",").join(", ")}</div>
+            <div className="text-lg font-bold items-center text-wrap text-center justify-center">{option.firstName === "" ? 'Skip' : option.firstName.split('|').join(' | ').split(",").join(", ")}</div>
             
           </label>
         ))}
@@ -165,7 +194,7 @@ const AdCategoryPage = () => {
               setVend(true)
             }}
           >
-            <div className="text-sm font-bold items-center justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.lastName}</div>
+            <div className="text-sm font-bold items-center justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.lastName === "" ? 'Skip' : options.lastName}</div>
 </label>))
               }
             </ul> 

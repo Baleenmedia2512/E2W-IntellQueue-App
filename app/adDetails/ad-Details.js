@@ -182,16 +182,15 @@ const handleSubmit = () => {
     .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
 
     const findMatchingQtySlab = (value) => {
-      let matchingStartQty = '';
+      let matchingStartQty = sortedSlabData[0].StartQty;
     
       for (const slab of sortedSlabData) {
         if (value >= slab.StartQty) {
           matchingStartQty = slab.StartQty;
         } else {
-          break;  // Stop searching once the condition is not met
+          break;
         }
       }
-    
       return matchingStartQty;
     };
     
@@ -218,6 +217,7 @@ const pdfGeneration = () => {
                   Cookies.remove('adcategory');
                   Cookies.remove('adMediumSelected');
                   setShowAdCategoryPage(true);
+                  Cookies.set('back1',true);
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} />
@@ -233,7 +233,7 @@ const pdfGeneration = () => {
                   (Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice / 1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{(margin / 1).toFixed(2)} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount)
                 </p>
                 <p className="font-bold text-sm">
-                  * Price: Rs.{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST)
+                  * Price: Rs.{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST 18%)
                 </p>
               </div>
               <div className="mb-8 overflow-y-auto h-[calc(100vh-300px)]">
@@ -246,7 +246,9 @@ const pdfGeneration = () => {
                   >
                     {filteredData.map((option, index) => (
                       <option className="rounded-lg" key={index} value={option.VendorName}>
-                        Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)} - 7 days - {option.VendorName}
+                        {option.VendorName === '' && filteredData.length === 1
+        ? 'No Vendors'
+        : `Rs.${qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)} - 7 days - ${option.VendorName}`}
                       </option>
                     ))}
                   </select>
@@ -273,7 +275,7 @@ const pdfGeneration = () => {
                   <label className="font-bold">Quantity</label>
                   <div className="flex w-full">
                     <input
-                      className="w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
                       defaultValue={qtySlab}
@@ -288,7 +290,7 @@ const pdfGeneration = () => {
                     />
                     <label className="text-center mt-2 ml-5">{unit}</label>
                   </div>
-                  <p className="text-red-700">{qty < qtySlab ? 'Quantity is lesser than minimum' : ''}</p>
+                  <p className="text-red-700">{qty < qtySlab ? 'Quantity should not be lesser than the slab' : ''}</p>
                 </div>
                 <div className="mb-4">
                   <label className="font-bold">Campaign Duration</label>
