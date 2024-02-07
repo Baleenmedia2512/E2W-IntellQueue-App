@@ -367,7 +367,7 @@ const pdfGeneration = () => {
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>
               </div>
-              <div className="bg-surface-card p-8 rounded-2xl mb-4">
+              <div className="bg-surface-card p-8 rounded-2xl mb-16">
                 <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
                   <MuiAlert severity={severity} onClose={() => setToast(false)}>
                     {toastMessage}
@@ -406,36 +406,38 @@ const pdfGeneration = () => {
               </button></>
           </div>
           <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
-          <div className='lg:mx-[30%] w-full'>
-            <h1 className='mb-4 font-bold'>AD Details</h1>
+          <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
+          <div>
+            <h1 className='mb-4 font-bold text-center'>AD Details</h1>
+            
             <table className='mb-8'>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Ad Medium</td>
-                <td>: {rateName}</td>
+                <td>:</td><td>  {rateName}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Ad Type</td>
-                <td>: {adType}</td>
+                <td>:</td><td>  {adType}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Edition</td>
-                <td>: {adCategory}</td>
+                <td>:</td><td>  {adCategory}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Quantity</td>
-                <td>: {qty} {unit}</td>
+                <td>:</td><td>  {qty} {unit}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Campaign Duration</td>
-                <td>: {campaignDuration} {selectedDayRange}</td>
+                <td>:</td><td>  {campaignDuration} {selectedDayRange}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Price</td>
-                <td>: {(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</td>
+                <td>:</td><td>  {(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</td>
               </tr>
             </table>
-
-            <h1 className='mb-4 font-bold'>Client Details</h1>
+            
+            <h1 className='mb-4 font-bold text-center'>Client Details</h1>
             {/* <span className='flex flex-row'><h1 className='mb-2 text-blue-600 font-semibold'>Client Name : </h1><div className=''>{clientName}</div></span>
             
             <span className='flex flex-row'>
@@ -453,22 +455,22 @@ const pdfGeneration = () => {
             <table className='mb-6'>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Client Name</td>
-                <td>: {clientName}</td>
+                <td>:</td><td>  {clientName}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Client Number</td>
-                <td>: {clientNumber}</td>
+                <td>:</td><td>  {clientNumber}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Client E-Mail</td>
-                <td>: {clientEmail}</td>
+                <td>:</td><td>  {clientEmail}</td>
               </tr>
               <tr>
                 <td className='py-1 text-blue-600 font-semibold'>Source</td>
-                <td>: {selectedSource}</td>
+                <td>:</td><td>  {selectedSource}</td>
               </tr>
             </table>
-          </div>
+          </div></div>
           <div className='flex flex-col justify-center items-center'>
 
             <button
