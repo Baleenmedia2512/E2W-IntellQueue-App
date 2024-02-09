@@ -398,7 +398,7 @@ const RatesListPage = () => {
         {filteredRates.map((item) => (
           <li
             key={item.rateId}
-            className={`border p-4 rounded-lg shadow-md bg-purple-400 ${
+            className={`border p-4 rounded-lg shadow-md bg-purple-200 ${
               selectedItems.includes(item) ? 'border-blue-500' : ''
             }`}
           >

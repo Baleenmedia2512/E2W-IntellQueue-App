@@ -64,17 +64,18 @@ const AdDetailsPage = () => {
 
   const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
 
-  useEffect(() => {
-    const multipliedAmount = (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
-    //setMargin((margin/1).toFixed(2))
-    //setMarginPercentage(((margin / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
-  }, [])
+  // useEffect(() => {
+  //   const multipliedAmount = (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
+  //   //setMargin((margin/1).toFixed(2))
+  //   //setMarginPercentage(((margin / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
+  // }, [])
 
   useEffect(() => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
     }
-    // if (margin === 0){
+    // setMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15) / 100).toFixed(2))
+    // if (margin === undefined){
     //   setMargin((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
     // }
   },
@@ -108,7 +109,7 @@ const AdDetailsPage = () => {
 
     {!changing && setQty(qtySlab);}
     {changing && setChanging(false)}
-    setMargin((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100);
+    setMargin(((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2));
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
@@ -230,7 +231,7 @@ const pdfGeneration = () => {
               <div className="mb-4">
                 <p className="font-semibold text-sm">
                   * Price: Rs. {(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) =
-                  (Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice / 1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{(margin / 1).toFixed(2)} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount)
+                  (Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice / 1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{margin} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount)
                 </p>
                 <p className="font-bold text-sm">
                   * Price: Rs.{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST 18%)
@@ -282,7 +283,8 @@ const pdfGeneration = () => {
                       value={qty}
                       onChange={(e) => {
                         setQty(e.target.value);
-                        setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
+                        setMargin(((e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2));
+                        // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value));
                         setChanging(true);
                       }}
@@ -302,7 +304,8 @@ const pdfGeneration = () => {
                       value={campaignDuration}
                       onChange={(e) => {
                         setCampaignDuration(e.target.value);
-                        setMarginPercentage(((margin * 100) / (qty * unitPrice * (e.target.value === 0 ? 1 : e.target.value))).toFixed(2));
+                        setMargin(((qtySlab * unitPrice * (e.target.value === 0 || e.target.value === '' ? 1 : e.target.value) * marginPercentage) / 100).toFixed(2));
+                        // setMarginPercentage(((margin * 100) / (qty * unitPrice * (e.target.value === 0 ? 1 : e.target.value))).toFixed(2));
                       }}
                     />
                     <div className="relative">
@@ -354,7 +357,7 @@ const pdfGeneration = () => {
                 </div>
                 <div className="flex flex-col items-center justify-center">
                   <button
-                    className="bg-blue-500 hover:bg-purple-500 text-black px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     onClick={() => handleSubmit()}
                   >
                     Checkout
