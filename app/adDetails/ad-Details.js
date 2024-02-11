@@ -195,12 +195,30 @@ const handleSubmit = () => {
       return matchingStartQty;
     };
     
-const pdfGeneration = () => {
+const pdfGeneration = async() => {
   const AmountExclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2);
   const AmountInclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2);
-  const PDFArray = [rateName, adType, adCategory, '', qty, unitPrice, AmountExclGST, '18%', AmountInclGST, leadDay.LeadDays]
+  const PDFArray = [rateName, adType, adCategory, '', qty, (AmountExclGST/qty), AmountExclGST, '18%', AmountInclGST, leadDay.LeadDays]
+  const GSTPerc = 18
 
   generatePdf(PDFArray)
+
+  try {
+    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${Cookies.get('username')}&
+    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}`)
+    const data = await response.json();
+    if (data.success === true) {
+      alert(data.message)
+      //setMessage(data.message);
+    } else {
+      alert(`The following error occurred while inserting data: ${data}`);
+      //setMessage("The following error occurred while inserting data: " + data);
+      // Update ratesData and filteredRates locally
+    
+    }
+  } catch (error) {
+    console.error('Error updating rate:', error);
+  }
 }
 
   const greater = ">>"
