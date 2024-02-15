@@ -14,6 +14,9 @@ const twoDaysFromNow = new Date();
 twoDaysFromNow.setDate(today.getDate() + 2);
 var intRegex = /^\d+$/;
 
+const PAGE_SIZE = 10;
+const NEIGHBOR_PAGES = 1;
+
 const RatesListPage = () => {
   const [ratesData, setRatesData] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -200,6 +203,44 @@ const RatesListPage = () => {
 
   const toggleModal = () => {
     setModal((prevState) => !prevState);
+  };
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(filteredRates.length / PAGE_SIZE);
+  const paginatedRates = filteredRates.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+  const generatePageNumbers = () => {
+    const pageNumbers = [];
+
+    // Always show the first page number
+    pageNumbers.push(1);
+
+    // Calculate start and end page numbers based on current page
+    let startPage = Math.max(2, currentPage - NEIGHBOR_PAGES);
+    let endPage = Math.min(totalPages - 1, currentPage + NEIGHBOR_PAGES);
+
+    // Add ellipsis if there are hidden pages before the first page number
+    if (startPage > 2) {
+      pageNumbers.push('...');
+    }
+
+    // Generate page numbers within the range
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    // Add ellipsis if there are hidden pages after the last page number
+    if (endPage < totalPages - 1) {
+      pageNumbers.push('...');
+    }
+
+    if(totalPages !== 1){
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
   };
 
   return (
@@ -395,7 +436,19 @@ const RatesListPage = () => {
     &&
     //sm:grid-cols-2 lg:grid-cols-3
       <ul className="grid gap-4 grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 ">
-        {filteredRates.map((item) => (
+        <div className="flex justify-center my-4">
+        {/* Render page numbers */}
+        {generatePageNumbers().map((pageNumber) => (
+          <button
+            key={pageNumber}
+            className={`mx-2 px-3 py-1 rounded ${currentPage === pageNumber ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}
+            onClick={() => handlePageChange(pageNumber)}
+          >
+            {pageNumber}
+          </button>
+        ))}
+      </div>
+        {paginatedRates.map((item) => (
           <li
             key={item.rateId}
             className={`border p-4 rounded-lg shadow-md bg-purple-200 ${
