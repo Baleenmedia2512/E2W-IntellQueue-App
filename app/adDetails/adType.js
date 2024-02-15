@@ -22,22 +22,31 @@ const AdTypePage = () => {
   };
 
   useEffect(() => {
-    const username = Cookies.get('username');
-
-    if(Cookies.get('adtype')){
-      setCat(true)
-      } else{
-        setCat(false)
+    const fetchData = async () => {
+      try {
+        const username = Cookies.get('username');
+        
+        if (Cookies.get('adtype')) {
+          setCat(true);
+        } else {
+          setCat(false);
+        }
+  
+        if (!username) {
+          routers.push('/login');
+        } else {
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+          const data = await response.json();
+          setDatas(data);
+        }
+      } catch (error) {
+        console.error(error);
       }
-    if (!username) {
-      routers.push('/login');
-    } else {
-      fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
-        .then((response) => response.json())
-        .then((data) => setDatas(data))
-        .catch((error) => console.error(error));
-    }
-  }, [routers]);
+    };
+  
+    fetchData();
+  }, []);
+  
 
   const filteredTypeofAd = datas
   .filter(item => item.rateName === Cookies.get('ratename'))

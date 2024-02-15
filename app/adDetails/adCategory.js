@@ -26,7 +26,6 @@ const AdCategoryPage = () => {
   };
 
   const filteredData = datas
-  .filter(item => item.adType === adType)
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adCategory === value.adCategory) === index
   )
@@ -52,20 +51,46 @@ const AdCategoryPage = () => {
   option.lastName.toLowerCase().includes(searchInput.toLowerCase())
 );
 
+  // useEffect(() => {
+  //   const username = Cookies.get('username');
+  //   if(selectedAdCategory){
+  //   setVend(Cookies.get('vendo'))
+  //   }
+  //   if (!username) {
+  //     routers.push('../login');
+  //   } else {
+  //     fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
+  //       .then((response) => response.json())
+  //       .then((data) => setDatas(data))
+  //       .catch((error) => console.error(error));
+  //   }
+  // }, []);
+
   useEffect(() => {
-    const username = Cookies.get('username');
-    if(selectedAdCategory){
-    setVend(Cookies.get('vendo'))
-    }
-    if (!username) {
-      routers.push('../login');
-    } else {
-      fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
-        .then((response) => response.json())
-        .then((data) => setDatas(data))
-        .catch((error) => console.error(error));
-    }
-  }, [routers]);
+    const fetchData = async () => {
+      try {
+        const username = Cookies.get('username');
+        
+        if (selectedAdCategory) {
+          setVend(Cookies.get('vendo'));
+        }
+  
+        if (!username) {
+          routers.push('../login');
+        } else {
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+          const data = await response.json();
+          const filData = data.filter(item => item.adType === adType);
+          setDatas(filData);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+  
 
   // useEffect(() => {
   //     if (!selectedFirstName && filteredDataone.length === 1) {

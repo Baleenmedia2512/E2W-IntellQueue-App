@@ -13,7 +13,7 @@ import BottomBar from '../BottomBar';
 export const AdMediumPage = () => {
   const [selectedAdMedium, setSelectedAdMedium] = useState('');
   const [datas, setDatas] = useState([]);
-  const [type, setType] = useState(false);
+  const [showAdTypePage, setShowAdTypePage] = useState(false);
   const routers = useRouter();
 
   const [searchInput, setSearchInput] = useState('');
@@ -71,24 +71,31 @@ export const AdMediumPage = () => {
   useEffect(() => {
     const username = Cookies.get('username');
 
-    if (Cookies.get('ratename')) {
-      setType(true)
+    const fetchData = async () => {
+      try {
+        if (Cookies.get('ratename')) {
+          setShowAdTypePage(true)
+        }
+
+        if (!username) {
+          routers.push('/login');
+        } else {
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+          const data = await response.json();
+          setDatas(data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
 
-    if (!username) {
-      routers.push('/login');
-    } else {
-      fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
-        .then((response) => response.json())
-        .then((data) => setDatas(data))
-        .catch((error) => console.error(error));
-    }
-  }, [routers]);
+    fetchData();
+  }, []);
 
   return (
     <div>
-      {type && (<AdTypePage data={selectedAdMedium} />)}
-      {!type && (
+      {showAdTypePage && (<AdTypePage />)}
+      {!showAdTypePage && (
         <div>
           <div className="flex flex-row justify-between mx-[8%] mt-8">
 
@@ -144,7 +151,7 @@ export const AdMediumPage = () => {
                   onClick={() => {
                     setSelectedAdMedium(option.rateName);
                     Cookies.set('ratename', option.rateName);
-                    setType(true);
+                    setShowAdTypePage(true);
                   }}
                 >
                   <div className="text-lg font-bold mb-2 text-black flex items-center justify-center">{option.rateName}</div>
@@ -375,19 +382,19 @@ export const AdMediumPage = () => {
 //   )
 // }
 
-const AdDetails = () => {
-  const [adDetailsSelected, setAdDetailsSelected] = useState(false);
+// const AdDetails = () => {
+//   const [adDetailsSelected, setAdDetailsSelected] = useState(false);
 
-  useEffect(() => {
-    setAdDetailsSelected(Cookies.get('adMediumSelected'))
+//   useEffect(() => {
+//     setAdDetailsSelected(Cookies.get('adMediumSelected'))
 
-  }, [Cookies.get('adMediumSelected')])
+//   }, [Cookies.get('adMediumSelected')])
 
-  return (
-    <div>
-      {adDetailsSelected ? <AdDetailsPage /> : <AdMediumPage />}
-    </div>
-  )
-}
+//   return (
+//     <div>
+//       {adDetailsSelected ? <AdDetailsPage /> : <AdMediumPage />}
+//     </div>
+//   )
+// }
 
-export default AdDetails;
+export default AdMediumPage;

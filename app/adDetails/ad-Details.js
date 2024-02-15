@@ -81,25 +81,27 @@ const AdDetailsPage = () => {
   },
     [])
 
-  useEffect(() => {
-    fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`)
-      .then((response) => {
-        // if (!response.ok) {
-        //   throw new Error(HTTP error! Status: ${response.status});
-        // }
-        return response.json();
-      })
-      .then((data) => {
-        setSlabData(data);
-        const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty))
-        const firstSelectedSlab = sortedData[0];
-        setQtySlab(firstSelectedSlab.StartQty);
-        setUnitPrice(firstSelectedSlab.UnitPrice);
-      })
-      //.then((data) => console.log)
-      .catch((error) => console.error(error));
-  }
-    , [rateId])
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const data = await response.json();
+          setSlabData(data);
+          const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+          const firstSelectedSlab = sortedData[0];
+          setQtySlab(firstSelectedSlab.StartQty);
+          setUnitPrice(firstSelectedSlab.UnitPrice);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+    
+      fetchData();
+    }, [rateId]);
+    
 
 
   const handleQtySlabChange = () => {
@@ -123,6 +125,27 @@ const AdDetailsPage = () => {
       handleQtySlabChange();
     }
   }, [qtySlab])
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const username = Cookies.get('username');
+        if (!username) {
+          routers.push('/login');
+        } else {
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+          const data = await response.json();
+          const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType)
+          setDatas(filterdata);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -154,23 +177,8 @@ const handleSubmit = () => {
     setMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value) / 100).toFixed(2));
   };
 
-  useEffect(() => {
-    const username = Cookies.get('username');
-    //console.log(data);
-    if (!username) {
-      routers.push('/login');
-    } else {
-      fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php') //FetchQtySlab.php
-        .then((response) => response.json())
-        .then((data) => setDatas(data))
-        .catch((error) => console.error(error));
-      //fetchAdQtySlab()
-     
-    }
-  }, []);
   
   const filteredData = datas
-    .filter(item => item.adCategory === adCategory && item.adType === adType)
     .filter((value, index, self) =>
       self.findIndex(obj => obj.VendorName === value.VendorName) === index
     )
