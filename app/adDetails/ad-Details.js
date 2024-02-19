@@ -19,7 +19,7 @@ const AdDetailsPage = () => {
   const [selectedDayRange, setSelectedDayRange] = useState('');
   const [campaignDuration, setCampaignDuration] = useState(1);
   const [unit, setUnit] = useState('')
-  
+
 
   const [showAdCategoryPage, setShowAdCategoryPage] = useState(false);
   const [marginPercentage, setMarginPercentage] = useState(15)
@@ -42,7 +42,7 @@ const AdDetailsPage = () => {
   const ratePerUnit = Cookies.get('rateperunit');
   const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15) / 100).toFixed(2));
   const ValidityDate = Cookies.get('validitydate')
-  const [ changing , setChanging ] = useState(false);
+  const [changing, setChanging] = useState(false);
   //const minimumUnit = 15;
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
 
@@ -81,27 +81,27 @@ const AdDetailsPage = () => {
   },
     [])
 
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          setSlabData(data);
-          const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-          const firstSelectedSlab = sortedData[0];
-          setQtySlab(firstSelectedSlab.StartQty);
-          setUnitPrice(firstSelectedSlab.UnitPrice);
-        } catch (error) {
-          console.error(error);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      };
-    
-      fetchData();
-    }, [rateId]);
-    
+        const data = await response.json();
+        setSlabData(data);
+        const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+        const firstSelectedSlab = sortedData[0];
+        setQtySlab(firstSelectedSlab.StartQty);
+        setUnitPrice(firstSelectedSlab.UnitPrice);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, [rateId]);
+
 
 
   const handleQtySlabChange = () => {
@@ -109,9 +109,9 @@ const AdDetailsPage = () => {
     // Find the corresponding slabData for the selected QtySlab
     const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
 
-    {!changing && setQty(qtySlab);}
-    {changing && setChanging(false)}
-    setMargin(((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2));
+    { !changing && setQty(qtySlab); }
+    { changing && setChanging(false) }
+    setMargin(formattedRupees(((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2)));
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
@@ -125,7 +125,7 @@ const AdDetailsPage = () => {
       handleQtySlabChange();
     }
   }, [qtySlab])
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -142,14 +142,14 @@ const AdDetailsPage = () => {
         console.error(error);
       }
     };
-  
+
     fetchData();
   }, []);
 
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
-const handleSubmit = () => {
+  const handleSubmit = () => {
     if (qty === '' || campaignDuration === '' || margin === '' || extraDiscount === '') {
       setSeverity('warning');
       setToastMessage('Please fill all the Client Details!');
@@ -168,66 +168,76 @@ const handleSubmit = () => {
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
-    setMarginPercentage(((event.target.value * 100) / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2))
+    setMarginPercentage(formattedRupees(((event.target.value * 100) / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2)))
   };
 
   const handleMarginPercentageChange = (event) => {
     //const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
-    setMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value) / 100).toFixed(2));
+    setMargin(formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value) / 100).toFixed(2)));
   };
 
-  
+
   const filteredData = datas
     .filter((value, index, self) =>
       self.findIndex(obj => obj.VendorName === value.VendorName) === index
     )
     .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
 
-  const newData =datas.filter(item => Number(item.rateId) === Number(rateId));
-   const leadDay = newData[0];
+  const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
+  const leadDay = newData[0];
 
   const sortedSlabData = slabData
     .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
 
-    const findMatchingQtySlab = (value) => {
-      let matchingStartQty = sortedSlabData[0].StartQty;
-    
-      for (const slab of sortedSlabData) {
-        if (value >= slab.StartQty) {
-          matchingStartQty = slab.StartQty;
-        } else {
-          break;
-        }
+  const findMatchingQtySlab = (value) => {
+    let matchingStartQty = sortedSlabData[0].StartQty;
+
+    for (const slab of sortedSlabData) {
+      if (value >= slab.StartQty) {
+        matchingStartQty = slab.StartQty;
+      } else {
+        break;
       }
-      return matchingStartQty;
-    };
-    
-const pdfGeneration = async() => {
-  const AmountExclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2);
-  const AmountInclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2);
-  const PDFArray = [rateName, adType, adCategory, '', qty, (AmountExclGST/qty), AmountExclGST, '18%', AmountInclGST, leadDay.LeadDays]
-  const GSTPerc = 18
-
-  generatePdf(PDFArray)
-
-  try {
-    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${Cookies.get('username')}&
-    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}`)
-    const data = await response.json();
-    if (data.success === true) {
-      alert(data.message)
-      //setMessage(data.message);
-    } else {
-      alert(`The following error occurred while inserting data: ${data}`);
-      //setMessage("The following error occurred while inserting data: " + data);
-      // Update ratesData and filteredRates locally
-    
     }
-  } catch (error) {
-    console.error('Error updating rate:', error);
+    return matchingStartQty;
+  };
+
+  const pdfGeneration = async () => {
+    const AmountExclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2);
+    const AmountInclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2);
+    const PDFArray = [rateName, adType, adCategory, '', qty, (AmountExclGST / qty), AmountExclGST, '18%', AmountInclGST, leadDay.LeadDays]
+    const GSTPerc = 18
+
+    generatePdf(PDFArray)
+
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${Cookies.get('username')}&
+    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}`)
+      const data = await response.json();
+      if (data.success === true) {
+        alert(data.message)
+        //setMessage(data.message);
+      } else {
+        alert(`The following error occurred while inserting data: ${data}`);
+        //setMessage("The following error occurred while inserting data: " + data);
+        // Update ratesData and filteredRates locally
+
+      }
+    } catch (error) {
+      console.error('Error updating rate:', error);
+    }
   }
-}
+
+  const formattedRupees = (number) => {
+    // return number % 1 === 0 ? number : (number % 1 <= 0.1 ? (number/1).toFixed(1) : (number/1).toFixed(2));
+    const roundedNumber = parseFloat((number / 1).toFixed(2));
+    return (roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2);
+  };
+
+  const formattedTotalAmount = (totalAmount) => {
+    return totalAmount.toLocaleString('en-IN');
+  }
 
   const greater = ">>"
   return (
@@ -244,7 +254,7 @@ const pdfGeneration = async() => {
                   Cookies.remove('adcategory');
                   Cookies.remove('adMediumSelected');
                   setShowAdCategoryPage(true);
-                  Cookies.set('back1',true);
+                  Cookies.set('back1', true);
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} />
@@ -256,11 +266,11 @@ const pdfGeneration = async() => {
             </div><div>
               <div className="mb-4">
                 <p className="font-semibold text-sm">
-                  * Price: Rs. {(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)} (excl. GST) =
-                  (Rs.{qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)}({qty} {unit} X Rs.{(unitPrice / 1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{margin} Margin - Rs.{(extraDiscount / 1).toFixed(2)} Discount)
+                  * Price: Rs. {formattedTotalAmount(formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)))} (excl. GST) =
+                  (Rs.{formattedTotalAmount(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))}({qty} {unit} X Rs.{formattedRupees((unitPrice / 1).toFixed(2))} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{margin} Margin - Rs.{formattedRupees((extraDiscount / 1).toFixed(2))} Discount)
                 </p>
                 <p className="font-bold text-sm">
-                  * Price: Rs.{(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} (incl. GST 18%)
+                  * Price: Rs.{formattedTotalAmount(formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)))} (incl. GST 18%)
                 </p>
               </div>
               <div className="mb-8 overflow-y-auto h-[calc(100vh-300px)]">
@@ -274,8 +284,8 @@ const pdfGeneration = async() => {
                     {filteredData.map((option, index) => (
                       <option className="rounded-lg" key={index} value={option.VendorName}>
                         {option.VendorName === '' && filteredData.length === 1
-        ? 'No Vendors'
-        : `Rs.${qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)} - 7 days - ${option.VendorName}`}
+                          ? 'No Vendors'
+                          : `Rs.${qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)} - 7 days - ${option.VendorName}`}
                       </option>
                     ))}
                   </select>
@@ -287,8 +297,8 @@ const pdfGeneration = async() => {
                     value={qtySlab}
                     onChange={(e) => {
                       setQtySlab(e.target.value);
-                     // {changing && setQty(e.target.value);}
-                     setQty(e.target.value)
+                      // {changing && setQty(e.target.value);}
+                      setQty(e.target.value)
                     }}
                   >
                     {sortedSlabData.map((opt, index) => (
@@ -309,7 +319,7 @@ const pdfGeneration = async() => {
                       value={qty}
                       onChange={(e) => {
                         setQty(e.target.value);
-                        setMargin(((e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2));
+                        setMargin(formattedRupees(((e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2)));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value));
                         setChanging(true);
@@ -330,7 +340,7 @@ const pdfGeneration = async() => {
                       value={campaignDuration}
                       onChange={(e) => {
                         setCampaignDuration(e.target.value);
-                        setMargin(((qtySlab * unitPrice * (e.target.value === 0 || e.target.value === '' ? 1 : e.target.value) * marginPercentage) / 100).toFixed(2));
+                        setMargin(formattedRupees(((qtySlab * unitPrice * (e.target.value === 0 || e.target.value === '' ? 1 : e.target.value) * marginPercentage) / 100).toFixed(2)));
                         // setMarginPercentage(((margin * 100) / (qty * unitPrice * (e.target.value === 0 ? 1 : e.target.value))).toFixed(2));
                       }}
                     />
@@ -391,7 +401,7 @@ const pdfGeneration = async() => {
                 </div>
                 <div className="flex flex-col justify-center items-center mt-4">
                   <p className="font-semibold text-red-500">
-                    *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays: ''} days from the date of payment received or the date of design approved, whichever is higher
+                    *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>
@@ -436,38 +446,38 @@ const pdfGeneration = async() => {
           </div>
           <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
           <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
-          <div>
-            <h1 className='mb-4 font-bold text-center'>AD Details</h1>
-            
-            <table className='mb-8'>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Ad Medium</td>
-                <td>:</td><td>  {rateName}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Ad Type</td>
-                <td>:</td><td>  {adType}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Edition</td>
-                <td>:</td><td>  {adCategory}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Quantity</td>
-                <td>:</td><td>  {qty} {unit}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Campaign Duration</td>
-                <td>:</td><td>  {campaignDuration} {selectedDayRange}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Price</td>
-                <td>:</td><td>  {(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</td>
-              </tr>
-            </table>
-            
-            <h1 className='mb-4 font-bold text-center'>Client Details</h1>
-            {/* <span className='flex flex-row'><h1 className='mb-2 text-blue-600 font-semibold'>Client Name : </h1><div className=''>{clientName}</div></span>
+            <div>
+              <h1 className='mb-4 font-bold text-center'>AD Details</h1>
+
+              <table className='mb-8'>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Ad Medium</td>
+                  <td>:</td><td>  {rateName}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Ad Type</td>
+                  <td>:</td><td>  {adType}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Edition</td>
+                  <td>:</td><td>  {adCategory}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Quantity</td>
+                  <td>:</td><td>  {qty} {unit}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Campaign Duration</td>
+                  <td>:</td><td>  {campaignDuration} {selectedDayRange}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Price</td>
+                  <td>:</td><td>  {formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2))}</td>
+                </tr>
+              </table>
+
+              <h1 className='mb-4 font-bold text-center'>Client Details</h1>
+              {/* <span className='flex flex-row'><h1 className='mb-2 text-blue-600 font-semibold'>Client Name : </h1><div className=''>{clientName}</div></span>
             
             <span className='flex flex-row'>
             <h1 className='mb-2 text-blue-600 font-semibold'>Client Number : </h1><div className=''>{clientNumber}</div>
@@ -481,25 +491,25 @@ const pdfGeneration = async() => {
             <h1 className='mb-4 text-blue-600 font-semibold'>Source : </h1><div className=''>{selectedSource}</div>
             </span> */}
 
-            <table className='mb-6'>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Client Name</td>
-                <td>:</td><td>  {clientName}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Client Number</td>
-                <td>:</td><td>  {clientNumber}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Client E-Mail</td>
-                <td>:</td><td>  {clientEmail}</td>
-              </tr>
-              <tr>
-                <td className='py-1 text-blue-600 font-semibold'>Source</td>
-                <td>:</td><td>  {selectedSource}</td>
-              </tr>
-            </table>
-          </div></div>
+              <table className='mb-6'>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Client Name</td>
+                  <td>:</td><td>  {clientName}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Client Number</td>
+                  <td>:</td><td>  {clientNumber}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Client E-Mail</td>
+                  <td>:</td><td>  {clientEmail}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Source</td>
+                  <td>:</td><td>  {selectedSource}</td>
+                </tr>
+              </table>
+            </div></div>
           <div className='flex flex-col justify-center items-center'>
 
             <button

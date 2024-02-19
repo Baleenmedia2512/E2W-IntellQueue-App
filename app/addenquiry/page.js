@@ -171,7 +171,7 @@ const ClientsData = () => {
   useEffect(() => { Cookies.set('selectedsource', selectedSource); }, [selectedSource])
 
   const moveToAdDetails = () => {
-    if (clientName !== '' && clientEmail !== '' && clientNumber !== '' && selectedSource !== '') {
+    if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
       router.push('../adDetails');
       Cookies.remove('adMediumSelected')
     }

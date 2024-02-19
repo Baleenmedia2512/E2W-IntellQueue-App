@@ -12,7 +12,6 @@ const BottomBar = () => {
   const [isHovered, setIsHovered] = useState('')
   const clientName = Cookies.get('clientname');
   const clientNumber = Cookies.get('clientnumber');
-  const clientEmail = Cookies.get('clientemail');
   const selectedSource = Cookies.get('selectedsource');
 
   if (currentPath === '/login') {
@@ -20,7 +19,7 @@ const BottomBar = () => {
   }
 
   const moveToQuoteSender = () => {
-    if (clientName !== '' && clientEmail !== '' && clientNumber !== '' && selectedSource !== '') {
+    if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
       routers.push('../adDetails');
     }
     else {
