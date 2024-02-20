@@ -36,7 +36,7 @@ const BottomBar = () => {
         onMouseEnter={() => setIsHovered('Rates')}
         onMouseLeave={() => setIsHovered(null)}
       >
-        <div className={` ${'/' === currentPath ? 'rounded-full border p-2 px-10 border-purple-500 bg-purple-500':''}`}>
+        <div className={` ${'/' === currentPath ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
         <Image src="/images/approval.png" alt="Validation Icon" width={30} height={30} />
         </div>
         <label>{isHovered==='Rates'  ? 'Rates Validation' : ''}</label>
@@ -49,12 +49,23 @@ const BottomBar = () => {
         onMouseEnter={() => setIsHovered('Quotes')}
         onMouseLeave={() => setIsHovered(null)}
       >
-        <div className={` ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'rounded-full border p-2 px-10 border-purple-500 bg-purple-500':''}`}>
+        <div className={` ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
         <Image src="/images/profiles.png" alt="Quote Sender Icon" width={30} height={30} />
         </div>
       <label>{isHovered==='Quotes' ? 'Quote Sender' : ''}</label>
       </button>
-
+      <button
+        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-full rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
+          }`}
+        onClick={() => routers.push('/RatesEntry')}
+        onMouseEnter={() => setIsHovered('RatesEntry')}
+        onMouseLeave={() => setIsHovered(null)}
+      >
+        <div className={` ${(currentPath === '/RatesEntry' ) ? 'rounded-full border p-2 px-8 border-gray-500 bg-gray-500':''}`}>
+        <Image src="/images/package.png" alt="Rates Entry Icon" width={30} height={30} />
+        </div>
+      <label className=' text-xs'>{isHovered==='RatesEntry' || (currentPath === '/RatesEntry' ) ? 'Rates Entry' : ''}</label>
+      </button>
 
       <button
         className='flex flex-col items-center justify-center py-2 h-16 w-1/3 rounded-lg'
