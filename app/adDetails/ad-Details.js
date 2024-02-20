@@ -293,7 +293,7 @@ const AdDetailsPage = () => {
                       <option className="rounded-lg" key={index} value={option.VendorName}>
                         {option.VendorName === '' && filteredData.length === 1
                           ? 'No Vendors'
-                          : `Rs.${formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))} - 7 days - ${option.VendorName}`}
+                          : `Rs.${formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - ${option.VendorName} - Rs.${formattedRupees(margin)} Margin`}
                       </option>
                     ))}
                   </select>
@@ -311,7 +311,7 @@ const AdDetailsPage = () => {
                   >
                     {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} Rs.{opt.UnitPrice} per {selectedDayRange}
+                        {opt.StartQty}+ {unit} Rs.{formattedRupees(opt.UnitPrice)} per {selectedDayRange} - Rs.{formattedRupees(margin)} Margin
                       </option>
                     ))}
                   </select>

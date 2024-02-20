@@ -150,7 +150,6 @@ const ClientsData = () => {
   // };  
 
   useEffect(() => {
-    // Check if localStorage contains a username
     const username = Cookies.get('username');
 
     // If no username is found, redirect to the login page
@@ -163,12 +162,14 @@ const ClientsData = () => {
     //     .then((data) => setDatas(data))
     //     .catch((error) => console.error(error));
     // }
-  }, [router]);
+  }, []);
 
   useEffect(() => { Cookies.set('clientname', clientName); }, [clientName]);
   useEffect(() => { Cookies.set('clientnumber', clientNumber); }, [clientNumber])
   useEffect(() => { Cookies.set('clientemail', clientEmail); }, [clientEmail])
   useEffect(() => { Cookies.set('selectedsource', selectedSource); }, [selectedSource])
+
+  // useEffect()
 
   const moveToAdDetails = () => {
     if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
