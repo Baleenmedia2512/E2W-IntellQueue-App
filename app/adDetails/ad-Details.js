@@ -207,9 +207,9 @@ const AdDetailsPage = () => {
   };
 
   const pdfGeneration = async () => {
-    const AmountExclGST = (formattedRupees((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)));
-    const AmountInclGST = (formattedRupees((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18));
-    const PDFArray = [rateName, adType, adCategory, '', qty, (AmountExclGST / qty), AmountExclGST, '18%', AmountInclGST, leadDay.LeadDays]
+    const AmountExclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)));
+    const AmountInclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18));
+    const PDFArray = [rateName, adType, adCategory, '', qty, (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays]
     const GSTPerc = 18
 
     generatePdf(PDFArray)
@@ -218,8 +218,8 @@ const AdDetailsPage = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${Cookies.get('username')}&
     JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}`)
       const data = await response.json();
-      if (data.success === true) {
-        alert(data.message)
+      if (data === "Values Inserted Successfully!") {
+        alert("Quote Downloaded")
         //setMessage(data.message);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
@@ -243,7 +243,10 @@ const AdDetailsPage = () => {
     return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
   };
 
+  useEffect(() => {setCampaignDuration(leadDay && leadDay['CampaignDuration(in Days)'] ? leadDay['CampaignDuration(in Days)'] : 0 )},[])
+
   const greater = ">>"
+  const campaignColumn =  ``
   return (
     <div className=" mt-8 ">
       {showAdCategoryPage && (<AdCategoryPage />)}
@@ -274,7 +277,7 @@ const AdDetailsPage = () => {
                   (Rs.{formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))}({qty} {unit} X Rs.{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{formattedRupees(margin)} Margin - Rs.{formattedRupees(extraDiscount / 1)} Discount)
                 </p>
                 <p className="font-semibold text-sm">
-                  * GST : Rs.{formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (0.18))}
+                  * GST Amount : Rs.{formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (0.18))}
                 </p>
                 <p className="font-bold text-sm">
                   * Price(incl. GST 18%) : Rs.{formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)))} 
@@ -293,7 +296,7 @@ const AdDetailsPage = () => {
                       <option className="rounded-lg" key={index} value={option.VendorName}>
                         {option.VendorName === '' && filteredData.length === 1
                           ? 'No Vendors'
-                          : `Rs.${formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - ${option.VendorName} - Rs.${formattedRupees(margin)} Margin`}
+                          : `Rs.${formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) + margin)} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - ${option.VendorName}`}
                       </option>
                     ))}
                   </select>
@@ -311,7 +314,7 @@ const AdDetailsPage = () => {
                   >
                     {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} Rs.{formattedRupees(opt.UnitPrice)} per {selectedDayRange} - Rs.{formattedRupees(margin)} Margin
+                        {opt.StartQty}+ {unit} Rs.{formattedRupees(Number(opt.UnitPrice) + margin/qty)} per {selectedDayRange}
                       </option>
                     ))}
                   </select>
@@ -341,29 +344,15 @@ const AdDetailsPage = () => {
                 <div className="mb-4">
                   <label className="font-bold">Campaign Duration</label>
                   <div className="flex w-full">
-                    <input
+                    <label
                       className="w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      type="number"
-                      placeholder="Ex: 3"
-                      value={campaignDuration}
-                      onChange={(e) => {
-                        setCampaignDuration(e.target.value);
-                        setMargin(formattedMargin((qtySlab * unitPrice * (e.target.value === 0 || e.target.value === '' ? 1 : e.target.value) * marginPercentage) / 100));
-                        // setMarginPercentage(((margin * 100) / (qty * unitPrice * (e.target.value === 0 ? 1 : e.target.value))).toFixed(2));
-                      }}
-                    />
+                      >{(leadDay ) ? leadDay['CampaignDuration(in Days)'] : ''}</label>
                     <div className="relative">
-                      <select
+                      <label
                         className="border border-gray-300 bg-blue-300 text-black rounded-lg p-2 ml-4"
-                        value={selectedDayRange}
-                        onChange={(e) => setSelectedDayRange(e.target.value)}
                       >
-                        {dayRange.map((option, index) => (
-                          <option key={index} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
+                       {(leadDay ) ? leadDay.CampaignDurationUnit : ''}</label>
+                      
                     </div>
                   </div>
                 </div>
