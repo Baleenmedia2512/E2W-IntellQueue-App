@@ -111,7 +111,7 @@ const AdDetailsPage = () => {
 
     { !changing && setQty(qtySlab); }
     { changing && setChanging(false) }
-    setMargin(formattedRupees(((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2)));
+    setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100));
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
@@ -146,6 +146,9 @@ const AdDetailsPage = () => {
     fetchData();
   }, []);
 
+  // useEffect(() => setAmt(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
+  // ,[qty, unitPrice, campaignDuration])
+
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -168,13 +171,13 @@ const AdDetailsPage = () => {
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
-    setMarginPercentage(formattedRupees(((event.target.value * 100) / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2)))
+    setMarginPercentage(formattedRupees((event.target.value * 100) / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))))
   };
 
   const handleMarginPercentageChange = (event) => {
     //const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
-    setMargin(formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value) / 100).toFixed(2)));
+    setMargin(formattedMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value) / 100)));
   };
 
 
@@ -204,8 +207,8 @@ const AdDetailsPage = () => {
   };
 
   const pdfGeneration = async () => {
-    const AmountExclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2);
-    const AmountInclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2);
+    const AmountExclGST = (formattedRupees((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)));
+    const AmountInclGST = (formattedRupees((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18));
     const PDFArray = [rateName, adType, adCategory, '', qty, (AmountExclGST / qty), AmountExclGST, '18%', AmountInclGST, leadDay.LeadDays]
     const GSTPerc = 18
 
@@ -230,14 +233,15 @@ const AdDetailsPage = () => {
   }
 
   const formattedRupees = (number) => {
-    // return number % 1 === 0 ? number : (number % 1 <= 0.1 ? (number/1).toFixed(1) : (number/1).toFixed(2));
-    const roundedNumber = parseFloat((number / 1).toFixed(2));
-    return (roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2);
+    const roundedNumber = (number / 1).toFixed(2);
+    const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
+    return totalAmount.toLocaleString('en-IN');
   };
 
-  const formattedTotalAmount = (totalAmount) => {
-    return totalAmount.toLocaleString('en-IN');
-  }
+  const formattedMargin = (number) => {
+    const roundedNumber = (number / 1).toFixed(2);
+    return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
+  };
 
   const greater = ">>"
   return (
@@ -266,13 +270,17 @@ const AdDetailsPage = () => {
             </div><div>
               <div className="mb-4">
                 <p className="font-semibold text-sm">
-                  * Price: Rs. {formattedTotalAmount(formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount))).toFixed(2)))} (excl. GST) =
-                  (Rs.{formattedTotalAmount(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))}({qty} {unit} X Rs.{formattedRupees((unitPrice / 1).toFixed(2))} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{margin} Margin - Rs.{formattedRupees((extraDiscount / 1).toFixed(2))} Discount)
+                  * Price(excl. GST) : Rs. {formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)))} =
+                  (Rs.{formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))}({qty} {unit} X Rs.{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{formattedRupees(margin)} Margin - Rs.{formattedRupees(extraDiscount / 1)} Discount)
+                </p>
+                <p className="font-semibold text-sm">
+                  * GST : Rs.{formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (0.18))}
                 </p>
                 <p className="font-bold text-sm">
-                  * Price: Rs.{formattedTotalAmount(formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)))} (incl. GST 18%)
+                  * Price(incl. GST 18%) : Rs.{formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)))} 
                 </p>
               </div>
+
               <div className="mb-8 overflow-y-auto h-[calc(100vh-300px)]">
                 <div className="mb-4">
                   <label className="font-bold">Vendor</label>
@@ -285,7 +293,7 @@ const AdDetailsPage = () => {
                       <option className="rounded-lg" key={index} value={option.VendorName}>
                         {option.VendorName === '' && filteredData.length === 1
                           ? 'No Vendors'
-                          : `Rs.${qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)} - 7 days - ${option.VendorName}`}
+                          : `Rs.${formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))} - 7 days - ${option.VendorName}`}
                       </option>
                     ))}
                   </select>
@@ -319,7 +327,7 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         setQty(e.target.value);
-                        setMargin(formattedRupees(((e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100).toFixed(2)));
+                        setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value));
                         setChanging(true);
@@ -340,7 +348,7 @@ const AdDetailsPage = () => {
                       value={campaignDuration}
                       onChange={(e) => {
                         setCampaignDuration(e.target.value);
-                        setMargin(formattedRupees(((qtySlab * unitPrice * (e.target.value === 0 || e.target.value === '' ? 1 : e.target.value) * marginPercentage) / 100).toFixed(2)));
+                        setMargin(formattedMargin((qtySlab * unitPrice * (e.target.value === 0 || e.target.value === '' ? 1 : e.target.value) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (qty * unitPrice * (e.target.value === 0 ? 1 : e.target.value))).toFixed(2));
                       }}
                     />
@@ -472,7 +480,7 @@ const AdDetailsPage = () => {
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Price</td>
-                  <td>:</td><td>  {formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2))}</td>
+                  <td>:</td><td>  {formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18))}</td>
                 </tr>
               </table>
 
