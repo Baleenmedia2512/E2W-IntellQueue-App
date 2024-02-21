@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
-import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { generatePdf } from '../generatePDF/generatePDF';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -76,48 +76,24 @@ const AdDetailsPage = () => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
     }
-
-    const fetchData = async() => {
-      const vendors = await fetch("https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/")
-      const vendor = await vendors.json()
-      console.log(vendor)
-      setVendorList(vendor);
-    }
-
-    fetchData()
     // setMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15) / 100).toFixed(2))
     // if (margin === undefined){
     //   setMargin((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
     // }
   }, [])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        setSlabData(data);
-        const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-        const firstSelectedSlab = sortedData[0];
-        setQtySlab(firstSelectedSlab.StartQty);
-        setUnitPrice(firstSelectedSlab.UnitPrice);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  const fetchAllVendor = async(suggestionText, callback) => {
+    const vendors = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonVendorSuggestion=${suggestionText}`)
+    const vendor = await vendors.json()
+    
+    // Map the API response to the format expected by react-select
+    const options = vendor.map((vendor) => ({
+      value: vendor.vendorName,
+      label: vendor.vendorName,
+    }));
 
-    fetchData();
-  }, [rateId]);
-
-  // useEffect(() => {
-  //   if (qtySlab) {
-  //     handleQtySlabChange();
-  //   }
-  // }, [qtySlab])
+    callback(options);
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -148,31 +124,9 @@ const AdDetailsPage = () => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
 
-  const filteredData = datas
-    .filter((value, index, self) =>
-      self.findIndex(obj => obj.VendorName === value.VendorName) === index
-    )
-    .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
 
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
-
-  const sortedSlabData = slabData
-    .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-
-  const findMatchingQtySlab = (value) => {
-    let matchingStartQty = sortedSlabData[0].StartQty;
-
-    for (const slab of sortedSlabData) {
-      if (value >= slab.StartQty) {
-        matchingStartQty = slab.StartQty;
-      } else {
-        break;
-      }
-    }
-    return matchingStartQty;
-  };
-
  
 
   const formattedRupees = (number) => {
@@ -206,85 +160,18 @@ const AdDetailsPage = () => {
               <div className="mb-8 overflow-y-auto h-[calc(100vh-300px)]">
                 <div className="mb-4">
                   <label className=''>Vendor</label><br/>
-                  <Select
+                  <AsyncSelect
                     className='mb-8 text-black bg-purple-400'
-                    id='Vendor'
-                    instanceId="Vendor"
-                    options={vendorList}
+                    cacheOptions
+                    defaultOptions
+                    isSearchable
+                    loadOptions={fetchAllVendor}
                     onChange={(selectedOption) => setSelectedVendor(selectedOption)}
                     value={selectedVendor}
                     placeholder="Select Vendor"
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Quantity Slab wise rates</label>
-                  <select
-                    className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={qtySlab}
-                    onChange={(e) => {
-                      setQtySlab(e.target.value);
-                      // {changing && setQty(e.target.value);}
-                      setQty(e.target.value)
-                    }}
-                  >
-                    {sortedSlabData.map((opt, index) => (
-                      <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} Rs.{formattedRupees(opt.UnitPrice)} per {selectedDayRange} - Rs.{formattedRupees(margin)} Margin
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="font-bold">Quantity</label>
-                  <div className="flex w-full">
-                    <input
-                      className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      type="number"
-                      placeholder="Ex: 15"
-                      defaultValue={qtySlab}
-                      value={qty}
-                      onChange={(e) => {
-                        setQty(e.target.value);
-                        setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100));
-                        // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
-                        setQtySlab(findMatchingQtySlab(e.target.value));
-                        setChanging(true);
-                      }}
-                      onFocus={(e) => e.target.select()}
-                    />
-                    <label className="text-center mt-2 ml-5">{unit}</label>
-                  </div>
-                  <p className="text-red-700">{qty < qtySlab ? 'Quantity should not be lesser than the slab' : ''}</p>
-                </div>
-                <div className="mb-4">
-                  <label className="font-bold">Campaign Duration</label>
-                  <div className="flex w-full">
-                    <input
-                      className="w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      type="number"
-                      placeholder="Ex: 3"
-                      value={campaignDuration}
-                      onChange={(e) => {
-                        setCampaignDuration(e.target.value);
-                        setMargin(formattedMargin((qtySlab * unitPrice * (e.target.value === 0 || e.target.value === '' ? 1 : e.target.value) * marginPercentage) / 100));
-                        // setMarginPercentage(((margin * 100) / (qty * unitPrice * (e.target.value === 0 ? 1 : e.target.value))).toFixed(2));
-                      }}
-                    />
-                    <div className="relative">
-                      <select
-                        className="border border-gray-300 bg-blue-300 text-black rounded-lg p-2 ml-4"
-                        value={selectedDayRange}
-                        onChange={(e) => setSelectedDayRange(e.target.value)}
-                      >
-                        {dayRange.map((option, index) => (
-                          <option key={index} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                
                
                 <div className="flex flex-col items-center justify-center">
                   <button
