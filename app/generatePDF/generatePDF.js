@@ -87,9 +87,9 @@ export const generatePdf = async(checkoutData) => {
   // pdf.setFontSize(12);
 
   // Create a table
-  const headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Edition', 'Remarks', 'Quantity', 'Rate Per Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
+  const headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Edition', 'Remarks', 'Qty', 'Campaign Duration', 'Rate Per Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
   const data = [
-    ['1', checkoutData[0], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4], checkoutData[5], checkoutData[6], checkoutData[7], checkoutData[8]],
+    ['1', checkoutData[0], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4], checkoutData[5], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
     //['Row 2 Data 1', 'Row 2 Data 2', 'Row 2 Data 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3'],
     // Add more rows as needed
   ];
@@ -120,7 +120,7 @@ export const generatePdf = async(checkoutData) => {
   pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, 360);
   pdf.text(`2.Ad. Material shall be shared by ${Cookies.get('clientname')}`, 10, 375)
   pdf.text("3.100% Upfront payment required for releasing the Ads", 10, 390)
-  pdf.text(`4.Lead time to book the Ad : ${checkoutData[9]} Days`, 10, 405)
+  pdf.text(`4.Lead time to book the Ad : ${checkoutData[10]} Days`, 10, 405)
   pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, 420)
 
   pdf.setDrawColor("#df5f98");

@@ -7,6 +7,8 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { generatePdf } from '../generatePDF/generatePDF';
+import { Carousel } from 'primereact/carousel';
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
 const AdDetailsPage = () => {
@@ -16,10 +18,9 @@ const AdDetailsPage = () => {
   const [unitPrice, setUnitPrice] = useState('')
   // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
   const [qty, setQty] = useState(qtySlab)
-  const [selectedDayRange, setSelectedDayRange] = useState('');
-  const [campaignDuration, setCampaignDuration] = useState(1);
+  const [selectedDayRange, setSelectedDayRange] = useState('Day');
+  // const [campaignDuration, setCampaignDuration] = useState(1);
   const [unit, setUnit] = useState('')
-
 
   const [showAdCategoryPage, setShowAdCategoryPage] = useState(false);
   const [marginPercentage, setMarginPercentage] = useState(15)
@@ -33,20 +34,24 @@ const AdDetailsPage = () => {
   const clientNumber = Cookies.get('clientnumber');
   const clientEmail = Cookies.get('clientemail');
   const selectedSource = Cookies.get('selectedsource');
-  const rateId = Cookies.get('rateId');
+  const [rateId, setRateId] = useState('');
   const rateName = Cookies.get('ratename');
   const adType = Cookies.get('adtype');
   const adCategory = Cookies.get('adcategory');
   const typeOfAd = Cookies.get('typeofad');
   //const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
-  const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15) / 100).toFixed(2));
+  
+  const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
+  const leadDay = newData[0];
+  const campaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
+  const [margin, setMargin] = useState(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2));
   const ValidityDate = Cookies.get('validitydate')
   const [changing, setChanging] = useState(false);
   //const minimumUnit = 15;
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
 
-
+  const [activeIndex, setActiveIndex] = useState(0);
   const parts = ValidityDate.split('-');
   const year = parseInt(parts[0]);
   const month = parseInt(parts[1]) - 1; // Months are zero-based in JavaScript
@@ -69,6 +74,25 @@ const AdDetailsPage = () => {
   //   //setMargin((margin/1).toFixed(2))
   //   //setMarginPercentage(((margin / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
   // }, [])
+
+  const items = Array.from({ length: 100 }, (_, i) => i + 1).map((num) => ({
+    content: num,
+  }));
+
+  const handlePageChange = (event) => {
+    setActiveIndex(event.page); // Example calculation for margin percentage
+    setMarginPercentage(event.page + 1);
+  };
+
+  const incrementNumber = () => {
+    setMarginPercentage(() => Math.min(Number((marginPercentage/1).toFixed(0)) + 1, 100));
+    setMargin(formattedMargin(((qty * unitPrice * campaignDuration * (marginPercentage + 1)) / 100)));
+  };
+
+  const decrementNumber = () => {
+    setMarginPercentage(() => Math.max(Number((marginPercentage/1).toFixed(0)) - 1, 1));
+    setMargin(formattedMargin(((qty * unitPrice * campaignDuration * (marginPercentage - 1)) / 100)));
+  };
 
   useEffect(() => {
     if (selectedDayRange === "") {
@@ -102,7 +126,23 @@ const AdDetailsPage = () => {
     fetchData();
   }, [rateId]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchRateId.php/?JsonRateName=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonVendorName=${selectedVendor}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        setRateId(data);
+      } 
+      catch (error) {
+        console.error(error);
+      }
+    };
 
+  fetchData();
+}, [selectedVendor]);
 
   const handleQtySlabChange = () => {
     const qtySlabNumber = parseInt(qtySlab)
@@ -111,7 +151,7 @@ const AdDetailsPage = () => {
 
     { !changing && setQty(qtySlab); }
     { changing && setChanging(false) }
-    setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100));
+    setMargin(formattedMargin((qtySlab * unitPrice * campaignDuration * marginPercentage) / 100));
     // Update UnitPrice based on the selected QtySlab
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
@@ -137,6 +177,7 @@ const AdDetailsPage = () => {
           const data = await response.json();
           const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType)
           setDatas(filterdata);
+          setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
         }
       } catch (error) {
         console.error(error);
@@ -168,16 +209,19 @@ const AdDetailsPage = () => {
     }
   }
 
+//   useEffect(() => {setCampaignDuration(leadDay && leadDay['CampaignDuration(in Days)'] ? leadDay['CampaignDuration(in Days)'] : 1 )
+// console.log(campaignDuration)})
+
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
-    setMarginPercentage(formattedRupees((event.target.value * 100) / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))))
+    setMarginPercentage(formattedRupees((event.target.value * 100) / (qty * unitPrice * campaignDuration)))
   };
 
   const handleMarginPercentageChange = (event) => {
     //const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
-    setMargin(formattedMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * event.target.value) / 100)));
+    setMargin(formattedMargin(((qty * unitPrice * campaignDuration * event.target.value) / 100)));
   };
 
 
@@ -186,9 +230,6 @@ const AdDetailsPage = () => {
       self.findIndex(obj => obj.VendorName === value.VendorName) === index
     )
     .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
-
-  const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
-  const leadDay = newData[0];
 
   const sortedSlabData = slabData
     .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
@@ -207,9 +248,10 @@ const AdDetailsPage = () => {
   };
 
   const pdfGeneration = async () => {
-    const AmountExclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)));
-    const AmountInclGST = (((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18));
-    const PDFArray = [rateName, adType, adCategory, '', qty, (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays]
+    const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
+    const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
+    const [firstPart, secondPart] = adCategory.split(':');
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays]
     const GSTPerc = 18
 
     generatePdf(PDFArray)
@@ -243,10 +285,23 @@ const AdDetailsPage = () => {
     return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
   };
 
-  useEffect(() => {setCampaignDuration(leadDay && leadDay['CampaignDuration(in Days)'] ? leadDay['CampaignDuration(in Days)'] : 0 )},[])
+  const findSlabDataForVendor = (vendorName) => {
+    return sortedSlabData.filter(item => item.VendorName === vendorName);
+};
+
+// Add sortedSlabData items to filteredData where VendorName is same
+const newDatas = filteredData.map(item => {
+    const slabDataForVendor = findSlabDataForVendor(item.VendorName);
+    return {
+        ...item,
+        slabData: slabDataForVendor
+    };
+});
+console.log(newDatas);
+
+  
 
   const greater = ">>"
-  const campaignColumn =  ``
   return (
     <div className=" mt-8 ">
       {showAdCategoryPage && (<AdCategoryPage />)}
@@ -273,14 +328,14 @@ const AdDetailsPage = () => {
             </div><div>
               <div className="mb-4">
                 <p className="font-semibold text-sm">
-                  * Price(excl. GST) : Rs. {formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)))} =
-                  (Rs.{formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))}({qty} {unit} X Rs.{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {selectedDayRange}) + Rs.{formattedRupees(margin)} Margin - Rs.{formattedRupees(extraDiscount / 1)} Discount)
+                  * Price(excl. GST) : Rs. {formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))} =
+                  (Rs.{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} X Rs.{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}) + Rs.{formattedRupees(margin)} Margin - Rs.{formattedRupees(extraDiscount / 1)} Discount)
                 </p>
                 <p className="font-semibold text-sm">
-                  * GST Amount : Rs.{formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (0.18))}
+                  * GST Amount : Rs.{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
                 </p>
                 <p className="font-bold text-sm">
-                  * Price(incl. GST 18%) : Rs.{formattedRupees((((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)))} 
+                  * Price(incl. GST 18%) : Rs.{formattedRupees((((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18)))} 
                 </p>
               </div>
 
@@ -296,7 +351,9 @@ const AdDetailsPage = () => {
                       <option className="rounded-lg" key={index} value={option.VendorName}>
                         {option.VendorName === '' && filteredData.length === 1
                           ? 'No Vendors'
-                          : `Rs.${formattedRupees(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) + margin)} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - ${option.VendorName}`}
+                          : 
+                          // `Rs.${formattedRupees(qty * unitPrice * campaignDuration + margin)} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - 
+                          `${option.VendorName}`}
                       </option>
                     ))}
                   </select>
@@ -310,11 +367,12 @@ const AdDetailsPage = () => {
                       setQtySlab(e.target.value);
                       // {changing && setQty(e.target.value);}
                       setQty(e.target.value)
+                      // setMargin(formattedMargin(((e.target.value * unitPrice * campaignDuration * marginPercentage) / 100)))
                     }}
                   >
                     {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} Rs.{formattedRupees(Number(opt.UnitPrice) + margin/qty)} per {selectedDayRange}
+                        {opt.StartQty}+ {unit} : Rs.{formattedRupees(Number(opt.UnitPrice) * (marginPercentage + 100)/100)} per {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}
                       </option>
                     ))}
                   </select>
@@ -330,7 +388,7 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         setQty(e.target.value);
-                        setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * marginPercentage) / 100));
+                        setMargin(formattedMargin((e.target.value * unitPrice * campaignDuration * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value));
                         setChanging(true);
@@ -346,14 +404,10 @@ const AdDetailsPage = () => {
                   <div className="flex w-full">
                     <label
                       className="w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      >{(leadDay ) ? leadDay['CampaignDuration(in Days)'] : ''}</label>
-                    <div className="relative">
-                      <label
-                        className="border border-gray-300 bg-blue-300 text-black rounded-lg p-2 ml-4"
-                      >
-                       {(leadDay ) ? leadDay.CampaignDurationUnit : ''}</label>
-                      
-                    </div>
+                      >{campaignDuration}</label>
+                    {/* <div className="relative"> */}
+                    <label className="text-center mt-2 ml-5">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
+                    {/* </div> */}
                   </div>
                 </div>
                 <div className="mb-4">
@@ -365,8 +419,36 @@ const AdDetailsPage = () => {
                     value={margin}
                     onChange={handleMarginChange}
                   />
-                  <p className="mt-1 text-sm">Margin Percentage: {marginPercentage}%</p>
-                  <input
+                  <p className="mt-1 text-sm">Margin Percentage: {marginPercentage}%</p><br/>
+
+                  <div className="flex flex-col items-center justify-center space-y-4">
+      <button onClick={decrementNumber} className="text-blue-500 hover:text-blue-700">
+        <ChevronUpIcon className="h-6 w-6" />
+      </button>
+      <div className="bg-gray-100 border border-gray-300 rounded-md p-2 w-20 text-center">
+        {marginPercentage}
+      </div>
+      <button onClick={incrementNumber} className="text-blue-500 hover:text-blue-700">
+        <ChevronDownIcon className="h-6 w-6" />
+      </button>
+    </div>
+                  <Carousel
+        value={items}
+        orientation="vertical"
+        verticalViewPortHeight="80px"
+        verticalViewPortWidth="100%"
+        numVisible={1}
+        numScroll={1}
+        activeIndex={activeIndex}
+        onPageChange={handlePageChange}
+        // circular
+        itemTemplate={(item) => (
+          <div className="p-grid p-nogutter">
+            <div className="p-col-12 custom-carousel-item bg-gray-100 border border-gray-300 rounded-md p-4 m-2">{item.content}</div>
+          </div>
+        )}
+      />
+                  {/* <input
                     className="w-full"
                     type="range"
                     id="marginPercentage"
@@ -376,7 +458,7 @@ const AdDetailsPage = () => {
                     step="1"
                     value={marginPercentage}
                     onChange={handleMarginPercentageChange}
-                  />
+                  /> */}
                 </div>
                 <div className="mb-4">
                   <label className="font-bold">Extra Discount(Rs)</label>
@@ -469,7 +551,7 @@ const AdDetailsPage = () => {
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Price</td>
-                  <td>:</td><td>  {formattedRupees(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18))}</td>
+                  <td>:</td><td>  {formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18))}</td>
                 </tr>
               </table>
 
