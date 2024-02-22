@@ -11,7 +11,7 @@ import { generatePdf } from '../generatePDF/generatePDF';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
-const AdDetailsPage = ({details}) => {
+const AdDetailsPage = () => {
   const [selectedVendor, setSelectedVendor] = useState("");
   const [slabData, setSlabData] = useState([])
   const [qtySlab, setQtySlab] = useState()
@@ -166,37 +166,37 @@ const AdDetailsPage = ({details}) => {
     }
   }, [qtySlab])
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const username = Cookies.get('username');
-  //       if (!username) {
-  //         routers.push('/login');
-  //       } else {
-  //         const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
-  //         const data = await response.json();
-  //         const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType)
-  //         .filter((value, index, self) =>
-  //           self.findIndex(obj => obj.VendorName === value.VendorName) === index
-  //         )
-  //         .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
-  //         setDatas(filterdata);
-  //         setRateId(filterdata[0].rateId);
-  //         setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
-  //       }
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
-
   useEffect(() => {
-    setDatas(details);
-    setRateId(details[0].rateId);
-    setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
-  },[])
+    const fetchData = async () => {
+      try {
+        const username = Cookies.get('username');
+        if (!username) {
+          routers.push('/login');
+        } else {
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+          const data = await response.json();
+          const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType)
+          .filter((value, index, self) =>
+            self.findIndex(obj => obj.VendorName === value.VendorName) === index
+          )
+          .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
+          setDatas(filterdata);
+          setRateId(filterdata[0].rateId);
+          setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // useEffect(() => {
+  //   setDatas(details);
+  //   setRateId(details[0].rateId);
+  //   setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
+  // },[])
 
   // useEffect(() => setAmt(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
   // ,[qty, unitPrice, campaignDuration])
@@ -335,8 +335,8 @@ const AdDetailsPage = ({details}) => {
             </div><div>
               <div className="mb-4">
                 <p className="font-semibold text-sm">
-                  * Price(excl. GST) : Rs. {formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))} =
-                  (Rs.{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} X Rs.{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}) + Rs.{formattedRupees(margin)} Margin - Rs.{formattedRupees(extraDiscount / 1)} Discount)
+                  * Price(excl. GST) : Rs.{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))} =
+                  (Rs.{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x Rs.{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}) + Rs.{formattedRupees(margin)} Margin - Rs.{formattedRupees(extraDiscount / 1)} Discount)
                 </p>
                 <p className="font-semibold text-sm">
                   * GST Amount : Rs.{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
