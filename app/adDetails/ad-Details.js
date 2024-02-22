@@ -7,11 +7,11 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { generatePdf } from '../generatePDF/generatePDF';
-import { Carousel } from 'primereact/carousel';
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
+// import { Carousel } from 'primereact/carousel';
+// import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
-const AdDetailsPage = () => {
+const AdDetailsPage = ({details}) => {
   const [selectedVendor, setSelectedVendor] = useState("");
   const [slabData, setSlabData] = useState([])
   const [qtySlab, setQtySlab] = useState()
@@ -75,24 +75,24 @@ const AdDetailsPage = () => {
   //   //setMarginPercentage(((margin / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
   // }, [])
 
-  const items = Array.from({ length: 100 }, (_, i) => i + 1).map((num) => ({
-    content: num,
-  }));
+  // const items = Array.from({ length: 100 }, (_, i) => i + 1).map((num) => ({
+  //   content: num,
+  // }));
 
-  const handlePageChange = (event) => {
-    setActiveIndex(event.page); // Example calculation for margin percentage
-    setMarginPercentage(event.page + 1);
-  };
+  // const handlePageChange = (event) => {
+  //   setActiveIndex(event.page); // Example calculation for margin percentage
+  //   setMarginPercentage(event.page + 1);
+  // };
 
-  const incrementNumber = () => {
-    setMarginPercentage(() => Math.min(Number((marginPercentage/1).toFixed(0)) + 1, 100));
-    setMargin(formattedMargin(((qty * unitPrice * campaignDuration * (marginPercentage + 1)) / 100)));
-  };
+  // const incrementNumber = () => {
+  //   setMarginPercentage(() => Math.min(Number((marginPercentage/1).toFixed(0)) + 1, 100));
+  //   setMargin(formattedMargin(((qty * unitPrice * campaignDuration * (marginPercentage + 1)) / 100)));
+  // };
 
-  const decrementNumber = () => {
-    setMarginPercentage(() => Math.max(Number((marginPercentage/1).toFixed(0)) - 1, 1));
-    setMargin(formattedMargin(((qty * unitPrice * campaignDuration * (marginPercentage - 1)) / 100)));
-  };
+  // const decrementNumber = () => {
+  //   setMarginPercentage(() => Math.max(Number((marginPercentage/1).toFixed(0)) - 1, 1));
+  //   setMargin(formattedMargin(((qty * unitPrice * campaignDuration * (marginPercentage - 1)) / 100)));
+  // };
 
   useEffect(() => {
     if (selectedDayRange === "") {
@@ -166,26 +166,37 @@ const AdDetailsPage = () => {
     }
   }, [qtySlab])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const username = Cookies.get('username');
-        if (!username) {
-          routers.push('/login');
-        } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
-          const data = await response.json();
-          const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType)
-          setDatas(filterdata);
-          setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const username = Cookies.get('username');
+  //       if (!username) {
+  //         routers.push('/login');
+  //       } else {
+  //         const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+  //         const data = await response.json();
+  //         const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType)
+  //         .filter((value, index, self) =>
+  //           self.findIndex(obj => obj.VendorName === value.VendorName) === index
+  //         )
+  //         .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
+  //         setDatas(filterdata);
+  //         setRateId(filterdata[0].rateId);
+  //         setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
+  //       }
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
+
+  useEffect(() => {
+    setDatas(details);
+    setRateId(details[0].rateId);
+    setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
+  },[])
 
   // useEffect(() => setAmt(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
   // ,[qty, unitPrice, campaignDuration])
@@ -222,14 +233,11 @@ const AdDetailsPage = () => {
     //const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
     setMargin(formattedMargin(((qty * unitPrice * campaignDuration * event.target.value) / 100)));
+    console.log((Number(event.target.value)+100)/100);
   };
 
 
   const filteredData = datas
-    .filter((value, index, self) =>
-      self.findIndex(obj => obj.VendorName === value.VendorName) === index
-    )
-    .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
 
   const sortedSlabData = slabData
     .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
@@ -251,7 +259,7 @@ const AdDetailsPage = () => {
     const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
     const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays]
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, leadDay.CampaignDurationUnit]
     const GSTPerc = 18
 
     generatePdf(PDFArray)
@@ -290,14 +298,13 @@ const AdDetailsPage = () => {
 };
 
 // Add sortedSlabData items to filteredData where VendorName is same
-const newDatas = filteredData.map(item => {
-    const slabDataForVendor = findSlabDataForVendor(item.VendorName);
-    return {
-        ...item,
-        slabData: slabDataForVendor
-    };
-});
-console.log(newDatas);
+// const newDatas = filteredData.map(item => {
+//     const slabDataForVendor = findSlabDataForVendor(item.VendorName);
+//     return {
+//         ...item,
+//         slabData: slabDataForVendor
+//     };
+// });
 
   
 
@@ -307,7 +314,7 @@ console.log(newDatas);
       {showAdCategoryPage && (<AdCategoryPage />)}
       {(checkout === true && showAdCategoryPage === false) &&
         (
-          <div className="mx-[8%]">
+          <div className="fixed left-[8%] right-[8%] overflow-hidden">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             <div className="mb-8 flex items-center">
               <button
@@ -339,7 +346,7 @@ console.log(newDatas);
                 </p>
               </div>
 
-              <div className="mb-8 overflow-y-auto h-[calc(100vh-300px)]">
+              <div className="mb-8 overflow-y-auto h-[calc(100vh-400px)]">
                 <div className="mb-4">
                   <label className="font-bold">Vendor</label>
                   <select
@@ -372,7 +379,7 @@ console.log(newDatas);
                   >
                     {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} : Rs.{formattedRupees(Number(opt.UnitPrice) * (marginPercentage + 100)/100)} per {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}
+                        {opt.StartQty}+ {unit} : Rs.{formattedRupees(Number(opt.UnitPrice) * (Number(marginPercentage) + 100)/100)} per {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}
                       </option>
                     ))}
                   </select>
@@ -418,10 +425,22 @@ console.log(newDatas);
                     placeholder="Ex: 4000"
                     value={margin}
                     onChange={handleMarginChange}
+                    onFocus={(e) => e.target.select()}
                   />
+                  <div className='flex items-center'>
                   <p className="mt-1 text-sm">Margin Percentage: {marginPercentage}%</p><br/>
+                  <input
+                      className="w-20 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      type="number"
+                      placeholder="Ex: 15"
+                      defaultValue="15"
+                      value={marginPercentage}
+                      onChange={handleMarginPercentageChange}
+                    />
+                  </div>
+                  
 
-                  <div className="flex flex-col items-center justify-center space-y-4">
+                  {/* <div className="flex flex-col items-center justify-center space-y-4">
       <button onClick={decrementNumber} className="text-blue-500 hover:text-blue-700">
         <ChevronUpIcon className="h-6 w-6" />
       </button>
@@ -447,7 +466,7 @@ console.log(newDatas);
             <div className="p-col-12 custom-carousel-item bg-gray-100 border border-gray-300 rounded-md p-4 m-2">{item.content}</div>
           </div>
         )}
-      />
+      /> */}
                   {/* <input
                     className="w-full"
                     type="range"
@@ -551,7 +570,7 @@ console.log(newDatas);
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Price</td>
-                  <td>:</td><td>  {formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18))}</td>
+                  <td>:</td><td> Rs. {formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18))} (incl. GST)</td>
                 </tr>
               </table>
 

@@ -238,7 +238,11 @@ const AdCategoryPage = () => {
       
       </div>)}
       {/* {showAdDetailsPage && <VendorPage details ={selectedAdCategory}/>} */}
-      {showAdDetailsPage && <AdDetailsPage />}
+      {showAdDetailsPage && <AdDetailsPage details={(filteredData.filter(item => item.adCategory === selectedEdition.adCategory && item.adType === adType)
+          .filter((value, index, self) =>
+            self.findIndex(obj => obj.VendorName === value.VendorName) === index
+          )
+          .sort((a, b) => a.VendorName.localeCompare(b.VendorName)))} />}
 
       </div>
   )
