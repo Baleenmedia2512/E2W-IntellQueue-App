@@ -101,7 +101,7 @@ export const AdMediumPage = () => {
 
             <> 
             <button className='hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
-          }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
+          }> <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button>
             
               <button
                 className="px-2 py-1 rounded text-center"

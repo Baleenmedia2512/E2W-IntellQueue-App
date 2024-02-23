@@ -57,6 +57,7 @@ const AdTypePage = () => {
   ;
 
   const filteredAdType = datas
+  .filter(item => item.rateName === Cookies.get('ratename'))
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adType === value.adType) === index
   )
@@ -106,7 +107,7 @@ const greater = '>>'
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
         <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' onClick={() => {moveToPreviousPage(!selectedTypeofAd)}
-    }> <FontAwesomeIcon icon={faArrowLeft} /> </button> 
+    }> <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button> 
     {Cookies.get('ratename')} {selectedTypeofAd ? greater : ''} {selectedTypeofAd ? selectedTypeofAd.typeOfAd : ''}</h1>
           <button
             className=" px-2 py-1 rounded text-center"

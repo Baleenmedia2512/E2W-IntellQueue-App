@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -34,7 +34,7 @@ const AdCategoryPage = () => {
 
   const splitNames = filteredData.map(item => {
     const [firstPart, secondPart] = item.adCategory.split(':');
-    const updatedFirstPart = (secondPart === undefined? adType : firstPart);
+    // const updatedFirstPart = (secondPart === undefined? adType : firstPart);
     return { ...item, Edition: firstPart.trim() , Position: secondPart || ''};
   });
 
@@ -74,13 +74,17 @@ const AdCategoryPage = () => {
         if (selectedAdCategory) {
           setShowAdDetailsPage(Cookies.get('vendo'));
         }
+
+        if (Cookies.get('adcategory')) {
+          setShowAdDetailsPage(true)
+        }
   
         if (!username) {
           routers.push('../login');
         } else {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
-          const filData = data.filter(item => item.adType === adType);
+          const filData = data.filter(item => item.adType === adType && item.rateName === Cookies.get('ratename'));
           setDatas(filData);
         }
       } catch (error) {
@@ -145,26 +149,11 @@ const AdCategoryPage = () => {
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
-              Cookies.remove('adtype'); 
-      Cookies.remove('edition')
-      Cookies.remove('adcategory');
-              routers.push('../addenquiry');
+              if(Cookies.get('previousadcategory')){
+                Cookies.set('adcategory', Cookies.get('previousadcategory'))
+              }
             }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+          ><FontAwesomeIcon icon={faArrowRight} />
           </button></>
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}

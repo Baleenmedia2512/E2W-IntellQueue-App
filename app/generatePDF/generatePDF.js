@@ -92,7 +92,7 @@ export const generatePdf = async(checkoutData) => {
     ['1', checkoutData[0], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
     //['Row 2 Data 1', 'Row 2 Data 2', 'Row 2 Data 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3'],
     // Add more rows as needed
-  ];
+  ]; 
 
   // Add the table to the PDF
   autoTable(pdf, {
