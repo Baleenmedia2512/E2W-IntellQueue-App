@@ -146,14 +146,34 @@ const AdCategoryPage = () => {
     {Cookies.get('ratename')} {!(typeOfAd === adType) ? greater : ''} {!(typeOfAd === adType) ? typeOfAd : ''} {greater} {adType} {selectedEdition ? greater : ''} {selectedEdition ? selectedEdition.Edition : ''}</h1>
 
         
-          <button
+    <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
-              if(Cookies.get('previousadcategory')){
-                Cookies.set('adcategory', Cookies.get('previousadcategory'))
-              }
+              Cookies.remove('adtype'); 
+      Cookies.remove('edition')
+      Cookies.remove('adcategory');
+      Cookies.remove('rateperunit')
+      Cookies.remove('minimumunit');
+      Cookies.remove('defunit');
+      Cookies.remove('rateId');
+      Cookies.remove('validitydate');
+              routers.push('../addenquiry');
             }}
-          ><FontAwesomeIcon icon={faArrowRight} />
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              className="h-6 w-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button></>
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}

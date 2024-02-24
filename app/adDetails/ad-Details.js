@@ -602,7 +602,7 @@ const [isChecked, setIsChecked] = useState(false);
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Campaign Duration</td>
-                  <td>:</td><td>  {campaignDuration} {selectedDayRange}</td>
+                  <td>:</td><td>  {campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</td>
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Price</td>
