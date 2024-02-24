@@ -1,110 +1,374 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Cookies from 'js-cookie';
+import Select from 'react-select';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import AdTypePage from './ratesAdTypePage';
+import IconButton from '@mui/material/IconButton';
+import {Button} from '@mui/material';
+import { AddCircleOutline, RemoveCircleOutline, SaveOutlined, DeleteOutline } from '@mui/icons-material';
+import { generatePdf } from '../generatePDF/generatePDF';
+import { TextField } from '@mui/material';
+// import { Carousel } from 'primereact/carousel';
+// import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
+//const minimumUnit = Cookies.get('minimumunit');
 
-export const AdMediumPage = () => {
-  const [selectedAdMedium, setSelectedAdMedium] = useState('');
-  const [datas, setDatas] = useState([]);
-  const [showAdTypePage, setShowAdTypePage] = useState(false);
-  const routers = useRouter();
+const AdDetailsPage = () => {
+  const [ratesData, setRatesData] = useState([]);
+  const [checkout, setCheckout] = useState(true);
+  const router = useRouter();
+  const sampleSlabs = ['Slab1', 'Slab2', 'Slab3']
+  const sampleUnits = [{label: 'Unit 1', Key: 'Unit 1'}, {label: 'Unit 2', Key: 'Unit 2'}, {label: 'Unit 3', Key: 'Unit 3'}, {label: 'Unit 4', Key: 'Unit 4'}]
+  const [slabData, setSlabData] = useState([]);
+  const [qtySlab, setQtySlab] = useState()
+  const [isSlabAvailable, setIsSlabAvailable] = useState(true)
+  const [selectedSlabData, setSelectedSlabData] = useState(null)
+  const [unitPrice, setUnitPrice] = useState();
+  const [rateId, setRateId] = useState(null);
 
-  const [searchInput, setSearchInput] = useState('');
+  const [filters, setFilters] = useState({
+    rateName: [],
+    adType: [],
+    adCategory: [],
+    VendorName: []
+  });
 
-  const handleSearchInputChange = (event) => {
-    setSearchInput(event.target.value);
+  const [selectedValues, setSelectedValues] = useState({
+    rateName: null,
+    adType: null,
+    adCategory: null,
+    VendorName: null
+  });
+
+  useEffect(() => {
+    if(rateId !== null){
+      const fetchData = async () => {
+        try {
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const data = await response.json();
+          setSlabData(data);
+          console.log(data)
+          const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+          const firstSelectedSlab = sortedData[0];
+          setQtySlab(firstSelectedSlab.StartQty);
+          setUnitPrice(firstSelectedSlab.UnitPrice);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      fetchData();
+    }
+  }, [rateId]);
+
+  useEffect(() => {
+     // Check if localStorage contains a username
+     const username = Cookies.get('username');
+     // If no username is found, redirect to the login page
+     if (!username) {
+       router.push('/login');
+     } else{
+      fetchRates();
+    }
+  }, []);
+
+  const getDistinctValues = (key) => {
+    const distinctValues = [...new Set(ratesData.map(item => item[key]))];
+    return distinctValues.sort();
   };
 
-  // const handleOptionChange = (option) => {
-  //   //setSelectedOption(option);
-  //   setSelectedOption((prevSelectedOption) => 
-  //   prevSelectedOption === option ? null : option
-  // );
-  // };
+  const transformQtySlabData = () => {
+    return slabData.map(item => {
+      return {
+        value: item.StartQty,  // Using StartQty as the unique identifier
+        label: `Per Unit: ${item.UnitPrice} for ${item.StartQty} ${item.Unit}`,
+      };
+    });
+  };
 
-  const datasOptions = datas
-    .filter((value, index, self) =>
-      self.findIndex(obj => obj.rateName === value.rateName) === index
-    )
-    .sort((a, b) => a.rateName.localeCompare(b.rateName));
-  //   .map((option) => ({
-  //    // if(option.rateName === 'Automobile'){
-  //     ...option,
-  //     icon: `https://t3.ftcdn.net/jpg/01/71/13/24/360_F_171132449_uK0OO5XHrjjaqx5JUbJOIoCC3GZP84Mt.jpg`
-  //  // }
-  //   }));
+  const qtySlabOptions = transformQtySlabData();
 
-  // Filtered options based on the search input
-  const searchedOptions = datasOptions.filter((option) =>
-    option.rateName.toLowerCase().includes(searchInput.toLowerCase())
-  );
+  // Function to get options based on the selected values
+  const getOptions = (filterKey, selectedValues) => {
+    const filteredData = ratesData.filter(item => {
+      return Object.entries(selectedValues).every(([key, value]) =>
+        key === filterKey || !value || item[key] === value.value
+      );
+    });
 
-  const icons = (iconValue) => {
-    if (iconValue === 'Automobile') {
-      return (<Image src="/images/school-bus.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Newspaper') {
-      return (<Image src="/images/newspaper.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Print Services') {
-      return (<Image src="/images/printer.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Production') {
-      return (<Image src="/images/smart-tv.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Radio Ads') {
-      return (<Image src="/images/radio.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Road Side') {
-      return (<Image src="/images/road-map.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Screen Branding') {
-      return (<Image src="/images/branding.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'Test') {
-      return (<Image src="/images/test.png" alt="car Icon" width={60} height={60} />);
-    } else if (iconValue === 'TV') {
-      return (<Image src="/images/tv-monitor.png" alt="car Icon" width={60} height={60} />);
+    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+    return distinctValues.sort().map(value => ({ value, label: value }));
+  };
+
+  // Function to handle dropdown selection
+  const handleSelectChange = (selectedOption, filterKey) => {
+    if (filterKey === 'rateName'){
+      setSelectedValues({
+        [filterKey]: selectedOption,
+        adType: null,
+        adCategory: null,
+        VendorName: null
+      })
+    } else if(filterKey === 'adType'){
+      setSelectedValues({
+        ...selectedValues,
+        [filterKey]: selectedOption,
+        adCategory: null,
+        VendorName: null
+      })
+    } else {
+      // Update the selected values
+    setSelectedValues({
+      ...selectedValues,
+      [filterKey]: selectedOption
+    });
+    }
+    
+
+    // Update the filters
+    setFilters({
+      ...filters,
+      [filterKey]: selectedOption.value
+    });
+
+    // Add logic to fetch rateId after selecting Vendor
+  if (filterKey === 'VendorName' && selectedOption) {
+    const selectedRate = ratesData.find(item =>
+      item.rateName === selectedValues.rateName.value &&
+      item.adType === selectedValues.adType.value &&
+      item.adCategory === selectedValues.adCategory.value &&
+      item.VendorName === selectedOption.value
+    );
+
+    if (selectedRate) {
+      setRateId(selectedRate.rateId);
+    }
+  }
+  }
+
+  const fetchRates = async () => {
+    const storedETag = localStorage.getItem('ratesETag');
+    const headers = {};
+    
+    if (storedETag) {
+      headers['If-None-Match'] = storedETag;
+    }
+  
+    try {
+      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php', {
+        headers,
+      });
+  
+      if (res.status === 304) {
+        // No changes since last request, use cached data
+        const cachedRates = JSON.parse(localStorage.getItem('cachedRates'));
+        setRatesData(cachedRates);
+        return;
+      }
+  
+      const newETag = res.headers.get('ETag');
+      localStorage.setItem('ratesETag', newETag);
+  
+      const data = await res.json();
+      setRatesData(data);
+      // Cache the new rates data
+      localStorage.setItem('cachedRates', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error fetching rates:', error);
+    }
+  };
+
+  const pdfGeneration = async () => {
+    const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
+    const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
+    const [firstPart, secondPart] = adCategory.split(':');
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, leadDay.CampaignDurationUnit]
+    const GSTPerc = 18
+
+    generatePdf(PDFArray)
+
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${Cookies.get('username')}&
+    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}`)
+      const data = await response.json();
+      if (data === "Values Inserted Successfully!") {
+        alert("Quote Downloaded")
+      } else {
+        alert(`The following error occurred while inserting data: ${data}`);
+
+      }
+    } catch (error) {
+      console.error('Error updating rate:', error);
     }
   }
 
-  useEffect(() => {
-    const username = Cookies.get('username');
+  const formattedRupees = (number) => {
+    const roundedNumber = (number / 1).toFixed(2);
+    const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
+    return totalAmount.toLocaleString('en-IN');
+  };
 
-    const fetchData = async () => {
-      try {
-        if (Cookies.get('ratename')) {
-          setShowAdTypePage(true)
-        }
+  const formattedMargin = (number) => {
+    const roundedNumber = (number / 1).toFixed(2);
+    return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
+  };
 
-        if (!username) {
-          routers.push('/login');
-        } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
-          const data = await response.json();
-          setDatas(data);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    fetchData();
-  }, []);
-
+  const greater = ">>"
   return (
-    <div>
-      {showAdTypePage && (<AdTypePage />)}
-      {!showAdTypePage && (
-        <div>
-          <div className="flex flex-row justify-between mx-[8%] mt-8">
+    <div className=" mt-8 justify-center">
+      {checkout === true &&
+        (
+            <div>
+                <div className="mb-4 flex flex-col items-center justify-center">
 
-            <> 
-            <button className='hover:scale-110 hover:text-orange-900' onClick={() => routers.push('../addenquiry')
-          }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-            
+                  {/* Ad Medium of the rate */}
+                  <div>
+                    <label className=''>Ad Medium</label><br />
+                    <Select
+                      className='mb-8 text-black w-64'
+                      id='AdMedium'
+                      instanceId="AdMedium"
+                      placeholder="Select Ad Medium"
+                      value={selectedValues.rateName}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
+                      options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+                    />
+                  </div>
+
+                  {/* Ad Type of the Rate  */}
+                  <div>
+                    <label className=''>Ad Type</label><br />
+                    <Select
+                      className='mb-8 text-black w-64 '
+                      id='AdType'
+                      instanceId="AdType"
+                      placeholder="Select Ad Type"
+                      value={selectedValues.adType}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+                      options={getOptions('adType', selectedValues)}
+                    />
+                  </div>
+
+                  {/* Ad Category of the rate  */}
+                  <div>
+                    <label className=''>Ad Category</label><br />
+                    <Select
+                      className='mb-8 text-black w-64'
+                      id='AdCategory'
+                      instanceId="AdCategory"
+                      placeholder="Select Ad Category"
+                      value={selectedValues.adCategory}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
+                      options={getOptions('adCategory', selectedValues)}
+                    />
+                  </div>
+
+                  {/* Choosing the vendor of the rate  */}
+                  <div>
+                    <label className=''>Vendor</label><br />
+                    <Select
+                      className='mb-8 text-black w-64'
+                      id='Vendor'
+                      instanceId="Vendor"
+                      placeholder="Select Vendor"
+                      value={selectedValues.VendorName}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
+                      options={getOptions('VendorName', selectedValues)}
+                    />
+                  </div>
+
+                  {/* Qty Slab of the rate  */}
+                  <div className='flex mb-4'>
+                    <TextField id="qtySlab" label="Quantity Slab" variant="outlined" size='small' className='w-44' type='number' helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
+                    <IconButton aria-label="Add" className='mb-10'>
+                      <AddCircleOutline color='primary'/>
+                    </IconButton>
+                    <IconButton aria-label="Remove">
+                      <RemoveCircleOutline color='secondary' className='mb-10'/>
+                    </IconButton>
+                  </div>
+
+                  {/* Slab List Here  */}
+                  {isSlabAvailable && (
+                    <div>
+                    <h2 className='mb-4 font-bold'>Available Slab Quantities</h2>
+                    <ul className='mb-4'>
+                      {sampleSlabs.map(data => (
+                        <option key={data}>{data}</option>
+                      ))}
+                    </ul>
+                    </div>
+                  )}
+
+                  {/* Units of the rate. Ex: Bus, Auto */}
+                  <div>
+                    <label className=''>Units</label><br />
+                    <Select
+                      className='mb-8 text-black w-64'
+                      id='Units'
+                      instanceId="Units"
+                      placeholder="Select Units"
+                      value={selectedValues.VendorName}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
+                      options={sampleUnits}
+                    />
+                  </div>
+
+                  {/* Campaign Duration Text with Units */}
+                  <div className='flex'>
+                    <TextField id="qtySlab" defaultValue={1} label="Campaign Duration" variant="outlined" size='small' className='w-36' type='number'/>
+                    <Select
+                      className='mb-8 text-black w-28 ml-2 mt-0.5'
+                      id='CUnits'
+                      instanceId="CUnits"
+                      placeholder="Units"
+                      value={selectedValues.VendorName}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
+                      options={sampleUnits}
+                    />
+                  </div>
+
+                  {/* Lead Days Text  */}
+                  <div className='flex mb-4'>
+                    <TextField id="leadDays" defaultValue={7} label="Lead Days" variant="outlined" size='small' className='w-48' type='number'/>
+                    <p className='ml-4 mt-2'>Day (s)</p>
+                  </div>
+
+                  {/* Valid Till Text*/}
+                  <div className='flex mb-4'>
+                    <TextField id="validTill" defaultValue={7} label="Valid Till" variant="outlined" size='small' className='w-48' type='number'/>
+                    <p className='ml-4 mt-2'>Day (s)</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-center mb-8">
+                <Button variant="outlined" startIcon={<DeleteOutline />} className='border-red-400 text-red-400'>
+                  Delete
+                </Button>
+                <Button variant="contained" endIcon={<SaveOutlined />} className='ml-4 bg-green-400'>
+                  Save
+                </Button>
+                </div>
+                <div className="flex flex-col justify-center items-center mt-4">
+                  <p className="font-semibold text-red-500">
+                    {/* *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days from the date of payment received or the date of design approved, whichever is higher */}
+                  </p>
+                  {/* <p className="font-bold">Quote Valid till {formattedDate}</p> */}
+                </div>
+              </div>
+        )
+      }
+      {checkout === false && (
+        <div className='mx-[8%]'>
+          <div className="flex flex-row justify-between mt-8">
+            <> <h1 className='text-2xl font-bold text-center mb-4'>Checkout</h1>
               <button
-                className="px-2 py-1 rounded text-center"
+                className=" px-2 py-1 rounded text-center"
                 onClick={() => {
-                  routers.push('../addenquiry')
+                  //routers.push('../addenquiry');
+                  setCheckout(true);
                 }}
               >
                 <svg
@@ -123,276 +387,73 @@ export const AdMediumPage = () => {
                 </svg>
               </button></>
           </div>
-          {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
 
-          <br/>
-          <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
-          <div className='mx-[8%] relative'>
-          <input
-          className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
-        type="text"
-        value={searchInput}
-        onChange={handleSearchInputChange}
-        placeholder="Search"
-      />
-      <div className="absolute top-0 right-0 mt-2 mr-3">
-          <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
-        </div></div>
-          <ul className="mx-[8%] mb-8 justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
-            {searchedOptions.map((option,index) => (<>
-              {option.rateName !== 'Newspaper' && (
-                <label
-                  key={option.rateName}
-                  className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg hover:bg-purple-500 ${(index)%4==0 || (index)%4==1 ? ' bg-blue-300' : ' bg-gray-500 '
-                    }`}
-                  //    htmlFor={`option-${option.id}`}
-                  onClick={() => {
-                    setSelectedAdMedium(option.rateName);
-                    Cookies.set('ratename', option.rateName);
-                    setShowAdTypePage(true);
-                  }}
-                >
-                  <div className="text-lg font-bold mb-2 text-black flex items-center justify-center">{option.rateName}</div>
-                  <div className='mb-2 flex items-center justify-center'>{icons(option.rateName)}</div>
-                </label>)}</>
-            ))
-            }
-          </ul>
-          {/* < BottomBar /> */}
+          <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
+          <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
+            <div>
+              <h1 className='mb-4 font-bold text-center'>AD Details</h1>
+
+              <table className='mb-8'>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Ad Medium</td>
+                  <td>:</td><td>  {rateName}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Ad Type</td>
+                  <td>:</td><td>  {adType}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Edition</td>
+                  <td>:</td><td>  {adCategory}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Quantity</td>
+                  <td>:</td><td>  {qty} {unit}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Campaign Duration</td>
+                  <td>:</td><td>  {campaignDuration} {selectedDayRange}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Price</td>
+                  <td>:</td><td> Rs. {formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18))} (incl. GST)</td>
+                </tr>
+              </table>
+
+              <h1 className='mb-4 font-bold text-center'>Client Details</h1>
+
+              <table className='mb-6'>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Client Name</td>
+                  <td>:</td><td>  {clientName}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Client Number</td>
+                  <td>:</td><td>  {clientNumber}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Client E-Mail</td>
+                  <td>:</td><td>  {clientEmail}</td>
+                </tr>
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Source</td>
+                  <td>:</td><td>  {selectedSource}</td>
+                </tr>
+              </table>
+            </div></div>
+          <div className='flex flex-col justify-center items-center'>
+
+            <button
+              className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full transition-all duration-300 ease-in-out hover:bg-green-600"
+              onClick={pdfGeneration}
+            >
+              Download Quote
+            </button>
+          </div>
         </div>
       )}
     </div>
-  );
-};
+  )
 
-// const AdDetailsPage = () => {
-//   const [qtySlab, setQtySlab] = useState('')
-//   const [qty, setQty] = useState(minimumUnit)
-//   const [selectedDayRange, setSelectedDayRange] = useState('');
-//   const [campaignDuration, setCampaignDuration] = useState(0);
-//   const [unit, setUnit] = useState('')
-//   const [margin, setMargin] = useState(0);
-//   const [marginPercentage, setMarginPercentage] = useState(0)
-//   const [extraDiscount, setExtraDiscount] = useState(0)
-//   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
-//   const units = ['Unit', 'Sec', 'Spot', 'Million Views', 'Minutes', 'SQFT'];
-//   const [checkout, setCheckout] = useState(true);
-
-//   const clientName = Cookies.get('clientname');
-//   const clientNumber = Cookies.get('clientnumber');
-//   const clientEmail = Cookies.get('clientemail');
-//   const selectedSource = Cookies.get('selectedsource');
-
-//   const rateName = Cookies.get('ratename');
-//   const adType = Cookies.get('adtype');
-//   const adCategory = Cookies.get('adcategory');
-//   const VendorName = Cookies.get('vendorname');
-//   const ratePerUnit = Cookies.get('rateperunit');
-
-//   //const minimumUnit = 15;
-//   const defUnits = Cookies.get('defunit');
-
-//   useEffect(() => {
-//     //setMargin((margin/1).toFixed(2))
-//     setMarginPercentage(((margin / (qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
-//   })
-//   useEffect(() => {
-//     if (selectedDayRange === "") {
-//       setSelectedDayRange(dayRange[0]);
-//     }
-//     if (unit === "") {
-//       setUnit(defUnits);
-//     }
-//   }
-//   )
-
-
-//   const greater = ">"
-//   return (
-//     <div className=" mt-8 mx-[8%]">
-//       {checkout === true &&
-//         (
-//           <div className='mx-[8%]'>
-//             <label className="font-bold">Quantity Slab ({greater})</label>
-//             <input
-//               className="w-full border border-gray-300 p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-//               type="number"
-//               placeholder="Ex: 1 (meaning quantity > 1)"
-//               value={qtySlab}
-//               onChange={e => setQtySlab(e.target.value)}
-//             />
-//             {/*qty<minimumUnit ? 'Quantity is lesser than minimum' : ''*/}
-
-//             <label className="font-bold">Quantity </label>
-//             <div className="flex w-full">
-//               <input
-//                 className="w-full border border-gray-300 p-2 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-//                 type="number"
-//                 placeholder="Ex: 15"
-//                 value={qty}
-//                 //value={minimumUnit > qty ? minimumUnit : qty}
-//                 onChange={e => { setQty(e.target.value) }}
-//               />
-
-//               <div className="relative">
-//                 <select
-//                   className="border-l border-gray-300 rounded-r-lg p-2"
-//                   defaultValue={defUnits}
-//                   value={unit}
-//                   onChange={e => setUnit(e.target.value)}
-//                 >
-//                   {units.map((option, index) => (
-//                     <option key={index} value={option}>
-//                       {option}
-//                     </option>
-//                   ))}
-//                 </select>
-//               </div>
-//             </div>
-//             <label className='text-red-300'>{qty < minimumUnit ? 'Quantity is lesser than minimum' : ''}</label>
-//             <br />
-//             <label className="font-bold mt-12 mb-4">Campaign Duration</label>
-//             <div className="flex w-full mb-4">
-//               <input
-//                 className="w-full border border-gray-300 p-2 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-//                 type="number"
-//                 placeholder="Ex: 3"
-//                 value={campaignDuration}
-//                 onChange={e => (setCampaignDuration(e.target.value))}
-//               />
-//               <div className="relative">
-//                 <select
-//                   className="border-l border-gray-300 rounded-r-lg p-2"
-//                   value={selectedDayRange}
-//                   onChange={e => setSelectedDayRange(e.target.value)}
-//                 >
-//                   {dayRange.map((option, index) => (
-//                     <option key={index} value={option}>
-//                       {option}
-//                     </option>
-//                   ))}
-//                 </select>
-//               </div>
-//             </div>
-
-//             <label className="font-bold">Margin Amount(Rs)</label>
-//             <input className='w-full border border-gray-300 p-2 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
-//               type='number'
-//               placeholder='Ex: 4000'
-//               value={margin}
-//               onChange={e => (setMargin(e.target.value))
-//               }
-//             />
-//             <label className="mt-1 text-sm mb-4">Margin Percentage: {marginPercentage}%</label>
-
-//             <br></br>
-//             <br></br>
-//             <label className="font-bold">Extra Discount(Rs)</label>
-//             <input className='w-full border border-gray-300 p-2 mb-4 rounded-l-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200'
-//               type='number'
-//               placeholder='Ex: 1000'
-//               value={extraDiscount}
-//               onChange={e => setExtraDiscount(e.target.value)}
-//             />
-//             <label className="font-bold">Price(Rs): {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)} </label>
-//             <label className="mt-1 text-sm mb-4">({qty} x {(ratePerUnit / 1).toFixed(2)} x {campaignDuration === 0 ? 1 : campaignDuration} = {((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) / 1).toFixed(2)} + Rs. {(margin / 1).toFixed(2)} Margin Amount - Rs. {(extraDiscount / 1).toFixed(2)} Discount Amount + 18% GST = Receivable (incl. GST))</label>
-
-//             <br /><br /><div className='flex flex-col items-center justify-center'>
-//               <button className=' bg-green-500 hover:bg-green-600 px-4 py-2 rounded-full transition-all duration-300 ease-in-out text-white'
-//                 onClick={() => setCheckout(false)}
-//               >
-//                 Checkout
-//               </button>
-//               <label className="text-sm mb-1">Ad Medium: {rateName}</label>
-//               <label className="mt-1 text-sm mb-1">Ad Type: {adType}</label>
-//               <label className="mt-1 text-sm mb-1">Ad Category: {adCategory}</label>
-//               <label className="mt-1 text-sm mb-1">Vendor Name: {VendorName}</label>
-//               <label className="mt-1 text-sm mb-1">Rate Per Unit: Rs. {(ratePerUnit / 1).toFixed(2)}</label>
-//               <br></br>
-//               <br></br>
-//             </div>
-//           </div>)
-//       }
-//       {checkout === false && (
-//         <div>
-//           <div className="flex flex-row justify-between mt-8">
-//             <> <h1 className='text-2xl font-bold text-center mb-4'>Checkout</h1>
-//               <button
-//                 className="text-black px-2 py-1 rounded text-center"
-//                 onClick={() => {
-//                   //routers.push('../addenquiry');
-//                   window.location.reload()
-//                 }}
-//               >
-//                 <svg
-//                   xmlns="http://www.w3.org/2000/svg"
-//                   fill="none"
-//                   viewBox="0 0 24 24"
-//                   stroke="currentColor"
-//                   className="h-6 w-6"
-//                 >
-//                   <path
-//                     strokeLinecap="round"
-//                     strokeLinejoin="round"
-//                     strokeWidth="2"
-//                     d="M6 18L18 6M6 6l12 12"
-//                   />
-//                 </svg>
-//               </button></>
-//           </div>
-//           <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
-//           <div className='lg:mx-[40%]'>
-//             <h1 className='mb-4 font-semibold'>AD Details</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Ad Medium : {rateName}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Ad Type : {adType}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Ad Category : {adCategory}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Vendor Name : {VendorName}</h1>
-//             {/* <h1 className='mb-2 text-red-400 font-semibold'>Quantity Slab : {qtySlab} Units</h1> */}
-//             <h1 className='mb-2 text-red-400 font-semibold'>Quantity : {qty} {unit}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Campaign Duration : {campaignDuration} {selectedDayRange}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Margin Amount : {(margin / 1).toFixed(2)}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Margin Percentage : {marginPercentage}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Extra Discount : {(extraDiscount / 1).toFixed(2)}</h1>
-//             <h1 className='mb-14 text-red-400 font-semibold'>Price : {(((qty * ratePerUnit * (campaignDuration === 0 ? 1 : campaignDuration)) + (margin - extraDiscount)) * (1.18)).toFixed(2)}</h1>
-
-
-//             <h1 className='mb-4 font-semibold'>Client Details</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Client Name : {clientName}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Client Number : {clientNumber}</h1>
-//             <h1 className='mb-2 text-red-400 font-semibold'>Client E-Mail: {clientEmail}</h1>
-//             <h1 className='mb-4 text-red-400 font-semibold'>Source : {selectedSource}</h1>
-
-//           </div>
-//           <div className='flex flex-col justify-center items-center'>
-
-//             <button
-//               className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full transition-all duration-300 ease-in-out hover:bg-green-600"
-//             >
-//               Send Quote
-//             </button>
-//             <p className='font-semibold text-red-500'>*Lead time is 7 days from the date of payment received or the date of design approved whichever
-//               is higher
-//             </p>
-//             <p className='font-bold'>Quote Valid till 13/01/2024</p></div>
-//         </div>
-//       )}
-//     </div>
-//   )
-// }
-
-// const AdDetails = () => {
-//   const [adDetailsSelected, setAdDetailsSelected] = useState(false);
-
-//   useEffect(() => {
-//     setAdDetailsSelected(Cookies.get('adMediumSelected'))
-
-//   }, [Cookies.get('adMediumSelected')])
-
-//   return (
-//     <div>
-//       {adDetailsSelected ? <AdDetailsPage /> : <AdMediumPage />}
-//     </div>
-//   )
-// }
-
-export default AdMediumPage;
+}
+export default AdDetailsPage;
