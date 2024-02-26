@@ -180,7 +180,7 @@ const AdDetailsPage = () => {
         } else {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
-          const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType && item.rateName === rateName)
+          const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType && item.rateName === rateName && item.typeOfAd === typeOfAd)
           .filter((value, index, self) =>
             self.findIndex(obj => obj.VendorName === value.VendorName) === index
           )
@@ -264,7 +264,7 @@ const AdDetailsPage = () => {
     const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
     const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day' )]
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day' ), unit]
     const GSTPerc = 18
 
     generatePdf(PDFArray)

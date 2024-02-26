@@ -84,7 +84,7 @@ const AdCategoryPage = () => {
         } else {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
-          const filData = data.filter(item => item.adType === adType && item.rateName === Cookies.get('ratename'));
+          const filData = data.filter(item => item.adType === adType && item.rateName === Cookies.get('ratename') && item.typeOfAd === typeOfAd);
           setDatas(filData);
         }
       } catch (error) {
@@ -178,7 +178,7 @@ const AdCategoryPage = () => {
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
       <br />
-<h1 className='text-2xl font-bold text-center  mb-4'>Select {!selectedEdition ? "Edition": "position"}</h1>
+<h1 className='text-2xl font-bold text-center  mb-4'>Select {!selectedEdition ? "Edition": "Package"}</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
           <input

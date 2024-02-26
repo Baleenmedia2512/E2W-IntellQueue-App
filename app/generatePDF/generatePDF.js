@@ -7,7 +7,7 @@ export const generatePdf = async(checkoutData) => {
 
   const ImageUrl = '/images/WHITE PNG.png';
   const quoteNumber = await fetchNextQuoteNumber();
-  console.log("Quote Nuimber: ", quoteNumber)
+  console.log("Quote Number: ", quoteNumber)
   // Create a new jsPDF instance
   const pdf = new jsPDF({
     orientation: "landscape",
@@ -43,9 +43,9 @@ export const generatePdf = async(checkoutData) => {
 
   // Calculate the x-coordinate for right-aligned text
  
-  textWidth = pdf.getStringUnitWidth('From,') * 12; // Adjust the font size multiplier as needed
-  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('From,', xCoordinate, 60);
+  // textWidth = pdf.getStringUnitWidth('From,') * 12; // Adjust the font size multiplier as needed
+  // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+  // pdf.text('From,', xCoordinate, 60);
 
   textWidth = pdf.getStringUnitWidth('Baleen Media') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
@@ -87,12 +87,18 @@ export const generatePdf = async(checkoutData) => {
   // pdf.setFontSize(12);
 
   // Create a table
-  const headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Edition', 'Remarks', 'Qty', 'Campaign Duration', 'Rate Per Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
-  const data = [
-    ['1', checkoutData[0], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty/Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
+  let data = [
+    ['1', checkoutData[0], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4] + " " + checkoutData[12], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
     //['Row 2 Data 1', 'Row 2 Data 2', 'Row 2 Data 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3'],
     // Add more rows as needed
   ]; 
+
+  if (!checkoutData[3]) {
+    headers = headers.map(row => row.filter(column => column !== 'Package'));
+    data = data.map(row => row.filter(column => column !== checkoutData[3]));
+}
+
 
   // Add the table to the PDF
   autoTable(pdf, {
