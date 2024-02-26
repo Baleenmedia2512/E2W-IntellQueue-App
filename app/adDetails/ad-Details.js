@@ -45,7 +45,8 @@ const AdDetailsPage = () => {
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const minimumCampaignDurartion = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
-  console.log(minimumCampaignDurartion)
+  // console.log(minimumCampaignDurartion)
+  const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0
   const [campaignDuration , setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   const [margin, setMargin] = useState(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2));
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
@@ -310,6 +311,7 @@ const AdDetailsPage = () => {
 //         slabData: slabDataForVendor
 //     };
 // });
+  const [remarks, setRemarks] = useState('');
   
 
   const greater = ">>"
@@ -340,9 +342,11 @@ const AdDetailsPage = () => {
               <div className="mb-4 bg-orange-300 rounded-md">
                 {/* <p className='font-semibold text-sm'>Rate Id : {rateId}</p> */}
                 <p className="font-semibold text-sm">
-                  * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))} =
+                  * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))}=
                   (₹{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}) + ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount)
                 </p>
+                <p className="text-sm"></p>
+                <p className="text-sm"></p>
                 <p className="font-semibold text-sm">
                   * GST Amount : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
                 </p>
@@ -411,7 +415,8 @@ const AdDetailsPage = () => {
                   </div>
                   <p className="text-red-700">{qty < qtySlab ? 'Minimum Quantity should be ' + qtySlab : ''}</p>
                 </div>
-                <div className="mb-4">
+                {campaignDurationVisibility && 
+                (<div className="mb-4">
                   <label className="font-bold">Campaign Duration 
                   
       </label>
@@ -434,7 +439,7 @@ const AdDetailsPage = () => {
                     {/* </div> */}
                   </div>
                   <p className="text-red-700">{campaignDuration < minimumCampaignDurartion ? 'Minimum Duration should be ' + minimumCampaignDurartion : ''}</p>
-                </div>
+                </div>)}
                 <div className="mb-4">
                   <label className="font-bold">Margin Amount(₹)</label>
                   <input
@@ -457,8 +462,7 @@ const AdDetailsPage = () => {
                       onFocus={(e) => e.target.select()}
                     />
                     <p className="mt-1 text-sm">%</p><br/>
-                  </div>
-                  
+                  </div>             
 
                   {/* <div className="flex flex-col items-center justify-center space-y-4">
       <button onClick={decrementNumber} className="text-blue-500 hover:text-blue-700">
@@ -502,12 +506,22 @@ const AdDetailsPage = () => {
                 <div className="mb-4">
                   <label className="font-bold">Extra Discount(₹)</label>
                   <input
-                    className="w-full border border-gray-300 bg-blue-300 text-black p-2 mb-4 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
                     placeholder="Ex: 1000"
                     value={extraDiscount}
                     onChange={(e) => setExtraDiscount(e.target.value)}
                     onFocus={(e) => e.target.select()}
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="font-bold">Remarks</label>
+                  <textarea
+                    className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    placeholder="Remarks"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    rows="2"
                   />
                 </div>
                 <div className="flex flex-col items-center justify-center">
