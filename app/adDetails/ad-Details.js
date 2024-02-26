@@ -48,7 +48,7 @@ const AdDetailsPage = () => {
   console.log(minimumCampaignDurartion)
   const [campaignDuration , setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   const [margin, setMargin] = useState(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2));
-  const ValidityDate = Cookies.get('validitydate')
+  const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
   const [changing, setChanging] = useState(false);
   //const minimumUnit = 15;
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
@@ -180,7 +180,7 @@ const AdDetailsPage = () => {
         } else {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
-          const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType && item.rateName === rateName && item.typeOfAd === typeOfAd)
+          const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType && item.rateName === rateName)
           .filter((value, index, self) =>
             self.findIndex(obj => obj.VendorName === value.VendorName) === index
           )
@@ -310,7 +310,6 @@ const AdDetailsPage = () => {
 //         slabData: slabDataForVendor
 //     };
 // });
-const [isChecked, setIsChecked] = useState(false);
   
 
   const greater = ">>"
@@ -338,7 +337,7 @@ const [isChecked, setIsChecked] = useState(false);
                 {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory.split('|').join(' | ').split(",").join(", ")} {greater} {rateId}
               </h2>
             </div><div>
-              <div className="mb-4">
+              <div className="mb-4 bg-orange-300 rounded-md">
                 {/* <p className='font-semibold text-sm'>Rate Id : {rateId}</p> */}
                 <p className="font-semibold text-sm">
                   * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))} =
@@ -417,7 +416,6 @@ const [isChecked, setIsChecked] = useState(false);
                   
       </label>
                   <div className="flex w-full">
-                  {isChecked ? (
                     <input
                     className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
@@ -430,22 +428,9 @@ const [isChecked, setIsChecked] = useState(false);
                     }}
                     onFocus={(e) => e.target.select()}
                   />
-                  ):(<label
-                  className="w-4/5 border border-gray-300 bg-gray-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-                  >{campaignDuration}</label>)
-                  }
                     {/* <div className="relative"> */}
                     <label className="text-center mt-2 ml-5">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
-                    <input
-        type="checkbox"
-        checked={isChecked}
-        onChange={() => {setIsChecked(!(isChecked));
-        if(isChecked){
-          setCampaignDuration(minimumCampaignDurartion);
-          setMargin(formattedMargin(((qty * unitPrice * minimumCampaignDurartion * marginPercentage) / 100)))
-        }}}
-        className="h-5 w-5 text-blue-500 focus:ring-blue-400 border-gray-300 rounded focus:outline-none ml-5 mt-2"
-      />
+                    
                     {/* </div> */}
                   </div>
                   <p className="text-red-700">{campaignDuration < minimumCampaignDurartion ? 'Minimum Duration should be ' + minimumCampaignDurartion : ''}</p>

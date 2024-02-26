@@ -84,7 +84,7 @@ const AdCategoryPage = () => {
         } else {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
-          const filData = data.filter(item => item.adType === adType && item.rateName === Cookies.get('ratename') && item.typeOfAd === typeOfAd);
+          const filData = data.filter(item => item.adType === adType && item.rateName === Cookies.get('ratename'));
           setDatas(filData);
         }
       } catch (error) {
