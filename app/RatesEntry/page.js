@@ -15,12 +15,14 @@ import { TextField } from '@mui/material';
 const AdDetailsPage = () => {
   const [ratesData, setRatesData] = useState([]);
   const [checkout, setCheckout] = useState(true);
+  const [selectedUnit, setSelectedUnit] = useState()
   const router = useRouter();
-  const sampleSlabs = ['Slab1', 'Slab2', 'Slab3']
   const sampleUnits = [{label: 'Unit 1', Key: 'Unit 1'}, {label: 'Unit 2', Key: 'Unit 2'}, {label: 'Unit 3', Key: 'Unit 3'}, {label: 'Unit 4', Key: 'Unit 4'}]
   const [slabData, setSlabData] = useState([]);
   const [qtySlab, setQtySlab] = useState()
+  const [units, setUnits] = useState([])
   const [isSlabAvailable, setIsSlabAvailable] = useState(true)
+  const [modal, setModal] = useState(false);
   const [selectedSlabData, setSelectedSlabData] = useState(null)
   const [unitPrice, setUnitPrice] = useState();
   const [rateId, setRateId] = useState(null);
@@ -29,15 +31,31 @@ const AdDetailsPage = () => {
     rateName: [],
     adType: [],
     adCategory: [],
-    VendorName: []
+    vendorName: []
   });
 
   const [selectedValues, setSelectedValues] = useState({
     rateName: null,
     adType: null,
     adCategory: null,
-    VendorName: null
+    vendorName: null
   });
+
+  // Function to toggle the modal
+  const toggleModal = (modelName) => {
+      setModal((prevState) => !prevState);
+  }
+
+  useEffect(() => {
+     // Check if localStorage contains a username
+     const username = Cookies.get('username');
+     // If no username is found, redirect to the login page
+     if (!username) {
+       router.push('/login');
+     } else{
+      fetchRates();
+    }
+  }, []);
 
   useEffect(() => {
     if(rateId !== null){
@@ -49,7 +67,6 @@ const AdDetailsPage = () => {
           }
           const data = await response.json();
           setSlabData(data);
-          console.log(data)
           const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
           const firstSelectedSlab = sortedData[0];
           setQtySlab(firstSelectedSlab.StartQty);
@@ -64,16 +81,23 @@ const AdDetailsPage = () => {
   }, [rateId]);
 
   useEffect(() => {
-     // Check if localStorage contains a username
-     const username = Cookies.get('username');
-     // If no username is found, redirect to the login page
-     if (!username) {
-       router.push('/login');
-     } else{
-      fetchRates();
+    const fetchData = async () => {
+        try {
+          if (selectedValues.rateName && selectedValues.adType) {
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setUnits(data);
+        }
+        } catch (error) {
+          console.error(error);
+        }
     }
-  }, []);
 
+    fetchData()
+  },[selectedValues.adType, selectedValues.rateName])
   const getDistinctValues = (key) => {
     const distinctValues = [...new Set(ratesData.map(item => item[key]))];
     return distinctValues.sort();
@@ -109,14 +133,14 @@ const AdDetailsPage = () => {
         [filterKey]: selectedOption,
         adType: null,
         adCategory: null,
-        VendorName: null
+        vendorName: null
       })
     } else if(filterKey === 'adType'){
       setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
         adCategory: null,
-        VendorName: null
+        vendorName: null
       })
     } else {
       // Update the selected values
@@ -134,16 +158,16 @@ const AdDetailsPage = () => {
     });
 
     // Add logic to fetch rateId after selecting Vendor
-  if (filterKey === 'VendorName' && selectedOption) {
+  if (filterKey === 'vendorName' && selectedOption) {
     const selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
       item.adType === selectedValues.adType.value &&
       item.adCategory === selectedValues.adCategory.value &&
-      item.VendorName === selectedOption.value
+      item.vendorName === selectedOption.value
     );
 
     if (selectedRate) {
-      setRateId(selectedRate.rateId);
+      setRateId(selectedRate.RateID);
     }
   }
   }
@@ -157,7 +181,7 @@ const AdDetailsPage = () => {
     }
   
     try {
-      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php', {
+      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php', {
         headers,
       });
   
@@ -218,6 +242,16 @@ const AdDetailsPage = () => {
   const greater = ">>"
   return (
     <div className=" mt-8 justify-center">
+      { modal && (
+      <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
+          <div onClick={toggleModal} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
+            <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
+            <TextField id="ratePerUnit" defaultValue={1} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number'/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={toggleModal}>Submit</Button>
+            </div>
+          </div>
+)}
       {checkout === true &&
         (
             <div>
@@ -273,20 +307,18 @@ const AdDetailsPage = () => {
                       id='Vendor'
                       instanceId="Vendor"
                       placeholder="Select Vendor"
-                      value={selectedValues.VendorName}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
-                      options={getOptions('VendorName', selectedValues)}
+                      value={selectedValues.vendorName}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
+                      options={getOptions('vendorName', selectedValues)}
                     />
                   </div>
 
                   {/* Qty Slab of the rate  */}
+                  <label>Quantity Slab</label>
                   <div className='flex mb-4'>
-                    <TextField id="qtySlab" label="Quantity Slab" variant="outlined" size='small' className='w-44' type='number' helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
-                    <IconButton aria-label="Add" className='mb-10'>
+                    <TextField id="qtySlab" variant="outlined" size='small' className='w-44' type='number' helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
+                    <IconButton aria-label="Add" className='mb-10' onClick={toggleModal}>
                       <AddCircleOutline color='primary'/>
-                    </IconButton>
-                    <IconButton aria-label="Remove">
-                      <RemoveCircleOutline color='secondary' className='mb-10'/>
                     </IconButton>
                   </div>
 
@@ -295,50 +327,60 @@ const AdDetailsPage = () => {
                     <div>
                     <h2 className='mb-4 font-bold'>Available Slab Quantities</h2>
                     <ul className='mb-4'>
-                      {sampleSlabs.map(data => (
-                        <option key={data}>{data}</option>
+                      {slabData.map(data => (
+                        <div className='flex'>
+                          <option key={data.StartQty}>{data.StartQty} {data.Unit} - ₹{data.UnitPrice}</option>
+                          <IconButton aria-label="Remove" className='align-top'>
+                            <RemoveCircleOutline color='secondary' />
+                          </IconButton>
+                        </div>
                       ))}
                     </ul>
                     </div>
                   )}
 
                   {/* Units of the rate. Ex: Bus, Auto */}
-                  <div>
+                  <div className='bg-white'>
                     <label className=''>Units</label><br />
                     <Select
                       className='mb-8 text-black w-64'
                       id='Units'
                       instanceId="Units"
                       placeholder="Select Units"
-                      value={selectedValues.VendorName}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
-                      options={sampleUnits}
+                      value={selectedUnit}
+                      onChange={(selectedOption) => setSelectedUnit(selectedOption)}
+                      options={units}
+                      
                     />
                   </div>
 
                   {/* Campaign Duration Text with Units */}
+                  <label className='justify-left'>Campaign Duration</label>
                   <div className='flex'>
-                    <TextField id="qtySlab" defaultValue={1} label="Campaign Duration" variant="outlined" size='small' className='w-36' type='number'/>
+                    
+                    <TextField id="qtySlab" value="1" variant="outlined" size='small' className='w-36 ' type='number'/>
                     <Select
-                      className='mb-8 text-black w-28 ml-2 mt-0.5'
+                      className='mb-8 text-black w-28 ml-2 mt-0.5 '
                       id='CUnits'
                       instanceId="CUnits"
                       placeholder="Units"
-                      value={selectedValues.VendorName}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'VendorName')}
+                      value={selectedValues.vendorName}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
                       options={sampleUnits}
                     />
                   </div>
 
                   {/* Lead Days Text  */}
+                  <label>Lead Days</label>
                   <div className='flex mb-4'>
-                    <TextField id="leadDays" defaultValue={7} label="Lead Days" variant="outlined" size='small' className='w-48' type='number'/>
+                    <TextField id="leadDays" value="7" variant="outlined" size='small' className='w-48' type='number'/>
                     <p className='ml-4 mt-2'>Day (s)</p>
                   </div>
 
                   {/* Valid Till Text*/}
+                  <label>Valid Till</label>
                   <div className='flex mb-4'>
-                    <TextField id="validTill" defaultValue={7} label="Valid Till" variant="outlined" size='small' className='w-48' type='number'/>
+                    <TextField id="validTill" value="7" variant="outlined" size='small' className='w-48' type='number'/>
                     <p className='ml-4 mt-2'>Day (s)</p>
                   </div>
                 </div>
