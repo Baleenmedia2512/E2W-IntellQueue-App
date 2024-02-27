@@ -7,6 +7,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { generatePdf } from '../generatePDF/generatePDF';
+import { InputTextarea } from 'primereact/inputtextarea';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -45,8 +46,9 @@ const AdDetailsPage = () => {
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const minimumCampaignDurartion = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
-  // console.log(minimumCampaignDurartion)
+  
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0
+  // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   const [campaignDuration , setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   const [margin, setMargin] = useState(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2));
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
@@ -339,15 +341,14 @@ const AdDetailsPage = () => {
                 {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory.split('|').join(' | ').split(",").join(", ")} {greater} {rateId}
               </h2>
             </div><div>
-              <div className="mb-4 bg-orange-300 rounded-md">
-                {/* <p className='font-semibold text-sm'>Rate Id : {rateId}</p> */}
-                <p className="font-semibold text-sm">
-                  * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))}=
-                  (₹{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}) + ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount)
+              <div className="mb-4 bg-orange-300 rounded-md p-4">
+                <p className="font-semibold text-sm mb-1">
+                  * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))}
                 </p>
-                <p className="text-sm"></p>
-                <p className="text-sm"></p>
-                <p className="font-semibold text-sm">
+                <p className="text-sm text-purple-700">=
+                  ₹{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'})</p>
+                <p className="text-sm text-purple-700 mb-1">+ ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount</p>
+                <p className="font-semibold text-sm mb-1">
                   * GST Amount : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
                 </p>
                 <p className="font-bold text-sm">
@@ -355,7 +356,8 @@ const AdDetailsPage = () => {
                 </p>
               </div>
 
-              <div className="mb-8 overflow-y-auto h-[calc(100vh-400px)]">
+              <div className="mb-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
+
                 <div className="mb-4">
                   <label className="font-bold">Vendor</label>
                   <select
@@ -415,11 +417,9 @@ const AdDetailsPage = () => {
                   </div>
                   <p className="text-red-700">{qty < qtySlab ? 'Minimum Quantity should be ' + qtySlab : ''}</p>
                 </div>
-                {campaignDurationVisibility && 
+                {campaignDurationVisibility === 1 && 
                 (<div className="mb-4">
-                  <label className="font-bold">Campaign Duration 
-                  
-      </label>
+                  <label className="font-bold">Campaign Duration</label>
                   <div className="flex w-full">
                     <input
                     className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
@@ -516,7 +516,8 @@ const AdDetailsPage = () => {
                 </div>
                 <div className="mb-4">
                   <label className="font-bold">Remarks</label>
-                  <textarea
+                  <InputTextarea
+                    autoResize
                     className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     placeholder="Remarks"
                     value={remarks}
