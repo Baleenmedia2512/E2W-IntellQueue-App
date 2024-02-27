@@ -245,7 +245,22 @@ const AdDetailsPage = () => {
     console.log((Number(event.target.value)+100)/100);
   };
 
+  const [remarks, setRemarks] = useState('');
 
+  const insertRemarks = async() => {
+    try{
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/InsertRemarks.php/?JsonRemarks=${remarks}&JsonRateId=${rateId}`);
+      const data = await response.json();
+      if (data === "Values Inserted Successfully!") {
+        console.log("Value Inserted")
+      } else {
+        alert(`The following error occurred while inserting data: ${data}`);
+      }
+    }catch (error) {
+      console.error('Error updating rate:', error);
+    }
+  }
+    
   const filteredData = datas
 
   const sortedSlabData = slabData
@@ -314,7 +329,7 @@ const AdDetailsPage = () => {
 //         slabData: slabDataForVendor
 //     };
 // });
-  const [remarks, setRemarks] = useState('');
+  
   
 
   const greater = ">>"
@@ -560,6 +575,7 @@ const AdDetailsPage = () => {
                 className=" px-2 py-1 rounded text-center"
                 onClick={() => {
                   //routers.push('../addenquiry');
+                  insertRemarks();
                   setCheckout(true);
                 }}
               >
