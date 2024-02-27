@@ -75,9 +75,9 @@ export const generatePdf = async(checkoutData) => {
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text('Proposal Date: 2024-02-01', xCoordinate, 180)
 
-  textWidth = pdf.getStringUnitWidth(`Valid Till: ${Cookies.get('validitydate')}`) * 12; // Adjust the font size multiplier as needed
+  textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text(`Valid Till: ${Cookies.get('validitydate')}`, xCoordinate, 195)
+  pdf.text(`Valid Till: ${checkoutData[14]}`, xCoordinate, 195)
   // textWidth = pdf.getStringUnitWidth('No.32, 3rd Cross Street,') * 12; // Adjust the font size multiplier as needed
   // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   // pdf.text('No.32, 3rd Cross Street,', xCoordinate, 90)
@@ -87,9 +87,9 @@ export const generatePdf = async(checkoutData) => {
   // pdf.setFontSize(12);
 
   // Create a table
-  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty/Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty/Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
   let data = [
-    ['1', checkoutData[0], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4] + " " + checkoutData[12], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
+    ['1', checkoutData[0], checkoutData[13], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4] + " " + checkoutData[12], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
     //['Row 2 Data 1', 'Row 2 Data 2', 'Row 2 Data 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3'],
     // Add more rows as needed
   ]; 
@@ -97,6 +97,14 @@ export const generatePdf = async(checkoutData) => {
   if (!checkoutData[3]) {
     headers = headers.map(row => row.filter(column => column !== 'Package'));
     data = data.map(row => row.filter(column => column !== checkoutData[3]));
+}
+if (!checkoutData[1]) {
+  headers = headers.map(row => row.filter(column => column !== 'Ad Category'));
+  data = data.map(row => row.filter(column => column !== checkoutData[1]));
+}
+if (!checkoutData[13]) {
+  headers = headers.map(row => row.filter(column => column !== 'Ad Type'));
+  data = data.map(row => row.filter(column => column !== checkoutData[13]));
 }
 
 

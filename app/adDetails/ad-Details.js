@@ -52,6 +52,7 @@ const AdDetailsPage = () => {
   const [campaignDuration , setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   const [margin, setMargin] = useState(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2));
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
+  // Cookies.set('validityDate', ValidityDate)
   const [changing, setChanging] = useState(false);
   //const minimumUnit = 15;
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
@@ -267,7 +268,7 @@ const AdDetailsPage = () => {
     const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
     const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day' ), unit]
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day' ), unit, typeOfAd, ValidityDate]
     const GSTPerc = 18
 
     generatePdf(PDFArray)
@@ -341,13 +342,13 @@ const AdDetailsPage = () => {
                 {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory.split('|').join(' | ').split(",").join(", ")} {greater} {rateId}
               </h2>
             </div><div>
-              <div className="mb-4 bg-orange-300 rounded-md p-4">
+              <div className="mb-4 bg-purple-800 rounded-md p-4 text-white">
                 <p className="font-semibold text-sm mb-1">
                   * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))}
                 </p>
-                <p className="text-sm text-purple-700">=
+                <p className="text-sm text-gray-300">=
                   ₹{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'})</p>
-                <p className="text-sm text-purple-700 mb-1">+ ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount</p>
+                <p className="text-sm text-gray-300 mb-1">+ ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount</p>
                 <p className="font-semibold text-sm mb-1">
                   * GST Amount : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
                 </p>
@@ -588,8 +589,12 @@ const AdDetailsPage = () => {
                   <td className='py-1 text-blue-600 font-semibold'>Ad Medium</td>
                   <td>:</td><td>  {rateName}</td>
                 </tr>
-                <tr>
+                {typeOfAd !== "" && (<tr>
                   <td className='py-1 text-blue-600 font-semibold'>Ad Type</td>
+                  <td>:</td><td>  {typeOfAd}</td>
+                </tr>)}
+                <tr>
+                  <td className='py-1 text-blue-600 font-semibold'>Ad Category</td>
                   <td>:</td><td>  {adType}</td>
                 </tr>
                 <tr>
