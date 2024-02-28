@@ -246,20 +246,6 @@ const AdDetailsPage = () => {
   };
 
   const [remarks, setRemarks] = useState('');
-
-  const insertRemarks = async() => {
-    try{
-      const response = await fetch(`https://orders.baleenmedia.com/API/Media/InsertRemarks.php/?JsonRemarks=${remarks}&JsonRateId=${rateId}`);
-      const data = await response.json();
-      if (data === "Values Inserted Successfully!") {
-        console.log("Value Inserted")
-      } else {
-        alert(`The following error occurred while inserting data: ${data}`);
-      }
-    }catch (error) {
-      console.error('Error updating rate:', error);
-    }
-  }
     
   const filteredData = datas
 
@@ -290,7 +276,7 @@ const AdDetailsPage = () => {
 
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${Cookies.get('username')}&
-    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}`)
+    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}&JsonRemarks=${remarks}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         alert("Quote Downloaded")
@@ -575,7 +561,6 @@ const AdDetailsPage = () => {
                 className=" px-2 py-1 rounded text-center"
                 onClick={() => {
                   //routers.push('../addenquiry');
-                  insertRemarks();
                   setCheckout(true);
                 }}
               >
