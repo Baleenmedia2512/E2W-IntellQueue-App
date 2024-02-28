@@ -42,14 +42,14 @@ const AdDetailsPage = () => {
   const typeOfAd = Cookies.get('typeofad');
   //const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
-  
+
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const minimumCampaignDurartion = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
-  
+
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
-  const [campaignDuration , setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
+  const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   const [margin, setMargin] = useState(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2));
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
   // Cookies.set('validityDate', ValidityDate)
@@ -73,7 +73,7 @@ const AdDetailsPage = () => {
     year: 'numeric', // Four-digit year
   });
 
-  useEffect(() => {setCampaignDuration(minimumCampaignDurartion)},[leadDay , minimumCampaignDurartion])
+  useEffect(() => { setCampaignDuration(minimumCampaignDurartion) }, [leadDay, minimumCampaignDurartion])
 
   const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
 
@@ -144,14 +144,14 @@ const AdDetailsPage = () => {
         }
         const data = await response.json();
         setRateId(data);
-      } 
+      }
       catch (error) {
         console.error(error);
       }
     };
 
-  fetchData();
-}, [selectedVendor]);
+    fetchData();
+  }, [selectedVendor]);
 
   const handleQtySlabChange = () => {
     const qtySlabNumber = parseInt(qtySlab)
@@ -185,10 +185,10 @@ const AdDetailsPage = () => {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
           const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType && item.rateName === rateName)
-          .filter((value, index, self) =>
-            self.findIndex(obj => obj.VendorName === value.VendorName) === index
-          )
-          .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
+            .filter((value, index, self) =>
+              self.findIndex(obj => obj.VendorName === value.VendorName) === index
+            )
+            .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
           setDatas(filterdata);
           setRateId(filterdata[0].rateId);
           // setMargin(((qty * unitPrice * campaignDuration * 15) / 100).toFixed(2))
@@ -214,14 +214,19 @@ const AdDetailsPage = () => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const handleSubmit = () => {
-    if (qty === '' || campaignDuration === '' || margin === '' || extraDiscount === '') {
+    if (qty === '' || campaignDuration === '' || margin === '') {
       setSeverity('warning');
       setToastMessage('Please fill all the Client Details!');
       setToast(true);
     }
     else if (qty < qtySlab) {
       setSeverity('warning');
-      setToastMessage('Quantity should not be lesser than the slab!');
+      setToastMessage('Minimum Quantity should be ',qtySlab,'!');
+      setToast(true);
+    }
+    else if(minimumCampaignDurartion > campaignDuration){
+      setSeverity('warning');
+      setToastMessage('Minimum Duration should be ',minimumCampaignDurartion,'!');
       setToast(true);
     }
     else {
@@ -229,8 +234,8 @@ const AdDetailsPage = () => {
     }
   }
 
-//   useEffect(() => {setCampaignDuration(leadDay && leadDay['CampaignDuration(in Days)'] ? leadDay['CampaignDuration(in Days)'] : 1 )
-// console.log(campaignDuration)})
+  //   useEffect(() => {setCampaignDuration(leadDay && leadDay['CampaignDuration(in Days)'] ? leadDay['CampaignDuration(in Days)'] : 1 )
+  // console.log(campaignDuration)})
 
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
@@ -242,11 +247,20 @@ const AdDetailsPage = () => {
     //const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
     setMargin(formattedMargin(((qty * unitPrice * campaignDuration * event.target.value) / 100)));
-    console.log((Number(event.target.value)+100)/100);
+    console.log((Number(event.target.value) + 100) / 100);
   };
 
   const [remarks, setRemarks] = useState('');
-    
+
+  const [remarksSuggestion, setRemarksSuggestion] = useState([]);
+
+  const handleRemarks = (e) => {
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingRemarks.php/get?suggestion=${e.target.value}`)
+      .then((response) => response.json())
+      .then((data) => setRemarksSuggestion(data));
+    setRemarks(e.target.value);
+  } 
+
   const filteredData = datas
 
   const sortedSlabData = slabData
@@ -269,7 +283,7 @@ const AdDetailsPage = () => {
     const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
     const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration , (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day' ), unit, typeOfAd, ValidityDate]
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration, (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'), unit, typeOfAd, ValidityDate]
     const GSTPerc = 18
 
     generatePdf(PDFArray)
@@ -303,20 +317,20 @@ const AdDetailsPage = () => {
     return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
   };
 
-//   const findSlabDataForVendor = (vendorName) => {
-//     return sortedSlabData.filter(item => item.VendorName === vendorName);
-// };
+  //   const findSlabDataForVendor = (vendorName) => {
+  //     return sortedSlabData.filter(item => item.VendorName === vendorName);
+  // };
 
-// Add sortedSlabData items to filteredData where VendorName is same
-// const newDatas = filteredData.map(item => {
-//     const slabDataForVendor = findSlabDataForVendor(item.VendorName);
-//     return {
-//         ...item,
-//         slabData: slabDataForVendor
-//     };
-// });
-  
-  
+  // Add sortedSlabData items to filteredData where VendorName is same
+  // const newDatas = filteredData.map(item => {
+  //     const slabDataForVendor = findSlabDataForVendor(item.VendorName);
+  //     return {
+  //         ...item,
+  //         slabData: slabDataForVendor
+  //     };
+  // });
+
+
 
   const greater = ">>"
   return (
@@ -336,7 +350,7 @@ const AdDetailsPage = () => {
                   Cookies.set('back1', true);
                 }}
               >
-                <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/>
+                <FontAwesomeIcon icon={faArrowLeft} className=' text-xl' />
               </button>
 
               <h2 className="font-semibold text-wrap mb-1">
@@ -354,7 +368,7 @@ const AdDetailsPage = () => {
                   * GST Amount : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
                 </p>
                 <p className="font-bold text-sm">
-                  * Price(incl. GST 18%) : ₹{formattedRupees((((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18)))} 
+                  * Price(incl. GST 18%) : ₹{formattedRupees((((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18)))}
                 </p>
               </div>
 
@@ -371,7 +385,7 @@ const AdDetailsPage = () => {
                       <option className="rounded-lg" key={index} value={option.VendorName}>
                         {option.VendorName === '' && filteredData.length === 1
                           ? 'No Vendors'
-                          : 
+                          :
                           // `₹${formattedRupees(qty * unitPrice * campaignDuration + margin)} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - 
                           `${option.VendorName}`}
                       </option>
@@ -392,7 +406,7 @@ const AdDetailsPage = () => {
                   >
                     {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice) * (Number(marginPercentage) + 100)/100)} per {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}
+                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice) * (Number(marginPercentage) + 100) / 100)} per {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}
                       </option>
                     ))}
                   </select>
@@ -419,29 +433,29 @@ const AdDetailsPage = () => {
                   </div>
                   <p className="text-red-700">{qty < qtySlab ? 'Minimum Quantity should be ' + qtySlab : ''}</p>
                 </div>
-                {campaignDurationVisibility === 1 && 
-                (<div className="mb-4">
-                  <label className="font-bold">Campaign Duration</label>
-                  <div className="flex w-full">
-                    <input
-                    className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-                    type="number"
-                    placeholder="Ex: 1000"
-                    // defaultValue={campaignDuration}
-                    value={campaignDuration}
-                    onChange={(e) => {
-                      setCampaignDuration(e.target.value);
-                      setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
-                    }}
-                    onFocus={(e) => e.target.select()}
-                  />
-                    {/* <div className="relative"> */}
-                    <label className="text-center mt-2 ml-5">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
-                    
-                    {/* </div> */}
-                  </div>
-                  <p className="text-red-700">{campaignDuration < minimumCampaignDurartion ? 'Minimum Duration should be ' + minimumCampaignDurartion : ''}</p>
-                </div>)}
+                {campaignDurationVisibility === 1 &&
+                  (<div className="mb-4">
+                    <label className="font-bold">Campaign Duration</label>
+                    <div className="flex w-full">
+                      <input
+                        className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                        type="number"
+                        placeholder="Ex: 1000"
+                        // defaultValue={campaignDuration}
+                        value={campaignDuration}
+                        onChange={(e) => {
+                          setCampaignDuration(e.target.value);
+                          setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
+                        }}
+                        onFocus={(e) => e.target.select()}
+                      />
+                      {/* <div className="relative"> */}
+                      <label className="text-center mt-2 ml-5">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
+
+                      {/* </div> */}
+                    </div>
+                    <p className="text-red-700">{campaignDuration < minimumCampaignDurartion ? 'Minimum Duration should be ' + minimumCampaignDurartion : ''}</p>
+                  </div>)}
                 <div className="mb-4">
                   <label className="font-bold">Margin Amount(₹)</label>
                   <input
@@ -453,8 +467,8 @@ const AdDetailsPage = () => {
                     onFocus={(e) => e.target.select()}
                   />
                   <div className='flex items-center'>
-                  <p className="mr-5">Margin Percentage :</p><br/>
-                  <input
+                    <p className="mr-5">Margin Percentage :</p><br />
+                    <input
                       className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
@@ -463,8 +477,8 @@ const AdDetailsPage = () => {
                       onChange={handleMarginPercentageChange}
                       onFocus={(e) => e.target.select()}
                     />
-                    <p className="mt-1 text-sm">%</p><br/>
-                  </div>             
+                    <p className="mt-1 text-sm">%</p><br />
+                  </div>
 
                   {/* <div className="flex flex-col items-center justify-center space-y-4">
       <button onClick={decrementNumber} className="text-blue-500 hover:text-blue-700">
@@ -520,14 +534,30 @@ const AdDetailsPage = () => {
                   <label className="font-bold">Remarks</label>
                   <InputTextarea
                     autoResize
-                    className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     placeholder="Remarks"
                     value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
+                    onChange={handleRemarks}
                     rows="2"
                   />
+
+                  {remarksSuggestion.length > 0 && (
+                    <ul className="list-none">
+                      {remarksSuggestion.map((name) => (
+                        <li>
+                          <button
+                          className='text-purple-500 hover:text-purple-700'
+                          value={name}
+                          onClick={() => {setRemarks(name); setRemarksSuggestion([])}}
+                          >
+                            {name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <div className="flex flex-col items-center justify-center">
+                <div className="flex flex-col mt-4 items-center justify-center">
                   <button
                     className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     onClick={() => handleSubmit()}
@@ -542,7 +572,7 @@ const AdDetailsPage = () => {
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>
               </div>
-              <div className="bg-surface-card p-8 rounded-2xl mb-16">
+              <div className="bg-surface-card p-8 rounded-2xl mb-4">
                 <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
                   <MuiAlert severity={severity} onClose={() => setToast(false)}>
                     {toastMessage}
