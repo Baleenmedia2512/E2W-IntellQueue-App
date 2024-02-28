@@ -17,13 +17,17 @@ const AdDetailsPage = () => {
   const [checkout, setCheckout] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState()
   const router = useRouter();
-  const sampleUnits = [{label: 'Unit 1', Key: 'Unit 1'}, {label: 'Unit 2', Key: 'Unit 2'}, {label: 'Unit 3', Key: 'Unit 3'}, {label: 'Unit 4', Key: 'Unit 4'}]
+  const [vendors, setVendors] = useState([])
+  const [campaignDuration, setCampaignDuration] = useState();
+  const [leadDays, setLeadDays] = useState();
+  const [validTill, setValidTill] = useState();
+  const [campaignUnits, setCampaignUnits] = useState([]) 
+  const [selectedCampaignUnits, setSelectedCampaignUnits] = useState()
   const [slabData, setSlabData] = useState([]);
   const [qtySlab, setQtySlab] = useState()
   const [units, setUnits] = useState([])
-  const [isSlabAvailable, setIsSlabAvailable] = useState(true)
+  const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [modal, setModal] = useState(false);
-  const [selectedSlabData, setSelectedSlabData] = useState(null)
   const [unitPrice, setUnitPrice] = useState();
   const [rateId, setRateId] = useState(null);
 
@@ -54,31 +58,62 @@ const AdDetailsPage = () => {
        router.push('/login');
      } else{
       fetchRates();
+      fetchCampaignUnits();
     }
   }, []);
 
+  const fetchQtySlab = async () => {
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setSlabData(data);
+      const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+      const firstSelectedSlab = sortedData[0];
+      if(firstSelectedSlab.length > 0){
+        setIsSlabAvailable(true)
+      }
+      setQtySlab(firstSelectedSlab.StartQty);
+      setUnitPrice(firstSelectedSlab.UnitPrice);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     if(rateId !== null){
-      const fetchData = async () => {
-        try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          setSlabData(data);
-          const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-          const firstSelectedSlab = sortedData[0];
-          setQtySlab(firstSelectedSlab.StartQty);
-          setUnitPrice(firstSelectedSlab.UnitPrice);
-        } catch (error) {
-          console.error(error);
-        }
-      };
-
-      fetchData();
+      fetchQtySlab();
     }
   }, [rateId]);
+
+  const fetchCampaignUnits = async() => {
+    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchCampaignUnits.php/`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    const options = data.map(item => ({
+      value: item, 
+      label: item,  
+    }));
+    
+    // Update the state campaignUnits with the new options
+    setCampaignUnits(options);
+  }
+
+  const fetchAllVendor = async() => {
+    const adMed = selectedValues.rateName ? selectedValues.rateName.label : null;
+    const adTyp = selectedValues.adType ? selectedValues.adType.label : null;
+    const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonAdMedium=${adMed}&JsonAdType=${adTyp}`)
+    if(!res.ok){
+      throw new Error(`HTTP Error! Status: ${res.status}`);
+    }
+    const data = await res.json();
+    setVendors(data);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,7 +131,8 @@ const AdDetailsPage = () => {
         }
     }
 
-    fetchData()
+    fetchData();
+    fetchAllVendor();
   },[selectedValues.adType, selectedValues.rateName])
   const getDistinctValues = (key) => {
     const distinctValues = [...new Set(ratesData.map(item => item[key]))];
@@ -168,6 +204,9 @@ const AdDetailsPage = () => {
 
     if (selectedRate) {
       setRateId(selectedRate.RateID);
+      setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
+      setLeadDays(selectedRate.LeadDays);
+      setValidTill(selectedRate.ValidityDate)
     }
   }
   }
@@ -309,7 +348,7 @@ const AdDetailsPage = () => {
                       placeholder="Select Vendor"
                       value={selectedValues.vendorName}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
-                      options={getOptions('vendorName', selectedValues)}
+                      options={vendors}
                     />
                   </div>
 
@@ -364,9 +403,9 @@ const AdDetailsPage = () => {
                       id='CUnits'
                       instanceId="CUnits"
                       placeholder="Units"
-                      value={selectedValues.vendorName}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
-                      options={sampleUnits}
+                      value={selectedCampaignUnits}
+                      onChange={(selectedOption) => setSelectedCampaignUnits(selectedOption)}
+                      options={campaignUnits}
                     />
                   </div>
 
