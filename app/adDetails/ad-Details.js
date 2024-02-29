@@ -221,12 +221,12 @@ const AdDetailsPage = () => {
     }
     else if (qty < qtySlab) {
       setSeverity('warning');
-      setToastMessage('Minimum Quantity should be ',qtySlab,'!');
+      setToastMessage('Minimum Quantity should be ' + qtySlab);
       setToast(true);
     }
     else if(minimumCampaignDurartion > campaignDuration){
       setSeverity('warning');
-      setToastMessage('Minimum Duration should be ',minimumCampaignDurartion,'!');
+      setToastMessage('Minimum Duration should be ' + minimumCampaignDurartion);
       setToast(true);
     }
     else {
@@ -572,13 +572,7 @@ const AdDetailsPage = () => {
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>
               </div>
-              <div className="bg-surface-card p-8 rounded-2xl mb-4">
-                <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
-                  <MuiAlert severity={severity} onClose={() => setToast(false)}>
-                    {toastMessage}
-                  </MuiAlert>
-                </Snackbar>
-              </div>
+              
             </div>
           </div>
         )
@@ -691,6 +685,13 @@ const AdDetailsPage = () => {
           </div>
         </div>
       )}
+      <div className="bg-surface-card p-8 rounded-2xl mb-4">
+                <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
+                  <MuiAlert severity={severity} onClose={() => setToast(false)}>
+                    {toastMessage}
+                  </MuiAlert>
+                </Snackbar>
+              </div>
     </div>
   )
 
