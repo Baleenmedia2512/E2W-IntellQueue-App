@@ -330,6 +330,20 @@ const AdDetailsPage = () => {
   //     };
   // });
 
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      if (window.pageYOffset === 0) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, []);
+
 
 
   const greater = ">>"
@@ -358,6 +372,9 @@ const AdDetailsPage = () => {
               </h2>
             </div><div>
               <div className="mb-4 bg-purple-800 rounded-md p-4 text-white">
+                <p className="font-bold text-sm">
+                  * Price(incl. GST 18%) : ₹{formattedRupees((((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18)))}
+                </p>
                 <p className="font-semibold text-sm mb-1">
                   * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))}
                 </p>
@@ -366,9 +383,6 @@ const AdDetailsPage = () => {
                 <p className="text-sm text-gray-300 mb-1">+ ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount</p>
                 <p className="font-semibold text-sm mb-1">
                   * GST Amount : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
-                </p>
-                <p className="font-bold text-sm">
-                  * Price(incl. GST 18%) : ₹{formattedRupees((((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18)))}
                 </p>
               </div>
 

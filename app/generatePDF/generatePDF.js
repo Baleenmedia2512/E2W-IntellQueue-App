@@ -71,9 +71,13 @@ export const generatePdf = async(checkoutData) => {
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
 
-  textWidth = pdf.getStringUnitWidth('Proposal Date: 2024-02-01') * 12; // Adjust the font size multiplier as needed
+  const today = new Date();
+
+const formattedDate = today.toISOString().split('T')[0];
+
+  textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Proposal Date: 2024-02-01', xCoordinate, 180)
+  pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
 
   textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
