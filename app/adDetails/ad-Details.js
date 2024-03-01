@@ -58,20 +58,14 @@ const AdDetailsPage = () => {
   // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const parts = ValidityDate.split('-');
-  const year = parseInt(parts[0]);
-  const month = parseInt(parts[1]) - 1; // Months are zero-based in JavaScript
-  const day = parseInt(parts[2]);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  // Create a new Date object with the parsed components
-  const dateObject = new Date(year, month, day);
+const inputDate = new Date(ValidityDate);
+const day = ('0' + inputDate.getDate()).slice(-2); // Ensure two digits for day
+const month = months[inputDate.getMonth()]; // Get month abbreviation from the array
+const year = inputDate.getFullYear();
 
-  // Format the date using the "MMM dd, yyyy" format
-  const formattedDate = dateObject.toLocaleDateString('en-US', {
-    month: 'short', // Three-letter month name
-    day: 'numeric', // Day of the month
-    year: 'numeric', // Four-digit year
-  });
+const formattedDate = `${day}-${month}-${year}`;
 
   useEffect(() => { setCampaignDuration(minimumCampaignDurartion) }, [leadDay, minimumCampaignDurartion])
 
@@ -283,7 +277,7 @@ const AdDetailsPage = () => {
     const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
     const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDuration, (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'), unit, typeOfAd, ValidityDate]
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDurationVisibility===1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, typeOfAd, ValidityDate]
     const GSTPerc = 18
 
     generatePdf(PDFArray)
@@ -330,19 +324,19 @@ const AdDetailsPage = () => {
   //     };
   // });
 
-  useEffect(() => {
-    const handleTouchStart = (e) => {
-      if (window.pageYOffset === 0) {
-        e.preventDefault();
-      }
-    };
+  // useEffect(() => {
+  //   const handleTouchStart = (e) => {
+  //     if (window.pageYOffset === 0) {
+  //       e.preventDefault();
+  //     }
+  //   };
 
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+  //   document.addEventListener('touchstart', handleTouchStart, { passive: false });
 
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-    };
-  }, []);
+  //   return () => {
+  //     document.removeEventListener('touchstart', handleTouchStart);
+  //   };
+  // }, []);
 
 
 
@@ -372,16 +366,16 @@ const AdDetailsPage = () => {
               </h2>
             </div><div>
               <div className="mb-4 bg-purple-800 rounded-md p-4 text-white">
-                <p className="font-bold text-sm">
+                <p className="font-bold text-sm mb-1">
                   * Price(incl. GST 18%) : ₹{formattedRupees((((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18)))}
                 </p>
                 <p className="font-semibold text-sm mb-1">
                   * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))}
                 </p>
                 <p className="text-sm text-gray-300">=
-                  ₹{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice)} x {campaignDuration === 0 ? 1 : campaignDuration} {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'})</p>
+                  ₹{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice)}{campaignDurationVisibility === 1 && (' x '+((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
                 <p className="text-sm text-gray-300 mb-1">+ ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount</p>
-                <p className="font-semibold text-sm mb-1">
+                <p className="font-semibold text-sm">
                   * GST Amount : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
                 </p>
               </div>
@@ -420,7 +414,7 @@ const AdDetailsPage = () => {
                   >
                     {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice) * (Number(marginPercentage) + 100) / 100)} per {(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}
+                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice) * (Number(marginPercentage) + 100) / 100)} per {campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}
                       </option>
                     ))}
                   </select>
