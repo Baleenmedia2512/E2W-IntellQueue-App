@@ -7,6 +7,8 @@ import IconButton from '@mui/material/IconButton';
 import {Button} from '@mui/material';
 import { AddCircleOutline, RemoveCircleOutline, SaveOutlined, DeleteOutline } from '@mui/icons-material';
 import { TextField } from '@mui/material';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -24,11 +26,16 @@ const AdDetailsPage = () => {
   const [selectedCampaignUnits, setSelectedCampaignUnits] = useState()
   const [slabData, setSlabData] = useState([]);
   const [qtySlab, setQtySlab] = useState();
+  const [qty, setQty] = useState()
   const [validityDays, setValidityDays] = useState(0)
   const [units, setUnits] = useState([])
+  const [newUnitPrice, setNewUnitPrice] = useState()
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [modal, setModal] = useState(false);
   const [unitPrice, setUnitPrice] = useState(0);
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
   const [rateId, setRateId] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -46,8 +53,14 @@ const AdDetailsPage = () => {
   });
 
   // Function to toggle the modal
-  const toggleModal = (modelName) => {
+  const toggleModal = () => {
       setModal((prevState) => !prevState);
+  }
+
+  const showToastMessage = (severityStatus, toastMessageContent) => {
+    setSeverity(severityStatus)
+    setToastMessage(toastMessageContent)
+    setToast(true)
   }
 
   useEffect(() => {
@@ -62,6 +75,17 @@ const AdDetailsPage = () => {
     }
   }, []);
 
+  const InsertQtySlab = async(Qty, UnitPrice) => {
+    await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${Cookies.get("username")}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit}`)
+    fetchQtySlab();
+    toggleModal();
+  }
+
+  const removeQtySlab = async(Qty) => {
+    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}`);
+    fetchQtySlab();
+  }
+  
   const fetchQtySlab = async () => {
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
@@ -78,7 +102,6 @@ const AdDetailsPage = () => {
       setQtySlab(firstSelectedSlab.StartQty);
       setUnitPrice(firstSelectedSlab.UnitPrice);
       setSelectedUnit(firstSelectedSlab.Unit);
-      console.log("Unit Selected: " + firstSelectedSlab)
     } catch (error) {
       console.error(error);
     }
@@ -285,8 +308,8 @@ const AdDetailsPage = () => {
           <div onClick={toggleModal} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
-            <TextField id="ratePerUnit" defaultValue={1} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number'/>
-            <Button className='bg-blue-400 ml-4 text-white' onClick={toggleModal}>Submit</Button>
+            <TextField id="ratePerUnit" value={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}}/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={() => InsertQtySlab(qty, newUnitPrice)}>Submit</Button>
             </div>
           </div>
 )}
@@ -354,8 +377,8 @@ const AdDetailsPage = () => {
                   {/* Qty Slab of the rate  */}
                   <label>Quantity Slab</label>
                   <div className='flex mb-4'>
-                    <TextField id="qtySlab" variant="outlined" size='small' className='w-44' type='number' helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
-                    <IconButton aria-label="Add" className='mb-10' onClick={toggleModal}>
+                    <TextField id="qtySlab" variant="outlined" size='small' className='w-44' type='number' value={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
+                    <IconButton aria-label="Add" className='mb-10' onClick={() => (qty ? toggleModal() : showToastMessage('warning', 'Please enter a Quantity!'))}>
                       <AddCircleOutline color='primary'/>
                     </IconButton>
                   </div>
@@ -368,7 +391,7 @@ const AdDetailsPage = () => {
                       {slabData.map(data => (
                         <div className='flex' key={data.StartQty}>
                           <option key={data.StartQty}>{data.StartQty} {data.Unit} - ₹{data.UnitPrice}</option>
-                          <IconButton aria-label="Remove" className='align-top'>
+                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty)}>
                             <RemoveCircleOutline color='secondary' />
                           </IconButton>
                         </div>
@@ -444,6 +467,13 @@ const AdDetailsPage = () => {
               </div>
         )
       }
+      <div className='bg-surface-card p-8 rounded-2xl mb-4'>
+        <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
+          <MuiAlert severity={severity} onClose={() => setToast(false)}>
+            {toastMessage}
+          </MuiAlert>
+        </Snackbar>
+      </div>
     </div>
   )
 
