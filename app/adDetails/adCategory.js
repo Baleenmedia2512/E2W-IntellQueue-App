@@ -78,6 +78,10 @@ const AdCategoryPage = () => {
         if (Cookies.get('adcategory')) {
           setShowAdDetailsPage(true)
         }
+
+        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+          routers.push('/addenquiry');
+        }
   
         if (!username) {
           routers.push('../login');
@@ -138,6 +142,7 @@ const AdCategoryPage = () => {
       // Cookies.remove('rateId')
       // Cookies.remove('validitydate');
       setShowAdTypePage(true);
+      Cookies.set('backfromcategory',true);
     }else{
       setSelectedEdition(null)
       Cookies.remove('edition')

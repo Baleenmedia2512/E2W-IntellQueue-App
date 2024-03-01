@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import AdCategoryPage from './adCategory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -70,6 +70,7 @@ const formattedDate = `${day}-${month}-${year}`;
   useEffect(() => { setCampaignDuration(minimumCampaignDurartion) }, [leadDay, minimumCampaignDurartion])
 
   const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
+
 
   // useEffect(() => {
   //   const multipliedAmount = (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
@@ -173,6 +174,11 @@ const formattedDate = `${day}-${month}-${year}`;
     const fetchData = async () => {
       try {
         const username = Cookies.get('username');
+
+        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+          routers.push('/addenquiry');
+        }
+
         if (!username) {
           routers.push('/login');
         } else {
@@ -247,6 +253,7 @@ const formattedDate = `${day}-${month}-${year}`;
   const [remarks, setRemarks] = useState('');
 
   const [remarksSuggestion, setRemarksSuggestion] = useState([]);
+  const textAreaRef = useRef(null);
 
   const handleRemarks = (e) => {
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingRemarks.php/get?suggestion=${e.target.value}`)
@@ -346,7 +353,7 @@ const formattedDate = `${day}-${month}-${year}`;
       {showAdCategoryPage && (<AdCategoryPage />)}
       {(checkout === true && showAdCategoryPage === false) &&
         (
-          <div className="fixed left-[8%] right-[8%] overflow-hidden">
+          <div className="fixed left-[8%] right-[8%] overflow-hidden no-pull-to-refresh">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             <div className="mb-8 flex items-center">
               <button
@@ -547,6 +554,7 @@ const formattedDate = `${day}-${month}-${year}`;
                     value={remarks}
                     onChange={handleRemarks}
                     rows="2"
+                    ref={textAreaRef}
                   />
 
                   {remarksSuggestion.length > 0 && (
@@ -556,7 +564,10 @@ const formattedDate = `${day}-${month}-${year}`;
                           <button
                           className='text-purple-500 hover:text-purple-700'
                           value={name}
-                          onClick={() => {setRemarks(name); setRemarksSuggestion([])}}
+                          onClick={() => {setRemarks(name);
+                             setRemarksSuggestion([]);
+                             textAreaRef.current.focus();
+                            }}
                           >
                             {name}
                           </button>

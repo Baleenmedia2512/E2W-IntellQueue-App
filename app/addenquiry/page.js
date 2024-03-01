@@ -164,10 +164,10 @@ const ClientsData = () => {
     // }
   }, []);
 
-  useEffect(() => { Cookies.set('clientname', clientName); }, [clientName]);
-  useEffect(() => { Cookies.set('clientnumber', clientNumber); }, [clientNumber])
-  useEffect(() => { Cookies.set('clientemail', clientEmail); }, [clientEmail])
-  useEffect(() => { Cookies.set('selectedsource', selectedSource); }, [selectedSource])
+  // useEffect(() => { Cookies.set('clientname', clientName); }, [clientName]);
+  // useEffect(() => { Cookies.set('clientnumber', clientNumber); }, [clientNumber])
+  // useEffect(() => { Cookies.set('clientemail', clientEmail); }, [clientEmail])
+  // useEffect(() => { Cookies.set('selectedsource', selectedSource); }, [selectedSource])
 
   // useEffect(() => {
   //   setClientName(() => {Cookies.get('clientname')});
@@ -191,6 +191,11 @@ const ClientsData = () => {
         // Update ratesData and filteredRates locally
 
       }
+
+      Cookies.set('clientname', clientName);
+  Cookies.set('clientnumber', clientNumber);
+  Cookies.set('clientemail', clientEmail);
+  Cookies.set('selectedsource', selectedSource);
       router.push('../adDetails');
     } catch (error) {
       console.error('Error updating rate:', error);

@@ -115,6 +115,38 @@ if (!checkoutData[13]) {
   data = data.map(row => row.filter(column => column !== checkoutData[13]));
 }
 
+let columnWidths = {
+  'S.No.': 35,
+  'Ad Medium': 60,
+  'Ad Type': 60,
+    'Ad Category': 120,
+    'Edition': 60,
+    'Package': 80,
+    'Qty': 45,
+    'Campaign Duration': 65,
+    'Rate Per Qty/Unit (in Rs.)': 50,
+    'Amount (Excl. GST) (in Rs.)': 70,
+    'GST': 30,
+    'Amount (incl. GST) (in Rs.)': 50
+};
+
+// Map column names to their indices
+let headerMap = {};
+headers[0].forEach((header, index) => {
+  headerMap[header] = index;
+});
+
+// Convert column names to indices and assign column widths
+let columnStyles = {};
+Object.keys(columnWidths).forEach(columnName => {
+  let columnIndex = headerMap[columnName];
+  if (columnIndex !== undefined) {
+      columnStyles[columnIndex] = { columnWidth: columnWidths[columnName] };
+  }
+});
+
+
+
 
   // Add the table to the PDF
   autoTable(pdf, {
@@ -124,9 +156,10 @@ if (!checkoutData[13]) {
         fillColor: [51,51,51],
         lineColor: 240, 
         lineWidth: 1,
+        valign: 'middle',
       },
       margin: {top: 210},
-      columnStyles: {fillColor: false},
+      columnStyles: columnStyles,
       addPageContent: function(data) {
         pdf.text("", 40, 30);
       },

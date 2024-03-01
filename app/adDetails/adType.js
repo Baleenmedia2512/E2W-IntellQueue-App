@@ -31,6 +31,10 @@ const AdTypePage = () => {
         } else {
           setShowAdCategoryPage(false);
         }
+
+        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+          routers.push('/addenquiry');
+        }
   
         if (!username) {
           routers.push('/login');
@@ -74,7 +78,8 @@ const AdTypePage = () => {
       Cookies.remove('typeofad'); 
       Cookies.remove('adType'); 
       Cookies.remove('selecteds');
-      setShowAdMediumPage(true)
+      setShowAdMediumPage(true);
+      Cookies.remove('backfromcategory');
     } else {
       Cookies.remove('selecteds');
       setSelectedTypeofAd(null)
@@ -91,7 +96,7 @@ const AdTypePage = () => {
         }
       }
 
-    if (!selectedTypeofAd && filteredTypeofAd.length === 1) {
+    if (!selectedTypeofAd && filteredTypeofAd.length === 1 && !Cookies.get('backfromcategory')) {
       setSelectedTypeofAd(filteredTypeofAd[0]);
       Cookies.set('selecteds' ,JSON.stringify(filteredTypeofAd[0]));
     }

@@ -77,6 +77,10 @@ export const AdMediumPage = () => {
           setShowAdTypePage(true)
         }
 
+        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+          routers.push('/addenquiry');
+        }
+
         if (!username) {
           routers.push('/login');
         } else {
