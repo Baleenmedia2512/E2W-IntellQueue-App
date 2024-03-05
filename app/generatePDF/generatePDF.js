@@ -49,23 +49,23 @@ export const generatePdf = async(checkoutData) => {
 
   textWidth = pdf.getStringUnitWidth('Baleen Media') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Baleen Media', xCoordinate, 75);
+  pdf.text('Baleen Media', xCoordinate, 90);
 
   textWidth = pdf.getStringUnitWidth('No.32, 3rd Cross Street,') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('No.32, 3rd Cross Street,', xCoordinate, 90)
+  pdf.text('No.32, 3rd Cross Street,', xCoordinate, 105)
 
   textWidth = pdf.getStringUnitWidth('Kasturba Nagar, Adyar, Chennai-20.') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Kasturba Nagar, Adyar, Chennai-20.', xCoordinate, 105)
+  pdf.text('Kasturba Nagar, Adyar, Chennai-20.', xCoordinate, 120)
 
   textWidth = pdf.getStringUnitWidth('Phone: 95660 31113') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Phone: 95660 31113', xCoordinate, 120)
+  pdf.text('Phone: 95660 31113', xCoordinate, 135)
 
   textWidth = pdf.getStringUnitWidth('www.baleenmedia.com') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('www.baleenmedia.com', xCoordinate, 135)
+  pdf.text('www.baleenmedia.com', xCoordinate, 150)
 
   textWidth = pdf.getStringUnitWidth(`Proposal ID: ${quoteNumber}`) * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
@@ -94,10 +94,16 @@ export const generatePdf = async(checkoutData) => {
   // pdf.setFont('normal');
   // pdf.setFontSize(12);
 
+  const [day, month, year] = checkoutData[14].split('-');
+  const yearYY = year.slice(-2);
+
+// Concatenate day, month, and the shortened year to form the new date string
+const formattedValidityDate = `${day}-${month}-${yearYY}`;
+
   // Create a table
-  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Validity Date"]];
   let data = [
-    ['1', checkoutData[0], checkoutData[13], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4] + " " + checkoutData[12], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
+    ['1', checkoutData[0], checkoutData[13], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4] + " " + checkoutData[12], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9], formattedValidityDate],
     //['Row 2 Data 1', 'Row 2 Data 2', 'Row 2 Data 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3'],
     // Add more rows as needed
   ]; 
@@ -119,15 +125,16 @@ let columnWidths = {
   'S.No.': 35,
   'Ad Medium': 60,
   'Ad Type': 60,
-    'Ad Category': 120,
+    'Ad Category': { minCellWidth: 100 },
     'Edition': 60,
-    'Package': 80,
+    'Package': { minCellWidth: 65 },
     'Qty': 45,
     'Campaign Duration': 65,
     'Rate Per Qty (in Rs.)': 50,
-    'Amount (Excl. GST) (in Rs.)': 70,
+    'Amount (Excl. GST) (in Rs.)': 65,
     'GST': 30,
-    'Amount (incl. GST) (in Rs.)': 50
+    'Amount (incl. GST) (in Rs.)': 65,
+    'Validity Date': 55
 };
 
 // Map column names to their indices
@@ -145,9 +152,6 @@ Object.keys(columnWidths).forEach(columnName => {
   }
 });
 
-
-
-
   // Add the table to the PDF
   autoTable(pdf, {
     head: headers, 
@@ -158,11 +162,11 @@ Object.keys(columnWidths).forEach(columnName => {
         lineWidth: 1,
         valign: 'middle',
       },
-      margin: {top: 210},
+      margin: {top: 210, left: 10},
       columnStyles: columnStyles,
-      addPageContent: function(data) {
-        pdf.text("", 40, 30);
-      },
+      // addPageContent: function(data) {
+      //   pdf.text("", 40, 30);
+      // },
       tableWidth: 'auto'
   })
 

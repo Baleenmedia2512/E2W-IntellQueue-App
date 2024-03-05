@@ -284,7 +284,7 @@ const formattedDate = `${day}-${month}-${year}`;
     const AmountExclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (1.18));
     const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDurationVisibility===1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, typeOfAd, ValidityDate]
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDurationVisibility===1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, typeOfAd, formattedDate]
     const GSTPerc = 18
 
     generatePdf(PDFArray)
