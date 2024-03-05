@@ -240,7 +240,7 @@ const formattedDate = `${day}-${month}-${year}`;
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
     setMargin(event.target.value);
-    setMarginPercentage(formattedRupees((event.target.value * 100) / (qty * unitPrice * campaignDuration)))
+    setMarginPercentage((event.target.value * 100) / (qty * unitPrice * campaignDuration))
   };
 
   const handleMarginPercentageChange = (event) => {
@@ -380,8 +380,8 @@ const formattedDate = `${day}-${month}-${year}`;
                   * Price(excl. GST) : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)))}
                 </p>
                 <p className="text-sm text-gray-300">=
-                  ₹{formattedRupees(qty * unitPrice * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice)}{campaignDurationVisibility === 1 && (' x '+((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
-                <p className="text-sm text-gray-300 mb-1">+ ₹{formattedRupees(margin)} Margin - ₹{formattedRupees(extraDiscount / 1)} Discount</p>
+                  ₹{formattedRupees(qty * (unitPrice  * (Number(marginPercentage) + 100) / 100) * campaignDuration)}({qty} {unit} x ₹{formattedRupees(unitPrice * (Number(marginPercentage) + 100) / 100)}{campaignDurationVisibility === 1 && (' x '+((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
+                <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
                 <p className="font-semibold text-sm">
                   * GST Amount : ₹{formattedRupees(((qty * unitPrice * campaignDuration) + (margin - extraDiscount)) * (0.18))}
                 </p>
@@ -488,7 +488,7 @@ const formattedDate = `${day}-${month}-${year}`;
                       type="number"
                       placeholder="Ex: 15"
                       defaultValue="15"
-                      value={marginPercentage}
+                      value={formattedRupees(marginPercentage)}
                       onChange={handleMarginPercentageChange}
                       onFocus={(e) => e.target.select()}
                     />
