@@ -71,17 +71,17 @@ export const generatePdf = async(checkoutData) => {
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const today = new Date();
-const day = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
-const month = months[today.getMonth()]; // Get month abbreviation from the array
-const year = today.getFullYear();
+//   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// const today = new Date();
+// const day = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
+// const month = months[today.getMonth()]; // Get month abbreviation from the array
+// const year = today.getFullYear();
 
-const formattedDate = `${day}-${month}-${year}`;
+// const formattedDate = `${day}-${month}-${year}`;
 
-  textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
-  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
+//   textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
+//   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+//   pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
 
   // textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
   // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
@@ -95,7 +95,7 @@ const formattedDate = `${day}-${month}-${year}`;
   // pdf.setFontSize(12);
 
   // Create a table
-  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty/Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
   let data = [
     ['1', checkoutData[0], checkoutData[13], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4] + " " + checkoutData[12], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9]],
     //['Row 2 Data 1', 'Row 2 Data 2', 'Row 2 Data 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3'],
@@ -124,7 +124,7 @@ let columnWidths = {
     'Package': 80,
     'Qty': 45,
     'Campaign Duration': 65,
-    'Rate Per Qty/Unit (in Rs.)': 50,
+    'Rate Per Qty (in Rs.)': 50,
     'Amount (Excl. GST) (in Rs.)': 70,
     'GST': 30,
     'Amount (incl. GST) (in Rs.)': 50
