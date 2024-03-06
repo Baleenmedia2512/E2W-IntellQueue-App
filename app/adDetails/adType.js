@@ -11,10 +11,10 @@ import { AdMediumPage } from './page';
 const AdTypePage = () => {
   const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
-  const [cat, setCat] = useState(false);
-  const [selectedAdType2, setSelectedAdType2] = useState(null);
+  const [showAdCategoryPage, setShowAdCategoryPage] = useState(false);
+  const [selectedTypeofAd, setSelectedTypeofAd] = useState(null);
   const routers = useRouter();
-  const [showAdMedium, setShowAdMedium] = useState(false);
+  const [showAdMediumPage, setShowAdMediumPage] = useState(false);
   const [searchInput, setSearchInput] = useState('');
 
   const handleSearchInputChange = (event) => {
@@ -27,9 +27,13 @@ const AdTypePage = () => {
         const username = Cookies.get('username');
         
         if (Cookies.get('adtype')) {
-          setCat(true);
+          setShowAdCategoryPage(true);
         } else {
-          setCat(false);
+          setShowAdCategoryPage(false);
+        }
+
+        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+          routers.push('/addenquiry');
         }
   
         if (!username) {
@@ -56,15 +60,16 @@ const AdTypePage = () => {
   .sort((a, b) => a.typeOfAd.localeCompare(b.typeOfAd))
   ;
 
-  const filteredData = datas
+  const filteredAdType = datas
+  .filter(item => item.rateName === Cookies.get('ratename'))
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adType === value.adType) === index
   )
   .sort((a, b) => a.adType.localeCompare(b.adType))
   ;
 
-  const searchedType = filteredTypeofAd.filter((optionn) =>
-    optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
+  const searchedTypeofAd = filteredTypeofAd.filter((optionn) =>
+    optionn.typeOfAd.toLowerCase().includes(searchInput.toLowerCase())
   );
 
   const moveToPreviousPage = (adMedium) => {
@@ -73,25 +78,26 @@ const AdTypePage = () => {
       Cookies.remove('typeofad'); 
       Cookies.remove('adType'); 
       Cookies.remove('selecteds');
-      setShowAdMedium(true)
+      setShowAdMediumPage(true);
+      Cookies.remove('backfromcategory');
     } else {
       Cookies.remove('selecteds');
-      setSelectedAdType2(null)
+      setSelectedTypeofAd(null)
     }
   }
-  const searchedType2 = filteredData.filter((optionn) =>
+  const searchedAdType = filteredAdType.filter((optionn) =>
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
   useEffect(() => {
       if(Cookies.get('selecteds')){
         const selected = JSON.parse(Cookies.get('selecteds'))
-        if(filteredData.filter(item => item.typeOfAd === selected.typeOfAd).length>1){
-          setSelectedAdType2(selected);
+        if(filteredAdType.filter(item => item.typeOfAd === selected.typeOfAd).length>1){
+          setSelectedTypeofAd(selected);
         }
       }
 
-    if (!selectedAdType2 && filteredTypeofAd.length === 1) {
-      setSelectedAdType2(filteredTypeofAd[0]);
+    if (!selectedTypeofAd && filteredTypeofAd.length === 1 && !Cookies.get('backfromcategory')) {
+      setSelectedTypeofAd(filteredTypeofAd[0]);
       Cookies.set('selecteds' ,JSON.stringify(filteredTypeofAd[0]));
     }
   },[filteredTypeofAd] );
@@ -99,15 +105,15 @@ const AdTypePage = () => {
 const greater = '>>'
   return (
     <div >
-      {cat && (<AdCategoryPage />)}
-      {showAdMedium && (<AdMediumPage />)}
-      {(!cat && !showAdMedium) && (
+      {showAdCategoryPage && (<AdCategoryPage />)}
+      {showAdMediumPage && (<AdMediumPage />)}
+      {(!showAdCategoryPage && !showAdMediumPage) && (
       <div>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
-        <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' onClick={() => {moveToPreviousPage(!selectedAdType2)}
-    }> <FontAwesomeIcon icon={faArrowLeft} /> </button> 
-    {Cookies.get('ratename')} {selectedAdType2 ? greater : ''} {selectedAdType2 ? selectedAdType2.typeOfAd : ''}</h1>
+        <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' onClick={() => {moveToPreviousPage(!selectedTypeofAd)}
+    }> <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button> 
+    {Cookies.get('ratename')} {selectedTypeofAd ? greater : ''} {selectedTypeofAd ? selectedTypeofAd.typeOfAd : ''}</h1>
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -137,7 +143,7 @@ const greater = '>>'
       {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
       <br />
 
-      <h1 className='text-2xl font-bold text-center  mb-4'>Select AD {!selectedAdType2 ? 'Type' : 'Category'}</h1>
+      <h1 className='text-2xl font-bold text-center  mb-4'>Select AD {!selectedTypeofAd ? 'Type' : 'Category'}</h1>
     
     <div className='mx-[8%] relative'>
           <input
@@ -151,9 +157,9 @@ const greater = '>>'
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
         <div>
-          {!selectedAdType2 ? (
+          {!selectedTypeofAd ? (
         <div className="flex flex-col mx-[8%]">
-        {searchedType.map((optionss) => (
+        {searchedTypeofAd.map((optionss) => (
           <label
             key={optionss.typeOfAd}
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
@@ -161,7 +167,7 @@ const greater = '>>'
             {
               Cookies.set('typeofad', optionss.typeOfAd)
               Cookies.set('adtype', optionss.adType)
-              setSelectedAdType2(optionss);
+              setSelectedTypeofAd(optionss);
               Cookies.set('selecteds' ,JSON.stringify(optionss));
           }}}
           >
@@ -169,10 +175,10 @@ const greater = '>>'
 
           </label>
         ))}
-      </div>):  (filteredData.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).length>1)? (
+      </div>):  (filteredAdType.filter(item => item.typeOfAd === selectedTypeofAd.typeOfAd).length>1)? (
       <ul className="flex flex-col items-center mx-[8%]">
         
-          {searchedType2.filter(item => item.typeOfAd === selectedAdType2.typeOfAd).map((option) => (
+          {searchedAdType.filter(item => item.typeOfAd === selectedTypeofAd.typeOfAd).map((option) => (
             <label
               key={option.adType}
               className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
@@ -180,15 +186,15 @@ const greater = '>>'
                 Cookies.set('typeofad', option.typeOfAd)
                 Cookies.set('adtype', option.adType)
                 setSelectedAdType(option);
-                 setCat(true);
+                 setShowAdCategoryPage(true);
               }}
             >
               <div className="text-lg font-bold flex items-center justify-center">{option.adType}</div>
             </label>
           ))}
-        </ul>):(setCat(true),
-      Cookies.set('typeofad', selectedAdType2.typeOfAd),
-      Cookies.set('adtype', selectedAdType2.adType)
+        </ul>):(setShowAdCategoryPage(true),
+      Cookies.set('typeofad', selectedTypeofAd.typeOfAd),
+      Cookies.set('adtype', selectedTypeofAd.adType)
         )}
 </div>
       

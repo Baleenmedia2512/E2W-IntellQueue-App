@@ -12,7 +12,6 @@ const BottomBar = () => {
   const [isHovered, setIsHovered] = useState('')
   const clientName = Cookies.get('clientname');
   const clientNumber = Cookies.get('clientnumber');
-  const clientEmail = Cookies.get('clientemail');
   const selectedSource = Cookies.get('selectedsource');
 
   if (currentPath === '/login') {
@@ -20,7 +19,7 @@ const BottomBar = () => {
   }
 
   const moveToQuoteSender = () => {
-    if (clientName !== '' && clientEmail !== '' && clientNumber !== '' && selectedSource !== '') {
+    if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
       routers.push('../adDetails');
     }
     else {
@@ -62,6 +61,10 @@ const BottomBar = () => {
         onClick={() => {
           routers.push('/login')
           Cookies.remove('username')
+          Cookies.remove('clientname');
+          Cookies.remove('clientnumber');
+          Cookies.remove('selectedsource');
+          Cookies.remove('clientemail');
         }}
         onMouseEnter={() => setIsHovered('log')}
         onMouseLeave={() => setIsHovered(null)}
