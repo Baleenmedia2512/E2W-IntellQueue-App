@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -34,7 +34,7 @@ const AdCategoryPage = () => {
 
   const splitNames = filteredData.map(item => {
     const [firstPart, secondPart] = item.adCategory.split(':');
-    const updatedFirstPart = (secondPart === undefined? adType : firstPart);
+    // const updatedFirstPart = (secondPart === undefined? adType : firstPart);
     return { ...item, Edition: firstPart.trim() , Position: secondPart || ''};
   });
 
@@ -74,13 +74,21 @@ const AdCategoryPage = () => {
         if (selectedAdCategory) {
           setShowAdDetailsPage(Cookies.get('vendo'));
         }
+
+        if (Cookies.get('adcategory')) {
+          setShowAdDetailsPage(true)
+        }
+
+        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+          routers.push('/addenquiry');
+        }
   
         if (!username) {
           routers.push('../login');
         } else {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
-          const filData = data.filter(item => item.adType === adType);
+          const filData = data.filter(item => item.adType === adType && item.rateName === Cookies.get('ratename'));
           setDatas(filData);
         }
       } catch (error) {
@@ -134,6 +142,7 @@ const AdCategoryPage = () => {
       // Cookies.remove('rateId')
       // Cookies.remove('validitydate');
       setShowAdTypePage(true);
+      Cookies.set('backfromcategory',true);
     }else{
       setSelectedEdition(null)
       Cookies.remove('edition')
@@ -142,12 +151,17 @@ const AdCategoryPage = () => {
     {Cookies.get('ratename')} {!(typeOfAd === adType) ? greater : ''} {!(typeOfAd === adType) ? typeOfAd : ''} {greater} {adType} {selectedEdition ? greater : ''} {selectedEdition ? selectedEdition.Edition : ''}</h1>
 
         
-          <button
+    <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
               Cookies.remove('adtype'); 
       Cookies.remove('edition')
       Cookies.remove('adcategory');
+      Cookies.remove('rateperunit')
+      Cookies.remove('minimumunit');
+      Cookies.remove('defunit');
+      Cookies.remove('rateId');
+      Cookies.remove('validitydate');
               routers.push('../addenquiry');
             }}
           >
@@ -169,7 +183,7 @@ const AdCategoryPage = () => {
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
       <br />
-<h1 className='text-2xl font-bold text-center  mb-4'>Select {!selectedEdition ? "Edition": "position"}</h1>
+<h1 className='text-2xl font-bold text-center  mb-4'>Select {!selectedEdition ? "Edition": "Package"}</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
           <input

@@ -31,6 +31,10 @@ const AdTypePage = () => {
         } else {
           setShowAdCategoryPage(false);
         }
+
+        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+          routers.push('/addenquiry');
+        }
   
         if (!username) {
           routers.push('/login');
@@ -57,6 +61,7 @@ const AdTypePage = () => {
   ;
 
   const filteredAdType = datas
+  .filter(item => item.rateName === Cookies.get('ratename'))
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adType === value.adType) === index
   )
@@ -73,7 +78,8 @@ const AdTypePage = () => {
       Cookies.remove('typeofad'); 
       Cookies.remove('adType'); 
       Cookies.remove('selecteds');
-      setShowAdMediumPage(true)
+      setShowAdMediumPage(true);
+      Cookies.remove('backfromcategory');
     } else {
       Cookies.remove('selecteds');
       setSelectedTypeofAd(null)
@@ -90,7 +96,7 @@ const AdTypePage = () => {
         }
       }
 
-    if (!selectedTypeofAd && filteredTypeofAd.length === 1) {
+    if (!selectedTypeofAd && filteredTypeofAd.length === 1 && !Cookies.get('backfromcategory')) {
       setSelectedTypeofAd(filteredTypeofAd[0]);
       Cookies.set('selecteds' ,JSON.stringify(filteredTypeofAd[0]));
     }
@@ -106,7 +112,7 @@ const greater = '>>'
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
         <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' onClick={() => {moveToPreviousPage(!selectedTypeofAd)}
-    }> <FontAwesomeIcon icon={faArrowLeft} /> </button> 
+    }> <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button> 
     {Cookies.get('ratename')} {selectedTypeofAd ? greater : ''} {selectedTypeofAd ? selectedTypeofAd.typeOfAd : ''}</h1>
           <button
             className=" px-2 py-1 rounded text-center"

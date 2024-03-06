@@ -7,7 +7,7 @@ export const generatePdf = async(checkoutData) => {
 
   const ImageUrl = '/images/WHITE PNG.png';
   const quoteNumber = await fetchNextQuoteNumber();
-  console.log("Quote Nuimber: ", quoteNumber)
+  console.log("Quote Number: ", quoteNumber)
   // Create a new jsPDF instance
   const pdf = new jsPDF({
     orientation: "landscape",
@@ -43,41 +43,49 @@ export const generatePdf = async(checkoutData) => {
 
   // Calculate the x-coordinate for right-aligned text
  
-  textWidth = pdf.getStringUnitWidth('From,') * 12; // Adjust the font size multiplier as needed
-  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('From,', xCoordinate, 60);
+  // textWidth = pdf.getStringUnitWidth('From,') * 12; // Adjust the font size multiplier as needed
+  // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+  // pdf.text('From,', xCoordinate, 60);
 
   textWidth = pdf.getStringUnitWidth('Baleen Media') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Baleen Media', xCoordinate, 75);
+  pdf.text('Baleen Media', xCoordinate, 90);
 
   textWidth = pdf.getStringUnitWidth('No.32, 3rd Cross Street,') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('No.32, 3rd Cross Street,', xCoordinate, 90)
+  pdf.text('No.32, 3rd Cross Street,', xCoordinate, 105)
 
   textWidth = pdf.getStringUnitWidth('Kasturba Nagar, Adyar, Chennai-20.') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Kasturba Nagar, Adyar, Chennai-20.', xCoordinate, 105)
+  pdf.text('Kasturba Nagar, Adyar, Chennai-20.', xCoordinate, 120)
 
   textWidth = pdf.getStringUnitWidth('Phone: 95660 31113') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Phone: 95660 31113', xCoordinate, 120)
+  pdf.text('Phone: 95660 31113', xCoordinate, 135)
 
   textWidth = pdf.getStringUnitWidth('www.baleenmedia.com') * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('www.baleenmedia.com', xCoordinate, 135)
+  pdf.text('www.baleenmedia.com', xCoordinate, 150)
 
   textWidth = pdf.getStringUnitWidth(`Proposal ID: ${quoteNumber}`) * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
 
-  textWidth = pdf.getStringUnitWidth('Proposal Date: 2024-02-01') * 12; // Adjust the font size multiplier as needed
-  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text('Proposal Date: 2024-02-01', xCoordinate, 180)
+//   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// const today = new Date();
+// const day = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
+// const month = months[today.getMonth()]; // Get month abbreviation from the array
+// const year = today.getFullYear();
 
-  textWidth = pdf.getStringUnitWidth(`Valid Till: ${Cookies.get('validitydate')}`) * 12; // Adjust the font size multiplier as needed
-  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text(`Valid Till: ${Cookies.get('validitydate')}`, xCoordinate, 195)
+// const formattedDate = `${day}-${month}-${year}`;
+
+//   textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
+//   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+//   pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
+
+  // textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
+  // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+  // pdf.text(`Valid Till: ${checkoutData[14]}`, xCoordinate, 195)
   // textWidth = pdf.getStringUnitWidth('No.32, 3rd Cross Street,') * 12; // Adjust the font size multiplier as needed
   // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   // pdf.text('No.32, 3rd Cross Street,', xCoordinate, 90)
@@ -86,13 +94,63 @@ export const generatePdf = async(checkoutData) => {
   // pdf.setFont('normal');
   // pdf.setFontSize(12);
 
+  const [day, month, year] = checkoutData[14].split('-');
+  const yearYY = year.slice(-2);
+
+// Concatenate day, month, and the shortened year to form the new date string
+const formattedValidityDate = `${day}-${month}-${yearYY}`;
+
   // Create a table
-  const headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Edition', 'Remarks', 'Quantity', 'Rate Per Unit (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)"]];
-  const data = [
-    ['1', checkoutData[0], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4], checkoutData[5], checkoutData[6], checkoutData[7], checkoutData[8]],
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Validity Date"]];
+  let data = [
+    ['1', checkoutData[0], checkoutData[13], checkoutData[1], checkoutData[2], checkoutData[3], checkoutData[4] + " " + checkoutData[12], checkoutData[5] + " " + checkoutData[11], checkoutData[6], checkoutData[7], checkoutData[8], checkoutData[9], formattedValidityDate],
     //['Row 2 Data 1', 'Row 2 Data 2', 'Row 2 Data 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3', 'Column 3'],
     // Add more rows as needed
-  ];
+  ]; 
+
+  if (!checkoutData[3]) {
+    headers = headers.map(row => row.filter(column => column !== 'Package'));
+    data = data.map(row => row.filter(column => column !== checkoutData[3]));
+}
+if (!checkoutData[1]) {
+  headers = headers.map(row => row.filter(column => column !== 'Ad Category'));
+  data = data.map(row => row.filter(column => column !== checkoutData[1]));
+}
+if (!checkoutData[13]) {
+  headers = headers.map(row => row.filter(column => column !== 'Ad Type'));
+  data = data.map(row => row.filter(column => column !== checkoutData[13]));
+}
+
+let columnWidths = {
+  'S.No.': 35,
+  'Ad Medium': 60,
+  'Ad Type': 60,
+    'Ad Category': { minCellWidth: 100 },
+    'Edition': 60,
+    'Package': { minCellWidth: 65 },
+    'Qty': 45,
+    'Campaign Duration': 65,
+    'Rate Per Qty (in Rs.)': 50,
+    'Amount (Excl. GST) (in Rs.)': 65,
+    'GST': 30,
+    'Amount (incl. GST) (in Rs.)': 65,
+    'Validity Date': 55
+};
+
+// Map column names to their indices
+let headerMap = {};
+headers[0].forEach((header, index) => {
+  headerMap[header] = index;
+});
+
+// Convert column names to indices and assign column widths
+let columnStyles = {};
+Object.keys(columnWidths).forEach(columnName => {
+  let columnIndex = headerMap[columnName];
+  if (columnIndex !== undefined) {
+      columnStyles[columnIndex] = { columnWidth: columnWidths[columnName] };
+  }
+});
 
   // Add the table to the PDF
   autoTable(pdf, {
@@ -102,12 +160,13 @@ export const generatePdf = async(checkoutData) => {
         fillColor: [51,51,51],
         lineColor: 240, 
         lineWidth: 1,
+        valign: 'middle',
       },
-      margin: {top: 210},
-      columnStyles: {fillColor: false},
-      addPageContent: function(data) {
-        pdf.text("", 40, 30);
-      },
+      margin: {top: 210, left: 10},
+      columnStyles: columnStyles,
+      // addPageContent: function(data) {
+      //   pdf.text("", 40, 30);
+      // },
       tableWidth: 'auto'
   })
 
@@ -120,7 +179,7 @@ export const generatePdf = async(checkoutData) => {
   pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, 360);
   pdf.text(`2.Ad. Material shall be shared by ${Cookies.get('clientname')}`, 10, 375)
   pdf.text("3.100% Upfront payment required for releasing the Ads", 10, 390)
-  pdf.text(`4.Lead time to book the Ad : ${checkoutData[9]} Days`, 10, 405)
+  pdf.text(`4.Lead time to book the Ad : ${checkoutData[10]} Days`, 10, 405)
   pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, 420)
 
   pdf.setDrawColor("#df5f98");

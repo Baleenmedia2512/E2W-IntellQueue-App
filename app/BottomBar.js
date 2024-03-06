@@ -72,6 +72,10 @@ const BottomBar = () => {
         onClick={() => {
           routers.push('/login')
           Cookies.remove('username')
+          Cookies.remove('clientname');
+          Cookies.remove('clientnumber');
+          Cookies.remove('selectedsource');
+          Cookies.remove('clientemail');
         }}
         onMouseEnter={() => setIsHovered('log')}
         onMouseLeave={() => setIsHovered(null)}

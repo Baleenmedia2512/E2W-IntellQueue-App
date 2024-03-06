@@ -22,10 +22,10 @@ const ClientsData = () => {
     '8.Online'
   ];
   //const [cses, setCses] = useState('');
-  const [selectedSource, setSelectedSource] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [clientNumber, setClientNumber] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
+  const [selectedSource, setSelectedSource] = useState(Cookies.get('selectedsource'));
+  const [clientName, setClientName] = useState(Cookies.get('clientname'));
+  const [clientNumber, setClientNumber] = useState(Cookies.get('clientnumber'));
+  const [clientEmail, setClientEmail] = useState(Cookies.get('clientemail'));
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -164,20 +164,51 @@ const ClientsData = () => {
     // }
   }, []);
 
-  useEffect(() => { Cookies.set('clientname', clientName); }, [clientName]);
-  useEffect(() => { Cookies.set('clientnumber', clientNumber); }, [clientNumber])
-  useEffect(() => { Cookies.set('clientemail', clientEmail); }, [clientEmail])
-  useEffect(() => { Cookies.set('selectedsource', selectedSource); }, [selectedSource])
+  // useEffect(() => { Cookies.set('clientname', clientName); }, [clientName]);
+  // useEffect(() => { Cookies.set('clientnumber', clientNumber); }, [clientNumber])
+  // useEffect(() => { Cookies.set('clientemail', clientEmail); }, [clientEmail])
+  // useEffect(() => { Cookies.set('selectedsource', selectedSource); }, [selectedSource])
 
-  // useEffect()
+  // useEffect(() => {
+  //   setClientName(() => {Cookies.get('clientname')});
+  //   setClientNumber(() => {Cookies.get('clientnumber')});
+  //   setClientEmail(() => {Cookies.get('clientemail')});
+  //   setSelectedSource(() => {Cookies.get('selectedsource')});
+  //   // console.log(Cookies.get('clientname'));
+  // })
+
+  const submitDetails = async() => {
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${Cookies.get('username')}&
+      JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonSource=${selectedSource}`)
+      const data = await response.json();
+      if (data === "Values Inserted Successfully!") {
+        console.log("Value Inserted")
+        //setMessage(data.message);
+      } else {
+        alert(`The following error occurred while inserting data: ${data}`);
+        //setMessage("The following error occurred while inserting data: " + data);
+        // Update ratesData and filteredRates locally
+
+      }
+
+      Cookies.set('clientname', clientName);
+  Cookies.set('clientnumber', clientNumber);
+  Cookies.set('clientemail', clientEmail);
+  Cookies.set('selectedsource', selectedSource);
+      router.push('../adDetails');
+    } catch (error) {
+      console.error('Error updating rate:', error);
+    }
+    
+  }
 
   const moveToAdDetails = () => {
     if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
-      router.push('../adDetails');
-      Cookies.remove('adMediumSelected')
+      submitDetails();
     }
     else {
-      showToastMessage('warning', 'Please fill all the Client Details!')
+      showToastMessage('warning', 'Please fill all the Required Client Details!')
     }
   }
 
@@ -234,7 +265,7 @@ const ClientsData = () => {
           className="w-full border border-purple-400 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
           type="text"
           placeholder="Client Name"
-          value={searchTerm}
+          value={clientName}
           onChange={handleSearchTermChange}
         />
         {clientNameSuggestions.length > 0 && (
