@@ -29,7 +29,7 @@ const BottomBar = () => {
 
   return (
     <nav className="flex justify-around bg-white border p-2 fixed bottom-0 left-0 w-full">
-      <button className={` flex flex-col items-center justify-center h-16 w-1/3 py-2 rounded-lg ${
+      <button className={` flex flex-col items-center justify-center h-16 w-1/4 py-2 rounded-lg ${
         '/' === currentPath ? 'bg-white' : ''
         }`}
         onClick={() => { routers.push('/'); }}
@@ -43,7 +43,7 @@ const BottomBar = () => {
       
       </button>
       <button
-        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/3 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
+        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
           }`}
         onClick={() => moveToQuoteSender()}
         onMouseEnter={() => setIsHovered('Quotes')}
@@ -55,7 +55,7 @@ const BottomBar = () => {
       <label>{isHovered==='Quotes' ? 'Quote Sender' : ''}</label>
       </button>
       <button
-        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-full rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
+        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
           }`}
         onClick={() => routers.push('/RatesEntry')}
         onMouseEnter={() => setIsHovered('RatesEntry')}
@@ -68,7 +68,7 @@ const BottomBar = () => {
       </button>
 
       <button
-        className='flex flex-col items-center justify-center py-2 h-16 w-1/3 rounded-lg'
+        className='flex flex-col items-center justify-center py-2 h-16 w-1/4 rounded-lg'
         onClick={() => {
           routers.push('/login')
           Cookies.remove('username')

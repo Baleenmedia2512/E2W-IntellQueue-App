@@ -5,18 +5,21 @@ import Select from 'react-select';
 import { useRouter } from 'next/navigation';
 import IconButton from '@mui/material/IconButton';
 import {Button} from '@mui/material';
-import { AddCircleOutline, RemoveCircleOutline, SaveOutlined, DeleteOutline } from '@mui/icons-material';
-import { TextField } from '@mui/material';
+import { AddCircleOutline, RemoveCircleOutline, SaveOutlined, DeleteOutline, Event } from '@mui/icons-material';
+import { TextField, InputAdornment } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
 const AdDetailsPage = () => {
   const [ratesData, setRatesData] = useState([]);
-  const [checkout, setCheckout] = useState(true);
-  const [selectedUnit, setSelectedUnit] = useState("")
+  const [validityDate, setValidityDate] = useState(new Date());
+  const [selectedUnit, setSelectedUnit] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const router = useRouter();
   const [vendors, setVendors] = useState([])
   const [campaignDuration, setCampaignDuration] = useState();
@@ -25,14 +28,17 @@ const AdDetailsPage = () => {
   const [campaignUnits, setCampaignUnits] = useState([]) 
   const [selectedCampaignUnits, setSelectedCampaignUnits] = useState()
   const [slabData, setSlabData] = useState([]);
-  const [qtySlab, setQtySlab] = useState();
-  const [qty, setQty] = useState()
+  const [editModal, setEditModal] = useState();
+  const [qty, setQty] = useState(0)
   const [validityDays, setValidityDays] = useState(0)
   const [units, setUnits] = useState([])
   const [newUnitPrice, setNewUnitPrice] = useState()
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [modal, setModal] = useState(false);
+  const [startQty, setStartQty] = useState([])
   const [unitPrice, setUnitPrice] = useState(0);
+  const [showCampaignDuration, setShowCampaignDuration] = useState(false)
+  const [selectedUnitId, setSelectedUnitId] = useState()
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -75,10 +81,34 @@ const AdDetailsPage = () => {
     }
   }, []);
 
-  const InsertQtySlab = async(Qty, UnitPrice) => {
-    await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${Cookies.get("username")}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit}`)
+  const insertQtySlab = async(Qty, UnitPrice) => {
+    try{
+      if(!startQty.includes(Number(Qty))){
+        console.log(qty)
+        await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${Cookies.get("username")}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}`)
+        fetchQtySlab();
+        setQty(0)
+        toggleModal();
+      } else{
+        console.log(qty)
+        updateQtySlab()
+      }
+    }catch(error){
+      console.error(error)
+    }
+  }
+
+  const updateQtySlab = async() => {
+    if(selectedUnitId){
+    await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonUnitId=${selectedUnitId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}`);
+    } else{
+      await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}`);
+      toggleModal()
+    }
     fetchQtySlab();
-    toggleModal();
+    setQty(0);
+    setNewUnitPrice();
+    setEditModal(false);
   }
 
   const removeQtySlab = async(Qty) => {
@@ -99,9 +129,9 @@ const AdDetailsPage = () => {
       if(firstSelectedSlab){
         setIsSlabAvailable(true)
       }
-      setQtySlab(firstSelectedSlab.StartQty);
       setUnitPrice(firstSelectedSlab.UnitPrice);
-      setSelectedUnit(firstSelectedSlab.Unit);
+      setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit});
+      setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
     } catch (error) {
       console.error(error);
     }
@@ -231,8 +261,13 @@ const AdDetailsPage = () => {
     if (selectedRate) {
       setRateId(selectedRate.RateID);
       setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
+      if(selectedRate['CampaignDuration(in Days)'] > 0){
+        setShowCampaignDuration(true)
+      }
+      setSelectedCampaignUnits({label: selectedRate.CampaignDurationUnit, value: selectedRate.CampaignDurationUnit})
       setLeadDays(selectedRate.LeadDays);
       setValidTill(selectedRate.ValidityDate)
+      setValidityDate(selectedRate.ValidityDate)
     }
   }
   }
@@ -285,12 +320,59 @@ const AdDetailsPage = () => {
     parsedDate2.setHours(0, 0, 0, 0);
   
     // Calculate the difference in milliseconds
-    const differenceInMilliseconds = parsedDate2 - parsedDate1;
+    const differenceInMilliseconds = parsedDate1 - parsedDate2;
   
     // Convert the difference to days
     const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
   
     // Update state with the calculated difference
+    setValidityDays(differenceInDays);
+  };
+  
+  const updateRates = async() => {
+    try{
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRates.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}`)
+    showToastMessage('success', 'Updated Successfully!')
+    window.location.reload()
+    } catch(error){
+      console.log(error);
+    }
+  }
+
+  const calculateDateFromDays = (days) => {
+    const day = days.target.value
+    setValidityDays(day)
+    const currentDate = new Date();
+    const targetDate = new Date(currentDate);
+    targetDate.setDate(currentDate.getDate() + day);
+    setValidityDate(target)
+    let formattedValidityDate = targetDate.toISOString().split('T')[0];
+    setValidTill(formattedValidityDate);
+  };
+
+  const handleDateChange = (event) => {
+    // Set current date to midnight
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+  
+    // Extract the selected date from the event
+    let validityDay = new Date(event);
+  
+    // Set the selected date to midnight
+    validityDay.setHours(0, 0, 0, 0);
+  
+    // Update the state with the selected date
+    setValidityDate(validityDay);
+  
+    // Format the selected date for display
+    let formattedValidityDate = validityDay.toISOString().split('T')[0];
+    setValidTill(formattedValidityDate);
+  
+    // Calculate the difference in days
+    const differenceInMilliseconds = validityDay - currentDate;
+    const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
+  
+    // Update the state with the difference in days
     setValidityDays(differenceInDays);
   };
   
@@ -308,13 +390,22 @@ const AdDetailsPage = () => {
           <div onClick={toggleModal} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
-            <TextField id="ratePerUnit" value={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}}/>
-            <Button className='bg-blue-400 ml-4 text-white' onClick={() => InsertQtySlab(qty, newUnitPrice)}>Submit</Button>
+            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}}/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={() => insertQtySlab(qty, newUnitPrice)}>Submit</Button>
             </div>
           </div>
-)}
-      {checkout === true &&
-        (
+      )}
+      { editModal && (
+      <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
+          <div onClick={() => {setEditModal(false); setQty(0); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
+            <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
+            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setQty(e.target.value)}}  onFocus={event => event.target.select()}/>
+            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}} onFocus={event => event.target.select()}/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={updateQtySlab}>Submit</Button>
+            </div>
+          </div>
+      )}
             <div>
                 <div className="mb-4 flex flex-col items-center justify-center">
 
@@ -326,7 +417,7 @@ const AdDetailsPage = () => {
                       id='AdMedium'
                       instanceId="AdMedium"
                       placeholder="Select Ad Medium"
-                      value={selectedValues.rateName}
+                      defaultValue={selectedValues.rateName}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
                       options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
                     />
@@ -340,7 +431,7 @@ const AdDetailsPage = () => {
                       id='AdType'
                       instanceId="AdType"
                       placeholder="Select Ad Type"
-                      value={selectedValues.adType}
+                      defaultValue={selectedValues.adType}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                       options={getOptions('adType', selectedValues)}
                     />
@@ -354,7 +445,7 @@ const AdDetailsPage = () => {
                       id='AdCategory'
                       instanceId="AdCategory"
                       placeholder="Select Ad Category"
-                      value={selectedValues.adCategory}
+                      defaultValue={selectedValues.adCategory}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
                       options={getOptions('adCategory', selectedValues)}
                     />
@@ -368,38 +459,41 @@ const AdDetailsPage = () => {
                       id='Vendor'
                       instanceId="Vendor"
                       placeholder="Select Vendor"
-                      value={selectedValues.vendorName}
+                      defaultValue={selectedValues.vendorName}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
                       options={vendors}
                     />
                   </div>
 
                   {/* Qty Slab of the rate  */}
-                  <label>Quantity Slab</label>
-                  <div className='flex mb-4'>
-                    <TextField id="qtySlab" variant="outlined" size='small' className='w-44' type='number' value={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
-                    <IconButton aria-label="Add" className='mb-10' onClick={() => (qty ? toggleModal() : showToastMessage('warning', 'Please enter a Quantity!'))}>
-                      <AddCircleOutline color='primary'/>
-                    </IconButton>
+                  <div>
+                    <label>Quantity Slab</label>
+                    <div className='flex mb-4'>
+                    
+                      <TextField id="qtySlab" variant="outlined" size='small' className='w-52' type='number' defaultValue={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
+                      <IconButton aria-label="Add" className='mb-10' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
+                        <AddCircleOutline color='primary'/>
+                      </IconButton>
+                    </div>
                   </div>
-
                   {/* Slab List Here  */}
+                  <div>
                   {isSlabAvailable && (
-                    <div>
-                    <h2 className='mb-4 font-bold'>Available Slab Quantities</h2>
+                    <div className='text-left justify-start'>
+                    <h2 className='mb-4 font-bold'>Rate-Slab</h2>
                     <ul className='mb-4'>
                       {slabData.map(data => (
                         <div className='flex' key={data.StartQty}>
-                          <option key={data.StartQty}>{data.StartQty} {data.Unit} - ₹{data.UnitPrice}</option>
+                          <option key={data.StartQty} className=" mt-1.5" onClick={() => {setEditModal(true); setQty(data.StartQty); setNewUnitPrice(data.UnitPrice); setSelectedUnitId(data.Id)}}>{data.StartQty} {data.Unit} - ₹{data.UnitPrice}</option>
                           <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty)}>
-                            <RemoveCircleOutline color='secondary' />
+                            <RemoveCircleOutline color='secondary' fontSize='small'/>
                           </IconButton>
                         </div>
                       ))}
                     </ul>
                     </div>
                   )}
-
+                </div>
                   {/* Units of the rate. Ex: Bus, Auto */}
                   <div className='bg-white'>
                     <label className=''>Units</label><br />
@@ -408,7 +502,7 @@ const AdDetailsPage = () => {
                       id='Units'
                       instanceId="Units"
                       placeholder="Select Units"
-                      defaultValue={selectedUnit}
+                      //defaultValue={selectedUnit}
                       value={selectedUnit}
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
                       options={units}
@@ -416,41 +510,72 @@ const AdDetailsPage = () => {
                   </div>
 
                   {/* Campaign Duration Text with Units */}
-                  <label className='justify-left'>Campaign Duration</label>
-                  <div className='flex'>
+                  <div>
+                    <div className='flex'>
+                      <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {setShowCampaignDuration(!showCampaignDuration)}}/>
+                      <label className='justify-left ml-2' onClick={() => setShowCampaignDuration(!showCampaignDuration)}>Campaign Duration</label>
+                    </div>
+                    <div className='mb-8'>
+                    {showCampaignDuration && (
                     
-                    <TextField id="qtySlab" value={campaignDuration} defaultValue="1" variant="outlined" size='small' className='w-36 ' type='number'/>
-                    <Select
-                      className='mb-8 text-black w-28 ml-2 mt-0.5 '
-                      id='CUnits'
-                      instanceId="CUnits"
-                      placeholder="Units"
-                      value={selectedCampaignUnits}
-                      onChange={(selectedOption) => setSelectedCampaignUnits(selectedOption)}
-                      options={campaignUnits}
-                    />
+                      <div className='flex'>
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='w-36 ' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}}/>
+                      <Select
+                        className='text-black w-24 ml-2 mt-0.5 '
+                        id='CUnits'
+                        instanceId="CUnits"
+                        placeholder="Units"
+                        defaultValue={selectedCampaignUnits}
+                        onChange={(selectedOption) => setSelectedCampaignUnits(selectedOption)}
+                        options={campaignUnits}
+                      />
+                    </div>
+                    )}
+                    </div>
                   </div>
-
                   {/* Lead Days Text  */}
-                  <label>Lead Days</label>
-                  <div className='flex mb-4'>
-                    <TextField id="leadDays" value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-48' type='number'/>
-                    <p className='ml-4 mt-2'>Day (s)</p>
+                  <div>
+                    <label>Lead Days</label>
+                    <div className='flex mb-4'>
+                      <TextField id="leadDays" value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)}/>
+                      <p className='ml-4 mt-2'>Day (s)</p>
+                    </div>
                   </div>
-
                   {/* Valid Till Text*/}
+                  <div>
                   <label>Valid Till</label>
                   <div className='flex mb-4'>
-                    <TextField id="validTill" value={validityDays} variant="outlined" size='small' className='w-48' type='number'/>
-                    <p className='ml-4 mt-2'>Day (s)</p>
+                    <TextField id="validTill" defaultValue={validityDays} variant="outlined" size='small' className='w-36' type='number'/>
+                    <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
+                        <Event color='primary'/>
+                      </IconButton>
+                    <p className='ml-2 mt-2'>Day (s)</p>
                   </div>
+                  {showDatePicker && (
+                    <div>
+                    <p>Select Date:</p>
+                      <DatePicker
+                        selected={validityDate}
+                        onChange={handleDateChange}
+                        dateFormat="dd-MMM-yyyy"
+                        dateFormatCalendar='dd-MMM-yyyy'
+                        showYearDropdown
+                        showMonthDropdown
+                        className="border rounded-md p-2"
+                        minDate={new Date()}
+                        calendarClassName="bg-white shadow-md rounded-md mt-2"
+                      />
+                      </div>
+                    )}
+                    
+                </div>
                 </div>
                 <p className=' text-center'>Rate Id: {rateId}</p>
                 <div className="flex items-center justify-center mb-8">
                 <Button variant="outlined" startIcon={<DeleteOutline />} className='border-red-400 text-red-400'>
                   Delete
                 </Button>
-                <Button variant="contained" endIcon={<SaveOutlined />} className='ml-4 bg-green-400'>
+                <Button variant="contained" endIcon={<SaveOutlined />} className='ml-4 bg-green-400' onClick={updateRates}>
                   Save
                 </Button>
                 </div>
@@ -465,8 +590,6 @@ const AdDetailsPage = () => {
                 </div> */}
                 
               </div>
-        )
-      }
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>
         <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
           <MuiAlert severity={severity} onClose={() => setToast(false)}>
