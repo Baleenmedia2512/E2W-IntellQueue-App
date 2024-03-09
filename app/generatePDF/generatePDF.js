@@ -7,7 +7,6 @@ export const generatePdf = async(checkoutData) => {
 
   const ImageUrl = '/images/WHITE PNG.png';
   const quoteNumber = await fetchNextQuoteNumber();
-  console.log("Quote Number: ", quoteNumber)
   // Create a new jsPDF instance
   const pdf = new jsPDF({
     orientation: "landscape",
