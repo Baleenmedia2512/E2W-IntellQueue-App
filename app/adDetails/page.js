@@ -6,9 +6,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import AdDetailsPage from './ad-Details';
 import AdTypePage from './adType';
-import BottomBar from '../BottomBar';
 
 export const AdMediumPage = () => {
   const [selectedAdMedium, setSelectedAdMedium] = useState('');
@@ -84,7 +82,7 @@ export const AdMediumPage = () => {
         if (!username) {
           routers.push('/login');
         } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
           const data = await response.json();
           setDatas(data);
         }

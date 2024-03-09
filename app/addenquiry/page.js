@@ -72,7 +72,7 @@ const ClientsData = () => {
         }
       })
       .catch((error) => {
-        console.log(error);
+        console.error(error);
       });
   };
 
@@ -183,7 +183,12 @@ const ClientsData = () => {
       JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonSource=${selectedSource}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
-        console.log("Value Inserted")
+        if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
+          router.push('../adDetails');
+        }
+        else {
+          showToastMessage('warning', 'Please fill all the Required Client Details!')
+        }
         //setMessage(data.message);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
@@ -196,20 +201,11 @@ const ClientsData = () => {
   Cookies.set('clientnumber', clientNumber);
   Cookies.set('clientemail', clientEmail);
   Cookies.set('selectedsource', selectedSource);
-      router.push('../adDetails');
+      
     } catch (error) {
       console.error('Error updating rate:', error);
     }
     
-  }
-
-  const moveToAdDetails = () => {
-    if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
-      submitDetails();
-    }
-    else {
-      showToastMessage('warning', 'Please fill all the Required Client Details!')
-    }
   }
 
 
@@ -315,7 +311,7 @@ const ClientsData = () => {
       <div className='flex flex-col items-center justify-center'>
       <button
           className="bg-purple-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-purple-600"
-          onClick={() => { moveToAdDetails() }}
+          onClick={() => { submitDetails() }}
         >
           Submit
         </button>

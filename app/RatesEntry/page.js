@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import IconButton from '@mui/material/IconButton';
 import {Button} from '@mui/material';
 import { AddCircleOutline, RemoveCircleOutline, SaveOutlined, DeleteOutline, Event } from '@mui/icons-material';
-import { TextField, InputAdornment } from '@mui/material';
+import { TextField } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import DatePicker from 'react-datepicker';
@@ -84,13 +84,11 @@ const AdDetailsPage = () => {
   const insertQtySlab = async(Qty, UnitPrice) => {
     try{
       if(!startQty.includes(Number(Qty))){
-        console.log(qty)
         await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${Cookies.get("username")}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}`)
         fetchQtySlab();
         setQty(0)
         toggleModal();
       } else{
-        console.log(qty)
         updateQtySlab()
       }
     }catch(error){
@@ -335,7 +333,7 @@ const AdDetailsPage = () => {
     showToastMessage('success', 'Updated Successfully!')
     window.location.reload()
     } catch(error){
-      console.log(error);
+      console.error(error);
     }
   }
 
@@ -545,7 +543,7 @@ const AdDetailsPage = () => {
                   <div>
                   <label>Valid Till</label>
                   <div className='flex mb-4'>
-                    <TextField id="validTill" defaultValue={validityDays} variant="outlined" size='small' className='w-36' type='number'/>
+                    <TextField id="validTill" value={validityDays} onChange={(e) => {setValidityDays(e.target.value)}} variant="outlined" size='small' className='w-36' type='number'/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
                       </IconButton>

@@ -167,7 +167,6 @@ const RatesListPage = () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRates.php/?JsonUserName=Siva&
         JsonRateId=${selectedItems.map(item => item.rateId)}&JsonValidity=${validityDate}`)
-        console.log(validityDate)
         const data = await response.json();
         setVisible(true);
         if (data.success === true) {
@@ -194,10 +193,8 @@ const RatesListPage = () => {
   function addDaysToDate(days) {
     const today = new Date();
     const futureDate = new Date(new Date(today).setDate(today.getDate()+ parseInt(days)));
-    console.log(futureDate)
     //Formatted Date
     const formattedDate = futureDate.toISOString().split('T')[0];
-    console.log(formattedDate)
     return formattedDate;
   }
 
