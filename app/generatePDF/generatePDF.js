@@ -70,17 +70,17 @@ export const generatePdf = async(checkoutData) => {
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
 
-//   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-// const today = new Date();
-// const day = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
-// const month = months[today.getMonth()]; // Get month abbreviation from the array
-// const year = today.getFullYear();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const today = new Date();
+const proposedDay = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
+const proposedMonth = months[today.getMonth()]; // Get month abbreviation from the array
+const proposedYear = today.getFullYear();
 
-// const formattedDate = `${day}-${month}-${year}`;
+const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
 
-//   textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
-//   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-//   pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
+  textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
+  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+  pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
 
   // textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
   // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed

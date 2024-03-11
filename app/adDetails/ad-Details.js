@@ -182,7 +182,7 @@ const formattedDate = `${day}-${month}-${year}`;
         if (!username) {
           routers.push('/login');
         } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
           const data = await response.json();
           const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType && item.rateName === rateName)
             .filter((value, index, self) =>
@@ -558,8 +558,8 @@ const formattedDate = `${day}-${month}-${year}`;
 
                   {remarksSuggestion.length > 0 && (
                     <ul className="list-none">
-                      {remarksSuggestion.map((name) => (
-                        <li>
+                      {remarksSuggestion.map((name, index) => (
+                        <li key={index}>
                           <button
                           className='text-purple-500 hover:text-purple-700'
                           value={name}
