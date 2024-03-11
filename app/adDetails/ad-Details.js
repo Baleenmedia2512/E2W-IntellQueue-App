@@ -182,7 +182,7 @@ const formattedDate = `${day}-${month}-${year}`;
         if (!username) {
           routers.push('/login');
         } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php');
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
           const data = await response.json();
           const filterdata = data.filter(item => item.adCategory === adCategory && item.adType === adType && item.rateName === rateName)
             .filter((value, index, self) =>
