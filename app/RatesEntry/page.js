@@ -271,32 +271,12 @@ const AdDetailsPage = () => {
   }
 
   const fetchRates = async () => {
-    const storedETag = localStorage.getItem('ratesETag');
-    const headers = {};
-    
-    if (storedETag) {
-      headers['If-None-Match'] = storedETag;
-    }
-  
     try {
-      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php', {
-        headers,
-      });
-  
-      if (res.status === 304) {
-        // No changes since last request, use cached data
-        const cachedRates = JSON.parse(localStorage.getItem('cachedRates'));
-        setRatesData(cachedRates);
-        return;
-      }
-  
-      const newETag = res.headers.get('ETag');
-      localStorage.setItem('ratesETag', newETag);
+      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php');
   
       const data = await res.json();
       setRatesData(data);
       // Cache the new rates data
-      localStorage.setItem('cachedRates', JSON.stringify(data));
     } catch (error) {
       console.error('Error fetching rates:', error);
     }
@@ -329,7 +309,7 @@ const AdDetailsPage = () => {
   
   const updateRates = async() => {
     try{
-    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRates.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}`)
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}`)
     showToastMessage('success', 'Updated Successfully!')
     window.location.reload()
     } catch(error){
