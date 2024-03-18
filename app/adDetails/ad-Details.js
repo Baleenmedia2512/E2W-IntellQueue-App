@@ -558,8 +558,8 @@ const formattedDate = `${day}-${month}-${year}`;
 
                   {remarksSuggestion.length > 0 && (
                     <ul className="list-none">
-                      {remarksSuggestion.map((name) => (
-                        <li>
+                      {remarksSuggestion.map((name, index) => (
+                        <li key={index}>
                           <button
                           className='text-purple-500 hover:text-purple-700'
                           value={name}
