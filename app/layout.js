@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   title: 'Rates Validation',
   description: 'This page is used to update rates',
+  manifest: '/manifest.json'
 }
 
 export default function RootLayout({ children }) {
