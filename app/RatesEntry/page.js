@@ -11,6 +11,7 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { MdDeleteOutline , MdOutlineSave, MdAddCircle} from "react-icons/md";
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -337,6 +338,16 @@ const AdDetailsPage = () => {
     }
   }
 
+  const rejectRates = async() => {
+    try{
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteRates.php/?JsonRateId=${rateId}`)
+    showToastMessage('success', 'Rejected Successfully!')
+    window.location.reload()
+    } catch(error){
+      console.error(error);
+    }
+  }
+
   const calculateDateFromDays = (days) => {
     const day = days.target.value
     setValidityDays(day)
@@ -468,10 +479,13 @@ const AdDetailsPage = () => {
                     <label>Quantity Slab</label>
                     <div className='flex mb-4'>
                     
-                      <TextField id="qtySlab" variant="outlined" size='small' className='w-52' type='number' defaultValue={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3"/>
-                      <IconButton aria-label="Add" className='mb-10' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
+                      <TextField id="qtySlab" variant="outlined" size='small' className='w-52' type='number' defaultValue={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3" onFocus={(e) => {e.target.select()}}/>
+                      <button className='justify-center mb-10 ml-3 text-blue-400' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                      {/* <IconButton aria-label="Add" className='mb-10' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
                         <AddCircleOutline color='primary'/>
-                      </IconButton>
+                      </IconButton> */}
                     </div>
                   </div>
                   {/* Slab List Here  */}
@@ -535,7 +549,7 @@ const AdDetailsPage = () => {
                   <div>
                     <label>Lead Days</label>
                     <div className='flex mb-4'>
-                      <TextField id="leadDays" value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)}/>
+                      <TextField id="leadDays" value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
                       <p className='ml-4 mt-2'>Day (s)</p>
                     </div>
                   </div>
@@ -543,7 +557,7 @@ const AdDetailsPage = () => {
                   <div>
                   <label>Valid Till</label>
                   <div className='flex mb-4'>
-                    <TextField id="validTill" value={validityDays} onChange={(e) => {setValidityDays(e.target.value)}} variant="outlined" size='small' className='w-36' type='number'/>
+                    <TextField id="validTill" value={validityDays} onChange={(e) => {setValidityDays(e.target.value)}} variant="outlined" size='small' className='w-36' type='number' onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
                       </IconButton>
@@ -570,12 +584,18 @@ const AdDetailsPage = () => {
                 </div>
                 <p className=' text-center'>Rate Id: {rateId}</p>
                 <div className="flex items-center justify-center mb-8">
-                <Button variant="outlined" startIcon={<DeleteOutline />} className='border-red-400 text-red-400'>
+                  <button className = "bg-red-400 text-white p-2 rounded-full w-24 justify-center" onClick={rejectRates}>
+                    <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span>
+                    </button>
+                    <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center" onClick={updateRates}>
+                    <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Save</span>
+                    </button>
+                {/* <Button variant="outlined" startIcon={<DeleteOutline />} className='border-red-400 text-red-400'>
                   Delete
                 </Button>
                 <Button variant="contained" endIcon={<SaveOutlined />} className='ml-4 bg-green-400' onClick={updateRates}>
                   Save
-                </Button>
+                </Button> */}
                 </div>
                 
                 {/* <div className="flex flex-col justify-center items-center ">
