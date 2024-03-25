@@ -121,6 +121,7 @@ const formattedDate = `${day}-${month}-${year}`;
         const firstSelectedSlab = sortedData[0];
         setQtySlab(firstSelectedSlab.StartQty);
         setUnitPrice(firstSelectedSlab.UnitPrice);
+        setUnit(firstSelectedSlab.Unit);
         setMargin(((qty * firstSelectedSlab.UnitPrice * campaignDuration * marginPercentage) / 100).toFixed(2))
       } catch (error) {
         console.error(error);
