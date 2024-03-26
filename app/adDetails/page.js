@@ -98,7 +98,7 @@ export const AdMediumPage = () => {
     <div>
       {showAdTypePage && (<AdTypePage />)}
       {!showAdTypePage && (
-        <div>
+        <div className='text-black'>
           <div className="flex flex-row justify-between mx-[8%] mt-8">
 
             <> 

@@ -116,7 +116,7 @@ const Login = () => {
             Login
           </button>
           <><br /></>
-          <p className='text-black'>V: 0.0.3</p>
+          <p className='text-black'>V: 0.0.4</p>
         </form>
       </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>

@@ -104,11 +104,11 @@ const AdTypePage = () => {
 
 const greater = '>>'
   return (
-    <div >
+    <div>
       {showAdCategoryPage && (<AdCategoryPage />)}
       {showAdMediumPage && (<AdMediumPage />)}
       {(!showAdCategoryPage && !showAdMediumPage) && (
-      <div>
+      <div className='text-black'>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
         <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' onClick={() => {moveToPreviousPage(!selectedTypeofAd)}

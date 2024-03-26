@@ -126,7 +126,7 @@ const AdCategoryPage = () => {
   return (
     <div>
       {showAdTypePage && (<AdTypePage />)}
-      {(!showAdDetailsPage && showAdTypePage === false) && (<div>
+      {(!showAdDetailsPage && showAdTypePage === false) && (<div className='text-black'>
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
       

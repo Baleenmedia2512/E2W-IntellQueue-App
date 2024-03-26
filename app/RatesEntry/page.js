@@ -12,6 +12,7 @@ import MuiAlert from '@mui/material/Alert';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { MdDeleteOutline , MdOutlineSave, MdAddCircle} from "react-icons/md";
+import { formattedMargin } from '../adDetails/ad-Details';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -44,6 +45,10 @@ const AdDetailsPage = () => {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [rateId, setRateId] = useState(null);
+  const [searchingRateId, setSearchingRateId] = useState('');
+  const [invalidRates, setInvalidRates] = useState(false)
+  const [invalidRatesData, setInvalidRatesData] = useState([]);
+  const [validRatesData, setValidRatesData] = useState([]);
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -270,39 +275,96 @@ const AdDetailsPage = () => {
     }
   }
   }
+console.log(invalidRatesData,'valid', validRatesData);
+  useEffect(() => {
+    invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
+  },[invalidRates])
 
   const fetchRates = async () => {
-    const storedETag = localStorage.getItem('ratesETag');
-    const headers = {};
+    // const storedETag = localStorage.getItem('ratesETag');
+    // const headers = {};
     
-    if (storedETag) {
-      headers['If-None-Match'] = storedETag;
-    }
+    // if (storedETag) {
+    //   headers['If-None-Match'] = storedETag;
+    // }
   
     try {
-      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php', {
-        headers,
-      });
+      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php');
   
-      if (res.status === 304) {
-        // No changes since last request, use cached data
-        const cachedRates = JSON.parse(localStorage.getItem('cachedRates'));
-        setRatesData(cachedRates);
-        return;
-      }
+      // if (res.status === 304) {
+      //   // No changes since last request, use cached data
+      //   const cachedRates = JSON.parse(localStorage.getItem('cachedRates'));
+      //   setRatesData(cachedRates);
+      //   return;
+      // }
   
-      const newETag = res.headers.get('ETag');
-      localStorage.setItem('ratesETag', newETag);
+      // const newETag = res.headers.get('ETag');
+      // localStorage.setItem('ratesETag', newETag);
   
       const data = await res.json();
-      setRatesData(data);
+      const today = new Date();
+      const valid = data.filter(item => {
+        const validityDate = new Date(item.ValidityDate);
+        return validityDate >= today;
+    });
+      const invalid = data.filter(item => {
+        const validityDate = new Date(item.ValidityDate);
+        return validityDate < today;
+    });
+      setValidRatesData(valid);
+      setInvalidRatesData(invalid);
+      setRatesData(valid);
+      console.log(today,'h');
+      // console.log(data,'Rates',ratesData,'Invalid',invalid,'valid ', valid)
       // Cache the new rates data
-      localStorage.setItem('cachedRates', JSON.stringify(data));
+      // localStorage.setItem('cachedRates', JSON.stringify(data));
     } catch (error) {
       console.error('Error fetching rates:', error);
     }
   };
 
+  const handleRateId = async () => {
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${searchingRateId}`);
+      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setSelectedValues({
+    rateName: {
+      label:  data.rateName ,
+      value:  data.rateName 
+    },
+    adType: {
+      label:  data.adType ,
+      value:  data.adType 
+    },
+    adCategory: {
+      label:  data.adCategory ,
+      value:  data.adCategory 
+    },
+    vendorName: {
+      label:  data.vendorName ,
+      value:  data.vendorName 
+    }
+      })
+
+      setRateId(data.RateID);
+      setCampaignDuration(data['CampaignDuration(in Days)']);
+      if(data['CampaignDuration(in Days)'] > 0){
+        setShowCampaignDuration(true)
+      }
+      setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
+      setLeadDays(data.LeadDays);
+      setValidTill(data.ValidityDate)
+      setValidityDate(data.ValidityDate)
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+// console.log(selectedValues);
   const formattedRupees = (number) => {
     const roundedNumber = (number / 1).toFixed(2);
     const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
@@ -398,7 +460,7 @@ const AdDetailsPage = () => {
       <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
           <div onClick={toggleModal} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
-            <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
+            <h3 className='normal-label mb-4 text-black'>Enter Slab Rates for {qty}+ Quantities</h3>
             <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}}/>
             <Button className='bg-blue-400 ml-4 text-white' onClick={() => insertQtySlab(qty, newUnitPrice)}>Submit</Button>
             </div>
@@ -418,6 +480,25 @@ const AdDetailsPage = () => {
             <div>
                 <div className="mb-4 flex flex-col items-center justify-center">
 
+                <div className='flex'>
+                      <input type='checkbox' checked={invalidRates} value={invalidRates} onChange={() => {setInvalidRates(!invalidRates)}}/>
+                      <label className='justify-left ml-2' onClick={() => {setInvalidRates(!invalidRates)}}>Invalid rates</label>
+                    </div>
+
+                <div>
+                <label>Rate Id</label><br/>
+  <input
+    className="mb-8 text-black w-64 border "
+    type="number"
+    placeholder="Ex. 4000"
+    value={searchingRateId}
+    onChange = {(e) => setSearchingRateId(e.target.value)}
+    // oange = {(e) => setSearchingRateId(e.target.value)}
+  />
+  <Button
+  className='border '
+   onClick={() => handleRateId()}>Select</Button></div>
+
                   {/* Ad Medium of the rate */}
                   <div>
                     <label className=''>Ad Medium</label><br />
@@ -427,6 +508,7 @@ const AdDetailsPage = () => {
                       instanceId="AdMedium"
                       placeholder="Select Ad Medium"
                       defaultValue={selectedValues.rateName}
+                      value={selectedValues.rateName}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
                       options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
                     />
@@ -441,6 +523,7 @@ const AdDetailsPage = () => {
                       instanceId="AdType"
                       placeholder="Select Ad Type"
                       defaultValue={selectedValues.adType}
+                      value={selectedValues.adType}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                       options={getOptions('adType', selectedValues)}
                     />
@@ -455,6 +538,7 @@ const AdDetailsPage = () => {
                       instanceId="AdCategory"
                       placeholder="Select Ad Category"
                       defaultValue={selectedValues.adCategory}
+                      value={selectedValues.adCategory}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
                       options={getOptions('adCategory', selectedValues)}
                     />
@@ -469,6 +553,7 @@ const AdDetailsPage = () => {
                       instanceId="Vendor"
                       placeholder="Select Vendor"
                       defaultValue={selectedValues.vendorName}
+                      value={selectedValues.vendorName}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
                       options={vendors}
                     />
@@ -496,7 +581,7 @@ const AdDetailsPage = () => {
                     <ul className='mb-4'>
                       {slabData.map(data => (
                         <div className='flex' key={data.StartQty}>
-                          <option key={data.StartQty} className=" mt-1.5" onClick={() => {setEditModal(true); setQty(data.StartQty); setNewUnitPrice(data.UnitPrice); setSelectedUnitId(data.Id)}}>{data.StartQty} {data.Unit} - ₹{data.UnitPrice}</option>
+                          <option key={data.StartQty} className=" mt-1.5" onClick={() => {setEditModal(true); setQty(data.StartQty); setNewUnitPrice(data.UnitPrice); setSelectedUnitId(data.Id)}}>{data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}</option>
                           <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty)}>
                             <RemoveCircleOutline color='secondary' fontSize='small'/>
                           </IconButton>

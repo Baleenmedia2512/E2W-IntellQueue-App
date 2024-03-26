@@ -253,7 +253,7 @@ const ClientsData = () => {
         </button>
       </div> */}
 
-      <div className='w-full mt-8 justify-center items-center'>
+      <div className='w-full mt-8 justify-center items-center text-black'>
         <h1 className="font-bold text-3xl text-center mb-4 mt-4">BME - Enquiry. Enter enquiry details!</h1>
         {/* <h1 className='text-3xl'>Client Details</h1> */}
         <label className="flex flex-col items-left text-lg mb-2">Client Name</label>
@@ -287,7 +287,15 @@ const ClientsData = () => {
     type="text"
     placeholder="Client Contact"
     value={clientNumber}
-    onChange={(e) => setClientNumber(e.target.value)}
+    onChange={(e) => {
+      const inputValue = e.target.value;
+      // Remove any non-digit characters
+      const sanitizedValue = inputValue.replace(/\D/g, '');
+      // Ensure the length is not more than 10 characters
+      const limitedValue = sanitizedValue.slice(0, 10);
+      // Update the state with the modified value
+      setClientNumber(limitedValue);
+    }}
   />
 
   <label>Client Email</label>
