@@ -230,6 +230,7 @@ const AdCategoryPage = () => {
               Cookies.set('defunit', options.Units);
               Cookies.set('rateId', options.rateId)
               Cookies.set('validitydate', options.ValidityDate);
+              Cookies.remove('isAdDetails');
               setShowAdDetailsPage(true)
             }}
           >

@@ -5,6 +5,7 @@ import AdCategoryPage from './adCategory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
+import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { InputTextarea } from 'primereact/inputtextarea';
@@ -47,11 +48,11 @@ const AdDetailsPage = () => {
   const typeOfAd = Cookies.get('typeofad');
   //const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
-
+  const isAdDetails = Cookies.get('isAdDetails');
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
-
+  const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
@@ -114,6 +115,10 @@ const formattedDate = `${day}-${month}-${year}`;
     [])
 
   useEffect(() => {
+    if(isAdDetails){
+      setCheckout(false)
+    }
+    else{
     const fetchData = async () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
@@ -134,6 +139,7 @@ const formattedDate = `${day}-${month}-${year}`;
     };
 
     fetchData();
+  }
   }, [rateId]);
 
   useEffect(() => {
@@ -181,9 +187,9 @@ const formattedDate = `${day}-${month}-${year}`;
       try {
         const username = Cookies.get('username');
 
-        if ((!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')) && !Cookies.get('isSkipped')){
-          routers.push('/addenquiry');
-        }
+        // if ((!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')) && !Cookies.get('isSkipped')){
+        //   routers.push('/addenquiry');
+        // }
 
         if (!username) {
           routers.push('/login');
@@ -236,7 +242,12 @@ const formattedDate = `${day}-${month}-${year}`;
       setToast(true);
     }
     else {
-      setCheckout(false);
+      Cookies.set('isAdDetails', true);
+      if(clientName){
+        setCheckout(false);
+      } else{
+        routers.push('/addenquiry');
+      }
     }
   }
 

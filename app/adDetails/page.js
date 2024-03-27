@@ -108,7 +108,11 @@ export const AdMediumPage = () => {
               <button
                 className="px-2 py-1 rounded text-center"
                 onClick={() => {
-                  routers.push('../addenquiry')
+                  routers.push('../addenquiry');
+                  Cookies.remove('clientname');
+                  Cookies.remove('clientnumber');
+                  Cookies.remove('selectedsource');
+                  Cookies.remove('clientemail');
                 }}
               >
                 <svg
