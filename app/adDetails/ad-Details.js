@@ -181,7 +181,7 @@ const formattedDate = `${day}-${month}-${year}`;
       try {
         const username = Cookies.get('username');
 
-        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
+        if ((!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')) && !Cookies.get('isSkipped')){
           routers.push('/addenquiry');
         }
 

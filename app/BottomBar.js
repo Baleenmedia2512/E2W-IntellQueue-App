@@ -19,7 +19,7 @@ const BottomBar = () => {
   }
 
   const moveToQuoteSender = () => {
-    if (clientName !== '' && clientNumber !== '' && selectedSource !== '') {
+    if ((clientName !== '' && clientNumber !== '' && selectedSource !== '') || Cookies.get('isSkipped')) {
       routers.push('../adDetails');
     }
     else {

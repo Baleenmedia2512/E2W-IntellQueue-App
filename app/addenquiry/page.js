@@ -22,10 +22,10 @@ const ClientsData = () => {
     '8.Online'
   ];
   //const [cses, setCses] = useState('');
-  const [selectedSource, setSelectedSource] = useState(Cookies.get('selectedsource'));
-  const [clientName, setClientName] = useState(Cookies.get('clientname'));
-  const [clientNumber, setClientNumber] = useState(Cookies.get('clientnumber'));
-  const [clientEmail, setClientEmail] = useState(Cookies.get('clientemail'));
+  const [selectedSource, setSelectedSource] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [clientNumber, setClientNumber] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -316,12 +316,19 @@ const ClientsData = () => {
     placeholder="Select Source"
   />
       </div>
-      <div className='flex flex-col items-center justify-center'>
+      <div className='flex flex-row items-center justify-center'>
       <button
           className="bg-purple-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-purple-600"
           onClick={() => { submitDetails() }}
         >
           Submit
+        </button>
+        <button
+          className="bg-purple-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-purple-600"
+          onClick={() => { router.push('../adDetails')
+          Cookies.set('isSkipped',true) }}
+        >
+          Skip
         </button>
       </div>
 

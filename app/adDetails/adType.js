@@ -32,9 +32,9 @@ const AdTypePage = () => {
           setShowAdCategoryPage(false);
         }
 
-        if (!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')){
-          routers.push('/addenquiry');
-        }
+        // if ((!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')) && !Cookies.get('isSkipped')){
+        //   routers.push('/addenquiry');
+        // }
   
         if (!username) {
           routers.push('/login');
