@@ -275,7 +275,6 @@ const AdDetailsPage = () => {
     }
   }
   }
-console.log(invalidRatesData,'valid', validRatesData);
   useEffect(() => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
   },[invalidRates])
@@ -314,7 +313,6 @@ console.log(invalidRatesData,'valid', validRatesData);
       setValidRatesData(valid);
       setInvalidRatesData(invalid);
       setRatesData(valid);
-      console.log(today,'h');
       // console.log(data,'Rates',ratesData,'Invalid',invalid,'valid ', valid)
       // Cache the new rates data
       // localStorage.setItem('cachedRates', JSON.stringify(data));
@@ -616,7 +614,7 @@ console.log(invalidRatesData,'valid', validRatesData);
                     {showCampaignDuration && (
                     
                       <div className='flex'>
-                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='w-36 ' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}}/>
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='w-36 ' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}} onFocus={(e) => e.target.select()}/>
                       <Select
                         className='text-black w-24 ml-2 mt-0.5 '
                         id='CUnits'

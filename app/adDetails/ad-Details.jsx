@@ -10,6 +10,9 @@ import MuiAlert from '@mui/material/Alert';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Carousel } from 'primereact/carousel';
+import { useAppSelector } from '@/redux/store';
+import { useDispatch } from 'react-redux';
+import { resetClientData } from '@/redux/features/client-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -19,6 +22,7 @@ export const formattedMargin = (number) => {
 };
 
 const AdDetailsPage = () => {
+  
   const [selectedVendor, setSelectedVendor] = useState("");
   const [slabData, setSlabData] = useState([])
   const [qtySlab, setQtySlab] = useState()
@@ -37,10 +41,13 @@ const AdDetailsPage = () => {
   const [datas, setDatas] = useState([]);
   const [amt, setAmt] = useState();
 
-  const clientName = Cookies.get('clientname');
-  const clientNumber = Cookies.get('clientnumber');
-  const clientEmail = Cookies.get('clientemail');
-  const selectedSource = Cookies.get('selectedsource');
+  const clientDetails = useAppSelector(state => state.clientSlice)
+  const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
+  const username = useAppSelector(state => state.authSlice.userName);
+  // const clientName = Cookies.get('clientname');
+  // const clientNumber = Cookies.get('clientnumber');
+  // const clientEmail = Cookies.get('clientemail');
+  // const selectedSource = Cookies.get('selectedsource');
   const [rateId, setRateId] = useState('');
   const rateName = Cookies.get('ratename');
   const adType = Cookies.get('adtype');
@@ -185,7 +192,7 @@ const formattedDate = `${day}-${month}-${year}`;
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const username = Cookies.get('username');
+        
 
         // if ((!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')) && !Cookies.get('isSkipped')){
         //   routers.push('/addenquiry');
@@ -225,6 +232,7 @@ const formattedDate = `${day}-${month}-${year}`;
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+  const dispatch = useDispatch();
   const handleSubmit = () => {
     if (qty === '' || campaignDuration === '' || margin === '') {
       setSeverity('warning');
@@ -303,14 +311,15 @@ const formattedDate = `${day}-${month}-${year}`;
     const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDurationVisibility===1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, typeOfAd, formattedDate]
     const GSTPerc = 18
 
-    generatePdf(PDFArray)
+    generatePdf(PDFArray, clientName, clientEmail)
 
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${Cookies.get('username')}&
-    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${selectedSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}&JsonRemarks=${remarks}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${userName}&
+    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${clientSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}&JsonRemarks=${remarks}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         alert("Quote Downloaded")
+        dispatch(resetClientData())
         //setMessage(data.message);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
@@ -321,6 +330,8 @@ const formattedDate = `${day}-${month}-${year}`;
     } catch (error) {
       console.error('Error updating rate:', error);
     }
+
+    dispatch(resetClientData())
   }
 
   const formattedRupees = (number) => {
@@ -725,7 +736,7 @@ const formattedDate = `${day}-${month}-${year}`;
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Client Number</td>
-                  <td>:</td><td>  {clientNumber}</td>
+                  <td>:</td><td>  {clientContact}</td>
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Client E-Mail</td>
@@ -733,7 +744,7 @@ const formattedDate = `${day}-${month}-${year}`;
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Source</td>
-                  <td>:</td><td>  {selectedSource}</td>
+                  <td>:</td><td>  {clientSource}</td>
                 </tr>
               </table>
             </div></div>

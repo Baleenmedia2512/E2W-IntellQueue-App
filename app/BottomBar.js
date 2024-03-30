@@ -23,7 +23,7 @@ const BottomBar = () => {
       routers.push('../adDetails');
     }
     else {
-      routers.push('/addenquiry')
+      routers.push('/')
     }
   }
 
@@ -32,30 +32,30 @@ const BottomBar = () => {
       <button className={` flex flex-col items-center justify-center h-16 w-1/4 py-2 rounded-lg ${
         '/' === currentPath ? 'bg-white' : ''
         }`}
-        onClick={() => { routers.push('/'); }}
+        onClick={() => { routers.push('/rate-validation'); }}
         onMouseEnter={() => setIsHovered('Rates')}
         onMouseLeave={() => setIsHovered(null)}
       >
-        <div className={` ${'/' === currentPath ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
+        <div className={` ${'/rate-validation' === currentPath ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
         <Image src="/images/approval.png" alt="Validation Icon" width={30} height={30} />
         </div>
         <label>{isHovered==='Rates'  ? 'Rates Validation' : ''}</label>
       
       </button>
       <button
-        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
+        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/' || currentPath === '/adDetails') ? 'bg-white' : ''
           }`}
         onClick={() => moveToQuoteSender()}
         onMouseEnter={() => setIsHovered('Quotes')}
         onMouseLeave={() => setIsHovered(null)}
       >
-        <div className={` ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
+        <div className={` ${(currentPath === '/' || currentPath === '/adDetails') ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
         <Image src="/images/profiles.png" alt="Quote Sender Icon" width={30} height={30} />
         </div>
       <label>{isHovered==='Quotes' ? 'Quote Sender' : ''}</label>
       </button>
       <button
-        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/addenquiry' || currentPath === '/adDetails') ? 'bg-white' : ''
+        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/' || currentPath === '/adDetails') ? 'bg-white' : ''
           }`}
         onClick={() => routers.push('/RatesEntry')}
         onMouseEnter={() => setIsHovered('RatesEntry')}

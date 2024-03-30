@@ -7,8 +7,16 @@ import Cookies from 'js-cookie';
 import AdCategoryPage from './adCategory';
 import { useRouter } from 'next/navigation';
 import { AdMediumPage } from './page';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/redux/store';
+import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 
 const AdTypePage = () => {
+  const username = useAppSelector(state => state.authSlice.userName);
+  const dispatch = useDispatch();
+  const adMedium = useAppSelector(state => state.quoetSlice.adMedium);
+  const adType = useAppSelector(state => state.quoetSlice.adType);
+
   const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const [showAdCategoryPage, setShowAdCategoryPage] = useState(false);
@@ -24,9 +32,8 @@ const AdTypePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const username = Cookies.get('username');
         
-        if (Cookies.get('adtype')) {
+        if (adType) {
           setShowAdCategoryPage(true);
         } else {
           setShowAdCategoryPage(false);
@@ -53,7 +60,7 @@ const AdTypePage = () => {
   
 
   const filteredTypeofAd = datas
-  .filter(item => item.rateName === Cookies.get('ratename'))
+  .filter(item => item.rateName === adMedium)
   .filter((value, index, self) => 
     self.findIndex(obj => obj.typeOfAd === value.typeOfAd) === index
   )
@@ -61,7 +68,7 @@ const AdTypePage = () => {
   ;
 
   const filteredAdType = datas
-  .filter(item => item.rateName === Cookies.get('ratename'))
+  .filter(item => item.rateName === adMedium)
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adType === value.adType) === index
   )
@@ -74,20 +81,18 @@ const AdTypePage = () => {
 
   const moveToPreviousPage = (adMedium) => {
     if(adMedium || filteredTypeofAd.length === 1){
-      Cookies.remove('ratename'); 
-      Cookies.remove('typeofad'); 
-      Cookies.remove('adType'); 
-      Cookies.remove('selecteds');
+      dispatch(resetQuotesData());
       setShowAdMediumPage(true);
-      Cookies.remove('backfromcategory');
     } else {
-      Cookies.remove('selecteds');
-      setSelectedTypeofAd(null)
+      //Cookies.remove('selecteds');
+      dispatch(setQuotesData({adType: ""}));
+      setSelectedTypeofAd(null);
     }
   }
   const searchedAdType = filteredAdType.filter((optionn) =>
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
+
   useEffect(() => {
       if(Cookies.get('selecteds')){
         const selected = JSON.parse(Cookies.get('selecteds'))

@@ -1,10 +1,8 @@
-import Cookies from 'js-cookie';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 
-export const generatePdf = async(checkoutData) => {
-
+export const generatePdf = async(checkoutData, clientName, clientEmail) => {
   const ImageUrl = '/images/WHITE PNG.png';
   const quoteNumber = await fetchNextQuoteNumber();
   // Create a new jsPDF instance
@@ -25,8 +23,8 @@ export const generatePdf = async(checkoutData) => {
   pdf.setFontSize(12);
   pdf.addImage(ImageUrl, 'PNG', 10, 60, 100, 100)
   pdf.text('To,', 10, 165);
-  pdf.text(Cookies.get('clientname'), 10, 180);
-  pdf.text(Cookies.get('clientemail'), 10, 195);
+  pdf.text(clientName, 10, 180);
+  pdf.text(clientEmail, 10, 195);
 
   const lineThickness = 3; // Set the desired thickness
   pdf.setLineWidth(lineThickness);
@@ -176,7 +174,7 @@ Object.keys(columnWidths).forEach(columnName => {
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(12);
   pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, 360);
-  pdf.text(`2.Ad. Material shall be shared by ${Cookies.get('clientname')}`, 10, 375)
+  pdf.text(`2.Ad. Material shall be shared by ${clientName}`, 10, 375)
   pdf.text("3.100% Upfront payment required for releasing the Ads", 10, 390)
   pdf.text(`4.Lead time to book the Ad : ${checkoutData[10]} Days`, 10, 405)
   pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, 420)
@@ -198,5 +196,7 @@ Object.keys(columnWidths).forEach(columnName => {
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text('www.baleenmedia.com', xCoordinate, pdf.internal.pageSize.height - 15)
   // Save the PDF
-  pdf.save(`Quote${quoteNumber}_${Cookies.get('clientname')}.pdf`);
+  pdf.save(`Quote${quoteNumber}_${clientName}.pdf`);
+
+  return
 };

@@ -1,11 +1,13 @@
 'use client'
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
+import { login } from '@/redux/features/auth-slice';
 import Cookies from 'js-cookie';
 import MuiAlert from '@mui/material/Alert';
+import { useDispatch, useSelector } from 'react-redux';
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -14,7 +16,7 @@ const Login = () => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
-
+  
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
     setToastMessage(toastMessageContent)
@@ -24,8 +26,9 @@ const Login = () => {
   const toggleShowPassword = () => {setShowPassword(!showPassword)};
 
   const router = useRouter();
+  const dispatch = useDispatch();
 
-  const handleSubmit = (event) => {
+  const handleLogin = (event) => {
         event.preventDefault();
         if(userName === '' || password === ''){
           showToastMessage('warning', "Please Enter User Name and Password")
@@ -51,8 +54,9 @@ const Login = () => {
 
             if(data === 'Login Succesfully'){
               showToastMessage('success', data)
-              Cookies.set('username', userName, { expires: 7 });
-              router.push("/addenquiry") //navigating to the enquiry Screen
+              //Cookies.set('username', userName, { expires: 7 });
+              dispatch(login(userName));
+              router.push("/") //navigating to the enquiry Screen
             }else{
               showToastMessage('error', "Invalid user name or password!")
             }
@@ -111,7 +115,7 @@ const Login = () => {
           <button
             type="button"
             className="bg-green-500 text-white px-4 py-2 rounded-lg mb-4 font-poppins transition-all duration-300 ease-in-out hover:bg-green-600"
-            onClick={handleSubmit}
+            onClick={handleLogin}
           >
             Login
           </button>
