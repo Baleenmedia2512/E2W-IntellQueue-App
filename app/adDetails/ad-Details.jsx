@@ -13,6 +13,7 @@ import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
 import { resetClientData } from '@/redux/features/client-slice';
+import { setQuotesData } from '@/redux/features/quote-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -44,15 +45,19 @@ const AdDetailsPage = () => {
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
+  const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
+  const typeOfAd = useAppSelector(state => state.quoteSlice.selectedAdType);
+  const adType = useAppSelector(state => state.quoteSlice.selectedAdCategory);
+  const adCategory = useAppSelector(state => state.quoteSlice.selectedEdition)
   // const clientName = Cookies.get('clientname');
   // const clientNumber = Cookies.get('clientnumber');
   // const clientEmail = Cookies.get('clientemail');
   // const selectedSource = Cookies.get('selectedsource');
   const [rateId, setRateId] = useState('');
-  const rateName = Cookies.get('ratename');
-  const adType = Cookies.get('adtype');
-  const adCategory = Cookies.get('adcategory');
-  const typeOfAd = Cookies.get('typeofad');
+  // const rateName = Cookies.get('ratename');
+  // const adType = Cookies.get('adtype');
+  // const adCategory = Cookies.get('adcategory');
+  // const typeOfAd = Cookies.get('typeofad');
   //const VendorName = Cookies.get('vendorname');
   const ratePerUnit = Cookies.get('rateperunit');
   const isAdDetails = Cookies.get('isAdDetails');
@@ -429,6 +434,7 @@ const formattedDate = `${day}-${month}-${year}`;
                 onClick={() => {
                   Cookies.remove('adcategory');
                   Cookies.remove('adMediumSelected');
+                  dispatch(setQuotesData({selectedAdCategory: "", selectedEdition: null}))
                   setShowAdCategoryPage(true);
                   Cookies.set('back1', true);
                 }}
@@ -437,7 +443,7 @@ const formattedDate = `${day}-${month}-${year}`;
               </button>
 
               <h2 className="font-semibold text-wrap mb-1">
-                {rateName} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory.split('|').join(' | ').split(",").join(", ")} {greater} {rateId}
+                {adMedium} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory.split('|').join(' | ').split(",").join(", ")} {greater} {rateId}
               </h2>
             </div><div>
             <Carousel value={items} numVisible={1} numScroll={1} itemTemplate={customTemplate} />

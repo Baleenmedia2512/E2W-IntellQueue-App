@@ -130,7 +130,7 @@ const ClientsData = () => {
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <div className='w-full mt-8 justify-center items-center text-black'>
-        <h1 className="font-bold text-3xl text-center mb-4 mt-4">BME - Enquiry. Enter enquiry details!</h1>
+        <h1 className="font-bold text-3xl text-center mb-4 mt-4">Enter client details</h1>
         {/* <h1 className='text-3xl'>Client Details</h1> */}
         <label className="flex flex-col items-left text-lg mb-2">Client Name</label>
         <input

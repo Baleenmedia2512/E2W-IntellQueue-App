@@ -21,7 +21,7 @@ export const AdMediumPage = () => {
 
   const [searchInput, setSearchInput] = useState('');
   const username = useAppSelector(state => state.authSlice.userName);
-  const adMedium = useAppSelector(state => state.quoteSlice.adMedium);
+  const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
 
   const handleSearchInputChange = (event) => {
     setSearchInput(event.target.value);
@@ -155,7 +155,7 @@ export const AdMediumPage = () => {
                     }`}
                   onClick={() => {
                     //setSelectedAdMedium(option.rateName);
-                    dispatch(setQuotesData({adMedium: option.rateName}))
+                    dispatch(setQuotesData({selectedAdMedium: option.rateName}))
                     //Cookies.set('ratename', option.rateName);
                     setShowAdTypePage(true);
                   }}

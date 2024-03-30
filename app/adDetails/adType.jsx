@@ -14,8 +14,8 @@ import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 const AdTypePage = () => {
   const username = useAppSelector(state => state.authSlice.userName);
   const dispatch = useDispatch();
-  const adMedium = useAppSelector(state => state.quoetSlice.adMedium);
-  const adType = useAppSelector(state => state.quoetSlice.adType);
+  const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
+  const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
 
   const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
@@ -85,7 +85,7 @@ const AdTypePage = () => {
       setShowAdMediumPage(true);
     } else {
       //Cookies.remove('selecteds');
-      dispatch(setQuotesData({adType: ""}));
+      dispatch(setQuotesData({selectedAdType: ""}));
       setSelectedTypeofAd(null);
     }
   }
@@ -97,12 +97,13 @@ const AdTypePage = () => {
       if(Cookies.get('selecteds')){
         const selected = JSON.parse(Cookies.get('selecteds'))
         if(filteredAdType.filter(item => item.typeOfAd === selected.typeOfAd).length>1){
-          setSelectedTypeofAd(selected);
+          setSelectedTypeofAd(Cookies.get('selecteds'));
         }
       }
 
     if (!selectedTypeofAd && filteredTypeofAd.length === 1 && !Cookies.get('backfromcategory')) {
       setSelectedTypeofAd(filteredTypeofAd[0]);
+      //dispatch(setQuotesData({adType: filteredTypeofAd[0]}))
       Cookies.set('selecteds' ,JSON.stringify(filteredTypeofAd[0]));
     }
   },[filteredTypeofAd] );
@@ -118,15 +119,12 @@ const greater = '>>'
         <>
         <h1 className='font-semibold'><button className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' onClick={() => {moveToPreviousPage(!selectedTypeofAd)}
     }> <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button> 
-    {Cookies.get('ratename')} {selectedTypeofAd ? greater : ''} {selectedTypeofAd ? selectedTypeofAd.typeOfAd : ''}</h1>
+    {adMedium} {selectedTypeofAd ? greater : ''} {selectedTypeofAd ? selectedTypeofAd.typeOfAd : ''}</h1>
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
-              Cookies.remove('ratename'); 
-              Cookies.remove('typeofad'); 
-              Cookies.remove('adType'); 
-              Cookies.remove('selecteds');
-              routers.push('../addenquiry');
+              dispatch(resetQuotesData())
+              routers.push('/');
             }}
           >
             <svg
@@ -170,8 +168,7 @@ const greater = '>>'
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
             {
-              Cookies.set('typeofad', optionss.typeOfAd)
-              Cookies.set('adtype', optionss.adType)
+              dispatch(setQuotesData({selectedAdType: optionss.typeOfAd, selectedAdCategory: optionss.adType}))
               setSelectedTypeofAd(optionss);
               Cookies.set('selecteds' ,JSON.stringify(optionss));
           }}}
@@ -188,8 +185,7 @@ const greater = '>>'
               key={option.adType}
               className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
               onClick={() => {
-                Cookies.set('typeofad', option.typeOfAd)
-                Cookies.set('adtype', option.adType)
+                dispatch(setQuotesData({selectedAdType: option.typeOfAd, selectedAdCategory: option.adType}))
                 setSelectedAdType(option);
                  setShowAdCategoryPage(true);
               }}
@@ -198,8 +194,7 @@ const greater = '>>'
             </label>
           ))}
         </ul>):(setShowAdCategoryPage(true),
-      Cookies.set('typeofad', selectedTypeofAd.typeOfAd),
-      Cookies.set('adtype', selectedTypeofAd.adType)
+        dispatch(setQuotesData({selectedAdType: selectedTypeofAd.typeOfAd, selectedAdCategory: selectedTypeofAd.adType}))
         )}
 </div>
       

@@ -4,7 +4,7 @@ const initialState = {
   selectedAdMedium: "",
   selectedAdType: "",
   selectedAdCategory: "",
-  selectedEdition: "",
+  selectedEdition: null,
   selectedPosition: "",
   selectedVendor: "",
   selectedSlab: "",

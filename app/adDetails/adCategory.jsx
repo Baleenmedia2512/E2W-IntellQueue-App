@@ -1,21 +1,29 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/redux/store';
 import AdDetailsPage from './ad-Details';
 import AdTypePage from './adType';
-
+import { setQuotesData } from '@/redux/features/quote-slice';
 
 const AdCategoryPage = () => {
+  const dispatch = useDispatch();
+  const username = useAppSelector(state => state.authSlice.userName);
   const [selectedAdCategory, setSelectedAdCategory] = useState(null);
   const [datas, setDatas] = useState([]);
   const [showAdDetailsPage, setShowAdDetailsPage] = useState(false);
   const routers = useRouter();
-  const typeOfAd = Cookies.get('typeofad');
-  const adType = Cookies.get('adtype')
+  const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
+  const selectedAdType = useAppSelector(state => state.quoteSlice.selectedAdType);
+  const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
+  const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
+  // const typeOfAd = Cookies.get('typeofad');
+  // const adType = Cookies.get('adtype')
   const [showAdTypePage, setShowAdTypePage] = useState(false)
   const [selectedEdition, setSelectedEdition] = useState(null)
 
@@ -33,6 +41,7 @@ const AdCategoryPage = () => {
   ;
 
   const splitNames = filteredData.map(item => {
+    console.log(item.adCategory)
     const [firstPart, secondPart] = item.adCategory.split(':');
     // const updatedFirstPart = (secondPart === undefined? adType : firstPart);
     return { ...item, Edition: firstPart.trim() , Position: secondPart || ''};
@@ -51,44 +60,24 @@ const AdCategoryPage = () => {
   option.Position.toLowerCase().includes(searchInput.toLowerCase())
 );
 
-  // useEffect(() => {
-  //   const username = Cookies.get('username');
-  //   if(selectedAdCategory){
-  //   setShowAdDetailsPage(Cookies.get('vendo'))
-  //   }
-  //   if (!username) {
-  //     routers.push('../login');
-  //   } else {
-  //     fetch('https://www.orders.baleenmedia.com/API/Media/FetchRates.php')
-  //       .then((response) => response.json())
-  //       .then((data) => setDatas(data))
-  //       .catch((error) => console.error(error));
-  //   }
-  // }, []);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const username = Cookies.get('username');
         
-        if (selectedAdCategory) {
-          setShowAdDetailsPage(Cookies.get('vendo'));
-        }
+        // if (selectedAdCategory) {
+        //   setShowAdDetailsPage(Cookies.get('vendo'));
+        // }
 
-        if (Cookies.get('adcategory')) {
+        if (adCategory) {
           setShowAdDetailsPage(true)
         }
 
-        // if ((!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')) && !Cookies.get('isSkipped')){
-        //   routers.push('/addenquiry');
-        // }
-  
         if (!username) {
-          routers.push('../login');
+          routers.push('/login');
         } else {
           const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
           const data = await response.json();
-          const filData = data.filter(item => item.adType === adType && item.rateName === Cookies.get('ratename'));
+          const filData = data.filter(item => item.adType === selectedAdType && item.rateName === adMedium);
           setDatas(filData);
         }
       } catch (error) {
@@ -110,6 +99,7 @@ const AdCategoryPage = () => {
         const selected = JSON.parse(Cookies.get('edition'))
         if(splitNames.filter(item => item.Edition === selected.Edition).length>1){
           setSelectedEdition(selected);
+          dispatch(setQuotesData({selectedEdition: selected}))
         }
       }
       // if(Cookies.get('back1')){
@@ -133,22 +123,23 @@ const AdCategoryPage = () => {
     <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' 
     onClick={() => {
       if(!selectedEdition || filteredEdition.length === 1){
-      Cookies.remove('adtype'); 
-      Cookies.remove('edition')
-      Cookies.remove('adcategory');
-      // Cookies.remove('rateperunit')
-      // Cookies.remove('minimumunit');
-      // Cookies.remove('defunit');
-      // Cookies.remove('rateId')
-      // Cookies.remove('validitydate');
+      dispatch(setQuotesData({
+        selectedAdType: "",
+        selectedAdCategory: "",
+        selectedEdition: ""
+      }))
+      // Cookies.remove('adtype'); 
+      // Cookies.remove('edition')
+      // Cookies.remove('adcategory');
       setShowAdTypePage(true);
       Cookies.set('backfromcategory',true);
     }else{
       setSelectedEdition(null)
+      dispatch(setQuotesData({selectedEdition: ""}))
       Cookies.remove('edition')
     }}
     }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
-    {Cookies.get('ratename')} {!(typeOfAd === adType) ? greater : ''} {!(typeOfAd === adType) ? typeOfAd : ''} {greater} {adType} {selectedEdition ? greater : ''} {selectedEdition ? selectedEdition.Edition : ''}</h1>
+    {adMedium} {!(selectedAdType === adCategory) ? greater : ''} {!(selectedAdType === adCategory) ? selectedAdType : ''} {greater} {selectedAdType} {selectedEdition ? greater : ''} {selectedEdition ? selectedEdition.Edition : ''}</h1>
 
         
     <button
@@ -203,6 +194,7 @@ const AdCategoryPage = () => {
             key={option.Edition}
             className='flex flex-col items-center justify-center w-full min-h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={()=> {setSelectedEdition(option);
+              dispatch(setQuotesData({selectedEdition: option.Edition}))
             Cookies.set('edition',JSON.stringify(option));
           }}
           >
@@ -220,11 +212,13 @@ const AdCategoryPage = () => {
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
               setSelectedAdCategory(options);
-              Cookies.set('adMediumSelected', true);
+              //Cookies.set('adMediumSelected', true);
               //Cookies.set('ratename', options.rateName);
               //Cookies.set('adtype', options.adType);
-              Cookies.set('typeofad', options.typeOfAd);
-              Cookies.set('adcategory', options.adCategory);
+              //Cookies.set('typeofad', options.typeOfAd);
+              //Cookies.set('adcategory', options.adCategory);
+              dispatch(setQuotesData({selectedAdCategory: options.adCategory}))
+              dispatch(setQuotesData({selectedEdition: options.Edition}))
               Cookies.set('rateperunit', options.ratePerUnit)
               Cookies.set('minimumunit', options.minimumUnit);
               Cookies.set('defunit', options.Units);
@@ -240,8 +234,10 @@ const AdCategoryPage = () => {
             </ul> 
             ):(
             setShowAdDetailsPage(true),
-            Cookies.set('adcategory', selectedEdition.adCategory),
-            Cookies.set('typeofad', selectedEdition.typeOfAd),
+            // Cookies.set('adcategory', selectedEdition.adCategory),
+            // Cookies.set('typeofad', selectedEdition.typeOfAd),
+              dispatch(setQuotesData({selectedAdCategory: selectedEdition.adCategory})),
+              dispatch(setQuotesData({selectedEdition: selectedEdition.Edition})),
               Cookies.set('rateperunit', selectedEdition.ratePerUnit),
               Cookies.set('minimumunit', selectedEdition.minimumUnit),
               Cookies.set('defunit', selectedEdition.Units),
