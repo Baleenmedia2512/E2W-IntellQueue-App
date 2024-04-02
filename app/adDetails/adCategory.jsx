@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import AdDetailsPage from './ad-Details';
 import AdTypePage from './adType';
-import { setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 
 const AdCategoryPage = () => {
   const dispatch = useDispatch();
@@ -33,6 +33,7 @@ const AdCategoryPage = () => {
     setSearchInput(event.target.value);
   };
 
+  //Choose data based on AdCategory - also sorting and removing duplicates
   const filteredData = datas
   .filter((value, index, self) => 
     self.findIndex(obj => obj.adCategory === value.adCategory) === index
@@ -40,6 +41,7 @@ const AdCategoryPage = () => {
   .sort((a, b) => a.adCategory.localeCompare(b.adCategory))
   ;
 
+  //Splitting the Edition and Position using :
   const splitNames = filteredData.map(item => {
     console.log(item.adCategory)
     const [firstPart, secondPart] = item.adCategory.split(':');
@@ -47,19 +49,23 @@ const AdCategoryPage = () => {
     return { ...item, Edition: firstPart.trim() , Position: secondPart || ''};
   });
 
+  //Filter Edition using Filters - also removing duplicates
   const filteredEdition = splitNames
   .filter((value, index, self) => 
     self.findIndex(obj => obj.Edition === value.Edition) === index
   );
 
+  //search filter for Edition
   const searchedEdition = filteredEdition.filter((option) =>
-  option.Edition.toLowerCase().includes(searchInput.toLowerCase())
-);
+    option.Edition.toLowerCase().includes(searchInput.toLowerCase())
+  );
 
+  //search filter for Position 
   const searchedPosition = splitNames.filter((option) =>
-  option.Position.toLowerCase().includes(searchInput.toLowerCase())
-);
+    option.Position.toLowerCase().includes(searchInput.toLowerCase())
+  );
 
+  //fetch rates 
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,9 +74,10 @@ const AdCategoryPage = () => {
         //   setShowAdDetailsPage(Cookies.get('vendo'));
         // }
 
-        if (adCategory) {
+        //if edition and position is chosen move to ad-details page
+        if (edition) {
           setShowAdDetailsPage(true)
-        }
+        } 
 
         if (!username) {
           routers.push('/login');
@@ -94,7 +101,11 @@ const AdCategoryPage = () => {
   //       setSelectedEdition(filteredEdition[0]);
   //     }
   //   },[filteredEdition] );
+
+
   useEffect(() => {
+
+      //to move to position page from adDetails
       if(Cookies.get('edition')){
         const selected = JSON.parse(Cookies.get('edition'))
         if(splitNames.filter(item => item.Edition === selected.Edition).length>1){
@@ -102,6 +113,7 @@ const AdCategoryPage = () => {
           dispatch(setQuotesData({selectedEdition: selected}))
         }
       }
+
       // if(Cookies.get('back1')){
       //   console.log(filteredEdition.length)
       //   if(filteredEdition.length === 1 && splitNames.filter(item => item.Edition === selectedEdition.Edition).length <=1){
@@ -122,23 +134,20 @@ const AdCategoryPage = () => {
       
     <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' 
     onClick={() => {
-      if(!selectedEdition || filteredEdition.length === 1){
-      dispatch(setQuotesData({
-        selectedAdType: "",
-        selectedAdCategory: "",
-        selectedEdition: ""
-      }))
+    //  if(!selectedEdition || filteredEdition.length === 1){
+      dispatch(resetQuotesData())
       // Cookies.remove('adtype'); 
       // Cookies.remove('edition')
       // Cookies.remove('adcategory');
       setShowAdTypePage(true);
       Cookies.set('backfromcategory',true);
-    }else{
-      setSelectedEdition(null)
-      dispatch(setQuotesData({selectedEdition: ""}))
-      Cookies.remove('edition')
-    }}
-    }> <FontAwesomeIcon icon={faArrowLeft} /> </button>
+    // }else{
+    //   setSelectedEdition(null)
+    //   dispatch(setQuotesData({selectedEdition: ""}))
+    //   Cookies.remove('edition')
+    // }
+  }
+    }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> </button>
     {adMedium} {!(selectedAdType === adCategory) ? greater : ''} {!(selectedAdType === adCategory) ? selectedAdType : ''} {greater} {selectedAdType} {selectedEdition ? greater : ''} {selectedEdition ? selectedEdition.Edition : ''}</h1>
 
         
@@ -187,7 +196,9 @@ const AdCategoryPage = () => {
       <div className="absolute top-0 right-0 mt-2 mr-3">
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
-<div>{!selectedEdition ?(
+<div>{!selectedEdition ?
+      {/* Check whether the edition is chosen. If chosen move to Position page*/}
+      (
       <ul className="flex flex-col mx-[8%]">
         {searchedEdition.map((option) => (
           <label
@@ -203,7 +214,9 @@ const AdCategoryPage = () => {
             
           </label>
         ))}
-      </ul>): splitNames.filter(item => item.Edition === selectedEdition.Edition).length>1 ?
+      </ul>): 
+      {/* check if only one item is available, if only one move to ad-details page*/}
+      (splitNames.filter(item => item.Edition === selectedEdition.Edition).length>1) ?
       (
        <ul className="flex flex-col flex-wrap items-center list-disc list-inside mx-[8%]">
               {searchedPosition.filter(item => item.Edition === selectedEdition.Edition).map((options) => (
@@ -211,6 +224,8 @@ const AdCategoryPage = () => {
             key={options.adCategory}
             className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
             onClick={() => {
+              //options contain Edition:Position values
+              //the edition position is saved in adCategory Cookie
               setSelectedAdCategory(options);
               //Cookies.set('adMediumSelected', true);
               //Cookies.set('ratename', options.rateName);
@@ -238,6 +253,7 @@ const AdCategoryPage = () => {
             // Cookies.set('typeofad', selectedEdition.typeOfAd),
               dispatch(setQuotesData({selectedAdCategory: selectedEdition.adCategory})),
               dispatch(setQuotesData({selectedEdition: selectedEdition.Edition})),
+              console.log(selectedEdition.Edition),
               Cookies.set('rateperunit', selectedEdition.ratePerUnit),
               Cookies.set('minimumunit', selectedEdition.minimumUnit),
               Cookies.set('defunit', selectedEdition.Units),

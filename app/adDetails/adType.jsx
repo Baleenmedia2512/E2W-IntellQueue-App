@@ -29,10 +29,12 @@ const AdTypePage = () => {
     setSearchInput(event.target.value);
   };
 
+  //fetch all the valid rates at the loading of the page
   useEffect(() => {
     const fetchData = async () => {
       try {
         
+        //check if adtype is already selected. If selected move to adCategory page
         if (adType) {
           setShowAdCategoryPage(true);
         } else {
@@ -58,7 +60,7 @@ const AdTypePage = () => {
     fetchData();
   }, []);
   
-
+  //filter using adMedium - also sorting and removing duplicates
   const filteredTypeofAd = datas
   .filter(item => item.rateName === adMedium)
   .filter((value, index, self) => 
@@ -67,6 +69,7 @@ const AdTypePage = () => {
   .sort((a, b) => a.typeOfAd.localeCompare(b.typeOfAd))
   ;
 
+  //filter using adtype - also sorting and removing duplicates
   const filteredAdType = datas
   .filter(item => item.rateName === adMedium)
   .filter((value, index, self) => 
@@ -75,32 +78,39 @@ const AdTypePage = () => {
   .sort((a, b) => a.adType.localeCompare(b.adType))
   ;
 
+  //search Filter for adType
   const searchedTypeofAd = filteredTypeofAd.filter((optionn) =>
     optionn.typeOfAd.toLowerCase().includes(searchInput.toLowerCase())
   );
 
+  //to move to Ad Medium page
   const moveToPreviousPage = (adMedium) => {
+    //To move to adMedium from AdType
     if(adMedium || filteredTypeofAd.length === 1){
       dispatch(resetQuotesData());
       setShowAdMediumPage(true);
-    } else {
+    } else { //To move to adType from adCategory
       //Cookies.remove('selecteds');
       dispatch(setQuotesData({selectedAdType: ""}));
       setSelectedTypeofAd(null);
     }
   }
+
+  //search filter for adCategory
   const searchedAdType = filteredAdType.filter((optionn) =>
     optionn.adType.toLowerCase().includes(searchInput.toLowerCase())
   );
 
   useEffect(() => {
-      if(Cookies.get('selecteds')){
+      //To move to adCategory page from Edition page
+      if(Cookies.get('selecteds')){ 
         const selected = JSON.parse(Cookies.get('selecteds'))
         if(filteredAdType.filter(item => item.typeOfAd === selected.typeOfAd).length>1){
           setSelectedTypeofAd(Cookies.get('selecteds'));
         }
       }
 
+    //to move to adType from adCategory page
     if (!selectedTypeofAd && filteredTypeofAd.length === 1 && !Cookies.get('backfromcategory')) {
       setSelectedTypeofAd(filteredTypeofAd[0]);
       //dispatch(setQuotesData({adType: filteredTypeofAd[0]}))
@@ -160,6 +170,7 @@ const greater = '>>'
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>
         <div>
+          {/* Show page based on Ad Type selection. If adType selected move to adCategory Page*/}
           {!selectedTypeofAd ? (
         <div className="flex flex-col mx-[8%]">
         {searchedTypeofAd.map((optionss) => (
@@ -177,7 +188,9 @@ const greater = '>>'
 
           </label>
         ))}
-      </div>):  (filteredAdType.filter(item => item.typeOfAd === selectedTypeofAd.typeOfAd).length>1)? (
+      </div>):  
+      {/* Check if page has single value. If single value move to adCategory*/}
+      (filteredAdType.filter(item => item.typeOfAd === selectedTypeofAd.typeOfAd).length>1)? ( 
       <ul className="flex flex-col items-center mx-[8%]">
         
           {searchedAdType.filter(item => item.typeOfAd === selectedTypeofAd.typeOfAd).map((option) => (
