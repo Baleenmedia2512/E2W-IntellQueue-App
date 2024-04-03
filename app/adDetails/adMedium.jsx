@@ -15,14 +15,14 @@ import { useAppSelector } from '@/redux/store';
 export const AdMediumPage = () => {
   const dispatch = useDispatch();
   //const [selectedAdMedium, setSelectedAdMedium] = useState('');
-  const [datas, setDatas] = useState([]);
+  //const [datas, setDatas] = useState([]);
   const [showAdTypePage, setShowAdTypePage] = useState(false);
   const routers = useRouter();
 
   const [searchInput, setSearchInput] = useState('');
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
-  const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
+  const datas = useAppSelector(state => state.quoteSlice.validRates);
   const handleSearchInputChange = (event) => {
     setSearchInput(event.target.value);
   };
@@ -75,32 +75,15 @@ export const AdMediumPage = () => {
 
   useEffect(() => {
 
-    const fetchData = async () => {
-      try {
-        if (adMedium) {
-          setShowAdTypePage(true)
-        }
-
-        if (!username) {
-          routers.push('/login');
-        } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
-          const data = await response.json();
-          setDatas(data);
-        }
-      } catch (error) {
-        console.error(error);
-      }
+    if (!username) {
+        routers.push('/login');
     }
 
-    fetchData();
     dispatch(setQuotesData({currentPage: "adMedium"}))
   }, []);
 
   return (
     <div>
-      {showAdTypePage && (<AdTypePage />)}
-      {!showAdTypePage && (
         <div className='text-black'>
           <div className="flex flex-row justify-between mx-[8%] mt-8">
 
@@ -168,7 +151,6 @@ export const AdMediumPage = () => {
             }
           </ul>
         </div>
-      )}
     </div>
   );
 };

@@ -13,7 +13,9 @@ const initialState = {
   marginAmount: 0,
   marginPercentage: 15,
   extraDiscount: 0,
-  Remarks: ""
+  Remarks: "",
+  currentPage: "",
+  validRates: []
 };
 
 export const quoteSlice = createSlice({
@@ -23,9 +25,12 @@ export const quoteSlice = createSlice({
     setQuotesData: (state, action) => {
       return { ...state, ...action.payload };
     },
-    resetQuotesData: (state) => {
+    resetQuotesData: () => {
         return initialState;
     },
+    addValidRates: (state, action) => {
+      state.validRates = [...state.validRates, action.payload];
+    }
   }
 });
 

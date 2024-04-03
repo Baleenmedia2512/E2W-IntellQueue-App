@@ -74,13 +74,22 @@ const ClientsData = () => {
       });
   }; 
 
-  useEffect(() => {
-
-    // If no username is found, redirect to the login page
-    if (!loggedInUser) {
-      router.push('/login');
+  useEffect(() => {    
+    const FetchValidRates = async() => {
+      try {
+        if (!loggedInUser) {
+          router.push('/login');
+        } else {
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const data = await response.json();
+          dispatch(addValidRates(data));
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
 
+    FetchValidRates();
   }, []);
 
   const handleClientContactChange = (newValue) => {
