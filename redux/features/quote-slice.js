@@ -29,10 +29,11 @@ export const quoteSlice = createSlice({
         return initialState;
     },
     addValidRates: (state, action) => {
+      state.validRates = [];
       state.validRates = [...state.validRates, action.payload];
     }
   }
 });
 
-export const { setQuotesData, resetQuotesData } = quoteSlice.actions;
+export const { setQuotesData, resetQuotesData, addValidRates } = quoteSlice.actions;
 export const quoteReducer = quoteSlice.reducer;

@@ -301,8 +301,7 @@ const formattedDate = `${day}-${month}-${year}`;
 
     for (const slab of sortedSlabData) {
       if (value >= slab.StartQty) {
-        matchingStartQty = slab.StartQty;
-      } else {
+        matchingStartQty = slab.StartQty;      } else {
         break;
       }
     }
@@ -319,7 +318,7 @@ const formattedDate = `${day}-${month}-${year}`;
     generatePdf(PDFArray, clientName, clientEmail)
 
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${userName}&
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${username}&
     JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${clientSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}&JsonRemarks=${remarks}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
+import { addValidRates } from '@/redux/features/quote-slice';
 
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);

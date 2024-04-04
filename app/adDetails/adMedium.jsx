@@ -9,7 +9,7 @@ import Image from 'next/image';
 import AdTypePage from './adType';
 import { useDispatch } from 'react-redux';
 import { resetClientData } from '@/redux/features/client-slice';
-import { setQuotesData } from '@/redux/features/quote-slice';
+import { setQuotesData, addValidRates } from '@/redux/features/quote-slice';
 import { useAppSelector } from '@/redux/store';
 
 export const AdMediumPage = () => {
@@ -23,9 +23,12 @@ export const AdMediumPage = () => {
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const datas = useAppSelector(state => state.quoteSlice.validRates);
+  
   const handleSearchInputChange = (event) => {
     setSearchInput(event.target.value);
   };
+
+  console.log(datas)
 
   // const handleOptionChange = (option) => {
   //   //setSelectedOption(option);
@@ -78,6 +81,8 @@ export const AdMediumPage = () => {
     if (!username) {
         routers.push('/login');
     }
+
+    console.log(datas)
 
     dispatch(setQuotesData({currentPage: "adMedium"}))
   }, []);
