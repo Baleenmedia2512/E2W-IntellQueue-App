@@ -40,7 +40,7 @@ const clientPersistConfig = {
 const quotePersistConfig = {
   key: "quote",
   storage: storage,
-  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "validRates"]
+  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage"]
 }
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);

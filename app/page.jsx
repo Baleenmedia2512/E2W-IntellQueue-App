@@ -7,14 +7,14 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
-import { setClientData } from '@/redux/features/client-slice';
+import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
-import { addValidRates } from '@/redux/features/quote-slice';
+import { addValidRates, removeValidRates } from '@/redux/features/quote-slice';
 
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const clientDetails = useAppSelector(state => state.clientSlice)
-
+  const validRates = useAppSelector(state => state.quoteSlice.validRates);
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.LG', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online'];
 
@@ -76,21 +76,9 @@ const ClientsData = () => {
   }; 
 
   useEffect(() => {    
-    const FetchValidRates = async() => {
-      try {
         if (!loggedInUser) {
           router.push('/login');
-        } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
-          const data = await response.json();
-          dispatch(addValidRates(data));
         }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    FetchValidRates();
   }, []);
 
   const handleClientContactChange = (newValue) => {

@@ -3,39 +3,27 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import AdTypePage from './adType';
 import { useDispatch } from 'react-redux';
 import { resetClientData } from '@/redux/features/client-slice';
-import { setQuotesData, addValidRates } from '@/redux/features/quote-slice';
+import { setQuotesData } from '@/redux/features/quote-slice';
 import { useAppSelector } from '@/redux/store';
 
 export const AdMediumPage = () => {
   const dispatch = useDispatch();
   //const [selectedAdMedium, setSelectedAdMedium] = useState('');
-  //const [datas, setDatas] = useState([]);
-  const [showAdTypePage, setShowAdTypePage] = useState(false);
+  const [datas, setDatas] = useState([]);
+  //const [showAdTypePage, setShowAdTypePage] = useState(false);
   const routers = useRouter();
 
   const [searchInput, setSearchInput] = useState('');
   const username = useAppSelector(state => state.authSlice.userName);
-  const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
-  const datas = useAppSelector(state => state.quoteSlice.validRates);
+  // const datas = useAppSelector(state => state.quoteSlice.validRates);
   
   const handleSearchInputChange = (event) => {
     setSearchInput(event.target.value);
   };
-
-  console.log(datas)
-
-  // const handleOptionChange = (option) => {
-  //   //setSelectedOption(option);
-  //   setSelectedOption((prevSelectedOption) => 
-  //   prevSelectedOption === option ? null : option
-  // );
-  // };
 
   const datasOptions = datas
     .filter((value, index, self) =>
@@ -78,12 +66,17 @@ export const AdMediumPage = () => {
 
   useEffect(() => {
 
-    if (!username) {
-        routers.push('/login');
+    const FetchValidRates = async() => {
+      if (!username) {
+          routers.push('/login');
+      } else{
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const data = await response.json();
+          setDatas(data)
+      }
     }
 
-    console.log(datas)
-
+    FetchValidRates()
     dispatch(setQuotesData({currentPage: "adMedium"}))
   }, []);
 
@@ -144,9 +137,9 @@ export const AdMediumPage = () => {
                     }`}
                   onClick={() => {
                     //setSelectedAdMedium(option.rateName);
-                    dispatch(setQuotesData({selectedAdMedium: option.rateName}))
+                    dispatch(setQuotesData({selectedAdMedium: option.rateName, currentPage: "adType"}))
                     //Cookies.set('ratename', option.rateName);
-                    setShowAdTypePage(true);
+                    //setShowAdTypePage(true);
                   }}
                 >
                   <div className="text-lg font-bold mb-2 text-black flex items-center justify-center">{option.rateName}</div>
