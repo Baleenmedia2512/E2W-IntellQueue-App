@@ -65,7 +65,6 @@ export const AdMediumPage = () => {
   }
 
   useEffect(() => {
-
     const FetchValidRates = async() => {
       if (!username) {
           routers.push('/login');
@@ -88,17 +87,15 @@ export const AdMediumPage = () => {
             <> 
             <button className='hover:scale-110 hover:text-orange-900' onClick={() => {
               routers.push('/');
-              dispatch(resetClientData());
-            }
-          }> <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button>
-            
-              <button
-                className="px-2 py-1 rounded text-center"
-                onClick={() => {
-                  routers.push('/');
-                  dispatch(resetClientData());
-                }}
-              >
+              dispatch(resetClientData()); }}
+            > 
+          <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button>
+            <button
+              className="px-2 py-1 rounded text-center"
+              onClick={() => {
+                routers.push('/');
+                dispatch(resetClientData());}}
+            >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

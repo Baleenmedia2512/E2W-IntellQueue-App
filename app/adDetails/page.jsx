@@ -7,16 +7,12 @@ import { useAppSelector } from '@/redux/store';
 import AdCategoryPage from './adCategory';
 import EditionPage from './Edition';
 import RemarksPage from './Remarks';
-// import { useDispatch } from 'react-redux';
-// import { setQuotesData } from '@/redux/features/quote-slice';
+import AdDetailsPage from './ad-Details';
 
 export const AdDetails = () => {
-  //const [selectedAdMedium, setSelectedAdMedium] = useState('');
   const routers = useRouter();
-  // const dispatch = useDispatch
   const username = useAppSelector(state => state.authSlice.userName);
   const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
-  // const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
 
   useEffect(() => {
       if (!username) {
@@ -34,7 +30,9 @@ export const AdDetails = () => {
       showPage = <EditionPage />
     } else if(currentPage === "remarks"){
       showPage = <RemarksPage />
-    } else {
+    } else if(currentPage === "adDetails"){
+      showPage = <AdDetailsPage />
+    } else{
       showPage = <AdMediumPage />
     }
     return showPage;

@@ -67,7 +67,6 @@ const AdTypePage = () => {
       dispatch(setQuotesData({currentPage: "adMedium"}));
   }
 
-const greater = '>>'
   return (
     <div>
       <div className='text-black'>
@@ -144,6 +143,6 @@ const greater = '>>'
     </div>
   </div>
   )
-};
+}
 
 export default AdTypePage;

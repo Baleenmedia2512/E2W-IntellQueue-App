@@ -122,7 +122,6 @@ const greater = '>>'
           {/* Show page based on Ad Type selection. If adType selected move to adCategory Page*/}
                 
           {/* Check if page has single value. If single value move to adCategory*/}
-          {(filteredAdType.filter(item => item.typeOfAd === adType).length>1)? ( 
           <ul className="flex flex-col items-center mx-[8%]">
               {searchedAdType.filter(item => item.typeOfAd === adType).map((option) => (
                 <label
@@ -135,12 +134,7 @@ const greater = '>>'
                   <div className="text-lg font-bold flex items-center justify-center">{option.adType}</div>
                 </label>
               ))}
-          </ul>):
-          (
-            searchedAdType.filter(item => item.typeOfAd === adType).map((option) => (
-              dispatch(setQuotesData({selectedAdCategory: option.adType, currentPage: "edition"}))
-            ))
-          )}
+          </ul>
         </div>
       
       </div>

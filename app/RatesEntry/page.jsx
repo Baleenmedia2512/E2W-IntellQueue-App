@@ -280,26 +280,9 @@ const AdDetailsPage = () => {
   },[invalidRates])
 
   const fetchRates = async () => {
-    // const storedETag = localStorage.getItem('ratesETag');
-    // const headers = {};
-    
-    // if (storedETag) {
-    //   headers['If-None-Match'] = storedETag;
-    // }
   
     try {
       const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php');
-  
-      // if (res.status === 304) {
-      //   // No changes since last request, use cached data
-      //   const cachedRates = JSON.parse(localStorage.getItem('cachedRates'));
-      //   setRatesData(cachedRates);
-      //   return;
-      // }
-  
-      // const newETag = res.headers.get('ETag');
-      // localStorage.setItem('ratesETag', newETag);
-  
       const data = await res.json();
       const today = new Date();
       const valid = data.filter(item => {

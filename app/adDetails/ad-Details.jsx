@@ -40,26 +40,16 @@ const AdDetailsPage = () => {
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const [checkout, setCheckout] = useState(true);
   const [datas, setDatas] = useState([]);
-  const [amt, setAmt] = useState();
-
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
-  const typeOfAd = useAppSelector(state => state.quoteSlice.selectedAdType);
-  const adType = useAppSelector(state => state.quoteSlice.selectedAdCategory);
-  const adCategory = useAppSelector(state => state.quoteSlice.selectedEdition)
-  // const clientName = Cookies.get('clientname');
-  // const clientNumber = Cookies.get('clientnumber');
-  // const clientEmail = Cookies.get('clientemail');
-  // const selectedSource = Cookies.get('selectedsource');
-  const [rateId, setRateId] = useState('');
-  // const rateName = Cookies.get('ratename');
-  // const adType = Cookies.get('adtype');
-  // const adCategory = Cookies.get('adcategory');
-  // const typeOfAd = Cookies.get('typeofad');
-  //const VendorName = Cookies.get('vendorname');
-  const ratePerUnit = Cookies.get('rateperunit');
+  const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
+  const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
+  const ratePerUnit = useAppSelector(state => state.quoteSlice.ratePerUnit);
+  const rateId = useAppSelector(state => state.quoteSlice.rateId)
+  const edition = useAppSelector(state => state.quoteSlice.selectedEdition)
+  const position = useAppSelector(state => state.quoteSlice.selectedPosition);
   const isAdDetails = Cookies.get('isAdDetails');
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
@@ -70,12 +60,7 @@ const AdDetailsPage = () => {
   const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
-  // Cookies.set('validityDate', ValidityDate)
   const [changing, setChanging] = useState(false);
-  //const minimumUnit = 15;
-  // const defUnits = (rateName ==='Radio Ads')  ? 'spot(s)' : (rateName === 'Automobile') ? typeOfAd : Cookies.get('defunit');
-
-  const [activeIndex, setActiveIndex] = useState(0);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const inputDate = new Date(ValidityDate);
@@ -87,44 +72,11 @@ const formattedDate = `${day}-${month}-${year}`;
 
   useEffect(() => { setCampaignDuration(minimumCampaignDuration) }, [leadDay, minimumCampaignDuration])
 
-  const filteredData2 = slabData.filter(item => item.StartQty === qtySlab)
-
-
-  // useEffect(() => {
-  //   const multipliedAmount = (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
-  //   //setMargin((margin/1).toFixed(2))
-  //   //setMarginPercentage(((margin / (qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))) * 100).toFixed(2))
-  // }, [])
-
-  // const items = Array.from({ length: 100 }, (_, i) => i + 1).map((num) => ({
-  //   content: num,
-  // }));
-
-  // const handlePageChange = (event) => {
-  //   setActiveIndex(event.page); // Example calculation for margin percentage
-  //   setMarginPercentage(event.page + 1);
-  // };
-
-  // const incrementNumber = () => {
-  //   setMarginPercentage(() => Math.min(Number((marginPercentage/1).toFixed(0)) + 1, 100));
-  //   setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * (marginPercentage + 1)) / 100)));
-  // };
-
-  // const decrementNumber = () => {
-  //   setMarginPercentage(() => Math.max(Number((marginPercentage/1).toFixed(0)) - 1, 1));
-  //   setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * (marginPercentage - 1)) / 100)));
-  // };
-
   useEffect(() => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
     }
-    // setMargin(((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration) * 15) / 100).toFixed(2))
-    // if (margin === undefined){
-    //   setMargin((qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))*0.15);
-    // }
-  },
-    [])
+  },[])
 
   useEffect(() => {
     if(isAdDetails){
@@ -197,12 +149,6 @@ const formattedDate = `${day}-${month}-${year}`;
   useEffect(() => {
     const fetchData = async () => {
       try {
-        
-
-        // if ((!Cookies.get('clientname') || !Cookies.get('clientnumber') || !Cookies.get('selectedsource')) && !Cookies.get('isSkipped')){
-        //   routers.push('/addenquiry');
-        // }
-
         if (!username) {
           routers.push('/login');
         } else {
@@ -224,15 +170,6 @@ const formattedDate = `${day}-${month}-${year}`;
 
     fetchData();
   }, []);
-
-  // useEffect(() => {
-  //   setDatas(details);
-  //   setRateId(details[0].rateId);
-  //   setMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2))
-  // },[])
-
-  // useEffect(() => setAmt(qty * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))
-  // ,[qty, unitPrice, campaignDuration])
 
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
@@ -263,9 +200,6 @@ const formattedDate = `${day}-${month}-${year}`;
       }
     }
   }
-
-  //   useEffect(() => {setCampaignDuration(leadDay && leadDay['CampaignDuration(in Days)'] ? leadDay['CampaignDuration(in Days)'] : 1 )
-  // console.log(campaignDuration)})
 
   const handleMarginChange = (event) => {
     //const newValue = parseFloat(event.target.value);
@@ -312,7 +246,7 @@ const formattedDate = `${day}-${month}-${year}`;
     const AmountExclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
     const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDurationVisibility===1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, typeOfAd, formattedDate]
+    const PDFArray = [rateName, adType, firstPart, secondPart, qty, campaignDurationVisibility === 1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, typeOfAd, formattedDate]
     const GSTPerc = 18
 
     generatePdf(PDFArray, clientName, clientEmail)
@@ -343,8 +277,6 @@ const formattedDate = `${day}-${month}-${year}`;
     const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
     return totalAmount.toLocaleString('en-IN');
   };
-
-  
   
   const items = [
     {
@@ -389,35 +321,6 @@ const formattedDate = `${day}-${month}-${year}`;
     return item.content; // Return the content of each item
   };
 
-  //   const findSlabDataForVendor = (vendorName) => {
-  //     return sortedSlabData.filter(item => item.VendorName === vendorName);
-  // };
-
-  // Add sortedSlabData items to filteredData where VendorName is same
-  // const newDatas = filteredData.map(item => {
-  //     const slabDataForVendor = findSlabDataForVendor(item.VendorName);
-  //     return {
-  //         ...item,
-  //         slabData: slabDataForVendor
-  //     };
-  // });
-
-  // useEffect(() => {
-  //   const handleTouchStart = (e) => {
-  //     if (window.pageYOffset === 0) {
-  //       e.preventDefault();
-  //     }
-  //   };
-
-  //   document.addEventListener('touchstart', handleTouchStart, { passive: false });
-
-  //   return () => {
-  //     document.removeEventListener('touchstart', handleTouchStart);
-  //   };
-  // }, []);
-
-
-
   const greater = ">>"
   return (
     <div className=" mt-8 text-black">
@@ -442,7 +345,7 @@ const formattedDate = `${day}-${month}-${year}`;
               </button>
 
               <h2 className="font-semibold text-wrap mb-1">
-                {adMedium} {greater} {typeOfAd} {greater} {adType} {greater} {adCategory.split('|').join(' | ').split(",").join(", ")} {greater} {rateId}
+                {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {greater} {position} {greater} {rateId}
               </h2>
             </div><div>
             <Carousel value={items} numVisible={1} numScroll={1} itemTemplate={customTemplate} />
