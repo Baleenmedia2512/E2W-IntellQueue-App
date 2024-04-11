@@ -335,14 +335,18 @@ const formattedDate = `${day}-${month}-${year}`;
               <button
                 className="mr-8 hover:scale-110 hover:text-orange-900"
                 onClick={() => {
-                  dispatch(setQuotesData({selectedPosition: "", currentPage: "remarks"}))
+                  Cookies.remove('adcategory');
+                  Cookies.remove('adMediumSelected');
+                  dispatch(setQuotesData({selectedAdCategory: "", selectedEdition: null}))
+                  setShowAdCategoryPage(true);
+                  Cookies.set('back1', true);
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-xl' />
               </button>
 
               <h2 className="font-semibold text-wrap mb-1">
-                {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {position === "" ? "" : greater} {position === "" ? "" : position} {greater} {rateId}
+                {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {greater} {position} {greater} {rateId}
               </h2>
             </div><div>
             <Carousel value={items} numVisible={1} numScroll={1} itemTemplate={customTemplate} />

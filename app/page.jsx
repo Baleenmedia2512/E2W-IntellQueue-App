@@ -9,21 +9,13 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
-import { addValidRates, removeValidRates } from '@/redux/features/quote-slice';
 
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const clientDetails = useAppSelector(state => state.clientSlice)
-  const validRates = useAppSelector(state => state.quoteSlice.validRates);
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.LG', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online'];
 
-  //const [cses, setCses] = useState('');
-  // const [selectedSource, setSelectedSource] = useState('');
-  // const [clientName, setClientName] = useState('');
-  // const [clientNumber, setClientNumber] = useState('');
-  // const [clientEmail, setClientEmail] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -34,7 +26,6 @@ const ClientsData = () => {
 
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
-    setSearchTerm(newName);
     fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}`)
       .then((response) => response.json())
       .then((data) => setClientNameSuggestions(data));
@@ -52,7 +43,6 @@ const ClientsData = () => {
     const name = input.substring(0, input.indexOf('(')).trim();
     const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
 
-    setSearchTerm(name);
     setClientNameSuggestions([]);
     dispatch(setClientData({clientName: name}));
     dispatch(setClientData({clientContact: number}));
@@ -79,6 +69,7 @@ const ClientsData = () => {
         if (!loggedInUser) {
           router.push('/login');
         }
+        dispatch(resetClientData())
   }, []);
 
   const handleClientContactChange = (newValue) => {
@@ -108,15 +99,7 @@ const ClientsData = () => {
         //setMessage(data.message);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
-        //setMessage("The following error occurred while inserting data: " + data);
-        // Update ratesData and filteredRates locally
-
       }
-
-  //     Cookies.set('clientname', clientName);
-  // Cookies.set('clientnumber', clientNumber);
-  // Cookies.set('clientemail', clientEmail);
-  // Cookies.set('selectedsource', selectedSource);
       
     } catch (error) {
       console.error('Error updating rate:', error);
