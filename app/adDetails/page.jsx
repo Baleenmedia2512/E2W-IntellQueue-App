@@ -8,6 +8,7 @@ import AdCategoryPage from './adCategory';
 import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
+import CheckoutPage from './checkout';
 
 export const AdDetails = () => {
   const routers = useRouter();
@@ -32,6 +33,8 @@ export const AdDetails = () => {
       showPage = <RemarksPage />
     } else if(currentPage === "adDetails"){
       showPage = <AdDetailsPage />
+    } else if(currentPage === "checkout"){
+      showPage = <CheckoutPage />
     } else{
       showPage = <AdMediumPage />
     }

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
+import { resetQuotesData } from '@/redux/features/quote-slice';
 
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -69,7 +70,8 @@ const ClientsData = () => {
         if (!loggedInUser) {
           router.push('/login');
         }
-        dispatch(resetClientData())
+        dispatch(resetClientData());
+        dispatch(resetQuotesData());
   }, []);
 
   const handleClientContactChange = (newValue) => {
