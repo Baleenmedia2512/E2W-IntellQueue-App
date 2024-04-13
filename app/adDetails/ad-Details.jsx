@@ -197,10 +197,11 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
+      dispatch(setQuotesData({isDetails: true}))
       if(clientName){
         dispatch(setQuotesData({currentPage: "checkout"}))
       } else{
-        routers.push('/addenquiry');
+        routers.push('/');
       }
     }
   }

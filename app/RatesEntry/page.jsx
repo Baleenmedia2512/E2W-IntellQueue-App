@@ -13,11 +13,15 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { MdDeleteOutline , MdOutlineSave, MdAddCircle} from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
+import { useAppSelector } from '@/redux/store';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
 const AdDetailsPage = () => {
+
+  // Check if localStorage contains a username
+  const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -76,8 +80,7 @@ const AdDetailsPage = () => {
   }
 
   useEffect(() => {
-     // Check if localStorage contains a username
-     const username = Cookies.get('username');
+     
      // If no username is found, redirect to the login page
      if (!username) {
        router.push('/login');

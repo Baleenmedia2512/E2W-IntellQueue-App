@@ -20,7 +20,8 @@ const initialState = {
   extraDiscount: 0,
   remarks: "",
   currentPage: "",
-  validRates: []
+  validRates: [],
+  isDetails: false
 };
 
 export const quoteSlice = createSlice({
