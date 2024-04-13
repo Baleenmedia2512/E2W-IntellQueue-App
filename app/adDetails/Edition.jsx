@@ -50,6 +50,10 @@ const EditionPage = () => {
     option.Edition.toLowerCase().includes(searchInput.toLowerCase())
   );
 
+  const searchedPosition = splitNames.filter((option) =>
+    option.Position.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
   //fetch rates 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,7 +144,10 @@ const EditionPage = () => {
               key={option.Edition}
               className='flex flex-col items-center justify-center w-full min-h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
               onClick={()=> {
-                dispatch(setQuotesData({selectedEdition: option.Edition, currentPage: "remarks"}))
+                const filteredPositions = searchedPosition.filter(item => item.Edition === option.Edition);
+                filteredPositions.length > 0 ?
+                dispatch(setQuotesData({selectedEdition: option.Edition, currentPage: "remarks"})) :
+                dispatch(setQuotesData({selectedEdition: option.Edition, ratePerUnit: option.ratePerUnit, minimumUnit: option.minimumUnit, unit: option.Unit, rateId: option.rateId, validityDate: option.ValidityDate, selectedVendor: option.VendorName, currentPage: "adDetails"}))
             }}
             >
               {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.Edition):(categories.adType)}</div> */}

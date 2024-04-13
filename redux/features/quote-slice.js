@@ -13,12 +13,12 @@ const initialState = {
   unit: "",
   rateId: 0,
   validityDate: "",
+  leadDays: "",
   minimumUnit: 0,
   campaignDuration: "",
   marginAmount: 0,
-  marginPercentage: 15,
   extraDiscount: 0,
-  Remarks: "",
+  remarks: "",
   currentPage: "",
   validRates: []
 };

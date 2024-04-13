@@ -8,12 +8,10 @@ import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
 import { generatePdf } from '../generatePDF/generatePDF';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
-import { useDispatch } from 'react-redux';
 import { resetClientData } from '@/redux/features/client-slice';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { setQuotesData } from '@/redux/features/quote-slice';
+import { useDispatch, useSelector } from 'react-redux';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -23,20 +21,10 @@ export const formattedMargin = (number) => {
 };
 
 const CheckoutPage = () => {
-  
-  const [slabData, setSlabData] = useState([])
-  const [qtySlab, setQtySlab] = useState()
-  const [unitPrice, setUnitPrice] = useState('')
-  // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
-  const [qty, setQty] = useState(qtySlab)
-  const [selectedDayRange, setSelectedDayRange] = useState('Day');
-  // const [campaignDuration, setCampaignDuration] = useState(1);
-  const [unit, setUnit] = useState('')
-
-  const [marginPercentage, setMarginPercentage] = useState(15)
-  const [extraDiscount, setExtraDiscount] = useState(0)
-  const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
-  const [checkout, setCheckout] = useState(true);
+  const dispatch = useDispatch()
+  const [toastMessage, setToastMessage] = useState('');
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
   const [datas, setDatas] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
@@ -45,209 +33,37 @@ const CheckoutPage = () => {
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
   const ratePerUnit = useAppSelector(state => state.quoteSlice.ratePerUnit);
-  const rateId = useAppSelector(state => state.quoteSlice.rateId)
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition)
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
-  const selectedVendor = useAppSelector(state => state.quoteSlice.selectedVendor);
-  const isAdDetails = Cookies.get('isAdDetails');
+  const rateId = useAppSelector(state => state.quoteSlice.rateId)
+  const qty = useAppSelector(state => state.quoteSlice.quantity);
+  const unit = useAppSelector(state => state.quoteSlice.unit);
+  const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
+  const campaignDuration = useAppSelector(state => state.quoteSlice.campaignDuration);
+  const margin = useAppSelector(state => state.quoteSlice.marginAmount);
+  const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
+  const remarks = useAppSelector(state => state.quoteSlice.remarks);
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
-  const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
-  const routers = useRouter();
-  const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0
-  // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
-  const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
-  const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
+  const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1;
+  const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
   const [changing, setChanging] = useState(false);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const inputDate = new Date(ValidityDate);
-const day = ('0' + inputDate.getDate()).slice(-2); // Ensure two digits for day
-const month = months[inputDate.getMonth()]; // Get month abbreviation from the array
-const year = inputDate.getFullYear();
+  const inputDate = new Date(ValidityDate);
+  const day = ('0' + inputDate.getDate()).slice(-2); // Ensure two digits for day
+  const month = months[inputDate.getMonth()]; // Get month abbreviation from the array
+  const year = inputDate.getFullYear();
 
-const formattedDate = `${day}-${month}-${year}`;
+  const formattedDate = `${day}-${month}-${year}`;
 
-  useEffect(() => { setCampaignDuration(minimumCampaignDuration) }, [leadDay, minimumCampaignDuration])
-
-  useEffect(() => {
-    if (selectedDayRange === "") {
-      setSelectedDayRange(dayRange[1]);
-    }
-  },[])
-
-  useEffect(() => {
-    if(isAdDetails){
-      setCheckout(false)
-    }
-    else{
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        setSlabData(data);
-        const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-        const firstSelectedSlab = sortedData[0];
-        setQtySlab(firstSelectedSlab.StartQty);
-        setUnitPrice(firstSelectedSlab.UnitPrice);
-        setUnit(firstSelectedSlab.Unit)
-        setMargin(((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2))
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchData();
-  }
-  }, [rateId]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchRateId.php/?JsonRateName=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonVendorName=${selectedVendor}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        dispatch(setQuotesData({rateId: data}));
-      }
-      catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchData();
-  }, [selectedVendor]);
-
-  const handleQtySlabChange = () => {
-    const qtySlabNumber = parseInt(qtySlab)
-    // Find the corresponding slabData for the selected QtySlab
-    const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
-
-    { !changing && setQty(qtySlab); }
-    { changing && setChanging(false) }
-    setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
-    // Update UnitPrice based on the selected QtySlab
-    if (selectedSlab) {
-      const firstSelectedSlab = selectedSlab[0];
-      setUnitPrice(firstSelectedSlab.UnitPrice);
-      setUnit(firstSelectedSlab.Unit)
-    }
-  };
-
-  useEffect(() => {
-    if (qtySlab) {
-      handleQtySlabChange();
-    }
-  }, [qtySlab])
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!username) {
-          routers.push('/login');
-        } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
-          const data = await response.json();
-
-          //filter rates according to adMedium, adType and adCategory
-          const filterdata = data.filter(item => (item.adCategory.includes(":") ? (edition + " : " + position) : edition) && item.adType === adCategory && item.rateName === adMedium)
-            .filter((value, index, self) =>
-              self.findIndex(obj => obj.VendorName === value.VendorName) === index
-            )
-            .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
-          setDatas(filterdata);
-          dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-          // setMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2))
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const [toastMessage, setToastMessage] = useState('');
-  const [toast, setToast] = useState(false);
-  const [severity, setSeverity] = useState('');
-  const dispatch = useDispatch();
-  const handleSubmit = () => {
-    if (qty === '' || campaignDuration === '' || margin === '') {
-      setSeverity('warning');
-      setToastMessage('Please fill all the Client Details!');
-      setToast(true);
-    }
-    else if (qty < qtySlab) {
-      setSeverity('warning');
-      setToastMessage('Minimum Quantity should be ' + qtySlab);
-      setToast(true);
-    }
-    else if(minimumCampaignDuration > campaignDuration){
-      setSeverity('warning');
-      setToastMessage('Minimum Duration should be ' + minimumCampaignDuration);
-      setToast(true);
-    }
-    else {
-      Cookies.set('isAdDetails', true);
-      if(clientName){
-        setCheckout(false);
-      } else{
-        routers.push('/addenquiry');
-      }
-    }
-  }
-
-  const handleMarginChange = (event) => {
-    //const newValue = parseFloat(event.target.value);
-    setMargin(event.target.value);
-    setMarginPercentage((event.target.value * 100) / (qty * unitPrice * (campaignDuration / minimumCampaignDuration)))
-  };
-
-  const handleMarginPercentageChange = (event) => {
-    //const newPercentage = parseFloat(event.target.value);
-    setMarginPercentage(event.target.value);
-    setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
-  };
-
-  const [remarks, setRemarks] = useState('');
-
-  const [remarksSuggestion, setRemarksSuggestion] = useState([]);
-  const textAreaRef = useRef(null);
-
-  const handleRemarks = (e) => {
-    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingRemarks.php/get?suggestion=${e.target.value}`)
-      .then((response) => response.json())
-      .then((data) => setRemarksSuggestion(data));
-    setRemarks(e.target.value);
-  } 
-
-  const filteredData = datas
-
-  const sortedSlabData = slabData
-    .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-
-  const findMatchingQtySlab = (value) => {
-    let matchingStartQty = sortedSlabData[0].StartQty;
-
-    for (const slab of sortedSlabData) {
-      if (value >= slab.StartQty) {
-        matchingStartQty = slab.StartQty;      } else {
-        break;
-      }
-    }
-    return matchingStartQty;
-  };
+  const routers = useRouter();
 
   const pdfGeneration = async () => {
     const AmountExclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)));
     const AmountInclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
-    const [firstPart, secondPart] = adCategory.split(':');
-    const PDFArray = [adMedium, adCategory, edition, position, qty, campaignDurationVisibility === 1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, typeOfAd, formattedDate]
+    const PDFArray = [adMedium, adCategory, edition, position, qty, campaignDurationVisibility === 1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, adType, formattedDate]
     const GSTPerc = 18
 
     generatePdf(PDFArray, clientName, clientEmail)
@@ -269,9 +85,32 @@ const formattedDate = `${day}-${month}-${year}`;
     } catch (error) {
       console.error('Error updating rate:', error);
     }
-
-    dispatch(resetClientData())
   }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!username) {
+          routers.push('/login');
+        } else {
+          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const data = await response.json();
+
+          //filter rates according to adMedium, adType and adCategory
+          const filterdata = data.filter(item => (item.adCategory.includes(":") ? (edition + " : " + position) : edition) && item.adType === adCategory && item.rateName === adMedium)
+            .filter((value, index, self) =>
+              self.findIndex(obj => obj.VendorName === value.VendorName) === index
+            )
+            .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
+          setDatas(filterdata);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const formattedRupees = (number) => {
     const roundedNumber = (number / 1).toFixed(2);
@@ -349,7 +188,9 @@ const formattedDate = `${day}-${month}-${year}`;
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Price</td>
-                  <td>:</td><td> ₹ {formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18))} (incl. GST)</td>
+                  <td>:</td>
+                  {/* <td>{unitPrice}</td> */}
+                  <td> ₹ {formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18))} (incl. GST)</td>
                 </tr>
               </table>
 
