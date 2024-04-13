@@ -4,6 +4,7 @@ import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/redux/store';
 import Cookies from 'js-cookie';
 // import Snackbar from '@mui/material/Snackbar';
 // import MuiAlert from '@mui/material/Alert'
@@ -18,6 +19,7 @@ const PAGE_SIZE = 10;
 const NEIGHBOR_PAGES = 1;
 
 const RatesListPage = () => {
+  const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [modal, setModal] = useState(false);
@@ -117,8 +119,6 @@ const RatesListPage = () => {
   // };
 
   useEffect(() => {
-     // Check if localStorage contains a username
-     const username = Cookies.get('username');
      // If no username is found, redirect to the login page
      if (!username) {
        router.push('/login');

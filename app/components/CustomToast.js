@@ -1,27 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 
-const CustomToast = () => {
+const CustomToast = ({ loginStatus, loginMessage }) => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
 
-  const showToastMessage = (severityStatus, toastMessageContent) => {
-    setSeverity(severityStatus)
-    setToastMessage(toastMessageContent)
-    setToast(true)
-  }
+  useEffect(() => {
+    if (loginStatus !== '') {
+      setSeverity(loginStatus);
+      setToastMessage(loginMessage);
+      setToast(true);
+    }
+  }, [loginStatus, loginMessage]);
 
-  return(
-    <div className='bg-surface-card p-8 rounded-2xl mb-4'>
-        <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
-          <MuiAlert severity={severity} onClose={() => setToast(false)}>
-            {toastMessage}
-          </MuiAlert>
-        </Snackbar>
-      </div>
-  )
-}
+  const handleClose = () => {
+    setToast(false);
+  };
+
+  return (
+    <Snackbar open={toast} autoHideDuration={6000} onClose={handleClose}>
+      <MuiAlert
+        elevation={6}
+        variant="filled"
+        severity={severity}
+        onClose={handleClose}
+      >
+        {toastMessage}
+      </MuiAlert>
+    </Snackbar>
+  );
+};
 
 export default CustomToast;

@@ -1,8 +1,10 @@
-"use client"
+'use client'
 
-import { store } from "./store";
 import { Provider } from "react-redux";
+import { store } from "./store";
+import { persistStore } from "redux-persist";
 
-export function ReduxProvider({children}) {
-    return <Provider store={store}>{children}</Provider>
-}
+persistStore(store);
+export default function ReduxProvider({ children }) {
+  return <Provider store={store}>{children}</Provider>;
+};

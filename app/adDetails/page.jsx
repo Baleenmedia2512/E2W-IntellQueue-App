@@ -1,0 +1,51 @@
+'use client'
+import {useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import AdTypePage from './adType';
+import AdMediumPage from './adMedium';
+import { useAppSelector } from '@/redux/store';
+import AdCategoryPage from './adCategory';
+import EditionPage from './Edition';
+import RemarksPage from './Remarks';
+import AdDetailsPage from './ad-Details';
+import CheckoutPage from './checkout';
+
+export const AdDetails = () => {
+  const routers = useRouter();
+  const username = useAppSelector(state => state.authSlice.userName);
+  const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
+
+  useEffect(() => {
+      if (!username) {
+        routers.push('/login');
+      }
+  }, []);
+
+  function showCurrentPage(){
+    let showPage = '' 
+    if(currentPage === "adType"){
+      showPage = <AdTypePage />
+    } else if(currentPage === "adCategory" ){
+      showPage = <AdCategoryPage />
+    } else if(currentPage === "edition"){
+      showPage = <EditionPage />
+    } else if(currentPage === "remarks"){
+      showPage = <RemarksPage />
+    } else if(currentPage === "adDetails"){
+      showPage = <AdDetailsPage />
+    } else if(currentPage === "checkout"){
+      showPage = <CheckoutPage />
+    } else{
+      showPage = <AdMediumPage />
+    }
+    return showPage;
+  }
+  
+  return (
+    <div>
+      {showCurrentPage()}
+    </div>
+  );
+};
+
+export default AdDetails;
