@@ -74,7 +74,7 @@ const ClientsData = () => {
         
         if(clientName){
           dispatch(resetClientData());
-          resetQuotesData()
+          dispatch(resetQuotesData());
         }
   }, []);
 
@@ -91,7 +91,7 @@ const ClientsData = () => {
   };
 
   const submitDetails = async() => {
-    if(isDetails){
+    if(isDetails && clientName && clientContact && clientSource){
       dispatch(setQuotesData({currentPage: "checkout"}))
       router.push('/adDetails')
     }
@@ -102,6 +102,7 @@ const ClientsData = () => {
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '') {
+          dispatch(resetQuotesData())
           router.push('../adDetails');
         }
         else {
@@ -186,9 +187,15 @@ const ClientsData = () => {
         </button>
         <button
           className="bg-purple-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-purple-600 mt-4 ml-4"
-          onClick={() => { 
+          onClick={() => {
+            if(clientName && clientContact && clientSource){ 
             router.push('/adDetails')
-          Cookies.set('isSkipped',true) }}
+            Cookies.set('isSkipped',true)
+            } else{
+              dispatch(setQuotesData({currentPage: 'adDetails'}));
+              router.push('/adDetails');
+            }
+          }}
         >
           Skip
         </button>

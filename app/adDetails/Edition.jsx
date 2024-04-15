@@ -98,8 +98,7 @@ const EditionPage = () => {
           <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
-              dispatch(resetQuotesData());
-              dispatch(resetClientData());
+              dispatch(resetQuotesData());        
               routers.push('../addenquiry');
             }}
           >

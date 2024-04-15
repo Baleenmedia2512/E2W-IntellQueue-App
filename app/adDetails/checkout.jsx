@@ -10,7 +10,7 @@ import MuiAlert from '@mui/material/Alert';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
 import { resetClientData } from '@/redux/features/client-slice';
-import { setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch, useSelector } from 'react-redux';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -138,6 +138,7 @@ const CheckoutPage = () => {
                 className=" px-2 py-1 rounded text-center"
                 onClick={() => {
                   routers.push('/');
+                  dispatch(resetQuotesData());
                 }}
               >
                 <svg
