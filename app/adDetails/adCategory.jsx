@@ -82,7 +82,7 @@ const greater = '>>'
             <button
               className=" px-2 py-1 rounded text-center"
               onClick={() => {
-                dispatch(resetQuotesData())
+                dispatch(resetQuotesData());
                 routers.push('/');
               }}
             >

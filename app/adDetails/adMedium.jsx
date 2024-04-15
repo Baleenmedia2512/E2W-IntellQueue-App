@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useDispatch } from 'react-redux';
 import { resetClientData } from '@/redux/features/client-slice';
-import { setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { useAppSelector } from '@/redux/store';
 
 export const AdMediumPage = () => {
@@ -76,6 +76,7 @@ export const AdMediumPage = () => {
     }
 
     FetchValidRates()
+    
     dispatch(setQuotesData({currentPage: "adMedium"}))
   }, []);
 
@@ -94,7 +95,9 @@ export const AdMediumPage = () => {
               className="px-2 py-1 rounded text-center"
               onClick={() => {
                 routers.push('/');
-                dispatch(resetClientData());}}
+                dispatch(resetClientData());
+                dispatch(resetQuotesData());              
+              }}
             >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
