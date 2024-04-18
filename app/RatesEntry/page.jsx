@@ -5,7 +5,7 @@ import Select from 'react-select';
 import { useRouter } from 'next/navigation';
 import IconButton from '@mui/material/IconButton';
 import {Button} from '@mui/material';
-import { AddCircleOutline, RemoveCircleOutline, SaveOutlined, DeleteOutline, Event } from '@mui/icons-material';
+import { RemoveCircleOutline, Event } from '@mui/icons-material';
 import { TextField } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -13,6 +13,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { MdDeleteOutline , MdOutlineSave, MdAddCircle} from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useAppSelector } from '@/redux/store';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
@@ -472,16 +474,17 @@ const AdDetailsPage = () => {
                 <div>
                 <label>Rate Id</label><br/>
   <input
-    className="mb-8 text-black w-64 border "
+    className="mb-8 text-black w-48 border h-9 p-2 border-gray-300"
     type="number"
     placeholder="Ex. 4000"
     value={searchingRateId}
     onChange = {(e) => setSearchingRateId(e.target.value)}
     // oange = {(e) => setSearchingRateId(e.target.value)}
   />
-  <Button
-  className='border '
-   onClick={() => handleRateId()}>Select</Button></div>
+  <Button className='border' onClick={() => handleRateId()}>
+  <FontAwesomeIcon icon={faSearch} className='mr-1' />
+</Button>
+</div>
 
                   {/* Ad Medium of the rate */}
                   <div>
