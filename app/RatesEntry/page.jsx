@@ -16,6 +16,7 @@ import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useAppSelector } from '@/redux/store';
+import "./page.css"
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -55,6 +56,11 @@ const AdDetailsPage = () => {
   const [invalidRates, setInvalidRates] = useState(false)
   const [invalidRatesData, setInvalidRatesData] = useState([]);
   const [validRatesData, setValidRatesData] = useState([]);
+  const [newRateModel, setNewRateModel] = useState(false);
+  const [isNewRate, setIsNewRate] = useState(false);
+  const [newRateType, setNewRateType] = useState("");
+  const [newRateName, setNewRateName] = useState("");
+  const [rateGST, setRateGST] = useState("");
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -74,6 +80,8 @@ const AdDetailsPage = () => {
   const toggleModal = () => {
       setModal((prevState) => !prevState);
   }
+
+  const GSTOptions = ['5', '18'].map(option => ({value: option, label: option}))
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
@@ -270,7 +278,7 @@ const AdDetailsPage = () => {
     if (selectedRate) {
       setRateId(selectedRate.RateID);
       setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
-      if(selectedRate['CampaignDuration(in Days)'] > 0){
+      if(selectedRate.campaignDurationVisibility === 1){
         setShowCampaignDuration(true)
       }
       setSelectedCampaignUnits({label: selectedRate.CampaignDurationUnit, value: selectedRate.CampaignDurationUnit})
@@ -279,6 +287,10 @@ const AdDetailsPage = () => {
       setValidityDate(selectedRate.ValidityDate)
     }
   }
+  if (filterKey !== 'vendorName'){
+    setIsNewRate(false)
+  }
+  
   }
   useEffect(() => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
@@ -338,7 +350,7 @@ const AdDetailsPage = () => {
 
       setRateId(data.RateID);
       setCampaignDuration(data['CampaignDuration(in Days)']);
-      if(data['CampaignDuration(in Days)'] > 0){
+      if(data.campaignDurationVisibility === 1){
         setShowCampaignDuration(true)
       }
       setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
@@ -349,12 +361,6 @@ const AdDetailsPage = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  };
-// console.log(selectedValues);
-  const formattedRupees = (number) => {
-    const roundedNumber = (number / 1).toFixed(2);
-    const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
-    return totalAmount.toLocaleString('en-IN');
   };
 
   const calculateDifference = () => {
@@ -378,7 +384,7 @@ const AdDetailsPage = () => {
   
   const updateRates = async() => {
     try{
-    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}`)
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}`)
     showToastMessage('success', 'Updated Successfully!')
     window.location.reload()
     } catch(error){
@@ -395,17 +401,6 @@ const AdDetailsPage = () => {
       console.error(error);
     }
   }
-
-  const calculateDateFromDays = (days) => {
-    const day = days.target.value
-    setValidityDays(day)
-    const currentDate = new Date();
-    const targetDate = new Date(currentDate);
-    targetDate.setDate(currentDate.getDate() + day);
-    setValidityDate(target)
-    let formattedValidityDate = targetDate.toISOString().split('T')[0];
-    setValidTill(formattedValidityDate);
-  };
 
   const handleDateChange = (event) => {
     // Set current date to midnight
@@ -433,12 +428,97 @@ const AdDetailsPage = () => {
     setValidityDays(differenceInDays);
   };
   
+  const handleSetNewRateName = () => {
+    // Add the new rate name to the options based on the newRateType
+    let updatedOptions = [];
+    let changedRate = "";
+  
+    switch (newRateType) {
+      case 'Ad Medium':
+        updatedOptions = [
+          ...getDistinctValues('ratename').map((value) => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "rateName";
+        break;
+      case 'Ad Type':
+        updatedOptions = [
+          ...getDistinctValues('adType').map((value) => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "adType";
+        break;
+      case 'Ad Category':
+        updatedOptions = [
+          ...getDistinctValues('adCategory').map((value) => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "adCategory";
+        break;
+      default:
+        return;
+    }
+  
+    // Update the filters and selected values with the new rate name
+    setFilters({
+      ...filters,
+      [changedRate]: newRateName,
+    });
+  
+    setSelectedValues({
+      ...selectedValues,
+      [changedRate]: {
+        label: newRateName,
+        value: newRateName,
+      },
+    });
+  
+    // Close the newRateModel modal
+    setIsNewRate(true);
+    setNewRateName("");
+    setNewRateModel(false);
+  };  
+
+  const insertNewRate = async() => {
+
+    try{
+      if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.adCategory === null || selectedValues.vendorName === null){
+        showToastMessage('warning', "Please fill all the fields!");
+      } else if(validTill <= 0){
+        showToastMessage('warning', "Validity date should 1 or more!")
+      } else if(leadDays <= 0){
+        showToastMessage('warning', "Lead Days should be more than 0!")
+      } else {
+        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.adCategory.value}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}`)
+        showToastMessage('success', 'Inserted Successfully!')
+        window.location.reload()
+      }
+    } catch(error){
+        console.error(error);
+    }
+  }
+
+  const handleValidityChange = (e) => {
+    const daysToAdd = parseInt(e.target.value);
+    if (!isNaN(daysToAdd)) {
+      const currentDate = new Date();
+      const newValidityDate = new Date(currentDate.setDate(currentDate.getDate() + daysToAdd));
+      const formattedDate = newValidityDate.toISOString().split('T')[0];
+      setValidityDate(formattedDate)
+      setValidTill(formattedDate);
+    }
+    setValidityDays(e.target.value);
+  };
 
   useEffect(() => {
     if(validTill){
       calculateDifference()
     }
   },[validTill])
+  
+  useEffect(() => {
+    console.log(showCampaignDuration)
+  },[showCampaignDuration])
 
   return (
     <div className=" mt-8 justify-center">
@@ -463,72 +543,99 @@ const AdDetailsPage = () => {
             </div>
           </div>
       )}
+      { newRateModel && (
+      <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
+          <div onClick={() => setNewRateModel(!newRateModel)} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
+            <h3 className='normal-label mb-4 text-black'>Enter new {newRateType}</h3>
+            <TextField id="newRateType" defaultValue={newRateName} value={newRateName} label={newRateType} variant="outlined" size='small' className='w-36' onChange={(e) => {setNewRateName(e.target.value)}}/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={() => handleSetNewRateName()}>Submit</Button>
+            </div>
+          </div>
+      )}
             <div>
+            
                 <div className="mb-4 flex flex-col items-center justify-center">
-
-                <div className='flex'>
-                      <input type='checkbox' checked={invalidRates} value={invalidRates} onChange={() => {setInvalidRates(!invalidRates)}}/>
-                      <label className='justify-left ml-2' onClick={() => {setInvalidRates(!invalidRates)}}>Invalid rates</label>
+                { !isNewRate && (
+                    <div className='checkbox-wrapper-8'>
+                      <input type='checkbox' id="cb3-8" class="tgl tgl-skewed" checked={invalidRates} value={invalidRates} onChange={() => {setInvalidRates(!invalidRates)}}/>
+                      <label for="cb3-8" data-tg-on="Invalid" data-tg-off="Valid" class="tgl-btn"></label>
                     </div>
+                )}
 
                 <div>
                 <label>Rate Id</label><br/>
-  <input
-    className="mb-8 text-black w-48 border h-9 p-2 border-gray-300"
-    type="number"
-    placeholder="Ex. 4000"
-    value={searchingRateId}
-    onChange = {(e) => setSearchingRateId(e.target.value)}
-    // oange = {(e) => setSearchingRateId(e.target.value)}
-  />
-  <Button className='border' onClick={() => handleRateId()}>
-  <FontAwesomeIcon icon={faSearch} className='mr-1' />
-</Button>
-</div>
+                <input
+                  className="mb-8 text-black w-60 border h-9 p-2 border-gray-300"
+                  type="number"
+                  placeholder="Ex. 4000"
+                  value={searchingRateId}
+                  onChange = {(e) => setSearchingRateId(e.target.value)}
+                  // oange = {(e) => setSearchingRateId(e.target.value)}
+                />
+                <Button className='border' onClick={() => handleRateId()}>
+                <FontAwesomeIcon icon={faSearch} className='mr-1' />
+              </Button>
+              </div>
 
                   {/* Ad Medium of the rate */}
                   <div>
                     <label className=''>Ad Medium</label><br />
-                    <Select
-                      className='mb-8 text-black w-64'
-                      id='AdMedium'
-                      instanceId="AdMedium"
-                      placeholder="Select Ad Medium"
-                      defaultValue={selectedValues.rateName}
-                      value={selectedValues.rateName}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
-                      options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
-                    />
+                    <div className='flex'>
+                      <Select
+                        className='mb-8 text-black w-64'
+                        id='AdMedium'
+                        instanceId="AdMedium"
+                        placeholder="Select Ad Medium"
+                        defaultValue={selectedValues.rateName}
+                        value={selectedValues.rateName}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
+                        options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+                      />
+                      <button className='justify-center mb-8 ml-3 text-blue-400' onClick={() => {setNewRateModel(true); setNewRateType("Ad Medium");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Ad Type of the Rate  */}
                   <div>
                     <label className=''>Ad Type</label><br />
-                    <Select
-                      className='mb-8 text-black w-64 '
-                      id='AdType'
-                      instanceId="AdType"
-                      placeholder="Select Ad Type"
-                      defaultValue={selectedValues.adType}
-                      value={selectedValues.adType}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-                      options={getOptions('adType', selectedValues)}
-                    />
+                    <div className='flex'>
+                      <Select
+                        className='mb-8 text-black w-64 '
+                        id='AdType'
+                        instanceId="AdType"
+                        placeholder="Select Ad Type"
+                        defaultValue={selectedValues.adType}
+                        value={selectedValues.adType}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+                        options={getOptions('adType', selectedValues)}
+                      />
+                      <button className='justify-center mb-8 ml-3 text-blue-400' onClick={() => {setNewRateModel(true); setNewRateType("Ad Type");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Ad Category of the rate  */}
                   <div>
                     <label className=''>Ad Category</label><br />
-                    <Select
-                      className='mb-8 text-black w-64'
-                      id='AdCategory'
-                      instanceId="AdCategory"
-                      placeholder="Select Ad Category"
-                      defaultValue={selectedValues.adCategory}
-                      value={selectedValues.adCategory}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
-                      options={getOptions('adCategory', selectedValues)}
-                    />
+                    <div className='flex'>
+                      <Select
+                        className='mb-8 text-black w-64'
+                        id='AdCategory'
+                        instanceId="AdCategory"
+                        placeholder="Select Ad Category"
+                        defaultValue={selectedValues.adCategory}
+                        value={selectedValues.adCategory}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
+                        options={getOptions('adCategory', selectedValues)}
+                      />
+                      <button className='justify-center mb-8 ml-3 text-blue-400' onClick={() => {setNewRateModel(true); setNewRateType("Ad Category");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Choosing the vendor of the rate  */}
@@ -596,8 +703,10 @@ const AdDetailsPage = () => {
                   {/* Campaign Duration Text with Units */}
                   <div>
                     <div className='flex'>
-                      <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {setShowCampaignDuration(!showCampaignDuration)}}/>
-                      <label className='justify-left ml-2' onClick={() => setShowCampaignDuration(!showCampaignDuration)}>Campaign Duration</label>
+                      <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
+                        setShowCampaignDuration(!showCampaignDuration);
+                      }}/>
+                      <label className='justify-left ml-2'>Campaign Duration</label>
                     </div>
                     <div className='mb-8'>
                     {showCampaignDuration && (
@@ -629,7 +738,7 @@ const AdDetailsPage = () => {
                   <div>
                   <label>Valid Till</label>
                   <div className='flex mb-4'>
-                    <TextField id="validTill" value={validityDays} onChange={(e) => {setValidityDays(e.target.value)}} variant="outlined" size='small' className='w-36' type='number' onFocus={(e) => {e.target.select()}}/>
+                    <TextField id="validTill" value={validityDays} onChange={handleValidityChange} variant="outlined" size='small' className='w-36' type='number' onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
                       </IconButton>
@@ -653,15 +762,39 @@ const AdDetailsPage = () => {
                     )}
                     
                 </div>
-                </div>
+                {isNewRate ? (
+                  <div>
+                    <label className=''>Rate GST%</label><br />
+                    <Select
+                      className='mb-8 text-black w-64'
+                      id='Rate GST'
+                      instanceId="Rate GST"
+                      placeholder="Select Rate GST%"
+                      //defaultValue={selectedUnit}
+                      value={rateGST}
+                      onChange={(selectedOption) => setRateGST(selectedOption)}
+                      options={GSTOptions}
+                    />
+                  </div>
+                ) : 
                 <p className=' text-center'>Rate Id: {rateId}</p>
+                } 
+                </div>
+                
                 <div className="flex items-center justify-center mb-8">
                   <button className = "bg-red-400 text-white p-2 rounded-full w-24 justify-center" onClick={rejectRates}>
                     <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span>
                     </button>
-                    <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center" onClick={updateRates}>
-                    <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Save</span>
+                    {isNewRate ? (
+                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center" onClick={insertNewRate}>
+                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span>
+                      </button>
+                    ) : (
+                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center" onClick={updateRates}>
+                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Save</span>
                     </button>
+                    )}
+                    
                 {/* <Button variant="outlined" startIcon={<DeleteOutline />} className='border-red-400 text-red-400'>
                   Delete
                 </Button>
