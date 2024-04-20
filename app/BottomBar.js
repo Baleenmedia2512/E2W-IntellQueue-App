@@ -1,88 +1,71 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation';
-import Image from 'next/image';
-import Cookies from 'js-cookie';
+'use client';
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { BottomNavigation, BottomNavigationAction } from "@mui/material";
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import { ExitToApp } from "@mui/icons-material";
 
 const BottomBar = () => {
-  const routers = useRouter();
+  const router = useRouter();
   const currentPath = usePathname();
-  const username = Cookies.get('username')
-  const [isHovered, setIsHovered] = useState('')
-  const clientName = Cookies.get('clientname');
-  const clientNumber = Cookies.get('clientnumber');
-  const selectedSource = Cookies.get('selectedsource');
+  const [value, setValue] = useState(0); // Define the value state variable
+
+  useEffect(()=>{
+    // Set the value state variable based on the current path
+    switch (currentPath) {
+      case '/rate-validation':
+        setValue(0);
+        break;
+      case '/':
+        setValue(1);
+        break;
+      case '/RatesEntry':
+        setValue(2);
+        break;
+      default:
+        break;
+    }
+  }, [currentPath]); // Update useEffect dependency
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue); // Update the value state variable
+    switch (newValue) {
+      case 0:
+        router.push('/rate-validation');
+        break;
+      case 1:
+        router.push('/');
+        break;
+      case 2:
+        router.push('/RatesEntry');
+        break;
+      case 3:
+        router.push('/login');
+        break;
+      default:
+        break;
+    }
+  };
 
   if (currentPath === '/login') {
-    return null;
-  }
-
-  const moveToQuoteSender = () => {
-    if ((clientName !== '' && clientNumber !== '' && selectedSource !== '') || Cookies.get('isSkipped')) {
-      routers.push('../adDetails');
-    }
-    else {
-      routers.push('/')
-    }
+    return null; // Conditionally return null
   }
 
   return (
-    <nav className="flex justify-around bg-white border p-2 fixed bottom-0 left-0 w-full">
-      <button className={` flex flex-col items-center justify-center h-16 w-1/4 py-2 rounded-lg ${
-        '/' === currentPath ? 'bg-white' : ''
-        }`}
-        onClick={() => { routers.push('/rate-validation'); }}
-        onMouseEnter={() => setIsHovered('Rates')}
-        onMouseLeave={() => setIsHovered(null)}
-      >
-        <div className={` ${'/rate-validation' === currentPath ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
-        <Image src="/images/approval.png" alt="Validation Icon" width={30} height={30} />
-        </div>
-        <label>{isHovered==='Rates'  ? 'Rates Validation' : ''}</label>
-      
-      </button>
-      <button
-        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/' || currentPath === '/adDetails') ? 'bg-white' : ''
-          }`}
-        onClick={() => moveToQuoteSender()}
-        onMouseEnter={() => setIsHovered('Quotes')}
-        onMouseLeave={() => setIsHovered(null)}
-      >
-        <div className={` ${(currentPath === '/' || currentPath === '/adDetails') ? 'rounded-full border p-2 px-10 border-gray-500 bg-gray-500':''}`}>
-        <Image src="/images/profiles.png" alt="Quote Sender Icon" width={30} height={30} />
-        </div>
-      <label>{isHovered==='Quotes' ? 'Quote Sender' : ''}</label>
-      </button>
-      <button
-        className={`flex flex-col items-center justify-center transition duration-500 py-2 h-16 w-1/4 rounded-lg ${(currentPath === '/' || currentPath === '/adDetails') ? 'bg-white' : ''
-          }`}
-        onClick={() => routers.push('/RatesEntry')}
-        onMouseEnter={() => setIsHovered('RatesEntry')}
-        onMouseLeave={() => setIsHovered(null)}
-      >
-        <div className={` ${(currentPath === '/RatesEntry' ) ? 'rounded-full border p-2 px-8 border-gray-500 bg-gray-500':''}`}>
-        <Image src="/images/package.png" alt="Rates Entry Icon" width={30} height={30} />
-        </div>
-      <label className=' text-xs'>{isHovered==='RatesEntry' || (currentPath === '/RatesEntry' ) ? 'Rates Entry' : ''}</label>
-      </button>
-
-      <button
-        className='flex flex-col items-center justify-center py-2 h-16 w-1/4 rounded-lg'
-        onClick={() => {
-          routers.push('/login')
-          Cookies.remove('username')
-          Cookies.remove('clientname');
-          Cookies.remove('clientnumber');
-          Cookies.remove('selectedsource');
-          Cookies.remove('clientemail');
-        }}
-        onMouseEnter={() => setIsHovered('log')}
-        onMouseLeave={() => setIsHovered(null)}
-      ><Image src="/images/exit.png" alt="Logout Icon" width={30} height={30} />
-      <label>{isHovered==='log' ? 'Logout' : ''}</label>
-      </button>
-    </nav>
+    <BottomNavigation
+      showLabels
+      value={value}
+      onChange={handleChange}
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
+    >
+      <BottomNavigationAction label="Rates Validation" icon={<VerifiedUserIcon />} />
+      <BottomNavigationAction label="Quote Sender" icon={<RequestQuoteIcon />} />
+      <BottomNavigationAction label="Rates Entry" icon={<PaymentsIcon />} />
+      <BottomNavigationAction label="Logout" icon={<ExitToApp />} />
+    </BottomNavigation>
   );
 };
 
