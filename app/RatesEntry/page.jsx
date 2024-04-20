@@ -659,7 +659,7 @@ const AdDetailsPage = () => {
                     <div className='flex mb-4'>
                     
                       <TextField id="qtySlab" variant="outlined" size='small' className='w-52' type='number' defaultValue={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3" onFocus={(e) => {e.target.select()}}/>
-                      <button className='justify-center mb-10 ml-3 text-blue-400' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
+                      <button className='justify-center mb-10 ml-3 text-blue-400' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
                         <MdAddCircle size={28}/>
                       </button>
                       {/* <IconButton aria-label="Add" className='mb-10' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
