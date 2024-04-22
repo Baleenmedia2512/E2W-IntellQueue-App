@@ -10,9 +10,12 @@ export const authSlice = createSlice({
   reducers: {
     login: (state, action) => {
       state.userName = action.payload;
+    },
+    logout: (state) => {
+      state.userName = ""; // Reset userName to an empty string
     }
   }
 });
 
-export const { login } = authSlice.actions;
+export const { login, logout } = authSlice.actions;
 export const authReducer = authSlice.reducer;

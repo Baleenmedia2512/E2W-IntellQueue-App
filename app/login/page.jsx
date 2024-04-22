@@ -1,13 +1,12 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
-import { login } from '@/redux/features/auth-slice';
-import Cookies from 'js-cookie';
+import { login, logout } from '@/redux/features/auth-slice';
 import MuiAlert from '@mui/material/Alert';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -22,6 +21,10 @@ const Login = () => {
     setToastMessage(toastMessageContent)
     setToast(true)
   }
+
+  useEffect(() => {
+    dispatch(logout())
+  },[])
 
   const toggleShowPassword = () => {setShowPassword(!showPassword)};
 
@@ -64,8 +67,9 @@ const Login = () => {
           .catch(error => {
             showToastMessage('error', "Error in login " + error)
           });
-      };}
-
+      };
+  }
+      
   return (
     <div className="bg-gray-200 h-screen flex items-center justify-center content-center">
       <div className="bg-white p-8 rounded-3xl shadow-md flex items-center justify-center ml-11 mb-10">
@@ -120,7 +124,7 @@ const Login = () => {
             Login
           </button>
           <><br /></>
-          <p className='text-black'>V: 0.1.0</p>
+          <p className='text-black'>V: 0.1.2</p>
         </form>
       </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>
