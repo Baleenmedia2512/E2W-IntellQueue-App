@@ -15,7 +15,7 @@ const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
-  const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.LG', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online'];
+  const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
 
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -122,9 +122,61 @@ const ClientsData = () => {
 
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
-      <div className='w-full mt-8 justify-center items-center text-black'>
+      <form class="px-7 h-screen grid justify-center items-center">
+    <div class="grid gap-6" id="form">
+      <div class="w-full flex gap-3">
+      <select
+        className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center"
+        id="Title"
+        name="Title"
+        required
+      >
+        <option value="Mr.">Mr.</option>
+        <option value="Miss.">Miss.</option>
+        <option value="Mrs.">Mrs.</option>
+        <option value="Ms.">Ms.</option>
+      </select>
+        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Name" id="Name" name="Name" required/>
+      </div>
+      <div class="grid gap-6 w-full">
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Contact Number" id="contact" name="contact" required/>
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="Email" placeholder="Email" id="Email" name="email" />
+      </div>
+      <div class="w-full flex gap-3">
+        <input className='capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age"/>
+        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" />
+      </div>
+      <div class="flex gap-3">
+      <textarea
+        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#035ec5]"
+        id="address"
+        name="address"
+        placeholder="Address"
+      ></textarea>
+        {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
+      </div>
+      <div className='grid gap-6 w-full'>
+      <select
+        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#035ec5]"
+        id="source"
+        name="source"
+      >
+        <option value="">Select Source</option>
+        {sources.map((source, index) => (
+          <option key={index} value={source}>
+            {source}
+          </option>
+        ))}
+      </select>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false}/>
+      </div>
+      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff42] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
+    </div>
+  </form>
+      {/* <div className='w-full mt-8 justify-center items-center text-black'>
         <h1 className="font-bold text-3xl text-center mb-4 mt-4">Enter client details</h1>
-        {/* <h1 className='text-3xl'>Client Details</h1> */}
+        {/* <h1 className='text-3xl'>Client Details</h1>
         <label className="flex flex-col items-left text-lg mb-2">Client Name</label>
         <input
           className="w-full border border-purple-400 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
@@ -207,7 +259,7 @@ const ClientsData = () => {
             {toastMessage}
           </MuiAlert>
         </Snackbar>
-      </div>
+      </div> */}
     </div>
 
   );

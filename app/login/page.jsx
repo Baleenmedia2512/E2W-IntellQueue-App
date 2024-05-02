@@ -59,7 +59,11 @@ const Login = () => {
               showToastMessage('success', data)
               //Cookies.set('username', userName, { expires: 7 });
               dispatch(login(userName));
-              router.push("/") //navigating to the enquiry Screen
+              if(userName === 'GraceScans'){
+                router.push("/") //navigating to the enquiry Screen
+              } else{
+                router.push("/adDetails")
+              }
             }else{
               showToastMessage('error', "Invalid user name or password!")
             }
