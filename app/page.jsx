@@ -21,6 +21,8 @@ const ClientsData = () => {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+
+  const [inputValue, setInputValue] = useState('');
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -118,11 +120,28 @@ const ClientsData = () => {
     }
   }
   }
+// Function to format the date as dd-MON-yyyy
+function formatDate(date) {
+  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const day = String(date.getDate()).padStart(2, '0');
+  const monthIndex = date.getMonth();
+  const year = date.getFullYear();
+  const month = months[monthIndex];
+  return `${day}-${month}-${year}`;
+}
 
+// Handle input change
+const handleInputChange = (event) => {
+  const inputDate = new Date(event.target.value);
+  if (!isNaN(inputDate.getTime())) { // Check if valid date
+      setInputValue(formatDate(inputDate));
+  }
+};
 
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
-      <form class="px-7 h-screen grid justify-center items-center">
+      <h1 className="font-bold text-3xl text-center mb-4 ">Client Registration</h1>
+      <form class="px-7 h-screen grid justify-center items-center ">
     <div class="grid gap-6" id="form">
       <div class="w-full flex gap-3">
       <select
@@ -136,14 +155,34 @@ const ClientsData = () => {
         <option value="Mrs.">Mrs.</option>
         <option value="Ms.">Ms.</option>
       </select>
-        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Name" id="Name" name="Name" required/>
+        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Name" id="Name" name="Name" required 
+          value={clientDetails.clientName}
+          onChange={handleSearchTermChange}/>
       </div>
+      {clientNameSuggestions.length > 0 && (
+          <ul className="list-none">
+            {clientNameSuggestions.map((name, index) => (
+              <li key={index}>
+                <button
+                  type="button"
+                  className="text-purple-500 hover:text-purple-700"
+                  onClick={handleClientNameSelection}
+                  value={name}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       <div class="grid gap-6 w-full">
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Contact Number" id="contact" name="contact" required/>
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="Email" placeholder="Email" id="Email" name="email" />
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Contact Number" id="contact" name="contact" required value={clientContact}
+        onChange={(e) => handleClientContactChange(e.target.value)}/>
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="Email" placeholder="Email" id="Email" name="email" value={clientEmail}
+        onChange={(e) => handleClientEmailChange(e.target.value)}/>
       </div>
       <div class="w-full flex gap-3">
-        <input className='capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age"/>
+        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age"/>
         <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" />
       </div>
       <div class="flex gap-3">
@@ -171,7 +210,7 @@ const ClientsData = () => {
       <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false}/>
       <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false}/>
       </div>
-      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff42] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
+      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#cae9ff42] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
     </div>
   </form>
       {/* <div className='w-full mt-8 justify-center items-center text-black'>
