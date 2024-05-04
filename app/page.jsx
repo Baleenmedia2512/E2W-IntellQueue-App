@@ -14,13 +14,14 @@ import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const clientDetails = useAppSelector(state => state.clientSlice)
-  const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
+  const {clientName, clientContact, clientEmail, clientSource, vendorName, vendorContact, clientAge} = clientDetails;
   const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
 
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+  const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
 
   const [inputValue, setInputValue] = useState('');
   
@@ -34,6 +35,14 @@ const ClientsData = () => {
       .then((response) => response.json())
       .then((data) => setClientNameSuggestions(data));
     dispatch(setClientData({clientName: newName}));
+  };
+
+  const handleConsultantNameChange = (event) => {
+    const newName = event.target.value;
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}`)
+      .then((response) => response.json())
+      .then((data) => setConsultantNameSuggestions(data));
+    dispatch(setClientData({ consultantName: newName }));
   };
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
@@ -52,6 +61,18 @@ const ClientsData = () => {
     dispatch(setClientData({clientContact: number}));
     fetchClientDetails(name, number);
   };
+
+  const handleConsultantNameSelection = (event) => {
+    const input = event.target.value;
+    const name = input.substring(0, input.indexOf('(')).trim();
+    const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
+  
+    setConsultantNameSuggestions([]);
+    dispatch(setClientData({ consultantName: name }));
+    dispatch(setClientData({ consultantContact: number })); 
+    // fetchConsultantDetails(name, number);
+  };
+  
 
   const fetchClientDetails = (clientName, clientNumber) => {
     axios
@@ -90,6 +111,10 @@ const ClientsData = () => {
 
   const handleClientSourceChange = (selectedOption) => {
     dispatch(setClientData({ clientSource: selectedOption.value }));
+  };
+
+  const handleVendorChange = (newValue) => {
+    dispatch(setClientData({ vendorName: newValue }));
   };
 
   const submitDetails = async() => {
@@ -131,18 +156,58 @@ function formatDate(date) {
 }
 
 // Handle input change
+// const handleInputChange = (event) => {
+//   const inputDate = new Date(event.target.value);
+//   if (!isNaN(inputDate.getTime())) { // Check if valid date
+//       setInputValue(formatDate(inputDate));
+//   }
+// };
+
 const handleInputChange = (event) => {
   const inputDate = new Date(event.target.value);
-  if (!isNaN(inputDate.getTime())) { // Check if valid date
-      setInputValue(formatDate(inputDate));
+  if (!isNaN(inputDate.getTime())) {
+    setInputValue(formatDate(inputDate));
+    const today = new Date();
+    const age = today.getFullYear() - inputDate.getFullYear();
+    if (
+      today.getMonth() < inputDate.getMonth() ||
+      (today.getMonth() === inputDate.getMonth() && today.getDate() < inputDate.getDate())
+    ) {
+      dispatch(setClientData({ age: age - 1 }));
+    } else {
+      dispatch(setClientData({ age: age }));
+    }
+  } else {
+    // If the entered date is invalid, clear both age and DOB fields
+    dispatch(setClientData({ age: '' }));
+    dispatch(setClientData({ dob: '' }));
   }
 };
 
+
+const handleInputAgeChange = (event) => {
+  const inputDate = new Date(event.target.value);
+  if (!isNaN(inputDate.getTime())) { // Check if valid date
+    setInputValue(formatDate(inputDate)); // Update the input value
+    const age = calculateAge(inputDate); // Calculate age
+    dispatch(setClientData({ clientAge: age })); // Update client age in state
+  }
+};
+
+// Function to calculate age
+const calculateAge = (birthDate) => {
+  const today = new Date();
+  const diff = today - birthDate; // Difference in milliseconds
+  const ageDate = new Date(diff); // Unix epoch date
+  return Math.abs(ageDate.getUTCFullYear() - 1970); // Return the age
+};
+
+
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
-      <h1 className="font-bold text-3xl text-center mb-4 ">Client Registration</h1>
       <form class="px-7 h-screen grid justify-center items-center ">
     <div class="grid gap-6" id="form">
+    <h1 className="font-bold text-3xl text-center mb-4 ">Client Registration</h1>
       <div class="w-full flex gap-3">
       <select
         className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center"
@@ -182,8 +247,9 @@ const handleInputChange = (event) => {
         onChange={(e) => handleClientEmailChange(e.target.value)}/>
       </div>
       <div class="w-full flex gap-3">
-        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age"/>
-        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" />
+        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age" value={clientDetails.clientAge} />
+
+        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" onChange={handleInputAgeChange}/>
       </div>
       <div class="flex gap-3">
       <textarea
@@ -207,10 +273,26 @@ const handleInputChange = (event) => {
           </option>
         ))}
       </select>
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={clientDetails.consultantName}/>
+      {consultantNameSuggestions.length > 0 && (
+  <ul className="list-none">
+    {consultantNameSuggestions.map((name, index) => (
+      <li key={index}>
+        <button
+          type="button"
+          className="text-purple-500 hover:text-purple-700"
+          onClick={handleConsultantNameSelection}
+          value={name}
+        >
+          {name}
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
       <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false}/>
       </div>
-      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#cae9ff42] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
+      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
     </div>
   </form>
       {/* <div className='w-full mt-8 justify-center items-center text-black'>
