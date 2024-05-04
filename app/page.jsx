@@ -14,16 +14,20 @@ import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const clientDetails = useAppSelector(state => state.clientSlice)
-  const {clientName, clientContact, clientEmail, clientSource, vendorName, vendorContact, clientAge} = clientDetails;
+  const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
 
   const [toast, setToast] = useState(false);
+  const [clientAge, setClientAge] = useState();
+  const [gender, setGender] = useState();
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
-
+  const [address, setAddress] = useState();
   const [inputValue, setInputValue] = useState('');
+  const [consultantName, setConsultantName] = useState('');
+  const [consultantNumber, setConsultantNumber] = useState();
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -31,7 +35,7 @@ const ClientsData = () => {
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails);
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
-    fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}`)
+    fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}&dbname=${'gracescans'}`)
       .then((response) => response.json())
       .then((data) => setClientNameSuggestions(data));
     dispatch(setClientData({clientName: newName}));
@@ -39,7 +43,8 @@ const ClientsData = () => {
 
   const handleConsultantNameChange = (event) => {
     const newName = event.target.value;
-    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}`)
+    setConsultantName(newName)
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&dbname=${'gracescans'}`)
       .then((response) => response.json())
       .then((data) => setConsultantNameSuggestions(data));
     dispatch(setClientData({ consultantName: newName }));
@@ -68,21 +73,25 @@ const ClientsData = () => {
     const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
   
     setConsultantNameSuggestions([]);
-    dispatch(setClientData({ consultantName: name }));
-    dispatch(setClientData({ consultantContact: number })); 
+    setConsultantName(name)
+    setConsultantNumber(number);
     // fetchConsultantDetails(name, number);
   };
   
 
   const fetchClientDetails = (clientName, clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}`)
+      .get(`https://orders.baleenmedia.com/API/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&dbname=${'gracescans'}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
           dispatch(setClientData({clientEmail: clientDetails.email}));
           dispatch(setClientData({clientSource: clientDetails.source}));
+          setClientAge(clientDetails.Age);
+          setInputValue(clientDetails.DOB);
+          setAddress(clientDetails.address);
+          setGender(clientDetails.gender);
         }
       })
       .catch((error) => {
@@ -124,8 +133,7 @@ const ClientsData = () => {
     }
     else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&
-      JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&dbname=${'gracescans'}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '') {
@@ -190,7 +198,7 @@ const handleInputAgeChange = (event) => {
   if (!isNaN(inputDate.getTime())) { // Check if valid date
     setInputValue(formatDate(inputDate)); // Update the input value
     const age = calculateAge(inputDate); // Calculate age
-    dispatch(setClientData({ clientAge: age })); // Update client age in state
+    setClientAge(age); // Update client age in state
   }
 };
 
@@ -247,9 +255,8 @@ const calculateAge = (birthDate) => {
         onChange={(e) => handleClientEmailChange(e.target.value)}/>
       </div>
       <div class="w-full flex gap-3">
-        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age" value={clientDetails.clientAge} />
-
-        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" onChange={handleInputAgeChange}/>
+        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age" value={clientAge} />
+        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" onChange={handleInputAgeChange} value={inputValue}/>
       </div>
       <div class="flex gap-3">
       <textarea
@@ -257,6 +264,8 @@ const calculateAge = (birthDate) => {
         id="address"
         name="address"
         placeholder="Address"
+        value={address}
+        onChange={e => setAddress(e.target.value)}
       ></textarea>
         {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
       </div>
@@ -273,7 +282,7 @@ const calculateAge = (birthDate) => {
           </option>
         ))}
       </select>
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={clientDetails.consultantName}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={consultantName}/>
       {consultantNameSuggestions.length > 0 && (
   <ul className="list-none">
     {consultantNameSuggestions.map((name, index) => (
@@ -290,7 +299,7 @@ const calculateAge = (birthDate) => {
     ))}
   </ul>
 )}
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false} value={consultantNumber} onChange={e => setConsultantNumber(e.target.value)}/>
       </div>
       <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
     </div>
