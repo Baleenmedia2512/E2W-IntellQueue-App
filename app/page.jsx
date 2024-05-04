@@ -154,62 +154,41 @@ const ClientsData = () => {
   }
   }
 // Function to format the date as dd-MON-yyyy
-function formatDate(date) {
+function formatDate(inputValue) {
   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-  const day = String(date.getDate()).padStart(2, '0');
-  const monthIndex = date.getMonth();
-  const year = date.getFullYear();
+  const day = String(inputValue.getDate()).padStart(2, '0');
+  const monthIndex = inputValue.getMonth();
+  const year = inputValue.getFullYear();
   const month = months[monthIndex];
   return `${day}-${month}-${year}`;
 }
 
-// Handle input change
-// const handleInputChange = (event) => {
-//   const inputDate = new Date(event.target.value);
-//   if (!isNaN(inputDate.getTime())) { // Check if valid date
-//       setInputValue(formatDate(inputDate));
-//   }
-// };
 
 const handleInputChange = (event) => {
   const inputDate = new Date(event.target.value);
-  if (!isNaN(inputDate.getTime())) {
-    setInputValue(formatDate(inputDate));
-    const today = new Date();
-    const age = today.getFullYear() - inputDate.getFullYear();
-    if (
-      today.getMonth() < inputDate.getMonth() ||
-      (today.getMonth() === inputDate.getMonth() && today.getDate() < inputDate.getDate())
-    ) {
-      dispatch(setClientData({ age: age - 1 }));
-    } else {
-      dispatch(setClientData({ age: age }));
-    }
-  } else {
-    // If the entered date is invalid, clear both age and DOB fields
-    dispatch(setClientData({ age: '' }));
-    dispatch(setClientData({ dob: '' }));
+  if (!isNaN(inputDate.getTime())) { // Check if valid date
+      setInputValue(formatDate(inputDate));
   }
 };
 
+const calculateAge = (dob) => {
+  const today = new Date();
+  const birthDate = new Date(dob);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
 
 const handleInputAgeChange = (event) => {
-  const inputDate = new Date(event.target.value);
-  if (!isNaN(inputDate.getTime())) { // Check if valid date
-    setInputValue(formatDate(inputDate)); // Update the input value
-    const age = calculateAge(inputDate); // Calculate age
-    setClientAge(age); // Update client age in state
-  }
+  const dob = event.target.value;
+  const age = calculateAge(dob);
+  setInputValue(dob);
+  // setInputValue(formatDate(new Date(dob)));
+  setClientAge(age);
 };
-
-// Function to calculate age
-const calculateAge = (birthDate) => {
-  const today = new Date();
-  const diff = today - birthDate; // Difference in milliseconds
-  const ageDate = new Date(diff); // Unix epoch date
-  return Math.abs(ageDate.getUTCFullYear() - 1970); // Return the age
-};
-
 
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
@@ -218,7 +197,7 @@ const calculateAge = (birthDate) => {
     <h1 className="font-bold text-3xl text-center mb-4 ">Client Registration</h1>
       <div class="w-full flex gap-3">
       <select
-        className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center"
+        className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
         id="Title"
         name="Title"
         required
@@ -228,9 +207,21 @@ const calculateAge = (birthDate) => {
         <option value="Mrs.">Mrs.</option>
         <option value="Ms.">Ms.</option>
       </select>
-        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Name" id="Name" name="Name" required 
+        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" type="text" placeholder="Name" id="Name" name="Name" required 
           value={clientDetails.clientName}
-          onChange={handleSearchTermChange}/>
+          onChange={handleSearchTermChange}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              // Find the next input field and focus on it
+              const inputs = document.querySelectorAll('input, select, textarea');
+              const index = Array.from(inputs).findIndex(input => input === e.target);
+              if (index !== -1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+              }
+            }
+          }}
+          />
       </div>
       {clientNameSuggestions.length > 0 && (
           <ul className="list-none">
@@ -249,31 +240,89 @@ const calculateAge = (birthDate) => {
           </ul>
         )}
       <div class="grid gap-6 w-full">
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Contact Number" id="contact" name="contact" required value={clientContact}
-        onChange={(e) => handleClientContactChange(e.target.value)}/>
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="Email" placeholder="Email" id="Email" name="email" value={clientEmail}
-        onChange={(e) => handleClientEmailChange(e.target.value)}/>
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="number" placeholder="Contact Number" id="contact" name="contact" required value={clientContact}
+        onChange={(e) => handleClientContactChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
+        />
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="Email" placeholder="Email" id="Email" name="email" value={clientEmail}
+        onChange={(e) => handleClientEmailChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
+        />
       </div>
       <div class="w-full flex gap-3">
-        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age" value={clientAge} />
-        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" onChange={handleInputAgeChange} value={inputValue}/>
+        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' type='number' placeholder="Age" value={clientAge} onChange={(e) => setClientAge(e.target.value)} 
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
+        />
+        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" type="date" value={inputValue} onChange={handleInputAgeChange} onKeyDown={(e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Find the next input field and focus on it
+      const inputs = document.querySelectorAll('input, select, textarea');
+      const index = Array.from(inputs).findIndex(input => input === e.target);
+      if (index !== -1 && index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      }
+    }
+  }}/>
       </div>
       <div class="flex gap-3">
       <textarea
-        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#035ec5]"
+        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="address"
         name="address"
         placeholder="Address"
         value={address}
         onChange={e => setAddress(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
       ></textarea>
         {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
       </div>
       <div className='grid gap-6 w-full'>
       <select
-        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#035ec5]"
+        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="source"
         name="source"
+        
       >
         <option value="">Select Source</option>
         {sources.map((source, index) => (
@@ -282,7 +331,19 @@ const calculateAge = (birthDate) => {
           </option>
         ))}
       </select>
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={consultantName}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={consultantName}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // Find the next input field and focus on it
+          const inputs = document.querySelectorAll('input, select, textarea');
+          const index = Array.from(inputs).findIndex(input => input === e.target);
+          if (index !== -1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+        }
+      }}
+      />
       {consultantNameSuggestions.length > 0 && (
   <ul className="list-none">
     {consultantNameSuggestions.map((name, index) => (
@@ -292,16 +353,18 @@ const calculateAge = (birthDate) => {
           className="text-purple-500 hover:text-purple-700"
           onClick={handleConsultantNameSelection}
           value={name}
+          
         >
           {name}
+          
         </button>
       </li>
     ))}
   </ul>
 )}
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false} value={consultantNumber} onChange={e => setConsultantNumber(e.target.value)}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false} value={consultantNumber} onChange={e => setConsultantNumber(e.target.value)}/>
       </div>
-      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
+      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
     </div>
   </form>
       {/* <div className='w-full mt-8 justify-center items-center text-black'>
