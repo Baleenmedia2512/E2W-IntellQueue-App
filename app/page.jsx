@@ -15,8 +15,8 @@ const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
-  const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
-
+  // const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
+  const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState();
   const [gender, setGender] = useState();
@@ -28,6 +28,9 @@ const ClientsData = () => {
   const [inputValue, setInputValue] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState();
+  const [displayWarning, setDisplayWarning] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("");
+  const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -191,7 +194,7 @@ const handleInputAgeChange = (event) => {
 };
 
   return (
-    <div className="flex flex-col justify-center mt-8 mx-[8%]">
+    <div className="flex flex-col justify-center mt-8 mx-[8%] mb-10">
       <form class="px-7 h-screen grid justify-center items-center ">
     <div class="grid gap-6" id="form">
     <h1 className="font-bold text-3xl text-center mb-4 ">Client Registration</h1>
@@ -201,11 +204,26 @@ const handleInputAgeChange = (event) => {
         id="Title"
         name="Title"
         required
+        onChange={(e) => {
+          const selectedOption = e.target.value;
+          setSelectedOption(selectedOption);
+          setClientAge(""); // Clear the age input field when the title changes
+
+        // Display DOB warning when selected option is "B/o."
+        if (selectedOption === "B/o.") {
+          setDisplayDOBWarning(true);
+        } else {
+          setDisplayDOBWarning(false);
+        }
+      }}
       >
         <option value="Mr.">Mr.</option>
         <option value="Miss.">Miss.</option>
         <option value="Mrs.">Mrs.</option>
         <option value="Ms.">Ms.</option>
+        <option value="B/o.">B/o.</option>
+        <option value="Baby.">Baby.</option>
+        <option value="Master.">Master.</option>
       </select>
         <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" type="text" placeholder="Name" id="Name" name="Name" required 
           value={clientDetails.clientName}
@@ -269,8 +287,19 @@ const handleInputAgeChange = (event) => {
         }}
         />
       </div>
-      <div class="w-full flex gap-3">
-        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' type='number' placeholder="Age" value={clientAge} onChange={(e) => setClientAge(e.target.value)} 
+      <div class="w-full flex gap-3 ">
+        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' type='number' placeholder="Age" value={clientAge} onChange={(e) => {
+        const { value } = e.target;
+        setClientAge(value);
+
+        // Display warning based on the selected option and age input value
+        if ((selectedOption === "Baby." && parseInt(value) > 3) || 
+            (selectedOption === "Master." && (parseInt(value) < 4 || parseInt(value) > 12))) {
+          setDisplayWarning(true);
+        } else {
+          setDisplayWarning(false);
+        }
+      }}  
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -295,6 +324,16 @@ const handleInputAgeChange = (event) => {
     }
   }}/>
       </div>
+      {displayWarning && (
+      <div className={`text-red-600 ${selectedOption === "Baby." ? "ml-12" : "ml-9"}`}>
+        {selectedOption === "Baby." && "The age should be less than 3."}
+        {selectedOption === "Master." && "The age should be between 4 and 12."}
+      </div>
+    )}
+
+{displayDOBWarning && (
+      <div className="text-red-600 ml-9">Note: The DOB should be the baby's</div>
+    )}
       <div class="flex gap-3">
       <textarea
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
@@ -322,7 +361,7 @@ const handleInputAgeChange = (event) => {
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="source"
         name="source"
-        
+        value="Consultant"
       >
         <option value="">Select Source</option>
         {sources.map((source, index) => (
