@@ -572,7 +572,44 @@ const AdDetailsPage = () => {
 
   return (
     <div className=" mt-8 justify-center">
-      { modal && (
+      
+      {/* { modal && (
+      <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
+          <div onClick={toggleModal} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
+            <h3 className='normal-label mb-4 text-black'>Enter Slab Rates for {qty}+ Quantities</h3>
+            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}}/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={() => insertQtySlab(qty, newUnitPrice)}>Submit</Button>
+            </div>
+          </div>
+      )}
+      { editModal && (
+      <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
+          <div onClick={() => {setEditModal(false); setQty(0); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
+            <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
+            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setQty(e.target.value)}}  onFocus={event => event.target.select()}/>
+            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}} onFocus={event => event.target.select()}/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={updateQtySlab}>Submit</Button>
+            </div>
+          </div>
+      )}
+      { newRateModel && (
+      <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
+          <div onClick={() => setNewRateModel(!newRateModel)} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
+            <h3 className='normal-label mb-4 text-black'>Enter new {newRateType}</h3>
+            <TextField id="newRateType" defaultValue={newRateName} value={newRateName} label={newRateType} variant="outlined" size='small' className='w-36' onChange={(e) => {setNewRateName(e.target.value)}}/>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={() => handleSetNewRateName()}>Submit</Button>
+            </div>
+          </div>
+      )}
+            <div> */}
+            <h1 className="font-bold text-3xl text-center mb-8 mr-12 " style={{fontFamily: 'Poppins, sans-serif'}}>Rates Entry</h1>
+
+
+            {/* text-blue-500 */}
+{ modal && (
       <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
           <div onClick={toggleModal} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
@@ -606,7 +643,8 @@ const AdDetailsPage = () => {
             <div>
             
                 <div className="mb-4 flex flex-col items-center justify-center">
-                { !isNewRate && (
+                  
+                {/* { !isNewRate && (
                     <ToggleButtonGroup
                     color="primary"
                     value={invalidRates ? "invalid" : "valid"}
@@ -628,12 +666,12 @@ const AdDetailsPage = () => {
                       style={invalidRates ? { color: 'white' }: {color: 'black'}}
                       >Invalid Rates</ToggleButton>
                   </ToggleButtonGroup>
-                )}
+                )} */}
 
                 <div>
-                <label>Rate Id</label><br/>
+                <label className='mb-4 text-gray-700 font-semibold'>Search Rate Card</label><br/>
                 <input
-                  className="mb-8 text-black w-60 border h-9 p-2 border-gray-300"
+                  className="p-2 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3"
                   type="number"
                   placeholder="Ex. 4000"
                   value={rateId}
@@ -647,7 +685,7 @@ const AdDetailsPage = () => {
               </div>
 
                   {/* Ad Medium of the rate */}
-                  <div>
+                  {/* <div>
                     <label className=''>Ad Medium</label><br />
                     <div className='flex'>
                       <Select
@@ -664,10 +702,33 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
+
+                    <div>
+                      <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Rate Card Name</label>
+                      <div className='flex mr-4'>
+                        <Select
+                          className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+                          id="AdMedium"
+                          name="AdMedium"
+                          placeholder="Select Rate Card Name"
+                          value={selectedValues.rateName} // Assuming selectedValues contains the currently selected value
+                          onChange={(e) => handleSelectChange(e.target.value, 'rateName')}
+                        >
+                          <option value="">Select Rate Card Name</option>
+                          {getDistinctValues('rateName').map((value, index) => (
+                            <option key={index} value={value}>{value}</option>
+                          ))}
+                        </Select>
+                        <button className='justify-center text-blue-400 ml-7 ' onClick={() => {setNewRateModel(true); setNewRateType("Rate Card Name");}}>
+                          <MdAddCircle size={28}/>
+                        </button>
+                      </div>
+                    </div>
+
 
                   {/* Ad Type of the Rate  */}
-                  <div>
+                  {/* <div>
                     <label className=''>Ad Type</label><br />
                     <div className='flex'>
                       <Select
@@ -684,10 +745,12 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
+
+
 
                   {/* Ad Category of the rate  */}
-                  <div>
+                  {/* <div>
                     <label className=''>Ad Category</label><br />
                     <div className='flex'>
                       <Select
@@ -704,10 +767,55 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
+
+                  <div>
+  <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
+  <div className='flex mr-4'>
+    <Select
+      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
+      id="AdCategory"
+      name="AdCategory"
+      placeholder="Select Category"
+      value={selectedValues.adCategory}
+      onChange={(e) => handleSelectChange(e.target.value, 'adCategory')}
+    >
+      <option value="">Category</option>
+      {getOptions('adCategory', selectedValues).map((option, index) => (
+        <option key={index} value={option.value}>{option.label}</option>
+      ))}
+    </Select>
+    <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
+      <MdAddCircle size={28}/>
+    </button>
+  </div>
+</div>
+
+{/* Ad Type of the Rate for GS */}
+<div>
+  <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
+  <div className='flex mr-4'>
+    <Select
+      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+      id="AdType"
+      name="AdType"
+      placeholder="Select Type"
+      value={selectedValues.adType}
+      onChange={(e) => handleSelectChange(e.target.value, 'adType')}
+    >
+      <option value="">Type</option>
+      {getOptions('adType', selectedValues).map((option, index) => (
+        <option key={index} value={option.value}>{option.label}</option>
+      ))}
+    </Select>
+    <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+      <MdAddCircle size={28}/>
+    </button>
+  </div>
+</div>
 
                   {/* Choosing the vendor of the rate  */}
-                  <div>
+                  {/* <div>
                     <label className=''>Vendor</label><br />
                     <Select
                       className='mb-8 text-black w-64'
@@ -719,10 +827,23 @@ const AdDetailsPage = () => {
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
                       options={vendors}
                     />
-                  </div>
+                  </div> */}
+
+<div className="mb-6 mt-4 mr-14">
+  <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
+  <Select
+    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+    id="Vendor"
+    instanceId="Vendor"
+    placeholder="Select Vendor"
+    value={selectedValues.vendorName}
+    onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
+    options={vendors}
+  />
+</div>                  
 
                   {/* Units of the rate. Ex: Bus, Auto */}
-                  <div className='bg-white'>
+                  {/* <div className='bg-white'>
                     <label className=''>Units</label><br />
                     <Select
                       className='mb-8 text-black w-64'
@@ -734,22 +855,49 @@ const AdDetailsPage = () => {
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
                       options={units}
                     />
-                  </div>
+                  </div> */}
+
+<div className="mb-8 mr-14">
+  <label className="block mb-2 text-gray-700 font-semibold">Units</label>
+  <Select
+    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+    id="Units"
+    instanceId="Units"
+    placeholder="Select Units"
+    value={selectedUnit}
+    onChange={(selectedOption) => setSelectedUnit(selectedOption)}
+    options={units}
+  />
+</div>
 
                     {/* Qty Slab of the rate  */}
-                    <div>
+                    {/* <div>
                     <label>Quantity Slab</label>
                     <div className='flex mb-4'>
                     
                       <TextField id="qtySlab" variant="outlined" size='small' className='w-52' type='number' defaultValue={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3" onFocus={(e) => {e.target.select()}}/>
                       <button className='justify-center mb-10 ml-3 text-blue-400' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
                         <MdAddCircle size={28}/>
-                      </button>
+                      </button> */}
+                      {/* <IconButton aria-label="Add" className='mb-10' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
+                        <AddCircleOutline color='primary'/>
+                      </IconButton> */}
+                    {/* </div>
+                  </div> */}
+
+                    <div>
+                    <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
+                    <div className='flex mb-4 mr-7'>
+                      <TextField id="qtySlab" variant="outlined" size='small' className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' defaultValue={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3" onFocus={(e) => {e.target.select()}}/>
+                      <button className='justify-center mb-10 ml-6 text-blue-400' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
+                        <MdAddCircle size={28}/>
+                      </button> 
                       {/* <IconButton aria-label="Add" className='mb-10' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
                         <AddCircleOutline color='primary'/>
                       </IconButton> */}
                     </div>
-                  </div>
+                  </div> 
+
                   {/* Slab List Here  */}
                   <div>
                   {isSlabAvailable && (
@@ -770,7 +918,7 @@ const AdDetailsPage = () => {
                 </div>
 
                   {/* Campaign Duration Text with Units */}
-                  <div>
+                  {/* <div>
                     <div className='flex'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
@@ -794,17 +942,55 @@ const AdDetailsPage = () => {
                     </div>
                     )}
                     </div>
+                  </div> */}
+
+<div>
+                    <div className='flex mr-16 mt-2'>
+                      <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
+                        setShowCampaignDuration(!showCampaignDuration);
+                      }}/>
+                      <label className='justify-left ml-2 text-gray-700 font-semibold'>Campaign Duration</label>
+                    </div>
+                    <div className='mb-8'>
+                    {showCampaignDuration && (
+                    
+                      <div className='flex mr-10'>
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-0 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}} onFocus={(e) => e.target.select()}/>
+                      <Select
+                        className='p-0 glass shadow-2xl w-30 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md '
+                        id='CUnits'
+                        instanceId="CUnits"
+                        placeholder="Units"
+                        defaultValue={selectedCampaignUnits}
+                        onChange={(selectedOption) => setSelectedCampaignUnits(selectedOption)}
+                        options={campaignUnits}
+                      />
+                    </div>
+                    )}
+                    </div>
                   </div>
+
                   {/* Lead Days Text  */}
-                  <div>
+                  {/* <div>
                     <label>Lead Days</label>
                     <div className='flex mb-4'>
                       <TextField id="leadDays" value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
                       <p className='ml-4 mt-2'>Day (s)</p>
                     </div>
+                  </div> */}
+
+                    <div>
+                    <div className='mr-5'>
+                    <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
+                    <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
+                      <TextField id="leadDays" value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
+                      <p className='ml-4 mt-2 '>Day (s)</p>
+                    </div>
+                    </div>
                   </div>
+                  
                   {/* Valid Till Text*/}
-                  <div>
+                  {/* <div>
                   <label>Valid Till</label>
                   <div className='flex mb-4'>
                     <TextField id="validTill" value={validityDays} onChange={handleValidityChange} variant="outlined" size='small' className='w-36' type='number' onFocus={(e) => {e.target.select()}}/>
@@ -830,8 +1016,37 @@ const AdDetailsPage = () => {
                       </div>
                     )}
                     
+                </div> */}
+
+              <div className='mr-9 mt-4'>
+                  <label className="block mb-2 text-gray-700 font-semibold">Valid Till</label>
+                  <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-10'>
+                    <TextField id="validTill" value={validityDays} onChange={handleValidityChange} variant="outlined" size='small' className='w-36' type='number' onFocus={(e) => {e.target.select()}}/>
+                    <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
+                        <Event color='primary'/>
+                      </IconButton>
+                    <p className='ml-1 mt-2'>Day (s)</p>
+                  </div>
+                  {showDatePicker && (
+                    <div>
+                    <p>Select Date:</p>
+                      <DatePicker
+                        selected={validityDate}
+                        onChange={handleDateChange}
+                        dateFormat="dd-MMM-yyyy"
+                        dateFormatCalendar='dd-MMM-yyyy'
+                        showYearDropdown
+                        showMonthDropdown
+                        className="border rounded-md p-2"
+                        minDate={new Date()}
+                        calendarClassName="bg-white shadow-md rounded-md mt-2"
+                      />
+                      </div>
+                    )}
+                    
                 </div>
-                  <div>
+
+                  {/* <div>
                     <label className=''>Rate GST%</label><br />
                     <Select
                       className='mb-8 text-black w-64'
@@ -843,10 +1058,23 @@ const AdDetailsPage = () => {
                       onChange={(selectedOption) => setRateGST(selectedOption)}
                       options={GSTOptions}
                     />
-                  </div>
+                  </div> */}
+
+<div className='mr-6 mt-4'>
+  <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
+  <Select
+    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14"
+    id="RateGST"
+    instanceId="RateGST"
+    placeholder="Select Rate GST%"
+    value={rateGST}
+    onChange={(selectedOption) => setRateGST(selectedOption)}
+    options={GSTOptions}
+  />
+</div>
                 </div>
                 
-                <div className="flex items-center justify-center mb-8">
+                <div className="flex items-center justify-center mb-8 mt-11 mr-14">
                   <button className = "bg-red-400 text-white p-2 rounded-full w-24 justify-center" onClick={rejectRates}>
                     <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span>
                     </button>
@@ -855,7 +1083,7 @@ const AdDetailsPage = () => {
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span>
                       </button>
                     ) : (
-                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center" onClick={updateRates}>
+                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={updateRates}>
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Save</span>
                     </button>
                     )}
