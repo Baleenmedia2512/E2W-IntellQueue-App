@@ -10,11 +10,14 @@ import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { KeyboardReturn } from '@mui/icons-material';
 
 const ClientsData = () => {
-  const loggedInUser = useAppSelector(state => state.authSlice.userName);
+  //const loggedInUser = useAppSelector(state => state.authSlice.userName);
+  const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
+  const [title, setTitle] = useState('Mr.');
   const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
 
   const [toast, setToast] = useState(false);
@@ -47,7 +50,6 @@ const ClientsData = () => {
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&dbname=${'gracescans'}`)
       .then((response) => response.json())
       .then((data) => setConsultantNameSuggestions(data));
-    dispatch(setClientData({ consultantName: newName }));
   };
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
@@ -91,7 +93,9 @@ const ClientsData = () => {
           setClientAge(clientDetails.Age);
           setInputValue(clientDetails.DOB);
           setAddress(clientDetails.address);
-          setGender(clientDetails.gender);
+          setTitle(clientDetails.gender);
+          setConsultantName(clientDetails.consname);
+          setConsultantNumber(clientDetails.consnumber);
         }
       })
       .catch((error) => {
@@ -119,21 +123,23 @@ const ClientsData = () => {
   };
 
   const handleClientSourceChange = (selectedOption) => {
-    dispatch(setClientData({ clientSource: selectedOption.value }));
+    dispatch(setClientData({ clientSource: selectedOption.target.value }));
   };
 
   const handleVendorChange = (newValue) => {
     dispatch(setClientData({ vendorName: newValue }));
   };
 
-  const submitDetails = async() => {
-    if(isDetails && clientName && clientContact && clientSource){
-      dispatch(setQuotesData({currentPage: "checkout"}))
-      router.push('/adDetails')
-    }
+  const submitDetails = async(event) => {
+    event.preventDefault()
+    if(!loggedInUser === 'GraceScans'){
+      if(isDetails && clientName && clientContact && clientSource){
+        dispatch(setQuotesData({currentPage: "checkout"}))
+        router.push('/adDetails')
+      }
     else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&dbname=${'gracescans'}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&dbname=${'gracescans'}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '') {
@@ -147,12 +153,31 @@ const ClientsData = () => {
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
       }
-      
     } catch (error) {
       console.error('Error updating rate:', error);
     }
+  }} 
+  else{
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&dbname=${'gracescans'}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}`)
+      const data = await response.json();
+      if (data === "Values Inserted Successfully!") {
+        if (clientName !== '' && clientContact !== '' && clientSource !== '' && address !== '' && clientAge !== undefined && inputValue !== undefined) {
+          window.alert('Client Details Entered Successfully!')
+          window.location.reload();
+        }
+        else {
+          showToastMessage('warning', 'Please fill all the Required Client Details!')
+        }
+        //setMessage(data.message);
+      } else {
+        (`The following error occurred while inserting data: ${data}`);
+      }
+  }catch (error) {
+    console.error('Error updating rate:', error);
   }
   }
+}
 // Function to format the date as dd-MON-yyyy
 function formatDate(date) {
   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -196,7 +221,7 @@ const handleInputChange = (event) => {
 const handleInputAgeChange = (event) => {
   const inputDate = new Date(event.target.value);
   if (!isNaN(inputDate.getTime())) { // Check if valid date
-    setInputValue(formatDate(inputDate)); // Update the input value
+    setInputValue(event.target.value); // Update the input value
     const age = calculateAge(inputDate); // Calculate age
     setClientAge(age); // Update client age in state
   }
@@ -213,7 +238,7 @@ const calculateAge = (birthDate) => {
 
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
-      <form class="px-7 h-screen grid justify-center items-center ">
+      <form class="px-7 h-screen grid justify-center items-center " onSubmit={submitDetails}>
     <div class="grid gap-6" id="form">
     <h1 className="font-bold text-3xl text-center mb-4 ">Client Registration</h1>
       <div class="w-full flex gap-3">
@@ -221,6 +246,8 @@ const calculateAge = (birthDate) => {
         className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center"
         id="Title"
         name="Title"
+        value={title}
+        onChange={e => setTitle(e.target.value)}
         required
       >
         <option value="Mr.">Mr.</option>
@@ -251,12 +278,12 @@ const calculateAge = (birthDate) => {
       <div class="grid gap-6 w-full">
         <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Contact Number" id="contact" name="contact" required value={clientContact}
         onChange={(e) => handleClientContactChange(e.target.value)}/>
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="Email" placeholder="Email" id="Email" name="email" value={clientEmail}
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="Email" placeholder="Email (Optional)" id="Email" name="email" value={clientEmail}
         onChange={(e) => handleClientEmailChange(e.target.value)}/>
       </div>
       <div class="w-full flex gap-3">
-        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age" value={clientAge} />
-        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" onChange={handleInputAgeChange} value={inputValue}/>
+        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#035ec5] justify-center' type='number' placeholder="Age" value={clientAge} required/>
+        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px]border-[#035ec5]" type="date" onChange={handleInputAgeChange} value={inputValue} required/>
       </div>
       <div class="flex gap-3">
       <textarea
@@ -266,6 +293,7 @@ const calculateAge = (birthDate) => {
         placeholder="Address"
         value={address}
         onChange={e => setAddress(e.target.value)}
+        required
       ></textarea>
         {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
       </div>
@@ -274,6 +302,8 @@ const calculateAge = (birthDate) => {
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#035ec5]"
         id="source"
         name="source"
+        value={clientSource}
+        onChange={handleClientSourceChange}
       >
         <option value="">Select Source</option>
         {sources.map((source, index) => (
@@ -282,7 +312,7 @@ const calculateAge = (birthDate) => {
           </option>
         ))}
       </select>
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={consultantName}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" onChange={handleConsultantNameChange} value={consultantName} required = {clientSource === '5.Consultant' ? true : false}/>
       {consultantNameSuggestions.length > 0 && (
   <ul className="list-none">
     {consultantNameSuggestions.map((name, index) => (
@@ -299,7 +329,7 @@ const calculateAge = (birthDate) => {
     ))}
   </ul>
 )}
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" required = {clientSource === '5.Consultant' ? true : false} value={consultantNumber} onChange={e => setConsultantNumber(e.target.value)}/>
+      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" value={consultantNumber} onChange={e => setConsultantNumber(e.target.value)} required = {clientSource === '5.Consultant' ? true : false}/>
       </div>
       <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#035ec5] hover:border-solid hover:border-[1px]  hover:text-[#035ec5] font-bold" type="submit">Submit</button>
     </div>
