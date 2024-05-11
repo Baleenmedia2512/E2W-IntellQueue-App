@@ -231,7 +231,7 @@ const handleInputAgeChange = (event) => {
         id="Title"
         name="Title"
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        //onChange={e => setTitle(e.target.value)}
         required
         onChange={(e) => {
           const selectedOption = e.target.value;
