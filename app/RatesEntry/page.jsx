@@ -26,8 +26,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
-  // const username = "GraceScans"
-  const username = useAppSelector(state => state.authSlice.userName)
+  const username = "GraceScans"
+  //const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -790,7 +790,7 @@ console.log(filters.package.length)
                   </div> */}
 
 {/* Ad Type of the Rate for GS */}
-<div>
+{/* <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
                     <div className='flex mr-4'>
                       <Select
@@ -807,7 +807,7 @@ console.log(filters.package.length)
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Ad Category of the rate  */}
                   {/* <div>
@@ -829,7 +829,7 @@ console.log(filters.package.length)
                     </div>
                   </div> */}
 
-                  {/* <div>
+                  <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
                     <div className='flex mr-4'>
                       <Select
@@ -837,16 +837,16 @@ console.log(filters.package.length)
                         id="AdCategory"
                         name="AdCategory"
                         placeholder="Select Category"
-                        defaultValue={selectedValues.adCategory}
-                        value={selectedValues.adCategory}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
-                        options={getOptions('adCategory', selectedValues)}
+                        defaultValue={selectedValues.adType}
+                        value={selectedValues.adType}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+                        options={getOptions('adType', selectedValues)}
                       />
                       <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div> */}
+                  </div>
 
                   
 
