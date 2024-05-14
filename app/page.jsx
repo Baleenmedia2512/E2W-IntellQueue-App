@@ -230,7 +230,7 @@ const handleInputAgeChange = (event) => {
         className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
         id="Title"
         name="Title"
-        value={title}
+        value={selectedOption}
         //onChange={e => setTitle(e.target.value)}
         required
         onChange={(e) => {
@@ -390,10 +390,11 @@ const handleInputAgeChange = (event) => {
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="source"
         name="source"
+        defaultValue='Consultant'
         value={clientSource}
         onChange={handleClientSourceChange}
       >
-        <option value="">Select Source</option>
+        <option defaultValue="Consultant">Select Source</option>
         {sources.map((source, index) => (
           <option key={index} value={source}>
             {source}
