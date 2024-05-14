@@ -38,6 +38,16 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
+  useEffect(() => {
+    // Check if age input violates constraints for selected option
+    if ((selectedOption === "Baby." && parseInt(clientAge) > 3) || 
+        (selectedOption === "Master." && (parseInt(clientAge) < 3 || parseInt(clientAge) > 12))) {
+      setDisplayWarning(true);
+    } else {
+      setDisplayWarning(false);
+    }
+  }, [clientAge, selectedOption]); 
+
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails);
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
@@ -97,6 +107,7 @@ const ClientsData = () => {
           setInputValue(clientDetails.DOB);
           setAddress(clientDetails.address);
           setTitle(clientDetails.gender);
+          setSelectedOption(clientDetails.gender);
           setConsultantName(clientDetails.consname);
           setConsultantNumber(clientDetails.consnumber);
         }
@@ -219,7 +230,7 @@ const handleInputAgeChange = (event) => {
   // setInputValue(formatDate(new Date(dob)));
   setClientAge(age);
 };
-
+console.log(clientDetails.gender)
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form class="px-7 h-screen grid justify-center items-center " onSubmit={submitDetails}>
@@ -239,11 +250,7 @@ const handleInputAgeChange = (event) => {
           setClientAge(""); // Clear the age input field when the title changes
 
         // Display DOB warning when selected option is "B/o."
-        if (selectedOption === "B/o.") {
-          setDisplayDOBWarning(true);
-        } else {
-          setDisplayDOBWarning(false);
-        }
+          setDisplayDOBWarning(selectedOption === "B/o.");
       }}
       >
         <option value="Mr.">Mr.</option>
@@ -395,8 +402,7 @@ const handleInputAgeChange = (event) => {
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="source"
         name="source"
-        defaultValue='Consultant'
-        value={clientSource}
+        value={clientSource || "Consultant"}
         onChange={handleClientSourceChange}
       >
         <option defaultValue="Consultant">Select Source</option>

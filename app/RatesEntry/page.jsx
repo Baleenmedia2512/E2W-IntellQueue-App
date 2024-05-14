@@ -26,8 +26,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
-  const username = "GraceScans"
-  //const username = useAppSelector(state => state.authSlice.userName)
+  // const username = "GraceScans"
+  const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -250,6 +250,16 @@ const AdDetailsPage = () => {
     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
     return distinctValues.sort().map(value => ({ value, label: value }));
   };
+//Should not depend on upcoming values
+//   const getOptions = (filterKey, selectedValues) => {
+//     const filteredData = ratesData.filter(item => {
+//         const previousKeys = Object.keys(selectedValues).filter(key => key !== filterKey);
+//         return previousKeys.every(key => !selectedValues[key] || item[key] === selectedValues[key].value);
+//     });
+
+//     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+//     return distinctValues.sort().map(value => ({ value, label: value }));
+// };
 
   // Function to handle dropdown selection
   const handleSelectChange = (selectedOption, filterKey) => {
@@ -258,14 +268,18 @@ const AdDetailsPage = () => {
         [filterKey]: selectedOption,
         adType: null,
         adCategory: null,
-        vendorName: null
+        vendorName: null,
+        package: null,
+        edition: null
       })
     } else if(filterKey === 'adType'){
       setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
         adCategory: null,
-        vendorName: null
+        vendorName: null,
+        package: null,
+        edition: null
       })
     } else {
       // Update the selected values
@@ -313,6 +327,8 @@ const AdDetailsPage = () => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
   },[invalidRates])
 
+console.log(username)
+
   const fetchRates = async () => {
   
     try {
@@ -349,9 +365,14 @@ const AdDetailsPage = () => {
       }
       const data = await response.json();
 
-      if(data === "Rate is rejected" || data === "Not rates found for the provided Rate ID"){
+      if(data === "Rate is rejected" || data === "No rates found for the provided Rate ID"){
         return null
       } else{
+        const validityDate = new Date(data.ValidityDate);
+      const currentDate = new Date()
+        if (validityDate < currentDate){
+          return
+        }
         var editionValues = data.adCategory;
         var packageValues = null;
         const colonIndex = data.adCategory.indexOf(':');
@@ -398,13 +419,14 @@ const AdDetailsPage = () => {
       setLeadDays(data.LeadDays);
       setValidTill(data.ValidityDate)
       setValidityDate(data.ValidityDate)
-      const validityDate = new Date(data.ValidityDate);
-      const currentDate = new Date()
-      if (validityDate < currentDate){
-        setInvalidRates(true);
-      } else{
-        setInvalidRates(false)
-      }
+      // const validityDate = new Date(data.ValidityDate);
+      // const currentDate = new Date()
+      // if (validityDate < currentDate){
+        
+      //   setInvalidRates(true);
+      // } else{
+      //   setInvalidRates(false)
+      // }
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -592,7 +614,7 @@ const AdDetailsPage = () => {
     setIsSlabAvailable(false);
     setSelectedUnit(null);
   }
-
+console.log(filters.package.length)
   return (
     <div className=" mt-8 justify-center">
       
@@ -767,7 +789,25 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-
+{/* Ad Type of the Rate for GS */}
+<div>
+                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
+                    <div className='flex mr-4'>
+                      <Select
+                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        id="AdType"
+                        name="AdType"
+                        placeholder="Select Type"
+                        defaultValue={selectedValues.adType}
+                        value={selectedValues.adType}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+                        options={getOptions('adType', selectedValues)}
+                      />
+                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
+                  </div>
 
                   {/* Ad Category of the rate  */}
                   {/* <div>
@@ -789,7 +829,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-                  <div>
+                  {/* <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
                     <div className='flex mr-4'>
                       <Select
@@ -797,36 +837,18 @@ const AdDetailsPage = () => {
                         id="AdCategory"
                         name="AdCategory"
                         placeholder="Select Category"
-                        defaultValue={selectedValues.adType}
-                        value={selectedValues.adType}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-                        options={getOptions('adType', selectedValues)}
+                        defaultValue={selectedValues.adCategory}
+                        value={selectedValues.adCategory}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
+                        options={getOptions('adCategory', selectedValues)}
                       />
                       <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
-
-                  {/* Ad Type of the Rate for GS */}
-                  {/* <div>
-                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
-                    <div className='flex mr-4'>
-                      <Select
-                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-                        id="AdType"
-                        name="AdType"
-                        placeholder="Select Type"
-                        defaultValue={selectedValues.adType}
-                        value={selectedValues.adType}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-                        options={getOptions('adType', selectedValues)}
-                      />
-                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
-                        <MdAddCircle size={28}/>
-                      </button>
-                    </div>
                   </div> */}
+
+                  
 
                   {/* Ad Type of the Rate for GS */}
                   <div>
@@ -847,7 +869,8 @@ const AdDetailsPage = () => {
                       </button>
                     </div>
                   </div>
-                  {/* {filters.package.length > 0 ? 
+                  {/* {filters.package.length > 0 ?  */}
+                  
                   <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
@@ -865,8 +888,9 @@ const AdDetailsPage = () => {
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
-                </div>: 
-                <></>} */}
+                </div>
+                <></>
+                
                   
                   {/* Choosing the vendor of the rate  */}
                   {/* <div>
