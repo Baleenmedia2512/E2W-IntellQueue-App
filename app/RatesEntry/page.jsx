@@ -109,7 +109,7 @@ const AdDetailsPage = () => {
     if(newUnitPrice > 0){
       try{
         if(!startQty.includes(Number(Qty))){
-          await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}`)
+          await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
           fetchQtySlab();
           setQty(0)
           toggleModal();
@@ -128,9 +128,9 @@ const AdDetailsPage = () => {
   const updateQtySlab = async() => {
     if(newUnitPrice > 0 && qty > 0){
       if(selectedUnitId){
-        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonUnitId=${selectedUnitId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}`);
+        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonUnitId=${selectedUnitId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`);
       } else{
-        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}`);
+        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`);
         toggleModal()
       }
       fetchQtySlab();
@@ -144,7 +144,7 @@ const AdDetailsPage = () => {
   }
 
   const removeQtySlab = async(Qty) => {
-    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}`);
+    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&DBName=${username}`);
     fetchQtySlab();
   }
   
@@ -533,14 +533,16 @@ const AdDetailsPage = () => {
   const insertNewRate = async() => {
 
     try{
-      if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.adCategory === null || selectedValues.vendorName === null){
+      if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null){
         showToastMessage('warning', "Please fill all the fields!");
       } else if(validTill <= 0){
         showToastMessage('warning', "Validity date should 1 or more!")
-      } else if(leadDays <= 0){
-        showToastMessage('warning', "Lead Days should be more than 0!")
-      } else {
-        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.adCategory.value}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}`)
+      } 
+      // else if(leadDays <= 0){
+      //   showToastMessage('warning', "Lead Days should be more than 0!")
+      // } 
+      else {
+        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.edition.value}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}`)
         showToastMessage('success', 'Inserted Successfully!')
         window.location.reload()
       }
@@ -840,7 +842,7 @@ const AdDetailsPage = () => {
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'edition')}
                         options={getOptions('edition', selectedValues)}
                       />
-                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Location");}}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -996,7 +998,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-<div>
+{/* <div>
                     <div className='flex mr-16 mt-2'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
@@ -1020,7 +1022,7 @@ const AdDetailsPage = () => {
                     </div>
                     )}
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Lead Days Text  */}
                   {/* <div>
@@ -1031,7 +1033,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-                    <div>
+                    {/* <div>
                     <div className='mr-5'>
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
                     <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
@@ -1039,7 +1041,7 @@ const AdDetailsPage = () => {
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
-                  </div>
+                  </div> */}
                   
                   {/* Valid Till Text*/}
                   {/* <div>
