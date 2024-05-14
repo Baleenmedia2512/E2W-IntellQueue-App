@@ -435,7 +435,7 @@ const AdDetailsPage = () => {
   
   const updateRates = async() => {
     try{
-    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}`)
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&DBName=${username}`)
     showToastMessage('success', 'Updated Successfully!')
     window.location.reload()
     } catch(error){
@@ -485,26 +485,26 @@ const AdDetailsPage = () => {
     let changedRate = "";
   
     switch (newRateType) {
-      case 'Ad Medium':
+      case 'Rate Card Name':
         updatedOptions = [
           ...getDistinctValues('ratename').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
         ];
         changedRate = "rateName";
         break;
-      case 'Ad Type':
-        updatedOptions = [
-          ...getDistinctValues('adType').map((value) => ({ value, label: value })),
-          { value: newRateName, label: newRateName },
-        ];
-        changedRate = "adType";
-        break;
-      case 'Ad Category':
+      case 'Category':
         updatedOptions = [
           ...getDistinctValues('adCategory').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
         ];
-        changedRate = "adCategory";
+        changedRate = "adType";
+        break;
+      case 'Location':
+        updatedOptions = [
+          ...getDistinctValues('edition').map((value) => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "edition";
         break;
       default:
         return;
@@ -909,18 +909,18 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-<div className="mb-8 mr-14">
-  <label className="block mb-2 text-gray-700 font-semibold">Units</label>
-  <Select
-    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
-    id="Units"
-    instanceId="Units"
-    placeholder="Select Units"
-    value={selectedUnit}
-    onChange={(selectedOption) => setSelectedUnit(selectedOption)}
-    options={units}
-  />
-</div>
+                  <div className="mb-8 mr-14">
+                    <label className="block mb-2 text-gray-700 font-semibold">Units</label>
+                    <Select
+                      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+                      id="Units"
+                      instanceId="Units"
+                      placeholder="Select Units"
+                      value={selectedUnit}
+                      onChange={(selectedOption) => setSelectedUnit(selectedOption)}
+                      options={units}
+                    />
+                  </div>
 
                     {/* Qty Slab of the rate  */}
                     {/* <div>
@@ -1001,7 +1001,7 @@ const AdDetailsPage = () => {
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
                       }}/>
-                      <label className='justify-left ml-2 text-gray-700 font-semibold'>Campaign Duration</label>
+                      <label className='justify-left ml-2 text-gray-700 font-semibold'>Service Duration</label>
                     </div>
                     <div className='mb-8'>
                     {showCampaignDuration && (
