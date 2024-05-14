@@ -261,7 +261,12 @@ console.log(clientDetails.gender)
         <option value="Baby.">Baby.</option>
         <option value="Master.">Master.</option>
       </select>
-        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" type="text" placeholder="Name" id="Name" name="Name" required 
+        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+          type="text" 
+          placeholder="Name" 
+          id="Name" 
+          name="Name" 
+          required 
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
           onKeyDown={(e) => {
@@ -400,7 +405,7 @@ console.log(clientDetails.gender)
         value={clientSource || "Consultant"}
         onChange={handleClientSourceChange}
       >
-        <option value="">Select Source</option>
+        <option defaultValue="Consultant">Select Source</option>
         {sources.map((source, index) => (
           <option key={index} value={source}>
             {source}
