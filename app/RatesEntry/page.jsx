@@ -26,6 +26,7 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
+  // const username = "GraceScans"
   const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
@@ -65,16 +66,20 @@ const AdDetailsPage = () => {
 
   const [filters, setFilters] = useState({
     rateName: [],
+    typeOfAd: [],
     adType: [],
-    adCategory: [],
-    vendorName: []
+    edition: [],
+    vendorName: [],
+    package: []
   });
 
   const [selectedValues, setSelectedValues] = useState({
     rateName: null,
+    typeOfAd: null,
     adType: null,
-    adCategory: null,
-    vendorName: null
+    edition:null,
+    vendorName: null,
+    package: null
   });
 
   // Function to toggle the modal
@@ -82,14 +87,13 @@ const AdDetailsPage = () => {
       setModal((prevState) => !prevState);
   }
 
-  const GSTOptions = ['5', '18'].map(option => ({value: option, label: option}))
+  const GSTOptions = ['0','5', '18'].map(option => ({value: option, label: option}))
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
     setToastMessage(toastMessageContent)
     setToast(true)
   }
-
   useEffect(() => {
      
      // If no username is found, redirect to the login page
@@ -146,7 +150,7 @@ const AdDetailsPage = () => {
   
   const fetchQtySlab = async () => {
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&DBName=${username}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -191,7 +195,7 @@ const AdDetailsPage = () => {
   const fetchAllVendor = async() => {
     const adMed = selectedValues.rateName ? selectedValues.rateName.label : null;
     const adTyp = selectedValues.adType ? selectedValues.adType.label : null;
-    const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonAdMedium=${adMed}&JsonAdType=${adTyp}`)
+    const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonAdMedium=${adMed}&JsonAdType=${adTyp}&DBName=${username}`)
     if(!res.ok){
       throw new Error(`HTTP Error! Status: ${res.status}`);
     }
@@ -203,7 +207,7 @@ const AdDetailsPage = () => {
     const fetchData = async () => {
         try {
           if (selectedValues.rateName && selectedValues.adType) {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}`);
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}&DBName=${username}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -246,6 +250,16 @@ const AdDetailsPage = () => {
     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
     return distinctValues.sort().map(value => ({ value, label: value }));
   };
+//Should not depend on upcoming values
+//   const getOptions = (filterKey, selectedValues) => {
+//     const filteredData = ratesData.filter(item => {
+//         const previousKeys = Object.keys(selectedValues).filter(key => key !== filterKey);
+//         return previousKeys.every(key => !selectedValues[key] || item[key] === selectedValues[key].value);
+//     });
+
+//     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+//     return distinctValues.sort().map(value => ({ value, label: value }));
+// };
 
   // Function to handle dropdown selection
   const handleSelectChange = (selectedOption, filterKey) => {
@@ -254,14 +268,18 @@ const AdDetailsPage = () => {
         [filterKey]: selectedOption,
         adType: null,
         adCategory: null,
-        vendorName: null
+        vendorName: null,
+        package: null,
+        edition: null
       })
     } else if(filterKey === 'adType'){
       setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
         adCategory: null,
-        vendorName: null
+        vendorName: null,
+        package: null,
+        edition: null
       })
     } else {
       // Update the selected values
@@ -271,7 +289,6 @@ const AdDetailsPage = () => {
     });
     }
     
-
     // Update the filters
     setFilters({
       ...filters,
@@ -283,7 +300,8 @@ const AdDetailsPage = () => {
     const selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
       item.adType === selectedValues.adType.value &&
-      item.adCategory === selectedValues.adCategory.value &&
+      (filters.package.length < 1 ? item.adCategory === selectedValues.edition.value : item.adCategory === selectedValues.edition.value + ":" + selectedValues.package.value) &&
+      
       item.vendorName === selectedOption.value
     );
 
@@ -309,12 +327,15 @@ const AdDetailsPage = () => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
   },[invalidRates])
 
+console.log(username)
+
   const fetchRates = async () => {
   
     try {
-      const res = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php');
+      const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php/?DBName=${username}`);
       const data = await res.json();
       const today = new Date();
+      console.log(data);
       const valid = data.filter(item => {
         const validityDate = new Date(item.ValidityDate);
         return validityDate >= today;
@@ -337,17 +358,28 @@ const AdDetailsPage = () => {
   const handleRateId = async () => {
     if(rateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}&DBName=${username}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
 
-      if(data === "Rate is rejected" || data === "Not rates found for the provided Rate ID"){
+      if(data === "Rate is rejected" || data === "No rates found for the provided Rate ID"){
         return null
       } else{
-        
+        const validityDate = new Date(data.ValidityDate);
+      const currentDate = new Date()
+        if (validityDate < currentDate){
+          return
+        }
+        var editionValues = data.adCategory;
+        var packageValues = null;
+        const colonIndex = data.adCategory.indexOf(':');
+        if (colonIndex !== -1) {
+          editionValues = data.adCategory.split(':')[0].trim()
+          packageValues = data.adCategory.split(':')[1].trim()
+        } 
         setSelectedValues({
           rateName: {
             label:  data.rateName ,
@@ -357,9 +389,17 @@ const AdDetailsPage = () => {
             label:  data.adType ,
             value:  data.adType 
           },
-          adCategory: {
-            label:  data.adCategory ,
-            value:  data.adCategory 
+          typeOfAd: {
+            label:  data.typeOfAd ,
+            value:  data.typeOfAd 
+          },
+          edition: {
+            label: editionValues,
+            value: editionValues
+          },
+          package: {
+            label: packageValues,
+            value: packageValues
           },
           vendorName: {
             label:  data.vendorName ,
@@ -379,13 +419,14 @@ const AdDetailsPage = () => {
       setLeadDays(data.LeadDays);
       setValidTill(data.ValidityDate)
       setValidityDate(data.ValidityDate)
-      const validityDate = new Date(data.ValidityDate);
-      const currentDate = new Date()
-      if (validityDate < currentDate){
-        setInvalidRates(true);
-      } else{
-        setInvalidRates(false)
-      }
+      // const validityDate = new Date(data.ValidityDate);
+      // const currentDate = new Date()
+      // if (validityDate < currentDate){
+        
+      //   setInvalidRates(true);
+      // } else{
+      //   setInvalidRates(false)
+      // }
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -553,8 +594,10 @@ const AdDetailsPage = () => {
     setSelectedValues({
       rateName: null,
       adType: null,
-      adCategory: null,
-      vendorName: null
+      vendorName: null,
+      typeOfAd: null,
+      edition: null,
+      package: null
     });
     setValidityDays(0);
     setValidityDate(new Date());
@@ -569,7 +612,7 @@ const AdDetailsPage = () => {
     setIsSlabAvailable(false);
     setSelectedUnit(null);
   }
-
+console.log(filters.package.length)
   return (
     <div className=" mt-8 justify-center">
       
@@ -712,15 +755,12 @@ const AdDetailsPage = () => {
                           id="AdMedium"
                           name="AdMedium"
                           placeholder="Select Rate Card Name"
-                          value={selectedValues.rateName} // Assuming selectedValues contains the currently selected value
-                          onChange={(e) => handleSelectChange(e.target.value, 'rateName')}
-                        >
-                          <option value="">Select Rate Card Name</option>
-                          {getDistinctValues('rateName').map((value, index) => (
-                            <option key={index} value={value}>{value}</option>
-                          ))}
-                        </Select>
-                        <button className='justify-center text-blue-400 ml-7 ' onClick={() => {setNewRateModel(true); setNewRateType("Rate Card Name");}}>
+                          defaultValue={selectedValues.rateName}
+                          value={selectedValues.rateName}
+                          onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
+                          options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+                        />
+                        <button className='justify-center text-blue-400 ml-7' onClick={() => {setNewRateModel(true); setNewRateType("Rate Card Name");}}>
                           <MdAddCircle size={28}/>
                         </button>
                       </div>
@@ -747,7 +787,25 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-
+{/* Ad Type of the Rate for GS */}
+<div>
+                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
+                    <div className='flex mr-4'>
+                      <Select
+                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        id="AdType"
+                        name="AdType"
+                        placeholder="Select Type"
+                        defaultValue={selectedValues.adType}
+                        value={selectedValues.adType}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+                        options={getOptions('adType', selectedValues)}
+                      />
+                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
+                  </div>
 
                   {/* Ad Category of the rate  */}
                   {/* <div>
@@ -769,51 +827,69 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
+                  {/* <div>
+                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
+                    <div className='flex mr-4'>
+                      <Select
+                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
+                        id="AdCategory"
+                        name="AdCategory"
+                        placeholder="Select Category"
+                        defaultValue={selectedValues.adCategory}
+                        value={selectedValues.adCategory}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adCategory')}
+                        options={getOptions('adCategory', selectedValues)}
+                      />
+                      <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
+                  </div> */}
+
+                  
+
+                  {/* Ad Type of the Rate for GS */}
                   <div>
-  <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
-  <div className='flex mr-4'>
-    <Select
-      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
-      id="AdCategory"
-      name="AdCategory"
-      placeholder="Select Category"
-      value={selectedValues.adCategory}
-      onChange={(e) => handleSelectChange(e.target.value, 'adCategory')}
-    >
-      <option value="">Category</option>
-      {getOptions('adCategory', selectedValues).map((option, index) => (
-        <option key={index} value={option.value}>{option.label}</option>
-      ))}
-    </Select>
-    <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
-      <MdAddCircle size={28}/>
-    </button>
-  </div>
-</div>
-
-{/* Ad Type of the Rate for GS */}
-<div>
-  <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
-  <div className='flex mr-4'>
-    <Select
-      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-      id="AdType"
-      name="AdType"
-      placeholder="Select Type"
-      value={selectedValues.adType}
-      onChange={(e) => handleSelectChange(e.target.value, 'adType')}
-    >
-      <option value="">Type</option>
-      {getOptions('adType', selectedValues).map((option, index) => (
-        <option key={index} value={option.value}>{option.label}</option>
-      ))}
-    </Select>
-    <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
-      <MdAddCircle size={28}/>
-    </button>
-  </div>
-</div>
-
+                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Location</label>
+                    <div className='flex mr-4'>
+                      <Select
+                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        id="AdType"
+                        name="AdType"
+                        placeholder="Select Location"
+                        defaultValue={selectedValues.edition}
+                        value={selectedValues.edition}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'edition')}
+                        options={getOptions('edition', selectedValues)}
+                      />
+                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
+                  </div>
+                  {/* {filters.package.length > 0 ?  */}
+                  
+                  <div>
+                  <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
+                  <div className='flex mr-4'>
+                    <Select
+                      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                      id="AdType"
+                      name="AdType"
+                      placeholder="Select Package"
+                      defaultValue={selectedValues.package}
+                      value={selectedValues.package}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'package')}
+                      options={getOptions('package', selectedValues)}
+                    />
+                    <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                      <MdAddCircle size={28}/>
+                    </button>
+                  </div>
+                </div>
+                <></>
+                
+                  
                   {/* Choosing the vendor of the rate  */}
                   {/* <div>
                     <label className=''>Vendor</label><br />
@@ -829,18 +905,18 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-<div className="mb-6 mt-4 mr-14">
-  <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
-  <Select
-    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
-    id="Vendor"
-    instanceId="Vendor"
-    placeholder="Select Vendor"
-    value={selectedValues.vendorName}
-    onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
-    options={vendors}
-  />
-</div>                  
+                <div className="mb-6 mt-4 mr-14">
+                  <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
+                  <Select
+                    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+                    id="Vendor"
+                    instanceId="Vendor"
+                    placeholder="Select Vendor"
+                    value={selectedValues.vendorName}
+                    onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
+                    options={vendors}
+                  />
+                </div>                  
 
                   {/* Units of the rate. Ex: Bus, Auto */}
                   {/* <div className='bg-white'>
