@@ -239,8 +239,8 @@ console.log(clientDetails.gender)
       <div class="w-full flex gap-3">
       <select
         className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
-        id="Title"
-        name="Title"
+        id='1'
+        name="TitleSelect"
         value={selectedOption}
         //onChange={e => setTitle(e.target.value)}
         required
@@ -264,8 +264,8 @@ console.log(clientDetails.gender)
         <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
           type="text" 
           placeholder="Name" 
-          id="Name" 
-          name="Name" 
+          id='2'
+          name="ClientNameInput" 
           required 
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
@@ -299,7 +299,14 @@ console.log(clientDetails.gender)
           </ul>
         )}
       <div class="grid gap-6 w-full">
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="number" placeholder="Contact Number" id="contact" name="contact" required value={clientContact}
+        <input 
+        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        type="number" 
+        placeholder="Contact Number" 
+        id="3" 
+        name="ClientContactInput" 
+        required 
+        value={clientContact}
         onChange={(e) => handleClientContactChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -313,7 +320,12 @@ console.log(clientDetails.gender)
           }
         }}
         />
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="Email" placeholder="Email" id="Email" name="email" value={clientEmail}
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        type="email" 
+        placeholder="Email" 
+        id="4" 
+        name="ClientEmailInput" 
+        value={clientEmail}
         onChange={(e) => handleClientEmailChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -329,18 +341,24 @@ console.log(clientDetails.gender)
         />
       </div>
       <div class="w-full flex gap-3 ">
-        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' type='number' placeholder="Age" value={clientAge} onChange={(e) => {
-        const { value } = e.target;
-        setClientAge(value);
+        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' 
+        type='number' 
+        id='5'
+        name='ClientAgeInput'
+        placeholder="Age" 
+        value={clientAge} 
+        onChange={(e) => {
+          const { value } = e.target;
+          setClientAge(value);
 
-        // Display warning based on the selected option and age input value
-        if ((selectedOption === "Baby." && parseInt(value) > 3) || 
-            (selectedOption === "Master." && (parseInt(value) < 4 || parseInt(value) > 12))) {
-          setDisplayWarning(true);
-        } else {
-          setDisplayWarning(false);
-        }
-      }}  
+          // Display warning based on the selected option and age input value
+          if ((selectedOption === "Baby." && parseInt(value) > 3) || 
+              (selectedOption === "Master." && (parseInt(value) < 4 || parseInt(value) > 12))) {
+            setDisplayWarning(true);
+          } else {
+            setDisplayWarning(false);
+          }
+        }}  
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -353,17 +371,23 @@ console.log(clientDetails.gender)
           }
         }}
         />
-        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" type="date" value={inputValue} onChange={handleInputAgeChange} onKeyDown={(e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      // Find the next input field and focus on it
-      const inputs = document.querySelectorAll('input, select, textarea');
-      const index = Array.from(inputs).findIndex(input => input === e.target);
-      if (index !== -1 && index < inputs.length - 1) {
-        inputs[index + 1].focus();
-      }
-    }
-  }}/>
+        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+        type="date" 
+        name='AgeDatePicker'
+        id='6'
+        value={inputValue} 
+        onChange={handleInputAgeChange} 
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}/>
       </div>
       {displayWarning && (
       <div className={`text-red-600 ${selectedOption === "Baby." ? "ml-12" : "ml-9"}`}>
@@ -378,8 +402,8 @@ console.log(clientDetails.gender)
       <div class="flex gap-3">
       <textarea
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-        id="address"
-        name="address"
+        id="7"
+        name="ClientAddressTextArea"
         placeholder="Address"
         value={address}
         onChange={e => setAddress(e.target.value)}
@@ -400,8 +424,8 @@ console.log(clientDetails.gender)
       <div className='grid gap-6 w-full'>
       <select
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-        id="source"
-        name="source"
+        id="8"
+        name="ClientSourceSelect"
         value={clientSource || "Consultant"}
         onChange={handleClientSourceChange}
       >
@@ -412,18 +436,24 @@ console.log(clientDetails.gender)
           </option>
         ))}
       </select>
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="text" placeholder="Consultant Name" id="consultantname" name="consultantname" required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={consultantName}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          // Find the next input field and focus on it
-          const inputs = document.querySelectorAll('input, select, textarea');
-          const index = Array.from(inputs).findIndex(input => input === e.target);
-          if (index !== -1 && index < inputs.length - 1) {
-            inputs[index + 1].focus();
+      <input 
+        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        type="text" 
+        placeholder="Consultant Name" 
+        id="9" 
+        name="ConsultantNameInput" 
+        required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={consultantName}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
           }
-        }
-      }}
+        }}
       />
       {consultantNameSuggestions.length > 0 && (
   <ul className="list-none">
@@ -443,7 +473,13 @@ console.log(clientDetails.gender)
     ))}
   </ul>
 )}
-      <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" id="consultantnumber" name="consultantnumber" value={consultantNumber} onChange={e => setConsultantNumber(e.target.value)} required = {clientSource === '5.Consultant' ? true : false}/>
+      <input 
+        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" 
+        id="10" 
+        name="ConsultantNumberInput" 
+        value={consultantNumber} 
+        onChange={e => setConsultantNumber(e.target.value)} 
+        required = {clientSource === '5.Consultant' ? true : false}/>
       </div>
       <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
     </div>

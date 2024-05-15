@@ -718,13 +718,19 @@ console.log(filters.package.length)
                 <input
                   className="p-2 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3"
                   type="number"
+                  id="11"
+                  name='RateSearchInput'
                   placeholder="Ex. 4000"
                   value={rateId}
                   onChange = {(e) => setRateId(e.target.value)}
                   onFocus={(e) => {e.target.select()}}
                   // oange = {(e) => setSearchingRateId(e.target.value)}
                 />
-                <Button className='border' onClick={handleClearRateId}>
+                <Button 
+                  className='border' 
+                  id='12'
+                  name='RatesClearButton'
+                  onClick={handleClearRateId}>
                 <FontAwesomeIcon icon={faTimesCircle} className='mr-1 w-6 h-6'/>
               </Button>
               </div>
@@ -754,15 +760,20 @@ console.log(filters.package.length)
                       <div className='flex mr-4'>
                         <Select
                           className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
-                          id="AdMedium"
-                          name="AdMedium"
+                          id="13"
+                          name="RateCardNameSelect"
                           placeholder="Select Rate Card Name"
                           defaultValue={selectedValues.rateName}
                           value={selectedValues.rateName}
                           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
                           options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
                         />
-                        <button className='justify-center text-blue-400 ml-7' onClick={() => {setNewRateModel(true); setNewRateType("Rate Card Name");}}>
+                        <button 
+                          className='justify-center text-blue-400 ml-7' 
+                          onClick={() => {setNewRateModel(true); setNewRateType("Rate Card Name");}}
+                          id='14'
+                          name='AddRateNameButton'
+                        >
                           <MdAddCircle size={28}/>
                         </button>
                       </div>
@@ -790,24 +801,27 @@ console.log(filters.package.length)
                   </div> */}
 
 {/* Ad Type of the Rate for GS */}
-{/* <div>
+<div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
                     <div className='flex mr-4'>
                       <Select
                         className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-                        id="AdType"
-                        name="AdType"
+                        id="15"
+                        name="AdTypeSelect"
                         placeholder="Select Type"
                         defaultValue={selectedValues.adType}
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                         options={getOptions('adType', selectedValues)}
                       />
-                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                      <button className='justify-center text-blue-400 ml-1' 
+                      id='16'
+                      name='AddAdTypeButton'
+                      onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div> */}
+                  </div>
 
                   {/* Ad Category of the rate  */}
                   {/* <div>
@@ -834,15 +848,18 @@ console.log(filters.package.length)
                     <div className='flex mr-4'>
                       <Select
                         className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
-                        id="AdCategory"
-                        name="AdCategory"
+                        id="17"
+                        name="AdCategorySelect"
                         placeholder="Select Category"
                         defaultValue={selectedValues.adType}
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                         options={getOptions('adType', selectedValues)}
                       />
-                      <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
+                      <button className='justify-center text-blue-400 ml-6' 
+                      id='18'
+                      name='AddAdCategoryButton'
+                      onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -850,21 +867,24 @@ console.log(filters.package.length)
 
                   
 
-                  {/* Ad Type of the Rate for GS */}
+                  {/* Location of the Rate for GS */}
                   <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Location</label>
                     <div className='flex mr-4'>
                       <Select
                         className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-                        id="AdType"
-                        name="AdType"
+                        id="19"
+                        name="LocationSelect"
                         placeholder="Select Location"
                         defaultValue={selectedValues.edition}
                         value={selectedValues.edition}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'edition')}
                         options={getOptions('edition', selectedValues)}
                       />
-                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Location");}}>
+                      <button className='justify-center text-blue-400 ml-1' 
+                      id='20'
+                      name='AddLocationButton'
+                      onClick={() => {setNewRateModel(true); setNewRateType("Location");}}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -876,15 +896,18 @@ console.log(filters.package.length)
                   <div className='flex mr-4'>
                     <Select
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-                      id="AdType"
-                      name="AdType"
+                      id="21"
+                      name="PackageSelect"
                       placeholder="Select Package"
                       defaultValue={selectedValues.package}
                       value={selectedValues.package}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'package')}
                       options={getOptions('package', selectedValues)}
                     />
-                    <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                    <button className='justify-center text-blue-400 ml-1' 
+                    id='22'
+                    name='AddPackageButton'
+                    onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
@@ -911,8 +934,8 @@ console.log(filters.package.length)
                   <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
                   <Select
                     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
-                    id="Vendor"
-                    instanceId="Vendor"
+                    id="23"
+                    name="VendorSelect"
                     placeholder="Select Vendor"
                     value={selectedValues.vendorName}
                     onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
@@ -936,11 +959,11 @@ console.log(filters.package.length)
                   </div> */}
 
                   <div className="mb-8 mr-14">
-                    <label className="block mb-2 text-gray-700 font-semibold">Units</label>
+                
                     <Select
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
-                      id="Units"
-                      instanceId="Units"
+                      id="24"
+                      name="UnitsSelect"
                       placeholder="Select Units"
                       value={selectedUnit}
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
