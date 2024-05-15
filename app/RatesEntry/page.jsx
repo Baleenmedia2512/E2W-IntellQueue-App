@@ -4,7 +4,7 @@ import Select from 'react-select';
 import { useRouter } from 'next/navigation';
 import IconButton from '@mui/material/IconButton';
 import {Button} from '@mui/material';
-import { RemoveCircleOutline, Event } from '@mui/icons-material';
+import { RemoveCircleOutline, Event, SignalCellularNullOutlined } from '@mui/icons-material';
 import { TextField } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -26,8 +26,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
-  const username = "GraceScans"
-  //const username = useAppSelector(state => state.authSlice.userName)
+  // const username = "GraceScans"
+  const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -68,7 +68,7 @@ const AdDetailsPage = () => {
     rateName: [],
     typeOfAd: [],
     adType: [],
-    edition: [],
+    location: [],
     vendorName: [],
     package: []
   });
@@ -77,9 +77,9 @@ const AdDetailsPage = () => {
     rateName: null,
     typeOfAd: null,
     adType: null,
-    edition:null,
+    Location: null,
     vendorName: null,
-    package: null
+    Package: null
   });
 
   // Function to toggle the modal
@@ -250,16 +250,30 @@ const AdDetailsPage = () => {
     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
     return distinctValues.sort().map(value => ({ value, label: value }));
   };
-//Should not depend on upcoming values
-//   const getOptions = (filterKey, selectedValues) => {
-//     const filteredData = ratesData.filter(item => {
-//         const previousKeys = Object.keys(selectedValues).filter(key => key !== filterKey);
-//         return previousKeys.every(key => !selectedValues[key] || item[key] === selectedValues[key].value);
-//     });
 
-//     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-//     return distinctValues.sort().map(value => ({ value, label: value }));
-// };
+  // useEffect to update filters whenever selectedValues change
+  // useEffect(() => {
+  //   // Define getFilters function
+  //   const getOptions = (filterKey, selectedValues) => {
+  //     // Filter data based on all selected values except the current filterKey
+  //     const filteredData = ratesData.filter(item => {
+  //       return Object.entries(selectedValues).filter(([key]) => key !== filterKey).every(([key, value]) =>
+  //         !value || item[key] === value.value
+  //       );
+  //     });
+
+  //     // Get distinct values for the current filterKey
+  //     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //     return distinctValues.sort().map(value => ({ value, label: value }));
+  //   };
+
+  //   // Update filters for each dropdown
+  //   const updatedFilters = {};
+  //   Object.keys(selectedValues).forEach(key => {
+  //     updatedFilters[key] = getOptions(key, selectedValues);
+  //   });
+  //   setFilters(updatedFilters);
+  // }, [selectedValues]); // Depend on selectedValues
 
   // Function to handle dropdown selection
   const handleSelectChange = (selectedOption, filterKey) => {
@@ -269,17 +283,41 @@ const AdDetailsPage = () => {
         adType: null,
         adCategory: null,
         vendorName: null,
-        package: null,
-        edition: null
+        Package: null,
+        Location: null,
+        typeOfAd:null
+      })
+    } else if(filterKey === 'typeOfAd'){
+      setSelectedValues({
+        ...selectedValues,
+        [filterKey]: selectedOption,
+        adType: null,
+        adCategory: null,
+        vendorName: null,
+        Package: null,
+        Location: null
       })
     } else if(filterKey === 'adType'){
       setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
-        adCategory: null,
         vendorName: null,
-        package: null,
-        edition: null
+        Package: null,
+        Location: null
+      })
+    } else if(filterKey === 'Location'){
+      setSelectedValues({
+        ...selectedValues,
+        [filterKey]: selectedOption,
+        Package: null,
+        vendorName: null,
+        
+      })
+    } else if(filterKey === 'Package'){
+      setSelectedValues({
+        ...selectedValues,
+        [filterKey]: selectedOption,
+        vendorName: null
       })
     } else {
       // Update the selected values
@@ -300,7 +338,7 @@ const AdDetailsPage = () => {
     const selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
       item.adType === selectedValues.adType.value &&
-      (filters.package.length < 1 ? item.adCategory === selectedValues.edition.value : item.adCategory === selectedValues.edition.value + ":" + selectedValues.package.value) &&
+      (filters.package.length < 1 ? item.adCategory === selectedValues.Location.value : item.Location === selectedValues.Location.value && item.Package === selectedValues.Package.value) &&
       
       item.vendorName === selectedOption.value
     );
@@ -364,7 +402,7 @@ console.log(username)
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-
+console.log(data.Location, data.Package)
       if(data === "Rate is rejected" || data === "No rates found for the provided Rate ID"){
         return null
       } else{
@@ -373,13 +411,13 @@ console.log(username)
         if (validityDate < currentDate){
           return
         }
-        var editionValues = data.adCategory;
-        var packageValues = null;
-        const colonIndex = data.adCategory.indexOf(':');
-        if (colonIndex !== -1) {
-          editionValues = data.adCategory.split(':')[0].trim()
-          packageValues = data.adCategory.split(':')[1].trim()
-        } 
+        // var locationValues = data.location;
+        // var packageValues = data.package;
+        // const colonIndex = data.adCategory.indexOf(':');
+        // if (colonIndex !== -1) {
+        //   locationValues = data.location.split(':')[0].trim()
+        //   packageValues = data.packages.split(':')[1].trim()
+        // } 
         setSelectedValues({
           rateName: {
             label:  data.rateName ,
@@ -393,13 +431,13 @@ console.log(username)
             label:  data.typeOfAd ,
             value:  data.typeOfAd 
           },
-          edition: {
-            label: editionValues,
-            value: editionValues
+          Location: {
+            label: data.Location,
+            value: data.Location
           },
-          package: {
-            label: packageValues,
-            value: packageValues
+          Package: {
+            label: data.Package,
+            value: data.Package
           },
           vendorName: {
             label:  data.vendorName ,
@@ -514,19 +552,33 @@ console.log(username)
         ];
         changedRate = "rateName";
         break;
-      case 'Category':
+      case 'Type':
         updatedOptions = [
-          ...getDistinctValues('adCategory').map((value) => ({ value, label: value })),
+          ...getDistinctValues('adType').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
         ];
         changedRate = "adType";
+      break;
+      case 'Category':
+        updatedOptions = [
+          ...getDistinctValues('typeOfAd').map((value) => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "typeOfAd";
         break;
       case 'Location':
         updatedOptions = [
-          ...getDistinctValues('edition').map((value) => ({ value, label: value })),
+          ...getDistinctValues('Location').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
         ];
-        changedRate = "edition";
+        changedRate = "Location";
+        break;
+        case 'Package':
+        updatedOptions = [
+          ...getDistinctValues('Package').map((value) => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "Package";
         break;
       default:
         return;
@@ -564,15 +616,19 @@ console.log(username)
       //   showToastMessage('warning', "Lead Days should be more than 0!")
       // } 
       else {
-        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.edition.value}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}`)
+        try{
+        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit.value}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}`)
         showToastMessage('success', 'Inserted Successfully!')
         window.location.reload()
+        }catch(error){
+          console.error(error)
+        }
       }
     } catch(error){
+      
         console.error(error);
     }
   }
-
   const handleValidityChange = (e) => {
     const daysToAdd = parseInt(e.target.value);
     if (!isNaN(daysToAdd)) {
@@ -598,8 +654,8 @@ console.log(username)
       adType: null,
       vendorName: null,
       typeOfAd: null,
-      edition: null,
-      package: null
+      Location: null,
+      Package: null
     });
     setValidityDays(0);
     setValidityDate(new Date());
@@ -834,20 +890,39 @@ console.log(filters.package.length)
                     <div className='flex mr-4'>
                       <Select
                         className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
-                        id="AdCategory"
-                        name="AdCategory"
+                        id="typeOfAd"
+                        name="typeOfAd"
                         placeholder="Select Category"
-                        defaultValue={selectedValues.adType}
-                        value={selectedValues.adType}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-                        options={getOptions('adType', selectedValues)}
+                        defaultValue={selectedValues.typeOfAd}
+                        value={selectedValues.typeOfAd}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
+                        options={getOptions('typeOfAd', selectedValues)}
+                        // options={filters.typeOfAd}
                       />
                       <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
                   </div>
-
+                  
+                  <div>
+                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
+                    <div className='flex mr-4'>
+                      <Select
+                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        id="adTypeSelect"
+                        name="adTypeSelect"
+                        placeholder="Select Type"
+                        defaultValue={selectedValues.adType}
+                        value={selectedValues.adType}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+                        options={getOptions('adType', selectedValues)}
+                      />
+                      <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                        <MdAddCircle size={28}/>
+                      </button>
+                    </div>
+                  </div>
                   
 
                   {/* Ad Type of the Rate for GS */}
@@ -856,13 +931,13 @@ console.log(filters.package.length)
                     <div className='flex mr-4'>
                       <Select
                         className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-                        id="AdType"
-                        name="AdType"
+                        id="location"
+                        name="location"
                         placeholder="Select Location"
-                        defaultValue={selectedValues.edition}
-                        value={selectedValues.edition}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'edition')}
-                        options={getOptions('edition', selectedValues)}
+                        defaultValue={selectedValues.Location}
+                        value={selectedValues.Location}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
+                        options={getOptions('Location', selectedValues)}
                       />
                       <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Location");}}>
                         <MdAddCircle size={28}/>
@@ -876,15 +951,15 @@ console.log(filters.package.length)
                   <div className='flex mr-4'>
                     <Select
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-                      id="AdType"
-                      name="AdType"
+                      id="Package"
+                      name="Package"
                       placeholder="Select Package"
-                      defaultValue={selectedValues.package}
-                      value={selectedValues.package}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'package')}
-                      options={getOptions('package', selectedValues)}
+                      defaultValue={selectedValues.Package}
+                      value={selectedValues.Package}
+                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
+                      options={getOptions('Package', selectedValues)}
                     />
-                    <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Type");}}>
+                    <button className='justify-center text-blue-400 ml-1' onClick={() => {setNewRateModel(true); setNewRateType("Package");}}>
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
@@ -978,7 +1053,7 @@ console.log(filters.package.length)
 
                   {/* Slab List Here  */}
                   <div>
-                  {isSlabAvailable && (
+                  {(isSlabAvailable && !isNewRate) && (
                     <div className='text-left justify-start'>
                     <h2 className='mb-4 font-bold'>Rate-Slab</h2>
                     <ul className='mb-4'>
@@ -1022,7 +1097,7 @@ console.log(filters.package.length)
                     </div>
                   </div> */}
 
-{/* <div>
+<div>
                     <div className='flex mr-16 mt-2'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
@@ -1046,7 +1121,7 @@ console.log(filters.package.length)
                     </div>
                     )}
                     </div>
-                  </div> */}
+                  </div>
 
                   {/* Lead Days Text  */}
                   {/* <div>
@@ -1057,7 +1132,7 @@ console.log(filters.package.length)
                     </div>
                   </div> */}
 
-                    {/* <div>
+                    <div>
                     <div className='mr-5'>
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
                     <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
@@ -1065,7 +1140,7 @@ console.log(filters.package.length)
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
-                  </div> */}
+                  </div>
                   
                   {/* Valid Till Text*/}
                   {/* <div>
