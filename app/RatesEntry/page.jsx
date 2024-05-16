@@ -989,8 +989,23 @@ console.log(filters.package.length)
                     <div>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
                     <div className='flex mb-4 mr-7'>
-                      <TextField id="qtySlab" variant="outlined" size='small' className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' defaultValue={qty} onChange={e => setQty(e.target.value)} helperText="Ex: 3 | Means this rate is applicable for Units > 3" onFocus={(e) => {e.target.select()}}/>
-                      <button className='justify-center mb-10 ml-6 text-blue-400' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
+                      <TextField 
+                        id="25" 
+                        name='QuantityText'
+                        variant="outlined" 
+                        size='small' 
+                        className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' 
+                        type='number' 
+                        defaultValue={qty} 
+                        onChange={e => setQty(e.target.value)} 
+                        helperText="Ex: 3 | Means this rate is applicable for Units > 3" 
+                        onFocus={(e) => {e.target.select()}}/>
+                      <button 
+                        className='justify-center mb-10 ml-6 text-blue-400' 
+                        onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
+                        id='26'
+                        name='AddQuantityButton'  
+                      >
                         <MdAddCircle size={28}/>
                       </button> 
                       {/* <IconButton aria-label="Add" className='mb-10' onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}>
@@ -1004,7 +1019,7 @@ console.log(filters.package.length)
                   {isSlabAvailable && (
                     <div className='text-left justify-start'>
                     <h2 className='mb-4 font-bold'>Rate-Slab</h2>
-                    <ul className='mb-4'>
+                    <ul className='mb-4'  >
                       {slabData.map(data => (
                         <div className='flex' key={data.StartQty}>
                           <option key={data.StartQty} className=" mt-1.5" onClick={() => {setEditModal(true); setQty(data.StartQty); setNewUnitPrice(data.UnitPrice); setSelectedUnitId(data.Id)}}>{data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}</option>
@@ -1080,15 +1095,15 @@ console.log(filters.package.length)
                     </div>
                   </div> */}
 
-                    {/* <div>
+                    <div>
                     <div className='mr-5'>
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
                     <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
-                      <TextField id="leadDays" value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
+                      <TextField id="27" name='LeadDaysTextField' value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
-                  </div> */}
+                  </div>
                   
                   {/* Valid Till Text*/}
                   {/* <div>
@@ -1122,7 +1137,16 @@ console.log(filters.package.length)
               <div className='mr-9 mt-4'>
                   <label className="block mb-2 text-gray-700 font-semibold">Valid Till</label>
                   <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-10'>
-                    <TextField id="validTill" value={validityDays} onChange={handleValidityChange} variant="outlined" size='small' className='w-36' type='number' onFocus={(e) => {e.target.select()}}/>
+                    <TextField 
+                      id="28"
+                      name="ValidTillTextField" 
+                      value={validityDays} 
+                      onChange={handleValidityChange} 
+                      variant="outlined" 
+                      size='small' 
+                      className='w-36' 
+                      type='number' 
+                      onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
                       </IconButton>
@@ -1165,7 +1189,8 @@ console.log(filters.package.length)
   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
   <Select
     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14"
-    id="RateGST"
+    id="29"
+    name="RateGSTSelect"
     instanceId="RateGST"
     placeholder="Select Rate GST%"
     value={rateGST}

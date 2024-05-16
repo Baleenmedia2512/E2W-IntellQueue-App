@@ -1,16 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
 import axios from 'axios';
-import Cookies from 'js-cookie';
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
-import { KeyboardReturn } from '@mui/icons-material';
+
 
 const ClientsData = () => {
   //const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -18,11 +14,11 @@ const ClientsData = () => {
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const [title, setTitle] = useState('Mr.');
+  const [clientContactPerson, setClientContactPerson] = useState("")
   // const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
   const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState();
-  const [gender, setGender] = useState();
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
@@ -34,6 +30,8 @@ const ClientsData = () => {
   const [displayWarning, setDisplayWarning] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
+  const [clientGST, setClientGST] = useState("");
+  const [clientPAN, setClientPAN] = useState("");
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -230,7 +228,6 @@ const handleInputAgeChange = (event) => {
   // setInputValue(formatDate(new Date(dob)));
   setClientAge(age);
 };
-console.log(clientDetails.gender)
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form class="px-7 h-screen grid justify-center items-center " onSubmit={submitDetails}>
@@ -262,7 +259,7 @@ console.log(clientDetails.gender)
         <option value="Master.">Master.</option>
       </select>
         <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
-          type="text" 
+          type="text"
           placeholder="Name" 
           id='2'
           name="ClientNameInput" 
@@ -299,6 +296,27 @@ console.log(clientDetails.gender)
           </ul>
         )}
       <div class="grid gap-6 w-full">
+      {selectedOption === 'Ms.' ? (
+        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+          type="text" 
+          placeholder="Contact Person Name" 
+          id="30"
+          name="ClientContactPersonInput"
+          value={clientContactPerson}
+          onChange={(e) => setClientContactPerson(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              // Find the next input field and focus on it
+              const inputs = document.querySelectorAll('input, select, textarea');
+              const index = Array.from(inputs).findIndex(input => input === e.target);
+              if (index !== -1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+              }
+            }
+          }}
+          />
+        ) : (<></>)}
         <input 
         class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
@@ -422,6 +440,46 @@ console.log(clientDetails.gender)
         {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
       </div>
       <div className='grid gap-6 w-full'>
+      <input 
+        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        type="number" 
+        placeholder="GST Number" 
+        id="31" 
+        name="ClientGSTInput" 
+        value={clientContact}
+        onChange={(e) => handleClientContactChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
+        />
+        <input 
+        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        type="number" 
+        placeholder="PAN" 
+        id="32" 
+        name="ClientPANInput" 
+        value={clientContact}
+        onChange={(e) => handleClientContactChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
+        />
       <select
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="8"
