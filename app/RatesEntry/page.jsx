@@ -106,6 +106,11 @@ const AdDetailsPage = () => {
   }, []);
 
   const insertQtySlab = async(Qty, UnitPrice) => {
+    if (isNewRate) {
+      setIsSlabAvailable(true);
+      toggleModal();
+      return;
+    }
     if(newUnitPrice > 0){
       try{
         if(!startQty.includes(Number(Qty))){
@@ -133,21 +138,29 @@ const AdDetailsPage = () => {
         await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`);
         toggleModal()
       }
+      
       fetchQtySlab();
       setQty(0);
       setNewUnitPrice();
       setEditModal(false);
       setNewUnitPrice("");
+      showToastMessage('success', 'Updated Successfully!')
     } else {
       showToastMessage("error", "Enter valid Unit Price or Quantity!")
     }
   }
 
   const removeQtySlab = async(Qty) => {
+    if (isNewRate) {
+      setIsSlabAvailable(false);
+      setQty(0);
+      setNewUnitPrice("");
+      
+    } else {
     await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&DBName=${username}`);
     fetchQtySlab();
-  }
-  
+  }}
+
   const fetchQtySlab = async () => {
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&DBName=${username}`);
@@ -161,6 +174,7 @@ const AdDetailsPage = () => {
       if(firstSelectedSlab){
         setIsSlabAvailable(true)
       }
+      
       setUnitPrice(firstSelectedSlab.UnitPrice);
       setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit});
       setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
@@ -334,13 +348,12 @@ const AdDetailsPage = () => {
     });
 
     // Add logic to fetch rateId after selecting Vendor
-  if (filterKey === 'vendorName' && selectedOption) {
+  if (filterKey === 'adType' && selectedOption) {
     const selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
-      item.adType === selectedValues.adType.value &&
-      (filters.package.length < 1 ? item.adCategory === selectedValues.Location.value : item.Location === selectedValues.Location.value && item.Package === selectedValues.Package.value) &&
-      
-      item.vendorName === selectedOption.value
+      item.typeOfAd === selectedValues.typeOfAd.value && 
+      item.adType === selectedOption.value 
+
     );
 
     if (selectedRate) {
@@ -365,7 +378,6 @@ const AdDetailsPage = () => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
   },[invalidRates])
 
-console.log(username)
 
   const fetchRates = async () => {
   
@@ -373,7 +385,6 @@ console.log(username)
       const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php/?DBName=${username}`);
       const data = await res.json();
       const today = new Date();
-      console.log(data);
       const valid = data.filter(item => {
         const validityDate = new Date(item.ValidityDate);
         return validityDate >= today;
@@ -402,7 +413,6 @@ console.log(username)
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-console.log(data.Location, data.Package)
       if(data === "Rate is rejected" || data === "No rates found for the provided Rate ID"){
         return null
       } else{
@@ -495,7 +505,7 @@ console.log(data.Location, data.Package)
   
   const updateRates = async() => {
     try{
-    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&DBName=${username}`)
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&DBName=${username}&JsonUnit=${selectedUnit.label}`)
     showToastMessage('success', 'Updated Successfully!')
     window.location.reload()
     } catch(error){
@@ -600,12 +610,12 @@ console.log(data.Location, data.Package)
   
     // Close the newRateModel modal
     setIsNewRate(true);
+    setRateId("");
     setNewRateName("");
     setNewRateModel(false);
   };  
 
   const insertNewRate = async() => {
-
     try{
       if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null){
         showToastMessage('warning', "Please fill all the fields!");
@@ -617,8 +627,9 @@ console.log(data.Location, data.Package)
       // } 
       else {
         try{
-        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit.value}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}`)
+        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit.value}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonRatePerUnit=${newUnitPrice}`)
         showToastMessage('success', 'Inserted Successfully!')
+      
         window.location.reload()
         }catch(error){
           console.error(error)
@@ -665,12 +676,13 @@ console.log(data.Location, data.Package)
     setCampaignDuration("");
     setSelectedCampaignUnits("");
     setShowCampaignDuration(false);
-    setStartQty([]);
+    setStartQty(0);
     setSlabData([]);
     setIsSlabAvailable(false);
     setSelectedUnit(null);
   }
-console.log(filters.package.length)
+  const packageOptions = getOptions('Package', selectedValues);
+  
   return (
     <div className=" mt-8 justify-center">
       
@@ -946,6 +958,7 @@ console.log(filters.package.length)
                   </div>
                   {/* {filters.package.length > 0 ?  */}
                   
+                  {(packageOptions.length > 1 || isNewRate) && (
                   <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
@@ -964,6 +977,7 @@ console.log(filters.package.length)
                     </button>
                   </div>
                 </div>
+                  )}
                 <></>
                 
                   
