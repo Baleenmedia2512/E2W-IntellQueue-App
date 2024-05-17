@@ -444,7 +444,7 @@ useEffect(() => {
     )}
 
 {displayDOBWarning && (
-      <div className="text-red-600 ml-9">Note: The DOB should be the baby's</div>
+      <div className="text-red-600 ml-9">Note: The DOB should be the baby&#39;s</div>
     )}
       <div class="flex gap-3">
       <textarea
