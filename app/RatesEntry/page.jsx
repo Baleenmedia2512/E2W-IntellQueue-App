@@ -869,7 +869,7 @@ const AdDetailsPage = () => {
                   </div> */}
 
 {/* Ad Type of the Rate for GS */}
-<div>
+{/* <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
                     <div className='flex mr-4'>
                       <Select
@@ -889,7 +889,7 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Ad Category of the rate  */}
                   {/* <div>
@@ -1049,7 +1049,7 @@ const AdDetailsPage = () => {
                   </div> */}
 
                   <div className="mb-8 mr-14">
-                
+                  <label className="block mb-2 text-gray-700 font-semibold">Units</label>
                     <Select
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
                       id="24"

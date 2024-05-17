@@ -4,7 +4,16 @@ const initialState = {
   clientName: "",
   clientContact: "",
   clientEmail: "",
-  clientSource: ""
+  clientSource: "",
+  clientAge: "",
+  clientDOB: new Date(),
+  clientTitle: "",
+  clientAddress: "",
+  clientGST: "",
+  clientPAN: "",
+  consultantName: "",
+  consultantNumber: ""
+
 };
 
 export const clientSlice = createSlice({
