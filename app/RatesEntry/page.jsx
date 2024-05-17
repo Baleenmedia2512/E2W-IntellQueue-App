@@ -1311,7 +1311,13 @@ const AdDetailsPage = () => {
                   Save
                 </Button> */}
                 </div>
-                
+                <div className="flex items-center justify-center mb-8 mt-11 mr-14">
+                 <button 
+                  class="outline-none glass text-[#008000] shadow-2xl p-3 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] border-[#008000] hover:border-solid hover:border-[1px] w-48 hover:text-[#008000] font-bold rounded-full justify-center"
+                  onClick={() => router.push('/Create-Order')}
+                 >
+                 <img src='/images/add.png' className='w-7 h-7 mr-2'/>Generate Order</button>
+                 </div> 
                 {/* <div className="flex flex-col justify-center items-center ">
                   
                   <p className="font-semibold text-red-500">
