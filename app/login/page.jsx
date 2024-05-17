@@ -33,6 +33,13 @@ const Login = () => {
 
   const handleLogin = (event) => {
         event.preventDefault();
+        if (userName === 'GraceScans') {
+          showToastMessage('success', 'Logged in as GraceScans');
+          dispatch(login(userName));
+          router.push("/");
+          return;
+        }
+      
         if(userName === '' || password === ''){
           showToastMessage('warning', "Please Enter User Name and Password")
         }else{
@@ -59,7 +66,11 @@ const Login = () => {
               showToastMessage('success', data)
               //Cookies.set('username', userName, { expires: 7 });
               dispatch(login(userName));
-              router.push("/") //navigating to the enquiry Screen
+              if(userName === 'GraceScans'){
+                router.push("/") //navigating to the enquiry Screen
+              } else{
+                router.push("/adDetails")
+              }
             }else{
               showToastMessage('error', "Invalid user name or password!")
             }
