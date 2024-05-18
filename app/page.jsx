@@ -32,6 +32,8 @@ const ClientsData = () => {
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
   const [clientGST, setClientGST] = useState("");
   const [clientPAN, setClientPAN] = useState("");
+  const [months, setMonths] = useState('');
+  const [days, setDays] = useState('');
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -228,6 +230,34 @@ const handleInputAgeChange = (event) => {
   // setInputValue(formatDate(new Date(dob)));
   setClientAge(age);
 };
+
+const handleDateChange = (e) => {
+  const dateValue = e.target.value;
+  setInputValue(dateValue);
+
+  // if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
+  if (selectedOption === 'B/o.') {
+    const selectedDate = new Date(dateValue);
+    const today = new Date();
+    const diffTime = Math.abs(today - selectedDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const calculatedMonths = Math.floor(diffDays / 30);
+    const calculatedDays = diffDays % 30;
+
+    setClientAge(calculatedMonths);
+  }
+};
+
+useEffect(() => {
+  // if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
+  if (selectedOption !== 'B/o.') {
+    setMonths('');
+    setDays('');
+  }
+  setInputValue('');
+}, [selectedOption]);
+
   return (
     <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form class="px-7 h-screen grid justify-center items-center " onSubmit={submitDetails}>
@@ -358,7 +388,7 @@ const handleInputAgeChange = (event) => {
         }}
         />
       </div>
-      <div class="w-full flex gap-3 ">
+      {/* <div class="w-full flex gap-3 ">
         <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' 
         type='number' 
         id='5'
@@ -406,7 +436,91 @@ const handleInputAgeChange = (event) => {
             }
           }
         }}/>
-      </div>
+      </div> */}
+      {/* {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? ( */}
+      {selectedOption !== 'B/o.' ? (
+        <div className="w-full flex gap-3">
+          <input
+            className="capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
+            type="number"
+            id="5"
+            name="ClientAgeInput"
+            placeholder="Age"
+            value={clientAge}
+            onChange={(e) => {
+              const { value } = e.target;
+              setClientAge(value);
+
+              if (
+                (selectedOption === 'Baby.' && parseInt(value) > 3) ||
+                (selectedOption === 'Master.' && (parseInt(value) < 4 || parseInt(value) > 12))
+              ) {
+                setDisplayWarning(true);
+              } else {
+                setDisplayWarning(false);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const inputs = document.querySelectorAll('input, select, textarea');
+                const index = Array.from(inputs).findIndex(input => input === e.target);
+                if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
+                }
+              }
+            }}
+          />
+          <input
+            className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+            type="date"
+            name="AgeDatePicker"
+            id="6"
+            value={inputValue}
+            onChange={handleInputAgeChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const inputs = document.querySelectorAll('input, select, textarea');
+                const index = Array.from(inputs).findIndex(input => input === e.target);
+                if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
+                }
+              }
+            }}
+          />
+        </div>
+      ) : (
+        <div className="w-full flex gap-3">
+          <input
+            className="capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
+            type="number"
+            name="MonthsInput"
+            placeholder="Months"
+            value={clientAge}
+            onChange={(e) => setMonths(e.target.value)}
+          />
+          <input
+            className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+            type="date"
+            name="AgeDatePicker"
+            id="7"
+            value={inputValue}
+            onChange={handleDateChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const inputs = document.querySelectorAll('input, select, textarea');
+                const index = Array.from(inputs).findIndex(input => input === e.target);
+                if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
+                }
+              }
+            }}
+          />
+        </div>
+      )}
+
       {displayWarning && (
       <div className={`text-red-600 ${selectedOption === "Baby." ? "ml-12" : "ml-9"}`}>
         {selectedOption === "Baby." && "The age should be less than 3."}
@@ -414,9 +528,9 @@ const handleInputAgeChange = (event) => {
       </div>
     )}
 
-{displayDOBWarning && (
+{/* {displayDOBWarning && (
       <div className="text-red-600 ml-9">Note: The DOB should be the baby's</div>
-    )}
+    )} */}
       <div class="flex gap-3">
       <textarea
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
