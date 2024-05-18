@@ -26,8 +26,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
-  // const username = "GraceScans"
-  const username = useAppSelector(state => state.authSlice.userName)
+  const username = "GraceScans"
+  // const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -351,7 +351,7 @@ const AdDetailsPage = () => {
   if (filterKey === 'adType' && selectedOption) {
     const selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
-      item.typeOfAd === selectedValues.typeOfAd.value && 
+      // item.typeOfAd === selectedValues.typeOfAd.value && 
       item.adType === selectedOption.value 
 
     );
@@ -869,7 +869,7 @@ const AdDetailsPage = () => {
                   </div> */}
 
 {/* Ad Type of the Rate for GS */}
-<div>
+{/* <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
                     <div className='flex mr-4'>
                       <Select
@@ -889,7 +889,7 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Ad Category of the rate  */}
                   {/* <div>
@@ -911,7 +911,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-                  <div>
+                  {/* <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
                     <div className='flex mr-4'>
                       <Select
@@ -929,7 +929,7 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
                   
                   <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
@@ -956,7 +956,7 @@ const AdDetailsPage = () => {
                   
 
                   {/* Location of the Rate for GS */}
-                  <div>
+                  {/* <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Location</label>
                     <div className='flex mr-4'>
                       <Select
@@ -976,10 +976,10 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div>
+                  </div> */}
                   {/* {filters.package.length > 0 ?  */}
                   
-                  {(packageOptions.length > 1 || isNewRate) && (
+                
                   <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
@@ -1001,8 +1001,6 @@ const AdDetailsPage = () => {
                     </button>
                   </div>
                 </div>
-                  )}
-                <></>
                 
                   
                   {/* Choosing the vendor of the rate  */}
@@ -1020,7 +1018,7 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-                <div className="mb-6 mt-4 mr-14">
+                {/* <div className="mb-6 mt-4 mr-14">
                   <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
                   <Select
                     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
@@ -1031,7 +1029,7 @@ const AdDetailsPage = () => {
                     onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
                     options={vendors}
                   />
-                </div>                  
+                </div>                   */}
 
                   {/* Units of the rate. Ex: Bus, Auto */}
                   {/* <div className='bg-white'>
@@ -1048,8 +1046,8 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-                  <div className="mb-8 mr-14">
-                
+                  {/* <div className="mb-8 mr-14">
+                  <label className=''>Units</label><br />
                     <Select
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
                       id="24"
@@ -1059,7 +1057,7 @@ const AdDetailsPage = () => {
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
                       options={units}
                     />
-                  </div>
+                  </div> */}
 
                     {/* Qty Slab of the rate  */}
                     {/* <div>
@@ -1076,7 +1074,7 @@ const AdDetailsPage = () => {
                     {/* </div>
                   </div> */}
 
-                    <div>
+                    <div className='mt-4'>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
                     <div className='flex mb-4 mr-7'>
                       <TextField 
@@ -1150,7 +1148,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-<div>
+{/* <div>
                     <div className='flex mr-16 mt-2'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
@@ -1174,7 +1172,7 @@ const AdDetailsPage = () => {
                     </div>
                     )}
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Lead Days Text  */}
                   {/* <div>
@@ -1185,7 +1183,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-                    <div>
+                    {/* <div>
                     <div className='mr-5'>
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
                     <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
@@ -1193,7 +1191,7 @@ const AdDetailsPage = () => {
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
-                  </div>
+                  </div> */}
                   
                   {/* Valid Till Text*/}
                   {/* <div>
@@ -1275,7 +1273,7 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-<div className='mr-6 mt-4'>
+{/* <div className='mr-6 mt-4'>
   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
   <Select
     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14"
@@ -1287,7 +1285,7 @@ const AdDetailsPage = () => {
     onChange={(selectedOption) => setRateGST(selectedOption)}
     options={GSTOptions}
   />
-</div>
+</div> */}
                 </div>
                 
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
@@ -1316,7 +1314,7 @@ const AdDetailsPage = () => {
                   class="outline-none glass text-[#008000] shadow-2xl p-3 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] border-[#008000] hover:border-solid hover:border-[1px] w-48 hover:text-[#008000] font-bold rounded-full justify-center"
                   onClick={() => router.push('/Create-Order')}
                  >
-                 <img src='/images/add.png' className='w-7 h-7 mr-2'/>Generate Order</button>
+                 <img src='/images/add.png' className='w-7 h-7 mr-2'/>Create Order</button>
                  </div> 
                 {/* <div className="flex flex-col justify-center items-center ">
                   
