@@ -711,7 +711,7 @@ const AdDetailsPage = () => {
     setIsSlabAvailable(false);
     setSelectedUnit(null);
   }
-  const packageOptions = getOptions('Package', selectedValues);
+  // const packageOptions = getOptions('Package', selectedValues);
   
   return (
     <div className=" mt-8 justify-center">
@@ -865,6 +865,8 @@ const AdDetailsPage = () => {
                           value={selectedValues.rateName}
                           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
                           options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+                          required
+                          
                         />
                         <button 
                           className='justify-center text-blue-400 ml-7' 
@@ -954,6 +956,7 @@ const AdDetailsPage = () => {
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
                         options={getOptions('typeOfAd', selectedValues)}
                         // options={filters.typeOfAd}
+                        required
                       />
                       <button className='justify-center text-blue-400 ml-6' onClick={() => {setNewRateModel(true); setNewRateType("Category");}}>
                         <MdAddCircle size={28}/>
@@ -973,6 +976,7 @@ const AdDetailsPage = () => {
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                         options={getOptions('adType', selectedValues)}
+                        required
                       />
                       <button className='justify-center text-blue-400 ml-1' 
                       id='18'
@@ -998,6 +1002,7 @@ const AdDetailsPage = () => {
                         value={selectedValues.Location}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
                         options={getOptions('Location', selectedValues)}
+                        required
                       />
                       <button className='justify-center text-blue-400 ml-1' 
                       id='20'
@@ -1009,8 +1014,8 @@ const AdDetailsPage = () => {
                   </div> */}
                   {/* {filters.package.length > 0 ?  */}
                   
-                
-                  {/* <div>
+                  {/* {(packageOptions.length > 1 || isNewRate) && ( */}
+                  <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
                     <Select
@@ -1022,6 +1027,7 @@ const AdDetailsPage = () => {
                       value={selectedValues.Package}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
                       options={getOptions('Package', selectedValues)}
+                      required
                     />
                     <button className='justify-center text-blue-400 ml-1' 
                     id='22'
@@ -1030,7 +1036,9 @@ const AdDetailsPage = () => {
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
-                </div> */}
+                </div>
+                  {/* )} */}
+                <></>
                 
                   
                   {/* Choosing the vendor of the rate  */}
@@ -1058,6 +1066,7 @@ const AdDetailsPage = () => {
                     value={selectedValues.vendorName}
                     onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
                     options={vendors}
+                    required
                   />
                 </div>                   */}
 
@@ -1086,6 +1095,7 @@ const AdDetailsPage = () => {
                       value={selectedUnit}
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
                       options={units}
+                      required
                     />
                   </div> : <></>}
 
@@ -1117,8 +1127,10 @@ const AdDetailsPage = () => {
                         type='number' 
                         defaultValue={qty} 
                         onChange={e => setQty(e.target.value)} 
+                        required
                         helperText="Ex: 3 | Means this rate is applicable for Units > 3" 
                         onFocus={(e) => {e.target.select()}}/>
+                        
                       <button 
                         className='justify-center mb-10 ml-6 text-blue-400' 
                         onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
@@ -1281,6 +1293,7 @@ const AdDetailsPage = () => {
                       size='small' 
                       className='w-36' 
                       type='number' 
+                      required
                       onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
@@ -1331,6 +1344,7 @@ const AdDetailsPage = () => {
     value={rateGST}
     onChange={(selectedOption) => setRateGST(selectedOption)}
     options={GSTOptions}
+    required
   />
 </div> */}
                 </div>
@@ -1345,7 +1359,7 @@ const AdDetailsPage = () => {
                       </button>
                     ) : (
                       <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={updateRates}>
-                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Save</span>
+                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span>
                     </button>
                     )}
                     
