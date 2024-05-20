@@ -538,29 +538,23 @@ const AdDetailsPage = () => {
   }
 
   const handleDateChange = (event) => {
-    // Set current date to midnight
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
+    const parsedDate1 = new Date(event);
+    parsedDate1.setHours(0,0,0,0);
+
+    // Set time part of parsedDate2 to midnight
+    const parsedDate2 = new Date();
+    parsedDate2.setHours(0, 0, 0, 0);
   
-    // Extract the selected date from the event
-    let validityDay = new Date(event);
+    // Calculate the difference in milliseconds
+    const differenceInMilliseconds = parsedDate1 - parsedDate2;
   
-    // Set the selected date to midnight
-    validityDay.setHours(0, 0, 0, 0);
-  
-    // Update the state with the selected date
-    setValidityDate(validityDay);
-  
-    // Format the selected date for display
-    let formattedValidityDate = validityDay.toISOString().split('T')[0];
-    setValidTill(formattedValidityDate);
-  
-    // Calculate the difference in days
-    const differenceInMilliseconds = validityDay - currentDate;
+    // Convert the difference to days
     const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
   
-    // Update the state with the difference in days
+    // Update state with the calculated difference
     setValidityDays(differenceInDays);
+
+    setValidityDate(parsedDate1);
   };
   
   const handleSetNewRateName = () => {
@@ -1305,6 +1299,7 @@ const AdDetailsPage = () => {
                     <p>Select Date:</p>
                       <DatePicker
                         selected={validityDate}
+                        //onChange={handleDateChange}
                         onChange={handleDateChange}
                         dateFormat="dd-MMM-yyyy"
                         dateFormatCalendar='dd-MMM-yyyy'
