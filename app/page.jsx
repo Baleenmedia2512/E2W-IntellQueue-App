@@ -251,7 +251,7 @@ const handleDateChange = (e) => {
 
 useEffect(() => {
   // if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
-  if (selectedOption !== 'B/o.') {
+  if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
     setMonths('');
     setDays('');
   }
@@ -438,7 +438,7 @@ useEffect(() => {
         }}/>
       </div> */}
       {/* {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? ( */}
-      {selectedOption !== 'B/o.' ? (
+      {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? (
         <div className="w-full flex gap-3">
           <input
             className="capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
@@ -554,7 +554,7 @@ useEffect(() => {
         {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
       </div>
       <div className='grid gap-6 w-full'>
-      <input 
+      {/* <input 
         class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
         placeholder="GST Number" 
@@ -593,7 +593,7 @@ useEffect(() => {
             }
           }
         }}
-        />
+        /> */}
       <select
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="8"

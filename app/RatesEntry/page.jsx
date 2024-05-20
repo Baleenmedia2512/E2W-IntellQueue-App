@@ -503,15 +503,29 @@ const AdDetailsPage = () => {
     setValidityDays(differenceInDays);
   };
   
-  const updateRates = async() => {
-    try{
-    await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&DBName=${username}&JsonUnit=${selectedUnit.label}`)
-    showToastMessage('success', 'Updated Successfully!')
-    window.location.reload()
-    } catch(error){
-      console.error(error);
+  const updateRates = async () => {
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&DBName=${username}&JsonUnit=${selectedUnit.label}`);
+  
+      // Check if the response is ok (status in the range 200-299)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+  
+      if (data.error) {
+        throw new Error(data.error);
+      }
+  
+      showToastMessage('success', 'Updated Successfully!');
+      // window.location.reload();
+    } catch (error) {
+      console.error('Error:', error);
+      showToastMessage('error', error.message);
     }
-  }
+  };
+  
 
   const rejectRates = async() => {
     try{
@@ -615,6 +629,20 @@ const AdDetailsPage = () => {
     setNewRateModel(false);
   };  
 
+  useEffect(() => {
+    const setVendor = () => {
+      if(username === 'GraceScans' && selectedValues.vendorName === null){
+        setSelectedValues({
+          ...selectedValues,
+          vendorName: {
+            label: 'Self',
+            value: 'Self'
+          }
+        })
+      }
+    }
+    setVendor()
+  }, [selectedValues])
   const insertNewRate = async() => {
     try{
       if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null){
@@ -627,10 +655,12 @@ const AdDetailsPage = () => {
       // } 
       else {
         try{
-        await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST.value}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit.value}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonRatePerUnit=${newUnitPrice}`)
-        showToastMessage('success', 'Inserted Successfully!')
-      
-        window.location.reload()
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${newUnitPrice}`)
+        const data = await response.json();
+
+        showToastMessage('success', 'Inserted Successfully!' + data)
+        console.log(data)
+        // window.location.reload()
         }catch(error){
           console.error(error)
         }
@@ -980,7 +1010,7 @@ const AdDetailsPage = () => {
                   {/* {filters.package.length > 0 ?  */}
                   
                 
-                  <div>
+                  {/* <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
                     <Select
@@ -1000,7 +1030,7 @@ const AdDetailsPage = () => {
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
-                </div>
+                </div> */}
                 
                   
                   {/* Choosing the vendor of the rate  */}
@@ -1046,7 +1076,7 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-                  {/* <div className="mb-8 mr-14">
+                {isNewRate || (rateId > 0 && slabData.length < 1) ? <div className="mb-4 mr-14">
                   <label className=''>Units</label><br />
                     <Select
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
@@ -1057,7 +1087,7 @@ const AdDetailsPage = () => {
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
                       options={units}
                     />
-                  </div> */}
+                  </div> : <></>}
 
                     {/* Qty Slab of the rate  */}
                     {/* <div>
@@ -1074,6 +1104,7 @@ const AdDetailsPage = () => {
                     {/* </div>
                   </div> */}
 
+                    {isNewRate || (rateId > 0 && slabData.length < 1) ? (
                     <div className='mt-4'>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
                     <div className='flex mb-4 mr-7'>
@@ -1101,16 +1132,18 @@ const AdDetailsPage = () => {
                       </IconButton> */}
                     </div>
                   </div> 
-
+):<></>}
                   {/* Slab List Here  */}
                   <div>
-                  {(isSlabAvailable && !isNewRate) && (
-                    <div className='text-left justify-start'>
+                  {(isSlabAvailable && !isNewRate) ? (
+                    <div className='text-left justify-start mt-4'>
                     <h2 className='mb-4 font-bold'>Rate-Slab</h2>
-                    <ul className='mb-4'  >
+                    <ul className='mb-4 mr-4'  >
                       {slabData.map(data => (
                         <div className='flex' key={data.StartQty}>
-                          <option key={data.StartQty} className=" mt-1.5" onClick={() => {setEditModal(true); setQty(data.StartQty); setNewUnitPrice(data.UnitPrice); setSelectedUnitId(data.Id)}}>{data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}</option>
+                          <option key={data.StartQty} className=" mt-1.5 " 
+                          onClick={() => {setEditModal(true); setQty(data.StartQty); setNewUnitPrice(data.UnitPrice); setSelectedUnitId(data.Id)}}
+                          >{data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}</option>
                           <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty)}>
                             <RemoveCircleOutline color='secondary' fontSize='small'/>
                           </IconButton>
@@ -1118,9 +1151,23 @@ const AdDetailsPage = () => {
                       ))}
                     </ul>
                     </div>
-                  )}
+                  ) : isSlabAvailable ?
+                  <div className='text-left justify-start mt-4'>
+                    <h2 className='mb-4 font-bold'>Rate-Slab</h2>
+                    <ul className='mb-4 mr-4'  >
+                    <div className='flex'>
+                          <option key={qty} className=" mt-1.5 " 
+                          onClick={() => {setEditModal(true); setQty(qty); setNewUnitPrice(newUnitPrice)}}
+                          >{qty} {selectedUnit.value} - ₹{formattedMargin(newUnitPrice)} per {selectedUnit.value}</option>
+                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(qty)}>
+                            <RemoveCircleOutline color='secondary' fontSize='small'/>
+                          </IconButton>
+                          </div>
+                    </ul>
+                    </div>
+                    : <></>}
                 </div>
-
+                
                   {/* Campaign Duration Text with Units */}
                   {/* <div>
                     <div className='flex'>
