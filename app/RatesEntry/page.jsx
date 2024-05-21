@@ -26,8 +26,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
-  const username = "GraceScans"
-  // const username = useAppSelector(state => state.authSlice.userName)
+  // const username = "GraceScans"
+  const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -63,6 +63,7 @@ const AdDetailsPage = () => {
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
   const [rateGST, setRateGST] = useState(null);
+  const [tempSlabData, setTempSlabData] = useState([]);
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -112,6 +113,7 @@ const AdDetailsPage = () => {
       return;
     }
     if(newUnitPrice > 0){
+      setTempSlabData([...tempSlabData, { qty, newUnitPrice: price }]);
       try{
         if(!startQty.includes(Number(Qty))){
           await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
@@ -151,15 +153,19 @@ const AdDetailsPage = () => {
   }
 
   const removeQtySlab = async(Qty) => {
+    
     if (isNewRate) {
       setIsSlabAvailable(false);
       setQty(0);
       setNewUnitPrice("");
+      setTempSlabData(tempSlabData.filter((_, i) => i !== index));
       
     } else {
     await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&DBName=${username}`);
     fetchQtySlab();
   }}
+
+
 
   const fetchQtySlab = async () => {
     try {
@@ -347,14 +353,27 @@ const AdDetailsPage = () => {
       [filterKey]: selectedOption.value
     });
 
+var selectedRate = '';
     // Add logic to fetch rateId after selecting Vendor
   if (filterKey === 'adType' && selectedOption) {
-    const selectedRate = ratesData.find(item =>
+      selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
       // item.typeOfAd === selectedValues.typeOfAd.value && 
       item.adType === selectedOption.value 
 
-    );
+    );}
+    if (filterKey === 'Location' && selectedOption) {
+        selectedRate = ratesData.find(item =>
+        item.rateName === selectedValues.rateName.value &&
+        item.Loaction === selectedOption.value 
+  
+      );}
+      if (filterKey === 'Package' && selectedOption) {
+          selectedRate = ratesData.find(item =>
+          item.rateName === selectedValues.rateName.value &&
+          item.Package === selectedOption.value 
+    
+        );}
 
     if (selectedRate) {
       setRateId(selectedRate.RateID);
@@ -368,7 +387,7 @@ const AdDetailsPage = () => {
       setValidTill(selectedRate.ValidityDate)
       setValidityDate(selectedRate.ValidityDate)
     }
-  }
+  
   if (filterKey !== 'vendorName'){
     setIsNewRate(false)
   }
@@ -704,6 +723,8 @@ const AdDetailsPage = () => {
     setSlabData([]);
     setIsSlabAvailable(false);
     setSelectedUnit(null);
+    setQty(0);
+    setUnitPrice(0);
   }
   // const packageOptions = getOptions('Package', selectedValues);
   
@@ -937,7 +958,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-                  {/* <div>
+                  <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
                     <div className='flex mr-4'>
                       <Select
@@ -956,7 +977,7 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div> */}
+                  </div>
                   
                   <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
@@ -984,7 +1005,7 @@ const AdDetailsPage = () => {
                   
 
                   {/* Location of the Rate for GS */}
-                  {/* <div>
+                  <div>
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Location</label>
                     <div className='flex mr-4'>
                       <Select
@@ -1005,7 +1026,7 @@ const AdDetailsPage = () => {
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
-                  </div> */}
+                  </div>
                   {/* {filters.package.length > 0 ?  */}
                   
                   {/* {(packageOptions.length > 1 || isNewRate) && ( */}
@@ -1050,7 +1071,7 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-                {/* <div className="mb-6 mt-4 mr-14">
+                <div className="mb-6 mt-4 mr-14">
                   <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
                   <Select
                     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
@@ -1062,7 +1083,7 @@ const AdDetailsPage = () => {
                     options={vendors}
                     required
                   />
-                </div>                   */}
+                </div>                  
 
                   {/* Units of the rate. Ex: Bus, Auto */}
                   {/* <div className='bg-white'>
@@ -1079,7 +1100,8 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-                {isNewRate || (rateId > 0 && slabData.length < 1) ? <div className="mb-4 mr-14">
+                {/* {isNewRate || (rateId > 0 && slabData.length < 1) ?  */}
+                  <div className="mb-4 mr-14"> 
                   <label className=''>Units</label><br />
                     <Select
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
@@ -1091,7 +1113,8 @@ const AdDetailsPage = () => {
                       options={units}
                       required
                     />
-                  </div> : <></>}
+                  </div>
+                   {/* : <></>}
 
                     {/* Qty Slab of the rate  */}
                     {/* <div>
@@ -1108,7 +1131,7 @@ const AdDetailsPage = () => {
                     {/* </div>
                   </div> */}
 
-                    {isNewRate || (rateId > 0 && slabData.length < 1) ? (
+                    {/* {isNewRate || (rateId > 0 && slabData.length < 1) ? ( */}
                     <div className='mt-4'>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
                     <div className='flex mb-4 mr-7'>
@@ -1127,7 +1150,7 @@ const AdDetailsPage = () => {
                         
                       <button 
                         className='justify-center mb-10 ml-6 text-blue-400' 
-                        onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
+                        onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
                         id='26'
                         name='AddQuantityButton'  
                       >
@@ -1138,7 +1161,7 @@ const AdDetailsPage = () => {
                       </IconButton> */}
                     </div>
                   </div> 
-):<></>}
+{/* ):<></>} */}
                   {/* Slab List Here  */}
                   <div>
                   {(isSlabAvailable && !isNewRate) ? (
@@ -1157,23 +1180,24 @@ const AdDetailsPage = () => {
                       ))}
                     </ul>
                     </div>
-                  ) : isSlabAvailable ?
+                  ) : isNewRate ?
                   <div className='text-left justify-start mt-4'>
                     <h2 className='mb-4 font-bold'>Rate-Slab</h2>
                     <ul className='mb-4 mr-4'  >
-                    <div className='flex'>
-                          <option key={qty} className=" mt-1.5 " 
-                          onClick={() => {setEditModal(true); setQty(qty); setNewUnitPrice(newUnitPrice)}}
-                          >{qty} {selectedUnit.value} - ₹{formattedMargin(newUnitPrice)} per {selectedUnit.value}</option>
-                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(qty)}>
-                            <RemoveCircleOutline color='secondary' fontSize='small'/>
-                          </IconButton>
-                          </div>
+                    {tempSlabData.map((data, index) => (
+                      <div key={index} className='flex'>
+                        <span>{data.qty} {selectedUnit.value} - ₹{formattedMargin(data.newUnitPrice)} per {selectedUnit.value}</span>
+                        <IconButton aria-label="Remove" onClick={() => removeQtySlab(index)}>
+                          <RemoveCircleOutline color='secondary' fontSize='small'/>
+                        </IconButton>
+                      </div>
+                    ))}
                     </ul>
                     </div>
                     : <></>}
                 </div>
-                
+
+
                   {/* Campaign Duration Text with Units */}
                   {/* <div>
                     <div className='flex'>
@@ -1201,7 +1225,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-{/* <div>
+<div>
                     <div className='flex mr-16 mt-2'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
@@ -1225,7 +1249,7 @@ const AdDetailsPage = () => {
                     </div>
                     )}
                     </div>
-                  </div> */}
+                  </div>
 
                   {/* Lead Days Text  */}
                   {/* <div>
@@ -1236,7 +1260,7 @@ const AdDetailsPage = () => {
                     </div>
                   </div> */}
 
-                    {/* <div>
+                    <div>
                     <div className='mr-5'>
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
                     <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
@@ -1244,7 +1268,7 @@ const AdDetailsPage = () => {
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
-                  </div> */}
+                  </div>
                   
                   {/* Valid Till Text*/}
                   {/* <div>
@@ -1328,7 +1352,7 @@ const AdDetailsPage = () => {
                     />
                   </div> */}
 
-{/* <div className='mr-6 mt-4'>
+<div className='mr-6 mt-4'>
   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
   <Select
     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14"
@@ -1341,7 +1365,7 @@ const AdDetailsPage = () => {
     options={GSTOptions}
     required
   />
-</div> */}
+</div>
                 </div>
                 
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
