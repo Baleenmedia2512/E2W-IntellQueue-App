@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef  } from 'react';
 import Select from 'react-select';
 import { useRouter } from 'next/navigation';
 import IconButton from '@mui/material/IconButton';
@@ -64,6 +64,8 @@ const AdDetailsPage = () => {
   const [newRateName, setNewRateName] = useState("");
   const [rateGST, setRateGST] = useState(null);
   const [tempSlabData, setTempSlabData] = useState([]);
+  const [isFormChanged, setIsFormChanged] = useState(false);
+  const [initialState, setInitialState] = useState({ validityDays: '', rateGST: null });
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -88,6 +90,19 @@ const AdDetailsPage = () => {
       setModal((prevState) => !prevState);
   }
 
+  useEffect(() => {
+    setInitialState({ validityDays, rateGST });
+  }, []);
+
+  useEffect(() => {
+    const isChanged = 
+      validityDays !== initialState.validityDays || 
+      rateGST !== initialState.rateGST;
+    setIsFormChanged(isChanged);
+    console.log(isFormChanged)
+  }, [validityDays, rateGST, initialState]);
+  
+  
   const GSTOptions = ['0','5', '18'].map(option => ({value: option, label: option}))
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
@@ -107,13 +122,16 @@ const AdDetailsPage = () => {
   }, []);
 
   const insertQtySlab = async(Qty, UnitPrice) => {
+    const price = parseFloat(newUnitPrice);
     if (isNewRate) {
+      if (!isNaN(price)) {
+      setTempSlabData([...tempSlabData, { Qty, newUnitPrice: price }]);
+      }
       setIsSlabAvailable(true);
-      toggleModal();
-      return;
     }
+    
     if(newUnitPrice > 0){
-      setTempSlabData([...tempSlabData, { qty, newUnitPrice: price }]);
+      
       try{
         if(!startQty.includes(Number(Qty))){
           await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
@@ -131,7 +149,54 @@ const AdDetailsPage = () => {
       showToastMessage("error", "Enter valid Unit Price!")
     }
   }
+//   const insertQtySlab = async() => {
+//   if (isNewRate) {
+//     const price = parseFloat(newUnitPrice);
+//     if (!isNaN(price)) {
+//       setTempSlabData([...tempSlabData, { qty, newUnitPrice: price }]);
+//     }
+//     setIsSlabAvailable(true);
+//     toggleModal();
+//   }
 
+//   if (newUnitPrice > 0) {
+//     try {
+//       const slabsData = tempSlabData.map(({ qty, newUnitPrice }) => ({
+//         Qty: qty,
+//         UnitPrice: newUnitPrice
+//       }));
+
+//       const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php`, {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({
+//           slabs: slabsData,
+//           JsonEntryUser: username,
+//           DBName: username,
+//           JsonUnit: selectedUnit.label
+//         })
+//       });
+
+//       const { message, RateId } = await response.json(); // Assuming the PHP script returns the message and RateId
+
+//       fetchQtySlab();
+//       setQty(0);
+//       toggleModal();
+//       setNewUnitPrice("");
+
+//       console.log(message); // Log the success message
+//       console.log("RateId:", RateId); // Log the returned RateId
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   } else {
+//     showToastMessage("error", "Enter valid Unit Price!");
+//   }
+// }
+
+  
   const updateQtySlab = async() => {
     if(newUnitPrice > 0 && qty > 0){
       if(selectedUnitId){
@@ -656,6 +721,7 @@ var selectedRate = '';
     }
     setVendor()
   }, [selectedValues])
+
   const insertNewRate = async() => {
     try{
       if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null){
@@ -668,7 +734,7 @@ var selectedRate = '';
       // } 
       else {
         try{
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${newUnitPrice}`)
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${newUnitPrice}`)
         const data = await response.json();
 
         showToastMessage('success', 'Inserted Successfully!' + data)
@@ -1377,7 +1443,7 @@ var selectedRate = '';
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span>
                       </button>
                     ) : (
-                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={updateRates}>
+                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={updateRates} disabled={!isFormChanged}>
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span>
                     </button>
                     )}
