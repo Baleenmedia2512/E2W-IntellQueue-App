@@ -860,6 +860,7 @@ const AdDetailsPage = () => {
                           className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
                           id="13"
                           name="RateCardNameSelect"
+                          required
                           placeholder="Select Rate Card Name"
                           defaultValue={selectedValues.rateName}
                           value={selectedValues.rateName}
@@ -970,6 +971,7 @@ const AdDetailsPage = () => {
                         name="adTypeSelect"
                         placeholder="Select Type"
                         defaultValue={selectedValues.adType}
+                        required
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                         options={getOptions('adType', selectedValues)}
@@ -1082,6 +1084,7 @@ const AdDetailsPage = () => {
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
                       id="24"
                       name="UnitsSelect"
+                      required = {isNewRate ? true : false}
                       placeholder="Select Units"
                       value={selectedUnit}
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
@@ -1113,6 +1116,7 @@ const AdDetailsPage = () => {
                         name='QuantityText'
                         variant="outlined" 
                         size='small' 
+                        required = {isNewRate ? true : false}
                         className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' 
                         type='number' 
                         defaultValue={qty} 
@@ -1280,6 +1284,7 @@ const AdDetailsPage = () => {
                       variant="outlined" 
                       size='small' 
                       className='w-36' 
+                      required
                       type='number' 
                       onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
