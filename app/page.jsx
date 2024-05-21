@@ -15,8 +15,8 @@ const ClientsData = () => {
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
-  // const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha', '4.Self', '5.Consultant', '6.Own', '7.WebApp DB', '8.Online', '9. Friends/Relatives'];
-  const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
+  const sources = ['JustDial', 'IndiaMart', 'Sulekha', 'Self', 'Consultant', 'Own', 'WebApp DB', 'Online', 'Friends/Relatives'];
+  // const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState();
   const [severity, setSeverity] = useState('');
