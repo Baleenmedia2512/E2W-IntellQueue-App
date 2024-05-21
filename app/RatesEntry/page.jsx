@@ -504,6 +504,7 @@ const AdDetailsPage = () => {
   };
   
   const updateRates = async () => {
+    if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&DBName=${username}&JsonUnit=${selectedUnit.label}`);
   
@@ -524,6 +525,9 @@ const AdDetailsPage = () => {
       console.error('Error:', error);
       showToastMessage('error', error.message);
     }
+  } else{
+    showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+  }
   };
   
 
@@ -643,7 +647,9 @@ const AdDetailsPage = () => {
         showToastMessage('warning', "Please fill all the fields!");
       } else if(validTill <= 0){
         showToastMessage('warning', "Validity date should 1 or more!")
-      } 
+      } else if(newUnitPrice < 1 || qty < 1 || !selectedUnit){
+        showToastMessage('warning', 'Select a valid Unit, Quantity and Unit Price!')
+      }
       // else if(leadDays <= 0){
       //   showToastMessage('warning', "Lead Days should be more than 0!")
       // } 
@@ -653,7 +659,6 @@ const AdDetailsPage = () => {
         const data = await response.json();
 
         showToastMessage('success', 'Inserted Successfully!' + data)
-        console.log(data)
         // window.location.reload()
         }catch(error){
           console.error(error)
@@ -860,8 +865,6 @@ const AdDetailsPage = () => {
                           value={selectedValues.rateName}
                           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
                           options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
-                          required
-                          
                         />
                         <button 
                           className='justify-center text-blue-400 ml-7' 
@@ -972,7 +975,6 @@ const AdDetailsPage = () => {
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                         options={getOptions('adType', selectedValues)}
-                        required
                       />
                       <button className='justify-center text-blue-400 ml-1' 
                       id='18'
@@ -1011,7 +1013,7 @@ const AdDetailsPage = () => {
                   {/* {filters.package.length > 0 ?  */}
                   
                   {/* {(packageOptions.length > 1 || isNewRate) && ( */}
-                  <div>
+                  {/* <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
                     <Select
@@ -1023,7 +1025,7 @@ const AdDetailsPage = () => {
                       value={selectedValues.Package}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
                       options={getOptions('Package', selectedValues)}
-                      required
+                      required = {isNewRate ? true : false}
                     />
                     <button className='justify-center text-blue-400 ml-1' 
                     id='22'
@@ -1032,7 +1034,7 @@ const AdDetailsPage = () => {
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
-                </div>
+                </div> */}
                   {/* )} */}
                 <></>
                 
@@ -1092,7 +1094,6 @@ const AdDetailsPage = () => {
                       value={selectedUnit}
                       onChange={(selectedOption) => setSelectedUnit(selectedOption)}
                       options={units}
-                      required
                     />
                   </div> : <></>}
 
@@ -1125,13 +1126,12 @@ const AdDetailsPage = () => {
                         type='number' 
                         defaultValue={qty} 
                         onChange={e => setQty(e.target.value)} 
-                        required
                         helperText="Ex: 3 | Means this rate is applicable for Units > 3" 
                         onFocus={(e) => {e.target.select()}}/>
                         
                       <button 
                         className='justify-center mb-10 ml-6 text-blue-400' 
-                        onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!z") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
+                        onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? !selectedUnit ? showToastMessage("error", "Select a valid Unit!") : toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
                         id='26'
                         name='AddQuantityButton'  
                       >
@@ -1292,7 +1292,6 @@ const AdDetailsPage = () => {
                       className='w-36' 
                       required
                       type='number' 
-                      required
                       onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
@@ -1374,8 +1373,13 @@ const AdDetailsPage = () => {
                  <button 
                   class="outline-none glass text-[#008000] shadow-2xl p-3 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] border-[#008000] hover:border-solid hover:border-[1px] w-48 hover:text-[#008000] font-bold rounded-full justify-center"
                   onClick={() => {
+                    if(rateId){
                     const params = new URLSearchParams({ rateId }).toString();
                     router.push(`/Create-Order?${params}`);
+                    }else{
+                      showToastMessage('warning', 'Choose a rate or save the existing rate!')
+                    }
+                    
                   }}>
                  <img src='/images/add.png' className='w-7 h-7 mr-2'/>Create Order</button>
                  </div> 
