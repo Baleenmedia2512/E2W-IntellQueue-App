@@ -66,6 +66,7 @@ const AdDetailsPage = () => {
   const [tempSlabData, setTempSlabData] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
   const [initialState, setInitialState] = useState({ validityDays: '', rateGST: null });
+  const [maxRateID, setMaxRateID] = useState("");
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -100,8 +101,13 @@ const AdDetailsPage = () => {
       rateGST !== initialState.rateGST;
     setIsFormChanged(isChanged);
     console.log(isFormChanged)
+    
+   
   }, [validityDays, rateGST, initialState]);
+  console.log(tempSlabData)
   
+
+
   
   const GSTOptions = ['0','5', '18'].map(option => ({value: option, label: option}))
 
@@ -118,36 +124,41 @@ const AdDetailsPage = () => {
      } else{
       fetchRates();
       fetchCampaignUnits();
+      fetchMaxRateID();
     }
   }, []);
 
   const insertQtySlab = async(Qty, UnitPrice) => {
-    const price = parseFloat(newUnitPrice);
-    if (isNewRate) {
-      if (!isNaN(price)) {
-      setTempSlabData([...tempSlabData, { Qty, newUnitPrice: price }]);
-      }
-      setIsSlabAvailable(true);
-    }
     
-    if(newUnitPrice > 0){
-      
-      try{
-        if(!startQty.includes(Number(Qty))){
-          await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
-          fetchQtySlab();
-          setQty(0)
-          toggleModal();
-          setNewUnitPrice("");
-        } else{
-          updateQtySlab()
-        }
-      }catch(error){
-        console.error(error)
-      }
+    const price = parseFloat(UnitPrice);
+    if (!isNaN(price)) {
+      setTempSlabData([...tempSlabData, { Qty, newUnitPrice: price }]);
+      toggleModal();
+      setIsSlabAvailable(true);
+    // if (isNewRate) {
+     
+    //   setIsSlabAvailable(true);
+    // }
+    
+    // if(newUnitPrice > 0){
+    //   console.log(tempSlabData.Qty, tempSlabData.newUnitPrice)
+    //   try{
+    //     if(!startQty.includes(Number(Qty))){
+    //       await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${tempSlabData.Qty}&JsonUnitPrice=${tempSlabData.newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
+    //       fetchQtySlab();
+    //       setQty(0)
+    //       toggleModal();
+    //       setNewUnitPrice("");
+    //     } else{
+    //       updateQtySlab()
+    //     }
+    //   }catch(error){
+    //     console.error(error)
+    //   }
     } else {
       showToastMessage("error", "Enter valid Unit Price!")
     }
+   
   }
 //   const insertQtySlab = async() => {
 //   if (isNewRate) {
@@ -230,7 +241,19 @@ const AdDetailsPage = () => {
     fetchQtySlab();
   }}
 
-
+  const fetchMaxRateID = async () => {
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxRateID.php`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setMaxRateID(data);
+      
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const fetchQtySlab = async () => {
     try {
@@ -722,33 +745,75 @@ var selectedRate = '';
     setVendor()
   }, [selectedValues])
 
-  const insertNewRate = async() => {
-    try{
-      if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null){
-        showToastMessage('warning', "Please fill all the fields!");
-      } else if(validTill <= 0){
-        showToastMessage('warning', "Validity date should 1 or more!")
-      } 
-      // else if(leadDays <= 0){
-      //   showToastMessage('warning', "Lead Days should be more than 0!")
-      // } 
-      else {
-        try{
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${newUnitPrice}`)
-        const data = await response.json();
+  // const insertNewRate = async() => {
+  //   try{
+  //     if(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null){
+  //       showToastMessage('warning', "Please fill all the fields!");
+  //     } else if(validTill <= 0){
+  //       showToastMessage('warning', "Validity date should 1 or more!")
+  //     } 
+  //     // else if(leadDays <= 0){
+  //     //   showToastMessage('warning', "Lead Days should be more than 0!")
+  //     // } 
+  //     else {
+  //       try{
+  //       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${newUnitPrice}`)
+  //       const data = await response.json();
 
-        showToastMessage('success', 'Inserted Successfully!' + data)
-        console.log(data)
-        // window.location.reload()
-        }catch(error){
-          console.error(error)
-        }
-      }
-    } catch(error){
+  //       showToastMessage('success', 'Inserted Successfully!' + data)
+  //       console.log(data)
+  //       // window.location.reload()
+  //       }catch(error){
+  //         console.error(error)
+  //       }
+  //     }
+  //   } catch(error){
       
+  //       console.error(error);
+  //   }
+  // }
+
+  const insertNewRate = async () => {
+    try {
+        if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
+            showToastMessage('warning', "Please fill all the fields!");
+        } else if (validTill <= 0) {
+            showToastMessage('warning', "Validity date should 1 or more!")
+          } else if(leadDays <= 0){
+            showToastMessage('warning', "Lead Days should be more than 0!")
+        } else {
+            try {
+              const response =await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${tempSlabData[0].Qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${tempSlabData[0].newUnitPrice}`)
+
+                const data = await response.text();
+                showToastMessage('success', 'Inserted Successfully!' + data);
+                console.log(data);
+
+                const rateId = maxRateID; 
+
+                await Promise.all(tempSlabData.map(async (item) => {
+                    const qty = item.Qty;
+                    const newUnitPrice = item.newUnitPrice;
+
+                    const qtySlabResponse = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
+
+                    const qtySlabData = await qtySlabResponse.text();
+                    console.log('Qty Slab Data:', qtySlabData);
+                }));
+
+                // Optionally reload the window after successful insertion
+                // window.location.reload();
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    } catch (error) {
         console.error(error);
     }
-  }
+}
+
+
   const handleValidityChange = (e) => {
     const daysToAdd = parseInt(e.target.value);
     if (!isNaN(daysToAdd)) {
@@ -1252,7 +1317,7 @@ var selectedRate = '';
                     <ul className='mb-4 mr-4'  >
                     {tempSlabData.map((data, index) => (
                       <div key={index} className='flex'>
-                        <span>{data.qty} {selectedUnit.value} - ₹{formattedMargin(data.newUnitPrice)} per {selectedUnit.value}</span>
+                        <span>{data.Qty} {selectedUnit.value} - ₹{formattedMargin(data.newUnitPrice)} per {selectedUnit.value}</span>
                         <IconButton aria-label="Remove" onClick={() => removeQtySlab(index)}>
                           <RemoveCircleOutline color='secondary' fontSize='small'/>
                         </IconButton>
