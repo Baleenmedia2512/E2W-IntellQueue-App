@@ -135,7 +135,7 @@ const Login = () => {
             Login
           </button>
           <><br /></>
-          <p className='text-black'>V: 1.0.0</p>
+          <p className='text-black'>V: 1.0.1</p>
         </form>
       </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>
