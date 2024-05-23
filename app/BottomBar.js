@@ -79,7 +79,8 @@ const BottomBar = () => {
   return (
     <div class="fixed z-50 w-full h-16 max-w-lg -translate-x-1/2 bg-white border border-gray-200 rounded-full bottom-4 left-1/2 dark:bg-gray-700 dark:border-gray-600">
   <div class="flex justify-evenly h-full max-w-lg mx-auto">
-    {/* <button data-tooltip-target="tooltip-home" 
+    {/* rate validation button */}
+    <button data-tooltip-target="tooltip-home" 
     type="button"
     class="inline-flex flex-col items-center justify-center px-5 rounded-s-full hover:bg-gray-50 dark:hover:bg-gray-800 group"
     onClick={(e) => handleChange(e, 0)}
@@ -93,7 +94,10 @@ const BottomBar = () => {
     <div id="tooltip-home" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
       Rates Validation
       <div class="tooltip-arrow" data-popper-arrow></div>
-    </div> */}
+    </div>
+    {/* rate validation button */}
+    
+{/* Enquiry button */}
     <button data-tooltip-target="tooltip-wallet" onClick={(e) => handleChange(e, 1)} type="button" class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
       <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
         <path fill-rule="evenodd" d="M9 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H7Zm8-1a1 1 0 0 1 1-1h1v-1a1 1 0 1 1 2 0v1h1a1 1 0 1 1 0 2h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
@@ -105,8 +109,10 @@ const BottomBar = () => {
       Enquiry
       <div class="tooltip-arrow" data-popper-arrow></div>
     </div>
-  
-    {/* <button data-tooltip-target="tooltip-settings" onClick={(e) => handleChange(e, 2)}type="button" class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
+  {/* Enquiry button */}
+
+  {/* Quote Sender button */}
+    <button data-tooltip-target="tooltip-settings" onClick={(e) => handleChange(e, 2)}type="button" class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
       <path fill-rule="evenodd" d="M3.559 4.544c.355-.35.834-.544 1.33-.544H19.11c.496 0 .975.194 1.33.544.356.35.559.829.559 1.331v9.25c0 .502-.203.981-.559 1.331-.355.35-.834.544-1.33.544H15.5l-2.7 3.6a1 1 0 0 1-1.6 0L8.5 17H4.889c-.496 0-.975-.194-1.33-.544A1.868 1.868 0 0 1 3 15.125v-9.25c0-.502.203-.981.559-1.331ZM7.556 7.5a1 1 0 1 0 0 2h8a1 1 0 0 0 0-2h-8Zm0 3.5a1 1 0 1 0 0 2H12a1 1 0 1 0 0-2H7.556Z" clip-rule="evenodd"/>
     </svg>
@@ -116,7 +122,10 @@ const BottomBar = () => {
     <div id="tooltip-settings" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
     Quote Sender
       <div class="tooltip-arrow" data-popper-arrow></div>
-    </div> */}
+    </div>
+    {/* Quote Sender button */}
+
+    {/* Rates Entry button */}
     <button data-tooltip-target="tooltip-profile" type="button" onClick={(e) => handleChange(e, 3)} class="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
   <path fill-rule="evenodd" d="M7 6a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2v-4a3 3 0 0 0-3-3H7V6Z" clip-rule="evenodd"/>
@@ -130,6 +139,9 @@ const BottomBar = () => {
     Rates Entry
       <div class="tooltip-arrow" data-popper-arrow></div>
       </div>
+      {/* Rates Entry button */}
+
+      {/*Logout button */}
       <button data-tooltip-target="tooltip-logout" type="button" onClick={(e) => handleChange(e, 4)} class="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
       <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
@@ -143,6 +155,7 @@ const BottomBar = () => {
       <div class="tooltip-arrow" data-popper-arrow></div>
       
     </div>
+    {/*Logout button */}
   </div>
 </div>
 
