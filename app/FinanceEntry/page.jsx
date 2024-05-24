@@ -33,6 +33,7 @@ const FinanceData = () => {
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
   const [orderNumber, setOrderNumber] = useState(null);
+  const [clientName, setClientName] = useState(null);
   const [orderAmount, setOrderAmount] = useState(null);
   const [taxType, setTaxType] = useState(null);
   const [gstAmount, setGSTAmount] = useState(null);
@@ -46,6 +47,29 @@ const FinanceData = () => {
   const transactionOptions = [
     { value: 'income', label: 'Income' },
     { value: 'opex', label: 'Operational Expense' }
+  ];
+
+  const taxTypeOptions = [
+    { value: 'gst', label: 'GST' },
+    { value: 'igst', label: 'IGST' },
+    { value: 'na', label: 'NA' }
+  ];
+
+  const expenseCategoryOptions = [
+    { value: 'bank', label: 'Bank' },
+    { value: 'communication', label: 'Communication' },
+    { value: 'commission', label: 'Commission' },
+    { value: 'consumables', label: 'Consumables' },
+    { value: 'conveyance', label: 'Conveyance' },
+    { value: 'eb', label: 'EB' },
+    { value: 'maintainance', label: 'Maintainance' },
+    { value: 'offering', label: 'Offering' },
+    { value: 'pc', label: 'PC' },
+    { value: 'promotion', label: 'Promotion' },
+    { value: 'rent', label: 'Rent' },
+    { value: 'laborcost', label: 'Labor Cost' },
+    { value: 'stationary', label: 'Stationary' },
+    { value: 'refund', label: 'Refund' }
   ];
 
   const handleDateClick = (event) => {
@@ -70,11 +94,17 @@ const FinanceData = () => {
       if(data === "Order is invalid" || data === "No data found for the provided Order Number"){
         return null
       } else{
-        setTransactionType({ value: data.TransactionType, label: data.TransactionType });
+        const matchedTransactionType = transactionOptions.find(option => option.value === data.TransactionType);
+        const matchedTaxType = taxTypeOptions.find(option => option.value === data.TaxType);
+        const matchedExpenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory);
+
+        setTransactionType(matchedTransactionType || { value: data.TransactionType, label: data.TransactionType });
+        setTaxType(matchedTaxType || { value: data.TaxType, label: data.TaxType });
+        setExpenseCategory(matchedExpenseCategory || { value: data.ExpensesCategory, label: data.ExpensesCategory });
+
+        setClientName(data.ClientName)
         setOrderAmount(data.Amount)
-        setTaxType(data.TaxType)
         setGSTAmount(data.TaxAmount)
-        setExpenseCategory(data.ExpensesCategory)
         setRemarks(data.Remarks)
         setTransactionDate(data.TransactionDate)
         setPaymentMode(data.PaymentMode)
@@ -87,6 +117,59 @@ const FinanceData = () => {
     showToastMessage("error", "Order Number is either 0 or empty. Please check and type again properly.")
   }
   };
+
+  const handleChange = (selectedOption, name) => {
+    console.log(`Selected Option for ${name}:`, selectedOption);  // Log selected option to debug
+    switch(name) {
+      case 'TransactionTypeSelect':
+        setTransactionType(selectedOption);
+        break;
+      case 'TaxTypeSelect':
+        setTaxType(selectedOption);
+        break;
+      case 'ExpenseCategorySelect':
+        setExpenseCategory(selectedOption);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const insertNewFinance = async () => {
+    // try {
+        // if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
+        //     showToastMessage('warning', "Please fill all the fields!");
+        // } else if (validTill <= 0) {
+        //     showToastMessage('warning', "Validity date should 1 or more!")
+        //   } else if(leadDays <= 0){
+        //     showToastMessage('warning', "Lead Days should be more than 0!")
+        // } else {
+            try {
+              const response =await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType : ''}&JsonClientName=${clientName ? clientName : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${transactionDate ? transactionDate : ''}&JsonPaymentMode=${paymentMode ? paymentMode : ''}`)
+
+                const data = await response.text();
+                showToastMessage('success', 'Inserted Successfully!' + data);
+                const rateId = maxRateID; 
+                await Promise.all(tempSlabData.slice(1).map(async (item) => {
+                    const qty = item.Qty;
+                    const newUnitPrice = item.newUnitPrice;
+
+                    const qtySlabResponse = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
+
+                    const qtySlabData = await qtySlabResponse.text();
+                }));
+
+                // Optionally reload the window after successful insertion
+                window.location.reload();
+                
+            } catch (error) {
+                console.error(error);
+            }
+        // }
+    // } catch (error) {
+    //     console.error(error);
+    // }
+}
 
   const getOptions = (filterKey, selectedValues) => {
     const filteredData = ordersData.filter(item => {
@@ -125,9 +208,8 @@ const FinanceData = () => {
                   minHeight: '50px', // adjust the height as needed
                 }),
               }}
-              defaultValue={transactionType}
               value={transactionType}
-            //   onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
+              onChange={(option) => handleChange(option, 'TransactionTypeSelect')}
               options={transactionOptions}
             //   required
               />
@@ -271,10 +353,9 @@ const FinanceData = () => {
                   minHeight: '50px', // adjust the height as needed
                 }),
               }}
-              defaultValue={taxType}
               value={taxType}
-            //   onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
-            //   options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+              options={taxTypeOptions}
+              onChange={(option) => handleChange(option, 'TaxTypeSelect')}
             //   required
               />
                </div>
@@ -339,10 +420,9 @@ const FinanceData = () => {
                   minHeight: '50px', // adjust the height as needed
                 }),
               }}
-              defaultValue={expenseCategory}
               value={expenseCategory}
-            //   onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
-            //   options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+              options={expenseCategoryOptions}
+              onChange={(option) => handleChange(option, 'ExpenseCategorySelect')}
             //   required
               />
                </div>
@@ -431,7 +511,7 @@ const FinanceData = () => {
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Clear</span>
                       </button>
 
-                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center">
+                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center " onClick={insertNewFinance}>
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Save</span>
                       </button>
                     
