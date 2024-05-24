@@ -6,10 +6,13 @@ import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import VirtualizedList from './components/VirtuvalizedList';
 
 
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
+  const companyName = "Grace Scans"
+  //const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
@@ -28,12 +31,13 @@ const ClientsData = () => {
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState();
   const [displayWarning, setDisplayWarning] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("");
+  const [selectedOption, setSelectedOption] = useState("Mr.");
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
   const [clientGST, setClientGST] = useState("");
   const [clientPAN, setClientPAN] = useState("");
   const [months, setMonths] = useState('');
   const [days, setDays] = useState('');
+  const [elementsToHide, setElementsToHide] = useState(['null', ''])
   const [isEmpty, setIsEmpty] = useState(true);
   
   const dispatch = useDispatch();
@@ -50,18 +54,33 @@ const ClientsData = () => {
   }, [clientAge, selectedOption]); 
 
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails);
+
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
-    fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}&dbname=${loggedInUser}`)
-      .then((response) => response.json())
-      .then((data) => setClientNameSuggestions(data));
-    dispatch(setClientData({clientName: newName}));
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+        .then((response) => response.json())
+        .then((data) => setClientNameSuggestions(data));
+      dispatch(setClientData({clientName: newName}));
+    } catch(error){
+      console.error("Error Suggesting Client Names: " + error)
+    }
   };
+
+  const elementsToHideList = () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+        .then((response) => response.json())
+        .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
 
   const handleConsultantNameChange = (event) => {
     const newName = event.target.value;
     setConsultantName(newName)
-    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&dbname=${loggedInUser}`)
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
       .then((data) => setConsultantNameSuggestions(data));
   };
@@ -72,8 +91,8 @@ const ClientsData = () => {
     setToast(true)
   }
 
-  const handleClientNameSelection = (event) => {
-    const input = event.target.value;
+  const handleClientNameSelection = (names) => {
+    const input = names;
     const name = input.substring(0, input.indexOf('(')).trim();
     const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
 
@@ -97,10 +116,9 @@ const ClientsData = () => {
 
   const fetchClientDetails = (clientName, clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&dbname=${loggedInUser}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
-        console.log(data)
         if (data.length > 0) {
           const clientDetails = data[0];
           dispatch(setClientData({clientEmail: clientDetails.email}));
@@ -130,8 +148,21 @@ const ClientsData = () => {
           dispatch(resetClientData());
           dispatch(resetQuotesData());
         }
+
+        elementsToHideList()
   }, []);
 
+  useEffect(() => {
+    //searching elements to Hide from database
+
+    // elementsToHide.forEach((name) => {
+    //   const elements = document.getElementsByName(name);
+    //   elements.forEach((element) => {
+    //     element.style.display = 'none'; // Hide the element
+    //   });
+    // });
+  }, [elementsToHide])
+  
   const handleClientContactChange = (newValue) => {
     dispatch(setClientData({ clientContact: newValue }));
   };
@@ -142,10 +173,6 @@ const ClientsData = () => {
 
   const handleClientSourceChange = (selectedOption) => {
     dispatch(setClientData({ clientSource: selectedOption.target.value }));
-  };
-
-  const handleVendorChange = (newValue) => {
-    dispatch(setClientData({ vendorName: newValue }));
   };
 
   const submitDetails = async(event) => {
@@ -160,7 +187,7 @@ const ClientsData = () => {
       }
     else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&dbname=${loggedInUser}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '') {
@@ -182,7 +209,7 @@ const ClientsData = () => {
   }} 
   else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&dbname=${loggedInUser}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '' && address !== '' && clientAge !== undefined && inputValue !== undefined) {
@@ -289,9 +316,9 @@ useEffect(() => {
 
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
-      <form class="px-7 h-screen grid justify-center items-center " onSubmit={submitDetails}>
+      <form class="px-7 h-screen grid justify-center items-center" onSubmit={submitDetails}>
     <div class="grid gap-6" id="form">
-    <h1 className="font-bold text-3xl text-center mb-4 ">Client Registration</h1>
+    <h1 className="font-bold text-3xl text-center mb-4">Client Registration</h1>
       <div class="w-full flex gap-3">
       <select
         className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
@@ -338,7 +365,8 @@ useEffect(() => {
           }}
           />
       </div>
-      {clientNameSuggestions.length > 0 && (
+      {clientNameSuggestions.length > 0 && <VirtualizedList clientNameSuggestions={clientNameSuggestions} onClientNameSelection={handleClientNameSelection}/> }
+      {/* {clientNameSuggestions.length > 0 && (
           <ul className="list-none">
             {clientNameSuggestions.map((name, index) => (
               <li key={index}>
@@ -353,7 +381,7 @@ useEffect(() => {
               </li>
             ))}
           </ul>
-        )}
+        )} */}
       <div class="grid gap-6 w-full">
       {selectedOption === 'Ms.' ? (
         <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
@@ -399,7 +427,7 @@ useEffect(() => {
         />
         <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="email" 
-        placeholder="Email" 
+        placeholder="Email"
         id="4" 
         name="ClientEmailInput" 
         value={clientEmail}
@@ -468,7 +496,7 @@ useEffect(() => {
       </div> */}
       {/* {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? ( */}
       {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? (
-        <div className="w-full flex gap-3">
+        <div className="w-full flex gap-3" name='AgeDatePicker'>
           <input
             className="capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
             type="number"
@@ -482,6 +510,7 @@ useEffect(() => {
 
               if (
                 (selectedOption === 'Baby.' && parseInt(value) > 3) ||
+         
                 (selectedOption === 'Master.' && (parseInt(value) < 4 || parseInt(value) > 12))
               ) {
                 setDisplayWarning(true);
@@ -583,7 +612,7 @@ useEffect(() => {
         {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
       </div>
       <div className='grid gap-6 w-full'>
-      {/* <input 
+      <input 
         class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
         placeholder="GST Number" 
@@ -622,7 +651,7 @@ useEffect(() => {
             }
           }
         }}
-        /> */}
+        />
       <select
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="8"

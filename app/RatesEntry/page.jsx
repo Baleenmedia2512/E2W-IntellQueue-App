@@ -4,7 +4,7 @@ import Select from 'react-select';
 import { useRouter } from 'next/navigation';
 import IconButton from '@mui/material/IconButton';
 import {Button} from '@mui/material';
-import { RemoveCircleOutline, Event, SignalCellularNullOutlined } from '@mui/icons-material';
+import { RemoveCircleOutline, Event } from '@mui/icons-material';
 import { TextField } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -13,11 +13,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { MdDeleteOutline , MdOutlineSave, MdAddCircle} from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { useAppSelector } from '@/redux/store';
 import "./page.css"
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
@@ -26,7 +22,7 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
-  const username = "GraceScans"
+  const username = "Grace Scans"
   // const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
@@ -114,7 +110,7 @@ const AdDetailsPage = () => {
     if(newUnitPrice > 0){
       try{
         if(!startQty.includes(Number(Qty))){
-          await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
+          await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${Qty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`)
           fetchQtySlab();
           setQty(0)
           toggleModal();
@@ -133,9 +129,9 @@ const AdDetailsPage = () => {
   const updateQtySlab = async() => {
     if(newUnitPrice > 0 && qty > 0){
       if(selectedUnitId){
-        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonUnitId=${selectedUnitId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`);
+        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonUnitId=${selectedUnitId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`);
       } else{
-        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`);
+        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`);
         toggleModal()
       }
       
@@ -157,13 +153,13 @@ const AdDetailsPage = () => {
       setNewUnitPrice("");
       
     } else {
-    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&DBName=${username}`);
+    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${username}`);
     fetchQtySlab();
   }}
 
   const fetchQtySlab = async () => {
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&DBName=${username}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${username}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -209,7 +205,7 @@ const AdDetailsPage = () => {
   const fetchAllVendor = async() => {
     const adMed = selectedValues.rateName ? selectedValues.rateName.label : null;
     const adTyp = selectedValues.adType ? selectedValues.adType.label : null;
-    const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonAdMedium=${adMed}&JsonAdType=${adTyp}&DBName=${username}`)
+    const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonAdMedium=${adMed}&JsonAdType=${adTyp}&JsonDBName=${username}`)
     if(!res.ok){
       throw new Error(`HTTP Error! Status: ${res.status}`);
     }
@@ -221,7 +217,7 @@ const AdDetailsPage = () => {
     const fetchData = async () => {
         try {
           if (selectedValues.rateName && selectedValues.adType) {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}&DBName=${username}`);
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}&JsonDBName=${username}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -382,7 +378,7 @@ const AdDetailsPage = () => {
   const fetchRates = async () => {
   
     try {
-      const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php/?DBName=${username}`);
+      const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php/?JsonDBName=${username}`);
       const data = await res.json();
       const today = new Date();
       const valid = data.filter(item => {
@@ -407,7 +403,7 @@ const AdDetailsPage = () => {
   const handleRateId = async () => {
     if(rateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}&DBName=${username}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}&JsonDBName=${username}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -506,7 +502,7 @@ const AdDetailsPage = () => {
   const updateRates = async () => {
     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&DBName=${username}&JsonUnit=${selectedUnit.label}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${username}&JsonUnit=${selectedUnit.label}`);
   
       // Check if the response is ok (status in the range 200-299)
       if (!response.ok) {
@@ -655,7 +651,7 @@ const AdDetailsPage = () => {
       // } 
       else {
         try{
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&DBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${newUnitPrice}`)
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${username}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${qty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${newUnitPrice}`)
         const data = await response.json();
 
         showToastMessage('success', 'Inserted Successfully!' + data)
@@ -1377,7 +1373,7 @@ const AdDetailsPage = () => {
                     const params = new URLSearchParams({ rateId }).toString();
                     router.push(`/Create-Order?${params}`);
                     }else{
-                      showToastMessage('warning', 'Choose a rate or save the existing rate!')
+                      showToastMessage('warning', 'Choose a valid rate or save the existing rate!')
                     }
                     
                   }}>
