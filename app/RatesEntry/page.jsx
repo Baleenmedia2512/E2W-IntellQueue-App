@@ -1612,7 +1612,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                   class="outline-none glass text-[#008000] shadow-2xl p-3 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] border-[#008000] hover:border-solid hover:border-[1px] w-48 hover:text-[#008000] font-bold rounded-full justify-center"
                   onClick={() => {
                     if(rateId){
-                    const params = new URLSearchParams({ rateId }).toString();
+                    const params = new URLSearchParams({ rateId, rateName: selectedValues.rateName.value, type: selectedValues.adType.value, unitPrice: unitPrice, qty: startQty, unit: selectedUnit.value }).toString();
                     router.push(`/Create-Order?${params}`);
                     }else{
                       showToastMessage('warning', 'Choose a valid rate or save the existing rate!')
