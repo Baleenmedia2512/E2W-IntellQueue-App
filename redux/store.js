@@ -28,7 +28,7 @@ const storage =
 const authPersistConfig = {
   key: "auth",
   storage: storage,
-  whitelist: ["userName"], // Update to correct slice name
+  whitelist: ["userName", "companyName"], // Update to correct slice name
 };
 
 const clientPersistConfig = {

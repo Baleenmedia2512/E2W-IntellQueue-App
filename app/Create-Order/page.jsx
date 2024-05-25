@@ -14,7 +14,7 @@ const CreateOrder = () => {
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value
-        fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}&dbname=${'gracescans'}`)
+        fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${'Grace Scans'}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
         setClientName(newName);
