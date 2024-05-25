@@ -58,7 +58,7 @@ const CreateOrder = () => {
 
       const fetchMaxRateID = async () => {
         try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxRateID.php`);
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
