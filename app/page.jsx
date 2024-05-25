@@ -11,8 +11,8 @@ import VirtualizedList from './components/VirtuvalizedList';
 
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
-  const companyName = "Grace Scans"
-  //const companyName = useAppSelector(state => state.authSlice.companyName);
+  //const companyName = "Grace Scans"
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
@@ -31,13 +31,13 @@ const ClientsData = () => {
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState();
   const [displayWarning, setDisplayWarning] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("Mr.");
+  const [selectedOption, setSelectedOption] = useState("Mrs.");
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
   const [clientGST, setClientGST] = useState("");
   const [clientPAN, setClientPAN] = useState("");
   const [months, setMonths] = useState('');
   const [days, setDays] = useState('');
-  const [elementsToHide, setElementsToHide] = useState(['null', ''])
+  const [elementsToHide, setElementsToHide] = useState([])
   const [isEmpty, setIsEmpty] = useState(true);
   
   const dispatch = useDispatch();
@@ -82,7 +82,8 @@ const ClientsData = () => {
     setConsultantName(newName)
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
-      .then((data) => setConsultantNameSuggestions(data));
+      .then((data) => {setConsultantNameSuggestions(data)});
+      
   };
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
@@ -155,12 +156,12 @@ const ClientsData = () => {
   useEffect(() => {
     //searching elements to Hide from database
 
-    // elementsToHide.forEach((name) => {
-    //   const elements = document.getElementsByName(name);
-    //   elements.forEach((element) => {
-    //     element.style.display = 'none'; // Hide the element
-    //   });
-    // });
+    elementsToHide.forEach((name) => {
+      const elements = document.getElementsByName(name);
+      elements.forEach((element) => {
+        element.style.display = 'none'; // Hide the element
+      });
+    });
   }, [elementsToHide])
   
   const handleClientContactChange = (newValue) => {
@@ -180,7 +181,7 @@ const ClientsData = () => {
     if (isEmpty === true){
       router.push('/adDetails')
     }
-    if(!loggedInUser === 'GraceScans'){
+    if(!loggedInUser === 'Grace Scans'){
       if(isDetails && clientName && clientContact && clientSource){
         dispatch(setQuotesData({currentPage: "checkout"}))
         router.push('/adDetails')
@@ -189,12 +190,13 @@ const ClientsData = () => {
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
       const data = await response.json();
+      //console.log(data)
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '') {
           window.alert('Client Details Entered Successfully!')
           window.location.reload();
           dispatch(resetQuotesData())
-          router.push('../adDetails');
+          //router.push('../adDetails');
         }
         else {
           showToastMessage('warning', 'Please fill all the Required Client Details!')
@@ -326,6 +328,7 @@ useEffect(() => {
         name="TitleSelect"
         value={selectedOption}
         //onChange={e => setTitle(e.target.value)}
+       // defaultValue="Mrs."
         required={!isEmpty}
         onChange={(e) => {
           const selectedOption = e.target.value;
@@ -365,14 +368,15 @@ useEffect(() => {
           }}
           />
       </div>
-      {clientNameSuggestions.length > 0 && <VirtualizedList clientNameSuggestions={clientNameSuggestions} onClientNameSelection={handleClientNameSelection}/> }
-      {/* {clientNameSuggestions.length > 0 && (
-          <ul className="list-none">
+      {/* {clientNameSuggestions.length > 0 && <VirtualizedList clientNameSuggestions={clientNameSuggestions} onClientNameSelection={handleClientNameSelection}/> } */}
+      {(clientNameSuggestions.length > 0 && clientName !== '') && (
+          <ul className="list-none border-green-300 border-1 ">
             {clientNameSuggestions.map((name, index) => (
-              <li key={index}>
+              <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
+              duration-300">
                 <button
                   type="button"
-                  className="text-purple-500 hover:text-purple-700"
+                  className="text-black"
                   onClick={handleClientNameSelection}
                   value={name}
                 >
@@ -381,7 +385,7 @@ useEffect(() => {
               </li>
             ))}
           </ul>
-        )} */}
+        )}
       <div class="grid gap-6 w-full">
       {selectedOption === 'Ms.' ? (
         <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
@@ -611,7 +615,7 @@ useEffect(() => {
       ></textarea>
         {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
       </div>
-      <div className='grid gap-6 w-full'>
+      <div className='grid gap-6 w-full' name="ClientGSTInput" >
       <input 
         class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
@@ -652,6 +656,8 @@ useEffect(() => {
           }
         }}
         />
+        </div>
+        <div className='grid gap-6 w-full'>
       <select
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="8"
@@ -689,10 +695,11 @@ useEffect(() => {
       {consultantNameSuggestions.length > 0 && (
   <ul className="list-none">
     {consultantNameSuggestions.map((name, index) => (
-      <li key={index}>
+      <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
+      duration-300">
         <button
           type="button"
-          className="text-purple-500 hover:text-purple-700"
+          className="text-black"
           onClick={handleConsultantNameSelection}
           value={name}
           

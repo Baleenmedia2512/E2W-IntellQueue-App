@@ -1,11 +1,11 @@
 'use client'
-import { useState, useEffect, useRef  } from 'react';
+import { useState, useEffect  } from 'react';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { useRouter } from 'next/navigation';
 import IconButton from '@mui/material/IconButton';
 import {Button} from '@mui/material';
-import { RemoveCircleOutline, Event } from '@mui/icons-material';
+import { RemoveCircleOutline, Event, DataArray } from '@mui/icons-material';
 import { TextField } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -16,6 +16,7 @@ import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { useAppSelector } from '@/redux/store';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -24,6 +25,7 @@ const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
   // const username = "GraceScans"
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
@@ -64,6 +66,8 @@ const AdDetailsPage = () => {
   const [isFormChanged, setIsFormChanged] = useState(false);
   const [initialState, setInitialState] = useState({ validityDays: '', rateGST: null });
   const [maxRateID, setMaxRateID] = useState("");
+  const [elementsToHide, setElementsToHide] = useState([])
+  const elementsNeeded = [""];
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -117,14 +121,38 @@ const AdDetailsPage = () => {
       fetchRates();
       fetchCampaignUnits();
       fetchMaxRateID();
+      elementsToHideList()
     }
   }, []);
+
+  useEffect(() => {
+    
+    if(tempSlabData.length === 0){}
+  },[tempSlabData])
+
+  const handleItemClick = (data) => {
+    setEditModal(true);
+    setQty(data.StartQty);
+    setNewUnitPrice(data.UnitPrice);
+    setSelectedUnitId(data.Id);
+  };
+
+  useEffect(() => {
+    //searching elements to Hide from database
+
+    elementsToHide.forEach((name) => {
+      const elements = document.getElementsByName(name);
+      elements.forEach((element) => {
+        element.style.display = 'none'; // Hide the element
+      });
+    });
+  }, [elementsToHide])
 
   const insertQtySlab = async(Qty, UnitPrice) => {
     
     const price = parseFloat(UnitPrice);
     if (!isNaN(price)) {
-      setTempSlabData([...tempSlabData, { Qty, newUnitPrice: price }]);
+      setTempSlabData([...tempSlabData, { StartQty: Qty, UnitPrice: price }]);
       toggleModal();
       setIsSlabAvailable(true);
     // if (isNewRate) {
@@ -198,16 +226,16 @@ const AdDetailsPage = () => {
 //     showToastMessage("error", "Enter valid Unit Price!");
 //   }
 // }
-console.log(tempSlabData)
   
   const updateQtySlab = async() => {
    
     if(newUnitPrice > 0 && qty > 0){
-      await Promise.all(tempSlabData.map(async (item) => {
-        const qty = item.Qty;
-        const newUnitPrice = item.newUnitPrice;
+      await Promise.all(combinedSlabData.map(async (item) => {
+        const qty = item.StartQty;
+        const newUnitPrice = item.UnitPrice;
 
-        const qtySlabResponse = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
+        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`)
+        console.log(qty, newUnitPrice)
       }));
 
       // if(selectedUnitId){
@@ -238,7 +266,7 @@ console.log(tempSlabData)
       setTempSlabData(tempSlabData.filter((_, i) => i !== index));
       
     } else {
-    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${username}`);
+    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}`);
     fetchQtySlab();
   }}
 
@@ -258,7 +286,7 @@ console.log(tempSlabData)
 
   const fetchQtySlab = async () => {
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${username}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -304,7 +332,7 @@ console.log(tempSlabData)
   const fetchAllVendor = async() => {
     const adMed = selectedValues.rateName ? selectedValues.rateName.label : null;
     const adTyp = selectedValues.adType ? selectedValues.adType.label : null;
-    const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonAdMedium=${adMed}&JsonAdType=${adTyp}&JsonDBName=${username}`)
+    const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllVendor.php/?JsonAdMedium=${adMed}&JsonAdType=${adTyp}&JsonDBName=${companyName}`)
     if(!res.ok){
       throw new Error(`HTTP Error! Status: ${res.status}`);
     }
@@ -316,7 +344,7 @@ console.log(tempSlabData)
     const fetchData = async () => {
         try {
           if (selectedValues.rateName && selectedValues.adType) {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}&JsonDBName=${username}`);
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}&JsonDBName=${companyName}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -446,13 +474,13 @@ console.log(tempSlabData)
 
 var selectedRate = '';
     // Add logic to fetch rateId after selecting Vendor
-  // if (filterKey === 'adType' && selectedOption) {
-  //     selectedRate = ratesData.find(item =>
-  //     item.rateName === selectedValues.rateName.value &&
-  //     // item.typeOfAd === selectedValues.typeOfAd.value && 
-  //     item.adType === selectedOption.value 
+  if (filterKey === 'adType' && selectedOption) {
+      selectedRate = ratesData.find(item =>
+      item.rateName === selectedValues.rateName.value &&
+      // item.typeOfAd === selectedValues.typeOfAd.value && 
+      item.adType === selectedOption.value 
 
-  //   );}
+    );}
   //   if (filterKey === 'Location' && selectedOption) {
   //       selectedRate = ratesData.find(item =>
   //       item.rateName === selectedValues.rateName.value &&
@@ -491,7 +519,7 @@ var selectedRate = '';
   const fetchRates = async () => {
   
     try {
-      const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php/?JsonDBName=${username}`);
+      const res = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAllRates.php/?JsonDBName=${companyName}`);
       const data = await res.json();
       const today = new Date();
       const valid = data.filter(item => {
@@ -516,7 +544,7 @@ var selectedRate = '';
   const handleRateId = async () => {
     if(rateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}&JsonDBName=${username}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -615,7 +643,7 @@ var selectedRate = '';
   const updateRates = async () => {
     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${username}&JsonUnit=${selectedUnit.label}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}`);
   
       // Check if the response is ok (status in the range 200-299)
       if (!response.ok) {
@@ -779,6 +807,16 @@ var selectedRate = '';
   //   }
   // }
 
+  const elementsToHideList = () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+        .then((response) => response.json())
+        .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
+
   const insertNewRate = async () => {
     try {
         if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
@@ -815,6 +853,32 @@ var selectedRate = '';
     }
 }
 
+
+const updateSlabData = (qty, newUnitPrice) => {
+  // Example: update newUnitPrice for the selected index
+  console.log(qty, newUnitPrice, tempSlabData)
+  if(tempSlabData.length > 0){
+  const updatedData = tempSlabData.map((data) => {
+    if (data.StartQty === qty) {
+      return { ...data, newUnitPrice };
+    }
+    return data;
+  });
+
+  setTempSlabData(updatedData);
+} else {
+  console.log(slabData)
+  const updatedData = slabData.map((data) => {
+    if (data.StartQty === qty) {
+      return { ...data, UnitPrice: newUnitPrice };
+    }
+    return data;
+  });
+
+  setSlabData(updatedData);
+}
+  setEditModal(false);
+};
 
   const handleValidityChange = (e) => {
     const daysToAdd = parseInt(e.target.value);
@@ -918,9 +982,9 @@ var selectedRate = '';
           <div onClick={() => {setEditModal(false); setQty(0); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
-            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setQty(e.target.value)}}  onFocus={event => event.target.select()}/>
+            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setQty(e.target.value)}} disabled  onFocus={event => event.target.select()}/>
             <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}} onFocus={event => event.target.select()}/>
-            <Button className='bg-blue-400 ml-4 text-white' onClick={insertQtySlab(qty, newUnitPrice)}>Submit</Button>
+            <Button className='bg-blue-400 ml-4 text-white' onClick={() => updateSlabData(qty, newUnitPrice)}>Submit</Button>
             </div>
           </div>
       )}
@@ -962,13 +1026,13 @@ var selectedRate = '';
                   </ToggleButtonGroup>
                 )} */}
 
-                <div>
-                <label className='mb-4 text-gray-700 font-semibold'>Search Rate Card</label><br/>
+                <div name="RateSearchInput">
+                <label className='mb-4 text-gray-700 font-semibold' name="RateSearchInput">Search Rate Card</label><br/>
                 <input
                   className="p-2 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3"
                   type="number"
-                  id="11"
-                  name='RateSearchInput'
+                  id="RatesClearButton"
+                 // name='RateSearchInput'
                   placeholder="Ex. 4000"
                   value={rateId}
                   onChange = {(e) => setRateId(e.target.value)}
@@ -977,8 +1041,8 @@ var selectedRate = '';
                 />
                 <Button 
                   className='border' 
-                  id='12'
-                  name='RatesClearButton'
+                  id='RatesClearButton'
+                  //name='RatesClearButton'
                   onClick={handleClearRateId}>
                 <FontAwesomeIcon icon={faTimesCircle} className='mr-1 w-6 h-6'/>
               </Button>
@@ -1093,13 +1157,11 @@ var selectedRate = '';
                     </div>
                   </div> */}
 
-                  <div>
-                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Category</label>
+                  <div name="AdCategorySelect" id="17">
+                    <label className='block mb-2 mt-4 text-gray-700 font-semibold'> Category</label>
                     <div className='flex mr-4'>
                       <CreatableSelect
                         className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
-                        id="17"
-                        name="AdCategorySelect"
                         placeholder="Select Category"
                         defaultValue={selectedValues.typeOfAd}
                         value={selectedValues.typeOfAd}
@@ -1140,13 +1202,11 @@ var selectedRate = '';
                   
 
                   {/* Location of the Rate for GS */}
-                  <div>
+                  <div id="19" name="RatesLocationSelect">
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Location</label>
                     <div className='flex mr-4'>
                       <CreatableSelect
                         className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
-                        id="19"
-                        name="LocationSelect"
                         placeholder="Select Location"
                         defaultValue={selectedValues.Location}
                         value={selectedValues.Location}
@@ -1206,12 +1266,11 @@ var selectedRate = '';
                     />
                   </div> */}
 
-                <div className="mb-6 mt-4 mr-14">
+                <div className="mb-6 mt-4 mr-14" id="23" name="RatesVendorSelect">
                   <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
                   <CreatableSelect
                     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
-                    id="23"
-                    name="VendorSelect"
+                    
                     placeholder="Select Vendor"
                     value={selectedValues.vendorName}
                     onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
@@ -1235,13 +1294,11 @@ var selectedRate = '';
                     />
                   </div> */}
 
-                {/* {isNewRate || (rateId > 0 && slabData.length < 1) ?  */}
-                  <div className="mb-4 mr-14"> 
+                {/* {isNewRate || (rateId > 0 && slabData.length < 1) ? '': ''} */}
+                  <div className="mb-4 mr-14" id="24" name="RatesUnitsSelect"> 
                   <label className=''>Units</label><br />
                     <CreatableSelect
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
-                      id="24"
-                      name="UnitsSelect"
                       required = {isNewRate ? true : false}
                       placeholder="Select Units"
                       value={selectedUnit}
@@ -1267,12 +1324,11 @@ var selectedRate = '';
                   </div> */}
 
                     {/* {isNewRate || (rateId > 0 && slabData.length < 1) ? ( */}
-                    <div className='mt-4'>
+                    <div className='mt-4' id="25" name='RatesQuantityText'>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
                     <div className='flex mb-4 mr-7'>
                       <TextField 
-                        id="25" 
-                        name='QuantityText'
+                        
                         variant="outlined" 
                         size='small' 
                         required = {isNewRate ? true : false}
@@ -1308,15 +1364,15 @@ var selectedRate = '';
                     {combinedSlabData.map((data, index) => (
                       <div key={data.StartQty || index} className='flex'>
                         {data.isTemp ? (
-                          <span>{data.Qty} {selectedUnit.value} - ₹{formattedMargin(data.newUnitPrice)} per {selectedUnit.value}</span>
+                          <span onClick={() => handleItemClick(data)}>{data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}</span>
                         ) : (
                           <option key={data.StartQty} className="mt-1.5" 
-                            onClick={() => {setEditModal(true); setQty(data.StartQty); setNewUnitPrice(data.UnitPrice); setSelectedUnitId(data.Id)}}
+                            onClick={() => handleItemClick(data)}
                           >
                             {data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}
                           </option>
                         )}
-                        <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty || data.Qty, index)}>
+                        <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
                           <RemoveCircleOutline color='secondary' fontSize='small'/>
                         </IconButton>
                       </div>
@@ -1345,7 +1401,7 @@ var selectedRate = '';
                     <ul className='mb-4 mr-4'  >
                     {tempSlabData.map((data, index) => (
                       <div key={index} className='flex'>
-                        <span>{data.Qty} {selectedUnit.value} - ₹{formattedMargin(data.newUnitPrice)} per {selectedUnit.value}</span>
+                        <span onClick={() => {handleItemClick(data)}}>{data.Qty} {selectedUnit.value} - ₹{formattedMargin(data.newUnitPrice)} per {selectedUnit.value}</span>
                         <IconButton aria-label="Remove" onClick={() => removeQtySlab(data.Qty, index)}>
                           <RemoveCircleOutline color='secondary' fontSize='small'/>
                         </IconButton>
@@ -1384,7 +1440,7 @@ var selectedRate = '';
                     </div>
                   </div> */}
 
-<div>
+              <div name="RatesServiceDurationCheckbox">
                     <div className='flex mr-16 mt-2'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
@@ -1420,10 +1476,10 @@ var selectedRate = '';
                   </div> */}
 
                     <div>
-                    <div className='mr-5'>
+                    <div className='mr-5' id="27" name="RatesLeadDaysTextField">
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
                     <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
-                      <TextField id="27" name='LeadDaysTextField' value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
+                      <TextField value={leadDays} defaultValue="1" variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
@@ -1458,12 +1514,12 @@ var selectedRate = '';
                     
                 </div> */}
 
-              <div className='mr-9 mt-4'>
+              <div className='mr-9 mt-4' name="RatesValidTillTextField">
                   <label className="block mb-2 text-gray-700 font-semibold">Valid Till</label>
                   <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-10'>
                     <TextField 
                       id="28"
-                      name="ValidTillTextField" 
+                      name="RatesValidTillTextField" 
                       value={validityDays} 
                       onChange={handleValidityChange} 
                       variant="outlined" 
@@ -1511,12 +1567,12 @@ var selectedRate = '';
                     />
                   </div> */}
 
-<div className='mr-6 mt-4'>
+<div className='mr-6 mt-4' name="RateGSTSelect">
   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
   <Select
     className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14"
     id="29"
-    name="RateGSTSelect"
+   
     instanceId="RateGST"
     placeholder="Select Rate GST%"
     value={rateGST}
@@ -1528,17 +1584,20 @@ var selectedRate = '';
                 </div>
                 
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
+                  {!(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) ? 
                   <button className = "bg-red-400 text-white p-2 rounded-full w-24 justify-center" onClick={rejectRates}>
                     <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span>
-                    </button>
+                    </button> : <></>}
                     {isNewRate ? (
+                      !(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) ? 
                       <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center" onClick={insertNewRate}>
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span>
-                      </button>
+                      </button>:<></>
                     ) : (
-                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={() => {updateRates(); updateQtySlab();}} disabled={!isFormChanged}>
-                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span>
-                    </button>
+                      !(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) ? 
+                        <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={() => {updateRates(); updateQtySlab();}} disabled={!isFormChanged}>
+                          <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span>
+                        </button> : <></>
                     )}
                     
                 {/* <Button variant="outlined" startIcon={<DeleteOutline />} className='border-red-400 text-red-400'>

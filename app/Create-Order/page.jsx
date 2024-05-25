@@ -2,10 +2,12 @@
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
+import { useAppSelector } from '@/redux/store';
 
 const CreateOrder = () => {
     const loggedInUser = 'GraceScans';
-    const [clientName, setClientName] = useState();
+    const [clientName, setClientName] = useState("");
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState();
     const router = useRouter();
@@ -14,7 +16,7 @@ const CreateOrder = () => {
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value
-        fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${'Grace Scans'}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
         setClientName(newName);
@@ -33,7 +35,7 @@ const CreateOrder = () => {
       const createNewOrder = async(event) => {
         event.preventDefault()
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonDBName=${companyName}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 window.alert('Work Order Created Successfully!')
@@ -71,13 +73,14 @@ const CreateOrder = () => {
                             }
                         }}
                     />
-                    {clientNameSuggestions.length > 0 && (
+                    {(clientNameSuggestions.length > 0 && clientName !== '') && (
                         <ul className="list-none">
                             {clientNameSuggestions.map((name, index) => (
-                            <li key={index}>
+                            <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
+                            duration-300">
                                 <button
                                 type="button"
-                                className="text-purple-500 hover:text-purple-700"
+                                className="text-black"
                                 onClick={handleClientNameSelection}
                                 value={name}
                                 >
@@ -88,7 +91,7 @@ const CreateOrder = () => {
                         </ul>
                         )}
                     {/* <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label> */}
-                    <input 
+                    {/* <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
                         placeholder='Client Number'  
@@ -106,7 +109,7 @@ const CreateOrder = () => {
                             }
                         }
                         }}
-                    />
+                    /> */}
                     {/* <div class="w-full flex gap-3 ">
                         <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
