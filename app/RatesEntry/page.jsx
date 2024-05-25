@@ -23,8 +23,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
-  // const username = "GraceScans"
-  const username = useAppSelector(state => state.authSlice.userName)
+  const username = "GraceScans"
+  // const username = useAppSelector(state => state.authSlice.userName)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState("");
@@ -206,6 +206,7 @@ console.log(tempSlabData)
       await Promise.all(tempSlabData.map(async (item) => {
         const qty = item.Qty;
         const newUnitPrice = item.newUnitPrice;
+        
 
         const qtySlabResponse = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
       }));
