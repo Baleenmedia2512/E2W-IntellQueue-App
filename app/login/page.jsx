@@ -4,12 +4,15 @@ import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
-import { login, logout } from '@/redux/features/auth-slice';
+import { login, logout, setCompanyName } from '@/redux/features/auth-slice';
 import MuiAlert from '@mui/material/Alert';
 import { useDispatch } from 'react-redux';
 import ImageRadioButton from '../components/ImageRadioButton';
+import { useAppSelector } from '@/redux/store';
 
 const Login = () => {
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const [companyNameSuggestions, setCompanyNameSuggestions] = useState([]);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,6 +30,21 @@ const Login = () => {
     dispatch(logout())
   },[])
 
+  const handleSearchTermChange = (event) => {
+    const newName = event.target.value
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestCompanyNames.php/get?suggestion=${newName}`)
+      .then((response) => response.json())
+      .then((data) => setCompanyNameSuggestions(data));
+      dispatch(setCompanyName(newName));
+  };
+
+  const handleCompanyNameSelection = (event) => {
+    const input = event.target.value;
+
+    setCompanyNameSuggestions([]);
+    dispatch(setCompanyName(input));
+  };
+
   const toggleShowPassword = () => {setShowPassword(!showPassword)};
 
   const router = useRouter();
@@ -40,21 +58,11 @@ const Login = () => {
           router.push("/");
           return;
         }
-      
+        const encodedPassw = encodeURIComponent(password)
         if(userName === '' || password === ''){
           showToastMessage('warning', "Please Enter User Name and Password")
         }else{
-        fetch(`https://orders.baleenmedia.com/API/Login.php`, {
-          method: 'POST',
-         // mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            JsonUserName: userName,
-            JsonPassword: password
-          })
-        })
+        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
         .then(response => {
           if (!response.ok) {
             throw new Error("response.statusText");
@@ -62,12 +70,11 @@ const Login = () => {
           return response.json();
         })
           .then(data => {
-
-            if(data === 'Login Succesfully'){
+            if(data === 'Login Successfully'){
               showToastMessage('success', data)
               //Cookies.set('username', userName, { expires: 7 });
               dispatch(login(userName));
-              if(userName === 'GraceScans'){
+              if(companyName === 'Grace Scans'){
                 router.push("/") //navigating to the enquiry Screen
               } else{
                 router.push("/adDetails")
@@ -128,10 +135,28 @@ const Login = () => {
               )}
             </span>
             </div>
-            <ImageRadioButton />
+            <input className="p-3 capitalize shadow-2xl  glass w-80 justify-self-center outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+            type="text" placeholder='Company Name' value={companyName} onChange={handleSearchTermChange}/>
+            {(companyNameSuggestions.length > 0 && companyName !== '') && (
+          <ul className="list-none border-green-300 w-80 ">
+            {companyNameSuggestions.map((name, index) => (
+              <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
+              duration-300">
+                <button
+                  type="button"
+                  className="text-black"
+                  onClick={handleCompanyNameSelection}
+                  value={name}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
           <button
             type="button"
-            className="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md mb-4"
+            className="mt-4 outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md mb-4"
             //className="bg-green-500 text-white px-4 py-2 rounded-lg mb-4 font-poppins transition-all duration-300 ease-in-out hover:bg-green-600"
             onClick={handleLogin}
           >

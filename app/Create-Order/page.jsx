@@ -1,20 +1,29 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useAppSelector } from '@/redux/store';
+import AdTypePage from '../adDetails/adType';
 
 const CreateOrder = () => {
     const loggedInUser = 'GraceScans';
-    const [clientName, setClientName] = useState();
+    const [clientName, setClientName] = useState("");
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState();
+    const [maxOrderNumber, setMaxOrderNumber] = useState();
     const router = useRouter();
     const searchParams = useSearchParams();
     const rateId = searchParams.get('rateId');
+    const qty = searchParams.get('qty');
+    const rateName = searchParams.get('rateName');
+    const type = searchParams.get('type');
+    const unitPrice = searchParams.get('unitPrice')
+    const unit = searchParams.get('unit');
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value
-        fetch(`https://orders.baleenmedia.com/API/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${'Grace Scans'}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
         setClientName(newName);
@@ -33,11 +42,11 @@ const CreateOrder = () => {
       const createNewOrder = async(event) => {
         event.preventDefault()
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonDBName=${companyName}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
-                window.alert('Work Order Created Successfully!')
-                router.push('/RatesEntry');
+                window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
+                router.push('/FinanceEntry');
               //setMessage(data.message);
             } else {
               alert(`The following error occurred while inserting data: ${data}`);
@@ -46,6 +55,24 @@ const CreateOrder = () => {
             console.error('Error updating rate:', error);
           }
       }
+
+      const fetchMaxRateID = async () => {
+        try {
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxRateID.php`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          const data = await response.json();
+          setMaxOrderNumber(data);
+          
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      useEffect(() => {
+        fetchMaxRateID()
+      },[])
 
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
@@ -71,13 +98,14 @@ const CreateOrder = () => {
                             }
                         }}
                     />
-                    {clientNameSuggestions.length > 0 && (
+                    {(clientNameSuggestions.length > 0 && clientName !== '') && (
                         <ul className="list-none">
                             {clientNameSuggestions.map((name, index) => (
-                            <li key={index}>
+                            <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
+                            duration-300">
                                 <button
                                 type="button"
-                                className="text-purple-500 hover:text-purple-700"
+                                className="text-black"
                                 onClick={handleClientNameSelection}
                                 value={name}
                                 >
@@ -87,8 +115,19 @@ const CreateOrder = () => {
                             ))}
                         </ul>
                         )}
+
+                        <ul className="list-none">
+                            <li className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
+                            duration-300">
+                                <option className='font-bold '>Short Summary</option>
+                                <option>Rate Card Name: {rateName}</option>
+                                <option>Type: {type}</option>
+                                <option>{unit}: {qty}</option>
+                                <option>Unit Price: Rs. {unitPrice}</option>
+                            </li>
+                        </ul>
                     {/* <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label> */}
-                    <input 
+                    {/* <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
                         placeholder='Client Number'  
@@ -106,7 +145,7 @@ const CreateOrder = () => {
                             }
                         }
                         }}
-                    />
+                    /> */}
                     {/* <div class="w-full flex gap-3 ">
                         <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
