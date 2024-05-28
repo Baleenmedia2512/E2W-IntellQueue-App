@@ -229,29 +229,34 @@ const AdDetailsPage = () => {
   
   const updateQtySlab = async() => {
    
-    if(newUnitPrice > 0 && qty > 0){
-      await Promise.all(combinedSlabData.map(async (item) => {
-        const qty = item.StartQty;
-        const newUnitPrice = item.UnitPrice;
-
-        await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`)
-        
-      }));
-
-      // if(selectedUnitId){
-      //   await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonUnitId=${selectedUnitId}&JsonQty=${tempSlabData.Qty}&JsonUnitPrice=${tempSlabData.newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`);
-      // } else{
-      //   await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonRateId=${rateId}&JsonQty=${tempSlabData.Qty}&JsonUnitPrice=${tempSlabData.newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`);
-        
-      // }
-
-      fetchQtySlab();
-      setQty(0);
-      setNewUnitPrice();
-      setEditModal(false);
-      setNewUnitPrice("");
-      setTempSlabData([]);
-      showToastMessage('success', 'Updated Successfully!')
+    if (newUnitPrice > 0 && qty > 0) {
+      try {
+        console.log("Combined: " + combinedSlabData, "Temp: " + tempSlabData, slabData)
+        await Promise.all(combinedSlabData.map(async (item) => {
+          const qty = item.StartQty;
+          const newUnitPrice = item.UnitPrice;
+    
+          try {
+            const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`);
+            
+            if (!response.ok) {
+              throw new Error(`Error: ${response.statusText}`);
+            }
+            console.log(response.json());
+            fetchQtySlab();
+            setQty(0);
+            setNewUnitPrice();
+            setEditModal(false);
+            setNewUnitPrice("");
+            setTempSlabData([]);
+            showToastMessage('success', 'Updated Successfully!')
+          } catch (fetchError) {
+            console.error(`Failed to update quantity slab for Qty: ${qty}, New Unit Price: ${newUnitPrice}, Rate ID: ${rateId}`, fetchError);
+          }
+        }));
+      } catch (error) {
+        console.error('An error occurred while processing combined slab data:', error);
+      }
     } else {
       showToastMessage("error", "Enter valid Unit Price or Quantity!")
     }
@@ -641,6 +646,7 @@ var selectedRate = '';
   };
   
   const updateRates = async () => {
+    updateQtySlab();
     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}`);
@@ -656,7 +662,7 @@ var selectedRate = '';
         throw new Error(data.error);
       }
   
-      showToastMessage('success', 'Updated Successfully!');
+      //showToastMessage('success', 'Updated Successfully!');
       // window.location.reload();
     } catch (error) {
       console.error('Error:', error);
@@ -872,6 +878,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     }
     return data;
   });
+  console.log(updatedData)
 
   setSlabData(updatedData);
 }
@@ -1593,7 +1600,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       </button>:<></>
                     ) : (
                       !(selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) ? 
-                        <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={() => {updateRates(); updateQtySlab();}} disabled={!isFormChanged}>
+                        <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={() => {updateRates(); }} disabled={!isFormChanged}>
                           <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span>
                         </button> : <></>
                     )}

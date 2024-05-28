@@ -4,8 +4,8 @@
     "display": "standalone",
     "scope": "/",
     "start_url": "/",
-    "name": "Baleen Media",
-    "short_name": "BM App",
+    "name": "Easy2Work(T)",
+    "short_name": "Easy2Work(T)",
     "icons": [
         {
             "src": "/icon-192x192.png",
