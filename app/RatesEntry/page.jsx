@@ -235,7 +235,7 @@ const AdDetailsPage = () => {
         const newUnitPrice = item.UnitPrice;
 
         await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`)
-        console.log(qty, newUnitPrice)
+        
       }));
 
       // if(selectedUnitId){
@@ -855,8 +855,7 @@ var selectedRate = '';
 
 
 const updateSlabData = (qty, newUnitPrice) => {
-  // Example: update newUnitPrice for the selected index
-  console.log(qty, newUnitPrice, tempSlabData)
+  
   if(tempSlabData.length > 0){
   const updatedData = tempSlabData.map((data) => {
     if (data.StartQty === qty) {
@@ -867,7 +866,6 @@ const updateSlabData = (qty, newUnitPrice) => {
 
   setTempSlabData(updatedData);
 } else {
-  console.log(slabData)
   const updatedData = slabData.map((data) => {
     if (data.StartQty === qty) {
       return { ...data, UnitPrice: newUnitPrice };
@@ -1225,7 +1223,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                   {/* {filters.package.length > 0 ?  */}
                   
                   {/* {(packageOptions.length > 1 || isNewRate) && ( */}
-                  {/* <div>
+                  <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
                     <CreatableSelect
@@ -1246,7 +1244,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
-                </div> */}
+                </div>
                   {/* )} */}
                 <></>
                 

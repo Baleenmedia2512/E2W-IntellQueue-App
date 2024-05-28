@@ -20,7 +20,7 @@ const ClientsData = () => {
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
-  const sources = ['JustDial', 'IndiaMart', 'Sulekha', 'Self', 'Consultant', 'Own', 'WebApp DB', 'Online', 'Friends/Relatives'];
+  const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
   // const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState('');
@@ -41,6 +41,7 @@ const ClientsData = () => {
   const [days, setDays] = useState('');
   const [elementsToHide, setElementsToHide] = useState([])
   const [isEmpty, setIsEmpty] = useState(true);
+  const [error, setError] = useState('');
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -116,7 +117,6 @@ const ClientsData = () => {
     // fetchConsultantDetails(name, number);
   };
   
-
   const fetchClientDetails = (clientName, clientNumber) => {
     axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
@@ -133,8 +133,17 @@ const ClientsData = () => {
           setSelectedOption(clientDetails.gender || "");
           setConsultantName(clientDetails.consname || "");
           setConsultantNumber(clientDetails.consnumber || "");
-          setClientPAN(clientDetails.PAN || "");
+          // setClientPAN(clientDetails.PAN || "");
           setClientGST(clientDetails.GST || "");
+
+          // Extract PAN from GST if necessary
+        if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")) {
+          const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
+          setClientPAN(pan);
+        } else {
+          setClientPAN(clientDetails.ClientPAN);
+        }
+      
         } else {
           // Handle case where no data is returned
           dispatch(setClientData({ clientEmail: "" }));
@@ -204,6 +213,7 @@ const ClientsData = () => {
     dispatch(setClientData({ clientSource: selectedOption.target.value }));
   };
 
+
   const submitDetails = async(event) => {
     event.preventDefault()
     
@@ -217,7 +227,7 @@ const ClientsData = () => {
       }
     else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
       const data = await response.json();
       //console.log(data)
       if (data === "Values Inserted Successfully!") {
@@ -240,7 +250,7 @@ const ClientsData = () => {
   }} 
   else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${title}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '' && address !== '' && clientAge !== undefined && inputValue !== undefined) {
@@ -252,7 +262,7 @@ const ClientsData = () => {
         }
         //setMessage(data.message);
       } else {
-        (`The following error occurred while inserting data: ${data}`);
+        alert(`The following error occurred while inserting data: ${data}`);
       }
   }catch (error) {
     console.error('Error updating rate:', error);
@@ -344,6 +354,22 @@ const checkEmptyFields = () => {
 useEffect(() => {
   checkEmptyFields();
 }, [clientName, clientContact, clientEmail, address, clientAge, inputValue]);
+
+
+const handleChange = (e) => {
+  const { value } = e.target;
+  setClientGST(value);
+  if (value.length < 15) {
+    setError('GST Number must be at least 15 characters long');
+    setClientPAN('');
+  } else {
+    const pan = value.slice(2, -3);
+    setClientPAN(pan);
+    setError('');
+    
+  }
+
+};
 
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
@@ -647,12 +673,12 @@ useEffect(() => {
       <div className='grid gap-6 w-full' name="ClientGSTInput" >
       <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="number" 
         placeholder="GST Number" 
         id="31" 
         name="ClientGSTInput" 
         value={clientGST}
-        onChange={(e) => setClientGST(e.target.value)}
+        // onChange={(e) => setClientGST(e.target.value)}
+        onChange={handleChange}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -664,10 +690,11 @@ useEffect(() => {
             }
           }
         }}
+        
         />
+        {error && <p className="text-red-500">{error}</p>}
         <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="number" 
         placeholder="PAN" 
         id="32" 
         name="ClientPANInput" 
@@ -691,11 +718,12 @@ useEffect(() => {
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="8"
         name="ClientSourceSelect"
-        value={clientSource}
+        value={clientSource === "" ? "5.Consultant" : clientSource}
         required
+        // defaultValue="Consultant"
         onChange={handleClientSourceChange}
       >
-        <option defaultValue="Consultant">Select Source</option>
+        {/* <option >Select Source</option> */}
         {sources.map((source, index) => (
           <option key={index} value={source}>
             {source}
@@ -708,7 +736,7 @@ useEffect(() => {
         placeholder="Consultant Name" 
         id="9" 
         name="ConsultantNameInput" 
-        required = {clientSource === 'Consultant' ? true : false} 
+        required = {clientSource === '5.Consultant' ? true : false} 
         onChange={handleConsultantNameChange} 
         value={consultantName}
         onKeyDown={(e) => {
@@ -748,9 +776,9 @@ useEffect(() => {
         name="ConsultantNumberInput" 
         value={consultantNumber} 
         onChange={e => setConsultantNumber(e.target.value)} 
-        required = {clientSource === 'Consultant' ? true : false}/>
+        required = {clientSource === '5.Consultant' ? true : false}/>
       </div>
-      <button className="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md mb-20" type="submit">Submit</button>
+      <button className="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md mb-28" type="submit">Submit</button>
     </div>
   </form>
       {/* <div className='w-full mt-8 justify-center items-center text-black'>
