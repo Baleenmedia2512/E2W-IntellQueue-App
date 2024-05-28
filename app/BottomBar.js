@@ -59,9 +59,14 @@ const BottomBar = () => {
       case 3:
         router.push('/RatesEntry');
         break;
-      case 4:
-        router.push('/login');
-        break;
+        case 4:
+          router.push('/FinanceEntry');
+          break; 
+
+        case 5:
+          router.push('/login');
+          break; 
+        
       default:
         break;
     }
@@ -141,13 +146,28 @@ const BottomBar = () => {
       </div>
       {/* Rates Entry button */}
 
+{/* Finance Entry button */}
+<button data-tooltip-target="tooltip-finance" type="button" onClick={(e) => handleChange(e, 4)} class="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
+  <svg class="w-6 h-6 text-gray-800 dark:text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+    <path fill-rule="evenodd" d="M2 10a8 8 0 1 1 16 0 8 8 0 0 1-16 0zm8-5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm-.5 1a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/>
+  </svg>
+  <span class="sr-only">Finance Entry</span>
+</button>
+<div id="tooltip-finance" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
+  Finance Entry
+  <div class="tooltip-arrow" data-popper-arrow></div>
+</div>
+
+
+{/* Finance Entry button */}
+
+
+
       {/*Logout button */}
-      <button data-tooltip-target="tooltip-logout" type="button" onClick={(e) => handleChange(e, 4)} class="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
+      <button data-tooltip-target="tooltip-logout" type="button" onClick={(e) => handleChange(e, 5)} class="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
       <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
 </svg>
-
-
       <span class="sr-only">Logout</span>
     </button>
     <div id="tooltip-logout" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
