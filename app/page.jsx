@@ -647,7 +647,6 @@ useEffect(() => {
       <div className='grid gap-6 w-full' name="ClientGSTInput" >
       <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="number" 
         placeholder="GST Number" 
         id="31" 
         name="ClientGSTInput" 
@@ -667,7 +666,6 @@ useEffect(() => {
         />
         <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="number" 
         placeholder="PAN" 
         id="32" 
         name="ClientPANInput" 
