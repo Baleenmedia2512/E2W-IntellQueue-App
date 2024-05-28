@@ -103,8 +103,7 @@ const FinanceData = () => {
   const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
   const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-  console.log(formattedDate); // Output: "2024-05-25"
-  console.log(formattedTime);
+  
   
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
@@ -232,8 +231,6 @@ const FinanceData = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&JsonDBName=${username}`)
       .then((response) => {
         const data = response.data;
-        console.log(data)
-        console.log(clientName)
         if (data.length > 0) {
           const clientDetails = data[0];
           setOrderNumber(clientDetails.orderNumber);

@@ -861,7 +861,7 @@ var selectedRate = '';
 
 
 const updateSlabData = (qty, newUnitPrice) => {
-  // Example: update newUnitPrice for the selected index
+  
   if(tempSlabData.length > 0){
   const updatedData = tempSlabData.map((data) => {
     if (data.StartQty === qty) {
@@ -1230,7 +1230,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                   {/* {filters.package.length > 0 ?  */}
                   
                   {/* {(packageOptions.length > 1 || isNewRate) && ( */}
-                  {/* <div>
+                  <div>
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
                   <div className='flex mr-4'>
                     <CreatableSelect
@@ -1251,7 +1251,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
-                </div> */}
+                </div>
                   {/* )} */}
                 <></>
                 
