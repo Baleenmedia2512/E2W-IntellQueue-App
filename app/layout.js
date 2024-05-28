@@ -10,8 +10,8 @@ const ReduxProvider = dynamic(() => import("@/redux/provider"), {
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: 'Media',
-  description: 'This page is used to update rates',
+  title: 'Easy2Work(T)',
+  description: 'A wonderful CRM which will make work of a business, easy and fast',
   manifest: '/manifest.json'
 };
 
