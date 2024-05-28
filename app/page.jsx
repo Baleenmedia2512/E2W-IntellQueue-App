@@ -6,6 +6,8 @@ import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { Snackbar } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
 import VirtualizedList from './components/VirtuvalizedList';
 
 
@@ -21,15 +23,15 @@ const ClientsData = () => {
   const sources = ['JustDial', 'IndiaMart', 'Sulekha', 'Self', 'Consultant', 'Own', 'WebApp DB', 'Online', 'Friends/Relatives'];
   // const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
-  const [clientAge, setClientAge] = useState();
+  const [clientAge, setClientAge] = useState('');
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
-  const [address, setAddress] = useState();
+  const [address, setAddress] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [consultantName, setConsultantName] = useState('');
-  const [consultantNumber, setConsultantNumber] = useState();
+  const [consultantNumber, setConsultantNumber] = useState('');
   const [displayWarning, setDisplayWarning] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Mrs.");
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
@@ -93,7 +95,7 @@ const ClientsData = () => {
   }
 
   const handleClientNameSelection = (names) => {
-    const input = names;
+    const input = names.target.value;
     const name = input.substring(0, input.indexOf('(')).trim();
     const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
 
@@ -120,25 +122,51 @@ const ClientsData = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
-        if (data.length > 0) {
+        if (data && data.length > 0) {
           const clientDetails = data[0];
-          dispatch(setClientData({clientEmail: clientDetails.email}));
-          dispatch(setClientData({clientSource: clientDetails.source}));
-          setClientAge(clientDetails.Age);
-          setInputValue(clientDetails.DOB);
-          setAddress(clientDetails.address);
-          setTitle(clientDetails.gender);
-          setSelectedOption(clientDetails.gender);
-          setConsultantName(clientDetails.consname);
-          setConsultantNumber(clientDetails.consnumber);
-          setClientPAN(clientDetails.PAN);
-          setClientGST(clientDetails.GST);
+          dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
+          dispatch(setClientData({ clientSource: clientDetails.source || "" }));
+          setClientAge(clientDetails.Age || "");
+          setInputValue(clientDetails.DOB || "");
+          setAddress(clientDetails.address || "");
+          setTitle(clientDetails.gender || "");
+          setSelectedOption(clientDetails.gender || "");
+          setConsultantName(clientDetails.consname || "");
+          setConsultantNumber(clientDetails.consnumber || "");
+          setClientPAN(clientDetails.PAN || "");
+          setClientGST(clientDetails.GST || "");
+        } else {
+          // Handle case where no data is returned
+          dispatch(setClientData({ clientEmail: "" }));
+          dispatch(setClientData({ clientSource: "" }));
+          setClientAge("");
+          setInputValue("");
+          setAddress("");
+          setTitle("");
+          setSelectedOption("");
+          setConsultantName("");
+          setConsultantNumber("");
+          setClientPAN("");
+          setClientGST("");
+          console.warn("No client details found for the given name and contact number.");
         }
       })
       .catch((error) => {
-        console.error(error);
+        console.error("Error fetching client details:", error);
+        // Optionally, you can reset the fields or show an error message to the user
+        dispatch(setClientData({ clientEmail: "" }));
+        dispatch(setClientData({ clientSource: "" }));
+        setClientAge("");
+        setInputValue("");
+        setAddress("");
+        setTitle("");
+        setSelectedOption("");
+        setConsultantName("");
+        setConsultantNumber("");
+        setClientPAN("");
+        setClientGST("");
       });
-  }; 
+  };
 
   useEffect(() => {    
         if (!loggedInUser) {
@@ -178,10 +206,11 @@ const ClientsData = () => {
 
   const submitDetails = async(event) => {
     event.preventDefault()
-    if (isEmpty === true){
+    
+    if(companyName !== 'Grace Scans'){
+      if (isEmpty === true){
       router.push('/adDetails')
     }
-    if(!loggedInUser === 'Grace Scans'){
       if(isDetails && clientName && clientContact && clientSource){
         dispatch(setQuotesData({currentPage: "checkout"}))
         router.push('/adDetails')
@@ -318,10 +347,10 @@ useEffect(() => {
 
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
-      <form class="px-7 h-screen grid justify-center items-center" onSubmit={submitDetails}>
-    <div class="grid gap-6" id="form">
+      <form className="px-7 h-screen grid justify-center items-center" onSubmit={submitDetails}>
+    <div className="grid gap-6" id="form">
     <h1 className="font-bold text-3xl text-center mb-4">Client Registration</h1>
-      <div class="w-full flex gap-3">
+      <div className="w-full flex gap-3">
       <select
         className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
         id='1'
@@ -329,7 +358,7 @@ useEffect(() => {
         value={selectedOption}
         //onChange={e => setTitle(e.target.value)}
        // defaultValue="Mrs."
-        required={!isEmpty}
+        required
         onChange={(e) => {
           const selectedOption = e.target.value;
           setSelectedOption(selectedOption);
@@ -352,7 +381,7 @@ useEffect(() => {
           placeholder="Name" 
           id='2'
           name="ClientNameInput" 
-          required={!isEmpty} 
+          required
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
           onKeyDown={(e) => {
@@ -386,9 +415,9 @@ useEffect(() => {
             ))}
           </ul>
         )}
-      <div class="grid gap-6 w-full">
+      <div className="grid gap-6 w-full">
       {selectedOption === 'Ms.' ? (
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
           type="text" 
           placeholder="Contact Person Name" 
           id="30"
@@ -409,12 +438,12 @@ useEffect(() => {
           />
         ) : (<></>)}
         <input 
-        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
         placeholder="Contact Number" 
         id="3" 
         name="ClientContactInput" 
-        required={!isEmpty} 
+        required
         value={clientContact}
         onChange={(e) => handleClientContactChange(e.target.value)}
         onKeyDown={(e) => {
@@ -429,7 +458,7 @@ useEffect(() => {
           }
         }}
         />
-        <input class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="email" 
         placeholder="Email"
         id="4" 
@@ -617,7 +646,7 @@ useEffect(() => {
       </div>
       <div className='grid gap-6 w-full' name="ClientGSTInput" >
       <input 
-        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
         placeholder="GST Number" 
         id="31" 
@@ -637,7 +666,7 @@ useEffect(() => {
         }}
         />
         <input 
-        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
         placeholder="PAN" 
         id="32" 
@@ -662,8 +691,8 @@ useEffect(() => {
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="8"
         name="ClientSourceSelect"
-        value={clientSource || "Consultant"}
-        required={!isEmpty}
+        value={clientSource}
+        required
         onChange={handleClientSourceChange}
       >
         <option defaultValue="Consultant">Select Source</option>
@@ -674,12 +703,14 @@ useEffect(() => {
         ))}
       </select>
       <input 
-        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="text" 
         placeholder="Consultant Name" 
         id="9" 
         name="ConsultantNameInput" 
-        required = {clientSource === '5.Consultant' ? true : false} onChange={handleConsultantNameChange} value={consultantName}
+        required = {clientSource === 'Consultant' ? true : false} 
+        onChange={handleConsultantNameChange} 
+        value={consultantName}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -712,14 +743,14 @@ useEffect(() => {
   </ul>
 )}
       <input 
-        class="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" 
+        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" 
         id="10" 
         name="ConsultantNumberInput" 
         value={consultantNumber} 
         onChange={e => setConsultantNumber(e.target.value)} 
-        required = {clientSource === '5.Consultant' ? true : false}/>
+        required = {clientSource === 'Consultant' ? true : false}/>
       </div>
-      <button class="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md mb-20" type="submit">Submit</button>
+      <button className="outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md mb-20" type="submit">Submit</button>
     </div>
   </form>
       {/* <div className='w-full mt-8 justify-center items-center text-black'>
@@ -799,7 +830,7 @@ useEffect(() => {
         >
           Skip
         </button>
-      </div>
+      </div>*/}
 
       <div className="bg-surface-card p-8 rounded-2xl mb-4">
         <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
@@ -807,7 +838,7 @@ useEffect(() => {
             {toastMessage}
           </MuiAlert>
         </Snackbar>
-      </div> */}
+      </div> 
     </div>
 
   );
