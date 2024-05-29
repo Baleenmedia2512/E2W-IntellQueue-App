@@ -214,6 +214,7 @@ const FinanceData = () => {
         .then((response) => response.json())
         .then((data) => setClientNameSuggestions(data));
         setClientName(newName);
+        setClientNameSuggestions([]);
     } catch(error){
       console.error("Error Suggesting Client Names: " + error)
     }
