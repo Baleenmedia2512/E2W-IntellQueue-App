@@ -39,7 +39,7 @@ const AdDetailsPage = () => {
   const [campaignUnits, setCampaignUnits] = useState([]) 
   const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("")
   const [slabData, setSlabData] = useState([]);
-  const [editModal, setEditModal] = useState();
+  const [editModal, setEditModal] = useState(false);
   const [qty, setQty] = useState(0)
   const [validityDays, setValidityDays] = useState(0)
   const [units, setUnits] = useState([])
@@ -49,11 +49,11 @@ const AdDetailsPage = () => {
   const [startQty, setStartQty] = useState([])
   const [unitPrice, setUnitPrice] = useState(0);
   const [showCampaignDuration, setShowCampaignDuration] = useState(false)
-  const [selectedUnitId, setSelectedUnitId] = useState()
+  const [selectedUnitId, setSelectedUnitId] = useState("")
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
-  const [rateId, setRateId] = useState(null);
+  const [rateId, setRateId] = useState("");
   const [invalidRates, setInvalidRates] = useState(false)
   const [invalidRatesData, setInvalidRatesData] = useState([]);
   const [validRatesData, setValidRatesData] = useState([]);
@@ -61,12 +61,13 @@ const AdDetailsPage = () => {
   const [isNewRate, setIsNewRate] = useState(false);
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
-  const [rateGST, setRateGST] = useState(null);
+  const [rateGST, setRateGST] = useState("");
   const [tempSlabData, setTempSlabData] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
-  const [initialState, setInitialState] = useState({ validityDays: '', rateGST: null });
+  const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
   const [maxRateID, setMaxRateID] = useState("");
   const [elementsToHide, setElementsToHide] = useState([])
+  const [elementsToShow, setElementsToShow] = useState([]);
   const elementsNeeded = [""];
 
   const [filters, setFilters] = useState({
@@ -79,12 +80,12 @@ const AdDetailsPage = () => {
   });
 
   const [selectedValues, setSelectedValues] = useState({
-    rateName: null,
-    typeOfAd: null,
-    adType: null,
-    Location: null,
-    vendorName: null,
-    Package: null
+    rateName: "",
+    typeOfAd: "",
+    adType: "",
+    Location: "",
+    vendorName: "",
+    Package: ""
   });
 
   // Function to toggle the modal
@@ -125,11 +126,6 @@ const AdDetailsPage = () => {
     }
   }, []);
 
-  useEffect(() => {
-    
-    if(tempSlabData.length === 0){}
-  },[tempSlabData])
-
   const handleItemClick = (data) => {
     setEditModal(true);
     setQty(data.StartQty);
@@ -147,6 +143,19 @@ const AdDetailsPage = () => {
       });
     });
   }, [elementsToHide])
+
+  useEffect(() => {
+    // Show elements from the database
+
+    if(elementsToShow.length > 0){
+      elementsToShow.forEach((name) => {
+        const elements = document.getElementsByName(name);
+        elements.forEach((element) => {
+          element.style.display = ''; // Reset the display property to show the element
+        });
+      });
+    }
+  }, [elementsToShow]);
 
   const insertQtySlab = async(Qty, UnitPrice) => {
     
@@ -227,15 +236,29 @@ const AdDetailsPage = () => {
 //   }
 // }
   
+  const addQtySlab = async() => {
+    try{
+      await Promise.all(combinedSlabData.map(async(item) => {
+        const qty = item.StartQty;
+        const newUnitPrice = item.UnitPrice;
+        try{
+          const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}$JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
+        }catch(error){
+          console.error(error);
+        }
+      }))
+    }catch(error){
+      console.error(error);
+    }
+  }
+
   const updateQtySlab = async() => {
    
     if (newUnitPrice > 0 && qty > 0) {
       try {
-        console.log("Combined: " + combinedSlabData)
         await Promise.all(combinedSlabData.map(async (item) => {
           const qty = item.StartQty;
           const newUnitPrice = item.UnitPrice;
-          console.log(item.StartQty, item.UnitPrice, qty, newUnitPrice)
           try {
             const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
             
@@ -243,16 +266,15 @@ const AdDetailsPage = () => {
               throw new Error(`Error: ${response.statusText}`);
             }
             const responseData = await response.json();
-            console.log(responseData)
             fetchQtySlab();
             setQty(0);
             setNewUnitPrice();
             setEditModal(false);
             setNewUnitPrice("");
             setTempSlabData([]);
-            showToastMessage('success', 'Updated Successfully!')
+            showToastMessage('success', responseData.message)
           } catch (fetchError) {
-            console.error(`Failed to update quantity slab for Qty: ${qty}, New Unit Price: ${newUnitPrice}, Rate ID: ${rateId}`, fetchError);
+            console.error(`Failed to update quantity slab`, fetchError);
           }
         }));
       } catch (error) {
@@ -301,12 +323,11 @@ const AdDetailsPage = () => {
       const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
       const firstSelectedSlab = sortedData[0];
       if(firstSelectedSlab){
-        setIsSlabAvailable(true)
+        setIsSlabAvailable(true);
+        setUnitPrice(firstSelectedSlab.UnitPrice);
+        setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit});
+        setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
       }
-      
-      setUnitPrice(firstSelectedSlab.UnitPrice);
-      setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit});
-      setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
     } catch (error) {
       console.error(error);
     }
@@ -521,6 +542,16 @@ var selectedRate = '';
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
   },[invalidRates])
 
+  // const packageOptions = getOptions('Package', selectedValues);
+  const combinedSlabData = slabData.concat(tempSlabData)
+
+  useEffect(() => {
+    if(slabData.length < 1){
+      elementsToShowList("Show");
+    }else{
+      elementsToShowList();
+    }
+  },[slabData])
 
   const fetchRates = async () => {
   
@@ -647,7 +678,8 @@ var selectedRate = '';
   };
   
   const updateRates = async () => {
-    updateQtySlab();
+    {elementsToShow.length < 1  ? insertQtySlab() : updateQtySlab();}
+    
     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}`);
@@ -663,7 +695,7 @@ var selectedRate = '';
         throw new Error(data.error);
       }
   
-      //showToastMessage('success', 'Updated Successfully!');
+      showToastMessage('success', 'Updated Successfully!');
       // window.location.reload();
     } catch (error) {
       console.error('Error:', error);
@@ -773,7 +805,7 @@ var selectedRate = '';
 
   useEffect(() => {
     const setVendor = () => {
-      if(username === 'GraceScans' && selectedValues.vendorName === null){
+      if(companyName === 'Grace Scans' && selectedValues.vendorName === null){
         setSelectedValues({
           ...selectedValues,
           vendorName: {
@@ -824,6 +856,15 @@ var selectedRate = '';
     }
   }
 
+  const elementsToShowList = (status) => {
+    if(status === "Show"){
+      setElementsToShow(["RatesUnitsSelect", "RatesQuantityText"]);
+    }else{
+      setElementsToShow([]);
+      elementsToHideList();
+    }
+  }
+
   const insertNewRate = async () => {
     try {
         if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
@@ -844,8 +885,7 @@ var selectedRate = '';
                     const newUnitPrice = item.newUnitPrice;
 
                     const qtySlabResponse = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
-
-                    const qtySlabData = await qtySlabResponse.text();
+                    const qtySlabData = await qtySlabResponse.json();
                 }));
 
                 // Optionally reload the window after successful insertion
@@ -879,7 +919,6 @@ const updateSlabData = (qty, newUnitPrice) => {
     }
     return data;
   });
-  console.log(updatedData)
 
   setSlabData(updatedData);
 }
@@ -907,12 +946,12 @@ const updateSlabData = (qty, newUnitPrice) => {
   const handleClearRateId = () => {
     setRateId("");
     setSelectedValues({
-      rateName: null,
-      adType: null,
-      vendorName: null,
-      typeOfAd: null,
-      Location: null,
-      Package: null
+      rateName: "",
+      adType: "",
+      vendorName: "",
+      typeOfAd: "",
+      Location: "",
+      Package: ""
     });
     setValidityDays(0);
     setValidityDate(new Date());
@@ -931,8 +970,6 @@ const updateSlabData = (qty, newUnitPrice) => {
     setNewUnitPrice(0);
     setTempSlabData([]);
   }
-  // const packageOptions = getOptions('Package', selectedValues);
-  const combinedSlabData = [...slabData.map(data => ({ ...data, isTemp: false })), ...tempSlabData.map(data => ({ ...data, isTemp: true }))];
 
   return (
     <div className=" mt-8 justify-center">
@@ -1301,8 +1338,8 @@ const updateSlabData = (qty, newUnitPrice) => {
                   </div> */}
 
                 {/* {isNewRate || (rateId > 0 && slabData.length < 1) ? '': ''} */}
-                  <div className="mb-4 mr-14" id="24" name="RatesUnitsSelect"> 
-                  <label className=''>Units</label><br />
+                  <div className="mr-14 mt-4" id="24" name="RatesUnitsSelect"> 
+                  <label className="text-gray-700 font-semibold">Units</label><br />
                     <CreatableSelect
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
                       required = {isNewRate ? true : false}
@@ -1365,7 +1402,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                   <div>
                   {(isSlabAvailable && !isNewRate) ? (
                     <div className='text-left justify-start mt-4'>
-                    <h2 className='mb-4 font-bold'>Rate-Slab</h2>
+                    {combinedSlabData > 0 ? <h2 className='mb-4 font-bold'>Rate-Slab</h2> : <></>}
                     <ul className='mb-4 mr-4'  >
                     {combinedSlabData.map((data, index) => (
                       <div key={data.StartQty || index} className='flex'>
