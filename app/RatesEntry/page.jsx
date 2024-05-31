@@ -231,18 +231,19 @@ const AdDetailsPage = () => {
    
     if (newUnitPrice > 0 && qty > 0) {
       try {
-        console.log("Combined: " + combinedSlabData, "Temp: " + tempSlabData, slabData)
+        console.log("Combined: " + combinedSlabData)
         await Promise.all(combinedSlabData.map(async (item) => {
           const qty = item.StartQty;
           const newUnitPrice = item.UnitPrice;
-    
+          console.log(item.StartQty, item.UnitPrice, qty, newUnitPrice)
           try {
-            const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${qty}&JsonUnitPrice=${newUnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${username}`);
+            const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
             
             if (!response.ok) {
               throw new Error(`Error: ${response.statusText}`);
             }
-            console.log(response.json());
+            const responseData = await response.json();
+            console.log(responseData)
             fetchQtySlab();
             setQty(0);
             setNewUnitPrice();
@@ -1230,13 +1231,13 @@ const updateSlabData = (qty, newUnitPrice) => {
                   {/* {filters.package.length > 0 ?  */}
                   
                   {/* {(packageOptions.length > 1 || isNewRate) && ( */}
-                  <div>
-                  <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Package</label>
+                  <div name="RatesPackageSelect">
+                  <label className='block mb-2 mt-4 text-gray-700 font-semibold' name="RatesPackageSelect">Package</label>
                   <div className='flex mr-4'>
                     <CreatableSelect
                       className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
                       id="21"
-                      name="PackageSelect"
+                      name="RatesPackageSelect"
                       placeholder="Select Package"
                       defaultValue={selectedValues.Package}
                       value={selectedValues.Package}
