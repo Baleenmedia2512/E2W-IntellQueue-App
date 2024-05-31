@@ -20,8 +20,8 @@ const ClientsData = () => {
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
-  const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
-  // const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
+  const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
+  const gssources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState('');
   const [severity, setSeverity] = useState('');
@@ -43,6 +43,7 @@ const ClientsData = () => {
   const [isEmpty, setIsEmpty] = useState(true);
   const [error, setError] = useState('');
   const [isNewClient, setIsNewClient] = useState('true');
+  const sources = companyName === 'Grace Scans' ? gssources : bmsources;
   
   const dispatch = useDispatch();
   const router = useRouter()
