@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import SwipeableViews from 'react-swipeable-views';
 import { DataGrid } from '@mui/x-data-grid';
 import axios from 'axios';
 import { useAppSelector } from '@/redux/store';
@@ -64,10 +63,6 @@ const Report = () => {
                 <Tab label="Orders" />
                 <Tab label="Finances" />
             </Tabs>
-            <SwipeableViews
-                index={value}
-                onChangeIndex={handleSwipeChange}
-            >
                 <Box sx={{ padding: 3 }}>
                     {/* Content for Orders tab */}
                     <div style={{ width: '100%' }}>
@@ -84,7 +79,6 @@ const Report = () => {
                     <h2>Finances</h2>
                     <p>Finance details go here...</p>
                 </Box>
-            </SwipeableViews>
         </Box>
     );
 }
