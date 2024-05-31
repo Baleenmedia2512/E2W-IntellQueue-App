@@ -47,6 +47,7 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
+  console.log(inputValue)
   useEffect(() => {
     // Check if age input violates constraints for selected option
     if ((selectedOption === "Baby." && parseInt(clientAge) > 3) || 
@@ -125,12 +126,12 @@ const ClientsData = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
-        console.log(data);
         if (data && data.length > 0) {
           const clientDetails = data[0];
+          setInputValue(clientDetails.DOB);
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
-          setClientAge(clientDetails.Age || "");
+          //setClientAge(clientDetails.Age || "");
           
           setAddress(clientDetails.address || "");
           setTitle(clientDetails.gender || "");
@@ -139,19 +140,9 @@ const ClientsData = () => {
           setConsultantNumber(clientDetails.consnumber || "");
           // setClientPAN(clientDetails.PAN || "");
           setClientGST(clientDetails.GST || "");
-
-          const dobDate = clientDetails.DOB ? new Date(clientDetails.DOB) : null;
-          let formattedDOB = '';
-
-          if (dobDate) {
-            const year = dobDate.getFullYear();
-            const month = String(dobDate.getMonth() + 1).padStart(2, '0'); // Adding 1 because getMonth() returns zero-based month index
-            const day = String(dobDate.getDate()).padStart(2, '0');
-            formattedDOB = `${year}-${month}-${day}`;
-          }
-
-          setInputValue(formattedDOB);
-
+          
+          const age = calculateAge(clientDetails.DOB);
+          setClientAge(age);
           // Extract PAN from GST if necessary
         if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")) {
           const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
@@ -353,7 +344,7 @@ const handleInputAgeChange = (event) => {
 const handleDateChange = (e) => {
   const dateValue = e.target.value;
   setInputValue(dateValue);
-
+  console.log(dateValue)
   const age = calculateAge(dateValue);
   setClientAge(age);
 
@@ -380,7 +371,6 @@ useEffect(() => {
   setInputValue('');
 }, [selectedOption]);
 
-console.log(inputValue)
 // Function to check if any of the fields are empty
 const checkEmptyFields = () => {
   if (
@@ -477,8 +467,7 @@ const handleChange = (e) => {
       {(clientNameSuggestions.length > 0 && clientName !== '') && (
           <ul className="list-none border-green-300 border-1 ">
             {clientNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
-              duration-300">
+              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
                 <button
                   type="button"
                   className="text-black"
@@ -644,6 +633,7 @@ const handleChange = (e) => {
             type="date"
             name="AgeDatePicker"
             id="6"
+            defaultValue={inputValue}
             value={inputValue}
             onChange={handleDateChange}
             onKeyDown={(e) => {

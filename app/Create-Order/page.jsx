@@ -42,7 +42,7 @@ const CreateOrder = () => {
       const createNewOrder = async(event) => {
         event.preventDefault()
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonDBName=${companyName}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonDBName=${companyName}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
