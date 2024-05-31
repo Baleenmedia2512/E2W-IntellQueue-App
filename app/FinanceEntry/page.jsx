@@ -84,10 +84,8 @@ const FinanceData = () => {
   const [transactionType, setTransactionType] = useState(transactionOptions[0]);
   const [ordersData, setOrdersData] = useState(null);
   const [chequeNumber, setChequeNumber] = useState('');
-  const [chequeDate, setChequeDate] = useState(dayjs());
+  const [chequeDate, setChequeDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [chequeTime, setChequeTime] = useState(dayjs());
-  // const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
-  const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -680,7 +678,7 @@ const FinanceData = () => {
             className="custom-date-picker"
             fullWidth
             label="Select Date"
-            value={formattedChequeDate}
+            value={chequeDate}
             onClick={handleDateClick}
             InputProps={{
               style: { borderColor: '#88cc6b' } 
