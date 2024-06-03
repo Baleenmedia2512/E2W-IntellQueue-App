@@ -304,8 +304,8 @@ const FinanceData = () => {
 
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
-      <form class="px-7 h-screen grid justify-center items-center ">
-    <div class="grid gap-6 " id="form">
+      <form className="px-7 h-screen grid justify-center items-center ">
+    <div className="grid gap-6 " id="form">
     <h1 className="font-bold text-3xl text-center mb-4 ">Finance Entry</h1>
         <div>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Transaction Type</label>
@@ -357,7 +357,7 @@ const FinanceData = () => {
             {transactionType && transactionType.value !== 'opex' && (
     <>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name</label>
-            <div class="w-full flex gap-3">
+            <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Client Name" 
@@ -397,7 +397,7 @@ const FinanceData = () => {
             )}
 
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number</label>
-            <div class="w-full flex gap-3">
+            <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Ex. 10000" 
@@ -421,7 +421,7 @@ const FinanceData = () => {
             </>
   )}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount</label>
-            <div class="w-full flex gap-3">
+            <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Amount" 
@@ -461,7 +461,7 @@ const FinanceData = () => {
             </div> */}
             
             {/* <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Balance</label>
-          <div class="w-full flex gap-3">
+          <div className="w-full flex gap-3">
           <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
               type="text"
               placeholder="Balance" 
@@ -507,7 +507,7 @@ const FinanceData = () => {
                {taxType && taxType.value === 'gst' && (
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %</label>
-          <div class="w-full flex gap-3">
+          <div className="w-full flex gap-3">
           <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
               type="text"
               placeholder="GST%" 
@@ -529,7 +529,7 @@ const FinanceData = () => {
           </div>
 
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount</label>
-            <div class="w-full flex gap-3">
+            <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="GST Amount" 
@@ -553,7 +553,7 @@ const FinanceData = () => {
             </>
             )}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Remarks</label>
-            <div class="w-full flex gap-3">
+            <div className="w-full flex gap-3">
             <TextareaAutosize
               className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
               id="7"
@@ -637,7 +637,7 @@ const FinanceData = () => {
                {paymentMode && paymentMode.value === 'cheque' && (
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number</label>
-            <div class="w-full flex gap-3">
+            <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Ex. 10000" 
