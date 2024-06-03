@@ -18,8 +18,8 @@ const ClientsData = () => {
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
-  const sources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
-  // const sources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
+  const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
+  const gssources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState('');
   const [severity, setSeverity] = useState('');
@@ -40,10 +40,13 @@ const ClientsData = () => {
   const [elementsToHide, setElementsToHide] = useState([])
   const [isEmpty, setIsEmpty] = useState(true);
   const [error, setError] = useState('');
+  const [isNewClient, setIsNewClient] = useState('true');
+  const sources = companyName === 'Grace Scans' ? gssources : bmsources;
   
   const dispatch = useDispatch();
   const router = useRouter()
 
+  console.log(inputValue)
   useEffect(() => {
     // Check if age input violates constraints for selected option
     if ((selectedOption === "Baby." && parseInt(clientAge) > 3) || 
@@ -98,10 +101,12 @@ const ClientsData = () => {
     const name = input.substring(0, input.indexOf('(')).trim();
     const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
 
-    setClientNameSuggestions([]);
+    
     dispatch(setClientData({clientName: name}));
     dispatch(setClientData({clientContact: number}));
     fetchClientDetails(name, number);
+    setClientNameSuggestions([]);
+    setIsNewClient('false');
   };
 
   const handleConsultantNameSelection = (event) => {
@@ -114,7 +119,7 @@ const ClientsData = () => {
     setConsultantNumber(number);
     // fetchConsultantDetails(name, number);
   };
-  
+
   const fetchClientDetails = (clientName, clientNumber) => {
     axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
@@ -122,10 +127,11 @@ const ClientsData = () => {
         const data = response.data;
         if (data && data.length > 0) {
           const clientDetails = data[0];
+          setInputValue(clientDetails.DOB);
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
-          setClientAge(clientDetails.Age || "");
-          setInputValue(clientDetails.DOB || "");
+          //setClientAge(clientDetails.Age || "");
+          
           setAddress(clientDetails.address || "");
           setTitle(clientDetails.gender || "");
           setSelectedOption(clientDetails.gender || "");
@@ -133,7 +139,9 @@ const ClientsData = () => {
           setConsultantNumber(clientDetails.consnumber || "");
           // setClientPAN(clientDetails.PAN || "");
           setClientGST(clientDetails.GST || "");
-
+          
+          const age = calculateAge(clientDetails.DOB);
+          setClientAge(age);
           // Extract PAN from GST if necessary
         if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")) {
           const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
@@ -219,36 +227,39 @@ const ClientsData = () => {
       if (isEmpty === true){
       router.push('/adDetails')
     }
-      if(isDetails && clientName && clientContact && clientSource){
-        dispatch(setQuotesData({currentPage: "checkout"}))
-        router.push('/adDetails')
-      }
-    else{
+    //   if(clientName && clientContact && clientSource){
+    //     dispatch(setQuotesData({currentPage: "checkout"}))
+    //     router.push('/adDetails')
+    //   }
+    // else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
+
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}`)
       const data = await response.json();
       //console.log(data)
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '') {
           window.alert('Client Details Entered Successfully!')
-          window.location.reload();
+          // window.location.reload();
           dispatch(resetQuotesData())
+          dispatch(setQuotesData({currentPage: "checkout"}))
+          router.push('/adDetails')
           //router.push('../adDetails');
         }
         else {
           showToastMessage('warning', 'Please fill all the Required Client Details!')
         }
-        //setMessage(data.message);
+        // setMessage(data.message);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
       }
     } catch (error) {
       console.error('Error updating rate:', error);
     }
-  }} 
+  } 
   else{
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${inputValue}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         if (clientName !== '' && clientContact !== '' && clientSource !== '' && address !== '' && clientAge !== undefined && inputValue !== undefined) {
@@ -298,20 +309,46 @@ const calculateAge = (dob) => {
   return age;
 };
 
+const calculateDateFromAge = (age) => {
+  const today = new Date();
+  const birthDate = new Date(today.setFullYear(today.getFullYear() - age));
+  return birthDate.toISOString().split('T')[0];
+};
+
+// const handleInputAgeChange = (event) => {
+//   const dob = event.target.value;
+//   const age = calculateAge(dob);
+//   setInputValue(dob);
+//   // setInputValue(formatDate(new Date(dob)));
+//   setClientAge(age);
+// };
+
 const handleInputAgeChange = (event) => {
-  const dob = event.target.value;
-  const age = calculateAge(dob);
-  setInputValue(dob);
-  // setInputValue(formatDate(new Date(dob)));
+  const age = event.target.value;
   setClientAge(age);
+
+  if ((selectedOption === 'Baby.' && parseInt(age) > 3) || 
+      (selectedOption === 'Master.' && (parseInt(age) < 4 || parseInt(age) > 12))) {
+    setDisplayWarning(true);
+  } else {
+    setDisplayWarning(false);
+  }
+
+  if (age) {
+    const dob = calculateDateFromAge(age);
+    setInputValue(dob);
+  }
 };
 
 const handleDateChange = (e) => {
   const dateValue = e.target.value;
   setInputValue(dateValue);
+  console.log(dateValue)
+  const age = calculateAge(dateValue);
+  setClientAge(age);
 
-  // if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
-  if (selectedOption === 'B/o.') {
+  if (selectedOption === 'B/o.' || selectedOption === 'Baby.') {
+  // if (selectedOption === 'B/o.') {
     const selectedDate = new Date(dateValue);
     const today = new Date();
     const diffTime = Math.abs(today - selectedDate);
@@ -320,7 +357,7 @@ const handleDateChange = (e) => {
     const calculatedMonths = Math.floor(diffDays / 30);
     const calculatedDays = diffDays % 30;
 
-    setClientAge(calculatedMonths);
+    setMonths(calculatedMonths);
   }
 };
 
@@ -332,7 +369,6 @@ useEffect(() => {
   }
   setInputValue('');
 }, [selectedOption]);
-
 
 // Function to check if any of the fields are empty
 const checkEmptyFields = () => {
@@ -402,12 +438,17 @@ const handleChange = (e) => {
       </select>
         <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
           type="text"
-          placeholder="Name" 
+          placeholder="Name*" 
           id='2'
           name="ClientNameInput" 
           required
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
+          onBlur={() => {
+            setTimeout(() => {
+              setClientNameSuggestions([]);
+            }, 200); // Adjust the delay time according to your preference
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -425,8 +466,7 @@ const handleChange = (e) => {
       {(clientNameSuggestions.length > 0 && clientName !== '') && (
           <ul className="list-none border-green-300 border-1 ">
             {clientNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
-              duration-300">
+              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
                 <button
                   type="button"
                   className="text-black"
@@ -443,7 +483,7 @@ const handleChange = (e) => {
       {selectedOption === 'Ms.' ? (
         <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
           type="text" 
-          placeholder="Contact Person Name" 
+          placeholder="Contact Person Name*" 
           id="30"
           name="ClientContactPersonInput"
           value={clientContactPerson}
@@ -464,7 +504,7 @@ const handleChange = (e) => {
         <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
-        placeholder="Contact Number" 
+        placeholder="Contact Number*" 
         id="3" 
         name="ClientContactInput" 
         required
@@ -559,22 +599,23 @@ const handleChange = (e) => {
             type="number"
             id="5"
             name="ClientAgeInput"
-            placeholder="Age"
+            placeholder="Age*"
             value={clientAge}
-            onChange={(e) => {
-              const { value } = e.target;
-              setClientAge(value);
+            onChange={handleInputAgeChange}
+            // onChange={(e) => {
+            //   const { value } = e.target;
+            //   setClientAge(value);
 
-              if (
-                (selectedOption === 'Baby.' && parseInt(value) > 3) ||
+            //   if (
+            //     (selectedOption === 'Baby.' && parseInt(value) > 3) ||
          
-                (selectedOption === 'Master.' && (parseInt(value) < 4 || parseInt(value) > 12))
-              ) {
-                setDisplayWarning(true);
-              } else {
-                setDisplayWarning(false);
-              }
-            }}
+            //     (selectedOption === 'Master.' && (parseInt(value) < 4 || parseInt(value) > 12))
+            //   ) {
+            //     setDisplayWarning(true);
+            //   } else {
+            //     setDisplayWarning(false);
+            //   }
+            // }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -591,8 +632,9 @@ const handleChange = (e) => {
             type="date"
             name="AgeDatePicker"
             id="6"
+            defaultValue={inputValue}
             value={inputValue}
-            onChange={handleInputAgeChange}
+            onChange={handleDateChange}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -611,8 +653,8 @@ const handleChange = (e) => {
             className="capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
             type="number"
             name="MonthsInput"
-            placeholder="Months"
-            value={clientAge}
+            placeholder="Months*"
+            value={months}
             onChange={(e) => setMonths(e.target.value)}
           />
           <input
@@ -671,7 +713,7 @@ const handleChange = (e) => {
       <div className='grid gap-6 w-full' name="ClientGSTInput" >
       <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="GST Number" 
+        placeholder="GST Number*" 
         id="31" 
         name="ClientGSTInput" 
         value={clientGST}
@@ -693,7 +735,7 @@ const handleChange = (e) => {
         {error && <p className="text-red-500">{error}</p>}
         <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="PAN" 
+        placeholder="PAN*" 
         id="32" 
         name="ClientPANInput" 
         value={clientPAN}
@@ -716,7 +758,7 @@ const handleChange = (e) => {
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="8"
         name="ClientSourceSelect"
-        value={clientSource === "" ? "5.Consultant" : clientSource}
+        value={clientSource}
         required
         // defaultValue="Consultant"
         onChange={handleClientSourceChange}

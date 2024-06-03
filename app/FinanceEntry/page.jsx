@@ -64,8 +64,9 @@ const paymentModeOptions = [
 ];
 
 const FinanceData = () => {
-  const username = "Grace Scans"
-  // const username = useAppSelector(state => state.authSlice.userName)
+  // const username = "Grace Scans"
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const username = useAppSelector(state => state.authSlice.userName)
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
@@ -77,16 +78,14 @@ const FinanceData = () => {
   const [gstPercentage, setGSTPercentage] = useState(null);
   const [expenseCategory, setExpenseCategory] = useState(null);
   const [remarks, setRemarks] = useState(null);
-  const [transactionDate, setTransactionDate] = useState(dayjs());
+  const [transactionDate, setTransactionDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [transactionTime, setTransactionTime] = useState(dayjs());
   const [paymentMode, setPaymentMode] = useState(paymentModeOptions[0]);
   const [transactionType, setTransactionType] = useState(transactionOptions[0]);
   const [ordersData, setOrdersData] = useState(null);
   const [chequeNumber, setChequeNumber] = useState('');
-  const [chequeDate, setChequeDate] = useState(dayjs());
+  const [chequeDate, setChequeDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [chequeTime, setChequeTime] = useState(dayjs());
-  // const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
-  const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -210,7 +209,7 @@ const FinanceData = () => {
     const newName = event.target.value
     
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesFinance.php/get?suggestion=${newName}&JsonDBName=${username}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesFinance.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
         .then((response) => response.json())
         .then((data) => setClientNameSuggestions(data));
         setClientName(newName);
@@ -220,23 +219,31 @@ const FinanceData = () => {
   };  
 
   const handleClientNameSelection = (e) => {
+    const input = e.target.value;
+    const name = input.substring(0, input.indexOf('(')).trim();
+    const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
+
     setClientNameSuggestions([]);
-    setClientName(e.target.value);
-    fetchClientDetails(e.target.value);
+    setClientName(name);
+    fetchClientDetails(name, number);
 
   };
 
-  const fetchClientDetails = (clientName) => {
+  const fetchClientDetails = (clientName, clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&JsonDBName=${username}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
+        console.log(data)
         if (data.length > 0) {
           const clientDetails = data[0];
+          console.log(clientDetails.orderDate)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.amount);
           setGSTPercentage(clientDetails.gstPercentage);
+          setTransactionDate(clientDetails.orderDate);
+          
         }
       })
       .catch((error) => {
@@ -258,7 +265,7 @@ const FinanceData = () => {
             try {
               // `EntryDate`, `EntryUser`, `TransactionType`, `OrderNumber`,  `Remarks`,`ExpensesCategory`,`Amount`, `TaxType`, `TaxAmount`, `PaymentMode`, `ChequeNumber`, `ChequeDate`, `ValidStatus`,`PEXtds`,`PEXbadebt`,`OPEXtds`,`OPEXbadebt`,`CAPEXtds`,`CAPEXbadebt`,`TransactionDate`
 
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonClientName=${clientName ? clientName : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedTime + ' ' + formattedTime}&JsonDBName=${username}`);
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonClientName=${clientName ? clientName : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedTime + ' ' + formattedTime}&JsonDBName=${companyName}`);
 
 
                 const data = await response.text();
@@ -366,6 +373,11 @@ const FinanceData = () => {
                 // required={!isEmpty} 
                 value={clientName}
                 onChange = {handleClientNameTermChange}
+                onBlur={() => {
+            setTimeout(() => {
+              setClientNameSuggestions([]);
+            }, 200); // Adjust the delay time according to your preference
+          }}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -378,14 +390,15 @@ const FinanceData = () => {
                 }}
                 />
             </div>
-            {clientNameSuggestions.length > 0 && (
+            {(clientNameSuggestions.length > 0 && clientName !== '') && (
                 <ul className="list-none">
                 {clientNameSuggestions.map((name, index) => (
                     <li key={index}>
                     <button
                         type="button"
-                        className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
-                            duration-300"
+                        // className="text-black text-left pl-3 border w-full bg-gradient-to-r from-green-100 via-green-200 to-green-300 hover:cursor-pointer transition
+                        //     duration-300"
+                        className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md"
                         onClick={handleClientNameSelection}
                         value={name}
                     >
@@ -424,7 +437,7 @@ const FinanceData = () => {
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
-                placeholder="Amount" 
+                placeholder="Amount (₹)" 
                 id='4'
                 name="AmountInput" 
                 // required={!isEmpty} 
@@ -573,7 +586,7 @@ const FinanceData = () => {
             className="custom-date-picker"
             fullWidth
             label="Select Date"
-            value={transactionDate.format('YYYY-MM-DD')}
+            value={transactionDate}
 
             onClick={handleDateClick}
             InputProps={{
@@ -665,7 +678,7 @@ const FinanceData = () => {
             className="custom-date-picker"
             fullWidth
             label="Select Date"
-            value={formattedChequeDate}
+            value={chequeDate}
             onClick={handleDateClick}
             InputProps={{
               style: { borderColor: '#88cc6b' } 
