@@ -7,7 +7,6 @@ import Snackbar from '@mui/material/Snackbar';
 import { login, logout, setCompanyName } from '@/redux/features/auth-slice';
 import MuiAlert from '@mui/material/Alert';
 import { useDispatch } from 'react-redux';
-import ImageRadioButton from '../components/ImageRadioButton';
 import { useAppSelector } from '@/redux/store';
 
 const Login = () => {

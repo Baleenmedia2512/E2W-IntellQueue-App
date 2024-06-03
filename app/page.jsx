@@ -8,9 +8,7 @@ import { useAppSelector } from '@/redux/store';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { Snackbar } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
-import VirtualizedList from './components/VirtuvalizedList';
-
-
+    
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   //const companyName = "Grace Scans"
@@ -648,7 +646,7 @@ const handleChange = (e) => {
 {/* {displayDOBWarning && (
       <div className="text-red-600 ml-9">Note: The DOB should be the baby's</div>
     )} */}
-      <div class="flex gap-3">
+      <div className="flex gap-3">
       <textarea
         className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
         id="7"
