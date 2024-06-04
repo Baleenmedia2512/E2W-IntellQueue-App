@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
-import AdTypePage from '../adDetails/adType';
 
 const CreateOrder = () => {
     const loggedInUser = 'GraceScans';
@@ -169,7 +168,7 @@ const CreateOrder = () => {
                         type='date' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"/>
                      */}
-                     <button class="outline-none glass shadow-2xl  w-64 p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
+                     <button className="outline-none glass shadow-2xl  w-64 p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
                 </div>
             </form>
         </div>
