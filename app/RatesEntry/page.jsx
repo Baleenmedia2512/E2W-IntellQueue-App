@@ -435,7 +435,7 @@ const AdDetailsPage = () => {
 
     if(!selectedValues[previousKey] == ''){ //Check whether the selected key is valid or not
       const filteredData = ratesData.filter(item => 
-       (!selectedValues[previousKey]['value'] || item[previousKey] === selectedValues[previousKey]['value']) //filter based on the previous key value
+       !selectedValues[previousKey]['value'] || item[previousKey] === selectedValues[previousKey]['value'] //filter based on the previous key value
       );
       
       // Extract distinct values of the specified filterKey from the filtered data
@@ -537,22 +537,35 @@ var selectedRate = '';
   if (filterKey === 'adType' && selectedOption) {
       selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
-      // item.typeOfAd === selectedValues.typeOfAd.value && 
+      item.typeOfAd === selectedValues.typeOfAd.value && 
       item.adType === selectedOption.value 
-
-    );}
-  //   if (filterKey === 'Location' && selectedOption) {
-  //       selectedRate = ratesData.find(item =>
-  //       item.rateName === selectedValues.rateName.value &&
-  //       item.Location === selectedOption.value 
+    );
   
-  //     );}
-      // if (filterKey === 'Package' && selectedOption) {
-      //     selectedRate = ratesData.find(item =>
-      //     item.rateName === selectedValues.rateName.value &&
-      //     item.Package === selectedOption.value 
-    
-      //   );}
+  }
+
+  if (filterKey === 'Location' && selectedOption) {
+    selectedRate = ratesData.find(item =>
+    item.rateName === selectedValues.rateName.value &&
+    item.typeOfAd === selectedValues.typeOfAd.value && 
+    item.adType === selectedValues.adType.value &&
+    item.Location === selectedOption.value 
+  );
+
+}
+    // if (filterKey === 'Location' && selectedOption) {
+    //     selectedRate = ratesData.find(item =>
+    //     item.rateName === selectedValues.rateName.value &&
+    //     item.Location === selectedOption.value 
+  
+    //   );}
+      if (filterKey === 'Package' && selectedOption) {
+          selectedRate = ratesData.find(item =>
+          item.rateName === selectedValues.rateName.value &&
+          item.typeOfAd === selectedValues.typeOfAd.value && 
+          item.adType === selectedValues.adType.value &&
+          item.Location === selectedValues.Location.value &&
+          item.Package === selectedOption.value 
+        );}
 
     if (selectedRate) {
       setRateId(selectedRate.RateID);
@@ -1367,7 +1380,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                 </div>
 
 <div className='mr-6 mt-4' name="RateGSTSelect">
-  <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
+  <label className="block mb-2 text-gray-700 font-semibold w-64">Rate GST%</label>
   <Select
     classNames="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14"
     id="29"
