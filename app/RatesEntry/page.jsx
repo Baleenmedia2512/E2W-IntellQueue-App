@@ -408,15 +408,44 @@ const AdDetailsPage = () => {
   const qtySlabOptions = transformQtySlabData();
 
   // Function to get options based on the selected values
-  const getOptions = (filterKey, selectedValues) => {
-    const filteredData = ratesData.filter(item => {
-      return Object.entries(selectedValues).every(([key, value]) =>
-        key === filterKey || !value || item[key] === value.value
-      );
-    });
+  // const getOptions = (filterKey, selectedValues) => {
+  //   const filteredData = ratesData.filter(item => {
+  //     return Object.entries(selectedValues).every(([key, value]) =>
+  //       key === filterKey || !value || item[key] === value.value
+  //     );
+  //   });
 
-    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-    return distinctValues.sort().map(value => ({ value, label: value }));
+  //   const distinctValues = [...new Set(ratesData.map(item => item[filterKey]))];
+  //   return distinctValues.sort().map(value => ({ value, label: value }));
+  // };
+
+  // const getOptions = (filterKey, selectedValues) => {
+  //   const filteredData = ratesData.filter(item => {
+  //     return Object.entries(selectedValues).every(([key, value]) =>
+  //       !value || item[key] === value
+  //     );
+  //   });
+  
+  //   const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //   return distinctValues.sort().map(value => ({ value, label: value }));
+  // };
+
+  //filtering the options based on previous values
+  const getOptions = (filterKey, previousKey) => {
+
+    if(!selectedValues[previousKey] == ''){ //Check whether the selected key is valid or not
+      const filteredData = ratesData.filter(item => 
+       !selectedValues[previousKey]['value'] || item[previousKey] === selectedValues[previousKey]['value'] //filter based on the previous key value
+      );
+      
+      // Extract distinct values of the specified filterKey from the filtered data
+      const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+    
+      // Return the distinct values sorted and mapped to objects with value and label properties
+      return distinctValues.sort().map(value => ({ value, label: value }));
+    } else{
+      return;
+    }
   };
 
   // useEffect to update filters whenever selectedValues change
@@ -508,22 +537,35 @@ var selectedRate = '';
   if (filterKey === 'adType' && selectedOption) {
       selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
-      // item.typeOfAd === selectedValues.typeOfAd.value && 
+      item.typeOfAd === selectedValues.typeOfAd.value && 
       item.adType === selectedOption.value 
-
-    );}
-  //   if (filterKey === 'Location' && selectedOption) {
-  //       selectedRate = ratesData.find(item =>
-  //       item.rateName === selectedValues.rateName.value &&
-  //       item.Location === selectedOption.value 
+    );
   
-  //     );}
-      // if (filterKey === 'Package' && selectedOption) {
-      //     selectedRate = ratesData.find(item =>
-      //     item.rateName === selectedValues.rateName.value &&
-      //     item.Package === selectedOption.value 
-    
-      //   );}
+  }
+
+  if (filterKey === 'Location' && selectedOption) {
+    selectedRate = ratesData.find(item =>
+    item.rateName === selectedValues.rateName.value &&
+    item.typeOfAd === selectedValues.typeOfAd.value && 
+    item.adType === selectedValues.adType.value &&
+    item.Location === selectedOption.value 
+  );
+
+}
+    // if (filterKey === 'Location' && selectedOption) {
+    //     selectedRate = ratesData.find(item =>
+    //     item.rateName === selectedValues.rateName.value &&
+    //     item.Location === selectedOption.value 
+  
+    //   );}
+      if (filterKey === 'Package' && selectedOption) {
+          selectedRate = ratesData.find(item =>
+          item.rateName === selectedValues.rateName.value &&
+          item.typeOfAd === selectedValues.typeOfAd.value && 
+          item.adType === selectedValues.adType.value &&
+          item.Location === selectedValues.Location.value &&
+          item.Package === selectedOption.value 
+        );}
 
     if (selectedRate) {
       setRateId(selectedRate.RateID);
@@ -1070,7 +1112,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         placeholder="Select Category"
                         value={selectedValues.typeOfAd}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
-                        options={getOptions('typeOfAd', selectedValues)}
+                        options={getOptions('typeOfAd', 'rateName')}
                         // options={filters.typeOfAd}
                         required
                       />
@@ -1091,7 +1133,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         required
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-                        options={getOptions('adType', selectedValues)}
+                        options={getOptions('adType', 'typeOfAd')}
                       />
                       <button className='justify-center text-blue-400 ml-1' 
                       id='18'
@@ -1113,7 +1155,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         placeholder="Select Location"
                         value={selectedValues.Location}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
-                        options={getOptions('Location', selectedValues)}
+                        options={getOptions('Location', 'adType')}
                         required
                       />
                       <button className='justify-center text-blue-400 ml-1' 
@@ -1137,7 +1179,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       placeholder="Select Package"
                       value={selectedValues.Package}
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
-                      options={getOptions('Package', selectedValues)}
+                      options={getOptions('Package', 'Location')}
                       required = {isNewRate ? true : false}
                     />
                     <button className='justify-center text-blue-400 ml-1' 
@@ -1338,7 +1380,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                 </div>
 
 <div className='mr-6 mt-4' name="RateGSTSelect">
-  <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
+  <label className="block mb-2 text-gray-700 font-semibold w-64">Rate GST%</label>
   <Select
     classNames="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14"
     id="29"
