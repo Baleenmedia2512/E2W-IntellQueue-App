@@ -49,6 +49,13 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
+  // useEffect(() => {
+  //   if (!clientSource && sources.length > 0) {
+  //     dispatch(setClientData({ clientSource: sources[0] }));
+  //   }
+  // }, [clientSource, dispatch]);
+  console.log(clientSource)
+
   useEffect(() => {
     // Check if age input violates constraints for selected option
     if ((selectedOption === "Baby." && parseInt(clientAge) > 3) || 
@@ -196,7 +203,7 @@ const ClientsData = () => {
           dispatch(resetClientData());
           dispatch(resetQuotesData());
         }
-
+        companyName === 'Grace Scans' ? dispatch(setClientData({clientSource: sources[1]})) : dispatch(setClientData({clientSource: sources[0]}))
         elementsToHideList()
   }, []);
 
@@ -245,17 +252,12 @@ const ClientsData = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
-        if (clientName !== '' && clientContact !== '' && clientSource !== '') {
           window.alert('Client Details Entered Successfully!')
           // window.location.reload();
           dispatch(resetQuotesData())
           dispatch(setQuotesData({currentPage: "checkout"}))
           router.push('/adDetails')
           //router.push('../adDetails');
-        }
-        else {
-          showToastMessage('warning', 'Please fill all the Required Client Details!')
-        }
         // setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
         window.alert('Contact Number Already Exists!')
@@ -272,13 +274,9 @@ const ClientsData = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
-        if (clientName !== '' && clientContact !== '' && clientSource !== '' && address !== '' && clientAge !== undefined && DOB !== undefined) {
           window.alert('Client Details Entered Successfully!')
           window.location.reload();
         
-        } else {
-          showToastMessage('warning', 'Please fill all the Required Client Details!')
-        }
         //setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
         window.alert('Contact Number Already Exists!')
@@ -372,6 +370,7 @@ const handleDateChange = (e) => {
   }
 };
 
+
 useEffect(() => {
   // if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
   if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
@@ -426,7 +425,6 @@ const handleConsultantNumberChange = (e) => {
   }
 
 };
-console.log(isNewClient)
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center" onSubmit={submitDetails}>
@@ -783,7 +781,7 @@ console.log(isNewClient)
         name="ClientSourceSelect"
         value={clientSource}
         required
-        // defaultValue="Consultant"
+        defaultValue={sources[0]}
         onChange={handleClientSourceChange}
       >
         {/* <option >Select Source</option> */}
