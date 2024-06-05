@@ -70,6 +70,7 @@ const AdDetailsPage = () => {
   const [maxRateID, setMaxRateID] = useState("");
   const [elementsToHide, setElementsToHide] = useState([])
   const [elementsToShow, setElementsToShow] = useState([]);
+  const [slabEdit, setSlabEdit] = useState(false)
   const elementsNeeded = [""];
 
   const [filters, setFilters] = useState({
@@ -165,6 +166,7 @@ const AdDetailsPage = () => {
     if (!isNaN(price)) {
       setTempSlabData([...tempSlabData, { StartQty: Qty, UnitPrice: price }]);
       toggleModal();
+      setSlabEdit(true)
       setIsSlabAvailable(true);
     // if (isNewRate) {
      
@@ -396,11 +398,7 @@ const AdDetailsPage = () => {
   useEffect(() => {
     fetchUnits();
     fetchAllVendor();
-    if(selectedValues.adType !== "" && combinedSlabData.length < 0){
-      elementsToShowList()
-    }else{
-      elementsToShowList("Show");
-    }
+    setTempSlabData([])
   },[selectedValues.adType, selectedValues.rateName])
 
   const getDistinctValues = (key) => {
@@ -508,7 +506,6 @@ const AdDetailsPage = () => {
         Location: "",
         typeOfAd:""
       });
-      
     } else if(filterKey === 'typeOfAd'){
       setSelectedValues({
         ...selectedValues,
@@ -619,11 +616,13 @@ var selectedRate = '';
   // const packageOptions = getOptions('Package', selectedValues);
   const combinedSlabData = slabData.concat(tempSlabData)
 
-  // useEffect(() => {
-  //   if(combinedSlabData.length < 1){
-  //     elementsToShowList("Show");
-  //   }
-  // },[slabData, tempSlabData, isNewRate])
+  useEffect(() => {
+    if(slabData.length < 1){
+      elementsToShowList("Show");
+    } else{
+      elementsToShowList()
+    }
+  },[slabData, tempSlabData, isNewRate])
 
   const fetchRates = async () => {
   
@@ -663,7 +662,7 @@ var selectedRate = '';
         return null
       } else{
         const validityDate = new Date(data.ValidityDate);
-      const currentDate = new Date()
+        const currentDate = new Date()
         if (validityDate < currentDate){
           return
         }
@@ -774,7 +773,11 @@ var selectedRate = '';
       showToastMessage('error', error.message);
     }
   } else{
-    showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+    if(validityDays < 1){
+      setIsValidityDays(true)
+    }else{
+      showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+    }
   }
   };
   
@@ -1044,10 +1047,7 @@ const updateSlabData = (qty, newUnitPrice) => {
 
   return (
     <div className=" mt-8 justify-center">
-      
             <h1 className="font-bold text-3xl text-center mb-8 mr-12 " style={{fontFamily: 'Poppins, sans-serif'}}>Rates Entry</h1>
-
-
             {/* text-blue-500 */}
 { modal && (
       <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
@@ -1267,7 +1267,6 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
                     <div className='flex mb-4 mr-7'>
                       <TextField 
-                        
                         variant="outlined" 
                         size='small' 
                         required = {isNewRate ? true : false}
@@ -1313,21 +1312,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     ))}
                   </ul>
                      </div>
-                  ) : isNewRate ?
-                  <div className='text-left justify-start mt-4'>
-                    {tempSlabData.length > 0 ?<h2 className='mb-4 font-bold'>Rate-Slab</h2> : <></>}
-                    <ul className='mb-4 mr-4'>
-                    {tempSlabData.map((data, index) => (
-                      <div key={index} className='flex'>
-                        <span onClick={() => {handleItemClick(data)}}>{data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}</span>
-                        <IconButton aria-label="Remove" onClick={() => removeQtySlab(data.Qty, index)}>
-                          <RemoveCircleOutline color='secondary' fontSize='small'/>
-                        </IconButton>
-                      </div>
-                    ))}
-                    </ul>
-                    </div>
-                    : <></>}
+                  ) : <></>}
                 </div>
 
               <div name="RatesServiceDurationCheckbox">
