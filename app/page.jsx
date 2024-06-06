@@ -333,6 +333,8 @@ const calculateDateFromAge = (age) => {
 //   setClientAge(age);
 // };
 
+
+
 const handleInputAgeChange = (event) => {
   const age = event.target.value;
   setClientAge(age);
@@ -344,6 +346,7 @@ const handleInputAgeChange = (event) => {
     setDisplayWarning(false);
   }
 
+// MP-42-DOB calculation is not working when age is entered
   if (age) {
     const dob = calculateDateFromAge(age);
     setDOB(dob);
@@ -398,13 +401,12 @@ useEffect(() => {
   checkEmptyFields();
 }, [clientName, clientContact, clientEmail, address, clientAge, DOB]);
 
-
+//MP-39-Warning message should be shown for GST Field (<15 characters)
 const handleGSTChange = (e) => {
   const { value } = e.target;
   setClientGST(value);
-  if (value.length < 15) {
-    setError('GST Number must be at least 15 characters long');
-    setClientPAN('');
+  if (value.length < 15 || value.length > 15) {
+    setError('GST Number must be 15 characters long');
   } else {
     const pan = value.slice(2, -3);
     setClientPAN(pan);
@@ -464,6 +466,8 @@ const handleConsultantNumberChange = (e) => {
           required
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
+          // MP-45-The client name suggestions should hide when it is not selected (or while creating a new client entry)
+
           onBlur={() => {
             setTimeout(() => {
               setClientNameSuggestions([]);
@@ -715,6 +719,7 @@ const handleConsultantNumberChange = (e) => {
         id="7"
         name="ClientAddressTextArea"
         placeholder="Address"
+        required
         value={address}
         onChange={e => setAddress(e.target.value)}
         onKeyDown={(e) => {
@@ -734,12 +739,13 @@ const handleConsultantNumberChange = (e) => {
       <div className='grid gap-6 w-full' name="ClientGSTInput" >
       <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="GST Number*" 
+        placeholder="GST Number" 
         id="31" 
         name="ClientGSTInput" 
         value={clientGST}
         // onChange={(e) => setClientGST(e.target.value)}
-        onChange={handleGSTChange}
+        //MP-39-Warning message should be shown for GST Field (<15 characters)
+        onChange={handleGSTChange} 
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -756,7 +762,7 @@ const handleConsultantNumberChange = (e) => {
         {error && <p className="text-red-500">{error}</p>}
         <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="PAN*" 
+        placeholder="PAN" 
         id="32" 
         name="ClientPANInput" 
         value={clientPAN}
