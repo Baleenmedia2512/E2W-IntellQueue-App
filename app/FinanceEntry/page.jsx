@@ -236,23 +236,20 @@ const FinanceData = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
-        console.log(data)
         if (data.length > 0) {
           const clientDetails = data[0];
-          console.log(clientDetails.orderDate)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.amount);
           setGSTPercentage(clientDetails.gstPercentage);
           // setTransactionDate(clientDetails.orderDate);
-          setTransactionDate(dayjs(clientDetails.orderDate));
+          // setTransactionDate(dayjs(clientDetails.orderDate));
         }
       })
       .catch((error) => {
         console.error(error);
       });
   }; 
-console.log(formattedDate + ' ' + formattedTime)
   const insertNewFinance = async (e) => {
     e.preventDefault()
     // try {
@@ -267,11 +264,11 @@ console.log(formattedDate + ' ' + formattedTime)
             try {
               // `EntryDate`, `EntryUser`, `TransactionType`, `OrderNumber`,  `Remarks`,`ExpensesCategory`,`Amount`, `TaxType`, `TaxAmount`, `PaymentMode`, `ChequeNumber`, `ChequeDate`, `ValidStatus`,`PEXtds`,`PEXbadebt`,`OPEXtds`,`OPEXbadebt`,`CAPEXtds`,`CAPEXbadebt`,`TransactionDate`
 
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonClientName=${clientName ? clientName : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
 
 
                 const data = await response.json();
-                showToastMessage('success', 'Inserted Successfully!' + data);
+                showToastMessage('success', data);
                 setChequeNumber('');;
                 setClientName('');
                 setExpenseCategory('');
@@ -310,7 +307,6 @@ console.log(formattedDate + ' ' + formattedTime)
   //     handleOrderNumber()
   //   }
   // }, [orderNumber]);
-
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
