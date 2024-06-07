@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import { DataGrid, GridFilterInputValue, getGridStringOperators, getGridNumericOperators } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import axios from 'axios';
 import { useAppSelector } from '@/redux/store';
 
@@ -52,19 +52,9 @@ const Report = () => {
             });
     };
 
-    const customStringOperators = getGridStringOperators().map(operator => ({
-        ...operator,
-        InputComponent: GridFilterInputValue,
-    }));
-    
-    const customNumericOperators = getGridNumericOperators().map(operator => ({
-        ...operator,
-        InputComponent: GridFilterInputValue,
-    }));
-
     const orderColumns = [
-        { field: 'OrderNumber', headerName: 'Order Number', width: 150, filterOperators: customNumericOperators},
-        { field: 'OrderDate', headerName: 'Order Date', width: 150, filterOperators: customNumericOperators },
+        { field: 'OrderNumber', headerName: 'Order Number', width: 150},
+        { field: 'OrderDate', headerName: 'Order Date', width: 150},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
         { field: 'Receivable', headerName: 'Amount', width: 130 },
         { field: 'rateName', headerName: 'Rate Name', width: 150 },
@@ -104,9 +94,6 @@ const Report = () => {
             <DataGrid
               rows={orderDetails}
               columns={orderColumns}
-              filterModel={{
-                items: [],
-            }}
             />
           </div>
         </div>

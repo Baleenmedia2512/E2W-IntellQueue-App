@@ -30,37 +30,37 @@ import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
 
 const transactionOptions = [
-  { value: 'income', label: 'Income' },
-  { value: 'opex', label: 'Operational Expense' }
+  { value: 'Income', label: 'Income' },
+  { value: 'Operational Expense', label: 'Operational Expense' }
 ];
 
 const taxTypeOptions = [
-  { value: 'gst', label: 'GST' },
-  { value: 'igst', label: 'IGST' },
-  { value: 'na', label: 'NA' }
+  { value: 'GST', label: 'GST' },
+  { value: 'IGST', label: 'IGST' },
+  { value: 'NA', label: 'NA' }
 ];
 
 const expenseCategoryOptions = [
-  { value: 'bank', label: 'Bank' },
-  { value: 'communication', label: 'Communication' },
-  { value: 'commission', label: 'Commission' },
-  { value: 'consumables', label: 'Consumables' },
-  { value: 'conveyance', label: 'Conveyance' },
-  { value: 'eb', label: 'EB' },
-  { value: 'maintainance', label: 'Maintainance' },
-  { value: 'offering', label: 'Offering' },
-  { value: 'pc', label: 'PC' },
-  { value: 'promotion', label: 'Promotion' },
-  { value: 'rent', label: 'Rent' },
-  { value: 'laborcost', label: 'Labor Cost' },
-  { value: 'stationary', label: 'Stationary' },
-  { value: 'refund', label: 'Refund' }
+  { value: 'Bank', label: 'Bank' },
+  { value: 'Communication', label: 'Communication' },
+  { value: 'Commission', label: 'Commission' },
+  { value: 'Consumables', label: 'Consumables' },
+  { value: 'Conveyance', label: 'Conveyance' },
+  { value: 'EB', label: 'EB' },
+  { value: 'Maintainance', label: 'Maintainance' },
+  { value: 'Offering', label: 'Offering' },
+  { value: 'PC', label: 'PC' },
+  { value: 'Promotion', label: 'Promotion' },
+  { value: 'Rent', label: 'Rent' },
+  { value: 'Laborcost', label: 'Labor Cost' },
+  { value: 'Stationary', label: 'Stationary' },
+  { value: 'Refund', label: 'Refund' }
 ];
 
 const paymentModeOptions = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'online', label: 'Online' },
-  { value: 'cheque', label: 'Cheque' }
+  { value: 'Cash', label: 'Cash' },
+  { value: 'Online', label: 'Online' },
+  { value: 'Cheque', label: 'Cheque' }
 ];
 
 const FinanceData = () => {
@@ -334,7 +334,7 @@ const FinanceData = () => {
             //   required
               />
                </div>
-               {transactionType && transactionType.value === 'opex' && (
+               {transactionType && transactionType.value === 'Operational Expense' && (
               <>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category</label>
             <div className='flex w-full'>
@@ -359,7 +359,7 @@ const FinanceData = () => {
                </div>
                </>
             )}
-            {transactionType && transactionType.value !== 'opex' && (
+            {transactionType && transactionType.value !== 'Operational Expense' && (
     <>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name</label>
             <div className="w-full flex gap-3">
@@ -515,7 +515,7 @@ const FinanceData = () => {
               />
                </div>
 
-               {taxType && taxType.value === 'gst' && (
+               {taxType && taxType.value === 'GST' && (
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %</label>
           <div className="w-full flex gap-3">
@@ -645,7 +645,7 @@ const FinanceData = () => {
             //   required
               />
                </div>
-               {paymentMode && paymentMode.value === 'cheque' && (
+               {paymentMode && paymentMode.value === 'Cheque' && (
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number</label>
             <div className="w-full flex gap-3">
