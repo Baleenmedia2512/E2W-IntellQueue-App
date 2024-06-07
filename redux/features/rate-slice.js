@@ -1,16 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  selectedAdMedium: "",
-  selectedAdType: "",
-  selectedAdCategory: "",
-  selectedEdition: null,
-  selectedPosition: "",
+  selectedValues: {
+    rateName: "",
+    typeOfAd: "",
+    adType: "",
+    Location: "",
+    vendorName: "",
+    Package: ""
+  },
   selectedVendor: "",
   selectedSlab: "",
-  quantity: 1,
+  qty: 1,
   ratePerUnit: 0,
-  unit: "",
+  units: "",
   rateId: 0,
   validityDate: "",
   leadDays: "",
@@ -24,24 +27,21 @@ const initialState = {
   isDetails: false
 };
 
-export const quoteSlice = createSlice({
-  name: "quote",
+export const rateSlice = createSlice({
+  name: "rate",
   initialState,
   reducers: {
-    setQuotesData: (state, action) => {
+    setRatesData: (state, action) => {
       return { ...state, ...action.payload };
     },
-    resetQuotesData: () => {
+    resetRatesData: () => {
         return initialState;
     },
-    addValidRates: (state, action) => {
-      state.validRates.push(action.payload);
-    },
-    removeValidRates: (state, action) => {
-      state.validRates = []
+    setSelectedValues: (state, action) => {
+      state.selectedValues = { ...state.selectedValues, ...action.payload };
     }
   }
 });
 
-export const { setQuotesData, resetQuotesData, addValidRates, removeValidRates } = quoteSlice.actions;
-export const quoteReducer = quoteSlice.reducer;
+export const { setRatesData, resetRatesData, setSelectedValues } = rateSlice.actions;
+export const rateReducer = rateSlice.reducer;
