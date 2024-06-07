@@ -30,37 +30,37 @@ import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
 
 const transactionOptions = [
-  { value: 'income', label: 'Income' },
-  { value: 'opex', label: 'Operational Expense' }
+  { value: 'Income', label: 'Income' },
+  { value: 'Operational Expense', label: 'Operational Expense' }
 ];
 
 const taxTypeOptions = [
-  { value: 'gst', label: 'GST' },
-  { value: 'igst', label: 'IGST' },
-  { value: 'na', label: 'NA' }
+  { value: 'GST', label: 'GST' },
+  { value: 'IGST', label: 'IGST' },
+  { value: 'NA', label: 'NA' }
 ];
 
 const expenseCategoryOptions = [
-  { value: 'bank', label: 'Bank' },
-  { value: 'communication', label: 'Communication' },
-  { value: 'commission', label: 'Commission' },
-  { value: 'consumables', label: 'Consumables' },
-  { value: 'conveyance', label: 'Conveyance' },
-  { value: 'eb', label: 'EB' },
-  { value: 'maintainance', label: 'Maintainance' },
-  { value: 'offering', label: 'Offering' },
-  { value: 'pc', label: 'PC' },
-  { value: 'promotion', label: 'Promotion' },
-  { value: 'rent', label: 'Rent' },
-  { value: 'laborcost', label: 'Labor Cost' },
-  { value: 'stationary', label: 'Stationary' },
-  { value: 'refund', label: 'Refund' }
+  { value: 'Bank', label: 'Bank' },
+  { value: 'Communication', label: 'Communication' },
+  { value: 'Commission', label: 'Commission' },
+  { value: 'Consumables', label: 'Consumables' },
+  { value: 'Conveyance', label: 'Conveyance' },
+  { value: 'EB', label: 'EB' },
+  { value: 'Maintainance', label: 'Maintainance' },
+  { value: 'Offering', label: 'Offering' },
+  { value: 'PC', label: 'PC' },
+  { value: 'Promotion', label: 'Promotion' },
+  { value: 'Rent', label: 'Rent' },
+  { value: 'Laborcost', label: 'Labor Cost' },
+  { value: 'Stationary', label: 'Stationary' },
+  { value: 'Refund', label: 'Refund' }
 ];
 
 const paymentModeOptions = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'online', label: 'Online' },
-  { value: 'cheque', label: 'Cheque' }
+  { value: 'Cash', label: 'Cash' },
+  { value: 'Online', label: 'Online' },
+  { value: 'Cheque', label: 'Cheque' }
 ];
 
 const FinanceData = () => {
@@ -78,26 +78,28 @@ const FinanceData = () => {
   const [gstPercentage, setGSTPercentage] = useState(null);
   const [expenseCategory, setExpenseCategory] = useState(null);
   const [remarks, setRemarks] = useState(null);
-  const [transactionDate, setTransactionDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [transactionDate, setTransactionDate] = useState(dayjs());
   const [transactionTime, setTransactionTime] = useState(dayjs());
   const [paymentMode, setPaymentMode] = useState(paymentModeOptions[0]);
   const [transactionType, setTransactionType] = useState(transactionOptions[0]);
   const [ordersData, setOrdersData] = useState(null);
   const [chequeNumber, setChequeNumber] = useState('');
-  const [chequeDate, setChequeDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [chequeDate, setChequeDate] = useState(dayjs());
   const [chequeTime, setChequeTime] = useState(dayjs());
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
 
+  const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
+  const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
 
   const year = transactionDate.$y;
   const month = transactionDate.$M + 1; // Months are zero-based, so we add 1 to get the correct month
   const day = transactionDate.$D;
-  const hours = transactionDate.$H;
-  const minutes = transactionDate.$m;
-  const seconds = transactionDate.$s;
+  const hours = transactionTime.$H;
+  const minutes = transactionTime.$m;
+  const seconds = transactionTime.$s;
   
   const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
   const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -234,23 +236,20 @@ const FinanceData = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
-        console.log(data)
         if (data.length > 0) {
           const clientDetails = data[0];
-          console.log(clientDetails.orderDate)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.amount);
           setGSTPercentage(clientDetails.gstPercentage);
-          setTransactionDate(clientDetails.orderDate);
-          
+          // setTransactionDate(clientDetails.orderDate);
+          // setTransactionDate(dayjs(clientDetails.orderDate));
         }
       })
       .catch((error) => {
         console.error(error);
       });
   }; 
-
   const insertNewFinance = async (e) => {
     e.preventDefault()
     // try {
@@ -265,11 +264,11 @@ const FinanceData = () => {
             try {
               // `EntryDate`, `EntryUser`, `TransactionType`, `OrderNumber`,  `Remarks`,`ExpensesCategory`,`Amount`, `TaxType`, `TaxAmount`, `PaymentMode`, `ChequeNumber`, `ChequeDate`, `ValidStatus`,`PEXtds`,`PEXbadebt`,`OPEXtds`,`OPEXbadebt`,`CAPEXtds`,`CAPEXbadebt`,`TransactionDate`
 
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonClientName=${clientName ? clientName : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedTime + ' ' + formattedTime}&JsonDBName=${companyName}`);
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
 
 
-                const data = await response.text();
-                showToastMessage('success', 'Inserted Successfully!' + data);
+                const data = await response.json();
+                showToastMessage('success', data);
                 setChequeNumber('');;
                 setClientName('');
                 setExpenseCategory('');
@@ -281,7 +280,7 @@ const FinanceData = () => {
                 setRemarks('');
                 setTaxType(taxTypeOptions[2]);
                 setTransactionType(transactionOptions[0]);
-                window.location.reload();
+                // window.location.reload();
                 
             } catch (error) {
                 console.error(error);
@@ -308,7 +307,6 @@ const FinanceData = () => {
   //     handleOrderNumber()
   //   }
   // }, [orderNumber]);
-
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
@@ -336,7 +334,7 @@ const FinanceData = () => {
             //   required
               />
                </div>
-               {transactionType && transactionType.value === 'opex' && (
+               {transactionType && transactionType.value === 'Operational Expense' && (
               <>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category</label>
             <div className='flex w-full'>
@@ -361,7 +359,7 @@ const FinanceData = () => {
                </div>
                </>
             )}
-            {transactionType && transactionType.value !== 'opex' && (
+            {transactionType && transactionType.value !== 'Operational Expense' && (
     <>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name</label>
             <div className="w-full flex gap-3">
@@ -517,7 +515,7 @@ const FinanceData = () => {
               />
                </div>
 
-               {taxType && taxType.value === 'gst' && (
+               {taxType && taxType.value === 'GST' && (
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %</label>
           <div className="w-full flex gap-3">
@@ -586,7 +584,7 @@ const FinanceData = () => {
             className="custom-date-picker"
             fullWidth
             label="Select Date"
-            value={transactionDate}
+            value={formattedTransactionDate}
 
             onClick={handleDateClick}
             InputProps={{
@@ -647,7 +645,7 @@ const FinanceData = () => {
             //   required
               />
                </div>
-               {paymentMode && paymentMode.value === 'cheque' && (
+               {paymentMode && paymentMode.value === 'Cheque' && (
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number</label>
             <div className="w-full flex gap-3">
@@ -678,7 +676,7 @@ const FinanceData = () => {
             className="custom-date-picker"
             fullWidth
             label="Select Date"
-            value={chequeDate}
+            value={formattedChequeDate}
             onClick={handleDateClick}
             InputProps={{
               style: { borderColor: '#88cc6b' } 

@@ -49,6 +49,13 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
+  // useEffect(() => {
+  //   if (!clientSource && sources.length > 0) {
+  //     dispatch(setClientData({ clientSource: sources[0] }));
+  //   }
+  // }, [clientSource, dispatch]);
+  console.log(clientSource)
+
   useEffect(() => {
     // Check if age input violates constraints for selected option
     if ((selectedOption === "Baby." && parseInt(clientAge) > 3) || 
@@ -196,7 +203,7 @@ const ClientsData = () => {
           dispatch(resetClientData());
           dispatch(resetQuotesData());
         }
-
+        companyName === 'Grace Scans' ? dispatch(setClientData({clientSource: sources[1]})) : dispatch(setClientData({clientSource: sources[0]}))
         elementsToHideList()
   }, []);
 
@@ -245,17 +252,12 @@ const ClientsData = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
-        if (clientName !== '' && clientContact !== '' && clientSource !== '') {
           window.alert('Client Details Entered Successfully!')
           // window.location.reload();
           dispatch(resetQuotesData())
           dispatch(setQuotesData({currentPage: "checkout"}))
           router.push('/adDetails')
           //router.push('../adDetails');
-        }
-        else {
-          showToastMessage('warning', 'Please fill all the Required Client Details!')
-        }
         // setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
         window.alert('Contact Number Already Exists!')
@@ -272,13 +274,9 @@ const ClientsData = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
-        if (clientName !== '' && clientContact !== '' && clientSource !== '' && address !== '' && clientAge !== undefined && DOB !== undefined) {
           window.alert('Client Details Entered Successfully!')
           window.location.reload();
         
-        } else {
-          showToastMessage('warning', 'Please fill all the Required Client Details!')
-        }
         //setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
         window.alert('Contact Number Already Exists!')
@@ -335,6 +333,8 @@ const calculateDateFromAge = (age) => {
 //   setClientAge(age);
 // };
 
+
+
 const handleInputAgeChange = (event) => {
   const age = event.target.value;
   setClientAge(age);
@@ -346,6 +346,7 @@ const handleInputAgeChange = (event) => {
     setDisplayWarning(false);
   }
 
+// MP-42-DOB calculation is not working when age is entered
   if (age) {
     const dob = calculateDateFromAge(age);
     setDOB(dob);
@@ -371,6 +372,7 @@ const handleDateChange = (e) => {
     setMonths(calculatedMonths);
   }
 };
+
 
 useEffect(() => {
   // if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
@@ -399,13 +401,12 @@ useEffect(() => {
   checkEmptyFields();
 }, [clientName, clientContact, clientEmail, address, clientAge, DOB]);
 
-
+//MP-39-Warning message should be shown for GST Field (<15 characters)
 const handleGSTChange = (e) => {
   const { value } = e.target;
   setClientGST(value);
-  if (value.length < 15) {
-    setError('GST Number must be at least 15 characters long');
-    setClientPAN('');
+  if (value.length < 15 || value.length > 15) {
+    setError('GST Number must be 15 characters long');
   } else {
     const pan = value.slice(2, -3);
     setClientPAN(pan);
@@ -426,7 +427,6 @@ const handleConsultantNumberChange = (e) => {
   }
 
 };
-console.log(isNewClient)
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center" onSubmit={submitDetails}>
@@ -466,6 +466,8 @@ console.log(isNewClient)
           required
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
+          // MP-45-The client name suggestions should hide when it is not selected (or while creating a new client entry)
+
           onBlur={() => {
             setTimeout(() => {
               setClientNameSuggestions([]);
@@ -717,6 +719,7 @@ console.log(isNewClient)
         id="7"
         name="ClientAddressTextArea"
         placeholder="Address"
+        required
         value={address}
         onChange={e => setAddress(e.target.value)}
         onKeyDown={(e) => {
@@ -736,12 +739,13 @@ console.log(isNewClient)
       <div className='grid gap-6 w-full' name="ClientGSTInput" >
       <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="GST Number*" 
+        placeholder="GST Number" 
         id="31" 
         name="ClientGSTInput" 
         value={clientGST}
         // onChange={(e) => setClientGST(e.target.value)}
-        onChange={handleGSTChange}
+        //MP-39-Warning message should be shown for GST Field (<15 characters)
+        onChange={handleGSTChange} 
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -758,7 +762,7 @@ console.log(isNewClient)
         {error && <p className="text-red-500">{error}</p>}
         <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="PAN*" 
+        placeholder="PAN" 
         id="32" 
         name="ClientPANInput" 
         value={clientPAN}
@@ -783,7 +787,7 @@ console.log(isNewClient)
         name="ClientSourceSelect"
         value={clientSource}
         required
-        // defaultValue="Consultant"
+        defaultValue={sources[0]}
         onChange={handleClientSourceChange}
       >
         {/* <option >Select Source</option> */}
