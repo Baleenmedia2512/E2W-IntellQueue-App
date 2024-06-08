@@ -7,16 +7,22 @@ import { DataGrid, GridToolbar, getGridNumericOperators} from '@mui/x-data-grid'
 import axios from 'axios';
 import { useAppSelector } from '@/redux/store';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-
+import { PieChart, Pie, Sector, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const Report = () => {
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [value, setValue] = useState(0);
     const [orderDetails, setOrderDetails] = useState([]);
     const [financeDetails, setFinanceDetails] = useState([]);
+    const [sumOfFinance, setSumOfFinance] = useState([]);
     const [filter, setFilter] = useState('All');
     // const [orderFilterModel, setOrderFilterModel] = useState({ items: [] });
     // const [financeFilterModel, setFinanceFilterModel] = useState({ items: [] });
+    const [activeIndex, setActiveIndex] = React.useState(0);
+
+    const onPieEnter = (_, index) => {
+      setActiveIndex(index);
+    };
 
     const handleChange = (event, newValue) => {
         setValue(newValue);
@@ -25,6 +31,7 @@ const Report = () => {
     useEffect(() => {
         fetchOrderDetails();
         fetchFinanceDetails();
+        fetchSumOfFinance();
     }, []);
 
     const fetchOrderDetails = () => {
@@ -51,7 +58,18 @@ const Report = () => {
                     id: transaction.ID // Generate a unique identifier based on the index
                 }));
                 setFinanceDetails(data);
-                console.log(data)
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
+    const fetchSumOfFinance = () => {
+        axios
+            .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfFinance.php?JsonDBName=${companyName}`)
+            .then((response) => {
+                const data = response.data
+                setSumOfFinance(data);
             })
             .catch((error) => {
                 console.error(error);
@@ -106,6 +124,55 @@ const Report = () => {
     // const handleFinanceFilterChange = (model) => {
     //     setFinanceFilterModel(model);
     // };
+console.log(sumOfFinance)
+console.log(sumOfFinance.income, sumOfFinance.expense)
+    // Convert string numbers to integers
+    const incomeValue = sumOfFinance.income ? parseInt(sumOfFinance.income.replace(/,/g, '')) : 0;
+    const expenseValue = sumOfFinance.expense ? parseInt(sumOfFinance.expense.replace(/,/g, '')) : 0;
+
+    // Data for the pie chart
+    const pieData = [
+        { name: 'Income', value: incomeValue },
+        { name: 'Expense', value: expenseValue },
+    ];
+
+    const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
+
+    const renderActiveShape = (props) => {
+        const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
+        
+        return (
+          <g>
+            <text x={cx} y={cy} textAnchor="middle" fill="#333"
+            dominantBaseline="central">
+                <tspan style={{ fontSize: '36px', fontWeight: 'bold', fontFamily: 'Roboto, sans-serif' }}>{`${(percent * 100).toFixed(0)}`}</tspan>
+                <tspan dx="0" dy="4" style={{ fontSize: '16px' }}>%</tspan>
+                </text>
+            <Sector
+              cx={cx}
+              cy={cy}
+              innerRadius={innerRadius}
+              outerRadius={outerRadius}
+              startAngle={startAngle}
+              endAngle={endAngle}
+              fill={fill}
+            />
+          </g>
+        );
+      };
+
+      // Styles
+const styles = {
+    chartContainer: {
+      width: '100%',
+      height: '250px',
+      background: '#ffffff',
+      borderRadius: '12px',
+      boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)', // Add box shadow for 3D effect
+      marginTop: '20px', // Add margin to the top
+    marginBottom: '30px',
+    },
+  };
 
     return (
         <Box sx={{ width: '100%', padding: '12px' }}>
@@ -153,6 +220,38 @@ const Report = () => {
                      <MenuItem value="Expense">Expense</MenuItem>
                  </Select>
              </FormControl>
+
+             <div style={styles.chartContainer}>
+             <ResponsiveContainer width="100%" height={250}>
+      <PieChart>
+        <Pie
+          activeIndex={activeIndex}
+          activeShape={renderActiveShape}
+          data={pieData}
+          cx="50%"
+          cy="50%"
+          innerRadius={70}
+          outerRadius={90}
+          fill="#8884d8"
+          paddingAngle={5}
+          dataKey="value"
+          onMouseEnter={onPieEnter}
+        >
+          {pieData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend 
+          layout="vertical" 
+          align="right" 
+          verticalAlign="middle" 
+          wrapperStyle={{ paddingLeft: "20px" }} 
+        />
+      </PieChart>
+    </ResponsiveContainer>
+             </div>
+
              <div style={{ height: 500, width: '100%' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}
