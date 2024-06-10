@@ -125,16 +125,20 @@ const Report = () => {
     //     setFinanceFilterModel(model);
     // };
 console.log(sumOfFinance)
-console.log(sumOfFinance.income, sumOfFinance.expense)
     // Convert string numbers to integers
     const incomeValue = sumOfFinance.income ? parseInt(sumOfFinance.income.replace(/,/g, '')) : 0;
     const expenseValue = sumOfFinance.expense ? parseInt(sumOfFinance.expense.replace(/,/g, '')) : 0;
 
     // Data for the pie chart
-    const pieData = [
-        { name: 'Income', value: incomeValue },
-        { name: 'Expense', value: expenseValue },
-    ];
+    // const pieData = [
+    //     { name: 'Income', value: 'income' },
+    //     { name: 'Expense', value: 'income' },
+    // ];
+
+    const pieData = sumOfFinance.length > 0 ? [
+        { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
+        { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
+    ] : [];
 
     const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
 
@@ -186,7 +190,7 @@ const styles = {
                 variant="fullWidth"
             >
                 <Tab label="Orders" />
-                <Tab label="Finances" />
+                <Tab label="Finance" />
             </Tabs>
             <Box sx={{ padding: 3 }}>
         {value === 0 && (
@@ -207,7 +211,7 @@ const styles = {
         {value === 1 && (
              <div style={{ width: '100%' }}>
              <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2, width: '40%'}}>
-                 <InputLabel id="filter-label">Filter by Transaction Type</InputLabel>
+                 <InputLabel id="filter-label">Transaction Type</InputLabel>
                  <Select
                      labelId="filter-label"
                      id="filter"

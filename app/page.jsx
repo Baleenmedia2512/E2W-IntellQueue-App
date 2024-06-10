@@ -64,6 +64,7 @@ const ClientsData = () => {
     } else {
       setDisplayWarning(false);
     }
+    //MP-70-DOB doesn't set while fetching from DB
   }, [clientAge, selectedOption]); 
 
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails);
@@ -138,6 +139,8 @@ const ClientsData = () => {
         if (data && data.length > 0) {
           const clientDetails = data[0];
           setClientID(clientDetails.id);
+
+          //MP-69-New Record are not fetching in GS
           setDOB(clientDetails.DOB);
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
@@ -203,6 +206,8 @@ const ClientsData = () => {
           dispatch(resetClientData());
           dispatch(resetQuotesData());
         }
+        // MP-72-Fix - Source is empty on start up.
+
         companyName === 'Grace Scans' ? dispatch(setClientData({clientSource: sources[1]})) : dispatch(setClientData({clientSource: sources[0]}))
         elementsToHideList()
   }, []);
@@ -353,6 +358,7 @@ const handleInputAgeChange = (event) => {
   }
 };
 
+
 const handleDateChange = (e) => {
   const dateValue = e.target.value;
   setDOB(dateValue);
@@ -416,6 +422,7 @@ const handleGSTChange = (e) => {
 
 };
 
+// MP-67-Create validation for client and consultant contact field (=10)
 const handleConsultantNumberChange = (e) => {
   const { value } = e.target;
   setConsultantNumber(value);
@@ -847,6 +854,7 @@ const handleConsultantNumberChange = (e) => {
       </div>
       {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}  
       <div>
+        {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
       {isNewClient == true ? (
         <button 
           className="outline-none glass shadow-2xl w-full p-3 bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:text-[#008000] font-bold rounded-md mb-28" 
