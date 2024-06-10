@@ -12,13 +12,11 @@ const CreateOrder = () => {
     const [clientNumber, setClientNumber] = useState();
     const [maxOrderNumber, setMaxOrderNumber] = useState();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const rateId = searchParams.get('rateId');
-    const qty = searchParams.get('qty');
-    const rateName = searchParams.get('rateName');
-    const type = searchParams.get('type');
-    const unitPrice = searchParams.get('unitPrice')
-    const unit = searchParams.get('unit');
+    const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
+    const rateId = useAppSelector(state => state.rateSlice.rateId)
+    const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit);  
+    const qty = useAppSelector(state => state.rateSlice.qty);
+    const unitPrice = useAppSelector(state => state.rateSlice.unitPrice);
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value
@@ -119,14 +117,13 @@ const CreateOrder = () => {
                             <li className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
                             duration-300">
                                 <option className='font-bold '>Short Summary</option>
-                                <option>Rate Card Name: {rateName}</option>
-                                <option>Type: {type}</option>
-                                <option>{unit}: {qty}</option>
+                                <option>Rate Card Name: {selectedValues.rateName.value}</option>
+                                <option>Type: {selectedValues.adType.value}</option>
                                 <option>Unit Price: Rs. {unitPrice}</option>
                             </li>
                         </ul>
-                    {/* <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label> */}
-                    {/* <input 
+                    <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label> 
+                   {/* <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
                         placeholder='Client Number'  
@@ -144,8 +141,8 @@ const CreateOrder = () => {
                             }
                         }
                         }}
-                    /> */}
-                    {/* <div class="w-full flex gap-3 ">
+                    />  */}
+                    <div class="w-full flex gap-3 ">
                         <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
                             placeholder="Margin Amount" 
@@ -167,8 +164,8 @@ const CreateOrder = () => {
                     <input 
                         type='date' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"/>
-                     */}
-                     <button className="outline-none glass shadow-2xl  w-64 p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
+                    
+                     <button className="outline-none glass shadow-2xl w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
                 </div>
             </form>
         </div>
