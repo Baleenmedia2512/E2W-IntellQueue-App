@@ -11,6 +11,12 @@ const CreateOrder = () => {
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState();
     const [maxOrderNumber, setMaxOrderNumber] = useState();
+    const [marginAmount, setMarginAmount] = useState(0);
+    const [marginPercentage, setMarginPercentage] = useState(0);
+    const [releaseDates, setReleaseDates] = useState([]);
+    const [remarks, setRemarks] = useState();
+    const [elementsToHide, setElementsToHide] = useState([])
+
     const router = useRouter();
     const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
     const rateId = useAppSelector(state => state.rateSlice.rateId)
@@ -53,7 +59,7 @@ const CreateOrder = () => {
           }
       }
 
-      const fetchMaxRateID = async () => {
+      const fetchMaxOrderNumber = async () => {
         try {
           const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}`);
           if (!response.ok) {
@@ -67,15 +73,39 @@ const CreateOrder = () => {
         }
       };
 
+      const elementsToHideList = () => {
+        try{
+          fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+            .then((response) => response.json())
+            .then((data) => setElementsToHide(data));
+        } catch(error){
+          console.error("Error showing element names: " + error)
+        }
+      }
+
       useEffect(() => {
-        fetchMaxRateID()
+        fetchMaxOrderNumber();
+        elementsToHideList();
       },[])
 
+      useEffect(() => {
+        //searching elements to Hide from database
+    
+        elementsToHide.forEach((name) => {
+          const elements = document.getElementsByName(name);
+          elements.forEach((element) => {
+            element.style.display = 'none'; // Hide the element
+          });
+        });
+      }, [elementsToHide])
+      
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
             <form className="px-7 h-screen grid justify-center items-center" onSubmit={createNewOrder}>
                 <div className="grid gap-6" id="form">
                     <h1 className="font-bold text-3xl text-center mb-4">Order Generation</h1>
+                    <div>
+                    <label className="block text-gray-700 font-semibold mb-2">Order Number</label>
                     <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
@@ -112,16 +142,17 @@ const CreateOrder = () => {
                             ))}
                         </ul>
                         )}
-
+ </div>   
                         <ul className="list-none">
                             <li className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
                             duration-300">
                                 <option className='font-bold '>Short Summary</option>
                                 <option>Rate Card Name: {selectedValues.rateName.value}</option>
                                 <option>Type: {selectedValues.adType.value}</option>
-                                <option>Unit Price: Rs. {unitPrice}</option>
+                                <option>Unit Price: Rs. {unitPrice} per {selectedUnit.value}</option>
                             </li>
                         </ul>
+                        
                     <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label> 
                    {/* <input 
                         type='text' 
@@ -143,28 +174,64 @@ const CreateOrder = () => {
                         }}
                     />  */}
                     <div class="w-full flex gap-3 ">
+                    <div>
+                    <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
                         <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
                             placeholder="Margin Amount" 
                             name="MarginText" 
                             required
+                            value={marginAmount}
+                            onChange={e => setMarginAmount(e.target.value)}
                         />
+                        </div>
+                        <div>
+                    <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
                         <input className="p-3 capitalize shadow-2xl glass w-28 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
                             placeholder="Margin %" 
                             name="MarginText" 
+                            value={marginPercentage}
                             required
+                            onChange={e => setMarginPercentage(e.target.value)}
                         />
+                        </div>
                     </div>
+                    <div>
+                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
                         placeholder='Remarks'    
+                        value={remarks}
+                        onChange={e => setRemarks(e.target.value)}
                     />
+                    </div>
+                    <div>
+                    <label className="block text-gray-700 font-semibold mb-2">Release Date</label>
                     <input 
                         type='date' 
-                        className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"/>
-                    
+                        className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        value={new Date()}
+                        onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
+                      />
+                    </div>
+                    <div className='text-center justify-start mt-4'>
+                    {releaseDates.length > 0 ? <h2 className='mb-4 font-bold'>Release-Dates</h2> : <></>}
+                    <ul className='mb-4 mr-4'>
+                    {releaseDates.map((data, index) => (
+                      <div key={index} className='flex'>
+                        <option key={data} className="mt-1.5" 
+                          >
+                            {data}
+                          </option>
+                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
+                          <RemoveCircleOutline color='secondary' fontSize='small'/>
+                        </IconButton>
+                          </div>
+))}
+</ul>
+ </div>
                      <button className="outline-none glass shadow-2xl w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
                 </div>
             </form>
