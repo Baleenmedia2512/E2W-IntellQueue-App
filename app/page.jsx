@@ -73,7 +73,7 @@ const ClientsData = () => {
     const newName = event.target.value
     setIsNewClient(true);
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
         .then((response) => response.json())
         .then((data) => setClientNameSuggestions(data));
       dispatch(setClientData({clientName: newName}));
@@ -224,12 +224,20 @@ const ClientsData = () => {
   }, [elementsToHide])
   
   const handleClientContactChange = (newValue) => {
-    if (newValue.length < 10) {
+    if (newValue.length < 10 || newValue.length > 10) {
       setContactWarning('Contact number should contain at least 10 digits.');
     } else {
       setContactWarning('');
     }
-    dispatch(setClientData({ clientContact: newValue }));
+    try {
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
+          .then((response) => response.json())
+          .then((data) => setClientNameSuggestions(data));
+      dispatch(setClientData({ clientContact: newValue }));
+  } catch (error) {
+      console.error("Error Suggesting Client Names: " + error);
+  }
+    
   };
 
   const handleClientEmailChange = (newValue) => {
@@ -541,6 +549,11 @@ const handleConsultantNumberChange = (e) => {
         required
         value={clientContact}
         onChange={(e) => handleClientContactChange(e.target.value)}
+        onBlur={() => {
+          setTimeout(() => {
+            setClientNameSuggestions([]);
+          }, 200); // Adjust the delay time according to your preference
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -553,6 +566,22 @@ const handleConsultantNumberChange = (e) => {
           }
         }}
         />
+        {(clientNameSuggestions.length > 0 && clientName === '' && clientContact !=='') && (
+          <ul className="list-none border-green-300 border-1 ">
+            {clientNameSuggestions.map((name, index) => (
+              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
+                <button
+                  type="button"
+                  className="text-black"
+                  onClick={handleClientNameSelection}
+                  value={name}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         {contactWarning && <p className="text-red-500">{contactWarning}</p>}
         <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="email" 
