@@ -3,9 +3,11 @@ import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
+import IconButton from '@mui/material/IconButton';
+import { RemoveCircleOutline } from '@mui/icons-material';
 
 const CreateOrder = () => {
-    const loggedInUser = 'GraceScans';
+    const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const [clientName, setClientName] = useState("");
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
@@ -24,6 +26,12 @@ const CreateOrder = () => {
     const qty = useAppSelector(state => state.rateSlice.qty);
     const unitPrice = useAppSelector(state => state.rateSlice.unitPrice);
 
+    
+    useEffect(() => {
+      fetchMaxOrderNumber();
+      elementsToHideList();
+    },[])
+
     const handleSearchTermChange = (event) => {
         const newName = event.target.value
         fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
@@ -41,11 +49,10 @@ const CreateOrder = () => {
         setClientName(name);
         setClientNumber(number);
       };
-
       const createNewOrder = async(event) => {
         event.preventDefault()
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonDBName=${companyName}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonMarginAmount=${marginAmount}&JsonRemarks=${remarks}&JsonDBName=${companyName}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
@@ -83,10 +90,6 @@ const CreateOrder = () => {
         }
       }
 
-      useEffect(() => {
-        fetchMaxOrderNumber();
-        elementsToHideList();
-      },[])
 
       useEffect(() => {
         //searching elements to Hide from database
@@ -98,6 +101,7 @@ const CreateOrder = () => {
           });
         });
       }, [elementsToHide])
+
       
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
@@ -128,8 +132,7 @@ const CreateOrder = () => {
                     {(clientNameSuggestions.length > 0 && clientName !== '') && (
                         <ul className="list-none">
                             {clientNameSuggestions.map((name, index) => (
-                            <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
-                            duration-300">
+                            <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
                                 <button
                                 type="button"
                                 className="text-black"
@@ -144,7 +147,7 @@ const CreateOrder = () => {
                         )}
  </div>   
                         <ul className="list-none">
-                            <li className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
+                            <li className="p-2 text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition rounded-md
                             duration-300">
                                 <option className='font-bold '>Short Summary</option>
                                 <option>Rate Card Name: {selectedValues.rateName.value}</option>
@@ -153,7 +156,14 @@ const CreateOrder = () => {
                             </li>
                         </ul>
                         
-                    <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label> 
+                    {/* <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label>  */}
+                    <label className='text-black hover:cursor-pointer'>New Client? <span 
+                      className='underline text-green-500 hover:text-green-600' 
+                      onClick={() => router.push('/')}
+                      >
+                    Click Here
+                   </span>
+                  </label>
                    {/* <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
@@ -232,7 +242,7 @@ const CreateOrder = () => {
 ))}
 </ul>
  </div>
-                     <button className="outline-none glass shadow-2xl w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
+                     <button className="outline-none glass shadow-2xl w-full p-3 mb-24 bg-[#ffffff] hover:border-[#b7e0a5] border-[2px] hover:border-solid hover:border-[3px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
                 </div>
             </form>
         </div>

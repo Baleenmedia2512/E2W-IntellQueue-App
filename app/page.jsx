@@ -502,7 +502,7 @@ const handleConsultantNumberChange = (e) => {
           />
       </div>
       {/* {clientNameSuggestions.length > 0 && <VirtualizedList clientNameSuggestions={clientNameSuggestions} onClientNameSelection={handleClientNameSelection}/> } */}
-      {(clientNameSuggestions.length > 0 && clientName !== '') && (
+      {(clientNameSuggestions.length > 0 && clientName !== '' && clientContact === '' ) && (
           <ul className="list-none border-green-300 border-1 ">
             {clientNameSuggestions.map((name, index) => (
               <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
