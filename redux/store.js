@@ -5,6 +5,7 @@ import { authReducer } from "@/redux/features/auth-slice";
 import { clientReducer } from "./features/client-slice";
 import { quoteReducer } from "./features/quote-slice";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
+import { rateReducer } from "./features/rate-slice";
 
 const createNoopStorage = () => {
   return {
@@ -43,14 +44,22 @@ const quotePersistConfig = {
   whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "campaignDuration", "ratePerUnit", "extraDiscount"]
 }
 
+const ratePersistConfig = {
+  key: "rate",
+  storage: storage,
+  whitelist: ["selectedValues", "rateId", "qty", "unitPrice", "selectedUnit"]
+}
+
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer)
 const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer)
+const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer)
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
   clientSlice: persistedClientReducer,
-  quoteSlice: persistedQuoteReducer
+  quoteSlice: persistedQuoteReducer,
+  rateSlice: persistedRateReducer
 });
 
 export const store = configureStore({

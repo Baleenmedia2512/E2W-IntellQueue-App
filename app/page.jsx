@@ -64,6 +64,7 @@ const ClientsData = () => {
     } else {
       setDisplayWarning(false);
     }
+    //MP-70-DOB doesn't set while fetching from DB
   }, [clientAge, selectedOption]); 
 
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails);
@@ -72,7 +73,7 @@ const ClientsData = () => {
     const newName = event.target.value
     setIsNewClient(true);
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
         .then((response) => response.json())
         .then((data) => setClientNameSuggestions(data));
       dispatch(setClientData({clientName: newName}));
@@ -138,6 +139,8 @@ const ClientsData = () => {
         if (data && data.length > 0) {
           const clientDetails = data[0];
           setClientID(clientDetails.id);
+
+          //MP-69-New Record are not fetching in GS
           setDOB(clientDetails.DOB);
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
@@ -203,6 +206,8 @@ const ClientsData = () => {
           dispatch(resetClientData());
           dispatch(resetQuotesData());
         }
+        // MP-72-Fix - Source is empty on start up.
+
         companyName === 'Grace Scans' ? dispatch(setClientData({clientSource: sources[1]})) : dispatch(setClientData({clientSource: sources[0]}))
         elementsToHideList()
   }, []);
@@ -219,12 +224,20 @@ const ClientsData = () => {
   }, [elementsToHide])
   
   const handleClientContactChange = (newValue) => {
-    if (newValue.length < 10) {
+    if (newValue.length < 10 || newValue.length > 10) {
       setContactWarning('Contact number should contain at least 10 digits.');
     } else {
       setContactWarning('');
     }
-    dispatch(setClientData({ clientContact: newValue }));
+    try {
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
+          .then((response) => response.json())
+          .then((data) => setClientNameSuggestions(data));
+      dispatch(setClientData({ clientContact: newValue }));
+  } catch (error) {
+      console.error("Error Suggesting Client Names: " + error);
+  }
+    
   };
 
   const handleClientEmailChange = (newValue) => {
@@ -353,6 +366,7 @@ const handleInputAgeChange = (event) => {
   }
 };
 
+
 const handleDateChange = (e) => {
   const dateValue = e.target.value;
   setDOB(dateValue);
@@ -416,6 +430,7 @@ const handleGSTChange = (e) => {
 
 };
 
+// MP-67-Create validation for client and consultant contact field (=10)
 const handleConsultantNumberChange = (e) => {
   const { value } = e.target;
   setConsultantNumber(value);
@@ -487,7 +502,7 @@ const handleConsultantNumberChange = (e) => {
           />
       </div>
       {/* {clientNameSuggestions.length > 0 && <VirtualizedList clientNameSuggestions={clientNameSuggestions} onClientNameSelection={handleClientNameSelection}/> } */}
-      {(clientNameSuggestions.length > 0 && clientName !== '') && (
+      {(clientNameSuggestions.length > 0 && clientName !== '' && clientContact === '' ) && (
           <ul className="list-none border-green-300 border-1 ">
             {clientNameSuggestions.map((name, index) => (
               <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
@@ -534,6 +549,11 @@ const handleConsultantNumberChange = (e) => {
         required
         value={clientContact}
         onChange={(e) => handleClientContactChange(e.target.value)}
+        onBlur={() => {
+          setTimeout(() => {
+            setClientNameSuggestions([]);
+          }, 200); // Adjust the delay time according to your preference
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -546,6 +566,22 @@ const handleConsultantNumberChange = (e) => {
           }
         }}
         />
+        {(clientNameSuggestions.length > 0 && clientName === '' && clientContact !=='') && (
+          <ul className="list-none border-green-300 border-1 ">
+            {clientNameSuggestions.map((name, index) => (
+              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
+                <button
+                  type="button"
+                  className="text-black"
+                  onClick={handleClientNameSelection}
+                  value={name}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         {contactWarning && <p className="text-red-500">{contactWarning}</p>}
         <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="email" 
@@ -847,6 +883,7 @@ const handleConsultantNumberChange = (e) => {
       </div>
       {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}  
       <div>
+        {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
       {isNewClient == true ? (
         <button 
           className="outline-none glass shadow-2xl w-full p-3 bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:text-[#008000] font-bold rounded-md mb-28" 

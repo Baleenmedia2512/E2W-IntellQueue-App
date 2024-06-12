@@ -17,6 +17,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useAppSelector } from '@/redux/store';
+import { setSelectedValues, setRateId, setSelectedUnit, setUnitPrice, setQty, setRateGST  } from '@/redux/features/rate-slice';
+import { useDispatch } from 'react-redux';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -25,14 +27,21 @@ const AdDetailsPage = () => {
 
   // Check if localStorage contains a username
   // const username = "GraceScans"
+  const dispatch = useDispatch()
   const validityRef = useRef();
   const unitRef = useRef();
   const qtyRef = useRef()
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  const username = useAppSelector(state => state.authSlice.userName)
+  const username = useAppSelector(state => state.authSlice.userName);
+  const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
+  const rateId = useAppSelector(state => state.rateSlice.rateId)
+  const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit);  
+  const qty = useAppSelector(state => state.rateSlice.qty);
+  const unitPrice = useAppSelector(state => state.rateSlice.unitPrice);
+  const rateGST = useAppSelector(state => state.rateSlice.rateGST);
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
-  const [selectedUnit, setSelectedUnit] = useState("");
+  //const [selectedUnit, setSelectedUnit] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const router = useRouter();
   const [vendors, setVendors] = useState([])
@@ -43,20 +52,20 @@ const AdDetailsPage = () => {
   const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("")
   const [slabData, setSlabData] = useState([]);
   const [editModal, setEditModal] = useState(false);
-  const [qty, setQty] = useState(0)
+  //const [qty, setQty] = useState(0)
   const [validityDays, setValidityDays] = useState(0)
   const [units, setUnits] = useState([])
   const [newUnitPrice, setNewUnitPrice] = useState("")
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [modal, setModal] = useState(false);
   const [startQty, setStartQty] = useState([])
-  const [unitPrice, setUnitPrice] = useState(0);
+  //const [unitPrice, setUnitPrice] = useState(0);
   const [showCampaignDuration, setShowCampaignDuration] = useState(false)
   const [selectedUnitId, setSelectedUnitId] = useState("")
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
-  const [rateId, setRateId] = useState("");
+  //const [rateId, setRateId] = useState("");
   const [invalidRates, setInvalidRates] = useState(false);
   const [isValidityDays, setIsValidityDays] = useState(false);
   const [invalidRatesData, setInvalidRatesData] = useState([]);
@@ -65,7 +74,7 @@ const AdDetailsPage = () => {
   const [isNewRate, setIsNewRate] = useState(false);
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
-  const [rateGST, setRateGST] = useState("");
+  // const [rateGST, setRateGST] = useState("");
   const [tempSlabData, setTempSlabData] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
   const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
@@ -77,6 +86,8 @@ const AdDetailsPage = () => {
   var combinedSlabData = slabData.concat(tempSlabData)
   const elementsNeeded = [""];
 
+  
+
   const [filters, setFilters] = useState({
     rateName: [],
     typeOfAd: [],
@@ -86,14 +97,14 @@ const AdDetailsPage = () => {
     package: []
   });
 
-  const [selectedValues, setSelectedValues] = useState({
-    rateName: "",
-    typeOfAd: "",
-    adType: "",
-    Location: "",
-    vendorName: "",
-    Package: ""
-  });
+  // const [selectedValues, setSelectedValues] = useState({
+  //   rateName: "",
+  //   typeOfAd: "",
+  //   adType: "",
+  //   Location: "",
+  //   vendorName: "",
+  //   Package: ""
+  // });
 
   // Function to toggle the modal
   const toggleModal = () => {
@@ -135,9 +146,9 @@ const AdDetailsPage = () => {
 
   const handleItemClick = (data) => {
     setEditModal(true);
-    setQty(data.StartQty);
+    dispatch(setQty(data.StartQty));
     setNewUnitPrice(data.UnitPrice);
-    setSelectedUnitId(data.Id);
+    dispatch(setSelectedUnitId(data.Id));
   };
 
   useEffect(() => {
@@ -296,7 +307,7 @@ const AdDetailsPage = () => {
   const removeQtySlab = async(Qty, index) => {
     if (isNewRate) {
       setIsSlabAvailable(false);
-      setQty(0);
+      dispatch(setQty(0));
       setNewUnitPrice("");
       setTempSlabData(tempSlabData.filter((_, i) => i !== index));
     } else {
@@ -330,8 +341,8 @@ const AdDetailsPage = () => {
       const firstSelectedSlab = sortedData[0];
       if(firstSelectedSlab){
         setIsSlabAvailable(true);
-        setUnitPrice(firstSelectedSlab.UnitPrice);
-        setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit});
+        dispatch(setUnitPrice(firstSelectedSlab.UnitPrice));
+        dispatch(setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit}));
         setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
       }
     } catch (error) {
@@ -531,10 +542,10 @@ const AdDetailsPage = () => {
 
   // Function to handle dropdown selection
   const handleSelectChange = (selectedOption, filterKey) => {
-    setRateId("");
+    dispatch(setRateId(""));
     setIsNewRate(true);
     if (filterKey === 'rateName'){
-      setSelectedValues({
+      dispatch(setSelectedValues({
         [filterKey]: selectedOption,
         adType: "",
         adCategory: "",
@@ -542,9 +553,9 @@ const AdDetailsPage = () => {
         Package: "",
         Location: "",
         typeOfAd:""
-      });
+      }));
     } else if(filterKey === 'typeOfAd'){
-      setSelectedValues({
+      dispatch(setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
         adType: "",
@@ -552,35 +563,35 @@ const AdDetailsPage = () => {
         vendorName: "",
         Package: "",
         Location: ""
-      })
+      }))
     } else if(filterKey === 'adType'){
-      setSelectedValues({
+      dispatch(setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
         vendorName: "",
         Package: "",
         Location: ""
-      })
+      }))
     } else if(filterKey === 'Location'){
-      setSelectedValues({
+      dispatch(setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
         Package: "",
         vendorName: "",
         
-      })
+      }))
     } else if(filterKey === 'Package'){
-      setSelectedValues({
+      dispatch(setSelectedValues({
         ...selectedValues,
         [filterKey]: selectedOption,
         vendorName: ""
-      })
+      }))
     } else {
       // Update the selected values
-    setSelectedValues({
+      dispatch(setSelectedValues({
       ...selectedValues,
       [filterKey]: selectedOption
-    });
+    }));
     }
     
     // Update the filters
@@ -630,13 +641,14 @@ var selectedRate = '';
         );}
 
     if (selectedRate) {
-      setRateId(selectedRate.RateID);
+      dispatch(setRateId(selectedRate.RateID));
       setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
       if(selectedRate.campaignDurationVisibility === 1){
         setShowCampaignDuration(true)
       }
       setSelectedCampaignUnits({label: selectedRate.CampaignDurationUnit, value: selectedRate.CampaignDurationUnit})
-      setRateGST({label: selectedRate.rategst, value: selectedRate.rategst})
+      // setRateGST({label: selectedRate.rategst, value: selectedRate.rategst})
+      dispatch(setRateGST({label: selectedRate.rategst, value: selectedRate.rategst}));
       setLeadDays(selectedRate.LeadDays);
       setValidTill(selectedRate.ValidityDate)
       setValidityDate(selectedRate.ValidityDate)
@@ -709,7 +721,7 @@ var selectedRate = '';
         //   locationValues = data.location.split(':')[0].trim()
         //   packageValues = data.packages.split(':')[1].trim()
         // } 
-        setSelectedValues({
+        dispatch(setSelectedValues({
           rateName: {
             label:  data.rateName ,
             value:  data.rateName 
@@ -734,9 +746,9 @@ var selectedRate = '';
             label:  data.vendorName ,
             value:  data.vendorName 
           }
-        })
+        }))
 
-      setRateId(data.RateID);
+        dispatch(setRateId(data.RateID));
       setCampaignDuration(data['CampaignDuration(in Days)']);
       if(data.campaignDurationVisibility === 1){
         setShowCampaignDuration(true)
@@ -744,7 +756,8 @@ var selectedRate = '';
         setShowCampaignDuration(false)
       }
       setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
-      setRateGST({label: data.rategst, value: data.rategst})
+      // setRateGST({label: data.rategst, value: data.rategst})
+      dispatch(setRateGST({label: data.rategst, value: data.rategst}));
       setLeadDays(data.LeadDays);
       setValidTill(data.ValidityDate)
       setValidityDate(data.ValidityDate)
@@ -900,17 +913,17 @@ var selectedRate = '';
       [changedRate]: newRateName,
     });
   
-    setSelectedValues({
+    dispatch(setSelectedValues({
       ...selectedValues,
       [changedRate]: {
         label: newRateName,
         value: newRateName,
       },
-    });
+    }));
   
     // Close the newRateModel modal
     setIsNewRate(true);
-    setRateId("");
+    dispatch(setRateId(""));
     setNewRateName("");
     setNewRateModel(false);
   };  
@@ -918,13 +931,13 @@ var selectedRate = '';
   useEffect(() => {
     const setVendor = () => {
       if(elementsToHide.includes("RatesVendorSelect") && selectedValues.vendorName === ""){
-        setSelectedValues({
+        dispatch(setSelectedValues({
           ...selectedValues,
           vendorName: {
             label: 'Self',
             value: 'Self'
           }
-        })
+        }))
       }
     }
     setVendor()
@@ -1066,19 +1079,20 @@ const updateSlabData = (qty, newUnitPrice) => {
   },[validTill])
 
   const handleClearRateId = () => {
-    setRateId("");
-    setSelectedValues({
+    dispatch(setRateId(""));
+    dispatch(setSelectedValues({
       rateName: "",
       adType: "",
       vendorName: "",
       typeOfAd: "",
       Location: "",
       Package: ""
-    });
+    }));
     setValidityDays(0);
     setValidityDate(new Date());
     setValidTill("");
-    setRateGST(null);
+    dispatch(setRateGST(null));
+    // setRateGST(null);
     setLeadDays(0);
     setCampaignDuration("");
     setSelectedCampaignUnits("");
@@ -1086,9 +1100,9 @@ const updateSlabData = (qty, newUnitPrice) => {
     setStartQty(0);
     setSlabData([]);
     setIsSlabAvailable(false);
-    setSelectedUnit(null);
-    setQty(0);
-    setUnitPrice(0);
+    dispatch(setSelectedUnit(null));
+    dispatch(setQty(0));
+    dispatch(setUnitPrice(0));
     setNewUnitPrice(0);
     setTempSlabData([]);
   }
@@ -1109,10 +1123,10 @@ const updateSlabData = (qty, newUnitPrice) => {
       )}
       { editModal && (
       <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
-          <div onClick={() => {setEditModal(false); setQty(0); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div onClick={() => {setEditModal(false); dispatch(setQty(0)); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
-            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setQty(e.target.value)}} disabled  onFocus={event => event.target.select()}/>
+            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {dispatch(setQty(e.target.value))}} disabled  onFocus={event => event.target.select()}/>
             <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}} onFocus={event => event.target.select()}/>
             <Button className='bg-blue-400 ml-4 text-white' onClick={() => updateSlabData(qty, newUnitPrice)}>Submit</Button>
             </div>
@@ -1141,7 +1155,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                  // name='RateSearchInput'
                   placeholder="Ex. 4000"
                   value={rateId}
-                  onChange = {(e) => setRateId(e.target.value)}
+                  onChange = {(e) => dispatch(setRateId(e.target.value))}
                   onFocus={(e) => {e.target.select()}}
                   // oange = {(e) => setSearchingRateId(e.target.value)}
                 />
@@ -1306,7 +1320,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       ref={unitRef}
                       placeholder="Select Units"
                       value={selectedUnit}
-                      onChange={(selectedOption) => {setSelectedUnit(selectedOption); setIsUnitsSelected(false)}}
+                      onChange={(selectedOption) => {dispatch(setSelectedUnit(selectedOption)); setIsUnitsSelected(false)}}
                       options={units}
                     />
                     {isUnitsSelected && <p className='text-red-500 mt-2 font-medium'>Please select a valid Unit</p>}
@@ -1324,7 +1338,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' 
                         type='number' 
                         defaultValue={qty} 
-                        onChange={e => {setQty(e.target.value); setIsQty(false)}} 
+                        onChange={e => {dispatch(setQty(e.target.value)); setIsQty(false)}} 
                         helperText="Ex: 3 | Means this rate is applicable for Units > 3" 
                         onFocus={(e) => {e.target.select()}}/>
                         
@@ -1452,7 +1466,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     instanceId="RateGST"
     placeholder="Select Rate GST%"
     value={rateGST}
-    onChange={(selectedOption) => setRateGST(selectedOption)}
+    onChange={(selectedOption) => dispatch(setRateGST(selectedOption))}
     options={GSTOptions}
     required
   />
@@ -1481,8 +1495,8 @@ const updateSlabData = (qty, newUnitPrice) => {
                   className="outline-none glass text-[#008000] shadow-2xl p-3 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] border-[#008000] hover:border-solid hover:border-[1px] w-48 hover:text-[#008000] font-bold rounded-full justify-center"
                   onClick={() => {
                     if(rateId){
-                    const params = new URLSearchParams({ rateId, rateName: selectedValues.rateName.value, type: selectedValues.adType.value, unitPrice: unitPrice, qty: startQty, unit: selectedUnit.value }).toString();
-                    router.push(`/Create-Order?${params}`);
+                    //const params = new URLSearchParams({ rateId, rateName: selectedValues.rateName.value, type: selectedValues.adType.value, unitPrice: unitPrice, qty: startQty, unit: selectedUnit.value }).toString();
+                    router.push(`/Create-Order`);
                     }else{
                       showToastMessage('warning', 'Choose a valid rate or save the existing rate!')
                     }

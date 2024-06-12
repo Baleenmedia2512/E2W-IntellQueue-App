@@ -19,3 +19,6 @@
 body {
   color: rgb(var(--foreground-rgb));
 }
+
+/* Include this in your CSS file */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');

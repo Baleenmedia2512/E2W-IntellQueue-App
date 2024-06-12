@@ -12,9 +12,9 @@ const initialState = {
   selectedVendor: "",
   selectedSlab: "",
   qty: 1,
-  ratePerUnit: 0,
-  units: "",
-  rateId: 0,
+  unitPrice: 0,
+  selectedUnit: "",
+  rateId: "",
   validityDate: "",
   leadDays: "",
   minimumUnit: 0,
@@ -24,7 +24,8 @@ const initialState = {
   remarks: "",
   currentPage: "",
   validRates: [],
-  isDetails: false
+  isDetails: false,
+  rateGST: 0
 };
 
 export const rateSlice = createSlice({
@@ -39,9 +40,24 @@ export const rateSlice = createSlice({
     },
     setSelectedValues: (state, action) => {
       state.selectedValues = { ...state.selectedValues, ...action.payload };
+    },
+    setRateId: (state, action) => {
+      state.rateId = action.payload
+    },
+    setSelectedUnit: (state, action) => {
+      state.selectedUnit = action.payload
+    },
+    setQty: (state, action) => {
+      state.qty = action.payload
+    },
+    setUnitPrice: (state, action) => {
+      state.unitPrice = action.payload
+    },
+    setRateGST: (state, action) => {
+      state.rateGST = action.payload;  
     }
   }
 });
 
-export const { setRatesData, resetRatesData, setSelectedValues } = rateSlice.actions;
+export const { setRatesData, resetRatesData, setSelectedValues, setRateId, setSelectedUnit, setQty, setUnitPrice, setRateGST } = rateSlice.actions;
 export const rateReducer = rateSlice.reducer;
