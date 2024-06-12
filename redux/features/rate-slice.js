@@ -24,7 +24,8 @@ const initialState = {
   remarks: "",
   currentPage: "",
   validRates: [],
-  isDetails: false
+  isDetails: false,
+  rateGST: 0
 };
 
 export const rateSlice = createSlice({
@@ -51,9 +52,12 @@ export const rateSlice = createSlice({
     },
     setUnitPrice: (state, action) => {
       state.unitPrice = action.payload
+    },
+    setRateGST: (state, action) => {
+      state.rateGST = action.payload;  
     }
   }
 });
 
-export const { setRatesData, resetRatesData, setSelectedValues, setRateId, setSelectedUnit, setQty, setUnitPrice } = rateSlice.actions;
+export const { setRatesData, resetRatesData, setSelectedValues, setRateId, setSelectedUnit, setQty, setUnitPrice, setRateGST } = rateSlice.actions;
 export const rateReducer = rateSlice.reducer;

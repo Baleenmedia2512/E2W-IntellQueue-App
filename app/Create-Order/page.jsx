@@ -18,6 +18,7 @@ const CreateOrder = () => {
     const [releaseDates, setReleaseDates] = useState([]);
     const [remarks, setRemarks] = useState();
     const [elementsToHide, setElementsToHide] = useState([])
+    const [receivable, setReceivable] = useState();
 
     const router = useRouter();
     const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
@@ -25,11 +26,14 @@ const CreateOrder = () => {
     const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit);  
     const qty = useAppSelector(state => state.rateSlice.qty);
     const unitPrice = useAppSelector(state => state.rateSlice.unitPrice);
-
+    const rateGST = useAppSelector(state => state.rateSlice.rateGST);
+    // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
+    
     
     useEffect(() => {
       fetchMaxOrderNumber();
       elementsToHideList();
+      calculateReceivable();
     },[])
 
     const handleSearchTermChange = (event) => {
@@ -52,7 +56,7 @@ const CreateOrder = () => {
       const createNewOrder = async(event) => {
         event.preventDefault()
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonMarginAmount=${marginAmount}&JsonRemarks=${remarks}&JsonDBName=${companyName}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonMarginAmount=${marginAmount}&JsonRemarks=${remarks}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
@@ -102,7 +106,22 @@ const CreateOrder = () => {
         });
       }, [elementsToHide])
 
-      
+  // Function to calculate receivable amount
+  const calculateReceivable = () => {
+    const amountInclGST = ((qty * unitPrice) + marginAmount) + ((qty * unitPrice + marginAmount) * (rateGST.value / 100));
+    setReceivable(amountInclGST);
+  };
+  // Update margin amount based on margin percentage
+  const handleMarginPercentageChange = (e) => {
+    const percentage = parseFloat(e.target.value);
+    setMarginPercentage(percentage);
+    const newMarginAmount = (receivable * percentage) / 100;
+    setMarginAmount(newMarginAmount);
+    calculateReceivable(); // Recalculate receivable with new margin
+  };
+
+
+console.log(`receivable: ${receivable}`); // Should print the updated receivable amount with margin
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
             <form className="px-7 h-screen grid justify-center items-center" onSubmit={createNewOrder}>
@@ -203,7 +222,7 @@ const CreateOrder = () => {
                             name="MarginText" 
                             value={marginPercentage}
                             required
-                            onChange={e => setMarginPercentage(e.target.value)}
+                            onChange={handleMarginPercentageChange}
                         />
                         </div>
                     </div>

@@ -17,7 +17,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useAppSelector } from '@/redux/store';
-import { setSelectedValues, setRateId, setSelectedUnit, setUnitPrice, setQty } from '@/redux/features/rate-slice';
+import { setSelectedValues, setRateId, setSelectedUnit, setUnitPrice, setQty, setRateGST  } from '@/redux/features/rate-slice';
 import { useDispatch } from 'react-redux';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
@@ -38,6 +38,7 @@ const AdDetailsPage = () => {
   const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit);  
   const qty = useAppSelector(state => state.rateSlice.qty);
   const unitPrice = useAppSelector(state => state.rateSlice.unitPrice);
+  const rateGST = useAppSelector(state => state.rateSlice.rateGST);
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   //const [selectedUnit, setSelectedUnit] = useState("");
@@ -73,7 +74,7 @@ const AdDetailsPage = () => {
   const [isNewRate, setIsNewRate] = useState(false);
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
-  const [rateGST, setRateGST] = useState("");
+  // const [rateGST, setRateGST] = useState("");
   const [tempSlabData, setTempSlabData] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
   const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
@@ -84,6 +85,8 @@ const AdDetailsPage = () => {
   const [isQty, setIsQty] = useState(false);
   var combinedSlabData = slabData.concat(tempSlabData)
   const elementsNeeded = [""];
+
+  
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -644,7 +647,8 @@ var selectedRate = '';
         setShowCampaignDuration(true)
       }
       setSelectedCampaignUnits({label: selectedRate.CampaignDurationUnit, value: selectedRate.CampaignDurationUnit})
-      setRateGST({label: selectedRate.rategst, value: selectedRate.rategst})
+      // setRateGST({label: selectedRate.rategst, value: selectedRate.rategst})
+      dispatch(setRateGST({label: selectedRate.rategst, value: selectedRate.rategst}));
       setLeadDays(selectedRate.LeadDays);
       setValidTill(selectedRate.ValidityDate)
       setValidityDate(selectedRate.ValidityDate)
@@ -752,7 +756,8 @@ var selectedRate = '';
         setShowCampaignDuration(false)
       }
       setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
-      setRateGST({label: data.rategst, value: data.rategst})
+      // setRateGST({label: data.rategst, value: data.rategst})
+      dispatch(setRateGST({label: data.rategst, value: data.rategst}));
       setLeadDays(data.LeadDays);
       setValidTill(data.ValidityDate)
       setValidityDate(data.ValidityDate)
@@ -1086,7 +1091,8 @@ const updateSlabData = (qty, newUnitPrice) => {
     setValidityDays(0);
     setValidityDate(new Date());
     setValidTill("");
-    setRateGST(null);
+    dispatch(setRateGST(null));
+    // setRateGST(null);
     setLeadDays(0);
     setCampaignDuration("");
     setSelectedCampaignUnits("");
@@ -1460,7 +1466,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     instanceId="RateGST"
     placeholder="Select Rate GST%"
     value={rateGST}
-    onChange={(selectedOption) => setRateGST(selectedOption)}
+    onChange={(selectedOption) => dispatch(setRateGST(selectedOption))}
     options={GSTOptions}
     required
   />
