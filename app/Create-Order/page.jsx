@@ -33,7 +33,7 @@ const CreateOrder = () => {
     useEffect(() => {
       fetchMaxOrderNumber();
       elementsToHideList();
-      calculateReceivable();
+      // calculateReceivable();
     },[])
 
     const handleSearchTermChange = (event) => {
@@ -56,7 +56,7 @@ const CreateOrder = () => {
       const createNewOrder = async(event) => {
         event.preventDefault()
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonMarginAmount=${marginAmount}&JsonRemarks=${remarks}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonRateId=${rateId}&JsonMarginAmount=${marginAmount}&JsonRemarks=${remarks}&JsonReleaseDates=${releaseDates}&JsonReceivable=${unitPrice}&JsonDBName=${companyName}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
@@ -107,17 +107,17 @@ const CreateOrder = () => {
       }, [elementsToHide])
 
   // Function to calculate receivable amount
-  const calculateReceivable = () => {
-    const amountInclGST = ((qty * unitPrice) + marginAmount) + ((qty * unitPrice + marginAmount) * (rateGST.value / 100));
-    setReceivable(amountInclGST);
-  };
-  // Update margin amount based on margin percentage
+  // const calculateReceivable = () => {
+  //   const amountInclGST = ((qty * unitPrice) + marginAmount) + ((qty * unitPrice + marginAmount) * (rateGST.value / 100));
+  //   setReceivable(amountInclGST);
+  // };
+  // // Update margin amount based on margin percentage
   const handleMarginPercentageChange = (e) => {
     const percentage = parseFloat(e.target.value);
     setMarginPercentage(percentage);
-    const newMarginAmount = (receivable * percentage) / 100;
-    setMarginAmount(newMarginAmount);
-    calculateReceivable(); // Recalculate receivable with new margin
+    // const newMarginAmount = (receivable * percentage) / 100;
+    // setMarginAmount(newMarginAmount);
+    // calculateReceivable(); // Recalculate receivable with new margin
   };
 
 
@@ -203,8 +203,8 @@ console.log(`receivable: ${receivable}`); // Should print the updated receivable
                         }}
                     />  */}
                     <div class="w-full flex gap-3 ">
-                    <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
+                    <div name="OrderMarginAmount">
+                    <label className="block text-gray-700 font-semibold mb-2" name="OrderMarginAmount">Margin Amount</label>
                         <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
                             placeholder="Margin Amount" 
@@ -214,8 +214,8 @@ console.log(`receivable: ${receivable}`); // Should print the updated receivable
                             onChange={e => setMarginAmount(e.target.value)}
                         />
                         </div>
-                        <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
+                        <div name="OrderMarginPercentage">
+                    <label className="block text-gray-700 font-semibold mb-2" name="OrderMarginPercentage">Margin %</label>
                         <input className="p-3 capitalize shadow-2xl glass w-28 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
                             placeholder="Margin %" 
@@ -226,8 +226,8 @@ console.log(`receivable: ${receivable}`); // Should print the updated receivable
                         />
                         </div>
                     </div>
-                    <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
+                    <div name="OrderRemarks">
+                    <label className="block text-gray-700 font-semibold mb-2" name="OrderRemarks">Remarks</label>
                     <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
@@ -236,8 +236,8 @@ console.log(`receivable: ${receivable}`); // Should print the updated receivable
                         onChange={e => setRemarks(e.target.value)}
                     />
                     </div>
-                    <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Release Date</label>
+                    <div name="OrderReleaseDate">
+                    <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
                         type='date' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"

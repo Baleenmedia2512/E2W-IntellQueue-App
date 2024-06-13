@@ -100,14 +100,14 @@ const Login = () => {
           
           <h1 className="text-3xl font-bold mb-8 text-black font-poppins">Login</h1>
           <input
-            className="p-3 capitalize shadow-2xl  glass w-80 justify-self-center outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+            className="p-3 shadow-2xl  glass w-80 justify-self-center outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
             type="text"
             placeholder="User Name"
             value={userName}
             onChange={(e) => setUserName(e.target.value)} />
           <div className="relative">
             <input
-             className="p-3 capitalize shadow-2xl  glass w-80  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mt-4 mb-4"
+             className="p-3 shadow-2xl  glass w-80  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mt-4 mb-4"
               type={ showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
@@ -134,7 +134,7 @@ const Login = () => {
               )}
             </span>
             </div>
-            <input className="p-3 capitalize shadow-2xl  glass w-80 justify-self-center outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+            <input className="p-3 shadow-2xl  glass w-80 justify-self-center outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
             type="text" placeholder='Company Name' value={companyName} onChange={handleSearchTermChange}/>
             {(companyNameSuggestions.length > 0 && companyName !== '') && (
           <ul className="list-none border-green-300 w-80 ">
