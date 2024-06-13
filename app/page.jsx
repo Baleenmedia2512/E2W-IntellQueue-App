@@ -45,6 +45,7 @@ const ClientsData = () => {
   const [contactWarning, setContactWarning] = useState('');
   const [consulantWarning, setConsulantWarning] = useState('');
   const [clientID, setClientID] = useState('');
+  const [emailWarning, setEmailWarning] = useState('');
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -54,7 +55,6 @@ const ClientsData = () => {
   //     dispatch(setClientData({ clientSource: sources[0] }));
   //   }
   // }, [clientSource, dispatch]);
-  console.log(clientSource)
 
   useEffect(() => {
     // Check if age input violates constraints for selected option
@@ -71,15 +71,21 @@ const ClientsData = () => {
 
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
-    setIsNewClient(true);
+    // setIsNewClient(true);
+
+    if (newName !== '' && clientContact === '') {
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
         .then((response) => response.json())
         .then((data) => setClientNameSuggestions(data));
-      dispatch(setClientData({clientName: newName}));
+      
     } catch(error){
       console.error("Error Suggesting Client Names: " + error)
     }
+  } else {
+    setClientNameSuggestions([]);
+  }
+  dispatch(setClientData({clientName: newName}));
   };
 
   const elementsToHideList = () => {
@@ -117,9 +123,10 @@ const ClientsData = () => {
     dispatch(setClientData({clientContact: number}));
     fetchClientDetails(name, number);
     setClientNameSuggestions([]);
-    setIsNewClient('false');
+    // setIsNewClient('false');
+    setContactWarning('');
   };
-
+  
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
     const name = input.substring(0, input.indexOf('(')).trim();
@@ -145,7 +152,7 @@ const ClientsData = () => {
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
           //setClientAge(clientDetails.Age || "");
-          
+          console.log(data)
           setAddress(clientDetails.address || "");
           setTitle(clientDetails.gender || "");
           setSelectedOption(clientDetails.gender || "");
@@ -224,24 +231,68 @@ const ClientsData = () => {
   }, [elementsToHide])
   
   const handleClientContactChange = (newValue) => {
-    if (newValue.length < 10 || newValue.length > 10) {
-      setContactWarning('Contact number should contain at least 10 digits.');
+    // Contact Validation
+    if (newValue === '') {
+        setContactWarning('');
+    } else if (newValue.length !== 10) {
+        setContactWarning('Contact number should contain exactly 10 digits.');
     } else {
-      setContactWarning('');
+        setContactWarning('');
+        
+        // Check if contact number already exists or not
+        if (newValue !== '') {
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (!data.isNewUser) {
+                        // Contact number already exists
+                        setIsNewClient(false);
+                        setContactWarning('Contact number already exists.');
+                    } else {
+                        // Contact number is new
+                        setIsNewClient(true);
+                        setContactWarning('');
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error checking contact number: " + error);
+                });
+        }
     }
-    try {
-      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
-          .then((response) => response.json())
-          .then((data) => setClientNameSuggestions(data));
-      dispatch(setClientData({ clientContact: newValue }));
-  } catch (error) {
-      console.error("Error Suggesting Client Names: " + error);
-  }
-    
-  };
 
+    // Client Name Suggestions
+    if (newValue !== '' ) {
+        try {
+            fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
+                .then((response) => response.json())
+                .then((data) => setClientNameSuggestions(data));
+        } catch (error) {
+            console.error("Error suggesting client names: " + error);
+        }
+    } else {
+        setClientNameSuggestions([]);
+    }
+
+    dispatch(setClientData({ clientContact: newValue }));
+};
+
+
+
+  let emailTimeout;
   const handleClientEmailChange = (newValue) => {
     dispatch(setClientData({ clientEmail: newValue }));
+    
+    if (emailTimeout) {
+      clearTimeout(emailTimeout);
+    }
+
+    emailTimeout = setTimeout(() => {
+      if (newValue && !newValue.includes('@')) {
+        setEmailWarning('Email should contain an "@" symbol.');
+      } else {
+        setEmailWarning('');
+      }
+    }, 500);
   };
 
   const handleClientSourceChange = (selectedOption) => {
@@ -260,6 +311,19 @@ const ClientsData = () => {
     //     router.push('/adDetails')
     //   }
     // else{
+
+    //   if (!clientName || !clientContact || !clientSource) {
+    //     window.alert('Client Name, Client Contact and Source are required fields.');
+    //     document.getElementById('3').focus();
+    //     return;
+    // }
+  
+    // If source is consultant, validate consultant name and contact
+    if (clientSource === '5.Consultant' && (!consultantName || !consultantNumber)) {
+      window.alert('Consultant Name and Consultant Number are required fields.');
+      document.getElementById('9').focus();
+        return;
+    }
     try {
 
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}`)
@@ -269,7 +333,7 @@ const ClientsData = () => {
           // window.location.reload();
           dispatch(resetQuotesData())
           dispatch(setQuotesData({currentPage: "checkout"}))
-          router.push('/adDetails')
+          // router.push('/adDetails')
           //router.push('../adDetails');
         // setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
@@ -280,9 +344,22 @@ const ClientsData = () => {
 
     } catch (error) {
       console.error('Error updating rate:', error);
-    }
+    
+  }
   } 
   else{
+    if (!clientName || !clientContact || !clientSource || !clientAge || !DOB) {
+      window.alert('Client Name, Client Contact, Source, Age and DOB are required fields.');
+      document.getElementById('3').focus();
+      return;
+  }
+
+  // If source is consultant, validate consultant name and contact
+  if (clientSource === 'Consultant' && (!consultantName || !consultantNumber)) {
+    window.alert('Consultant Name and Consultant Number are required fields.');
+    document.getElementById('9').focus();
+      return;
+  }
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}`)
       const data = await response.json();
@@ -442,20 +519,96 @@ const handleConsultantNumberChange = (e) => {
   }
 
 };
+
+const handleRemoveClient = () => {
+    // Check if client contact is empty
+    if (!clientContact) {
+      document.getElementById('3').focus(); // Focusing on the input field with id="3"
+      return;
+  }
+
+  fetch(`https://orders.baleenmedia.com/API/Media/RemoveClient.php?ClientContact=${clientContact}`)
+  .then((response) => response.json())
+  .then((data) => {
+      if (data.success) {
+          // Client removed successfully
+          window.alert('Client Removed Successfully!')
+      } else {
+          // Failed to remove client
+          window.alert("Failed to remove client: " + data.message);
+      }
+  })
+  .catch((error) => {
+      console.error("Error removing client: " + error);
+  });
+};
+
+console.log(clientNameSuggestions)
+{/* onSubmit={submitDetails} */}
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
-      <form className="px-7 h-screen grid justify-center items-center" onSubmit={submitDetails}>
+      
+      <form className="px-7 h-screen grid justify-center items-center"> 
     <div className="grid gap-6" id="form">
     <h1 className="font-bold text-3xl text-center mb-4">Client Registration</h1>
-      <div className="w-full flex gap-3">
+
+        <input 
+        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
+        type="number" 
+        placeholder="Contact Number*" 
+        id="3" 
+        name="ClientContactInput" 
+        // required
+        value={clientContact}
+        // onChange={(e) => handleClientContactChange(e.target.value)}
+        onChange={(e) => {
+          if (e.target.value.length <= 10) {
+            handleClientContactChange(e.target.value);
+          }
+        }}
+        onBlur={() => {
+          setTimeout(() => {
+            setClientNameSuggestions([]);
+          }, 200); // Adjust the delay time according to your preference
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Find the next input field and focus on it
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
+        />
+        {(clientNameSuggestions.length > 0 && clientContact !=='') && (
+          <ul className="list-none border-green-300 border-1 ">
+            {clientNameSuggestions.map((name, index) => (
+              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
+                <button
+                  type="button"
+                  className="text-black"
+                  onClick={handleClientNameSelection}
+                  value={name}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {contactWarning && <p className="text-red-500">{contactWarning}</p>}
+        <div className="w-full flex gap-3">
       <select
-        className="capitalize shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
+        className="shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
         id='1'
         name="TitleSelect"
         value={selectedOption}
         //onChange={e => setTitle(e.target.value)}
        // defaultValue="Mrs."
-        required
+        // required
         onChange={(e) => {
           const selectedOption = e.target.value;
           setSelectedOption(selectedOption);
@@ -473,12 +626,12 @@ const handleConsultantNumberChange = (e) => {
         <option value="Baby.">Baby.</option>
         <option value="Master.">Master.</option>
       </select>
-        <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+        <input className="p-3 shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
           type="text"
           placeholder="Name*" 
           id='2'
           name="ClientNameInput" 
-          required
+          // required
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
           // MP-45-The client name suggestions should hide when it is not selected (or while creating a new client entry)
@@ -488,6 +641,13 @@ const handleConsultantNumberChange = (e) => {
               setClientNameSuggestions([]);
             }, 200); // Adjust the delay time according to your preference
           }}
+          onKeyPress={(e) => {
+            // Allow only alphabetic characters
+            const regex = /^[a-zA-Z\s]*$/;
+            if (!regex.test(e.key)) {
+                e.preventDefault();
+            }
+        }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -540,49 +700,6 @@ const handleConsultantNumberChange = (e) => {
           }}
           />
         ) : (<></>)}
-        <input 
-        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="number" 
-        placeholder="Contact Number*" 
-        id="3" 
-        name="ClientContactInput" 
-        required
-        value={clientContact}
-        onChange={(e) => handleClientContactChange(e.target.value)}
-        onBlur={() => {
-          setTimeout(() => {
-            setClientNameSuggestions([]);
-          }, 200); // Adjust the delay time according to your preference
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-        />
-        {(clientNameSuggestions.length > 0 && clientName === '' && clientContact !=='') && (
-          <ul className="list-none border-green-300 border-1 ">
-            {clientNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
-                <button
-                  type="button"
-                  className="text-black"
-                  onClick={handleClientNameSelection}
-                  value={name}
-                >
-                  {name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {contactWarning && <p className="text-red-500">{contactWarning}</p>}
         <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="email" 
         placeholder="Email"
@@ -602,7 +719,9 @@ const handleConsultantNumberChange = (e) => {
           }
         }}
         />
+        {emailWarning && <p className="text-red-500 ml-8">{emailWarning}</p>}
       </div>
+      
       {/* <div class="w-full flex gap-3 ">
         <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' 
         type='number' 
@@ -656,7 +775,7 @@ const handleConsultantNumberChange = (e) => {
       {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? (
         <div className="w-full flex gap-3" name='AgeDatePicker'>
           <input
-            className="capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
+            className="shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
             type="number"
             id="5"
             name="ClientAgeInput"
@@ -711,7 +830,7 @@ const handleConsultantNumberChange = (e) => {
       ) : (
         <div className="w-full flex gap-3">
           <input
-            className="capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
+            className="shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
             type="number"
             name="MonthsInput"
             placeholder="Months*"
@@ -755,7 +874,7 @@ const handleConsultantNumberChange = (e) => {
         id="7"
         name="ClientAddressTextArea"
         placeholder="Address"
-        required
+        // required
         value={address}
         onChange={e => setAddress(e.target.value)}
         onKeyDown={(e) => {
@@ -779,6 +898,7 @@ const handleConsultantNumberChange = (e) => {
         id="31" 
         name="ClientGSTInput" 
         value={clientGST}
+        maxLength={15}
         // onChange={(e) => setClientGST(e.target.value)}
         //MP-39-Warning message should be shown for GST Field (<15 characters)
         onChange={handleGSTChange} 
@@ -802,6 +922,7 @@ const handleConsultantNumberChange = (e) => {
         id="32" 
         name="ClientPANInput" 
         value={clientPAN}
+        maxLength={10}
         onChange={(e) => setClientPAN(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -822,7 +943,7 @@ const handleConsultantNumberChange = (e) => {
         id="8"
         name="ClientSourceSelect"
         value={clientSource}
-        required
+        // required
         defaultValue={sources[0]}
         onChange={handleClientSourceChange}
       >
@@ -839,7 +960,7 @@ const handleConsultantNumberChange = (e) => {
         placeholder="Consultant Name" 
         id="9" 
         name="ConsultantNameInput" 
-        required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false} 
+        // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false} 
         onChange={handleConsultantNameChange} 
         value={consultantName}
         onKeyDown={(e) => {
@@ -879,23 +1000,31 @@ const handleConsultantNumberChange = (e) => {
         name="ConsultantNumberInput" 
         value={consultantNumber} 
         onChange={handleConsultantNumberChange} 
-        required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false}/>
+        // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false}
+        />
       </div>
       {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}  
       <div>
         {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
       {isNewClient == true ? (
         <button 
-          className="outline-none glass shadow-2xl w-full p-3 bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:text-[#008000] font-bold rounded-md mb-28" 
-          type="submit">
+          className="outline-none glass shadow-2xl w-full p-3 bg-[#ffffff] border-[1px] border-solid border-[#b7e0a5] hover:border-[#b7e0a5] hover:bg-[#f0fff0] hover:text-[#008000] font-bold rounded-md mb-28" 
+          onClick={submitDetails}>
           Add
         </button>
       ) : (
+        <div className="flex gap-3 mb-28 ">
         <button 
-          className="outline-none glass shadow-2xl w-full p-3 bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:text-[#008000] font-bold rounded-md mb-28" 
-          type="submit">
-          Update
+            className="outline-none glass shadow-2xl flex-grow p-3 bg-[#ffffff] border-[1px] border-solid border-[#b7e0a5] hover:border-[#b7e0a5] hover:bg-[#f0fff0] hover:text-[#008000] font-bold rounded-md" 
+            onClick={submitDetails}>
+            Update
         </button>
+        <button 
+            className="outline-none glass shadow-2xl flex-grow p-3 bg-[#ffffff] border-[1px] border-solid border-[#ffd9d9] hover:border-[#ffe6e6] hover:bg-[#ffe6e6] hover:text-[#e53e3e] font-bold rounded-md" 
+            onClick={handleRemoveClient}>
+            Remove
+        </button>
+    </div>
       )}
     </div>
     </div>
