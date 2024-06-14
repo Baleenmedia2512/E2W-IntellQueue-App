@@ -584,7 +584,10 @@ const handleRemoveClient = () => {
           setTimeout(() => {
             setClientNameSuggestions([]);
             setContactWarning('');
-          }, 200); // Adjust the delay time according to your preference
+          if (clientContact.length === 10) {
+            fetchClientDetails(clientContact);
+          }
+          }, 200);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
