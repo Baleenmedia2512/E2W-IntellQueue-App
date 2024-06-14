@@ -121,7 +121,7 @@ const ClientsData = () => {
     
     dispatch(setClientData({clientName: name}));
     dispatch(setClientData({clientContact: number}));
-    fetchClientDetails(name, number);
+    fetchClientDetails(number);
     setClientNameSuggestions([]);
     // setIsNewClient('false');
     setContactWarning('');
@@ -138,21 +138,21 @@ const ClientsData = () => {
     // fetchConsultantDetails(name, number);
   };
 
-  const fetchClientDetails = (clientName, clientNumber) => {
+  const fetchClientDetails = (clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
           const clientDetails = data[0];
           setClientID(clientDetails.id);
-
+          dispatch(setClientData({ clientName: clientDetails.name || "" }));
           //MP-69-New Record are not fetching in GS
+          console.log(data)
           setDOB(clientDetails.DOB);
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
           //setClientAge(clientDetails.Age || "");
-          console.log(data)
           setAddress(clientDetails.address || "");
           setTitle(clientDetails.gender || "");
           setSelectedOption(clientDetails.gender || "");
@@ -229,6 +229,8 @@ const ClientsData = () => {
       });
     });
   }, [elementsToHide])
+
+
   
   const handleClientContactChange = (newValue) => {
     // Contact Validation
@@ -236,12 +238,12 @@ const ClientsData = () => {
         setContactWarning('');
     } else if (newValue.length !== 10) {
         setContactWarning('Contact number should contain exactly 10 digits.');
-    } else {
+      } else {
         setContactWarning('');
-        
+
         // Check if contact number already exists or not
         if (newValue !== '') {
-            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}`)
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}&JsonDBName=${companyName}`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.isNewUser) {
@@ -252,6 +254,18 @@ const ClientsData = () => {
                         // Contact number is new
                         setIsNewClient(true);
                         setContactWarning('');
+                          dispatch(setClientData({ clientEmail: "" }));
+                          dispatch(setClientData({ clientName: "" }));
+                          setClientAge("");
+                          setDOB("");
+                          setAddress("");
+                          setConsultantName("");
+                          setConsultantNumber("");
+                          setClientPAN("");
+                          setClientGST("");
+                          setClientContactPerson("");
+                          setClientID("");
+                          
                     }
                 })
                 .catch((error) => {
@@ -259,6 +273,7 @@ const ClientsData = () => {
                 });
         }
     }
+ 
 
     // Client Name Suggestions
     if (newValue !== '' ) {
@@ -299,6 +314,7 @@ const ClientsData = () => {
     dispatch(setClientData({ clientSource: selectedOption.target.value }));
   };
 
+  // console.log(isNewClient, clientContact, companyName)
   const submitDetails = async(event) => {
     event.preventDefault()
     
@@ -317,7 +333,7 @@ const ClientsData = () => {
     //     document.getElementById('3').focus();
     //     return;
     // }
-  
+
     // If source is consultant, validate consultant name and contact
     if (clientSource === '5.Consultant' && (!consultantName || !consultantNumber)) {
       window.alert('Consultant Name and Consultant Number are required fields.');
@@ -333,8 +349,7 @@ const ClientsData = () => {
           // window.location.reload();
           dispatch(resetQuotesData())
           dispatch(setQuotesData({currentPage: "checkout"}))
-          // router.push('/adDetails')
-          //router.push('../adDetails');
+          router.push('/adDetails')
         // setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
         window.alert('Contact Number Already Exists!')
@@ -361,7 +376,7 @@ const ClientsData = () => {
       return;
   }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
           window.alert('Client Details Entered Successfully!')
@@ -527,7 +542,7 @@ const handleRemoveClient = () => {
       return;
   }
 
-  fetch(`https://orders.baleenmedia.com/API/Media/RemoveClient.php?ClientContact=${clientContact}`)
+  fetch(`https://orders.baleenmedia.com/API/Media/RemoveClient.php?JsonClientID=${clientID}&JsonDBName=${companyName}`)
   .then((response) => response.json())
   .then((data) => {
       if (data.success) {
@@ -543,7 +558,6 @@ const handleRemoveClient = () => {
   });
 };
 
-console.log(clientNameSuggestions)
 {/* onSubmit={submitDetails} */}
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
@@ -569,6 +583,7 @@ console.log(clientNameSuggestions)
         onBlur={() => {
           setTimeout(() => {
             setClientNameSuggestions([]);
+            setContactWarning('');
           }, 200); // Adjust the delay time according to your preference
         }}
         onKeyDown={(e) => {
@@ -631,6 +646,7 @@ console.log(clientNameSuggestions)
           placeholder="Name*" 
           id='2'
           name="ClientNameInput" 
+          maxLength={32}
           // required
           value={clientDetails.clientName}
           onChange={handleSearchTermChange}
@@ -954,6 +970,8 @@ console.log(clientNameSuggestions)
           </option>
         ))}
       </select>
+      {(clientSource === '5.Consultant' || clientSource === 'Consultant') && (
+        <>
       <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="text" 
@@ -1002,8 +1020,11 @@ console.log(clientNameSuggestions)
         onChange={handleConsultantNumberChange} 
         // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false}
         />
+        </>
+            )}
       </div>
-      {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}  
+      {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}
+      
       <div>
         {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
       {isNewClient == true ? (
