@@ -47,7 +47,7 @@ const quotePersistConfig = {
 const ratePersistConfig = {
   key: "rate",
   storage: storage,
-  whitelist: ["selectedValues", "rateId", "qty", "unitPrice", "selectedUnit"]
+  whitelist: ["selectedValues", "rateId", "slabData", "selectedUnit",, "startQty"]
 }
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
