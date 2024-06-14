@@ -14,6 +14,7 @@ const initialState = {
   qty: 1,
   unitPrice: 0,
   selectedUnit: "",
+  selectedUnitId: "",
   rateId: "",
   validityDate: "",
   leadDays: "",
@@ -55,6 +56,9 @@ export const rateSlice = createSlice({
     },
     setRateGST: (state, action) => {
       state.rateGST = action.payload;  
+    },
+    setSelectedUnitId: (state, action) => {
+      state.selectedUnitId = action.payload
     }
   }
 });
