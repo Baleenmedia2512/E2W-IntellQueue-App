@@ -17,7 +17,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useAppSelector } from '@/redux/store';
-import { setSelectedValues, setRateId, setSelectedUnit, setUnitPrice, setQty, setRateGST  } from '@/redux/features/rate-slice';
+import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty} from '@/redux/features/rate-slice';
 import { useDispatch } from 'react-redux';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
@@ -30,27 +30,28 @@ const AdDetailsPage = () => {
   const dispatch = useDispatch()
   const validityRef = useRef();
   const unitRef = useRef();
-  const qtyRef = useRef()
+  const qtyRef = useRef();
+  const ldRef = useRef();
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
   const rateId = useAppSelector(state => state.rateSlice.rateId)
   const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit);  
-  const qty = useAppSelector(state => state.rateSlice.qty);
-  const unitPrice = useAppSelector(state => state.rateSlice.unitPrice);
   const rateGST = useAppSelector(state => state.rateSlice.rateGST);
+  const slabData = useAppSelector(state => state.rateSlice.slabData);
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   //const [selectedUnit, setSelectedUnit] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const router = useRouter();
-  const [vendors, setVendors] = useState([])
+  const [vendors, setVendors] = useState([]);
+  const [qty, setQty] = useState("")
   const [campaignDuration, setCampaignDuration] = useState("");
   const [leadDays, setLeadDays] = useState(0);
   const [validTill, setValidTill] = useState("");
   const [campaignUnits, setCampaignUnits] = useState([]) 
   const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("")
-  const [slabData, setSlabData] = useState([]);
+  //const [slabData, setSlabData] = useState([]);
   const [editModal, setEditModal] = useState(false);
   //const [qty, setQty] = useState(0)
   const [validityDays, setValidityDays] = useState(0)
@@ -58,8 +59,8 @@ const AdDetailsPage = () => {
   const [newUnitPrice, setNewUnitPrice] = useState("")
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [modal, setModal] = useState(false);
-  const [startQty, setStartQty] = useState([])
-  //const [unitPrice, setUnitPrice] = useState(0);
+  //const [startQty, setStartQty] = useState([])
+  const [unitPrice, setUnitPrice] = useState(0);
   const [showCampaignDuration, setShowCampaignDuration] = useState(false)
   const [selectedUnitId, setSelectedUnitId] = useState("")
   const [toast, setToast] = useState(false);
@@ -68,6 +69,7 @@ const AdDetailsPage = () => {
   //const [rateId, setRateId] = useState("");
   const [invalidRates, setInvalidRates] = useState(false);
   const [isValidityDays, setIsValidityDays] = useState(false);
+  const [isLeadDays, setIsLeadDays] = useState(false)
   const [invalidRatesData, setInvalidRatesData] = useState([]);
   const [validRatesData, setValidRatesData] = useState([]);
   const [newRateModel, setNewRateModel] = useState(false);
@@ -83,7 +85,7 @@ const AdDetailsPage = () => {
   const [elementsToShow, setElementsToShow] = useState([]);
   const [isUnitsSelected, setIsUnitsSelected] = useState(false);
   const [isQty, setIsQty] = useState(false);
-  var combinedSlabData = slabData.concat(tempSlabData)
+  const [combinedSlabData, setCombinedSlabData] = useState([]);
   const elementsNeeded = [""];
 
   
@@ -146,9 +148,9 @@ const AdDetailsPage = () => {
 
   const handleItemClick = (data) => {
     setEditModal(true);
-    dispatch(setQty(data.StartQty));
+    setQty(data.StartQty)
     setNewUnitPrice(data.UnitPrice);
-    dispatch(setSelectedUnitId(data.Id));
+    setSelectedUnitId(data.Id);
   };
 
   useEffect(() => {
@@ -307,7 +309,7 @@ const AdDetailsPage = () => {
   const removeQtySlab = async(Qty, index) => {
     if (isNewRate) {
       setIsSlabAvailable(false);
-      dispatch(setQty(0));
+      setQty(0);
       setNewUnitPrice("");
       setTempSlabData(tempSlabData.filter((_, i) => i !== index));
     } else {
@@ -336,14 +338,17 @@ const AdDetailsPage = () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
-      setSlabData(data);
+      dispatch(setSlabData(data));
+      if(data){
+        setIsSlabAvailable(true);
+      }
       const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
       const firstSelectedSlab = sortedData[0];
       if(firstSelectedSlab){
-        setIsSlabAvailable(true);
-        dispatch(setUnitPrice(firstSelectedSlab.UnitPrice));
+        setUnitPrice(firstSelectedSlab.UnitPrice);
         dispatch(setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit}));
-        setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
+        dispatch(setStartQty(firstSelectedSlab.StartQty));
+        //setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
       }
     } catch (error) {
       console.error(error);
@@ -664,7 +669,13 @@ var selectedRate = '';
 
   // const packageOptions = getOptions('Package', selectedValues);
 
+  // Merge slabData and tempSlabData
   useEffect(() => {
+    setCombinedSlabData(slabData.concat(tempSlabData));
+  }, [slabData, tempSlabData]);
+
+  useEffect(() => {
+    
     if(slabData.length < 1 && selectedValues.adType !== ""){
       elementsToShowList("Show");
     } else{
@@ -1000,6 +1011,9 @@ var selectedRate = '';
     if(isQty){
       qtyRef.current.focus()
     }
+    if(isLeadDays) {
+      ldRef.current.focus()
+    }
   }, [isValidityDays, isUnitsSelected, isQty]);
 
   const insertNewRate = async () => {
@@ -1054,7 +1068,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     return data;
   });
 
-  setSlabData(updatedData);
+  dispatch(setSlabData(updatedData));
 }
   setEditModal(false);
 };
@@ -1097,14 +1111,27 @@ const updateSlabData = (qty, newUnitPrice) => {
     setCampaignDuration("");
     setSelectedCampaignUnits("");
     setShowCampaignDuration(false);
-    setStartQty(0);
-    setSlabData([]);
+    dispatch(setStartQty(0));
+    dispatch(setSlabData([]));
     setIsSlabAvailable(false);
     dispatch(setSelectedUnit(null));
-    dispatch(setQty(0));
-    dispatch(setUnitPrice(0));
+    setQty(0);
+    setUnitPrice(0);
     setNewUnitPrice(0);
     setTempSlabData([]);
+  }
+
+  const handleKeyDown = (event) => {
+    if (
+      !/[0-9]/.test(event.key) && // Allow numbers
+      event.key !== 'Backspace' && // Allow backspace
+      event.key !== 'Delete' && // Allow delete
+      event.key !== 'ArrowLeft' && // Allow left arrow
+      event.key !== 'ArrowRight' && // Allow right arrow
+      event.key !== 'Tab' // Allow tab
+    ) {
+      event.preventDefault();
+    }
   }
 
   return (
@@ -1123,7 +1150,7 @@ const updateSlabData = (qty, newUnitPrice) => {
       )}
       { editModal && (
       <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
-          <div onClick={() => {setEditModal(false); dispatch(setQty(0)); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
+          <div onClick={() => {setEditModal(false); setQty(0); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
             <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {dispatch(setQty(e.target.value))}} disabled  onFocus={event => event.target.select()}/>
@@ -1334,13 +1361,15 @@ const updateSlabData = (qty, newUnitPrice) => {
                         variant="outlined" 
                         size='small' 
                         inputRef={qtyRef}
-                        required = {isNewRate ? true : false}
                         className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' 
                         type='number' 
                         defaultValue={qty} 
-                        onChange={e => {dispatch(setQty(e.target.value)); setIsQty(false)}} 
-                        helperText="Ex: 3 | Means this rate is applicable for Units > 3" 
-                        onFocus={(e) => {e.target.select()}}/>
+                        onChange={e => {setQty(e.target.value); setIsQty(false)}} 
+                        helperText="Ex: 3 | Means this rate is applicable for Units > 3"
+                        onFocus={(e) => {
+                          e.target.select()
+                        }}
+                        />
                         
                       <button 
                         className='justify-center mb-10 ml-6 text-blue-400' 
@@ -1368,7 +1397,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                           <option key={data.StartQty} className="mt-1.5" 
                             onClick={() => handleItemClick(data)}
                           >
-                            {data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}
+                            {data.StartQty} {selectedUnit ? selectedUnit.value : ''} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit ? selectedUnit.value : ''}
                           </option>
                         )}
                         <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
@@ -1392,7 +1421,9 @@ const updateSlabData = (qty, newUnitPrice) => {
                     {showCampaignDuration && (
                     
                       <div className='flex mr-10'>
-                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-0 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}} onFocus={(e) => e.target.select()}/>
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-0 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}} 
+                      onKeyDown = {handleKeyDown}
+                      onFocus={(e) => e.target.select()}/>
                       <Select
                         classNames='p-0 glass shadow-2xl w-30 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md '
                         id='CUnits'
@@ -1411,7 +1442,16 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <div className='mr-5' id="27" name="RatesLeadDaysTextField">
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
                     <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
-                      <TextField value={leadDays} variant="outlined" size='small' className='w-44' type='number' onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}/>
+                      <TextField 
+                        value={leadDays} 
+                        variant="outlined" 
+                        size='small' 
+                        ref={ldRef}
+                        className='w-44' 
+                        type='text'
+                        onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}
+                        onKeyDown ={handleKeyDown}
+                      />
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
@@ -1430,6 +1470,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       size='small' 
                       className='w-36' 
                       required
+                      onKeyDown ={handleKeyDown}
                       type='number' 
                       onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>

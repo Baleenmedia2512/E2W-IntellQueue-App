@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
@@ -30,22 +30,37 @@ const CreateOrder = () => {
     const [clientGST, setClientGST] = useState("");
     const [clientPAN, setClientPAN] = useState("");
 
-    const username = useAppSelector(state => state.authSlice.userName);
     const router = useRouter();
     const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
-    const rateId = useAppSelector(state => state.rateSlice.rateId)
-    const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit);  
-    const qty = useAppSelector(state => state.rateSlice.qty);
-    const unitPrice = useAppSelector(state => state.rateSlice.unitPrice);
+    const rateId = useAppSelector(state => state.rateSlice.rateId);
+    const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit); 
+    const slabData = useAppSelector(state => state.rateSlice.slabData); 
     const rateGST = useAppSelector(state => state.rateSlice.rateGST);
+    const startQty = useAppSelector(state => state.rateSlice.startQty);
+
+    const [qty, setQty] = useState(startQty);
+    const [unitPrice, setUnitPrice] = useState(0);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
-    
     
     useEffect(() => {
       fetchMaxOrderNumber();
       elementsToHideList();
       calculateReceivable();
     },[])
+
+    const findUnitPrice = () => {
+      // Sort slabData by startQty in descending order
+      const sortedSlabData = [...slabData].sort((a, b) => b.StartQty - a.StartQty);
+      // Find the appropriate slab
+      const slab = sortedSlabData.find((slab) => qty >= slab.StartQty);
+      return slab ? slab.UnitPrice : 0;
+    };
+
+    useEffect(() => {
+      const newUnitPrice = findUnitPrice();
+      setUnitPrice(newUnitPrice);
+    }, [qty])
+    
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value
@@ -108,25 +123,26 @@ const CreateOrder = () => {
       };
 
       const createNewOrder = async(event) => {
-        
+        event.preventDefault()
         var receivable = (unitPrice * qty)
         var payable = unitPrice * qty
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;  
-        event.preventDefault()
-        try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${username}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${username}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}`)
-            const data = await response.json();
-            if (data === "Values Inserted Successfully!") {
-                window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
-                router.push('/FinanceEntry');
-              //setMessage(data.message);
-            } else {
-              alert(`The following error occurred while inserting data: ${data}`);
-            }
-          } catch (error) {
-            console.error('Error updating rate:', error);
-          }
-      }
+        alert(qty + orderOwner + receivable + payable)
+        
+      //   try {
+      //       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${username}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${username}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}`)
+      //       const data = await response.json();
+      //       if (data === "Values Inserted Successfully!") {
+      //           window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
+      //           router.push('/FinanceEntry');
+      //         //setMessage(data.message);
+      //       } else {
+      //         alert(`The following error occurred while inserting data: ${data}`);
+      //       }
+      //     } catch (error) {
+      //       console.error('Error updating rate:', error);
+      //     }
+       }
 
       const fetchMaxOrderNumber = async () => {
         try {
@@ -296,6 +312,17 @@ const CreateOrder = () => {
                         />
                         </div>
                     </div>
+                    <div id="25" name='OrderQuantityText'>
+                    <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
+                      <input 
+                        required
+                        className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        type='number' 
+                        defaultValue={qty} 
+                        //onWheel={ event => event.currentTarget.blur() } 
+                        onChange={e => {setQty(e.target.value)}}  
+                        onFocus={(e) => {e.target.select()}}/>
+                        </div>
                     <div>
                     <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 

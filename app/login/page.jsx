@@ -8,6 +8,8 @@ import { login, logout, setCompanyName } from '@/redux/features/auth-slice';
 import MuiAlert from '@mui/material/Alert';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
+import { resetRatesData } from '@/redux/features/rate-slice';
+import { resetQuotesData } from '@/redux/features/quote-slice';
 
 const Login = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -73,6 +75,8 @@ const Login = () => {
               showToastMessage('success', data)
               //Cookies.set('username', userName, { expires: 7 });
               dispatch(login(userName));
+              dispatch(resetRatesData());
+              dispatch(resetQuotesData());
               if(companyName === 'Grace Scans'){
                 router.push("/") //navigating to the enquiry Screen
               } else{
