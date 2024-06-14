@@ -356,9 +356,9 @@ const AdDetailsPage = () => {
   };
 
   useEffect(() => {
-    fetchQtySlab();
     if(rateId > 0){
       handleRateId()
+      fetchQtySlab();
     }
   }, [rateId]);
 
@@ -810,7 +810,15 @@ var selectedRate = '';
   
   const updateRates = async () => {
     {elementsToShow.length > 0  ? addQtySlab() : updateQtySlab();}
-    
+    if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
+      setIsLeadDays(true)
+    } else if(selectedUnit === ""){
+      setIsUnitsSelected(true)
+    } else if(qty === 0){
+      setIsQty(true);
+    }else if (validityDays <= 0) {
+        setIsValidityDays(true);
+    }else{
     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}`);
@@ -838,7 +846,7 @@ var selectedRate = '';
     }else{
       showToastMessage('warning', 'Please fill all the necessary fields to Update!')
     }
-  }
+  }}
   };
   
 
@@ -1014,7 +1022,7 @@ var selectedRate = '';
     if(isLeadDays) {
       ldRef.current.focus()
     }
-  }, [isValidityDays, isUnitsSelected, isQty]);
+  }, [isValidityDays, isUnitsSelected, isQty, isLeadDays]);
 
   const insertNewRate = async () => {
     try {
@@ -1027,7 +1035,7 @@ var selectedRate = '';
         }else if (validityDays <= 0) {
             setIsValidityDays(true);
           } else if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
-            showToastMessage('warning', "Lead Days should be more than 0!")
+            setIsLeadDays(true)
         } else {
             try {
               const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${tempSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${tempSlabData[0].UnitPrice}`)
@@ -1421,11 +1429,11 @@ const updateSlabData = (qty, newUnitPrice) => {
                     {showCampaignDuration && (
                     
                       <div className='flex mr-10'>
-                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-0 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}} 
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-3 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}} 
                       onKeyDown = {handleKeyDown}
                       onFocus={(e) => e.target.select()}/>
                       <Select
-                        classNames='p-0 glass shadow-2xl w-30 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md '
+                        classNames='p-3 ml-2 glass shadow-2xl w-30 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md '
                         id='CUnits'
                         instanceId="CUnits"
                         placeholder="Units"
@@ -1446,15 +1454,16 @@ const updateSlabData = (qty, newUnitPrice) => {
                         value={leadDays} 
                         variant="outlined" 
                         size='small' 
-                        ref={ldRef}
+                        inputRef={ldRef}
                         className='w-44' 
                         type='text'
-                        onChange={e => setLeadDays(e.target.value)} onFocus={(e) => {e.target.select()}}
+                        onChange={e => {setLeadDays(e.target.value); setIsLeadDays(false)}} onFocus={(e) => {e.target.select()}}
                         onKeyDown ={handleKeyDown}
                       />
                       <p className='ml-4 mt-2 '>Day (s)</p>
                     </div>
                     </div>
+                    {isLeadDays && <p className='text-red-500 font-medium'>Lead Days should be more than 0</p>}
                   </div>
 
               <div className='mr-9 mt-4' name="RatesValidTillTextField">
