@@ -22,11 +22,9 @@ const CreateOrder = () => {
     const [clientEmail, setClientEmail] = useState("");
     const [clientSource, setClientSource] = useState("")
     const [receivable, setReceivable] = useState("");
-    const [clientAge, setClientAge] = useState('');
     const [address, setAddress] = useState('');
     const [DOB, setDOB] = useState('');
     const [consultantName, setConsultantName] = useState('');
-    const [consultantNumber, setConsultantNumber] = useState('');
     const [clientContactPerson, setClientContactPerson] = useState("");
     const [clientGST, setClientGST] = useState("");
     const [clientPAN, setClientPAN] = useState("");
@@ -89,29 +87,20 @@ const CreateOrder = () => {
             const data = response.data;
             if (data && data.length > 0) {
               const clientDetails = data[0];
-              setClientID(clientDetails.id);
     
               //MP-69-New Record are not fetching in GS
-              setDOB(clientDetails.DOB);
               setClientEmail(clientDetails.email);
               setClientSource(clientDetails.source);
-              //setClientAge(clientDetails.Age || "");
               setAddress(clientDetails.address || "");
-              setTitle(clientDetails.gender || "");
-              setSelectedOption(clientDetails.gender || "");
               setConsultantName(clientDetails.consname || "");
-              setConsultantNumber(clientDetails.consnumber || "");
-              // setClientPAN(clientDetails.PAN || "");
               setClientGST(clientDetails.GST || "");
-              setClientContactPerson(clientDetails.ClientContactPerson);
+              setClientContactPerson(clientDetails.ClientContactPerson || "");
               
-              const age = calculateAge(clientDetails.DOB);
-              setClientAge(age);
             if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")) {
               const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
-              setClientPAN(pan);
+              setClientPAN(pan || "");
             } else {
-              setClientPAN(clientDetails.ClientPAN);
+              setClientPAN(clientDetails.ClientPAN || "");
             }
           
             } else {
@@ -125,12 +114,12 @@ const CreateOrder = () => {
 
       const createNewOrder = async(event) => {
         event.preventDefault()
-        var receivable = (unitPrice * qty)
+        var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
         
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
@@ -183,7 +172,7 @@ const CreateOrder = () => {
   // Function to calculate receivable amount
   const calculateReceivable = () => {
     const amountInclGST = ((qty * unitPrice) + marginAmount) + ((qty * unitPrice + marginAmount) * (rateGST.value / 100));
-    setReceivable(amountInclGST);
+    setReceivable(amountInclGST); 
   };
 
   const handleMarginPercentageChange = (e) => {
