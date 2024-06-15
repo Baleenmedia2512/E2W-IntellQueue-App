@@ -1,33 +1,24 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
 import './page.css';
 import React, { useState, useEffect } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import { TextField } from '@mui/material';
-import IconButton from '@mui/material/IconButton';
-import DatePicker from 'react-datepicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { RemoveCircleOutline, Event, SignalCellularNullOutlined, Balance } from '@mui/icons-material';
 import 'react-datepicker/dist/react-datepicker.css';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-import { TimeClock } from '@mui/x-date-pickers/TimeClock';
-import Grid from '@mui/material/Grid';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import {Button} from '@mui/material';
 import Box from '@mui/material/Box';
 import Popover from '@mui/material/Popover';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import { MdDeleteOutline , MdOutlineSave, MdAddCircle} from "react-icons/md";
+import {MdOutlineSave} from "react-icons/md";
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import { useAppSelector } from '@/redux/store';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -90,6 +81,8 @@ const FinanceData = () => {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
   const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
@@ -205,6 +198,7 @@ const FinanceData = () => {
       default:
         break;
     }
+    setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleClientNameTermChange = (event) => {
@@ -252,43 +246,43 @@ const FinanceData = () => {
   }; 
   const insertNewFinance = async (e) => {
     e.preventDefault()
-    // try {
-        // if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
-        //     showToastMessage('warning', "Please fill all the fields!");
-        // } else if (validTill <= 0) {
-        //     showToastMessage('warning', "Validity date should 1 or more!")
-        //   } else if(leadDays <= 0){
-        //     showToastMessage('warning', "Lead Days should be more than 0!")
-        // } else {
-          
-            try {
-              // `EntryDate`, `EntryUser`, `TransactionType`, `OrderNumber`,  `Remarks`,`ExpensesCategory`,`Amount`, `TaxType`, `TaxAmount`, `PaymentMode`, `ChequeNumber`, `ChequeDate`, `ValidStatus`,`PEXtds`,`PEXbadebt`,`OPEXtds`,`OPEXbadebt`,`CAPEXtds`,`CAPEXbadebt`,`TransactionDate`
-
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
+    if (validateFields()) {
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
 
 
-                const data = await response.json();
-                showToastMessage('success', data);
-                setChequeNumber('');;
-                setClientName('');
-                setExpenseCategory('');
-                setGSTAmount('');
-                setGSTPercentage('');
-                setOrderAmount('');
-                setOrderNumber('');
-                setPaymentMode(paymentModeOptions[0]);
-                setRemarks('');
-                setTaxType(taxTypeOptions[2]);
-                setTransactionType(transactionOptions[0]);
-                // window.location.reload();
-                
-            } catch (error) {
-                console.error(error);
-            }
-        // }
-    // } catch (error) {
-    //     console.error(error);
-    // }
+          const data = await response.json();
+          // showToastMessage('success', data);
+          setChequeNumber('');;
+          setClientName('');
+          setExpenseCategory('');
+          setGSTAmount('');
+          setGSTPercentage('');
+          setOrderAmount('');
+          setOrderNumber('');
+          setPaymentMode(paymentModeOptions[0]);
+          setRemarks('');
+          setTaxType(taxTypeOptions[2]);
+          setTransactionType(transactionOptions[0]);
+          // window.location.reload();
+          setSuccessMessage('Finance Entry Added');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
+      } catch (error) {
+          console.error(error);
+      }
+      
+    } else {
+      setToastMessage('Please fill the necessary details in the form.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
+            
+    
 }
 
   const getOptions = (filterKey, selectedValues) => {
@@ -307,13 +301,52 @@ const FinanceData = () => {
   //     handleOrderNumber()
   //   }
   // }, [orderNumber]);
+
+  const validateFields = () => {
+    let errors = {};
+
+    if (!transactionType) errors.transactionType = 'Transaction Type is required';
+    if (transactionType?.value === 'Operational Expense' && !expenseCategory) {
+      errors.expenseCategory = 'Expense Category is required';
+    }
+    if (transactionType?.value !== 'Operational Expense' && !clientName) {
+      errors.clientName = 'Client Name is required';
+    }
+    if (!orderNumber) errors.orderNumber = 'Order Number is required';
+    if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
+    if (!taxType) errors.taxType = 'Tax Type is required';
+    if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
+      errors.gstPercentage = 'Valid GST % is required';
+    }
+    if (taxType?.value === 'GST' && !gstAmount) {
+      errors.gstAmount = 'GST Amount is required';
+    }
+    if (!transactionDate) {
+      errors.transactionDate = 'Transaction Date is required';
+    } else if (dayjs(transactionDate).isAfter(dayjs())) {
+      errors.transactionDate = 'Transaction Date cannot be in the future';
+    }
+    if (!transactionTime) errors.transactionTime = 'Transaction Time is required';
+    if (!paymentMode) errors.paymentMode = 'Payment Mode is required';
+    if (paymentMode?.value === 'Cheque' && !chequeNumber) {
+      errors.chequeNumber = 'Cheque Number is required';
+    }
+    if (paymentMode?.value === 'Cheque' && !chequeDate) {
+      errors.chequeDate = 'Cheque Date is required';
+    } else if (chequeDate && dayjs(chequeDate).isAfter(dayjs())) {
+      errors.chequeDate = 'Cheque Date cannot be in the future';
+    }
+
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
     <div className="grid gap-6 " id="form">
     <h1 className="font-bold text-3xl text-center mb-4 ">Finance Entry</h1>
         <div>
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Transaction Type</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Transaction Type*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -334,9 +367,10 @@ const FinanceData = () => {
             //   required
               />
                </div>
+               {errors.transactionType && <span className="text-red-500 text-sm">{errors.transactionType}</span>}
                {transactionType && transactionType.value === 'Operational Expense' && (
               <>
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -357,11 +391,12 @@ const FinanceData = () => {
               />
               
                </div>
+               {errors.expenseCategory && <span className="text-red-500 text-sm">{errors.expenseCategory}</span>}
                </>
             )}
             {transactionType && transactionType.value !== 'Operational Expense' && (
     <>
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -406,16 +441,21 @@ const FinanceData = () => {
                 ))}
                 </ul>
             )}
-
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number</label>
+{errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Ex. 10000" 
                 id='3'
                 name="OrderNumberInput"
-                value={orderNumber} 
-                onChange = {(e) => setOrderNumber(e.target.value)}
+                value={orderNumber}
+                pattern="\d*"
+                inputMode="numeric" 
+                onChange={(e) => {
+                  const input = e.target.value.replace(/\D/g, '');
+                  setOrderNumber(input);
+                }}
                 onFocus={(e) => {e.target.select()}}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -429,9 +469,10 @@ const FinanceData = () => {
                 }}
                 />
             </div>
+            {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
             </>
   )}
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -440,7 +481,12 @@ const FinanceData = () => {
                 name="AmountInput" 
                 // required={!isEmpty} 
                 value={orderAmount}
-                onChange = {(e) => setOrderAmount(e.target.value)}
+                pattern="\d*"
+                inputMode="numeric"
+                onChange={(e) => {
+                  const input = e.target.value.replace(/\D/g, '');
+                  setOrderAmount(input);
+                }}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -453,7 +499,7 @@ const FinanceData = () => {
                 }}
                 />
             </div>
-
+            {errors.orderAmount && <span className="text-red-500 text-sm">{errors.orderAmount}</span>}
           
             {/* <div className='block mb-2 mt-3 text-gray-700 font-semibold'>
             <RadioGroup
@@ -494,7 +540,7 @@ const FinanceData = () => {
               />
           </div> */}
 
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Tax Type</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Tax Type*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -514,10 +560,10 @@ const FinanceData = () => {
             //   required
               />
                </div>
-
+               {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>}
                {taxType && taxType.value === 'GST' && (
               <>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %</label>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
           <div className="w-full flex gap-3">
           <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
               type="text"
@@ -538,8 +584,8 @@ const FinanceData = () => {
               }}
               />
           </div>
-
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount</label>
+          {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -561,6 +607,7 @@ const FinanceData = () => {
                 }}
                 />
             </div>
+            {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
             </>
             )}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Remarks</label>
@@ -576,7 +623,7 @@ const FinanceData = () => {
             ></TextareaAutosize>
             </div>
 
-                  <label className="block mt-5 mb-4 text-gray-700 font-semibold">Transaction Date</label>
+                  <label className="block mt-5 mb-4 text-gray-700 font-semibold">Transaction Date*</label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >
@@ -624,8 +671,9 @@ const FinanceData = () => {
         </Box>
       </LocalizationProvider>
                 </div>
-
-                <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Payment Mode</label>
+                {errors.transactionDate && <span className="text-red-500 text-sm">{errors.transactionDate}</span>}
+                {errors.transactionTime && <span className="text-red-500 text-sm">{errors.transactionTime}</span>}
+                <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Payment Mode*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -645,9 +693,10 @@ const FinanceData = () => {
             //   required
               />
                </div>
+               {errors.paymentMode && <span className="text-red-500 text-sm">{errors.paymentMode}</span>}
                {paymentMode && paymentMode.value === 'Cheque' && (
               <>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number</label>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -668,7 +717,8 @@ const FinanceData = () => {
                 }}
                 />
             </div>
-            <label className="block mt-5 mb-4 text-gray-700 font-semibold">Cheque Date</label>
+            {errors.chequeNumber && <span className="text-red-500 text-sm">{errors.chequeNumber}</span>}
+            <label className="block mt-5 mb-4 text-gray-700 font-semibold">Cheque Date*</label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >
@@ -715,6 +765,8 @@ const FinanceData = () => {
         </Box>
       </LocalizationProvider>
                 </div>
+                {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
+                {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
                 </>
             )}
                <div className="flex items-center justify-center mb-36 mt-11 mr-14">
@@ -730,15 +782,17 @@ const FinanceData = () => {
             
   </div>
   </div>
-  <div className='bg-surface-card p-8 rounded-2xl mb-4'>
+  {/* <div className='bg-surface-card p-8 rounded-2xl mb-4'>
         <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
           <MuiAlert severity={severity} onClose={() => setToast(false)}>
             {toastMessage}
           </MuiAlert>
         </Snackbar>
-      </div>
+      </div> */}
   </form>
-  
+  {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
   </div>
     );
 }
