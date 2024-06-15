@@ -17,7 +17,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useAppSelector } from '@/redux/store';
-import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty} from '@/redux/features/rate-slice';
+import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
 import { useDispatch } from 'react-redux';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
@@ -88,6 +88,7 @@ const AdDetailsPage = () => {
   const [isUnitsSelected, setIsUnitsSelected] = useState(false);
   const [isQty, setIsQty] = useState(false);
   const [combinedSlabData, setCombinedSlabData] = useState([]);
+  const [editMode, setEditMode] = useState(false);
   const elementsNeeded = [""];
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -181,10 +182,23 @@ const AdDetailsPage = () => {
   }, [elementsToShow]);
 
   const insertQtySlab = async(Qty, UnitPrice) => {
-    
+    setEditMode(true)
     const price = parseFloat(UnitPrice);
     if (!isNaN(price)) {
-      setTempSlabData([...tempSlabData, { StartQty: Qty, UnitPrice: price }]);
+      setTempSlabData((prevSlabData) => {
+        // Check if a slab with the same StartQty already exists
+        const existingSlabIndex = prevSlabData.findIndex((slab) => slab.StartQty === Qty);
+    
+        if (existingSlabIndex !== -1) {
+          // Update the existing slab with the new UnitPrice
+          const updatedSlabData = [...prevSlabData];
+          updatedSlabData[existingSlabIndex].UnitPrice = price;
+          return updatedSlabData;
+        } else {
+          // Add the new slab
+          return [...prevSlabData, { StartQty: Qty, UnitPrice: price }];
+        }
+      });
       toggleModal();
       setIsSlabAvailable(true);
     // if (isNewRate) {
@@ -850,36 +864,38 @@ var selectedRate = '';
   };
   
   const updateRates = async () => {
-    {elementsToShow.length > 0  ? addQtySlab() : updateQtySlab();}
-    if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
-      setIsLeadDays(true)
-    } else if(selectedUnit === ""){
-      setIsUnitsSelected(true)
-    } else if(combinedSlabData.length === 0){
-      setIsQty(true);
-    }else if (validityDays <= 0) {
-      setIsValidityDays(true);
-    }else{
-    if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
-    try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}`);
-  
-      // Check if the response is ok (status in the range 200-299)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-  
-      if (data.error) {
-        throw new Error(data.error);
-      }
-  
-      // showToastMessage('success', 'Updated Successfully!');
-      setSuccessMessage('Updated Successfully!');
-        setTimeout(() => {
-      setSuccessMessage('');
-    }, 2000);
+    if(editMode){
+      {elementsToShow.length > 0  ? addQtySlab() : updateQtySlab();}
+      if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
+        setIsLeadDays(true)
+      } else if(selectedUnit === ""){
+        setIsUnitsSelected(true)
+      } else if(combinedSlabData.length === 0){
+        setIsQty(true);
+      }else if (validityDays <= 0) {
+        setIsValidityDays(true);
+      }else{
+      if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}`);
+    
+        // Check if the response is ok (status in the range 200-299)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    
+        const data = await response.json();
+    
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        setEditMode(false);
+        // showToastMessage('success', 'Updated Successfully!');
+        setSuccessMessage('Updated Successfully!');
+          setTimeout(() => {
+        setSuccessMessage('');
+      }, 2000);
+      
       // window.location.reload();
     } catch (error) {
       console.error('Error:', error);
@@ -887,6 +903,7 @@ var selectedRate = '';
       setToastMessage(error.message);
       setSeverity('error');
       setToast(true);
+      
       setTimeout(() => {
         setToast(false);
       }, 2000);
@@ -903,18 +920,26 @@ var selectedRate = '';
         setToast(false);
       }, 2000);
     }
-  }}
+  }}}else{
+      setToastMessage("No changes to update!")
+      setSeverity('warning')
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+  }
   };
   
 
   const rejectRates = async() => {
     try{
-    await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteRates.php/?JsonRateId=${rateId}`)
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteRates.php/?JsonRateId=${rateId}&JsonDBName=${companyName  }`)
     // showToastMessage('success', 'Rejected Successfully!')
     setSuccessMessage('Rejected Successfully!');
         setTimeout(() => {
       setSuccessMessage('');
     }, 2000);
+    dispatch(resetRatesData());
     window.location.reload()
 
     } catch(error){
@@ -1118,6 +1143,7 @@ var selectedRate = '';
                 fetchMaxRateID()
                 fetchRates()
                 fetchQtySlab()
+                setEditMode(false)
             } catch (error) {
                 console.error(error);
             }
@@ -1154,6 +1180,7 @@ const updateSlabData = (qty, newUnitPrice) => {
 
   const handleValidityChange = (e) => {
     setIsValidityDays(false)
+    setEditMode(true)
     const daysToAdd = parseInt(e.target.value);
     if (!isNaN(daysToAdd)) {
       const currentDate = new Date();
@@ -1172,6 +1199,7 @@ const updateSlabData = (qty, newUnitPrice) => {
   },[validTill])
 
   const handleClearRateId = () => {
+    setEditMode(false)
     dispatch(setRateId(""));
     dispatch(setSelectedValues({
       rateName: "",
@@ -1411,7 +1439,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     
                     placeholder="Select Vendor"
                     value={selectedValues.vendorName}
-                    onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
+                    onChange={(selectedOption) => {handleSelectChange(selectedOption, 'vendorName'); setEditMode(true)}}
                     options={vendors}
                     required
                   />
@@ -1426,7 +1454,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       ref={unitRef}
                       placeholder="Select Units"
                       value={selectedUnit}
-                      onChange={(selectedOption) => {dispatch(setSelectedUnit(selectedOption)); setIsUnitsSelected(false)}}
+                      onChange={(selectedOption) => {dispatch(setSelectedUnit(selectedOption)); setIsUnitsSelected(false); setEditMode(true)}}
                       options={units}
                     />
                     {isUnitsSelected && <p className='text-red-500 mt-2 font-medium'>Please select a valid Unit</p>}
@@ -1500,7 +1528,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     {showCampaignDuration && (
                     
                       <div className='flex mr-10'>
-                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-3 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value)}} 
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-3 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value); setEditMode(true)}} 
                       onKeyDown = {handleKeyDown}
                       onFocus={(e) => e.target.select()}/>
                       <Select
@@ -1509,7 +1537,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         instanceId="CUnits"
                         placeholder="Units"
                         value={selectedCampaignUnits}
-                        onChange={(selectedOption) => setSelectedCampaignUnits(selectedOption)}
+                        onChange={(selectedOption) => {setSelectedCampaignUnits(selectedOption); setEditMode(true)}}
                         options={campaignUnits}
                       />
                     </div>
@@ -1528,7 +1556,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         inputRef={ldRef}
                         className='w-44' 
                         type='text'
-                        onChange={e => {setLeadDays(e.target.value); setIsLeadDays(false)}} onFocus={(e) => {e.target.select()}}
+                        onChange={e => {setLeadDays(e.target.value); setIsLeadDays(false); setEditMode(true)}} onFocus={(e) => {e.target.select()}}
                         onKeyDown ={handleKeyDown}
                       />
                       <p className='ml-4 mt-2 '>Day (s)</p>
@@ -1617,11 +1645,25 @@ const updateSlabData = (qty, newUnitPrice) => {
                   onClick={() => {
                     if(rateId){
                     //const params = new URLSearchParams({ rateId, rateName: selectedValues.rateName.value, type: selectedValues.adType.value, unitPrice: unitPrice, qty: startQty, unit: selectedUnit.value }).toString();
-                    router.push(`/Create-Order`);
+                    if(editMode){
+                      const userConfirmed = window.confirm("You have pending changes. Is it ok to proceed?");
+                      if (userConfirmed) {
+                        // Your function on clicking 'Yes'
+                        router.push(`/Create-Order`);
+                        // Perform actions here...
+                      } else {
+                        // Your function on clicking 'No'
+                        return
+                        // Perform actions here...
+                      }
+                    }else{
+                      router.push(`/Create-Order`);
+                    }  
+                    
                     }else{
                       // showToastMessage('warning', 'Choose a valid rate or save the existing rate!')
                       setToastMessage('Choose a valid rate or save the existing rate!');
-                      setSeverity('error');
+                      setSeverity('warning');
                       setToast(true);
                       setTimeout(() => {
                         setToast(false);
