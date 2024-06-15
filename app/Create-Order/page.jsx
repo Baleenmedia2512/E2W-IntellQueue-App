@@ -127,22 +127,21 @@ const CreateOrder = () => {
         event.preventDefault()
         var receivable = (unitPrice * qty)
         var payable = unitPrice * qty
-        var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;  
-        alert(qty + orderOwner + receivable + payable)
+        var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
         
-      //   try {
-      //       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${username}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${username}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}`)
-      //       const data = await response.json();
-      //       if (data === "Values Inserted Successfully!") {
-      //           window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
-      //           router.push('/FinanceEntry');
-      //         //setMessage(data.message);
-      //       } else {
-      //         alert(`The following error occurred while inserting data: ${data}`);
-      //       }
-      //     } catch (error) {
-      //       console.error('Error updating rate:', error);
-      //     }
+        try {
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}`)
+            const data = await response.json();
+            if (data === "Values Inserted Successfully!") {
+                window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
+                router.push('/FinanceEntry');
+              //setMessage(data.message);
+            } else {
+              alert(`The following error occurred while inserting data: ${data}`);
+            }
+          } catch (error) {
+            console.error('Error updating rate:', error);
+          }
        }
 
       const fetchMaxOrderNumber = async () => {
@@ -287,14 +286,14 @@ const CreateOrder = () => {
                         }
                         }}
                     />  */}
-                    <div class="w-full flex gap-3 ">
+                    <div class="w-full flex">
                     <div name="OrderMarginAmount">
                     <label className="block text-gray-700 font-semibold mb-2" name="OrderMarginAmount">Margin Amount</label>
                         <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                             type="number"
                             placeholder="Margin Amount" 
                             name="MarginText" 
-                            required
+                            required = {elementsToHide.includes('OrderMarginAmount') ? false : true}
                             value={marginAmount || ''}
                             onChange={handleMarginAmountChange }
                             onFocus={e => e.target.select()}
@@ -307,16 +306,16 @@ const CreateOrder = () => {
                             placeholder="Margin %" 
                             name="MarginText" 
                             value={marginPercentage || ''}
-                            required
+                            required = {elementsToHide.includes("OrderMarginPercentage") ? false : true}
                             onChange={handleMarginPercentageChange}
                             onFocus={e => e.target.select()}
                         />
                         </div>
                     </div>
                     <div id="25" name='OrderQuantityText'>
-                    <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
+                    <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
                       <input 
-                        required
+                        required = {elementsToHide.includes("OrderQuantityText") ? false : true}
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
                         type='number' 
                         defaultValue={qty} 
@@ -324,7 +323,7 @@ const CreateOrder = () => {
                         onChange={e => {setQty(e.target.value)}}  
                         onFocus={(e) => {e.target.select()}}/>
                         </div>
-                    <div>
+                    <div name="OrderRemarks">
                     <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
@@ -343,8 +342,8 @@ const CreateOrder = () => {
                         onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
                       />
                     </div>
-                    <div className='text-center justify-start mt-4'>
-                    {releaseDates.length > 0 ? <h2 className='mb-4 font-bold'>Release-Dates</h2> : <></>}
+                    <div className='text-center justify-start' name="OrderReleaseDate">
+                    {releaseDates.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Release-Dates</h2> : <></>}
                     <ul className='mb-4 mr-4'>
                     {releaseDates.map((data, index) => (
                       <div key={index} className='flex'>
@@ -358,7 +357,7 @@ const CreateOrder = () => {
                           </div>
 ))}
 </ul>
- </div>
+                  </div>
                      <button className="outline-none glass shadow-2xl w-full p-3 mb-24 bg-[#ffffff] hover:border-[#b7e0a5] border-[2px] hover:border-solid hover:border-[3px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
                 </div>
             </form>
