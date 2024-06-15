@@ -11,6 +11,8 @@ import { useAppSelector } from '@/redux/store';
 import { resetRatesData } from '@/redux/features/rate-slice';
 import { resetQuotesData } from '@/redux/features/quote-slice';
 import { resetClientData } from '@/redux/features/client-slice';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 const Login = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -21,6 +23,7 @@ const Login = () => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
@@ -30,7 +33,9 @@ const Login = () => {
 
   useEffect(() => {
     dispatch(logout())
+
   },[])
+
 
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
@@ -55,14 +60,24 @@ const Login = () => {
   const handleLogin = (event) => {
         event.preventDefault();
         if (userName === 'GraceScans') {
-          showToastMessage('success', 'Logged in as GraceScans');
+          // showToastMessage('success', 'Logged in as GraceScans');
+          setSuccessMessage('Logged in as GraceScans');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 2000);
           dispatch(login(userName));
           router.push("/");
           return;
         }
         const encodedPassw = encodeURIComponent(password)
         if(userName === '' || password === ''){
-          showToastMessage('warning', "Please Enter User Name and Password")
+          // showToastMessage('warning', "Please Enter User Name and Password")
+          setToastMessage('Please Enter User Name and Password');
+              setSeverity('error');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
         }else{
         fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
         .then(response => {
@@ -73,7 +88,11 @@ const Login = () => {
         })
           .then(data => {
             if(data === 'Login Successfully'){
-              showToastMessage('success', data)
+              // showToastMessage('success', data)
+              setSuccessMessage(data);
+                setTimeout(() => {
+              setSuccessMessage('');
+            }, 2000);
               //Cookies.set('username', userName, { expires: 7 });
               dispatch(login(userName));
               dispatch(resetClientData());
@@ -86,11 +105,23 @@ const Login = () => {
                 router.push("/adDetails")
               }
             }else{
-              showToastMessage('error', "Invalid user name or password!")
+              // showToastMessage('error', "Invalid user name or password!")
+              setToastMessage('Invalid user name or password!');
+              setSeverity('error');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
             }
         })
           .catch(error => {
-            showToastMessage('error', "Error in login " + error)
+            // showToastMessage('error', "Error in login " + error)
+            setToastMessage('Error in login ' + error);
+              setSeverity('error');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
           });
       };
   }
@@ -98,7 +129,7 @@ const Login = () => {
   return (
     <div className="bg-white h-screen flex items-center justify-center content-center self-center justify-self-center">
       <div className="bg-white p-8 rounded-3xl shadow-md flex items-center justify-center ml-16 mb-10 self-center">
-        <form className='flex flex-col items-center justify-self-center'>
+        <form className='flex flex-col items-center justify-self-center'> 
           {/* <div className='pt-0 justify-center flex'>
             <div className='bg-gray-300 rounded-full items-center flex justify-center h-12 w-12'>
               <img src="/images/WHITE PNG.png" className='h-10 w-10 rounded-full' alt='profile' />
@@ -168,16 +199,18 @@ const Login = () => {
             Login
           </button>
           <><br /></>
-          <p className='text-black'>V: 1.0.15</p>
+          <p className='text-black'>V: 1.0.16</p>
         </form>
       </div>
-      <div className='bg-surface-card p-8 rounded-2xl mb-4'>
+      {/* <div className='bg-surface-card p-8 rounded-2xl mb-4'>
         <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
           <MuiAlert severity={severity} onClose={() => setToast(false)}>
             {toastMessage}
           </MuiAlert>
         </Snackbar>
-      </div>
+      </div> */}
+      {successMessage && <SuccessToast message={successMessage} />}
+      {toast && <ToastMessage message={toastMessage} type="error"/>}
     </div>
 
   );
