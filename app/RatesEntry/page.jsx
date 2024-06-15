@@ -885,7 +885,6 @@ var selectedRate = '';
         }
     
         const data = await response.json();
-    
         if (data.error) {
           throw new Error(data.error);
         }
@@ -1175,6 +1174,7 @@ const updateSlabData = (qty, newUnitPrice) => {
 
   dispatch(setSlabData(updatedData));
 }
+  setEditMode(true);
   setEditModal(false);
 };
 
