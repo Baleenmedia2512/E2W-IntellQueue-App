@@ -19,6 +19,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useAppSelector } from '@/redux/store';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty} from '@/redux/features/rate-slice';
 import { useDispatch } from 'react-redux';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -63,7 +65,7 @@ const AdDetailsPage = () => {
   const [unitPrice, setUnitPrice] = useState(0);
   const [showCampaignDuration, setShowCampaignDuration] = useState(false)
   const [selectedUnitId, setSelectedUnitId] = useState("")
-  const [toast, setToast] = useState(false);
+  const [toast, setToast] = useState(false); //toast
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   //const [rateId, setRateId] = useState("");
@@ -87,6 +89,8 @@ const AdDetailsPage = () => {
   const [isQty, setIsQty] = useState(false);
   const [combinedSlabData, setCombinedSlabData] = useState([]);
   const elementsNeeded = [""];
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
 
   
 
@@ -204,7 +208,13 @@ const AdDetailsPage = () => {
     //     console.error(error)
     //   }
     } else {
-      showToastMessage("error", "Enter valid Unit Price!")
+      // showToastMessage("error", "Enter valid Unit Price!")
+      setToastMessage('Enter valid Unit Price!');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
     }
    
   }
@@ -264,9 +274,19 @@ const AdDetailsPage = () => {
           const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
           const result = await response.json();
           if(result === "Failed to Insert" || result === "Failed to Update"){
-            showToastMessage("Error", "Error while updating data")
+            // showToastMessage("Error", "Error while updating data")
+            setToastMessage('Error while updating data.');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
           }else{
-            showToastMessage('success', result);
+            // showToastMessage('success', result);
+            setSuccessMessage(result);
+            setTimeout(() => {
+            setSuccessMessage('');
+          }, 2000);
             fetchQtySlab();
             setNewUnitPrice("");  
             setTempSlabData([]);
@@ -299,7 +319,11 @@ const AdDetailsPage = () => {
             setEditModal(false);
             setNewUnitPrice("");
             setTempSlabData([]);
-            showToastMessage('success', responseData.message)
+            // showToastMessage('success', responseData.message)
+            setSuccessMessage(responseData.message);
+              setTimeout(() => {
+            setSuccessMessage('');
+          }, 2000);
           } catch (updateError) {
             console.error(`Failed to update quantity slab`, updateError);
           }
@@ -796,7 +820,13 @@ var selectedRate = '';
       console.error('Error fetching data:', error);
     }
   } else{
-    showToastMessage("error", "Rate ID is either 0 or empty. Please check and type again properly.")
+    // showToastMessage("error", "Rate ID is either 0 or empty. Please check and type again properly.")
+    setToastMessage('Rate ID is either 0 or empty. Please check and type again properly.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
   }
   };
 
@@ -845,17 +875,33 @@ var selectedRate = '';
         throw new Error(data.error);
       }
   
-      showToastMessage('success', 'Updated Successfully!');
+      // showToastMessage('success', 'Updated Successfully!');
+      setSuccessMessage('Updated Successfully!');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 2000);
       // window.location.reload();
     } catch (error) {
       console.error('Error:', error);
-      showToastMessage('error', error.message);
+      // showToastMessage('error', error.message);
+      setToastMessage(error.message);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
     }
   } else{
     if(validityDays < 1){
       setIsValidityDays(true)
     }else{
-      showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+      // showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+      setToastMessage('Please fill the necessary fields to Update!.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
     }
   }}
   };
@@ -864,7 +910,11 @@ var selectedRate = '';
   const rejectRates = async() => {
     try{
     await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteRates.php/?JsonRateId=${rateId}`)
-    showToastMessage('success', 'Rejected Successfully!')
+    // showToastMessage('success', 'Rejected Successfully!')
+    setSuccessMessage('Rejected Successfully!');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 2000);
     window.location.reload()
 
     } catch(error){
@@ -1038,7 +1088,13 @@ var selectedRate = '';
   const insertNewRate = async () => {
     try {
         if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
-            showToastMessage('warning', "Please fill all the fields!");
+            // showToastMessage('warning', "Please fill all the fields!");
+            setToastMessage('Please fill all the fields!');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
         } else if(selectedUnit === ""){
           setIsUnitsSelected(true)
         } else if(qty === 0){
@@ -1052,7 +1108,11 @@ var selectedRate = '';
               const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${tempSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${tempSlabData[0].UnitPrice}`)
                 const data = await response.json();
                 addQtySlab()
-                showToastMessage('success', 'Inserted Successfully!');
+                // showToastMessage('success', 'Inserted Successfully!');
+                setSuccessMessage('Rate Card Added Successfully!');
+                setTimeout(() => {
+                setSuccessMessage('');
+              }, 2000);
                 // Setting the new Rate into Old Rate
                 setIsNewRate(false);
                 fetchMaxRateID()
@@ -1559,7 +1619,13 @@ const updateSlabData = (qty, newUnitPrice) => {
                     //const params = new URLSearchParams({ rateId, rateName: selectedValues.rateName.value, type: selectedValues.adType.value, unitPrice: unitPrice, qty: startQty, unit: selectedUnit.value }).toString();
                     router.push(`/Create-Order`);
                     }else{
-                      showToastMessage('warning', 'Choose a valid rate or save the existing rate!')
+                      // showToastMessage('warning', 'Choose a valid rate or save the existing rate!')
+                      setToastMessage('Choose a valid rate or save the existing rate!');
+                      setSeverity('error');
+                      setToast(true);
+                      setTimeout(() => {
+                        setToast(false);
+                      }, 2000);
                     }
                     
                   }}>
@@ -1567,13 +1633,15 @@ const updateSlabData = (qty, newUnitPrice) => {
                  </div> 
                 
               </div>
-      <div className='bg-surface-card p-8 rounded-2xl mb-4'>
+      {/* <div className='bg-surface-card p-8 rounded-2xl mb-4'>
         <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
           <MuiAlert severity={severity} onClose={() => setToast(false)}>
             {toastMessage}
           </MuiAlert>
         </Snackbar>
-      </div>
+      </div> */}
+      {successMessage && <SuccessToast message={successMessage} />}
+      {toast && <ToastMessage message={toastMessage} type="error"/>}
     </div>
   )
 
