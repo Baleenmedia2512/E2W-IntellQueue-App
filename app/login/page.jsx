@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import { resetRatesData } from '@/redux/features/rate-slice';
 import { resetQuotesData } from '@/redux/features/quote-slice';
+import { resetClientData } from '@/redux/features/client-slice';
 
 const Login = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -75,6 +76,7 @@ const Login = () => {
               showToastMessage('success', data)
               //Cookies.set('username', userName, { expires: 7 });
               dispatch(login(userName));
+              dispatch(resetClientData());
               dispatch(resetRatesData());
               dispatch(resetQuotesData());
               if(companyName === 'Grace Scans'){
