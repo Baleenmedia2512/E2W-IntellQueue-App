@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import { resetRatesData } from '@/redux/features/rate-slice';
 import { resetQuotesData } from '@/redux/features/quote-slice';
+import { resetClientData } from '@/redux/features/client-slice';
 
 const Login = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -77,6 +78,7 @@ const Login = () => {
               dispatch(login(userName));
               dispatch(resetRatesData());
               dispatch(resetQuotesData());
+              dispatch(resetClientData());
               if(companyName === 'Grace Scans'){
                 router.push("/") //navigating to the enquiry Screen
               } else{
@@ -143,11 +145,10 @@ const Login = () => {
             {(companyNameSuggestions.length > 0 && companyName !== '') && (
           <ul className="list-none border-green-300 w-80 ">
             {companyNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
-              duration-300">
+              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
                 <button
                   type="button"
-                  className="text-black"
+                  className="text-black w-full h-full text-left"
                   onClick={handleCompanyNameSelection}
                   value={name}
                 >
@@ -166,7 +167,7 @@ const Login = () => {
             Login
           </button>
           <><br /></>
-          <p className='text-black'>V: 1.0.13</p>
+          <p className='text-black'>V: 1.0.14</p>
         </form>
       </div>
       <div className='bg-surface-card p-8 rounded-2xl mb-4'>

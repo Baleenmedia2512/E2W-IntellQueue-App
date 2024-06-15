@@ -9,6 +9,7 @@ import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { Snackbar } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import ToastMessage from './components/ToastMessage';
+import SuccessToast from './components/SuccessToast';
     
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -48,6 +49,7 @@ const ClientsData = () => {
   const [clientID, setClientID] = useState('');
   const [emailWarning, setEmailWarning] = useState('');
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -115,6 +117,7 @@ const ClientsData = () => {
     setToast(true)
   }
 
+ 
   const handleClientNameSelection = (names) => {
     const input = names.target.value;
     const name = input.substring(0, input.indexOf('(')).trim();
@@ -125,7 +128,7 @@ const ClientsData = () => {
     dispatch(setClientData({clientContact: number}));
     fetchClientDetails(number);
     setClientNameSuggestions([]);
-    // setIsNewClient('false');
+    setIsNewClient('false');
     setContactWarning('');
   };
   
@@ -161,7 +164,8 @@ const ClientsData = () => {
           setConsultantNumber(clientDetails.consnumber || "");
           // setClientPAN(clientDetails.PAN || "");
           setClientGST(clientDetails.GST || "");
-          
+          setClientContactPerson(clientDetails.clientContactPerson || "");
+          setMonths(clientDetails.Age || "");
           const age = calculateAge(clientDetails.DOB);
           setClientAge(age);
           // Extract PAN from GST if necessary
@@ -210,10 +214,13 @@ const ClientsData = () => {
           router.push('/login');
         }
         
-        if(clientName){
-          dispatch(resetClientData());
-          dispatch(resetQuotesData());
-        }
+        // if(!clientName){
+        //   dispatch(resetClientData());
+        //   dispatch(resetQuotesData());
+        // }
+
+        dispatch(resetClientData());
+        dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
         companyName === 'Grace Scans' ? dispatch(setClientData({clientSource: sources[1]})) : dispatch(setClientData({clientSource: sources[0]}))
@@ -329,14 +336,22 @@ const ClientsData = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
-          window.alert('Client Details Entered Successfully!')
+                setSuccessMessage('Client Details Are Saved!');
+                setTimeout(() => {
+              setSuccessMessage('');
+            }, 3000);
           // window.location.reload();
           dispatch(resetQuotesData())
           dispatch(setQuotesData({currentPage: "checkout"}))
           router.push('/adDetails')
         // setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
-        window.alert('Contact Number Already Exists!')
+        setToastMessage('Contact Number Already Exists!');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
       }
@@ -344,8 +359,7 @@ const ClientsData = () => {
     } catch (error) {
       console.error('Error updating rate:', error);
   }
-  setSeverity('success');
-  setToast(true);
+  
 } else {
   setToastMessage('Please fill the necessary details in the form.');
   setSeverity('error');
@@ -359,23 +373,32 @@ const ClientsData = () => {
     const isValid = GSvalidateFields();
     if (isValid) {
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
-          window.alert('Client Details Entered Successfully!')
-          window.location.reload();
+        setSuccessMessage('Client Details Are Saved!');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
+          // window.location.reload();
         
         //setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
-        window.alert('Contact Number Already Exists!')
+        setToastMessage('Contact Number Already Exists!');
+  setSeverity('error');
+  setToast(true);
+  setTimeout(() => {
+    setToast(false);
+  }, 2000);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
       }
   }catch (error) {
     console.error('Error updating rate:', error);
   } 
-  setSeverity('success');
-  setToast(true);
+  // setSeverity('success');
+  // setToast(true);
 } else {
   setToastMessage('Please fill the necessary details in the form.');
   setSeverity('error');
@@ -471,6 +494,19 @@ const handleDateChange = (e) => {
   }
 };
 
+const calculateDateFromMonths = (months) => {
+  const today = new Date();
+  today.setMonth(today.getMonth() - months);
+  return today.toISOString().split('T')[0];
+};
+
+const handleMonthsChange = (e) => {
+  setMonths(e.target.value);
+  if (e.target.value) {
+    const dateFromMonths = calculateDateFromMonths(e.target.value);
+    setDOB(dateFromMonths);
+  }
+};
 
 useEffect(() => {
   // if (selectedOption !== 'B/o.' && selectedOption !== 'Baby.') {
@@ -483,8 +519,8 @@ useEffect(() => {
 // Function to check if any of the fields are empty
 const checkEmptyFields = () => {
   if (
-    clientName !== '' &&
-    clientContact !== '' &&
+    clientName !== '' ||
+    clientContact !== '' ||
     selectedOption !== '' 
     
   ) {
@@ -492,11 +528,13 @@ const checkEmptyFields = () => {
   } else {
     setIsEmpty(true); // Set isEmpty to true if any field is empty
   }
+
 };
 
 // useEffect to check empty fields whenever any relevant state changes
 useEffect(() => {
   checkEmptyFields();
+  
 }, [clientName, clientContact, clientEmail, address, clientAge, DOB]);
 
 //MP-39-Warning message should be shown for GST Field (<15 characters)
@@ -515,17 +553,17 @@ const handleGSTChange = (e) => {
 };
 
 // MP-67-Create validation for client and consultant contact field (=10)
-const handleConsultantNumberChange = (e) => {
-  const { value } = e.target;
-  setConsultantNumber(value);
-  if (value.length < 10) {
-    setConsulantWarning('Contact number should contain at least 10 digits.');
-  } else {
-    setConsulantWarning('');
-
-  }
-
+const handleConsultantNumberChange = (newValue) => {
+setConsultantNumber(newValue);
+if (newValue === '') {
+  setContactWarning('');
+} else if (newValue.length !== 10) {
+  setConsulantWarning('Contact number should contain exactly 10 digits.');
+} else {
+  
+  setConsulantWarning('');
 };
+}
 
 
 
@@ -541,10 +579,19 @@ const handleRemoveClient = () => {
   .then((data) => {
       if (data.success) {
           // Client removed successfully
-          window.alert('Client Removed Successfully!')
+          setSuccessMessage('Client removed successfully!');
+          setTimeout(() => {
+          setSuccessMessage('');
+        }, 3000);
       } else {
           // Failed to remove client
-          window.alert("Failed to remove client: " + data.message);
+          // window.alert("Failed to remove client: " + data.message);
+          setToastMessage("Failed to remove client: " + data.message);
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
       }
   })
   .catch((error) => {
@@ -557,16 +604,23 @@ const GSvalidateFields = () => {
   if (!clientContact) errors.clientContact = 'Contact Number is required';
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
-  if (!clientAge || !DOB) {
+  if (!clientAge && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
     errors.ageAndDOB = 'Age and DOB are required';
   }
-  if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
-  if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
+  
+  if (!DOB && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
+    errors.ageAndDOB = 'Age and DOB are required';
+  }
+  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName || !consultantNumber)) {
+    if (!consultantName) errors.consultantName = 'Consultant Name is required';
+    if (!consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
+  }
+  
   if (selectedOption === 'Ms.' && !clientContactPerson) {
     errors.clientContactPerson = 'Contact Person Name is required';
   }
   if ((selectedOption === 'Baby.' || selectedOption === 'B/o.') && !months) {
-    errors.months = 'Months is required for Baby.';
+    errors.months = 'Months and DOB are required for Baby.';
   }
   if (!clientSource) {
     errors.clientSource = 'Source is required';
@@ -601,6 +655,10 @@ const BMvalidateFields = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
+  // useEffect(() => {
+  //   GSvalidateFields();
+  // }, [clientContact, clientName, clientEmail, clientAge, DOB, selectedOption, clientContactPerson, clientSource, consultantName, consultantNumber, months]);
 
 {/* onSubmit={submitDetails} */}
   return (
@@ -648,10 +706,10 @@ const BMvalidateFields = () => {
         {(clientNameSuggestions.length > 0 && clientContact !=='') && (
           <ul className="list-none border-green-300 border-1 ">
             {clientNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
+              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md"> 
                 <button
                   type="button"
-                  className="text-black"
+                  className="text-black w-full h-full text-left"
                   onClick={handleClientNameSelection}
                   value={name}
                 >
@@ -734,7 +792,7 @@ const BMvalidateFields = () => {
               <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
                 <button
                   type="button"
-                  className="text-black"
+                  className="text-black w-full h-full text-left"
                   onClick={handleClientNameSelection}
                   value={name}
                 >
@@ -765,8 +823,11 @@ const BMvalidateFields = () => {
               }
             }
           }}
+          
           />
+          
         ) : (<></>)}
+        {errors.clientContactPerson && <p className="text-red-500">{errors.clientContactPerson}</p>}
         <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="email" 
         placeholder="Email"
@@ -906,9 +967,9 @@ const BMvalidateFields = () => {
             name="MonthsInput"
             placeholder="Months*"
             value={months}
-            onChange={(e) => setMonths(e.target.value)}
+            onChange={handleMonthsChange}
           />
-          {errors.Months && <p className="text-red-500">{errors.Months}</p>}
+          
           <input
             className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
             type="date"
@@ -932,6 +993,7 @@ const BMvalidateFields = () => {
         </div>
       )}
       {errors.ageAndDOB && <p className="text-red-500">{errors.ageAndDOB}</p>}
+      {errors.months && <p className="text-red-500">{errors.months}</p>}
       {displayWarning && (
       <div className={`text-red-600 ${selectedOption === "Baby." ? "ml-12" : "ml-9"}`}>
         {selectedOption === "Baby." && "The age should be less than 3."}
@@ -1034,7 +1096,7 @@ const BMvalidateFields = () => {
       <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="text" 
-        placeholder="Consultant Name" 
+        placeholder="Consultant Name*" 
         id="9" 
         name="ConsultantNameInput" 
         // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false} 
@@ -1055,11 +1117,10 @@ const BMvalidateFields = () => {
       {consultantNameSuggestions.length > 0 && (
   <ul className="list-none">
     {consultantNameSuggestions.map((name, index) => (
-      <li key={index} className="text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition
-      duration-300">
+      <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
         <button
           type="button"
-          className="text-black"
+          className="text-black w-full h-full text-left"
           onClick={handleConsultantNameSelection}
           value={name}
           
@@ -1073,11 +1134,16 @@ const BMvalidateFields = () => {
 )}
 {errors.consultantName && <p className="text-red-500">{errors.consultantName}</p>}
       <input 
-        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#035ec5] focus:border-[1px]" type="number" placeholder="Consultant Number" 
+        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="number" placeholder="Consultant Number*" 
         id="10" 
         name="ConsultantNumberInput" 
         value={consultantNumber} 
-        onChange={handleConsultantNumberChange} 
+        // onChange={handleConsultantNumberChange} 
+        onChange={(e) => {
+          if (e.target.value.length <= 10) {
+            handleConsultantNumberChange(e.target.value);
+          }
+        }}
         // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false}
         />
         </>
@@ -1197,7 +1263,8 @@ const BMvalidateFields = () => {
           </MuiAlert>
         </Snackbar>
       </div>  */}
-      {toast && <ToastMessage message={toastMessage} />}
+      {successMessage && <SuccessToast message={successMessage} />}
+      {toast && <ToastMessage message={toastMessage} type="error"/>}
     </div>
 
   );

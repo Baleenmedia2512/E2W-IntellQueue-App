@@ -18,6 +18,7 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
 import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -81,6 +82,7 @@ const FinanceData = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
   const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
@@ -250,7 +252,7 @@ const FinanceData = () => {
 
 
           const data = await response.json();
-          showToastMessage('success', data);
+          // showToastMessage('success', data);
           setChequeNumber('');;
           setClientName('');
           setExpenseCategory('');
@@ -263,12 +265,14 @@ const FinanceData = () => {
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
           // window.location.reload();
-          
+          setSuccessMessage('Finance Entry Added');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
       } catch (error) {
           console.error(error);
       }
-      setSeverity('success');
-      setToast(true);
+      
     } else {
       setToastMessage('Please fill the necessary details in the form.');
       setSeverity('error');
@@ -314,6 +318,9 @@ const FinanceData = () => {
     if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
       errors.gstPercentage = 'Valid GST % is required';
     }
+    if (taxType?.value === 'GST' && !gstAmount) {
+      errors.gstAmount = 'GST Amount is required';
+    }
     if (!transactionDate) {
       errors.transactionDate = 'Transaction Date is required';
     } else if (dayjs(transactionDate).isAfter(dayjs())) {
@@ -333,14 +340,13 @@ const FinanceData = () => {
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
-console.log(orderAmount, orderNumber)
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
     <div className="grid gap-6 " id="form">
     <h1 className="font-bold text-3xl text-center mb-4 ">Finance Entry</h1>
         <div>
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Transaction Type</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Transaction Type*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -364,7 +370,7 @@ console.log(orderAmount, orderNumber)
                {errors.transactionType && <span className="text-red-500 text-sm">{errors.transactionType}</span>}
                {transactionType && transactionType.value === 'Operational Expense' && (
               <>
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -390,7 +396,7 @@ console.log(orderAmount, orderNumber)
             )}
             {transactionType && transactionType.value !== 'Operational Expense' && (
     <>
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -436,7 +442,7 @@ console.log(orderAmount, orderNumber)
                 </ul>
             )}
 {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -466,7 +472,7 @@ console.log(orderAmount, orderNumber)
             {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
             </>
   )}
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -534,7 +540,7 @@ console.log(orderAmount, orderNumber)
               />
           </div> */}
 
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Tax Type</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Tax Type*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -557,7 +563,7 @@ console.log(orderAmount, orderNumber)
                {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>}
                {taxType && taxType.value === 'GST' && (
               <>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %</label>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
           <div className="w-full flex gap-3">
           <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
               type="text"
@@ -579,7 +585,7 @@ console.log(orderAmount, orderNumber)
               />
           </div>
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -601,6 +607,7 @@ console.log(orderAmount, orderNumber)
                 }}
                 />
             </div>
+            {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
             </>
             )}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Remarks</label>
@@ -616,7 +623,7 @@ console.log(orderAmount, orderNumber)
             ></TextareaAutosize>
             </div>
 
-                  <label className="block mt-5 mb-4 text-gray-700 font-semibold">Transaction Date</label>
+                  <label className="block mt-5 mb-4 text-gray-700 font-semibold">Transaction Date*</label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >
@@ -666,7 +673,7 @@ console.log(orderAmount, orderNumber)
                 </div>
                 {errors.transactionDate && <span className="text-red-500 text-sm">{errors.transactionDate}</span>}
                 {errors.transactionTime && <span className="text-red-500 text-sm">{errors.transactionTime}</span>}
-                <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Payment Mode</label>
+                <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Payment Mode*</label>
             <div className='flex w-full'>
             <CreatableSelect
               className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
@@ -689,7 +696,7 @@ console.log(orderAmount, orderNumber)
                {errors.paymentMode && <span className="text-red-500 text-sm">{errors.paymentMode}</span>}
                {paymentMode && paymentMode.value === 'Cheque' && (
               <>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number</label>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number*</label>
             <div className="w-full flex gap-3">
             <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
@@ -711,7 +718,7 @@ console.log(orderAmount, orderNumber)
                 />
             </div>
             {errors.chequeNumber && <span className="text-red-500 text-sm">{errors.chequeNumber}</span>}
-            <label className="block mt-5 mb-4 text-gray-700 font-semibold">Cheque Date</label>
+            <label className="block mt-5 mb-4 text-gray-700 font-semibold">Cheque Date*</label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >
@@ -784,7 +791,8 @@ console.log(orderAmount, orderNumber)
       </div> */}
   </form>
   {/* ToastMessage component */}
-  {toast && <ToastMessage message={toastMessage} />}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
   </div>
     );
 }
