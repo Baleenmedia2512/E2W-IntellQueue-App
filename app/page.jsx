@@ -63,7 +63,7 @@ const ClientsData = () => {
   useEffect(() => {
     // Check if age input violates constraints for selected option
     if ((selectedOption === "Baby." && parseInt(clientAge) > 3) || 
-        (selectedOption === "Master." && (parseInt(clientAge) < 3 || parseInt(clientAge) > 12))) {
+        (selectedOption === "Master." && (parseInt(clientAge) < 4 || parseInt(clientAge) > 12))) {
       setDisplayWarning(true);
     } else {
       setDisplayWarning(false);
@@ -602,6 +602,9 @@ const GSvalidateFields = () => {
   let errors = {};
 
   if (!clientContact) errors.clientContact = 'Contact Number is required';
+  if (!clientContact || clientContact.length !== 10) {
+    errors.clientContact = 'Client contact must be exactly 10 digits.';
+  }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (!clientAge && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
@@ -619,8 +622,26 @@ const GSvalidateFields = () => {
   if (selectedOption === 'Ms.' && !clientContactPerson) {
     errors.clientContactPerson = 'Contact Person Name is required';
   }
-  if ((selectedOption === 'Baby.' || selectedOption === 'B/o.') && !months) {
-    errors.months = 'Months and DOB are required for Baby.';
+  if ((selectedOption === 'Baby.' || selectedOption === 'B/o.') && (!months || months > 36 || months === 0)) {
+    if (!months) {
+      errors.months = 'Months and DOB are required for Baby.';
+    } else if (months > 36) {
+      errors.months = 'Months cannot be greater than 36.';
+    } else if (months === 0) {
+      errors.months = 'Months cannot be 0.';
+    }
+  }
+  if (selectedOption === 'Master.' && (!clientAge || clientAge < 4 || clientAge > 12 || clientAge === 0)) {
+    if (!clientAge) {
+      errors.ageAndDOB = 'Age is required for Master.';
+    } else if (clientAge < 4 || clientAge > 12) {
+      errors.ageAndDOB = 'Age must be between 4 and 12 for Master.';
+    } else if (clientAge === 0 ) {
+      errors.ageAndDOB = 'Age cannot be 0.';
+    }
+  }
+  if (clientAge === 0 && (selectedOption !== 'Baby.' && selectedOption !== 'B/o.')) {
+    errors.ageAndDOB = 'Age cannot be 0.';
   }
   if (!clientSource) {
     errors.clientSource = 'Source is required';
@@ -634,10 +655,19 @@ const BMvalidateFields = () => {
   let errors = {};
 
   if (!clientContact) errors.clientContact = 'Contact Number is required';
+  if (!clientContact || clientContact.length !== 10) {
+    errors.clientContact = 'Client contact must be exactly 10 digits.';
+  }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
-  if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
+  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantNumber || consultantNumber.length !== 10)) {
+    if (!consultantNumber) {
+      errors.consultantNumber = 'Consultant contact is required.';
+    } else if (consultantNumber.length !== 10) {
+      errors.consultantNumber = 'Consultant contact must be exactly 10 digits.';
+    }
+  }
   if (selectedOption === 'Ms.' && !clientContactPerson) {
     errors.clientContactPerson = 'Contact Person Name is required';
   }
@@ -994,12 +1024,12 @@ const BMvalidateFields = () => {
       )}
       {errors.ageAndDOB && <p className="text-red-500">{errors.ageAndDOB}</p>}
       {errors.months && <p className="text-red-500">{errors.months}</p>}
-      {displayWarning && (
+      {/* {displayWarning && (
       <div className={`text-red-600 ${selectedOption === "Baby." ? "ml-12" : "ml-9"}`}>
         {selectedOption === "Baby." && "The age should be less than 3."}
         {selectedOption === "Master." && "The age should be between 4 and 12."}
       </div>
-    )}
+    )} */}
 
 {/* {displayDOBWarning && (
       <div className="text-red-600 ml-9">Note: The DOB should be the baby's</div>
@@ -1102,6 +1132,11 @@ const BMvalidateFields = () => {
         // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false} 
         onChange={handleConsultantNameChange} 
         value={consultantName}
+        onBlur={() => {
+          setTimeout(() => {
+            setConsultantNameSuggestions([]);
+          }, 200);
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();

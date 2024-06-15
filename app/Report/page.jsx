@@ -19,6 +19,7 @@ const Report = () => {
     // const [orderFilterModel, setOrderFilterModel] = useState({ items: [] });
     // const [financeFilterModel, setFinanceFilterModel] = useState({ items: [] });
     const [activeIndex, setActiveIndex] = React.useState(0);
+    const [sumOfOrders, setSumOfOrders] = useState([]);
 
     const onPieEnter = (_, index) => {
       setActiveIndex(index);
@@ -32,7 +33,21 @@ const Report = () => {
         fetchOrderDetails();
         fetchFinanceDetails();
         fetchSumOfFinance();
+        fetchSumOfOrders();
     }, []);
+
+    const fetchSumOfOrders = () => {
+      axios
+          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}`)
+          .then((response) => {
+              const sumOfOrders = response.data;
+              setSumOfOrders(sumOfOrders);
+          })
+          .catch((error) => {
+              console.error(error);
+          });
+  };
+
 
     const fetchOrderDetails = () => {
         axios
@@ -40,7 +55,8 @@ const Report = () => {
             .then((response) => {
                 const data = response.data.map((order, index) => ({
                     ...order,
-                    id: order.ID // Generate a unique identifier based on the index
+                    id: order.ID ,
+                    Receivable: `₹ ${order.Receivable}`
                 }));
                 setOrderDetails(data);
             })
@@ -55,7 +71,8 @@ const Report = () => {
             .then((response) => {
                 const data = response.data.map((transaction, index) => ({
                     ...transaction,
-                    id: transaction.ID // Generate a unique identifier based on the index
+                    id: transaction.ID, // Generate a unique identifier based on the index
+                    Amount: `₹ ${transaction.Amount}`,
                 }));
                 setFinanceDetails(data);
             })
@@ -77,10 +94,10 @@ const Report = () => {
     };
 
     const orderColumns = [
-        { field: 'OrderNumber', headerName: 'Order Number', width: 150},
+        { field: 'OrderNumber', headerName: 'Order#', width: 150},
         { field: 'OrderDate', headerName: 'Order Date', width: 150},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
-        { field: 'Receivable', headerName: 'Amount', width: 130 },
+        { field: 'Receivable', headerName: 'Amount(₹)', width: 130 },
         { field: 'rateName', headerName: 'Rate Name', width: 150 },
         { field: 'adType', headerName: 'Rate Type', width: 150 },
     ];
@@ -88,11 +105,10 @@ const Report = () => {
     const financeColumns = [
         { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
+        { field: 'Amount', headerName: 'Amount(₹)', width: 130},
         { field: 'OrderNumber', headerName: 'Order Number', width: 150 },
-        { field: 'Amount', headerName: 'Amount', width: 130},
-        { field: 'TaxType', headerName: 'Tax Type', width: 150 },
+        { field: 'ClientName', headerName: 'Client Name', width: 200 },
         { field: 'Remarks', headerName: 'Remarks', width: 200 },
-        { field: 'ClientName', headerName: 'Client Name', width: 200 }, // Assuming ClientName is included after the join
     ];
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
@@ -124,10 +140,6 @@ const Report = () => {
     // const handleFinanceFilterChange = (model) => {
     //     setFinanceFilterModel(model);
     // };
-console.log(sumOfFinance)
-    // Convert string numbers to integers
-    const incomeValue = sumOfFinance.income ? parseInt(sumOfFinance.income.replace(/,/g, '')) : 0;
-    const expenseValue = sumOfFinance.expense ? parseInt(sumOfFinance.expense.replace(/,/g, '')) : 0;
 
     // Data for the pie chart
     // const pieData = [
@@ -135,9 +147,13 @@ console.log(sumOfFinance)
     //     { name: 'Expense', value: 'income' },
     // ];
 
+    // const pieData = sumOfFinance.length > 0 ? [
+    //     { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
+    //     { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
+    // ] : [];
     const pieData = sumOfFinance.length > 0 ? [
-        { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
-        { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
+      { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
+      { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
     ] : [];
 
     const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
@@ -172,14 +188,46 @@ const styles = {
       height: '250px',
       background: '#ffffff',
       borderRadius: '12px',
-      boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)', // Add box shadow for 3D effect
+      boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', // Add box shadow for 3D effect
       marginTop: '20px', // Add margin to the top
     marginBottom: '30px',
     },
   };
 
+const RADIAN = Math.PI / 180;
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+ // Calculate new coordinates based on angle and radius
+ const x = cx + (radius + 10) * Math.cos(-midAngle * RADIAN); // Adjusted x position
+ const y = cy + (radius + 10) * Math.sin(-midAngle * RADIAN); // Adjusted y position
+
+  // Convert the value to Indian format (10K, 10L, 10Cr)
+  const formattedValue = formatIndianNumber(value);
+
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="20px">
+      {formattedValue}
+    </text>
+  );
+};
+
+// Function to format numbers in Indian format
+const formatIndianNumber = (num) => {
+  if (num >= 10000000) {
+    return `${(num / 10000000).toFixed(2)}Cr`;
+  } else if (num >= 100000) {
+    return `${(num / 100000).toFixed(1)}L`;
+  } else if (num >= 1000) {
+    return `${(num / 1000).toFixed(0)}K`;
+  } else {
+    return `${num}`;
+  }
+};
+
+
+
     return (
-        <Box sx={{ width: '100%', padding: '12px' }}>
+        <Box sx={{ width: '100%', padding: '0px' }}>
             <Tabs
                 value={value}
                 onChange={handleChange}
@@ -193,24 +241,58 @@ const styles = {
                 <Tab label="Finance" />
             </Tabs>
             <Box sx={{ padding: 3 }}>
-        {value === 0 && (
-          <div style={{ width: '100%' }}>
-          <div style={{ height: 500 , width: '100%' }}>
-            <DataGrid
-              rows={orderDetails}
-              columns={orderColumns}
-            //   filterModel={orderFilterModel}
-            //   onFilterModelChange={handleOrderFilterChange}
-            //   components={{
-            //       Toolbar: GridToolbar,
-            //      }}
-            />
-          </div>
+            {value === 0 && (
+  <div style={{ width: '100%' }}>
+   
+      <div style={{
+        width: '200px',
+        height: '110px',
+        borderRadius: '10px',
+        boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)',
+        padding: '12px',
+        paddingLeft: '18px',
+        marginBottom: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start:',
+        justifyContent: 'flex-start:'
+      }}>
+        <div style={{
+          fontSize: '36px',
+          fontWeight: 'bold',
+          marginBottom: '5px'
+        }}>
+          {sumOfOrders}
         </div>
-        )}
+        <div style={{ fontSize: '18px', color: 'dimgray' }}>
+          Total Orders
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {orderDetails.length > 0 && (
+        <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
+          {/* Assuming DataGrid is properly defined */}
+          <DataGrid rows={orderDetails} columns={orderColumns} />
+        </div>
+      )}
+    </div>
+    <div style={{ height: '500px', width: '100%' }}>
+      <DataGrid
+        rows={orderDetails}
+        columns={orderColumns}
+        // filterModel={orderFilterModel}
+        // onFilterModelChange={handleOrderFilterChange}
+        // components={{
+        //   Toolbar: GridToolbar,
+        // }}
+      />
+    </div>
+  </div>
+)}
+
         {value === 1 && (
              <div style={{ width: '100%' }}>
-             <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2, width: '40%'}}>
+             {/* <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2, width: '40%'}}>
                  <InputLabel id="filter-label">Transaction Type</InputLabel>
                  <Select
                      labelId="filter-label"
@@ -223,9 +305,9 @@ const styles = {
                      <MenuItem value="Income">Income</MenuItem>
                      <MenuItem value="Expense">Expense</MenuItem>
                  </Select>
-             </FormControl>
+             </FormControl> */}
 
-             <div style={styles.chartContainer}>
+             {/* <div style={styles.chartContainer}>
              <ResponsiveContainer width="100%" height={250}>
       <PieChart>
         <Pie
@@ -254,9 +336,36 @@ const styles = {
         />
       </PieChart>
     </ResponsiveContainer>
-             </div>
-
-             <div style={{ height: 500, width: '100%' }}>
+             </div> */}
+             <div style={styles.chartContainer}>
+<ResponsiveContainer width="100%" height="100%">
+        <PieChart width={400} height={400}>
+          <Pie
+            data={pieData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={renderCustomizedLabel}
+            outerRadius={100}
+            fill="#8884d8"
+            dataKey="value"
+            stroke='none'
+          >
+            {pieData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+        <Legend 
+          layout="vertical" 
+          align="right" 
+          verticalAlign="middle" 
+          wrapperStyle={{ paddingLeft: "20px" }} 
+        />
+        </PieChart>
+      </ResponsiveContainer>
+      </div>
+             <div style={{ height: 500, width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
