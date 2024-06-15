@@ -263,9 +263,15 @@ const AdDetailsPage = () => {
         try{
           const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
           const result = await response.json();
-          showToastMessage('success', result);
-          setNewUnitPrice("");  
-          setTempSlabData([]);
+          if(result === "Failed to Insert" || result === "Failed to Update"){
+            showToastMessage("Error", "Error while updating data")
+          }else{
+            showToastMessage('success', result);
+            fetchQtySlab();
+            setNewUnitPrice("");  
+            setTempSlabData([]);
+          }
+          
         }catch(insertError){
           console.error("Error while inserting slab: " + insertError);
         }
@@ -311,10 +317,15 @@ const AdDetailsPage = () => {
       setIsSlabAvailable(false);
       setQty(0);
       setNewUnitPrice("");
-      setTempSlabData(tempSlabData.filter((_, i) => i !== index));
+      setCombinedSlabData(combinedSlabData.filter((_, i) => i !== index));
     } else {
-    await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}`);
-    fetchQtySlab();
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}`);
+      const data = await response.json();
+      if(data === 'No rows updated'){
+        setCombinedSlabData(combinedSlabData.filter((_, i) => i !== index));
+      } else{
+        fetchQtySlab();
+      }
   }}
 
   const fetchMaxRateID = async () => {
@@ -814,10 +825,10 @@ var selectedRate = '';
       setIsLeadDays(true)
     } else if(selectedUnit === ""){
       setIsUnitsSelected(true)
-    } else if(qty === 0){
+    } else if(combinedSlabData.length === 0){
       setIsQty(true);
     }else if (validityDays <= 0) {
-        setIsValidityDays(true);
+      setIsValidityDays(true);
     }else{
     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
     try {

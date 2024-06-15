@@ -148,7 +148,6 @@ const ClientsData = () => {
           setClientID(clientDetails.id);
           dispatch(setClientData({ clientName: clientDetails.name || "" }));
           //MP-69-New Record are not fetching in GS
-          console.log(data)
           setDOB(clientDetails.DOB);
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
