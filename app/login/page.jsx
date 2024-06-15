@@ -95,6 +95,7 @@ const Login = () => {
             }, 2000);
               //Cookies.set('username', userName, { expires: 7 });
               dispatch(login(userName));
+              dispatch(resetClientData());
               dispatch(resetRatesData());
               dispatch(resetQuotesData());
               dispatch(resetClientData());
