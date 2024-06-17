@@ -276,7 +276,7 @@ const formatIndianNumber = (num) => {
         </div>
       )}
     </div>
-    <div style={{ height: '500px', width: '100%' }}>
+    {/* <div style={{ height: '500px', width: '100%' }}>
       <DataGrid
         rows={orderDetails}
         columns={orderColumns}
@@ -286,7 +286,7 @@ const formatIndianNumber = (num) => {
         //   Toolbar: GridToolbar,
         // }}
       />
-    </div>
+    </div> */}
   </div>
 )}
 
@@ -365,7 +365,7 @@ const formatIndianNumber = (num) => {
         </PieChart>
       </ResponsiveContainer>
       </div>
-             <div style={{ height: 500, width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
+             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
