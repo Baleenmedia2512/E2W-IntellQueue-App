@@ -212,6 +212,10 @@ const FinanceData = () => {
     } catch(error){
       console.error("Error Suggesting Client Names: " + error)
     }
+    // MP-96-As a user, I want the validation to go away while filling the details.
+    if (errors.clientName) {
+      setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
+    }
   };  
 
   const handleClientNameSelection = (e) => {
@@ -455,6 +459,9 @@ const FinanceData = () => {
                 onChange={(e) => {
                   const input = e.target.value.replace(/\D/g, '');
                   setOrderNumber(input);
+                  if (errors.orderNumber) {
+                    setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                  }
                 }}
                 onFocus={(e) => {e.target.select()}}
                 onKeyDown={(e) => {
@@ -486,6 +493,9 @@ const FinanceData = () => {
                 onChange={(e) => {
                   const input = e.target.value.replace(/\D/g, '');
                   setOrderAmount(input);
+                  if (errors.orderAmount) {
+                    setErrors((prevErrors) => ({ ...prevErrors, orderAmount: undefined }));
+                  }
                 }}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -571,7 +581,11 @@ const FinanceData = () => {
               id='4'
               name="GSTInput" 
               value={gstPercentage}
-              onChange = {(e) => setGSTPercentage(e.target.value)}
+              onChange = {(e) => {setGSTPercentage(e.target.value)
+                if (errors.gstPercentage) {
+                  setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
+                }
+              }}
               onKeyDown={(e) => {
               if (e.key === 'Enter') {
                   e.preventDefault();
@@ -594,7 +608,12 @@ const FinanceData = () => {
                 name="GSTAmountInput" 
                 // required={!isEmpty} 
                 value={gstAmount}
-                onChange = {(e) => setGSTAmount(e.target.value)}
+                onChange = {(e) => {setGSTAmount(e.target.value);
+                  if (errors.gstAmount) {
+                    setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
+                  }
+                }}
+                
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -703,7 +722,11 @@ const FinanceData = () => {
                 placeholder="Ex. 10000" 
                 id='3'
                 name="ChequeNumberInput" 
-                onChange = {(e) => setChequeNumber(e.target.value)}
+                onChange = {(e) => {setChequeNumber(e.target.value)
+                  if (errors.chequeNumber) {
+                    setErrors((prevErrors) => ({ ...prevErrors, chequeNumber: undefined }));
+                  }
+                }}
                 onFocus={(e) => {e.target.select()}}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {

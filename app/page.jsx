@@ -10,6 +10,7 @@ import { Snackbar } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import ToastMessage from './components/ToastMessage';
 import SuccessToast from './components/SuccessToast';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
     
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -50,6 +51,8 @@ const ClientsData = () => {
   const [emailWarning, setEmailWarning] = useState('');
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [clientContactToRestore, setClientContactToRestore] = useState('');
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -76,7 +79,7 @@ const ClientsData = () => {
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
     // setIsNewClient(true);
-
+    
     if (newName !== '' && clientContact === '') {
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
@@ -90,6 +93,9 @@ const ClientsData = () => {
     setClientNameSuggestions([]);
   }
   dispatch(setClientData({clientName: newName}));
+  if (errors.clientName) {
+    setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
+  }
   };
 
   const elementsToHideList = () => {
@@ -108,7 +114,9 @@ const ClientsData = () => {
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
       .then((data) => {setConsultantNameSuggestions(data)});
-      
+      if (errors.consultantName) {
+        setErrors((prevErrors) => ({ ...prevErrors, consultantName: undefined }));
+      }
   };
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
@@ -239,12 +247,12 @@ const ClientsData = () => {
   }, [elementsToHide])
 
 
-  
   const handleClientContactChange = (newValue) => {
+    
     // Contact Validation
     if (newValue === '') {
         setContactWarning('');
-    } else if (newValue.length !== 10) {
+    } else if (newValue.length !== 10 && newValue.length !== 0) {
         setContactWarning('Contact number should contain exactly 10 digits.');
       } else {
         setContactWarning('');
@@ -258,6 +266,12 @@ const ClientsData = () => {
                         // Contact number already exists
                         setIsNewClient(false);
                         setContactWarning('Contact number already exists.');
+
+                        // MP-95-As a user, I should able to restore a removed client.
+                    if (data.warningMessage.includes('restore the client')) {
+                          setClientContactToRestore(newValue);
+                          setRestoreDialogOpen(true);
+                      }
                     } else {
                         // Contact number is new
                         setIsNewClient(true);
@@ -297,6 +311,11 @@ const ClientsData = () => {
     }
 
     dispatch(setClientData({ clientContact: newValue }));
+
+    // MP-96-As a user, I want the validation to go away while filling the details.
+    if (errors.clientContact) {
+      setErrors((prevErrors) => ({ ...prevErrors, clientContact: undefined }));
+    }
 };
 
 
@@ -304,6 +323,7 @@ const ClientsData = () => {
   let emailTimeout;
   const handleClientEmailChange = (newValue) => {
     dispatch(setClientData({ clientEmail: newValue }));
+    
     
     if (emailTimeout) {
       clearTimeout(emailTimeout);
@@ -316,10 +336,24 @@ const ClientsData = () => {
         setEmailWarning('');
       }
     }, 500);
+    // MP-96-As a user, I want the validation to go away while filling the details.
+    if (errors.clientEmail) {
+      setErrors((prevErrors) => ({ ...prevErrors, clientEmail: undefined }));
+    }
   };
 
   const handleClientSourceChange = (selectedOption) => {
     dispatch(setClientData({ clientSource: selectedOption.target.value }));
+    if (errors.clientSource) {
+      setErrors((prevErrors) => ({ ...prevErrors, clientSource: undefined }));
+    }
+  };
+
+  const handleClientContactPersonChange = (value) => {
+    setClientContactPerson(value);
+    if (errors.clientContactPerson) {
+      setErrors((prevErrors) => ({ ...prevErrors, clientContactPerson: undefined }));
+    }
   };
 
   const submitDetails = async(event) => {
@@ -458,7 +492,7 @@ const calculateDateFromAge = (age) => {
 const handleInputAgeChange = (event) => {
   const age = event.target.value;
   setClientAge(age);
-
+  
   if ((selectedOption === 'Baby.' && parseInt(age) > 3) || 
       (selectedOption === 'Master.' && (parseInt(age) < 4 || parseInt(age) > 12))) {
     setDisplayWarning(true);
@@ -471,6 +505,10 @@ const handleInputAgeChange = (event) => {
     const dob = calculateDateFromAge(age);
     setDOB(dob);
   }
+
+  if (errors.ageAndDOB) {
+    setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
+  }
 };
 
 
@@ -479,7 +517,7 @@ const handleDateChange = (e) => {
   setDOB(dateValue);
   const age = calculateAge(dateValue);
   setClientAge(age);
-
+  
   if (selectedOption === 'B/o.' || selectedOption === 'Baby.') {
   // if (selectedOption === 'B/o.') {
     const selectedDate = new Date(dateValue);
@@ -491,6 +529,10 @@ const handleDateChange = (e) => {
     const calculatedDays = diffDays % 30;
 
     setMonths(calculatedMonths);
+    
+  }
+  if (errors.ageAndDOB) {
+    setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
   }
 };
 
@@ -502,9 +544,13 @@ const calculateDateFromMonths = (months) => {
 
 const handleMonthsChange = (e) => {
   setMonths(e.target.value);
+  
   if (e.target.value) {
     const dateFromMonths = calculateDateFromMonths(e.target.value);
     setDOB(dateFromMonths);
+  }
+  if (errors.months) {
+    setErrors((prevErrors) => ({ ...prevErrors, months: undefined }));
   }
 };
 
@@ -557,20 +603,24 @@ const handleConsultantNumberChange = (newValue) => {
 setConsultantNumber(newValue);
 if (newValue === '') {
   setContactWarning('');
-} else if (newValue.length !== 10) {
+} else if (newValue.length !== 10 && newValue.length !== 0) {
   setConsulantWarning('Contact number should contain exactly 10 digits.');
 } else {
   
   setConsulantWarning('');
 };
+if (errors.consultantNumber) {
+  setErrors((prevErrors) => ({ ...prevErrors, consultantNumber: undefined }));
+}
 }
 
 
 
 const handleRemoveClient = () => {
+  event.preventDefault();
     // Check if client contact is empty
     if (!clientContact) {
-      document.getElementById('3').focus(); // Focusing on the input field with id="3"
+      errors.clientContact = 'Contact Number is required';
       return;
   }
 
@@ -580,6 +630,16 @@ const handleRemoveClient = () => {
       if (data.success) {
           // Client removed successfully
           setSuccessMessage('Client removed successfully!');
+          dispatch(resetClientData());
+          setClientAge("");
+          setDOB("");
+          setAddress("");
+          setConsultantName("");
+          setConsultantNumber("");
+          setClientPAN("");
+          setClientGST("");
+          setClientContactPerson("");
+          setClientID("");
           setTimeout(() => {
           setSuccessMessage('');
         }, 3000);
@@ -598,13 +658,42 @@ const handleRemoveClient = () => {
       console.error("Error removing client: " + error);
   });
 };
+
+// MP-95-As a user, I should able to restore a removed client.
+const handleRestoreClient = () => {
+  fetch(`https://orders.baleenmedia.com/API/Media/RestoreClient.php?ClientContact=${clientContactToRestore}&JsonDBName=${companyName}`)
+      .then((response) => response.json())
+      .then((data) => {
+          if (data.success) {
+            setSuccessMessage('Client has been restored successfully!');
+            setTimeout(() => {
+            setSuccessMessage('');
+          }, 3000);
+          fetchClientDetails(clientContact);
+          } else {
+            setToastMessage("Failed to restore client: " + data.message);
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+          }
+          setRestoreDialogOpen(false);
+      })
+      .catch((error) => {
+          console.error("Error restoring client: " + error);
+          setContactWarning('Error restoring client.');
+          setRestoreDialogOpen(false);
+      });
+};
+
 const GSvalidateFields = () => {
   let errors = {};
 
   if (!clientContact) errors.clientContact = 'Contact Number is required';
-  if (!clientContact || clientContact.length !== 10) {
-    errors.clientContact = 'Client contact must be exactly 10 digits.';
-  }
+  // if (!clientContact || clientContact.length < 10) {
+  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
+  // }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (!clientAge && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
@@ -655,9 +744,9 @@ const BMvalidateFields = () => {
   let errors = {};
 
   if (!clientContact) errors.clientContact = 'Contact Number is required';
-  if (!clientContact || clientContact.length !== 10) {
-    errors.clientContact = 'Client contact must be exactly 10 digits.';
-  }
+  // if (!clientContact || clientContact.length !== 10) {
+  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
+  // }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
@@ -681,23 +770,38 @@ const BMvalidateFields = () => {
 
   // Function to validate email format
   const isValidEmail = (email) => {
-    // Regex for basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // useEffect(() => {
-  //   GSvalidateFields();
-  // }, [clientContact, clientName, clientEmail, clientAge, DOB, selectedOption, clientContactPerson, clientSource, consultantName, consultantNumber, months]);
-
-{/* onSubmit={submitDetails} */}
   return (
     <div className="flex flex-col justify-center mt-8  mx-[8%]">
       
       <form className="px-7 h-screen grid justify-center items-center"> 
     <div className="grid gap-6" id="form">
     <h1 className="font-bold text-3xl text-center mb-4">Client Registration</h1>
-
+    {/* // MP-95-As a user, I should able to restore a removed client. */}
+    {/* Restore client dialog */}
+    <Dialog
+                open={restoreDialogOpen}
+                onClose={() => setRestoreDialogOpen(false)}
+            >
+                <DialogTitle>Restore Client</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        This client is invalid. Do you want to restore the client?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setRestoreDialogOpen(false)} color="primary">
+                        No
+                    </Button>
+                    <Button onClick={handleRestoreClient} color="primary" autoFocus>
+                        Yes
+                    </Button>
+                </DialogActions>
+            </Dialog>
+{/* Restore client dialog */}
         <input 
         className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
         type="number" 
@@ -841,7 +945,7 @@ const BMvalidateFields = () => {
           id="30"
           name="ClientContactPersonInput"
           value={clientContactPerson}
-          onChange={(e) => setClientContactPerson(e.target.value)}
+          onChange={handleClientContactPersonChange}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
