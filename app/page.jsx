@@ -22,7 +22,7 @@ const ClientsData = () => {
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
-  const gssources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
+  const gssources = ['Consultant', 'Self', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState('');
   const [severity, setSeverity] = useState('');
@@ -57,11 +57,11 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
-  // useEffect(() => {
-  //   if (!clientSource && sources.length > 0) {
-  //     dispatch(setClientData({ clientSource: sources[0] }));
-  //   }
-  // }, [clientSource, dispatch]);
+  useEffect(() => {
+    if (!clientSource && sources.length > 0) {
+      dispatch(setClientData({ clientSource: sources[0] }));
+    }
+  }, [clientSource, dispatch]);
 
   useEffect(() => {
     // Check if age input violates constraints for selected option
@@ -232,7 +232,7 @@ const ClientsData = () => {
         dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
-        companyName === 'Grace Scans' ? dispatch(setClientData({clientSource: sources[1]})) : dispatch(setClientData({clientSource: sources[0]}))
+        dispatch(setClientData({clientSource: sources[0]}))
         elementsToHideList()
   }, []);
 
@@ -631,7 +631,10 @@ const handleRemoveClient = () => {
       if (data.success) {
           // Client removed successfully
           setSuccessMessage('Client removed successfully!');
-          dispatch(resetClientData());
+          dispatch(setClientData({ clientEmail: "" }));
+          dispatch(setClientData({ clientName: "" }));
+          dispatch(setClientData({ clientContact: "" }));
+          dispatch(setClientData({clientSource: sources[0]}));
           setClientAge("");
           setDOB("");
           setAddress("");
@@ -641,6 +644,7 @@ const handleRemoveClient = () => {
           setClientGST("");
           setClientContactPerson("");
           setClientID("");
+          setIsNewClient(true);
           setTimeout(() => {
           setSuccessMessage('');
         }, 3000);
@@ -659,7 +663,7 @@ const handleRemoveClient = () => {
       console.error("Error removing client: " + error);
   });
 };
-
+console.log(isNewClient,clientSource)
 // MP-95-As a user, I should able to restore a removed client.
 const handleRestoreClient = () => {
   fetch(`https://orders.baleenmedia.com/API/Media/RestoreClient.php?ClientContact=${clientContactToRestore}&JsonDBName=${companyName}`)
