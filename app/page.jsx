@@ -157,6 +157,7 @@ const ClientsData = () => {
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
+          setErrors({});
           const clientDetails = data[0];
           setClientID(clientDetails.id);
           dispatch(setClientData({ clientName: clientDetails.name || "" }));
