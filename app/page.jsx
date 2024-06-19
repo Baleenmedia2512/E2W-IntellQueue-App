@@ -125,7 +125,8 @@ const ClientsData = () => {
     setToast(true)
   }
 
- 
+
+  
   const handleClientNameSelection = (names) => {
     const input = names.target.value;
     const name = input.substring(0, input.indexOf('(')).trim();
@@ -353,7 +354,7 @@ const ClientsData = () => {
   };
 
   const handleClientContactPersonChange = (value) => {
-    setClientContactPerson(value);
+    setClientContactPerson(value.target.value);
     if (errors.clientContactPerson) {
       setErrors((prevErrors) => ({ ...prevErrors, clientContactPerson: undefined }));
     }
