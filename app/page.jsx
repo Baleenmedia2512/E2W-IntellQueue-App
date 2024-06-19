@@ -22,7 +22,7 @@ const ClientsData = () => {
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
-  const gssources = ['Self', 'Consultant', 'Online', 'Friends/Relatives', 'Others'];
+  const gssources = ['Consultant', 'Self', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState('');
   const [severity, setSeverity] = useState('');
@@ -53,15 +53,16 @@ const ClientsData = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [clientContactToRestore, setClientContactToRestore] = useState('');
+  const isDetails = useAppSelector(state => state.quoteSlice.isDetails)
   
   const dispatch = useDispatch();
   const router = useRouter()
 
-  // useEffect(() => {
-  //   if (!clientSource && sources.length > 0) {
-  //     dispatch(setClientData({ clientSource: sources[0] }));
-  //   }
-  // }, [clientSource, dispatch]);
+  useEffect(() => {
+    if (!clientSource && sources.length > 0) {
+      dispatch(setClientData({ clientSource: sources[0] }));
+    }
+  }, [clientSource, dispatch]);
 
   useEffect(() => {
     // Check if age input violates constraints for selected option
@@ -74,7 +75,6 @@ const ClientsData = () => {
     //MP-70-DOB doesn't set while fetching from DB
   }, [clientAge, selectedOption]); 
 
-  const isDetails = useAppSelector(state => state.quoteSlice.isDetails);
 
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
@@ -159,6 +159,7 @@ const ClientsData = () => {
         if (data && data.length > 0) {
           setErrors({});
           const clientDetails = data[0];
+          console.log(clientDetails)
           setClientID(clientDetails.id);
           dispatch(setClientData({ clientName: clientDetails.name || "" }));
           //MP-69-New Record are not fetching in GS
@@ -178,11 +179,11 @@ const ClientsData = () => {
           const age = calculateAge(clientDetails.DOB);
           setClientAge(age);
           // Extract PAN from GST if necessary
-        if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")) {
+        if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.PAN || clientDetails.PAN === "")) {
           const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
           setClientPAN(pan);
         } else {
-          setClientPAN(clientDetails.ClientPAN);
+          setClientPAN(clientDetails.PAN);
         }
       
         } else {
@@ -227,12 +228,13 @@ const ClientsData = () => {
         //   dispatch(resetClientData());
         //   dispatch(resetQuotesData());
         // }
-
+        if (!isDetails) {
         dispatch(resetClientData());
-        dispatch(resetQuotesData());
+        }
+        // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
-        companyName === 'Grace Scans' ? dispatch(setClientData({clientSource: sources[1]})) : dispatch(setClientData({clientSource: sources[0]}))
+        dispatch(setClientData({clientSource: sources[0]}))
         elementsToHideList()
   }, []);
 
@@ -356,7 +358,6 @@ const ClientsData = () => {
       setErrors((prevErrors) => ({ ...prevErrors, clientContactPerson: undefined }));
     }
   };
-
   const submitDetails = async(event) => {
     event.preventDefault()
     
@@ -367,7 +368,6 @@ const ClientsData = () => {
     const isValid = BMvalidateFields();
     if (isValid) {
     try {
-
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
@@ -375,10 +375,14 @@ const ClientsData = () => {
                 setTimeout(() => {
               setSuccessMessage('');
             }, 3000);
+            // router.push('/adDetails')
+      if (isDetails) {
+        dispatch(setQuotesData({currentPage: "checkout"}))
+      } 
           // window.location.reload();
-          dispatch(resetQuotesData())
-          dispatch(setQuotesData({currentPage: "checkout"}))
-          router.push('/adDetails')
+          // dispatch(resetQuotesData())
+          
+          
         // setMessage(data.message);
       } else if (data === "Contact Number Already Exists!"){
         setToastMessage('Contact Number Already Exists!');
@@ -392,7 +396,7 @@ const ClientsData = () => {
       }
 
     } catch (error) {
-      console.error('Error updating rate:', error);
+      console.error('Error while data BM:', error);
   }
   
 } else {
@@ -416,6 +420,8 @@ const ClientsData = () => {
         setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
+    setIsNewClient(false);
+    fetchClientDetails(clientContact)
           // window.location.reload();
         
         //setMessage(data.message);
@@ -430,7 +436,7 @@ const ClientsData = () => {
         alert(`The following error occurred while inserting data: ${data}`);
       }
   }catch (error) {
-    console.error('Error updating rate:', error);
+    console.error('Error while data GS:', error);
   } 
   // setSeverity('success');
   // setToast(true);
@@ -624,14 +630,16 @@ const handleRemoveClient = () => {
       errors.clientContact = 'Contact Number is required';
       return;
   }
-
   fetch(`https://orders.baleenmedia.com/API/Media/RemoveClient.php?JsonClientID=${clientID}&JsonDBName=${companyName}`)
   .then((response) => response.json())
   .then((data) => {
       if (data.success) {
           // Client removed successfully
           setSuccessMessage('Client removed successfully!');
-          dispatch(resetClientData());
+          dispatch(setClientData({ clientEmail: "" }));
+          dispatch(setClientData({ clientName: "" }));
+          dispatch(setClientData({ clientContact: "" }));
+          dispatch(setClientData({clientSource: sources[0]}));
           setClientAge("");
           setDOB("");
           setAddress("");
@@ -641,6 +649,7 @@ const handleRemoveClient = () => {
           setClientGST("");
           setClientContactPerson("");
           setClientID("");
+          setIsNewClient(true);
           setTimeout(() => {
           setSuccessMessage('');
         }, 3000);
@@ -659,7 +668,6 @@ const handleRemoveClient = () => {
       console.error("Error removing client: " + error);
   });
 };
-
 // MP-95-As a user, I should able to restore a removed client.
 const handleRestoreClient = () => {
   fetch(`https://orders.baleenmedia.com/API/Media/RestoreClient.php?ClientContact=${clientContactToRestore}&JsonDBName=${companyName}`)

@@ -83,7 +83,19 @@ const AdDetailsPage = () => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
     }
+    if (adMedium === '') {
+      dispatch(setQuotesData({currentPage: 'adMedium'}));
+    } else if (adType === '') {
+      dispatch(setQuotesData({currentPage: 'adType'}));
+    } else if (adCategory === '') {
+      dispatch(setQuotesData({currentPage: 'adCategory'}));
+    } else if (edition === '') {
+      dispatch(setQuotesData({currentPage: 'edition'}));
+    }
+    
   },[])
+
+  
 
   useEffect(() => {
     const fetchData = async () => {
