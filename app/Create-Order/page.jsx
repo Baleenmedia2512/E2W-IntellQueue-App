@@ -47,9 +47,12 @@ const CreateOrder = () => {
     useEffect(() => {
       fetchMaxOrderNumber();
       elementsToHideList();
-      // calculateReceivable();
+      
     },[])
 
+    useEffect(() => {
+      calculateReceivable();
+    },[unitPrice])
     const findUnitPrice = () => {
       // Sort slabData by startQty in descending order
       const sortedSlabData = [...slabData].sort((a, b) => b.StartQty - a.StartQty);
@@ -70,6 +73,7 @@ const CreateOrder = () => {
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
         setClientName(newName);
+        dispatch(setOrderData({ clientName: clientName }))
       };
 
       const handleClientNameSelection = (event) => {
@@ -77,9 +81,9 @@ const CreateOrder = () => {
         const name = input.substring(0, input.indexOf('(')).trim();
         const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
     
-        setClientName(clientName);
+        setClientName(name);
         setClientNumber(number);
-        dispatch(setOrderData({ clientName: clientName }))
+        dispatch(setOrderData({ clientName: name }))
         dispatch(setOrderData({ clientNumber: number }))
         fetchClientDetails(number);
         setClientNameSuggestions([]);
@@ -99,7 +103,7 @@ const CreateOrder = () => {
         dispatch(setOrderData({ consultantName: clientDetails.consname || "" }))
         dispatch(setOrderData({ clientGST: clientDetails.GST || "" }))
         dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
-    
+   
               //MP-69-New Record are not fetching in GS
               setClientEmail(clientDetails.email);
               setClientSource(clientDetails.source);
@@ -185,10 +189,23 @@ const CreateOrder = () => {
 
   // Function to calculate receivable amount
   const calculateReceivable = () => {
-    const amountInclGST = ((qty * unitPrice) + marginAmount) + ((qty * unitPrice + marginAmount) * (rateGST.value / 100));
+    // Assuming qty, unitPrice, marginAmount, and rateGST are accessible in the scope of this function
+    const subtotalWithoutGST = qty * unitPrice + marginAmount;
+    const gstAmount = subtotalWithoutGST * (rateGST.value / 100);
+    const amountInclGST = subtotalWithoutGST + gstAmount;
+  
+    // Set the state with amountInclGST
     setReceivable(amountInclGST);
-    dispatch(setOrderData({ receivable: amountInclGST })) 
+  
+    // Dispatch action to set order data with receivable amount
+    dispatch(setOrderData({ receivable: amountInclGST }));
+  
+    // Logging for debugging purposes
+    console.log(`qty: ${qty}, unitPrice: ${unitPrice}, marginAmount: ${marginAmount}, rateGST: ${rateGST.label}`);
+    console.log(`amountInclGST: ${amountInclGST}`);
   };
+  
+console.log(receivable)
 
   const handleMarginPercentageChange = (e) => {
     const newMarginPercent = parseFloat(e.target.value) || 0;
@@ -220,7 +237,7 @@ const CreateOrder = () => {
                 <div className="grid gap-6" id="form">
                     <h1 className="font-bold text-3xl text-center mb-4">Order Generation</h1>
                     <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Order Number</label>
+                    <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
                     <input 
                         type='text' 
                         className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"

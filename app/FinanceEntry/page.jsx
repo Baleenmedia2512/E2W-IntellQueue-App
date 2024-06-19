@@ -83,7 +83,10 @@ const FinanceData = () => {
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
-  const orderClientName = useAppSelector(state => state.orderSlice.clientName); 
+  const orderClientName = useAppSelector(state => state.orderSlice.clientName);
+  const orderReceivable = useAppSelector(state => state.orderSlice.receivable); 
+  const orderOrderNumber = useAppSelector(state => state.orderSlice.orderNumber); 
+  const orderRemarks = useAppSelector(state => state.orderSlice.remarks);  
 
  
 
@@ -100,7 +103,9 @@ const FinanceData = () => {
   const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
   const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-  
+  useEffect(() => {
+    console.log(orderClientName, orderReceivable, orderRemarks)
+  }, [])
   
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
