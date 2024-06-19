@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
 import { RemoveCircleOutline } from '@mui/icons-material';
+import { useDispatch } from 'react-redux';
+import { setOrderData, resetOrderData } from '@/redux/features/order-slice';
 
 
 const CreateOrder = () => {
@@ -28,7 +30,8 @@ const CreateOrder = () => {
     const [clientContactPerson, setClientContactPerson] = useState("");
     const [clientGST, setClientGST] = useState("");
     const [clientPAN, setClientPAN] = useState("");
-
+    
+    const dispatch = useDispatch();
     const router = useRouter();
     const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
     const rateId = useAppSelector(state => state.rateSlice.rateId);
@@ -74,19 +77,28 @@ const CreateOrder = () => {
         const name = input.substring(0, input.indexOf('(')).trim();
         const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
     
-        setClientName(name);
+        setClientName(clientName);
         setClientNumber(number);
-        fetchClientDetails(name, number);
+        dispatch(setOrderData({ clientName: clientName }))
+        dispatch(setOrderData({ clientNumber: number }))
+        fetchClientDetails(number);
         setClientNameSuggestions([]);
       };
 
-      const fetchClientDetails = (clientName, clientNumber) => {
+      const fetchClientDetails = (clientNumber) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data && data.length > 0) {
               const clientDetails = data[0];
+
+              dispatch(setOrderData({ clientEmail: clientDetails.email }))
+              dispatch(setOrderData({ clientSource: clientDetails.source }))
+              dispatch(setOrderData({ address: clientDetails.address || "" }))
+        dispatch(setOrderData({ consultantName: clientDetails.consname || "" }))
+        dispatch(setOrderData({ clientGST: clientDetails.GST || "" }))
+        dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
     
               //MP-69-New Record are not fetching in GS
               setClientEmail(clientDetails.email);
@@ -99,8 +111,10 @@ const CreateOrder = () => {
             if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")) {
               const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
               setClientPAN(pan || "");
+        dispatch(setOrderData({ clientPAN: pan || "" }))
             } else {
               setClientPAN(clientDetails.ClientPAN || "");
+        dispatch(setOrderData({ clientPAN: clientDetails.ClientPAN || "" }))
             }
           
             } else {
@@ -141,7 +155,7 @@ const CreateOrder = () => {
           }
           const data = await response.json();
           setMaxOrderNumber(data);
-          
+        dispatch(setOrderData({ maxOrderNumber: data }))
         } catch (error) {
           console.error(error);
         }
@@ -172,26 +186,31 @@ const CreateOrder = () => {
   // Function to calculate receivable amount
   const calculateReceivable = () => {
     const amountInclGST = ((qty * unitPrice) + marginAmount) + ((qty * unitPrice + marginAmount) * (rateGST.value / 100));
-    setReceivable(amountInclGST); 
+    setReceivable(amountInclGST);
+    dispatch(setOrderData({ receivable: amountInclGST })) 
   };
 
   const handleMarginPercentageChange = (e) => {
     const newMarginPercent = parseFloat(e.target.value) || 0;
     setMarginPercentage(newMarginPercent);
+    dispatch(setOrderData({ marginPercentage: newMarginPercent })) 
 
     // Assuming you have a total amount to calculate percentage against
     const newMarginAmount = (newMarginPercent / 100) * unitPrice;
     setMarginAmount(newMarginAmount.toFixed(2)); // Adjust toFixed for precision as needed
+    dispatch(setOrderData({ marginAmount: newMarginAmount.toFixed(2) })) 
     calculateReceivable(); // Recalculate receivable with new margin
   };
   
   const handleMarginAmountChange = (e) => {
     const newMarginAmount = parseFloat(e.target.value) || 0;
     setMarginAmount(newMarginAmount);
+    dispatch(setOrderData({ marginAmount: newMarginAmount })) 
 
     // Assuming you have a total amount to calculate percentage against
     const newMarginPercentage = (newMarginAmount / (unitPrice)) * 100;
     setMarginPercentage(newMarginPercentage.toFixed(2)); // Adjust toFixed for precision as needed
+    dispatch(setOrderData({ marginPercentage: newMarginPercentage.toFixed(2) })) 
   };
   
 

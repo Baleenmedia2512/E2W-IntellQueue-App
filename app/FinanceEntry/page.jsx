@@ -83,6 +83,9 @@ const FinanceData = () => {
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+  const orderClientName = useAppSelector(state => state.orderSlice.clientName); 
+
+ 
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
   const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
@@ -115,71 +118,6 @@ const FinanceData = () => {
 
   const openDate = Boolean(anchorElDate);
 
-
-  // const handleOrderNumber = async () => {
-  //   if(orderNumber > 0){
-  //   try {
-  //     const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchFinanceData.php/?JsonOrderNumber=${orderNumber}&JsonDBName=${username}`);
-      
-  //     if (!response.ok) {
-  //       throw new Error('Network response was not ok');
-  //     }
-  //     const data = await response.json();
-  //     if(data === "Order is invalid" || data === "No data found for the provided Order Number"){
-  //       return null
-  //     } else{
-  //       const matchedTransactionType = transactionOptions.find(option => option.value === data.TransactionType);
-  //       const matchedTaxType = taxTypeOptions.find(option => option.value === data.TaxType);
-  //       const matchedExpenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory);
-  //       const matchedPaymentMode = paymentModeOptions.find(option => option.value === data.PaymentMode);
-
-  //       setTransactionType(matchedTransactionType || { value: data.TransactionType, label: data.TransactionType });
-  //       setTaxType(matchedTaxType || { value: data.TaxType, label: data.TaxType });
-  //       setExpenseCategory(matchedExpenseCategory || { value: data.ExpensesCategory, label: data.ExpensesCategory });
-  //       setPaymentMode(matchedPaymentMode || { value: data.PaymentMode, label: data.PaymentMode })
-
-  //       // // Extract date and time
-  //       // const transactionDateTime = new Date(data.TransactionDate);
-  //       // const transactionDate = transactionDateTime.toISOString().split('T')[0]; // Extract date
-  //       // const transactionTime = transactionDateTime.toLocaleTimeString(); // Extract time
-
-  //       // setTransactionDate(transactionDate);
-  //       // setTransactionTime(transactionTime);
-
-  //       // // Extract cheque date and time
-  //       // const chequeDateTime = new Date(data.ChequeDate);
-  //       // const chequeDate = chequeDateTime.toISOString().split('T')[0]; // Extract date
-  //       // const chequeTime = chequeDateTime.toLocaleTimeString(); // Extract time
-
-  //       // setChequeDate(chequeDate);
-  //       // setChequeTime(chequeTime);
-
-  //       // Convert fetched date string to dayjs object
-  //       // const transactionDate = dayjs(data.TransactionDate);
-
-  //       // setTransactionDate(transactionDate);
-  //       // setTransactionTime(transactionDate.format('HH:mm:ss')); // Assuming time format is 'HH:mm:ss'
-
-  //       // // Convert fetched cheque date string to dayjs object
-  //       // const chequeDate = dayjs(data.ChequeDate);
-
-  //       // setChequeDate(chequeDate);
-  //       // setChequeTime(chequeDate.format('HH:mm:ss')); 
-
-  //       setClientName(data.ClientName)
-  //       setOrderAmount(data.Amount)
-  //       setGSTAmount(data.TaxAmount)
-  //       setRemarks(data.Remarks)
-  //       setOrdersData(data)
-  //       console.log(data)
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching data:', error);
-  //   }
-  // } else{
-  //   showToastMessage("error", "Order Number is either 0 or empty. Please check and type again properly.")
-  // }
-  // };
 
   const handleChange = (selectedOption, name) => {
     switch(name) {
@@ -240,8 +178,6 @@ const FinanceData = () => {
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.amount);
           setGSTPercentage(clientDetails.gstPercentage);
-          // setTransactionDate(clientDetails.orderDate);
-          // setTransactionDate(dayjs(clientDetails.orderDate));
         }
       })
       .catch((error) => {
@@ -289,22 +225,17 @@ const FinanceData = () => {
     
 }
 
-  const getOptions = (filterKey, selectedValues) => {
-    const filteredData = ordersData.filter(item => {
-      return Object.entries(selectedValues).every(([key, value]) =>
-        key === filterKey || !value || item[key] === value.value
-      );
-    });
+  // const getOptions = (filterKey, selectedValues) => {
+  //   const filteredData = ordersData.filter(item => {
+  //     return Object.entries(selectedValues).every(([key, value]) =>
+  //       key === filterKey || !value || item[key] === value.value
+  //     );
+  //   });
 
-    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-    return distinctValues.sort().map(value => ({ value, label: value }));
-  };
+  //   const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //   return distinctValues.sort().map(value => ({ value, label: value }));
+  // };
 
-  // useEffect(() => {
-  //   if(orderNumber > 0){
-  //     handleOrderNumber()
-  //   }
-  // }, [orderNumber]);
 
   const validateFields = () => {
     let errors = {};
