@@ -1,0 +1,823 @@
+'use client';
+import './page.css';
+import React, { useState, useEffect } from 'react';
+import CreatableSelect from 'react-select/creatable';
+import { TextField } from '@mui/material';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import Box from '@mui/material/Box';
+import Popover from '@mui/material/Popover';
+import {MdOutlineSave} from "react-icons/md";
+import TextareaAutosize from '@mui/material/TextareaAutosize';
+import { useAppSelector } from '@/redux/store';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+import axios from 'axios';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
+
+const transactionOptions = [
+  { value: 'Income', label: 'Income' },
+  { value: 'Operational Expense', label: 'Operational Expense' }
+];
+
+const taxTypeOptions = [
+  { value: 'GST', label: 'GST' },
+  { value: 'IGST', label: 'IGST' },
+  { value: 'NA', label: 'NA' }
+];
+
+const expenseCategoryOptions = [
+  { value: 'Bank', label: 'Bank' },
+  { value: 'Communication', label: 'Communication' },
+  { value: 'Commission', label: 'Commission' },
+  { value: 'Consumables', label: 'Consumables' },
+  { value: 'Conveyance', label: 'Conveyance' },
+  { value: 'EB', label: 'EB' },
+  { value: 'Maintainance', label: 'Maintainance' },
+  { value: 'Offering', label: 'Offering' },
+  { value: 'PC', label: 'PC' },
+  { value: 'Promotion', label: 'Promotion' },
+  { value: 'Rent', label: 'Rent' },
+  { value: 'Laborcost', label: 'Labor Cost' },
+  { value: 'Stationary', label: 'Stationary' },
+  { value: 'Refund', label: 'Refund' }
+];
+
+const paymentModeOptions = [
+  { value: 'Cash', label: 'Cash' },
+  { value: 'Online', label: 'Online' },
+  { value: 'Cheque', label: 'Cheque' }
+];
+
+const FinanceData = () => {
+  // const username = "Grace Scans"
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const username = useAppSelector(state => state.authSlice.userName)
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [selectedTime, setSelectedTime] = useState(dayjs());
+  const [anchorElDate, setAnchorElDate] = React.useState(null);
+  const [orderNumber, setOrderNumber] = useState(null);
+  const [clientName, setClientName] = useState(null);
+  const [orderAmount, setOrderAmount] = useState(null);
+  const [taxType, setTaxType] = useState(taxTypeOptions[2]);
+  const [gstAmount, setGSTAmount] = useState(null);
+  const [gstPercentage, setGSTPercentage] = useState(null);
+  const [expenseCategory, setExpenseCategory] = useState(null);
+  const [remarks, setRemarks] = useState(null);
+  const [transactionDate, setTransactionDate] = useState(dayjs());
+  const [transactionTime, setTransactionTime] = useState(dayjs());
+  const [paymentMode, setPaymentMode] = useState(paymentModeOptions[0]);
+  const [transactionType, setTransactionType] = useState(transactionOptions[0]);
+  const [ordersData, setOrdersData] = useState(null);
+  const [chequeNumber, setChequeNumber] = useState('');
+  const [chequeDate, setChequeDate] = useState(dayjs());
+  const [chequeTime, setChequeTime] = useState(dayjs());
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
+  const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
+
+  const year = transactionDate.$y;
+  const month = transactionDate.$M + 1; // Months are zero-based, so we add 1 to get the correct month
+  const day = transactionDate.$D;
+  const hours = transactionTime.$H;
+  const minutes = transactionTime.$m;
+  const seconds = transactionTime.$s;
+  
+  const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
+  const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+  
+  
+  const showToastMessage = (severityStatus, toastMessageContent) => {
+    setSeverity(severityStatus)
+    setToastMessage(toastMessageContent)
+    setToast(true)
+  }
+
+  const handleDateClick = (event) => {
+    setAnchorElDate(event.currentTarget);
+  };
+
+  const handleDateClose = () => {
+    setAnchorElDate(null);
+  };
+
+  const openDate = Boolean(anchorElDate);
+
+
+  // const handleOrderNumber = async () => {
+  //   if(orderNumber > 0){
+  //   try {
+  //     const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchFinanceData.php/?JsonOrderNumber=${orderNumber}&JsonDBName=${username}`);
+      
+  //     if (!response.ok) {
+  //       throw new Error('Network response was not ok');
+  //     }
+  //     const data = await response.json();
+  //     if(data === "Order is invalid" || data === "No data found for the provided Order Number"){
+  //       return null
+  //     } else{
+  //       const matchedTransactionType = transactionOptions.find(option => option.value === data.TransactionType);
+  //       const matchedTaxType = taxTypeOptions.find(option => option.value === data.TaxType);
+  //       const matchedExpenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory);
+  //       const matchedPaymentMode = paymentModeOptions.find(option => option.value === data.PaymentMode);
+
+  //       setTransactionType(matchedTransactionType || { value: data.TransactionType, label: data.TransactionType });
+  //       setTaxType(matchedTaxType || { value: data.TaxType, label: data.TaxType });
+  //       setExpenseCategory(matchedExpenseCategory || { value: data.ExpensesCategory, label: data.ExpensesCategory });
+  //       setPaymentMode(matchedPaymentMode || { value: data.PaymentMode, label: data.PaymentMode })
+
+  //       // // Extract date and time
+  //       // const transactionDateTime = new Date(data.TransactionDate);
+  //       // const transactionDate = transactionDateTime.toISOString().split('T')[0]; // Extract date
+  //       // const transactionTime = transactionDateTime.toLocaleTimeString(); // Extract time
+
+  //       // setTransactionDate(transactionDate);
+  //       // setTransactionTime(transactionTime);
+
+  //       // // Extract cheque date and time
+  //       // const chequeDateTime = new Date(data.ChequeDate);
+  //       // const chequeDate = chequeDateTime.toISOString().split('T')[0]; // Extract date
+  //       // const chequeTime = chequeDateTime.toLocaleTimeString(); // Extract time
+
+  //       // setChequeDate(chequeDate);
+  //       // setChequeTime(chequeTime);
+
+  //       // Convert fetched date string to dayjs object
+  //       // const transactionDate = dayjs(data.TransactionDate);
+
+  //       // setTransactionDate(transactionDate);
+  //       // setTransactionTime(transactionDate.format('HH:mm:ss')); // Assuming time format is 'HH:mm:ss'
+
+  //       // // Convert fetched cheque date string to dayjs object
+  //       // const chequeDate = dayjs(data.ChequeDate);
+
+  //       // setChequeDate(chequeDate);
+  //       // setChequeTime(chequeDate.format('HH:mm:ss')); 
+
+  //       setClientName(data.ClientName)
+  //       setOrderAmount(data.Amount)
+  //       setGSTAmount(data.TaxAmount)
+  //       setRemarks(data.Remarks)
+  //       setOrdersData(data)
+  //       console.log(data)
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching data:', error);
+  //   }
+  // } else{
+  //   showToastMessage("error", "Order Number is either 0 or empty. Please check and type again properly.")
+  // }
+  // };
+
+  const handleChange = (selectedOption, name) => {
+    switch(name) {
+      case 'TransactionTypeSelect':
+        setTransactionType(selectedOption);
+        break;
+      case 'TaxTypeSelect':
+        setTaxType(selectedOption);
+        break;
+      case 'ExpenseCategorySelect':
+        setExpenseCategory(selectedOption);
+        break;
+      case 'PaymentModeSelect':
+        setPaymentMode(selectedOption);
+        break;
+      default:
+        break;
+    }
+    setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleClientNameTermChange = (event) => {
+    const newName = event.target.value
+    
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesFinance.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+        .then((response) => response.json())
+        .then((data) => setClientNameSuggestions(data));
+        setClientName(newName);
+    } catch(error){
+      console.error("Error Suggesting Client Names: " + error)
+    }
+    // MP-96-As a user, I want the validation to go away while filling the details.
+    if (errors.clientName) {
+      setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
+    }
+  };  
+
+  const handleClientNameSelection = (e) => {
+    const input = e.target.value;
+    const name = input.substring(0, input.indexOf('(')).trim();
+    const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
+
+    setClientNameSuggestions([]);
+    setClientName(name);
+    fetchClientDetails(name, number);
+
+  };
+
+  const fetchClientDetails = (clientName, clientNumber) => {
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .then((response) => {
+        const data = response.data;
+        if (data.length > 0) {
+          const clientDetails = data[0];
+          setOrderNumber(clientDetails.orderNumber);
+          setRemarks(clientDetails.remarks);
+          setOrderAmount(clientDetails.amount);
+          setGSTPercentage(clientDetails.gstPercentage);
+          // setTransactionDate(clientDetails.orderDate);
+          // setTransactionDate(dayjs(clientDetails.orderDate));
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }; 
+  const insertNewFinance = async (e) => {
+    e.preventDefault()
+    if (validateFields()) {
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
+
+
+          const data = await response.json();
+          // showToastMessage('success', data);
+          setChequeNumber('');;
+          setClientName('');
+          setExpenseCategory('');
+          setGSTAmount('');
+          setGSTPercentage('');
+          setOrderAmount('');
+          setOrderNumber('');
+          setPaymentMode(paymentModeOptions[0]);
+          setRemarks('');
+          setTaxType(taxTypeOptions[2]);
+          setTransactionType(transactionOptions[0]);
+          // window.location.reload();
+          setSuccessMessage('Finance Entry Added');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
+      } catch (error) {
+          console.error(error);
+      }
+      
+    } else {
+      setToastMessage('Please fill the necessary details in the form.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
+            
+    
+}
+
+  const getOptions = (filterKey, selectedValues) => {
+    const filteredData = ordersData.filter(item => {
+      return Object.entries(selectedValues).every(([key, value]) =>
+        key === filterKey || !value || item[key] === value.value
+      );
+    });
+
+    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+    return distinctValues.sort().map(value => ({ value, label: value }));
+  };
+
+  // useEffect(() => {
+  //   if(orderNumber > 0){
+  //     handleOrderNumber()
+  //   }
+  // }, [orderNumber]);
+
+  const validateFields = () => {
+    let errors = {};
+
+    if (!transactionType) errors.transactionType = 'Transaction Type is required';
+    if (transactionType?.value === 'Operational Expense' && !expenseCategory) {
+      errors.expenseCategory = 'Expense Category is required';
+    }
+    if (transactionType?.value !== 'Operational Expense' && !clientName) {
+      errors.clientName = 'Client Name is required';
+    }
+    if (!orderNumber) errors.orderNumber = 'Order Number is required';
+    if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
+    if (!taxType) errors.taxType = 'Tax Type is required';
+    if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
+      errors.gstPercentage = 'Valid GST % is required';
+    }
+    if (taxType?.value === 'GST' && !gstAmount) {
+      errors.gstAmount = 'GST Amount is required';
+    }
+    if (!transactionDate) {
+      errors.transactionDate = 'Transaction Date is required';
+    } else if (dayjs(transactionDate).isAfter(dayjs())) {
+      errors.transactionDate = 'Transaction Date cannot be in the future';
+    }
+    if (!transactionTime) errors.transactionTime = 'Transaction Time is required';
+    if (!paymentMode) errors.paymentMode = 'Payment Mode is required';
+    if (paymentMode?.value === 'Cheque' && !chequeNumber) {
+      errors.chequeNumber = 'Cheque Number is required';
+    }
+    if (paymentMode?.value === 'Cheque' && !chequeDate) {
+      errors.chequeDate = 'Cheque Date is required';
+    } else if (chequeDate && dayjs(chequeDate).isAfter(dayjs())) {
+      errors.chequeDate = 'Cheque Date cannot be in the future';
+    }
+
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+    return (
+        <div className="flex flex-col justify-center mt-8 mx-[8%]">
+      <form className="px-7 h-screen grid justify-center items-center ">
+    <div className="grid gap-6 " id="form">
+    <h1 className="font-bold text-3xl text-center mb-4 ">Finance Entry</h1>
+        <div>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Transaction Type*</label>
+            <div className='flex w-full'>
+            <CreatableSelect
+              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              id="1"
+              name="TransactionTypeSelect"
+              placeholder="Select Transaction Type"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  width: 'auto', // adjust the width as needed
+                  minHeight: '50px', // adjust the height as needed
+                }),
+              }}
+              defaultValue={transactionOptions[0]}
+              value={transactionType}
+              onChange={(option) => handleChange(option, 'TransactionTypeSelect')}
+              options={transactionOptions}
+            //   required
+              />
+               </div>
+               {errors.transactionType && <span className="text-red-500 text-sm">{errors.transactionType}</span>}
+               {transactionType && transactionType.value === 'Operational Expense' && (
+              <>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category*</label>
+            <div className='flex w-full'>
+            <CreatableSelect
+              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              id="1"
+              name="ExpenseCategorySelect"
+              placeholder="Select Expense Category"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  width: 'auto', // adjust the width as needed
+                  minHeight: '50px', // adjust the height as needed
+                }),
+              }}
+              value={expenseCategory}
+              options={expenseCategoryOptions}
+              onChange={(option) => handleChange(option, 'ExpenseCategorySelect')}
+            //   required
+              />
+              
+               </div>
+               {errors.expenseCategory && <span className="text-red-500 text-sm">{errors.expenseCategory}</span>}
+               </>
+            )}
+            {transactionType && transactionType.value !== 'Operational Expense' && (
+    <>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name*</label>
+            <div className="w-full flex gap-3">
+            <input className="p-3 capitalize shadow-2xl glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+                type="text"
+                placeholder="Client Name" 
+                id='2'
+                name="ClientNameInput" 
+                // required={!isEmpty} 
+                value={clientName}
+                onChange = {handleClientNameTermChange}
+                onBlur={() => {
+            setTimeout(() => {
+              setClientNameSuggestions([]);
+            }, 200); // Adjust the delay time according to your preference
+          }}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {(clientNameSuggestions.length > 0 && clientName !== '') && (
+                <ul className="list-none">
+                {clientNameSuggestions.map((name, index) => (
+                    <li key={index}>
+                    <button
+                        type="button"
+                        // className="text-black text-left pl-3 border w-full bg-gradient-to-r from-green-100 via-green-200 to-green-300 hover:cursor-pointer transition
+                        //     duration-300"
+                        className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md"
+                        onClick={handleClientNameSelection}
+                        value={name}
+                    >
+                        {name}
+                    </button>
+                    </li>
+                ))}
+                </ul>
+            )}
+{errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number*</label>
+            <div className="w-full flex gap-3">
+            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+                type="text"
+                placeholder="Ex. 10000" 
+                id='3'
+                name="OrderNumberInput"
+                value={orderNumber}
+                pattern="\d*"
+                inputMode="numeric" 
+                onChange={(e) => {
+                  const input = e.target.value.replace(/\D/g, '');
+                  setOrderNumber(input);
+                  if (errors.orderNumber) {
+                    setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                  }
+                }}
+                onFocus={(e) => {e.target.select()}}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
+            </>
+  )}
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount*</label>
+            <div className="w-full flex gap-3">
+            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+                type="text"
+                placeholder="Amount (₹)" 
+                id='4'
+                name="AmountInput" 
+                // required={!isEmpty} 
+                value={orderAmount}
+                pattern="\d*"
+                inputMode="numeric"
+                onChange={(e) => {
+                  const input = e.target.value.replace(/\D/g, '');
+                  setOrderAmount(input);
+                  if (errors.orderAmount) {
+                    setErrors((prevErrors) => ({ ...prevErrors, orderAmount: undefined }));
+                  }
+                }}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {errors.orderAmount && <span className="text-red-500 text-sm">{errors.orderAmount}</span>}
+          
+            {/* <div className='block mb-2 mt-3 text-gray-700 font-semibold'>
+            <RadioGroup
+              row
+              aria-labelledby="demo-row-radio-buttons-group-label"
+              name="row-radio-buttons-group"
+            >
+              <FormControlLabel value="None" control={<Radio />} label="None" />
+              <FormControlLabel value="TDS" control={<Radio />} label="TDS" />
+              <FormControlLabel value="DiscountBaddebt" control={<Radio />} label="Discount/Bad Debt" />
+             
+            </RadioGroup>
+            <div className='mb-2 mt-4' style={{ display: 'flex', justifyContent: 'center' }}>
+            <Button variant="contained" color="primary" style={{ backgroundColor: '#88cc6b' }}>Split TDS</Button>
+          </div>
+            </div> */}
+            
+            {/* <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Balance</label>
+          <div className="w-full flex gap-3">
+          <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+              type="text"
+              placeholder="Balance" 
+              id='4'
+              name="BalanceInput" 
+              // required={!isEmpty} 
+              // value={Balance}
+              // onChange={handleSearchTermChange}
+              onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const inputs = document.querySelectorAll('input, select, textarea');
+                  const index = Array.from(inputs).findIndex(input => input === e.target);
+                  if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
+                  }
+              }
+              }}
+              />
+          </div> */}
+
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Tax Type*</label>
+            <div className='flex w-full'>
+            <CreatableSelect
+              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              id="5"
+              name="TaxTypeSelect"
+              placeholder="Select Tax Type"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  width: 'auto', // adjust the width as needed
+                  minHeight: '50px', // adjust the height as needed
+                }),
+              }}
+              value={taxType}
+              options={taxTypeOptions}
+              onChange={(option) => handleChange(option, 'TaxTypeSelect')}
+            //   required
+              />
+               </div>
+               {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>}
+               {taxType && taxType.value === 'GST' && (
+              <>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
+          <div className="w-full flex gap-3">
+          <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+              type="text"
+              placeholder="GST%" 
+              id='4'
+              name="GSTInput" 
+              value={gstPercentage}
+              onChange = {(e) => {setGSTPercentage(e.target.value)
+                if (errors.gstPercentage) {
+                  setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
+                }
+              }}
+              onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const inputs = document.querySelectorAll('input, select, textarea');
+                  const index = Array.from(inputs).findIndex(input => input === e.target);
+                  if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
+                  }
+              }
+              }}
+              />
+          </div>
+          {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
+            <div className="w-full flex gap-3">
+            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+                type="text"
+                placeholder="GST Amount" 
+                id='7'
+                name="GSTAmountInput" 
+                // required={!isEmpty} 
+                value={gstAmount}
+                onChange = {(e) => {setGSTAmount(e.target.value);
+                  if (errors.gstAmount) {
+                    setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
+                  }
+                }}
+                
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
+            </>
+            )}
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Remarks</label>
+            <div className="w-full flex gap-3">
+            <TextareaAutosize
+              className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+              id="7"
+              name="RemarksTextArea"
+              placeholder="Remarks"
+              value={remarks}
+              onChange={e => setRemarks(e.target.value)}
+              
+            ></TextareaAutosize>
+            </div>
+
+                  <label className="block mt-5 mb-4 text-gray-700 font-semibold">Transaction Date*</label>
+                  <div className='flex w-full gap-1'>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Box mb={2} >
+          <TextField
+            className="custom-date-picker"
+            fullWidth
+            label="Select Date"
+            value={formattedTransactionDate}
+
+            onClick={handleDateClick}
+            InputProps={{
+              style: { borderColor: '#88cc6b' } 
+            }}
+          />
+          <Popover
+            open={openDate}
+            anchorEl={anchorElDate}
+            onClose={handleDateClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+          >
+            <DateCalendar
+              value={transactionDate}
+              onChange={(newValue) => {
+                setTransactionDate(newValue);
+                handleDateClose();
+              }}
+            />
+          </Popover>
+        </Box>
+        <Box>
+        <TimePicker
+            className="custom-time-picker"
+            label="Select Time"
+            value={transactionTime}
+            onChange={(newValue) => {
+              setTransactionTime(newValue);
+            }}
+            renderInput={(params) => <TextField {...params} fullWidth />}
+            ampm
+            views={['hours', 'minutes']}
+          />
+        </Box>
+      </LocalizationProvider>
+                </div>
+                {errors.transactionDate && <span className="text-red-500 text-sm">{errors.transactionDate}</span>}
+                {errors.transactionTime && <span className="text-red-500 text-sm">{errors.transactionTime}</span>}
+                <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Payment Mode*</label>
+            <div className='flex w-full'>
+            <CreatableSelect
+              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              id="5"
+              name="PaymentModeSelect"
+              placeholder="Select Payment Mode"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  width: 'auto', // adjust the width as needed
+                  minHeight: '50px', // adjust the height as needed
+                }),
+              }}
+              value={paymentMode}
+              onChange={(option) => handleChange(option, 'PaymentModeSelect')}
+              options={paymentModeOptions}
+            //   required
+              />
+               </div>
+               {errors.paymentMode && <span className="text-red-500 text-sm">{errors.paymentMode}</span>}
+               {paymentMode && paymentMode.value === 'Cheque' && (
+              <>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number*</label>
+            <div className="w-full flex gap-3">
+            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+                type="text"
+                placeholder="Ex. 10000" 
+                id='3'
+                name="ChequeNumberInput" 
+                onChange = {(e) => {setChequeNumber(e.target.value)
+                  if (errors.chequeNumber) {
+                    setErrors((prevErrors) => ({ ...prevErrors, chequeNumber: undefined }));
+                  }
+                }}
+                onFocus={(e) => {e.target.select()}}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {errors.chequeNumber && <span className="text-red-500 text-sm">{errors.chequeNumber}</span>}
+            <label className="block mt-5 mb-4 text-gray-700 font-semibold">Cheque Date*</label>
+                  <div className='flex w-full gap-1'>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Box mb={2} >
+          <TextField
+            className="custom-date-picker"
+            fullWidth
+            label="Select Date"
+            value={formattedChequeDate}
+            onClick={handleDateClick}
+            InputProps={{
+              style: { borderColor: '#88cc6b' } 
+            }}
+          />
+          <Popover
+            open={openDate}
+            anchorEl={anchorElDate}
+            onClose={handleDateClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+          >
+            <DateCalendar
+              value={chequeDate}
+              onChange={(newValue) => {
+                setChequeDate(newValue);
+                handleDateClose();
+              }}
+            />
+          </Popover>
+        </Box>
+        <Box>
+        <TimePicker
+            className="custom-time-picker"
+            label="Select Time"
+            value={chequeTime}
+            onChange={(newValue) => {
+              setChequeDate(newValue);
+            }}
+            renderInput={(params) => <TextField {...params} fullWidth />}
+            ampm
+            views={['hours', 'minutes']}
+          />
+        </Box>
+      </LocalizationProvider>
+                </div>
+                {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
+                {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
+                </>
+            )}
+               <div className="flex items-center justify-center mb-36 mt-11 mr-14">
+               <button className = "bg-red-400 text-white p-2 rounded-full ml-4 w-24 justify-center">
+                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Clear</span>
+                      </button>
+
+                      <button className = "bg-green-400 text-white p-2 rounded-full ml-4 w-24 justify-center " onClick={insertNewFinance}>
+                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span>
+                      </button>
+                    
+                </div>
+            
+  </div>
+  </div>
+  {/* <div className='bg-surface-card p-8 rounded-2xl mb-4'>
+        <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
+          <MuiAlert severity={severity} onClose={() => setToast(false)}>
+            {toastMessage}
+          </MuiAlert>
+        </Snackbar>
+      </div> */}
+  </form>
+  {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
+  </div>
+    );
+}
+
+export default FinanceData;
