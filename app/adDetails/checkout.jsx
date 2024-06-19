@@ -75,6 +75,7 @@ const CheckoutPage = () => {
       if (data === "Values Inserted Successfully!") {
         alert("Quote Downloaded")
         dispatch(resetClientData())
+        routers.push('/adMedium')
         //setMessage(data.message);
       } else {
         alert(`The following error occurred while inserting data: ${data}`);
