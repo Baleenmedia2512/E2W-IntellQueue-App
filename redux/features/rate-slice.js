@@ -25,7 +25,7 @@ const initialState = {
   currentPage: "",
   validRates: [],
   isDetails: false,
-  rateGST: 0
+  rateGST: { label: "0%" , value: 0 }
 };
 
 export const rateSlice = createSlice({

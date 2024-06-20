@@ -19,6 +19,8 @@ import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { resetOrderData } from '@/redux/features/order-slice';
+import { useDispatch } from 'react-redux';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -55,20 +57,26 @@ const paymentModeOptions = [
 ];
 
 const FinanceData = () => {
+  const orderData = useAppSelector(state => state.orderSlice);
+  const { clientName: orderClientName, maxOrderNumber: orderOrderNumber, remarks: orderRemarks, receivable: orderReceivable } = orderData;
   // const username = "Grace Scans"
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName)
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
-  const [orderNumber, setOrderNumber] = useState(null);
-  const [clientName, setClientName] = useState(null);
-  const [orderAmount, setOrderAmount] = useState(null);
+  // const [orderNumber, setOrderNumber] = useState(null);
+  // const [clientName, setClientName] = useState(null);
+  // const [orderAmount, setOrderAmount] = useState(null);
+  // const [remarks, setRemarks] = useState(null);
+  const [clientName, setClientName] = useState(orderClientName || '');
+  const [orderNumber, setOrderNumber] = useState(orderOrderNumber || '');
+  const [orderAmount, setOrderAmount] = useState(orderReceivable || '');
+  const [remarks, setRemarks] = useState(orderRemarks || '');
   const [taxType, setTaxType] = useState(taxTypeOptions[2]);
   const [gstAmount, setGSTAmount] = useState(null);
   const [gstPercentage, setGSTPercentage] = useState(null);
   const [expenseCategory, setExpenseCategory] = useState(null);
-  const [remarks, setRemarks] = useState(null);
   const [transactionDate, setTransactionDate] = useState(dayjs());
   const [transactionTime, setTransactionTime] = useState(dayjs());
   const [paymentMode, setPaymentMode] = useState(paymentModeOptions[0]);
@@ -83,12 +91,19 @@ const FinanceData = () => {
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
-  const orderClientName = useAppSelector(state => state.orderSlice.clientName);
-  const orderReceivable = useAppSelector(state => state.orderSlice.receivable); 
-  const orderOrderNumber = useAppSelector(state => state.orderSlice.orderNumber); 
-  const orderRemarks = useAppSelector(state => state.orderSlice.remarks);  
+  const dispatch = useDispatch();
 
  
+
+  useEffect(() => {
+    // Use the orderData values to initialize the state
+    setClientName(orderClientName || '');
+    setOrderAmount(orderReceivable || '');
+    setOrderNumber(orderOrderNumber || '');
+    setRemarks(orderRemarks || '')
+  }, [orderClientName, orderReceivable, orderOrderNumber, orderRemarks]);
+
+console.log(orderClientName, orderReceivable, orderOrderNumber, orderRemarks)
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
   const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
@@ -103,10 +118,6 @@ const FinanceData = () => {
   const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
   const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-  useEffect(() => {
-    console.log(orderClientName, orderReceivable, orderRemarks)
-  }, [])
-  
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
     setToastMessage(toastMessageContent)
@@ -209,11 +220,13 @@ const FinanceData = () => {
           setRemarks('');
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
+          dispatch(resetOrderData());
           // window.location.reload();
           setSuccessMessage('Finance Entry Added');
         setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
+    
       } catch (error) {
           console.error(error);
       }
