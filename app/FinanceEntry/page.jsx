@@ -189,7 +189,6 @@ const FinanceData = () => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
-          console.log(clientDetails)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);

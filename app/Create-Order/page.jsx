@@ -566,7 +566,6 @@ const fetchRates = async () => {
             console.error("Error fetching client details:", error);
           });
       };
-console.log(rateId)
       const createNewOrder = async(event) => {
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
@@ -600,7 +599,6 @@ console.log(rateId)
     setTimeout(() => {
       setToast(false);
     }, 2000);
-          console.log('Form is invalid, displaying errors...');
       }
        }
 
@@ -640,7 +638,6 @@ console.log(rateId)
         });
       }, [elementsToHide])
 
-console.log(qty)
   const calculateReceivable = () => {
     // Ensure qty, unitPrice, marginAmount, and rateGST are accessible in the scope of this function
     const validQty = Number(qty);
@@ -687,7 +684,6 @@ console.log(qty)
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
   };
-  console.log(elementsToHide.includes("OrderQuantityText"));
   const validateFields = () => {
     let errors = {};
 
