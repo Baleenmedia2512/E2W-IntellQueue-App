@@ -192,7 +192,7 @@ const FinanceData = () => {
           console.log(data)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
-          // setOrderAmount(clientDetails.amount);
+          setOrderAmount(clientDetails.balanceAmount);
           setGSTPercentage(clientDetails.gstPercentage);
         }
       })
