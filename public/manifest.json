@@ -4,8 +4,8 @@
     "display": "standalone",
     "scope": "/",
     "start_url": "/",
-    "name": "Easy2Work",
-    "short_name": "Easy2Work",
+    "name": "Easy2Work(T)",
+    "short_name": "Easy2Work(T)",
     "icons": [
         {
             "src": "/icon-192x192.png",

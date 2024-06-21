@@ -103,7 +103,6 @@ const FinanceData = () => {
     setRemarks(orderRemarks || '')
   }, [orderClientName, orderReceivable, orderOrderNumber, orderRemarks]);
 
-console.log(orderClientName, orderReceivable, orderOrderNumber, orderRemarks)
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
   const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
@@ -179,20 +178,21 @@ console.log(orderClientName, orderReceivable, orderOrderNumber, orderRemarks)
 
     setClientNameSuggestions([]);
     setClientName(name);
-    fetchClientDetails(name, number);
+    fetchClientDetails(number);
 
   };
 
-  const fetchClientDetails = (clientName, clientNumber) => {
+  const fetchClientDetails = (clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
+          console.log(data)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
-          setOrderAmount(clientDetails.amount);
+          // setOrderAmount(clientDetails.amount);
           setGSTPercentage(clientDetails.gstPercentage);
         }
       })
