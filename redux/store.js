@@ -6,7 +6,6 @@ import { clientReducer } from "./features/client-slice";
 import { quoteReducer } from "./features/quote-slice";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import { rateReducer } from "./features/rate-slice";
-import { orderReducer } from "./features/order-slice";
 
 const createNoopStorage = () => {
   return {
@@ -48,27 +47,19 @@ const quotePersistConfig = {
 const ratePersistConfig = {
   key: "rate",
   storage: storage,
-  whitelist: ["selectedValues", "rateId", "slabData", "selectedUnit", "startQty"]
-}
-
-const orderPersistConfig = {
-  key: "order",
-  storage: storage,
-  whitelist: ["clientName", "clientNumber", "maxOrderNumber", "receivable", "remarks"]
+  whitelist: ["selectedValues", "rateId", "slabData", "selectedUnit",, "startQty"]
 }
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
-const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer);
-const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer);
-const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer);
-const persistedOrderReducer = persistReducer(orderPersistConfig, orderReducer);
+const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer)
+const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer)
+const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer)
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
   clientSlice: persistedClientReducer,
   quoteSlice: persistedQuoteReducer,
-  rateSlice: persistedRateReducer,
-  orderSlice: persistedOrderReducer
+  rateSlice: persistedRateReducer
 });
 
 export const store = configureStore({

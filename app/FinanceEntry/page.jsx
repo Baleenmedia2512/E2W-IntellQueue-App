@@ -19,8 +19,6 @@ import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
-import { resetOrderData } from '@/redux/features/order-slice';
-import { useDispatch } from 'react-redux';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -57,26 +55,20 @@ const paymentModeOptions = [
 ];
 
 const FinanceData = () => {
-  const orderData = useAppSelector(state => state.orderSlice);
-  const { clientName: orderClientName, maxOrderNumber: orderOrderNumber, remarks: orderRemarks, receivable: orderReceivable } = orderData;
   // const username = "Grace Scans"
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName)
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
-  // const [orderNumber, setOrderNumber] = useState(null);
-  // const [clientName, setClientName] = useState(null);
-  // const [orderAmount, setOrderAmount] = useState(null);
-  // const [remarks, setRemarks] = useState(null);
-  const [clientName, setClientName] = useState(orderClientName || '');
-  const [orderNumber, setOrderNumber] = useState(orderOrderNumber || '');
-  const [orderAmount, setOrderAmount] = useState(orderReceivable || '');
-  const [remarks, setRemarks] = useState(orderRemarks || '');
+  const [orderNumber, setOrderNumber] = useState(null);
+  const [clientName, setClientName] = useState(null);
+  const [orderAmount, setOrderAmount] = useState(null);
   const [taxType, setTaxType] = useState(taxTypeOptions[2]);
   const [gstAmount, setGSTAmount] = useState(null);
   const [gstPercentage, setGSTPercentage] = useState(null);
   const [expenseCategory, setExpenseCategory] = useState(null);
+  const [remarks, setRemarks] = useState(null);
   const [transactionDate, setTransactionDate] = useState(dayjs());
   const [transactionTime, setTransactionTime] = useState(dayjs());
   const [paymentMode, setPaymentMode] = useState(paymentModeOptions[0]);
@@ -91,18 +83,6 @@ const FinanceData = () => {
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
-  const dispatch = useDispatch();
-
- 
-
-  useEffect(() => {
-    // Use the orderData values to initialize the state
-    setClientName(orderClientName || '');
-    setOrderAmount(orderReceivable || '');
-    setOrderNumber(orderOrderNumber || '');
-    setRemarks(orderRemarks || '')
-  }, [orderClientName, orderReceivable, orderOrderNumber, orderRemarks]);
-
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
   const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
@@ -117,6 +97,8 @@ const FinanceData = () => {
   const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
   const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
+  
+  
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
     setToastMessage(toastMessageContent)
@@ -133,6 +115,71 @@ const FinanceData = () => {
 
   const openDate = Boolean(anchorElDate);
 
+
+  // const handleOrderNumber = async () => {
+  //   if(orderNumber > 0){
+  //   try {
+  //     const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchFinanceData.php/?JsonOrderNumber=${orderNumber}&JsonDBName=${username}`);
+      
+  //     if (!response.ok) {
+  //       throw new Error('Network response was not ok');
+  //     }
+  //     const data = await response.json();
+  //     if(data === "Order is invalid" || data === "No data found for the provided Order Number"){
+  //       return null
+  //     } else{
+  //       const matchedTransactionType = transactionOptions.find(option => option.value === data.TransactionType);
+  //       const matchedTaxType = taxTypeOptions.find(option => option.value === data.TaxType);
+  //       const matchedExpenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory);
+  //       const matchedPaymentMode = paymentModeOptions.find(option => option.value === data.PaymentMode);
+
+  //       setTransactionType(matchedTransactionType || { value: data.TransactionType, label: data.TransactionType });
+  //       setTaxType(matchedTaxType || { value: data.TaxType, label: data.TaxType });
+  //       setExpenseCategory(matchedExpenseCategory || { value: data.ExpensesCategory, label: data.ExpensesCategory });
+  //       setPaymentMode(matchedPaymentMode || { value: data.PaymentMode, label: data.PaymentMode })
+
+  //       // // Extract date and time
+  //       // const transactionDateTime = new Date(data.TransactionDate);
+  //       // const transactionDate = transactionDateTime.toISOString().split('T')[0]; // Extract date
+  //       // const transactionTime = transactionDateTime.toLocaleTimeString(); // Extract time
+
+  //       // setTransactionDate(transactionDate);
+  //       // setTransactionTime(transactionTime);
+
+  //       // // Extract cheque date and time
+  //       // const chequeDateTime = new Date(data.ChequeDate);
+  //       // const chequeDate = chequeDateTime.toISOString().split('T')[0]; // Extract date
+  //       // const chequeTime = chequeDateTime.toLocaleTimeString(); // Extract time
+
+  //       // setChequeDate(chequeDate);
+  //       // setChequeTime(chequeTime);
+
+  //       // Convert fetched date string to dayjs object
+  //       // const transactionDate = dayjs(data.TransactionDate);
+
+  //       // setTransactionDate(transactionDate);
+  //       // setTransactionTime(transactionDate.format('HH:mm:ss')); // Assuming time format is 'HH:mm:ss'
+
+  //       // // Convert fetched cheque date string to dayjs object
+  //       // const chequeDate = dayjs(data.ChequeDate);
+
+  //       // setChequeDate(chequeDate);
+  //       // setChequeTime(chequeDate.format('HH:mm:ss')); 
+
+  //       setClientName(data.ClientName)
+  //       setOrderAmount(data.Amount)
+  //       setGSTAmount(data.TaxAmount)
+  //       setRemarks(data.Remarks)
+  //       setOrdersData(data)
+  //       console.log(data)
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching data:', error);
+  //   }
+  // } else{
+  //   showToastMessage("error", "Order Number is either 0 or empty. Please check and type again properly.")
+  // }
+  // };
 
   const handleChange = (selectedOption, name) => {
     switch(name) {
@@ -178,22 +225,23 @@ const FinanceData = () => {
 
     setClientNameSuggestions([]);
     setClientName(name);
-    fetchClientDetails(number);
+    fetchClientDetails(name, number);
 
   };
 
-  const fetchClientDetails = (clientNumber) => {
+  const fetchClientDetails = (clientName, clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientName=${clientName}&ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
-          console.log(data)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
-          // setOrderAmount(clientDetails.amount);
+          setOrderAmount(clientDetails.amount);
           setGSTPercentage(clientDetails.gstPercentage);
+          // setTransactionDate(clientDetails.orderDate);
+          // setTransactionDate(dayjs(clientDetails.orderDate));
         }
       })
       .catch((error) => {
@@ -220,13 +268,11 @@ const FinanceData = () => {
           setRemarks('');
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
           // window.location.reload();
           setSuccessMessage('Finance Entry Added');
         setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
-    
       } catch (error) {
           console.error(error);
       }
@@ -243,17 +289,22 @@ const FinanceData = () => {
     
 }
 
-  // const getOptions = (filterKey, selectedValues) => {
-  //   const filteredData = ordersData.filter(item => {
-  //     return Object.entries(selectedValues).every(([key, value]) =>
-  //       key === filterKey || !value || item[key] === value.value
-  //     );
-  //   });
+  const getOptions = (filterKey, selectedValues) => {
+    const filteredData = ordersData.filter(item => {
+      return Object.entries(selectedValues).every(([key, value]) =>
+        key === filterKey || !value || item[key] === value.value
+      );
+    });
 
-  //   const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-  //   return distinctValues.sort().map(value => ({ value, label: value }));
-  // };
+    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+    return distinctValues.sort().map(value => ({ value, label: value }));
+  };
 
+  // useEffect(() => {
+  //   if(orderNumber > 0){
+  //     handleOrderNumber()
+  //   }
+  // }, [orderNumber]);
 
   const validateFields = () => {
     let errors = {};

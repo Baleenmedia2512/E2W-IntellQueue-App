@@ -100,7 +100,6 @@ const Report = () => {
         { field: 'Receivable', headerName: 'Amount(₹)', width: 130 },
         { field: 'rateName', headerName: 'Rate Name', width: 150 },
         { field: 'adType', headerName: 'Rate Type', width: 150 },
-        { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
     ];
 
     const financeColumns = [
@@ -110,7 +109,6 @@ const Report = () => {
         { field: 'OrderNumber', headerName: 'Order Number', width: 150 },
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
         { field: 'Remarks', headerName: 'Remarks', width: 200 },
-        { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
     ];
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
