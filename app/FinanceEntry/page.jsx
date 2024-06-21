@@ -189,7 +189,7 @@ const FinanceData = () => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
-          console.log(data)
+          console.log(clientDetails)
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
@@ -200,6 +200,32 @@ const FinanceData = () => {
         console.error(error);
       });
   }; 
+
+  const handleOrderNumberChange = (event) => {
+    const newOrderNumber = event.target.value;
+    setOrderNumber(newOrderNumber);
+    axios
+    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      if (data.length > 0) {
+        const clientDetails = data[0];
+        setRemarks(clientDetails.remarks);
+        setOrderAmount(clientDetails.balanceAmount);
+        setGSTPercentage(clientDetails.gstPercentage);
+        setClientName(clientDetails.clientName);
+        
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    // Clear validation errors
+    if (errors.orderNumber) {
+      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+    }
+  };
+  
   const insertNewFinance = async (e) => {
     e.preventDefault()
     if (validateFields()) {
@@ -405,13 +431,7 @@ const FinanceData = () => {
                 value={orderNumber}
                 pattern="\d*"
                 inputMode="numeric" 
-                onChange={(e) => {
-                  const input = e.target.value.replace(/\D/g, '');
-                  setOrderNumber(input);
-                  if (errors.orderNumber) {
-                    setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-                  }
-                }}
+                onChange={handleOrderNumberChange}
                 onFocus={(e) => {e.target.select()}}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
