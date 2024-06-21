@@ -4,7 +4,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
-import { RemoveCircleOutline } from '@mui/icons-material';
+import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setOrderData, resetOrderData } from '@/redux/features/order-slice';
 import Select from 'react-select';
@@ -566,7 +566,6 @@ const fetchRates = async () => {
             console.error("Error fetching client details:", error);
           });
       };
-console.log(rateId)
       const createNewOrder = async(event) => {
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
@@ -583,8 +582,9 @@ console.log(rateId)
                 setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
                 setTimeout(() => {
                 setSuccessMessage('');
-              }, 4000);
                 router.push('/FinanceEntry');
+              }, 3000);
+                
               //setMessage(data.message);
             } else {
               alert(`The following error occurred while inserting data: ${data}`);
@@ -599,7 +599,6 @@ console.log(rateId)
     setTimeout(() => {
       setToast(false);
     }, 2000);
-          console.log('Form is invalid, displaying errors...');
       }
        }
 
@@ -639,7 +638,6 @@ console.log(rateId)
         });
       }, [elementsToHide])
 
-console.log(qty)
   const calculateReceivable = () => {
     // Ensure qty, unitPrice, marginAmount, and rateGST are accessible in the scope of this function
     const validQty = Number(qty);
@@ -686,7 +684,6 @@ console.log(qty)
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
   };
-  console.log(elementsToHide.includes("OrderQuantityText"));
   const validateFields = () => {
     let errors = {};
 
@@ -783,9 +780,16 @@ console.log(qty)
                   </label>
                   <div>
                       <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Rate Card Name</label>
-                      <div className='flex mr-4'>
+                      <div className='flex w-full'>
                         <Select
-                          className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+                          className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                          styles={{
+                            control: (provided) => ({
+                              ...provided,
+                              width: 'auto', // adjust the width as needed
+                              minHeight: '50px', // adjust the height as needed
+                            }),
+                          }}
                           id="13"
                           name="RateCardNameSelect"
                           // required
@@ -799,9 +803,16 @@ console.log(qty)
                     {errors.rateName && <span className="text-red-500 text-sm">{errors.rateName}</span>}
                     <div name="RatesCategorySelect" id="17">
                     <label className='block mb-2 text-gray-700 font-semibold'>Category</label>
-                    <div className='flex mr-4'>
+                    <div className='flex w-full'>
                       <Select
-                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
+                        className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        styles={{
+                          control: (provided) => ({
+                            ...provided,
+                            width: 'auto', // adjust the width as needed
+                            minHeight: '50px', // adjust the height as needed
+                          }),
+                        }}
                         placeholder="Select Category"
                         value={selectedValues.typeOfAd}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
@@ -814,9 +825,16 @@ console.log(qty)
                   {errors.typeOfAd && <span className="text-red-500 text-sm">{errors.typeOfAd}</span>}
                   <div>
                     <label className='block mb-2 text-gray-700 font-semibold'>Type</label>
-                    <div className='flex mr-4'>
+                    <div className='flex w-full'>
                       <Select
-                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        styles={{
+                          control: (provided) => ({
+                            ...provided,
+                            width: 'auto', // adjust the width as needed
+                            minHeight: '50px', // adjust the height as needed
+                          }),
+                        }}
                         id="adTypeSelect"
                         name="adTypeSelect"
                         placeholder="Select Type"
@@ -833,9 +851,16 @@ console.log(qty)
                   {/* Location of the Rate for GS */}
                   <div id="19" name="RatesLocationSelect">
                     <label className='block mb-2 text-gray-700 font-semibold'>Location</label>
-                    <div className='flex mr-4'>
+                    <div className='flex w-full'>
                       <Select
-                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        styles={{
+                          control: (provided) => ({
+                            ...provided,
+                            width: 'auto', // adjust the width as needed
+                            minHeight: '50px', // adjust the height as needed
+                          }),
+                        }}
                         placeholder="Select Location"
                         value={selectedValues.Location}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
@@ -850,9 +875,16 @@ console.log(qty)
                   {/* {(packageOptions.length > 1 || isNewRate) && ( */}
                   <div name="RatesPackageSelect">
                   <label className='block mb-2 text-gray-700 font-semibold' name="RatesPackageSelect">Package</label>
-                  <div className='flex mr-4'>
+                  <div className='flex w-full'>
                     <Select
-                      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                      className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                      styles={{
+                        control: (provided) => ({
+                          ...provided,
+                          width: 'auto', // adjust the width as needed
+                          minHeight: '50px', // adjust the height as needed
+                        }),
+                      }}
                       id="21"
                       name="RatesPackageSelect"
                       placeholder="Select Package"
@@ -867,20 +899,28 @@ console.log(qty)
                   {/* )} */}
                 <></>
 
-                <div className="mb-6 mt-4 mr-14" id="23" name="RatesVendorSelect">
+                <div id="23" name="RatesVendorSelect">
                   <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
+                  <div className='flex w-full'>
                   <Select
-                    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
-                    
+                    className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                    styles={{
+                      control: (provided) => ({
+                        ...provided,
+                        width: 'auto', // adjust the width as needed
+                        minHeight: '50px', // adjust the height as needed
+                      }),
+                    }}
                     placeholder="Select Vendor"
                     value={selectedValues.vendorName}
                     onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
                     options={vendors}
                     // required
                   />
+                  </div>
                 </div>
                 {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
-                    <div class="w-full flex">
+                    <div class="w-full gap-3 flex">
                     <div name="OrderMarginAmount">
                     <label className="block text-gray-700 font-semibold mb-2" name="OrderMarginAmount">Margin Amount</label>
                         <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
@@ -950,7 +990,7 @@ console.log(qty)
                     </div>
                     <div className='text-center justify-start' name="OrderReleaseDate">
                     {releaseDates.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Release-Dates</h2> : <></>}
-                    <ul className='mb-4 mr-4'>
+                    <ul className='mb-4'>
                     {releaseDates.map((data, index) => (
                       <div key={index} className='flex'>
                         <option key={data} className="mt-1.5" 
