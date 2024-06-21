@@ -637,7 +637,6 @@ const fetchRates = async () => {
           });
         });
       }, [elementsToHide])
-
   const calculateReceivable = () => {
     // Ensure qty, unitPrice, marginAmount, and rateGST are accessible in the scope of this function
     const validQty = Number(qty);
@@ -767,6 +766,7 @@ const fetchRates = async () => {
                                 <option>Rate Card Name: {selectedValues.rateName.value}</option>
                                 <option>Type: {selectedValues.adType.value}</option>
                                 <option>Unit Price: Rs. {unitPrice} per {selectedUnit.value}</option>
+                                <option>Consultant: {consultantName}</option>
                             </li>
                         </ul>
                         
