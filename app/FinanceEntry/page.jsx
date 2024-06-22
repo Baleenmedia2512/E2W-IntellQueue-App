@@ -91,6 +91,7 @@ const FinanceData = () => {
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [balanceAmount, setBalanceAmount] = useState('');
   const dispatch = useDispatch();
 
  
@@ -192,6 +193,7 @@ const FinanceData = () => {
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
+          setBalanceAmount(clientDetails.balanceAmount);
           setGSTPercentage(clientDetails.gstPercentage);
         }
       })
@@ -227,6 +229,16 @@ const FinanceData = () => {
   
   const insertNewFinance = async (e) => {
     e.preventDefault()
+    if (balanceAmount === 0) {
+      setToastMessage('Full payment has already been received!');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+
+    } else {
+
     if (validateFields()) {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
@@ -265,7 +277,7 @@ const FinanceData = () => {
       }, 2000);
     }
             
-    
+  }
 }
 
   // const getOptions = (filterKey, selectedValues) => {
@@ -291,7 +303,7 @@ const FinanceData = () => {
       errors.clientName = 'Client Name is required';
     }
     if (!orderNumber) errors.orderNumber = 'Order Number is required';
-    if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
+    // if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
     if (!taxType) errors.taxType = 'Tax Type is required';
     if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
       errors.gstPercentage = 'Valid GST % is required';
