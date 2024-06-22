@@ -91,10 +91,10 @@ useEffect(() => {
   }
 }, [rateId]);
 
-useEffect(() => {
- const newUnitPrice = findUnitPrice();
- setUnitPrice(newUnitPrice)
-}, [qty]);
+// useEffect(() => {
+//  const newUnitPrice = findUnitPrice();
+//  setUnitPrice(newUnitPrice)
+// }, [qty]);
 
 const [filters, setFilters] = useState({
   rateName: [],
@@ -119,6 +119,7 @@ const fetchQtySlab = async () => {
     if(firstSelectedSlab){
       dispatch(setStartQty(firstSelectedSlab.StartQty));
       setQty(firstSelectedSlab.StartQty);
+      setUnitPrice(firstSelectedSlab.UnitPrice);
     }
   }  catch (error) {
     console.error(error);
@@ -482,8 +483,6 @@ const fetchRates = async () => {
   }
 };
 
-
-//rate cards
 
 
     const findUnitPrice = () => {
