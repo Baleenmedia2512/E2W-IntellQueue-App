@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+
+/* Center login form on mobile */
+.login-container {
+  padding: 1rem; /* Adjust padding as needed */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 400px; /* Adjust max-width as needed */
+  padding: 1.5rem;
+  background-color: #FFFFFF;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Corporate Picture Display (Web Only) */
+@media (min-width: 768px) {
+  .login-container {
+    flex-direction: row;
+  }
+
+  .bg-corporate-pictures {
+    width: 50%; /* Adjust width as needed */
+    background-color: #A9D9FD;
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .bg-corporate-pictures img {
+    width: 100%;
+    height: 50%; /* Adjust height as needed */
+    object-fit: cover;
+  }
+}

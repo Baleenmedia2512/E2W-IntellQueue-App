@@ -157,7 +157,8 @@ const BottomBar = () => {
       <div className="tooltip-arrow" data-popper-arrow></div>
     </div>
     {/* Quote Sender button */}
-
+    
+    {/* MP-97 */}
     {/* Order button */}
     <button data-tooltip-target="tooltip-profile" name = "RatesEntryNavigation" type="button" onClick={(e) => handleChange(e, 3)} className="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
     <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
@@ -173,6 +174,7 @@ const BottomBar = () => {
       <div className="tooltip-arrow" data-popper-arrow></div>
       </div>
       {/* Order button */}
+      {/* MP-97 */}
 
     {/* Rates Entry button */}
     <button data-tooltip-target="tooltip-profile" name = "RatesEntryNavigation" type="button" onClick={(e) => handleChange(e, 4)} className="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
