@@ -88,13 +88,12 @@ useEffect(() => {
   if(rateId > 0){
     handleRateId()
     fetchQtySlab()
+  } else {
+    setUnitPrice(0);
   }
 }, [rateId]);
 
-// useEffect(() => {
-//  const newUnitPrice = findUnitPrice();
-//  setUnitPrice(newUnitPrice)
-// }, [qty]);
+
 
 const [filters, setFilters] = useState({
   rateName: [],
@@ -496,7 +495,6 @@ const fetchRates = async () => {
     useEffect(() => {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
-      
     }, [qty])
     
 
