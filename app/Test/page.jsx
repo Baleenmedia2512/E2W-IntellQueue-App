@@ -1,7 +1,132 @@
 'use client'
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { login, logout, setCompanyName } from '@/redux/features/auth-slice';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/redux/store';
+import { resetRatesData } from '@/redux/features/rate-slice';
+import { resetQuotesData } from '@/redux/features/quote-slice';
+import { resetClientData } from '@/redux/features/client-slice';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const LoginPage = () => {
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const [companyNameSuggestions, setCompanyNameSuggestions] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    dispatch(logout())
+
+  },[])
+
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const toggleShowPassword = () => {setShowPassword(!showPassword)};
+
+  const handleSearchTermChange = (event) => {
+    const newName = event.target.value
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestCompanyNames.php/get?suggestion=${newName}`)
+      .then((response) => response.json())
+      .then((data) => setCompanyNameSuggestions(data));
+      dispatch(setCompanyName(newName));
+  };
+
+  const handleCompanyNameSelection = (event) => {
+    const input = event.target.value;
+
+    setCompanyNameSuggestions([]);
+    dispatch(setCompanyName(input));
+  };
+
+  // Validate form fields
+  const validateFields = () => {
+    let errors = {};
+    if (!userName.trim()) {
+        errors.username = 'Username is required';
+    }
+    if (!password.trim()) {
+        errors.password = 'Password is required';
+    }
+    if (!companyName.trim()) {
+        errors.companyName = 'Company Name is required';
+    }
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+};
+
+const handleLogin = (event) => {
+    event.preventDefault();
+
+    if (validateFields()) {
+        const encodedPassw = encodeURIComponent(password);
+
+        // Assuming companyName, userName, and encodedPassw are defined and used correctly
+        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data === 'Login Successfully') {
+                    setSuccessMessage(data);
+                    setTimeout(() => {
+                        setSuccessMessage('');
+                    }, 2000);
+
+                    // Dispatch actions and navigate based on conditions
+                    dispatch(login(userName));
+                    dispatch(resetClientData());
+                    dispatch(resetRatesData());
+                    dispatch(resetQuotesData());
+
+                    if (companyName === 'Grace Scans') {
+                        router.push("/"); // Navigate to the main screen
+                    } else {
+                        router.push("/adDetails");
+                    }
+                } else {
+                    // Handle invalid credentials scenario
+                    setPassword(''); // Clear password field if needed
+                    setToastMessage('Invalid user name or password!');
+                    setSeverity('error');
+                    setToast(true);
+                    setTimeout(() => {
+                        setToast(false);
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                // Handle fetch or server errors
+                setToastMessage('Error in login ' + error);
+                setSeverity('error');
+                setToast(true);
+                setTimeout(() => {
+                    setToast(false);
+                }, 2000);
+            });
+    } else {
+        setToastMessage('Please fill all necessary fields!');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+            setToast(false);
+        }, 2000);
+    }
+};
+
+
+
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
             <div className="max-w-screen-lg min-w-fit min-h-fit bg-white shadow-md rounded-lg overflow-hidden p-8 md:flex md:items-center md:justify-center md:space-x-8">
@@ -16,41 +141,85 @@ const LoginPage = () => {
                                 Username
                             </label>
                             <input
-                                className="border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
+                                 className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 focus:ring focus:ring-blue-300 w-full ${errors.username ? 'border-red-500' : ''}`}
                                 id="username"
                                 type="text"
                                 placeholder="Enter your username"
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
                             />
+                            {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
                         </div>
                         <div className="mb-4">
                             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
                                 Password
                             </label>
-                            <input
-                                className="border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
-                                id="password"
-                                type="password"
-                                placeholder="Enter your password"
-                            />
+                            <div className="relative">
+                                <input
+                                    className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 focus:ring focus:ring-blue-300 w-full ${errors.password ? 'border-red-500' : ''}`}
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                                    onClick={toggleShowPassword}
+                                >
+                                    {showPassword ? (
+                                        <EyeSlashIcon className="h-5 w-5 text-gray-700" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-gray-700" />
+                                    )}
+                                </button>
+                            </div>
+                            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                         </div>
-                        <div className="mb-6">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+                        <div className="mb-6 relative">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="company">
                                 Company Name
                             </label>
                             <input
-                                className="border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full"
-                                id="password"
-                                type="password"
-                                placeholder="Enter your Company Name"
+                                className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 focus:ring focus:ring-blue-300 w-full ${errors.companyName ? 'border-red-500' : ''}`}
+                                id="company"
+                                type="text"
+                                placeholder="Enter your company name"
+                                value={companyName}
+                                onChange={handleSearchTermChange}
                             />
+                            {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
+                            {/* Company Name Suggestions */}
+                            {(companyNameSuggestions.length > 0 && companyName !== '') && (
+                                <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                                    {companyNameSuggestions.map((name, index) => (
+                                        <li key={index}>
+                                            <button
+                                                type="button"
+                                                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                                                onClick={handleCompanyNameSelection}
+                                                value={name}
+                                            >
+                                                {name}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
+                        
                         <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                             type="button"
+                            onClick={handleLogin}
                         >
                             Sign In
                         </button>
                     </form>
+                    <div className="text-gray-600 text-xs mt-4">
+                        Version 1.0.21
+                    </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
                 <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">
@@ -61,6 +230,9 @@ const LoginPage = () => {
                 </div>
                 </div>
             </div>
+            {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
         </div>
     );
 };
