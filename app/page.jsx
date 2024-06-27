@@ -351,7 +351,7 @@ const ClientsData = () => {
       setErrors((prevErrors) => ({ ...prevErrors, clientSource: undefined }));
     }
   };
-
+console.log(DOB)
   const handleClientContactPersonChange = (value) => {
     setClientContactPerson(value.target.value);
     if (errors.clientContactPerson) {
