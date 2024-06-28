@@ -6,11 +6,26 @@ import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
-import { Snackbar } from '@mui/material';
-import MuiAlert from '@mui/material/Alert';
 import ToastMessage from './components/ToastMessage';
 import SuccessToast from './components/SuccessToast';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
+import { Dropdown } from 'primereact/dropdown';
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
+import '@mui/x-date-pickers/DatePicker';
+import { Calendar } from 'primereact/calendar';
+
+
+const titleOptions = [
+  { label: 'Mr.', value: 'Mr.' },
+  { label: 'Miss.', value: 'Miss.' },
+  { label: 'Mrs.', value: 'Mrs.' },
+  { label: 'Ms.', value: 'Ms.' },
+  { label: 'B/o.', value: 'B/o.' },
+  { label: 'Baby.', value: 'Baby.' },
+  { label: 'Master.', value: 'Master.' },
+];
     
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -31,6 +46,7 @@ const ClientsData = () => {
   const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
   const [address, setAddress] = useState('');
   const [DOB, setDOB] = useState('');
+  const [displayDOB, setDisplayDOB] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState('');
   const [displayWarning, setDisplayWarning] = useState(false);
@@ -137,7 +153,7 @@ const ClientsData = () => {
     dispatch(setClientData({clientContact: number}));
     fetchClientDetails(number);
     setClientNameSuggestions([]);
-    setIsNewClient('false');
+    setIsNewClient(false);
     setContactWarning('');
   };
   
@@ -163,7 +179,10 @@ const ClientsData = () => {
           setClientID(clientDetails.id);
           dispatch(setClientData({ clientName: clientDetails.name || "" }));
           //MP-69-New Record are not fetching in GS
+          // Convert DOB to dd-M-yy for display
+          const formattedDOB = parseDateFromDB(clientDetails.DOB);
           setDOB(clientDetails.DOB);
+          setDisplayDOB(formattedDOB);
           dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
           //setClientAge(clientDetails.Age || "");
@@ -320,8 +339,6 @@ const ClientsData = () => {
       setErrors((prevErrors) => ({ ...prevErrors, clientContact: undefined }));
     }
 };
-
-
 
   let emailTimeout;
   const handleClientEmailChange = (newValue) => {
@@ -510,7 +527,9 @@ const handleInputAgeChange = (event) => {
 // MP-42-DOB calculation is not working when age is entered
   if (age) {
     const dob = calculateDateFromAge(age);
+    const formattedDOB = parseDateFromDB(dob);
     setDOB(dob);
+    setDisplayDOB(formattedDOB);
   }
 
   if (errors.ageAndDOB) {
@@ -521,10 +540,12 @@ const handleInputAgeChange = (event) => {
 
 const handleDateChange = (e) => {
   const dateValue = e.target.value;
-  setDOB(dateValue);
-  const age = calculateAge(dateValue);
+  setDisplayDOB(dateValue);
+  const formattedDate = formatDateToSave(e.value);
+  setDOB(formattedDate);
+  const age = calculateAge(formattedDate);
   setClientAge(age);
-  
+
   if (selectedOption === 'B/o.' || selectedOption === 'Baby.') {
   // if (selectedOption === 'B/o.') {
     const selectedDate = new Date(dateValue);
@@ -542,6 +563,19 @@ const handleDateChange = (e) => {
     setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
   }
 };
+function formatDateToSave(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+function parseDateFromDB(dateString) {
+  const [year, month, day] = dateString.split('-');
+  return new Date(year, month - 1, day);
+}
+
+
 
 const calculateDateFromMonths = (months) => {
   const today = new Date();
@@ -555,6 +589,8 @@ const handleMonthsChange = (e) => {
   if (e.target.value) {
     const dateFromMonths = calculateDateFromMonths(e.target.value);
     setDOB(dateFromMonths);
+    const formattedDOB = parseDateFromDB(dateFromMonths);
+    setDisplayDOB(formattedDOB);
   }
   if (errors.months) {
     setErrors((prevErrors) => ({ ...prevErrors, months: undefined }));
@@ -776,645 +812,393 @@ const BMvalidateFields = () => {
   setErrors(errors);
   return Object.keys(errors).length === 0;
 };
-
   // Function to validate email format
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-
-  return (
-    <div className="flex flex-col justify-center mt-8  mx-[8%]">
-      
-      <form className="px-7 h-screen grid justify-center items-center"> 
-    <div className="grid gap-6" id="form">
-    <h1 className="font-bold text-3xl text-center mb-4">Client Registration</h1>
-    {/* // MP-95-As a user, I should able to restore a removed client. */}
-    {/* Restore client dialog */}
-    <Dialog
-                open={restoreDialogOpen}
-                onClose={() => setRestoreDialogOpen(false)}
-            >
-                <DialogTitle>Restore Client</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        This client is invalid. Do you want to restore the client?
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setRestoreDialogOpen(false)} color="primary">
-                        No
-                    </Button>
-                    <Button onClick={handleRestoreClient} color="primary" autoFocus>
-                        Yes
-                    </Button>
-                </DialogActions>
-            </Dialog>
-{/* Restore client dialog */}
-        <input 
-        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="number" 
-        placeholder="Contact Number*" 
-        id="3" 
-        name="ClientContactInput" 
-        // required
-        value={clientContact}
-        // onChange={(e) => handleClientContactChange(e.target.value)}
-        onChange={(e) => {
-          if (e.target.value.length <= 10) {
-            handleClientContactChange(e.target.value);
-          }
-        }}
-        onBlur={() => {
-          setTimeout(() => {
-            setClientNameSuggestions([]);
-            setContactWarning('');
-          if (clientContact.length === 10 && isNewClient === false) {
-            fetchClientDetails(clientContact);
-          }
-          }, 200);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-        />
-        {(clientNameSuggestions.length > 0 && clientContact !=='') && (
-          <ul className="list-none border-green-300 border-1 ">
-            {clientNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md"> 
-                <button
-                  type="button"
-                  className="text-black w-full h-full text-left"
-                  onClick={handleClientNameSelection}
-                  value={name}
-                >
-                  {name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {contactWarning && <p className="text-red-500">{contactWarning}</p>}
-        {errors.clientContact && <p className="text-red-500">{errors.clientContact}</p>}
-        <div className="w-full flex gap-3">
-      <select
-        className="shadow-2xl p-3 ex w-24 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
-        id='1'
-        name="TitleSelect"
-        value={selectedOption}
-        //onChange={e => setTitle(e.target.value)}
-       // defaultValue="Mrs."
-        // required
-        onChange={(e) => {
-          const selectedOption = e.target.value;
-          setSelectedOption(selectedOption);
-          // setClientAge(""); // Clear the age input field when the title changes
-
-        // Display DOB warning when selected option is "B/o."
-          setDisplayDOBWarning(selectedOption === "B/o.");
-      }}
-      >
-        <option value="Mr.">Mr.</option>
-        <option value="Miss.">Miss.</option>
-        <option value="Mrs.">Mrs.</option>
-        <option value="Ms.">Ms.</option>
-        <option value="B/o.">B/o.</option>
-        <option value="Baby.">Baby.</option>
-        <option value="Master.">Master.</option>
-      </select>
-        <input className="p-3 shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
-          type="text"
-          placeholder="Name*" 
-          id='2'
-          name="ClientNameInput" 
-          maxLength={32}
-          // required
-          value={clientDetails.clientName}
-          onChange={handleSearchTermChange}
-          // MP-45-The client name suggestions should hide when it is not selected (or while creating a new client entry)
-
-          onBlur={() => {
-            setTimeout(() => {
-              setClientNameSuggestions([]);
-            }, 200); // Adjust the delay time according to your preference
-          }}
-          onKeyPress={(e) => {
-            // Allow only alphabetic characters
-            const regex = /^[a-zA-Z\s]*$/;
-            if (!regex.test(e.key)) {
-                e.preventDefault();
-            }
-        }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              // Find the next input field and focus on it
-              const inputs = document.querySelectorAll('input, select, textarea');
-              const index = Array.from(inputs).findIndex(input => input === e.target);
-              if (index !== -1 && index < inputs.length - 1) {
-                inputs[index + 1].focus();
-              }
-            }
-          }}
-          />
-          
-      </div>
-      
-      {/* {clientNameSuggestions.length > 0 && <VirtualizedList clientNameSuggestions={clientNameSuggestions} onClientNameSelection={handleClientNameSelection}/> } */}
-      {(clientNameSuggestions.length > 0 && clientName !== '' && clientContact === '' ) && (
-          <ul className="list-none border-green-300 border-1 ">
-            {clientNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
-                <button
-                  type="button"
-                  className="text-black w-full h-full text-left"
-                  onClick={handleClientNameSelection}
-                  value={name}
-                >
-                  {name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-         {errors.clientName && <p className="text-red-500">{errors.clientName}</p>}
-      <div className="grid gap-6 w-full">
-      {selectedOption === 'Ms.' ? (
-        <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-          type="text" 
-          placeholder="Contact Person Name*" 
-          id="30"
-          name="ClientContactPersonInput"
-          value={clientContactPerson}
-          onChange={handleClientContactPersonChange}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              // Find the next input field and focus on it
-              const inputs = document.querySelectorAll('input, select, textarea');
-              const index = Array.from(inputs).findIndex(input => input === e.target);
-              if (index !== -1 && index < inputs.length - 1) {
-                inputs[index + 1].focus();
-              }
-            }
-          }}
-          
-          />
-          
-        ) : (<></>)}
-        {errors.clientContactPerson && <p className="text-red-500">{errors.clientContactPerson}</p>}
-        <input className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="email" 
-        placeholder="Email"
-        id="4" 
-        name="ClientEmailInput" 
-        value={clientEmail}
-        onChange={(e) => handleClientEmailChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-        />
-        {emailWarning && <p className="text-red-500 ml-8">{emailWarning}</p>}
-      </div>
-      {errors.clientEmail && <p className="text-red-500">{errors.clientEmail}</p>}
-      
-      {/* <div class="w-full flex gap-3 ">
-        <input className='capitalize shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center' 
-        type='number' 
-        id='5'
-        name='ClientAgeInput'
-        placeholder="Age" 
-        value={clientAge} 
-        onChange={(e) => {
-          const { value } = e.target;
-          setClientAge(value);
-
-          // Display warning based on the selected option and age input value
-          if ((selectedOption === "Baby." && parseInt(value) > 3) || 
-              (selectedOption === "Master." && (parseInt(value) < 4 || parseInt(value) > 12))) {
-            setDisplayWarning(true);
-          } else {
-            setDisplayWarning(false);
-          }
-        }}  
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-        />
-        <input class="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
-        type="date" 
-        name='AgeDatePicker'
-        id='6'
-        value={inputValue} 
-        onChange={handleInputAgeChange} 
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}/>
-      </div> */}
-      {/* {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? ( */}
-      {(selectedOption !== 'B/o.' && selectedOption !== 'Baby.') ? (
-        <div className="w-full flex gap-3" name='AgeDatePicker'>
-          <input
-            className="shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
-            type="number"
-            id="5"
-            name="ClientAgeInput"
-            placeholder="Age*"
-            value={clientAge}
-            onChange={handleInputAgeChange}
-            // onChange={(e) => {
-            //   const { value } = e.target;
-            //   setClientAge(value);
-
-            //   if (
-            //     (selectedOption === 'Baby.' && parseInt(value) > 3) ||
-         
-            //     (selectedOption === 'Master.' && (parseInt(value) < 4 || parseInt(value) > 12))
-            //   ) {
-            //     setDisplayWarning(true);
-            //   } else {
-            //     setDisplayWarning(false);
-            //   }
-            // }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const inputs = document.querySelectorAll('input, select, textarea');
-                const index = Array.from(inputs).findIndex(input => input === e.target);
-                if (index !== -1 && index < inputs.length - 1) {
-                  inputs[index + 1].focus();
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
+        <h2 className="text-2xl font-bold text-blue-500 mb-1">Client Registration</h2>
+        <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
+        <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+        <form className="space-y-6">
+          {/* Restore client dialog */}
+          <Dialog open={restoreDialogOpen} onClose={() => setRestoreDialogOpen(false)}>
+            <DialogTitle>Restore Client</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                This client is invalid. Do you want to restore the client?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRestoreDialogOpen(false)} color="primary">
+                No
+              </Button>
+              <Button onClick={handleRestoreClient} color="primary" autoFocus>
+                Yes
+              </Button>
+            </DialogActions>
+          </Dialog>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left section */}
+            <div className="space-y-4">
+            <div className="relative" name="ClientContactInput">
+            <label className="block mb-1 font-medium">Contact Number</label>
+            <input
+              type="number"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContact ? 'border-red-400' : ''}`}
+              placeholder="Contact Number*"
+              id="3"
+              name="ClientContactInput"
+              value={clientContact}
+              onChange={(e) => {
+                if (e.target.value.length <= 10) {
+                  handleClientContactChange(e.target.value);
                 }
-              }
-            }}
-          />
-          
-          <input
-            className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-            type="date"
-            name="AgeDatePicker"
-            id="6"
-            defaultValue={DOB}
-            value={DOB}
-            onChange={handleDateChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const inputs = document.querySelectorAll('input, select, textarea');
-                const index = Array.from(inputs).findIndex(input => input === e.target);
-                if (index !== -1 && index < inputs.length - 1) {
-                  inputs[index + 1].focus();
-                }
-              }
-            }}
-          />
-          
-        </div>
-        
-      ) : (
-        <div className="w-full flex gap-3">
-          <input
-            className="shadow-2xl p-3 ex w-40 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md justify-center"
-            type="number"
-            name="MonthsInput"
-            placeholder="Months*"
-            value={months}
-            onChange={handleMonthsChange}
-          />
-          
-          <input
-            className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-            type="date"
-            name="AgeDatePicker"
-            id="7"
-            value={DOB}
-            onChange={handleDateChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const inputs = document.querySelectorAll('input, select, textarea');
-                const index = Array.from(inputs).findIndex(input => input === e.target);
-                if (index !== -1 && index < inputs.length - 1) {
-                  inputs[index + 1].focus();
-                }
-              }
-            }}
-          />
-          
-        
-        </div>
-      )}
-      {errors.ageAndDOB && <p className="text-red-500">{errors.ageAndDOB}</p>}
-      {errors.months && <p className="text-red-500">{errors.months}</p>}
-      {/* {displayWarning && (
-      <div className={`text-red-600 ${selectedOption === "Baby." ? "ml-12" : "ml-9"}`}>
-        {selectedOption === "Baby." && "The age should be less than 3."}
-        {selectedOption === "Master." && "The age should be between 4 and 12."}
-      </div>
-    )} */}
-
-{/* {displayDOBWarning && (
-      <div className="text-red-600 ml-9">Note: The DOB should be the baby's</div>
-    )} */}
-      <div className="flex gap-3">
-      <textarea
-        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-        id="7"
-        name="ClientAddressTextArea"
-        placeholder="Address"
-        // required
-        value={address}
-        onChange={e => setAddress(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-      ></textarea>
-        {/* <input class="p-3 glass shadow-2xl  w-full outline-none focus:border-solid focus:border-[1px] border-[#035ec5]" type="text" placeholder="Confirm password" required="" /> */}
-      </div>
-      <div className='grid gap-6 w-full' name="ClientGSTInput" >
-      <input 
-        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="GST Number" 
-        id="31" 
-        name="ClientGSTInput" 
-        value={clientGST}
-        maxLength={15}
-        // onChange={(e) => setClientGST(e.target.value)}
-        //MP-39-Warning message should be shown for GST Field (<15 characters)
-        onChange={handleGSTChange} 
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-        
-        />
-        {error && <p className="text-red-500">{error}</p>}
-        <input 
-        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        placeholder="PAN" 
-        id="32" 
-        name="ClientPANInput" 
-        value={clientPAN}
-        maxLength={10}
-        onChange={(e) => setClientPAN(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-        />
-        </div>
-        <div className='grid gap-6 w-full'>
-      <select
-        className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-        id="8"
-        name="ClientSourceSelect"
-        value={clientSource}
-        // required
-        defaultValue={sources[0]}
-        onChange={handleClientSourceChange}
-      >
-        {/* <option >Select Source</option> */}
-        {sources.map((source, index) => (
-          <option key={index} value={source}>
-            {source}
-          </option>
-        ))}
-      </select>
-      {errors.clientSource && <p className="text-red-500">{errors.clientSource}</p>}
-      {(clientSource === '5.Consultant' || clientSource === 'Consultant') && (
-        <>
-      <input 
-        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" 
-        type="text" 
-        placeholder="Consultant Name*" 
-        id="9" 
-        name="ConsultantNameInput" 
-        // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false} 
-        onChange={handleConsultantNameChange} 
-        value={consultantName}
-        onBlur={() => {
-          setTimeout(() => {
-            setConsultantNameSuggestions([]);
-          }, 200);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            // Find the next input field and focus on it
-            const inputs = document.querySelectorAll('input, select, textarea');
-            const index = Array.from(inputs).findIndex(input => input === e.target);
-            if (index !== -1 && index < inputs.length - 1) {
-              inputs[index + 1].focus();
-            }
-          }
-        }}
-      />
-      {consultantNameSuggestions.length > 0 && (
-  <ul className="list-none">
-    {consultantNameSuggestions.map((name, index) => (
-      <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
-        <button
-          type="button"
-          className="text-black w-full h-full text-left"
-          onClick={handleConsultantNameSelection}
-          value={name}
-          
-        >
-          {name}
-          
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
-{errors.consultantName && <p className="text-red-500">{errors.consultantName}</p>}
-      <input 
-        className="p-3 shadow-2xl  glass w-full outline-none focus:border-solid border-[#b7e0a5] border-[1px] focus:border-[1px] rounded-md" type="number" placeholder="Consultant Number*" 
-        id="10" 
-        name="ConsultantNumberInput" 
-        value={consultantNumber} 
-        // onChange={handleConsultantNumberChange} 
-        onChange={(e) => {
-          if (e.target.value.length <= 10) {
-            handleConsultantNumberChange(e.target.value);
-          }
-        }}
-        // required = {clientSource === '5.Consultant' || clientSource === 'Consultant' ? true : false}
-        />
-        </>
+              }}
+              onBlur={() => {
+                setTimeout(() => {
+                  setClientNameSuggestions([]);
+                  setContactWarning('');
+                  if (clientContact.length === 10 && !isNewClient) {
+                    fetchClientDetails(clientContact);
+                  }
+                }, 200);
+              }}
+            />
+            {clientNameSuggestions.length > 0 && clientContact !== '' && (
+              <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                {clientNameSuggestions.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleClientNameSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
-      </div>
-      {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}
-      {errors.consultantName && <p className="text-red-500">{errors.consultantNumber}</p>}
-      
-      <div>
-        {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
-      {isNewClient == true ? (
-        <button 
-          className="outline-none glass shadow-2xl w-full p-3 bg-[#ffffff] border-[1px] border-solid border-[#b7e0a5] hover:border-[#b7e0a5] hover:bg-[#f0fff0] hover:text-[#008000] font-bold rounded-md mb-28" 
-          onClick={submitDetails}>
-          Add
-        </button>
-      ) : (
-        <div className="flex gap-3 mb-28 ">
-        <button 
-            className="outline-none glass shadow-2xl flex-grow p-3 bg-[#ffffff] border-[1px] border-solid border-[#b7e0a5] hover:border-[#b7e0a5] hover:bg-[#f0fff0] hover:text-[#008000] font-bold rounded-md" 
-            onClick={submitDetails}>
-            Update
-        </button>
-        <button 
-            className="outline-none glass shadow-2xl flex-grow p-3 bg-[#ffffff] border-[1px] border-solid border-[#ffd9d9] hover:border-[#ffe6e6] hover:bg-[#ffe6e6] hover:text-[#e53e3e] font-bold rounded-md" 
-            onClick={handleRemoveClient}>
-            Remove
-        </button>
-    </div>
-      )}
-    </div>
-    </div>
-  </form>
-      {/* <div className='w-full mt-8 justify-center items-center text-black'>
-        <h1 className="font-bold text-3xl text-center mb-4 mt-4">Enter client details</h1>
-        {/* <h1 className='text-3xl'>Client Details</h1>
-        <label className="flex flex-col items-left text-lg mb-2">Client Name</label>
-        <input
-          className="w-full border border-purple-400 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
-          type="text"
-          placeholder="Client Name"
-          value={clientDetails.clientName}
-          onChange={handleSearchTermChange}
-          onFocus={(e) => e.target.select()}
-        />
-        {clientNameSuggestions.length > 0 && (
-          <ul className="list-none">
+            {contactWarning && <p className="text-red-500 text-xs">{contactWarning}</p>}
+            {errors.clientContact && <p className="text-red-500 text-xs">{errors.clientContact}</p>}
+          </div>
+          <div className="relative">
+          <label className="block mb-1 font-medium">Name</label>
+          <div className="flex space-x-2" name="ClientNameInput">
+            <Dropdown
+              value={selectedOption}
+              options={titleOptions}
+              onChange={(e) => {
+                setSelectedOption(e.target.value);
+              }}
+              className={`w-1/4 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              id="1"
+              name="TitleSelect"
+            />
+            <input
+              type="text"
+              className={`w-3/4 px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              placeholder="Name*"
+              id="2"
+              name="ClientNameInput"
+              maxLength={32}
+              value={clientDetails.clientName}
+              onChange={handleSearchTermChange}
+              onBlur={() => {
+                setTimeout(() => {
+                  setClientNameSuggestions([]);
+                }, 200); // Adjust the delay time according to your preference
+              }}
+              onKeyPress={(e) => {
+                // Allow only alphabetic characters
+                const regex = /^[a-zA-Z\s]*$/;
+                if (!regex.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+            />
+          </div>
+          {clientNameSuggestions.length > 0 && clientDetails.clientName !== '' && clientContact === '' && (
+            <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
             {clientNameSuggestions.map((name, index) => (
               <li key={index}>
                 <button
                   type="button"
-                  className="text-purple-500 hover:text-purple-700"
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
                   onClick={handleClientNameSelection}
                   value={name}
                 >
-                  {name}
+                    {name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {errors.clientName && <p className="text-red-500 text-xs">{errors.clientName}</p>}
+        </div>
+
+              {selectedOption === 'Ms.' ? (
+                <div name="ClientContactPersonInput">
+                  <label className="block mb-1 font-medium">Contact Person Name</label>
+                  <input
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContactPerson ? 'border-red-400' : ''}`}
+                    type="text"
+                    placeholder="Contact Person Name*"
+                    id="30"
+                    name="ClientContactPersonInput"
+                    value={clientDetails.clientContactPerson}
+                    onChange={handleClientContactPersonChange}
+                  />
+                  {errors.clientContactPerson && <p className="text-red-500 text-xs">{errors.clientContactPerson}</p>}
+                </div>
+              ) : (
+                <></>
+              )}
+              <div name="ClientEmailInput">
+                <label className="block mb-1 font-medium">Email</label>
+                <input
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientEmail ? 'border-red-400' : ''}`}
+                  type="email"
+                  placeholder="Email"
+                  id="4"
+                  name="ClientEmailInput"
+                  value={clientEmail}
+                  onChange={(e) => handleClientEmailChange(e.target.value)}
+                />
+                {emailWarning && <p className="text-red-500 text-xs">{emailWarning}</p>}
+                {errors.clientEmail && <p className="text-red-500 text-xs">{errors.clientEmail}</p>}
+              </div>
+            </div>
+            {/* Middle section */}
+            <div className="mt-0">
+              <div name="ClientAddressTextArea">
+                <label className="block mb-1 font-medium">Address</label>
+                <textarea
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                  id="7"
+                  name="ClientAddressTextArea"
+                  placeholder="Address"
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                />
+              </div>
+              {selectedOption !== 'B/o.' && selectedOption !== 'Baby.' ? (
+                <div className="flex space-x-2 mt-3" name="ClientAgeInput">
+                  <div className="w-1/2">
+                    <label className="block mb-1 font-medium">Age</label>
+                    <input
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      type="number"
+                      id="5"
+                      name="ClientAgeInput"
+                      placeholder="Age*"
+                      value={clientAge}
+                      onChange={handleInputAgeChange}
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <label className="block mb-1 font-medium">Birthdate</label>
+                    <div>
+                  <div name="AgeDatePicker">
+                    <Calendar
+                      type="date"
+                      name="AgeDatePicker"
+                      id="6"
+                      value={displayDOB}
+                      onChange={handleDateChange}
+                      placeholder="dd-M-yyyy"
+                      showIcon
+                      dateFormat='dd-M-yy'
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      inputClassName="p-inputtext-lg"
+                    />
+                  </div>
+                   </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex space-x-2 mt-3">
+                  <div className="w-1/2" name="MonthsInput">
+                    <label className="block mb-1 font-medium">Months</label>
+                    <input
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      type="number"
+                      name="MonthsInput"
+                      placeholder="Months*"
+                      value={months}
+                      onChange={handleMonthsChange}
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <label className="block mb-1 font-medium">Birthdate</label>
+                    <div>
+                  <div name="AgeDatePicker">
+                    <Calendar
+                      type="date"
+                      name="AgeDatePicker"
+                      id="6"
+                      value={displayDOB}
+                      onChange={handleDateChange}
+                      placeholder="dd-M-yyyy"
+                      showIcon
+                      dateFormat='dd-M-yy'
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      inputClassName="p-inputtext-lg"
+                    />
+                  </div>
+                   </div>
+                  </div>
+                  </div>
+              )}
+              {errors.ageAndDOB && <p className="text-red-500 text-xs">{errors.ageAndDOB}</p>}
+              {errors.months && <p className="text-red-500 text-xs">{errors.months}</p>}
+              <div>
+              </div>
+              <div className="mt-3" name="ClientGSTInput">
+              <div>
+                <label className="block mb-1 font-medium">GST Number</label>
+                <input
+                  className={`w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientGST ? 'border-red-400' : ''}`}
+                  placeholder="GST Number"
+                  id="31"
+                  name="ClientGSTInput"
+                  value={clientGST}
+                  maxLength={15}
+                  onChange={handleGSTChange}
+                />
+                {errors.clientGST && <p className="text-red-500 text-xs">{errors.clientGST}</p>}
+              </div>
+                <label className="block mb-1 font-medium">PAN Number</label>
+                <input
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientPAN ? 'border-red-400' : ''}`}
+                  placeholder="PAN Number"
+                  id="32"
+                  name="ClientPANInput"
+                  value={clientPAN}
+                  maxLength={10}
+                  onChange={(e) => setClientPAN(e.target.value)}
+                />
+                {errors.clientPAN && <p className="text-red-500 text-xs">{errors.clientPAN}</p>}
+              </div>
+            </div>
+            {/* Right section */}
+            <div className="space-y-4">
+              <div name="ClientSourceSelect">
+                <label className="block mb-1 font-medium">Source</label>
+                <Dropdown
+                  className={`w-full border rounded-lg ${errors.clientSource ? 'border-red-400' : ''}`}
+                  id="8"
+                  name="ClientSourceSelect"
+                  options={sources}
+                  value={clientSource}
+                  onChange={handleClientSourceChange}
+                />
+              </div>
+              {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>}
+              {(clientSource === '5.Consultant' || clientSource === 'Consultant') && (
+                <>
+                  <div className="relative" name="ConsultantNameInput">
+                  <label className="block mb-1 font-medium">Consultant Name</label>
+                  <input
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
+                    type="text"
+                    placeholder="Consultant Name*"
+                    id="9"
+                    name="ConsultantNameInput"
+                    onChange={handleConsultantNameChange}
+                    value={consultantName}
+                    onBlur={() => {
+                      setTimeout(() => {
+                        setConsultantNameSuggestions([]);
+                      }, 200);
+                    }}
+                    onKeyPress={(e) => {
+                      // Allow only alphabetic characters
+                      const regex = /^[a-zA-Z\s]*$/;
+                      if (!regex.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                  {consultantNameSuggestions.length > 0 && (
+                    <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                      {consultantNameSuggestions.map((name, index) => (
+                        <li key={index}>
+                          <button
+                            type="button"
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                            onClick={handleConsultantNameSelection}
+                            value={name}
+                          >
+                            {name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {errors.consultantName && <p className="text-red-500 text-xs">{errors.consultantName}</p>}
+                </div>
+
+                  <div name="ConsultantNumberInput">
+                    <label className="block mb-1 font-medium">Consultant Number</label>
+                    <input
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantNumber ? 'border-red-400' : ''}`}
+                      type="number" 
+                      placeholder="Consultant Number*" 
+                      id="10" 
+                      name="ConsultantNumberInput" 
+                      value={consultantNumber} 
+                      // onChange={handleConsultantNumberChange} 
+                      onChange={(e) => {
+                        if (e.target.value.length <= 10) {
+                          handleConsultantNumberChange(e.target.value);
+                        }
+                      }}
+                      
+                    />
+                    {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}
+                    {errors.consultantNumber && <p className="text-red-500 text-xs">{errors.consultantNumber}</p>}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="text-center">
+            {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
+            {isNewClient ? (
+              <button
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg"
+                onClick={submitDetails}
+              >
+                Add
+              </button>
+            ) : (
+              <div className="relative">
+                <button
+                  className="px-6 py-2 mr-3 bg-blue-500 text-white rounded-lg w-fit"
+                  onClick={submitDetails}
+                >
+                  Update
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-      <label className='mt-4'>Client Contact</label>
-      <input
-        className="w-full border border-purple-400 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
-        type="text"
-        placeholder="Client Contact"
-        value={clientContact}
-        onChange={(e) => handleClientContactChange(e.target.value)}
-        onFocus={(e) => e.target.select()}
-      />
-
-      <label>Client Email</label>
-      <input
-        className="w-full border border-purple-400 p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-600 focus:ring focus:ring-purple-200"
-        type="email"
-        placeholder="Client Email"
-        value={clientEmail}
-        onChange={(e) => handleClientEmailChange(e.target.value)}
-        onFocus={(e) => e.target.select()}
-      />
-
-      <label>Source</label>
-      <Select
-        value={{ label: clientSource, value: clientSource }}
-        onChange={handleClientSourceChange}
-        options={sources.map((source) => ({ label: source, value: source }))}
-      />
+                <button
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg w-fit"
+                  onClick={handleRemoveClient}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+        </form>
       </div>
-      <div className='flex flex-row items-center justify-center'>
-      <button
-          className="bg-purple-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-purple-600 mt-4"
-          onClick={() => { submitDetails() }}
-        >
-          Submit
-        </button>
-        <button
-          className="bg-purple-500 text-white px-4 py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-purple-600 mt-4 ml-4"
-          onClick={() => {
-            if(clientName && clientContact && clientSource){ 
-            router.push('/adDetails')
-            Cookies.set('isSkipped',true)
-            } else{
-              dispatch(setQuotesData({currentPage: 'adDetails'}));
-              router.push('/adDetails');
-            }
-          }}
-        >
-          Skip
-        </button>
-      </div>*/}
-
-      {/* <div className="bg-surface-card p-8 rounded-2xl mb-4">
-        <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
-          <MuiAlert severity={severity} onClose={() => setToast(false)}>
-            {toastMessage}
-          </MuiAlert>
-        </Snackbar>
-      </div>  */}
       {successMessage && <SuccessToast message={successMessage} />}
       {toast && <ToastMessage message={toastMessage} type="error"/>}
     </div>
-
   );
 };
 
