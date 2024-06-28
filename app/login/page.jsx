@@ -141,7 +141,7 @@ const handleLogin = (event) => {
                                 Username
                             </label>
                             <input
-                                 className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 focus:ring focus:ring-blue-300 w-full ${errors.username ? 'border-red-500' : ''}`}
+                                 className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.username ? 'border-red-400' : ''}`}
                                 id="username"
                                 type="text"
                                 placeholder="Enter your username"
@@ -156,7 +156,7 @@ const handleLogin = (event) => {
                             </label>
                             <div className="relative">
                                 <input
-                                    className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 focus:ring focus:ring-blue-300 w-full ${errors.password ? 'border-red-500' : ''}`}
+                                    className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.password ? 'border-red-400' : ''}`}
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Enter your password"
@@ -182,7 +182,7 @@ const handleLogin = (event) => {
                                 Company Name
                             </label>
                             <input
-                                className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 focus:ring focus:ring-blue-300 w-full ${errors.companyName ? 'border-red-500' : ''}`}
+                                className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.companyName ? 'border-red-400' : ''}`}
                                 id="company"
                                 type="text"
                                 placeholder="Enter your company name"
@@ -218,7 +218,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.0.21
+                        Version 1.1.21
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
