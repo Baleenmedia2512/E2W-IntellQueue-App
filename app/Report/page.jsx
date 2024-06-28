@@ -8,6 +8,9 @@ import axios from 'axios';
 import { useAppSelector } from '@/redux/store';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import Button from '@mui/material/Button';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 const Report = () => {
     const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -20,6 +23,10 @@ const Report = () => {
     // const [financeFilterModel, setFinanceFilterModel] = useState({ items: [] });
     const [activeIndex, setActiveIndex] = React.useState(0);
     const [sumOfOrders, setSumOfOrders] = useState([]);
+    const [toastMessage, setToastMessage] = useState('');
+     const [successMessage, setSuccessMessage] = useState('');
+     const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
 
     const onPieEnter = (_, index) => {
       setActiveIndex(index);
@@ -56,7 +63,9 @@ const Report = () => {
                 const data = response.data.map((order, index) => ({
                     ...order,
                     id: order.ID ,
-                    Receivable: `₹ ${order.Receivable}`
+                    Receivable: `₹ ${order.Receivable}`,
+                    markInvalidDisabled: order.CancelFlag === 1,
+                    restoreDisabled: order.CancelFlag === 0,
                 }));
                 setOrderDetails(data);
             })
@@ -90,17 +99,96 @@ const Report = () => {
             })
             .catch((error) => {
                 console.error(error);
+                
             });
     };
 
+    const handleMarkInvalid = (orderNum) => {
+      axios
+          .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=invalid`)
+          .then((response) => {
+              setSuccessMessage('Order Cancelled!');
+                    setTimeout(() => {
+                        setSuccessMessage('');
+                    }, 2000);
+              fetchOrderDetails();
+          })
+          .catch((error) => {
+              console.error(error);
+              setToastMessage('Failed to cancel order. Please try again.');
+                    setSeverity('error');
+                    setToast(true);
+                    setTimeout(() => {
+                        setToast(false);
+                    }, 2000);
+          });
+  };
+
+  const handleRestore = (orderNum) => {
+      axios
+          .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=restore`)
+          .then((response) => {
+              setSuccessMessage('Order Restored!');
+                    setTimeout(() => {
+                        setSuccessMessage('');
+                    }, 2000);
+              fetchOrderDetails();
+          })
+          .catch((error) => {
+              console.error(error);
+              setToastMessage('Failed to restore. Please try again.');
+              setSeverity('error');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+                }, 2000);
+          });
+  };
     const orderColumns = [
-        { field: 'OrderNumber', headerName: 'Order#', width: 150},
-        { field: 'OrderDate', headerName: 'Order Date', width: 150},
-        { field: 'ClientName', headerName: 'Client Name', width: 200 },
-        { field: 'Receivable', headerName: 'Amount(₹)', width: 130 },
+        { field: 'OrderNumber', headerName: 'Order#', width: 80},
+        { field: 'OrderDate', headerName: 'Order Date', width: 100},
+        { field: 'ClientName', headerName: 'Client Name', width: 170 },
+        { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
         { field: 'rateName', headerName: 'Rate Name', width: 150 },
         { field: 'adType', headerName: 'Rate Type', width: 150 },
         { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+        {
+          field: 'actions',
+          headerName: 'Actions',
+          width: 250,
+          renderCell: (params) => (
+              <div>
+                  <Button
+                      variant="contained"
+                      color="secondary"
+                      size="small"
+                      disabled={params.row.markInvalidDisabled}
+                      onClick={() => handleMarkInvalid(params.row.OrderNumber)}
+                      style={{ marginRight: '12px',  backgroundColor: '#ff5252',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        opacity: params.row.markInvalidDisabled ? 0.5 : 1,
+                        pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+                  >
+                      Cancel Order
+                  </Button>
+                  <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      disabled={params.row.restoreDisabled}
+                      onClick={() => handleRestore(params.row.OrderNumber)}
+                      style={{ backgroundColor: '#1976d2',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        opacity: params.row.restoreDisabled ? 0.5 : 1,
+                        pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+                  >
+                      Restore
+                  </Button>
+              </div>
+          ),
+      },
     ];
 
     const financeColumns = [
@@ -389,7 +477,10 @@ const formatIndianNumber = (num) => {
         // </div>
         )}
       </Box>
+      {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
     </Box>
+    
     );
 }
 
