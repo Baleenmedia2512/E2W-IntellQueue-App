@@ -802,9 +802,9 @@ const BMvalidateFields = () => {
       errors.consultantNumber = 'Consultant contact must be exactly 10 digits.';
     }
   }
-  if (selectedOption === 'Ms.' && !clientContactPerson) {
-    errors.clientContactPerson = 'Contact Person Name is required';
-  }
+  // if (selectedOption === 'Ms.' && !clientContactPerson) {
+  //   errors.clientContactPerson = 'Contact Person Name is required';
+  // }
   if (!clientSource) {
     errors.clientSource = 'Source is required';
   }
