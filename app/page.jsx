@@ -512,8 +512,8 @@ const calculateDateFromAge = (age) => {
 // };
 
 
-
 const handleInputAgeChange = (event) => {
+  if( event.target.value < 121) {
   const age = event.target.value;
   setClientAge(age);
   
@@ -535,6 +535,9 @@ const handleInputAgeChange = (event) => {
   if (errors.ageAndDOB) {
     setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
   }
+// } else {
+//   setErrors({ ...errors, ageAndDOB: true });
+}
 };
 
 
@@ -736,9 +739,9 @@ const GSvalidateFields = () => {
   let errors = {};
 
   if (!clientContact) errors.clientContact = 'Contact Number is required';
-  // if (!clientContact || clientContact.length < 10) {
-  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
-  // }
+  if (!clientContact || clientContact.length < 10) {
+    errors.clientContact = 'Client contact must be exactly 10 digits.';
+  }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (!clientAge && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
@@ -753,9 +756,9 @@ const GSvalidateFields = () => {
     if (!consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
   }
   
-  if (selectedOption === 'Ms.' && !clientContactPerson) {
-    errors.clientContactPerson = 'Contact Person Name is required';
-  }
+  // if (selectedOption === 'Ms.' && !clientContactPerson) {
+  //   errors.clientContactPerson = 'Contact Person Name is required';
+  // }
   if ((selectedOption === 'Baby.' || selectedOption === 'B/o.') && (!months || months > 36 || months === 0)) {
     if (!months) {
       errors.months = 'Months and DOB are required for Baby.';
@@ -789,9 +792,9 @@ const BMvalidateFields = () => {
   let errors = {};
 
   if (!clientContact) errors.clientContact = 'Contact Number is required';
-  // if (!clientContact || clientContact.length !== 10) {
-  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
-  // }
+  if (!clientContact || clientContact.length !== 10) {
+    errors.clientContact = 'Client contact must be exactly 10 digits.';
+  }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
