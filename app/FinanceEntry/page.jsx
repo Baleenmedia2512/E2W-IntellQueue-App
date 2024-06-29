@@ -1,6 +1,6 @@
 'use client';
 import './page.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import { TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
@@ -61,7 +61,8 @@ const FinanceData = () => {
   const { clientName: orderClientName, maxOrderNumber: orderOrderNumber, remarks: orderRemarks, receivable: orderReceivable } = orderData;
   // const username = "Grace Scans"
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  const username = useAppSelector(state => state.authSlice.userName)
+  const username = useAppSelector(state => state.authSlice.userName);
+  
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
@@ -92,9 +93,9 @@ const FinanceData = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [balanceAmount, setBalanceAmount] = useState('');
+  const [isOrderExist, setIsOrderExist] = useState(false);
   const dispatch = useDispatch();
 
- 
 
   useEffect(() => {
     // Use the orderData values to initialize the state
@@ -190,6 +191,7 @@ const FinanceData = () => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
+          setIsOrderExist(true);
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
@@ -203,6 +205,7 @@ const FinanceData = () => {
   }; 
 
   const handleOrderNumberChange = (event) => {
+    
     const newOrderNumber = event.target.value;
     setOrderNumber(newOrderNumber);
     axios
@@ -211,11 +214,13 @@ const FinanceData = () => {
       const data = response.data;
       if (data.length > 0) {
         const clientDetails = data[0];
+        setIsOrderExist(true);
         setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
-        
+      } else {
+        setIsOrderExist(false);
       }
     })
     .catch((error) => {
@@ -226,9 +231,18 @@ const FinanceData = () => {
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
     }
   };
-  
+
   const insertNewFinance = async (e) => {
     e.preventDefault()
+    if (!isOrderExist) {
+      setToastMessage('Order Number does not exist!');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+      return;
+    }
     if (balanceAmount === 0) {
       setToastMessage('Full payment has already been received!');
       setSeverity('error');
@@ -236,7 +250,7 @@ const FinanceData = () => {
       setTimeout(() => {
         setToast(false);
       }, 3000);
-
+      return;
     } else {
 
     if (validateFields()) {
@@ -290,7 +304,7 @@ const FinanceData = () => {
   //   const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
   //   return distinctValues.sort().map(value => ({ value, label: value }));
   // };
-
+  
 
   const validateFields = () => {
     let errors = {};
