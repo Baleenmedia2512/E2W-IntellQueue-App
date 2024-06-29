@@ -61,7 +61,8 @@ const FinanceData = () => {
   const { clientName: orderClientName, maxOrderNumber: orderOrderNumber, remarks: orderRemarks, receivable: orderReceivable } = orderData;
   // const username = "Grace Scans"
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  const username = useAppSelector(state => state.authSlice.userName)
+  const username = useAppSelector(state => state.authSlice.userName);
+  
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
@@ -94,7 +95,6 @@ const FinanceData = () => {
   const [balanceAmount, setBalanceAmount] = useState('');
   const dispatch = useDispatch();
 
- 
 
   useEffect(() => {
     // Use the orderData values to initialize the state

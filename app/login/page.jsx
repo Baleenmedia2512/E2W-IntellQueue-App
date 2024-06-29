@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { login, logout, setCompanyName } from '@/redux/features/auth-slice';
+import { login, logout, setCompanyName, setAppRights } from '@/redux/features/auth-slice';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import { resetRatesData } from '@/redux/features/rate-slice';
@@ -78,14 +78,15 @@ const handleLogin = (event) => {
                 return response.json();
             })
             .then(data => {
-                if (data === 'Login Successfully') {
-                    setSuccessMessage(data);
+                if (data.status === 'Login Successfully') {
+                    setSuccessMessage('Login Successfully!');
                     setTimeout(() => {
                         setSuccessMessage('');
                     }, 2000);
 
                     // Dispatch actions and navigate based on conditions
                     dispatch(login(userName));
+                    dispatch(setAppRights(data.appRights));
                     dispatch(resetClientData());
                     dispatch(resetRatesData());
                     dispatch(resetQuotesData());

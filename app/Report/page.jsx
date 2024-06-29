@@ -14,6 +14,7 @@ import SuccessToast from '../components/SuccessToast';
 
 const Report = () => {
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
     const [orderDetails, setOrderDetails] = useState([]);
     const [financeDetails, setFinanceDetails] = useState([]);
@@ -35,7 +36,7 @@ const Report = () => {
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
-
+    
     useEffect(() => {
         fetchOrderDetails();
         fetchFinanceDetails();
@@ -328,7 +329,7 @@ const formatIndianNumber = (num) => {
                 variant="fullWidth"
             >
                 <Tab label="Orders" />
-                <Tab label="Finance" />
+                {appRights.includes('Administrator') || appRights.includes('Finance') ? <Tab label="Finance" /> : null}
             </Tabs>
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
