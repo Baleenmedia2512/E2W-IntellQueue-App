@@ -1,83 +1,44 @@
+// app/Employee/page.jsx
 'use client';
-import TabNavigation from './components/TabNavigation';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import GeneralDetailsPage from './general-details';
+import ProofPage from './proof';
+import RolesGoalsPage from './roles-and-goals';
+import LoginCredentialPage from './login-credentials';
+import { useAppSelector } from '@/redux/store';
 
-export default function GeneralDetails() {
+const EmployeeRegistration = () => {
   const router = useRouter();
+  const username = useAppSelector(state => state.authSlice.userName);
+  const currentPage = useAppSelector(state => state.employeeSlice.currentPage);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission logic here
-    // Navigate to the next page
-    router.push('/Employee/proof');
-  };
+  useEffect(() => {
+    if (!username) {
+      router.push('/login');
+    }
+  }, [username, router]);
+
+  function showCurrentPage() {
+    switch(currentPage) {
+      case 'generalDetails':
+        return <GeneralDetailsPage />;
+      case 'proof':
+        return <ProofPage />;
+      case 'rolesGoals':
+        return <RolesGoalsPage />;
+      case 'loginCredential':
+        return <LoginCredentialPage />;
+      default:
+        return <GeneralDetailsPage />;
+    }
+  }
 
   return (
     <div>
-      <TabNavigation />
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
-          <h2 className="text-2xl font-bold text-blue-500 mb-1">General Details</h2>
-          <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
-          <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-                placeholder="Enter your name"
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-                placeholder="Enter your email"
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-                placeholder="Enter your phone number"
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                Address
-              </label>
-              <textarea
-                id="address"
-                name="address"
-                rows="3"
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-                placeholder="Enter your address"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
-            >
-              Next
-            </button>
-          </form>
-        </div>
-      </div>
+      {showCurrentPage()}
     </div>
   );
-}
+};
+
+export default EmployeeRegistration;

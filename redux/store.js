@@ -7,6 +7,7 @@ import { quoteReducer } from "./features/quote-slice";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import { rateReducer } from "./features/rate-slice";
 import { orderReducer } from "./features/order-slice";
+import { employeeReducer } from "./features/emp-slice"; 
 
 const createNoopStorage = () => {
   return {
@@ -57,18 +58,26 @@ const orderPersistConfig = {
   whitelist: ["clientName", "clientNumber", "maxOrderNumber", "receivable", "remarks"]
 }
 
+const employeePersistConfig = {
+  key: "employee",
+  storage: storage,
+  whitelist: ["generalDetails", "proofDetails", "rolesGoals", "loginCredentials", "currentPage", "isRegistered"], // Define the fields you want to persist
+};
+
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer);
 const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer);
 const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer);
 const persistedOrderReducer = persistReducer(orderPersistConfig, orderReducer);
+const persistedEmployeeReducer = persistReducer(employeePersistConfig, employeeReducer);
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
   clientSlice: persistedClientReducer,
   quoteSlice: persistedQuoteReducer,
   rateSlice: persistedRateReducer,
-  orderSlice: persistedOrderReducer
+  orderSlice: persistedOrderReducer,
+  employeeSlice: persistedEmployeeReducer,
 });
 
 export const store = configureStore({

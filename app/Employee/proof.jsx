@@ -1,7 +1,22 @@
-import Link from 'next/link';
-import TabNavigation from './components/TabNavigation';
+// app/Employee/proof.jsx
+'use client';
+import { useSelector, useDispatch } from 'react-redux';
+import { setProofDetails, setCurrentPage } from '@/redux/features/emp-slice';
+import { TabNavigation } from './components/TabNavigation';
 
-export default function Proof() {
+const ProofPage = () => {
+  const dispatch = useDispatch();
+  const proofDetails = useSelector((state) => state.employeeSlice.proofDetails);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    dispatch(setProofDetails({ ...proofDetails, [name]: value }));
+  };
+
+  const handleNextPage = () => {
+    dispatch(setCurrentPage('rolesGoals'));
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
@@ -12,12 +27,12 @@ export default function Proof() {
         <form className="space-y-6">
           {/* Your Proof Fields */}
           <div className="text-center">
-            <Link href="/roles-and-goals">
-              <button className="px-6 py-2 bg-blue-500 text-white rounded-lg">Next</button>
-            </Link>
+            <button className="px-6 py-2 bg-blue-500 text-white rounded-lg" onClick={handleNextPage}>Next</button>
           </div>
         </form>
       </div>
     </div>
   );
 }
+
+export default ProofPage;
