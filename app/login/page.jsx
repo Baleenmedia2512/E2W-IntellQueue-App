@@ -7,6 +7,7 @@ import { useAppSelector } from '@/redux/store';
 import { resetRatesData } from '@/redux/features/rate-slice';
 import { resetQuotesData } from '@/redux/features/quote-slice';
 import { resetClientData } from '@/redux/features/client-slice';
+import { resetOrderData } from '@/redux/features/order-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -90,7 +91,7 @@ const handleLogin = (event) => {
                     dispatch(resetClientData());
                     dispatch(resetRatesData());
                     dispatch(resetQuotesData());
-
+                    dispatch(resetOrderData());
                     if (companyName === 'Grace Scans') {
                         router.push("/"); // Navigate to the main screen
                     } else {
@@ -219,7 +220,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.1.22
+                        Version 1.1.23
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
