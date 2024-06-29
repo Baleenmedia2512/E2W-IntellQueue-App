@@ -78,8 +78,8 @@ const handleLogin = (event) => {
                 return response.json();
             })
             .then(data => {
-                if (data === 'Login Successfully') {
-                    setSuccessMessage(data);
+                if (data.status === 'Login Successfully') {
+                    setSuccessMessage('Login Successfully!');
                     setTimeout(() => {
                         setSuccessMessage('');
                     }, 2000);
