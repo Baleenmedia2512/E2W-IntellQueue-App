@@ -330,6 +330,23 @@ const FinanceData = () => {
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
+  const clearFinance = (e) => {
+    e.preventDefault();
+          setChequeNumber('');
+          setClientName('');
+          setExpenseCategory('');
+          setGSTAmount('');
+          setGSTPercentage('');
+          setOrderAmount('');
+          setOrderNumber('');
+          setPaymentMode(paymentModeOptions[0]);
+          setRemarks('');
+          setTaxType(taxTypeOptions[2]);
+          setTransactionType(transactionOptions[0]);
+          dispatch(resetOrderData());
+  };
+
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
@@ -773,7 +790,7 @@ const FinanceData = () => {
                 </>
             )}
                <div className="flex items-center justify-center mb-36 mt-11 mr-14">
-               <button className = "bg-red-400 text-white p-2 rounded-full ml-4 w-24 justify-center">
+               <button className = "bg-red-400 text-white p-2 rounded-full ml-4 w-24 justify-center" onClick={clearFinance}>
                       <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Clear</span>
                       </button>
 

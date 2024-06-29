@@ -82,6 +82,7 @@ const CreateOrder = () => {
       calculateReceivable();
     },[unitPrice, marginAmount])
 
+    // MP-99    
 //rate cards
 
 useEffect(() => {
@@ -481,9 +482,7 @@ const fetchRates = async () => {
     console.error('Error fetching rates:', error);
   }
 };
-
-
-//rate cards
+// MP-99
 
 
     const findUnitPrice = () => {
@@ -565,6 +564,7 @@ const fetchRates = async () => {
             console.error("Error fetching client details:", error);
           });
       };
+
       const createNewOrder = async(event) => {
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
@@ -578,6 +578,7 @@ const fetchRates = async () => {
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
+                // MP-101
                 setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
                 setTimeout(() => {
                 setSuccessMessage('');
@@ -592,6 +593,7 @@ const fetchRates = async () => {
             console.error('Error updating rate:', error);
           }
         } else {
+          // MP-101
           setToastMessage('Please fill all necessary fields.');
     setSeverity('error');
     setToast(true);
@@ -777,6 +779,7 @@ const fetchRates = async () => {
                     Click Here
                    </span>
                   </label>
+                   {/* MP-99 */}
                   <div>
                       <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Rate Card Name</label>
                       <div className='flex w-full'>
@@ -918,6 +921,7 @@ const fetchRates = async () => {
                   />
                   </div>
                 </div>
+                {/* MP-99 */}
                 {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
                     <div class="w-full gap-3 flex">
                     <div name="OrderMarginAmount">
@@ -1006,7 +1010,7 @@ const fetchRates = async () => {
                      <button className="outline-none glass shadow-2xl w-full p-3 mb-24 bg-[#ffffff] hover:border-[#b7e0a5] border-[2px] hover:border-solid hover:border-[3px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
                 </div>
             </form>
-            
+            {/* MP-101 */}
   {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}

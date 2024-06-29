@@ -1,11 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import Snackbar from '@mui/material/Snackbar';
 import { login, logout, setCompanyName } from '@/redux/features/auth-slice';
-import MuiAlert from '@mui/material/Alert';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import { resetRatesData } from '@/redux/features/rate-slice';
@@ -13,29 +9,28 @@ import { resetQuotesData } from '@/redux/features/quote-slice';
 import { resetClientData } from '@/redux/features/client-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const Login = () => {
-  const companyName = useAppSelector(state => state.authSlice.companyName);
-  const [companyNameSuggestions, setCompanyNameSuggestions] = useState([]);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const [companyNameSuggestions, setCompanyNameSuggestions] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
-  const showToastMessage = (severityStatus, toastMessageContent) => {
-    setSeverity(severityStatus)
-    setToastMessage(toastMessageContent)
-    setToast(true)
-  }
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     dispatch(logout())
 
   },[])
 
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const toggleShowPassword = () => {setShowPassword(!showPassword)};
 
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
@@ -52,168 +47,194 @@ const Login = () => {
     dispatch(setCompanyName(input));
   };
 
-  const toggleShowPassword = () => {setShowPassword(!showPassword)};
+  // Validate form fields
+  const validateFields = () => {
+    let errors = {};
+    if (!userName.trim()) {
+        errors.username = 'Username is required';
+    }
+    if (!password.trim()) {
+        errors.password = 'Password is required';
+    }
+    if (!companyName.trim()) {
+        errors.companyName = 'Company Name is required';
+    }
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+};
 
-  const router = useRouter();
-  const dispatch = useDispatch();
+const handleLogin = (event) => {
+    event.preventDefault();
 
-  const handleLogin = (event) => {
-        event.preventDefault();
-        if (userName === 'GraceScans') {
-          // showToastMessage('success', 'Logged in as GraceScans');
-          setSuccessMessage('Logged in as GraceScans');
-        setTimeout(() => {
-      setSuccessMessage('');
-    }, 2000);
-          dispatch(login(userName));
-          router.push("/");
-          return;
-        }
-        const encodedPassw = encodeURIComponent(password)
-        if(userName === '' || password === ''){
-          // showToastMessage('warning', "Please Enter User Name and Password")
-          setToastMessage('Please Enter User Name and Password');
-              setSeverity('error');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-        }else{
+    if (validateFields()) {
+        const encodedPassw = encodeURIComponent(password);
+
+        // Assuming companyName, userName, and encodedPassw are defined and used correctly
         fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("response.statusText");
-          }
-          return response.json();
-        })
-          .then(data => {
-            if(data === 'Login Successfully'){
-              // showToastMessage('success', data)
-              setSuccessMessage(data);
-                setTimeout(() => {
-              setSuccessMessage('');
-            }, 2000);
-              //Cookies.set('username', userName, { expires: 7 });
-              dispatch(login(userName));
-              dispatch(resetClientData());
-              dispatch(resetRatesData());
-              dispatch(resetQuotesData());
-              dispatch(resetClientData());
-              if(companyName === 'Grace Scans'){
-                router.push("/") //navigating to the enquiry Screen
-              } else{
-                router.push("/adDetails")
-              }
-            }else{
-              // showToastMessage('error', "Invalid user name or password!")
-              setToastMessage('Invalid user name or password!');
-              setSeverity('error');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-            }
-        })
-          .catch(error => {
-            // showToastMessage('error', "Error in login " + error)
-            setToastMessage('Error in login ' + error);
-              setSeverity('error');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-          });
-      };
-  }
-      
-  return (
-    <div className="bg-white h-screen flex items-center justify-center content-center self-center justify-self-center">
-      <div className="bg-white p-8 rounded-3xl shadow-md flex items-center justify-center ml-16 mb-10 self-center">
-        <form className='flex flex-col items-center justify-self-center'> 
-          {/* <div className='pt-0 justify-center flex'>
-            <div className='bg-gray-300 rounded-full items-center flex justify-center h-12 w-12'>
-              <img src="/images/WHITE PNG.png" className='h-10 w-10 rounded-full' alt='profile' />
-            </div>
-          </div> */}
-          
-          <h1 className="text-3xl font-bold mb-8 text-black font-poppins">Login</h1>
-          <input
-            className="p-3 shadow-2xl  glass w-80 justify-self-center outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-            type="text"
-            placeholder="User Name"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)} />
-          <div className="relative">
-            <input
-             className="p-3 shadow-2xl  glass w-80  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mt-4 mb-4"
-              type={ showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <span
-              className="absolute top-2 right-4 cursor-pointer mt-5 mb-4"
-              onClick={toggleShowPassword}
-            >
-              {showPassword ? (
-                <FontAwesomeIcon
-                className="far fa-eye"
-                icon={faEye}
-                style={{ color: 'black', fontSize: '14px' }}
-                alt="Show Password"
-              />
-              ) : (
-                <FontAwesomeIcon
-                  className="far fa-eye-slash"
-                  icon={faEyeSlash}
-                  style={{ color: 'black', fontSize: '14px' }}
-                  alt="Hide Password"
-                />
-              )}
-            </span>
-            </div>
-            <input className="p-3 shadow-2xl  glass w-80 justify-self-center outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-            type="text" placeholder='Company Name' value={companyName} onChange={handleSearchTermChange}/>
-            {(companyNameSuggestions.length > 0 && companyName !== '') && (
-          <ul className="list-none border-green-300 w-80 ">
-            {companyNameSuggestions.map((name, index) => (
-              <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
-                <button
-                  type="button"
-                  className="text-black w-full h-full text-left"
-                  onClick={handleCompanyNameSelection}
-                  value={name}
-                >
-                  {name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-          <button
-            type="button"
-            className="mt-4 outline-none glass shadow-2xl  w-full p-3  bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] hover:border-solid hover:border-[1px]  hover:text-[#008000] font-bold rounded-md mb-4"
-            //className="bg-green-500 text-white px-4 py-2 rounded-lg mb-4 font-poppins transition-all duration-300 ease-in-out hover:bg-green-600"
-            onClick={handleLogin}
-          >
-            Login
-          </button>
-          <><br /></>
-          <p className='text-black'>V: 1.0.20</p>
-        </form>
-      </div>
-      {/* <div className='bg-surface-card p-8 rounded-2xl mb-4'>
-        <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
-          <MuiAlert severity={severity} onClose={() => setToast(false)}>
-            {toastMessage}
-          </MuiAlert>
-        </Snackbar>
-      </div> */}
-      {successMessage && <SuccessToast message={successMessage} />}
-      {toast && <ToastMessage message={toastMessage} type="error"/>}
-    </div>
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'Login Successfully') {
+                    setSuccessMessage('Login Successfully!');
+                    setTimeout(() => {
+                        setSuccessMessage('');
+                    }, 2000);
 
-  );
+                    // Dispatch actions and navigate based on conditions
+                    dispatch(login(userName));
+                    dispatch(resetClientData());
+                    dispatch(resetRatesData());
+                    dispatch(resetQuotesData());
+
+                    if (companyName === 'Grace Scans') {
+                        router.push("/"); // Navigate to the main screen
+                    } else {
+                        router.push("/adDetails");
+                    }
+                } else {
+                    // Handle invalid credentials scenario
+                    setPassword(''); // Clear password field if needed
+                    setToastMessage('Invalid username or password. Please try again.');
+                    setSeverity('error');
+                    setToast(true);
+                    setTimeout(() => {
+                        setToast(false);
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                // Handle fetch or server errors
+                setToastMessage('Error in login ' + error);
+                setSeverity('error');
+                setToast(true);
+                setTimeout(() => {
+                    setToast(false);
+                }, 2000);
+            });
+    } else {
+        setToastMessage('Please fill all necessary fields!');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+            setToast(false);
+        }, 2000);
+    }
+};
+
+
+
+    return (
+        <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
+            <div className="max-w-screen-lg min-w-fit min-h-fit bg-white shadow-md rounded-lg overflow-hidden p-8 md:flex md:items-center md:justify-center md:space-x-8">
+                {/* Sign-in form */}
+                <div className="w-full md:w-1/2">
+                <h2 className="text-2xl font-bold font-inter text-gray-800">WELCOME TO</h2>
+                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK</h2>
+                   <div className="border-2 w-10 inline-block mb-4 border-blue-500 "></div>
+                    <form>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                                Username
+                            </label>
+                            <input
+                                 className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.username ? 'border-red-400' : ''}`}
+                                id="username"
+                                type="text"
+                                placeholder="Enter your username"
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
+                            />
+                            {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <input
+                                    className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.password ? 'border-red-400' : ''}`}
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                                    onClick={toggleShowPassword}
+                                >
+                                    {showPassword ? (
+                                        <EyeSlashIcon className="h-5 w-5 text-gray-700" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-gray-700" />
+                                    )}
+                                </button>
+                            </div>
+                            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                        </div>
+                        <div className="mb-6 relative">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="company">
+                                Company Name
+                            </label>
+                            <input
+                                className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.companyName ? 'border-red-400' : ''}`}
+                                id="company"
+                                type="text"
+                                placeholder="Enter your company name"
+                                value={companyName}
+                                onChange={handleSearchTermChange}
+                            />
+                            {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
+                            {/* Company Name Suggestions */}
+                            {(companyNameSuggestions.length > 0 && companyName !== '') && (
+                                <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                                    {companyNameSuggestions.map((name, index) => (
+                                        <li key={index}>
+                                            <button
+                                                type="button"
+                                                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                                                onClick={handleCompanyNameSelection}
+                                                value={name}
+                                            >
+                                                {name}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                        
+                        <button
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+                            type="button"
+                            onClick={handleLogin}
+                        >
+                            Sign In
+                        </button>
+                    </form>
+                    <div className="text-gray-600 text-xs mt-4">
+                        Version 1.1.22
+                    </div>
+                </div>
+                {/* Additional space with curved edges for pictures (visible on larger screens) */}
+                <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">
+                <div className="flex flex-col items-center justify-center">
+                <h2 className="text-xl text-center font-bold text-yellow-300 mb-4">Streamline Your Customer Relationships with Ease</h2>
+                <div className="border-2 w-10 inline-block mb-4 border-yellow-300"></div>
+                <img src="/images/login.png" alt="Login" className="w-72  h-auto rounded-br-lg" />
+                </div>
+                </div>
+            </div>
+            {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
+        </div>
+    );
 };
 
 export default Login;
