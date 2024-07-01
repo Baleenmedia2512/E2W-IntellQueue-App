@@ -11,6 +11,8 @@ import { PieChart, Pie, Sector, Cell, ResponsiveContainer, Tooltip, Legend } fro
 import Button from '@mui/material/Button';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import DateRangePicker from './CustomDateRangePicker';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 const Report = () => {
     const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -28,6 +30,14 @@ const Report = () => {
      const [successMessage, setSuccessMessage] = useState('');
      const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+  const currentStartDate = startOfMonth(new Date());
+  const currentEndDate = endOfMonth(new Date());
+  const [selectedRange, setSelectedRange] = useState({
+    startDate: currentStartDate,
+    endDate: currentEndDate,
+  });
+  const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
 
     const onPieEnter = (_, index) => {
       setActiveIndex(index);
@@ -42,7 +52,7 @@ const Report = () => {
         fetchFinanceDetails();
         fetchSumOfFinance();
         fetchSumOfOrders();
-    }, []);
+    }, [startDate, endDate]);
 
     const fetchSumOfOrders = () => {
       axios
@@ -59,7 +69,7 @@ const Report = () => {
 
     const fetchOrderDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}`)
+            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
             .then((response) => {
                 const data = response.data.map((order, index) => ({
                     ...order,
@@ -77,14 +87,17 @@ const Report = () => {
     
     const fetchFinanceDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}`)
+            .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
             .then((response) => {
-                const data = response.data.map((transaction, index) => ({
+              console.log('Response Data:', response.data);
+                const financeDetails = response.data.map((transaction, index) => ({
                     ...transaction,
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                 }));
-                setFinanceDetails(data);
+                console.log(financeDetails)
+                setFinanceDetails(financeDetails);
+                
             })
             .catch((error) => {
                 console.error(error);
@@ -273,17 +286,17 @@ const Report = () => {
       };
 
       // Styles
-const styles = {
-    chartContainer: {
-      width: '100%',
-      height: '250px',
-      background: '#ffffff',
-      borderRadius: '12px',
-      boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', // Add box shadow for 3D effect
-      marginTop: '20px', // Add margin to the top
-    marginBottom: '30px',
-    },
-  };
+      const styles = {
+        chartContainer: {
+          width: '100%',
+          height: '250px',
+          background: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
+          marginTop: '20px',
+          marginBottom: '30px',
+        },
+      };
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
@@ -315,15 +328,24 @@ const formatIndianNumber = (num) => {
   }
 };
 
-
+const handleDateChange = (range) => {
+  setSelectedRange({
+    startDate: range.startDate,
+    endDate: range.endDate,
+  });
+  const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
+  const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
+  setStartDate(formattedStartDate);
+  setEndDate(formattedEndDate);
+};
 
     return (
         <Box sx={{ width: '100%', padding: '0px' }}>
             <Tabs
                 value={value}
                 onChange={handleChange}
-                textColor="secondary"
-                indicatorColor="secondary"
+                textColor="primary"
+                indicatorColor="primary"
                 aria-label="secondary tabs example"
                 centered
                 variant="fullWidth"
@@ -334,12 +356,46 @@ const formatIndianNumber = (num) => {
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
   <div style={{ width: '100%' }}>
-   
+   <div className="flex justify-between items-start">
+  {/* Total Orders box */}
+  <div style={{
+        width: '200px',
+        height: '110px',
+        borderRadius: '10px',
+        boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
+        padding: '12px',
+        paddingLeft: '18px',
+        marginBottom: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start:',
+        justifyContent: 'flex-start:'
+      }}>
+        <div style={{
+          fontSize: '36px',
+          fontWeight: 'bold'
+        }}>
+          {sumOfOrders}
+        </div>
+        <div style={{ fontSize: '18px', color: 'dimgray' }}>
+          Total Orders
+        </div>
+      </div>
+
+  {/* Spacer to center the DateRangePicker */}
+  <div className="flex flex-grow justify-center items-start ml-2 mb-4">
+  <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+
+  </div>
+</div>
+
+
+   {/* <div>
       <div style={{
         width: '200px',
         height: '110px',
         borderRadius: '10px',
-        boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)',
+        boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
         padding: '12px',
         paddingLeft: '18px',
         marginBottom: '20px',
@@ -359,13 +415,18 @@ const formatIndianNumber = (num) => {
           Total Orders
         </div>
       </div>
+      <DateRangePicker dates={dates} setDates={setDates} />
+      </div> */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {orderDetails.length > 0 && (
-        <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
-          {/* Assuming DataGrid is properly defined */}
-          <DataGrid rows={orderDetails} columns={orderColumns} />
+        <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
+          <DataGrid rows={orderDetails} columns={orderColumns} 
+           sx={{
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: '#e3f2fd', // Light blue on hover
+            },
+          }}
+          />
         </div>
-      )}
     </div>
     {/* <div style={{ height: '500px', width: '100%' }}>
       <DataGrid
@@ -383,6 +444,9 @@ const formatIndianNumber = (num) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
+              <div className="flex flex-grow justify-center items-start ml-2 mb-4">
+               <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+             </div>
              {/* <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2, width: '40%'}}>
                  <InputLabel id="filter-label">Transaction Type</InputLabel>
                  <Select
@@ -465,6 +529,11 @@ const formatIndianNumber = (num) => {
                     //  components={{
                     //      Toolbar: GridToolbar,
                     //  }}
+                    sx={{
+                      '& .MuiDataGrid-row:hover': {
+                        backgroundColor: '#e3f2fd', // Light blue on hover
+                      },
+                    }}
                  />
              </div>
          </div>
