@@ -13,9 +13,11 @@ import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import DateRangePicker from './CustomDateRangePicker';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
+import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from '@mui/material';
 
 const Report = () => {
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
     const [orderDetails, setOrderDetails] = useState([]);
@@ -38,6 +40,46 @@ const Report = () => {
   });
   const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
+  const [open, setOpen] = useState(false);
+    const [password, setPassword] = useState('');
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
+    const [totalIncome, setTotalIncome] = useState('');
+    const [totalExpense, setTotalExpense] = useState('');
+    const [marginResult, setMarginResult] = useState('');
+    const [currentBalance, setCurrentBalance] = useState('');
+    const [cashInHand, setCashInHand] = useState('');
+    const [ledgerBalance, setLedgerBalance] = useState('');
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handlePasswordSubmit = () => {
+      const encodedPassw = encodeURIComponent(password);
+
+      fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${username}&JsonPassword=${encodedPassw}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.status === 'Login Successfully') {
+                  setOpen(false);
+                  setDialogOpen(true);
+              } else {
+                  setPasswordError(true);
+              }
+          })
+          .catch(error => {
+              console.error('Error during password validation:', error);
+          });
+  };
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+    };
 
     const onPieEnter = (_, index) => {
       setActiveIndex(index);
@@ -48,11 +90,17 @@ const Report = () => {
     };
     
     useEffect(() => {
+        fetchMarginAmount();
         fetchOrderDetails();
         fetchFinanceDetails();
         fetchSumOfFinance();
         fetchSumOfOrders();
+        FetchCurrentBalanceAmount();
     }, [startDate, endDate]);
+
+    useEffect(() => {
+      FetchCurrentBalanceAmount();
+  }, [marginResult]);
 
     const fetchSumOfOrders = () => {
       axios
@@ -89,13 +137,11 @@ const Report = () => {
         axios
             .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
             .then((response) => {
-              console.log('Response Data:', response.data);
                 const financeDetails = response.data.map((transaction, index) => ({
                     ...transaction,
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                 }));
-                console.log(financeDetails)
                 setFinanceDetails(financeDetails);
                 
             })
@@ -158,6 +204,36 @@ const Report = () => {
                 }, 2000);
           });
   };
+
+  const fetchMarginAmount = () => {
+    axios
+        .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+        .then((response) => {
+            const data = response.data[0]
+            setTotalIncome(data.total_income);
+            setTotalExpense(data.total_expense);
+            setMarginResult(data.margin_amount);
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+};
+
+const FetchCurrentBalanceAmount = () => {
+  axios
+      .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+      .then((response) => {
+          const data = response.data[0]
+          const currentBalanceAmount = data.currentBalance + marginResult;
+          setCurrentBalance(currentBalanceAmount);
+          setCashInHand(data.totalCashAmount);
+          setLedgerBalance(data.ledgerBalance);
+      })
+      .catch((error) => {
+          console.error(error);
+      });
+};
+
     const orderColumns = [
         { field: 'OrderNumber', headerName: 'Order#', width: 80},
         { field: 'OrderDate', headerName: 'Order Date', width: 100},
@@ -383,7 +459,7 @@ const handleDateChange = (range) => {
       </div>
 
   {/* Spacer to center the DateRangePicker */}
-  <div className="flex flex-grow justify-center items-start ml-2 mb-4">
+  <div className="flex flex-grow ml-2 mb-4">
   <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
 
   </div>
@@ -444,9 +520,82 @@ const handleDateChange = (range) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <div className="flex flex-grow justify-center items-start ml-2 mb-4">
+              <div className="flex flex-grow ml-2 mb-4">
                <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+               <div className="flex flex-grow items-end ml-2 mb-4">
+               <Button variant="outlined" color="primary" onClick={handleClickOpen}>
+                   Show Account Balance
+                </Button>
+                </div>
              </div>
+             <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>Enter Password</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Please enter your password to proceed.
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="password"
+                        label="Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        error={passwordError}
+                        helperText={passwordError ? 'Invalid password. Please try again.' : ''}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handlePasswordSubmit} color="primary">
+                        Submit
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
+                <DialogTitle>Account Balance Information</DialogTitle>
+                {/* <div className="border-x-2 w-10 inline-block mb-4 border-gray-500 "></div> */}
+                <DialogContent>
+                    {/* <Box display="flex" justifyContent="space-around" p={2}> */}
+                    <p className="text-xl font-bold">Margin Amount</p>
+                    <div className="w-fit p-4 mt-2 mr-3 border rounded-lg flex items-center space-x-4">
+                <p className="text-xl font-bold">{totalIncome}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Total Income</h2>
+                <p className="text-xl font-bold"> - </p>
+                <p className="text-xl font-bold">{totalExpense}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Total Expense</h2>
+                <p className="text-xl font-bold"> = </p>
+                <p className="text-xl font-bold">{marginResult}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Margin Amount</h2>
+            </div>
+            <p className="text-xl font-bold mt-5">Account Balance</p>
+                    <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
+                <p className="text-xl font-bold">{ledgerBalance}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
+                <p className="text-xl font-bold"> + </p>
+                <p className="text-xl font-bold">{cashInHand}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Cash In Hand</h2>
+                <p className="text-xl font-bold"> + </p>
+                <p className="text-xl font-bold">{marginResult}</p>
+                <h2 className="text-sm font-semibold text-gray-600">Margin Amount</h2>
+                <p className="text-xl font-bold"> = </p>
+                <p className="text-xl font-bold">{currentBalance}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Total Balance Amount</h2>
+            </div>
+                    {/* </Box> */}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
              {/* <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2, width: '40%'}}>
                  <InputLabel id="filter-label">Transaction Type</InputLabel>
                  <Select
