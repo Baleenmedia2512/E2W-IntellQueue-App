@@ -235,12 +235,8 @@ const FetchCurrentBalanceAmount = () => {
           const marginAmt = parseFloat(marginResult);
           const ledgerBal = parseFloat(data.ledgerBalance);
           const cashInHandAmt = parseFloat(data.totalCashAmount);
-          const currentBalanceAmount = data.currentBalance + marginAmt + data.totalCashAmount;
-          // setCurrentBalance(currentBalanceAmount);
-          // setCashInHand(data.totalCashAmount);
-          // setLedgerBalance(data.ledgerBalance);
-        // const currentBalanceAmount = (isNaN(data.currentBalance) ? 0 : parseFloat(data.currentBalance)) + (isNaN(marginAmt) ? 0 : marginAmt);
-
+          const currentBalanceAmount = ledgerBal + marginAmt + cashInHandAmt;
+         
         setCurrentBalance(isNaN(currentBalanceAmount) ? 0 : Math.round(currentBalanceAmount));
         setCashInHand(isNaN(cashInHandAmt) ? 0 : Math.round(cashInHandAmt));
         setLedgerBalance(isNaN(ledgerBal) ? 0 : Math.round(ledgerBal));
@@ -603,7 +599,7 @@ const handleDateChange = (range) => {
             <p className="text-xl font-bold mt-5">Account Balance</p>
                     <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
                 <p className="text-xl font-bold">₹{formatIndianCurrency(ledgerBalance)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
+                <h2 className="text-sm font-semibold text-gray-500">Ledger Balance</h2>
                 <p className="text-xl font-bold"> + </p>
                 <p className="text-xl font-bold">₹{formatIndianCurrency(cashInHand)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Cash In Hand</h2>
