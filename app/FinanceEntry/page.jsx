@@ -129,7 +129,7 @@ const FinanceData = () => {
   const handleDateClick = (event) => {
     setAnchorElDate(event.currentTarget);
   };
-console.log(isOrderExist)
+  
   const handleDateClose = () => {
     setAnchorElDate(null);
   };

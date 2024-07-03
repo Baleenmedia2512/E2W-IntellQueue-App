@@ -235,12 +235,8 @@ const FetchCurrentBalanceAmount = () => {
           const marginAmt = parseFloat(marginResult);
           const ledgerBal = parseFloat(data.ledgerBalance);
           const cashInHandAmt = parseFloat(data.totalCashAmount);
-          const currentBalanceAmount = data.currentBalance + marginAmt + data.totalCashAmount;
-          // setCurrentBalance(currentBalanceAmount);
-          // setCashInHand(data.totalCashAmount);
-          // setLedgerBalance(data.ledgerBalance);
-        // const currentBalanceAmount = (isNaN(data.currentBalance) ? 0 : parseFloat(data.currentBalance)) + (isNaN(marginAmt) ? 0 : marginAmt);
-
+          const currentBalanceAmount = ledgerBal + marginAmt + cashInHandAmt;
+         
         setCurrentBalance(isNaN(currentBalanceAmount) ? 0 : Math.round(currentBalanceAmount));
         setCashInHand(isNaN(cashInHandAmt) ? 0 : Math.round(cashInHandAmt));
         setLedgerBalance(isNaN(ledgerBal) ? 0 : Math.round(ledgerBal));
