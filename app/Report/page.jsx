@@ -69,6 +69,7 @@ const Report = () => {
               if (data.status === 'Login Successfully') {
                   setOpen(false);
                   setDialogOpen(true);
+                  setPassword('');
               } else {
                   setPasswordError(true);
               }
@@ -217,7 +218,7 @@ const Report = () => {
             const income = parseFloat(data.total_income);
         const expense = parseFloat(data.total_expense);
         const margin = parseFloat(data.margin_amount);
-        
+        console.log(data)
         setTotalIncome(isNaN(income) ? 0 : Math.round(income));
         setTotalExpense(isNaN(expense) ? 0 : Math.round(expense));
         setMarginResult(isNaN(margin) ? 0 : Math.round(margin));
@@ -226,24 +227,13 @@ const Report = () => {
             console.error(error);
         });
 };
-
 const FetchCurrentBalanceAmount = () => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data[0]
-          const marginAmt = parseFloat(marginResult);
-          const ledgerBal = parseFloat(data.ledgerBalance);
-          const cashInHandAmt = parseFloat(data.totalCashAmount);
-          const currentBalanceAmount = data.currentBalance + marginAmt + data.totalCashAmount;
-          // setCurrentBalance(currentBalanceAmount);
-          // setCashInHand(data.totalCashAmount);
-          // setLedgerBalance(data.ledgerBalance);
-        // const currentBalanceAmount = (isNaN(data.currentBalance) ? 0 : parseFloat(data.currentBalance)) + (isNaN(marginAmt) ? 0 : marginAmt);
-
-        setCurrentBalance(isNaN(currentBalanceAmount) ? 0 : Math.round(currentBalanceAmount));
-        setCashInHand(isNaN(cashInHandAmt) ? 0 : Math.round(cashInHandAmt));
-        setLedgerBalance(isNaN(ledgerBal) ? 0 : Math.round(ledgerBal));
+          console.log(`CurrentBalance:`, response.data)
+        setCurrentBalance(data.currentBalance);
       })
       .catch((error) => {
           console.error(error);
@@ -589,31 +579,44 @@ const handleDateChange = (range) => {
                 {/* <div className="border-x-2 w-10 inline-block mb-4 border-gray-500 "></div> */}
                 <DialogContent>
                     {/* <Box display="flex" justifyContent="space-around" p={2}> */}
-                    <p className="text-xl font-bold">Margin Amount</p>
-                    <div className="w-fit p-4 mt-2 mr-3 border rounded-lg flex items-center space-x-4">
-                <p className="text-xl font-bold">₹{formatIndianCurrency(totalIncome)}</p>
+                    <div className="flex items-center space-x-1 sm:space-x-1">
+                    <p className="text-lg font-bold whitespace-nowrap">Margin Amount</p>
+                    <p className="text-xs  mt-1">({format(startDate, 'dd-MMM-yy')} - {format(endDate, 'dd-MMM-yy')})</p>
+                  </div>
+
+
+                    <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
+                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(totalIncome)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Total Income</h2>
                 <p className="text-xl font-bold"> - </p>
                 <p className="text-xl font-bold">₹{formatIndianCurrency(totalExpense)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Total Expense</h2>
-                <p className="text-xl font-bold"> = </p>
+                <p className="text-xl font-bold"> = </p> */}
                 <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Margin Amount</h2>
+                {/* <h2 className="text-sm font-semibold text-gray-500">Margin Amount</h2> */}
+                
             </div>
-            <p className="text-xl font-bold mt-5">Account Balance</p>
+            <div>
+                <p className="text-xs text-gray-500 mt-1">Income - Expense = Margin Amount</p></div>
+            <div className="flex items-center mt-5">
+                      <p className="text-lg font-bold">Current Bank Balance</p>
+                      <p className="text-xs ml-1 mt-1">(Overall)</p>
+                  </div>
                     <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
-                <p className="text-xl font-bold">₹{formatIndianCurrency(ledgerBalance)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
+                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(ledgerBalance)}</p> */}
+                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
                 <p className="text-xl font-bold"> + </p>
                 <p className="text-xl font-bold">₹{formatIndianCurrency(cashInHand)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Cash In Hand</h2>
                 <p className="text-xl font-bold"> + </p>
                 <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
                 <h2 className="text-sm font-semibold text-gray-600">Margin Amount</h2>
-                <p className="text-xl font-bold"> = </p>
+                <p className="text-xl font-bold"> = </p> */}
                 <p className="text-xl font-bold">₹{formatIndianCurrency(currentBalance)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Total Balance Amount</h2>
+                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2> */}
             </div>
+            <div>
+                <p className="text-xs text-gray-500 mt-1">Ledger Balance + Income - Expense = Current Bank Balance</p></div>
                     {/* </Box> */}
                 </DialogContent>
                 <DialogActions>
