@@ -105,7 +105,7 @@ const Report = () => {
 
     const fetchSumOfOrders = () => {
       axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
           .then((response) => {
               const sumOfOrders = response.data;
               setSumOfOrders(sumOfOrders);
