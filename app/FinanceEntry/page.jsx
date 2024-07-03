@@ -21,6 +21,7 @@ import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
+import { setIsOrderExist } from '@/redux/features/order-slice';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -62,7 +63,6 @@ const FinanceData = () => {
   // const username = "Grace Scans"
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
-  
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
@@ -93,7 +93,8 @@ const FinanceData = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [balanceAmount, setBalanceAmount] = useState('');
-  const [isOrderExist, setIsOrderExist] = useState(false);
+  // const [isOrderExist, setIsOrderExist] = useState(false);
+  const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const dispatch = useDispatch();
 
 
@@ -128,7 +129,7 @@ const FinanceData = () => {
   const handleDateClick = (event) => {
     setAnchorElDate(event.currentTarget);
   };
-
+console.log(isOrderExist)
   const handleDateClose = () => {
     setAnchorElDate(null);
   };
@@ -191,7 +192,7 @@ const FinanceData = () => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
-          setIsOrderExist(true);
+          dispatch(setIsOrderExist(true));
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
@@ -214,13 +215,13 @@ const FinanceData = () => {
       const data = response.data;
       if (data.length > 0) {
         const clientDetails = data[0];
-        setIsOrderExist(true);
+        dispatch(setIsOrderExist(true));
         setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
       } else {
-        setIsOrderExist(false);
+        dispatch(setIsOrderExist(false));
       }
     })
     .catch((error) => {
@@ -234,7 +235,7 @@ const FinanceData = () => {
 
   const insertNewFinance = async (e) => {
     e.preventDefault()
-    if (!isOrderExist) {
+    if (!isOrderExist && !expenseCategory) {
       setToastMessage('Order Number does not exist!');
       setSeverity('error');
       setToast(true);
@@ -316,7 +317,7 @@ const FinanceData = () => {
     if (transactionType?.value !== 'Operational Expense' && !clientName) {
       errors.clientName = 'Client Name is required';
     }
-    if (!orderNumber) errors.orderNumber = 'Order Number is required';
+    if (!orderNumber && !expenseCategory) errors.orderNumber = 'Order Number is required';
     // if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
     if (!taxType) errors.taxType = 'Tax Type is required';
     if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {

@@ -14,6 +14,7 @@ import SuccessToast from '../components/SuccessToast';
 import DateRangePicker from './CustomDateRangePicker';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from '@mui/material';
+import './styles.css';
 
 const Report = () => {
     const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -210,9 +211,16 @@ const Report = () => {
         .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
         .then((response) => {
             const data = response.data[0]
-            setTotalIncome(data.total_income);
-            setTotalExpense(data.total_expense);
-            setMarginResult(data.margin_amount);
+            // setTotalIncome(data.total_income);
+            // setTotalExpense(data.total_expense);
+            // setMarginResult(data.margin_amount);
+            const income = parseFloat(data.total_income);
+        const expense = parseFloat(data.total_expense);
+        const margin = parseFloat(data.margin_amount);
+        
+        setTotalIncome(isNaN(income) ? 0 : Math.round(income));
+        setTotalExpense(isNaN(expense) ? 0 : Math.round(expense));
+        setMarginResult(isNaN(margin) ? 0 : Math.round(margin));
         })
         .catch((error) => {
             console.error(error);
@@ -224,10 +232,18 @@ const FetchCurrentBalanceAmount = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
       .then((response) => {
           const data = response.data[0]
-          const currentBalanceAmount = data.currentBalance + marginResult;
-          setCurrentBalance(currentBalanceAmount);
-          setCashInHand(data.totalCashAmount);
-          setLedgerBalance(data.ledgerBalance);
+          const marginAmt = parseFloat(marginResult);
+          const ledgerBal = parseFloat(data.ledgerBalance);
+          const cashInHandAmt = parseFloat(data.totalCashAmount);
+          const currentBalanceAmount = data.currentBalance + marginAmt + data.totalCashAmount;
+          // setCurrentBalance(currentBalanceAmount);
+          // setCashInHand(data.totalCashAmount);
+          // setLedgerBalance(data.ledgerBalance);
+        // const currentBalanceAmount = (isNaN(data.currentBalance) ? 0 : parseFloat(data.currentBalance)) + (isNaN(marginAmt) ? 0 : marginAmt);
+
+        setCurrentBalance(isNaN(currentBalanceAmount) ? 0 : Math.round(currentBalanceAmount));
+        setCashInHand(isNaN(cashInHandAmt) ? 0 : Math.round(cashInHandAmt));
+        setLedgerBalance(isNaN(ledgerBal) ? 0 : Math.round(ledgerBal));
       })
       .catch((error) => {
           console.error(error);
@@ -415,6 +431,14 @@ const handleDateChange = (range) => {
   setEndDate(formattedEndDate);
 };
 
+ // Utility function to format number as Indian currency (₹)
+ const formatIndianCurrency = (number) => {
+  if (typeof number === 'number') {
+    return number.toLocaleString('en-IN');
+  }
+  return number;
+};
+
     return (
         <Box sx={{ width: '100%', padding: '0px' }}>
             <Tabs
@@ -436,7 +460,7 @@ const handleDateChange = (range) => {
   {/* Total Orders box */}
   <div style={{
         width: '200px',
-        height: '110px',
+        height: '143px',
         borderRadius: '10px',
         boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
         padding: '12px',
@@ -445,10 +469,12 @@ const handleDateChange = (range) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start:',
-        justifyContent: 'flex-start:'
+        justifyContent: 'flex-start:',
+        border: '1px solid #e0e0e0'
       }}>
         <div style={{
           fontSize: '36px',
+          marginTop: '20px',
           fontWeight: 'bold'
         }}>
           {sumOfOrders}
@@ -520,12 +546,12 @@ const handleDateChange = (range) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <div className="flex flex-grow ml-2 mb-4">
+              <div className="flex flexgrow- ml-2 mb-4">
                <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
                <div className="flex flex-grow items-end ml-2 mb-4">
-               <Button variant="outlined" color="primary" onClick={handleClickOpen}>
-                   Show Account Balance
-                </Button>
+               <button className="custom-button" onClick={handleClickOpen}>
+                Show Balance
+              </button>
                 </div>
              </div>
              <Dialog open={open} onClose={handleClose}>
@@ -565,27 +591,27 @@ const handleDateChange = (range) => {
                     {/* <Box display="flex" justifyContent="space-around" p={2}> */}
                     <p className="text-xl font-bold">Margin Amount</p>
                     <div className="w-fit p-4 mt-2 mr-3 border rounded-lg flex items-center space-x-4">
-                <p className="text-xl font-bold">{totalIncome}</p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(totalIncome)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Total Income</h2>
                 <p className="text-xl font-bold"> - </p>
-                <p className="text-xl font-bold">{totalExpense}</p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(totalExpense)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Total Expense</h2>
                 <p className="text-xl font-bold"> = </p>
-                <p className="text-xl font-bold">{marginResult}</p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Margin Amount</h2>
             </div>
             <p className="text-xl font-bold mt-5">Account Balance</p>
                     <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
-                <p className="text-xl font-bold">{ledgerBalance}</p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(ledgerBalance)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
                 <p className="text-xl font-bold"> + </p>
-                <p className="text-xl font-bold">{cashInHand}</p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(cashInHand)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Cash In Hand</h2>
                 <p className="text-xl font-bold"> + </p>
-                <p className="text-xl font-bold">{marginResult}</p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
                 <h2 className="text-sm font-semibold text-gray-600">Margin Amount</h2>
                 <p className="text-xl font-bold"> = </p>
-                <p className="text-xl font-bold">{currentBalance}</p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(currentBalance)}</p>
                 <h2 className="text-sm font-semibold text-gray-500">Total Balance Amount</h2>
             </div>
                     {/* </Box> */}

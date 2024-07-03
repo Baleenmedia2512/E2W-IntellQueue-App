@@ -55,7 +55,7 @@ const ratePersistConfig = {
 const orderPersistConfig = {
   key: "order",
   storage: storage,
-  whitelist: ["clientName", "clientNumber", "maxOrderNumber", "receivable", "remarks"]
+  whitelist: ["clientName", "clientNumber", "maxOrderNumber", "receivable", "remarks", "isOrderExist"]
 }
 
 const employeePersistConfig = {

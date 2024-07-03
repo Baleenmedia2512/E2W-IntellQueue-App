@@ -27,7 +27,8 @@ const DateRangePicker = ({ startDate, endDate, onDateChange }) => {
   };
 
   return (
-    <div className="border p-4 h-36 rounded-md shadow-md">
+    
+    <div className="border p-4 w-44 h-36 rounded-md shadow-md">
       <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
       <div className="mb-4">
       <Calendar
@@ -36,7 +37,7 @@ const DateRangePicker = ({ startDate, endDate, onDateChange }) => {
         placeholder="Start Date"
         showIcon
         dateFormat="dd-M-yy"
-          className="w-full text-gray-700"
+        className="w-fit text-black-700"
       />
       </div>
       <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
@@ -47,7 +48,7 @@ const DateRangePicker = ({ startDate, endDate, onDateChange }) => {
         placeholder="End Date"
         showIcon
         dateFormat="dd-M-yy"
-          className="w-full text-gray-500"
+        className="w-fit text-black-700"
       />
     </div>
     </div>

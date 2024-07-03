@@ -15,7 +15,8 @@ const initialState = {
   consultantName: '',
   clientContactPerson: "",
   clientGST: "",
-  clientPAN: ""
+  clientPAN: "",
+  isOrderExist: false,
 };
 
 export const orderSlice = createSlice({
@@ -27,9 +28,12 @@ export const orderSlice = createSlice({
     },
     resetOrderData: (state) => {
         return initialState;
-    }
+    },
+    setIsOrderExist: (state, action) => {
+      state.isOrderExist = action.payload;
+    },
   }
 });
 
-export const { setOrderData, resetOrderData} = orderSlice.actions;
+export const { setOrderData, resetOrderData, setIsOrderExist} = orderSlice.actions;
 export const orderReducer = orderSlice.reducer;
