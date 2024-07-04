@@ -218,7 +218,7 @@ const Report = () => {
             const income = parseFloat(data.total_income);
         const expense = parseFloat(data.total_expense);
         const margin = parseFloat(data.margin_amount);
-        console.log(data)
+
         setTotalIncome(isNaN(income) ? 0 : Math.round(income));
         setTotalExpense(isNaN(expense) ? 0 : Math.round(expense));
         setMarginResult(isNaN(margin) ? 0 : Math.round(margin));
@@ -232,7 +232,7 @@ const FetchCurrentBalanceAmount = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data[0]
-          console.log(`CurrentBalance:`, response.data)
+          
         setCurrentBalance(data.currentBalance);
       })
       .catch((error) => {
@@ -576,9 +576,8 @@ const handleDateChange = (range) => {
 
             <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
                 <DialogTitle>Account Balance Information</DialogTitle>
-                {/* <div className="border-x-2 w-10 inline-block mb-4 border-gray-500 "></div> */}
+                <hr className="border-gray-300" />
                 <DialogContent>
-                    {/* <Box display="flex" justifyContent="space-around" p={2}> */}
                     <div className="flex items-center space-x-1 sm:space-x-1">
                     <p className="text-lg font-bold whitespace-nowrap">Margin Amount</p>
                     <p className="text-xs  mt-1">({format(startDate, 'dd-MMM-yy')} - {format(endDate, 'dd-MMM-yy')})</p>
@@ -586,39 +585,26 @@ const handleDateChange = (range) => {
 
 
                     <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
-                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(totalIncome)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Total Income</h2>
-                <p className="text-xl font-bold"> - </p>
-                <p className="text-xl font-bold">₹{formatIndianCurrency(totalExpense)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Total Expense</h2>
-                <p className="text-xl font-bold"> = </p> */}
                 <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
-                {/* <h2 className="text-sm font-semibold text-gray-500">Margin Amount</h2> */}
-                
             </div>
+            
             <div>
                 <p className="text-xs text-gray-500 mt-1">Income - Expense = Margin Amount</p></div>
+                <div className="flex justify-center my-4">
+            <div className="w-full border-t border-gray-300" />
+        </div>
+        
             <div className="flex items-center mt-5">
                       <p className="text-lg font-bold">Current Bank Balance</p>
                       <p className="text-xs ml-1 mt-1">(Overall)</p>
                   </div>
                     <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
-                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(ledgerBalance)}</p> */}
-                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
-                <p className="text-xl font-bold"> + </p>
-                <p className="text-xl font-bold">₹{formatIndianCurrency(cashInHand)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Cash In Hand</h2>
-                <p className="text-xl font-bold"> + </p>
-                <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
-                <h2 className="text-sm font-semibold text-gray-600">Margin Amount</h2>
-                <p className="text-xl font-bold"> = </p> */}
                 <p className="text-xl font-bold">₹{formatIndianCurrency(currentBalance)}</p>
-                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2> */}
             </div>
             <div>
                 <p className="text-xs text-gray-500 mt-1">Ledger Balance + Income - Expense = Current Bank Balance</p></div>
-                    {/* </Box> */}
                 </DialogContent>
+                <hr className=" border-gray-300 w-full" />
                 <DialogActions>
                     <Button onClick={handleDialogClose} color="primary">
                         Close
