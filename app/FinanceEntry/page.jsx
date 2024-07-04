@@ -1,6 +1,6 @@
 'use client';
 import './page.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import { TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
@@ -21,6 +21,7 @@ import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
+import { setIsOrderExist } from '@/redux/features/order-slice';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -61,7 +62,7 @@ const FinanceData = () => {
   const { clientName: orderClientName, maxOrderNumber: orderOrderNumber, remarks: orderRemarks, receivable: orderReceivable } = orderData;
   // const username = "Grace Scans"
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  const username = useAppSelector(state => state.authSlice.userName)
+  const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
@@ -92,9 +93,10 @@ const FinanceData = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [balanceAmount, setBalanceAmount] = useState('');
+  // const [isOrderExist, setIsOrderExist] = useState(false);
+  const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const dispatch = useDispatch();
 
- 
 
   useEffect(() => {
     // Use the orderData values to initialize the state
@@ -127,7 +129,7 @@ const FinanceData = () => {
   const handleDateClick = (event) => {
     setAnchorElDate(event.currentTarget);
   };
-
+  
   const handleDateClose = () => {
     setAnchorElDate(null);
   };
@@ -190,6 +192,7 @@ const FinanceData = () => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
+          dispatch(setIsOrderExist(true));
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
@@ -203,6 +206,7 @@ const FinanceData = () => {
   }; 
 
   const handleOrderNumberChange = (event) => {
+    
     const newOrderNumber = event.target.value;
     setOrderNumber(newOrderNumber);
     axios
@@ -211,11 +215,13 @@ const FinanceData = () => {
       const data = response.data;
       if (data.length > 0) {
         const clientDetails = data[0];
+        dispatch(setIsOrderExist(true));
         setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
-        
+      } else {
+        dispatch(setIsOrderExist(false));
       }
     })
     .catch((error) => {
@@ -226,9 +232,18 @@ const FinanceData = () => {
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
     }
   };
-  
+
   const insertNewFinance = async (e) => {
     e.preventDefault()
+    if (!isOrderExist && !expenseCategory) {
+      setToastMessage('Order Number does not exist!');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+      return;
+    }
     if (balanceAmount === 0) {
       setToastMessage('Full payment has already been received!');
       setSeverity('error');
@@ -236,7 +251,7 @@ const FinanceData = () => {
       setTimeout(() => {
         setToast(false);
       }, 3000);
-
+      return;
     } else {
 
     if (validateFields()) {
@@ -290,7 +305,7 @@ const FinanceData = () => {
   //   const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
   //   return distinctValues.sort().map(value => ({ value, label: value }));
   // };
-
+  
 
   const validateFields = () => {
     let errors = {};
@@ -302,7 +317,7 @@ const FinanceData = () => {
     if (transactionType?.value !== 'Operational Expense' && !clientName) {
       errors.clientName = 'Client Name is required';
     }
-    if (!orderNumber) errors.orderNumber = 'Order Number is required';
+    if (!orderNumber && !expenseCategory) errors.orderNumber = 'Order Number is required';
     // if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
     if (!taxType) errors.taxType = 'Tax Type is required';
     if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {

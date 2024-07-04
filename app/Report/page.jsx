@@ -11,9 +11,15 @@ import { PieChart, Pie, Sector, Cell, ResponsiveContainer, Tooltip, Legend } fro
 import Button from '@mui/material/Button';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import DateRangePicker from './CustomDateRangePicker';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
+import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from '@mui/material';
+import './styles.css';
 
 const Report = () => {
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    const username = useAppSelector(state => state.authSlice.userName);
+    const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
     const [orderDetails, setOrderDetails] = useState([]);
     const [financeDetails, setFinanceDetails] = useState([]);
@@ -27,6 +33,55 @@ const Report = () => {
      const [successMessage, setSuccessMessage] = useState('');
      const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+  const currentStartDate = startOfMonth(new Date());
+  const currentEndDate = endOfMonth(new Date());
+  const [selectedRange, setSelectedRange] = useState({
+    startDate: currentStartDate,
+    endDate: currentEndDate,
+  });
+  const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
+  const [open, setOpen] = useState(false);
+    const [password, setPassword] = useState('');
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
+    const [totalIncome, setTotalIncome] = useState('');
+    const [totalExpense, setTotalExpense] = useState('');
+    const [marginResult, setMarginResult] = useState('');
+    const [currentBalance, setCurrentBalance] = useState('');
+    const [cashInHand, setCashInHand] = useState('');
+    const [ledgerBalance, setLedgerBalance] = useState('');
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handlePasswordSubmit = () => {
+      const encodedPassw = encodeURIComponent(password);
+
+      fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${username}&JsonPassword=${encodedPassw}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.status === 'Login Successfully') {
+                  setOpen(false);
+                  setDialogOpen(true);
+                  setPassword('');
+              } else {
+                  setPasswordError(true);
+              }
+          })
+          .catch(error => {
+              console.error('Error during password validation:', error);
+          });
+  };
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+    };
 
     const onPieEnter = (_, index) => {
       setActiveIndex(index);
@@ -35,30 +90,36 @@ const Report = () => {
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
-
+    
     useEffect(() => {
+        fetchMarginAmount();
         fetchOrderDetails();
         fetchFinanceDetails();
         fetchSumOfFinance();
         fetchSumOfOrders();
-    }, []);
+        FetchCurrentBalanceAmount();
+    }, [startDate, endDate]);
+
+    useEffect(() => {
+      FetchCurrentBalanceAmount();
+  }, [marginResult]);
 
     const fetchSumOfOrders = () => {
       axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
           .then((response) => {
-              const sumOfOrders = response.data;
-              setSumOfOrders(sumOfOrders);
+              const totalOrders = response.data;
+              setSumOfOrders(totalOrders);
+
           })
           .catch((error) => {
               console.error(error);
           });
   };
 
-
     const fetchOrderDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}`)
+            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
             .then((response) => {
                 const data = response.data.map((order, index) => ({
                     ...order,
@@ -76,14 +137,15 @@ const Report = () => {
     
     const fetchFinanceDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}`)
+            .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
             .then((response) => {
-                const data = response.data.map((transaction, index) => ({
+                const financeDetails = response.data.map((transaction, index) => ({
                     ...transaction,
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                 }));
-                setFinanceDetails(data);
+                setFinanceDetails(financeDetails);
+                
             })
             .catch((error) => {
                 console.error(error);
@@ -92,10 +154,11 @@ const Report = () => {
 
     const fetchSumOfFinance = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfFinance.php?JsonDBName=${companyName}`)
+            .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfFinance.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
             .then((response) => {
                 const data = response.data
                 setSumOfFinance(data);
+                
             })
             .catch((error) => {
                 console.error(error);
@@ -144,6 +207,38 @@ const Report = () => {
                 }, 2000);
           });
   };
+
+  const fetchMarginAmount = () => {
+    axios
+        .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+        .then((response) => {
+            const data = response.data[0]
+            // setTotalIncome(data.total_income);
+            // setTotalExpense(data.total_expense);
+            // setMarginResult(data.margin_amount);
+            const income = parseFloat(data.total_income);
+        const expense = parseFloat(data.total_expense);
+        const margin = parseFloat(data.margin_amount);
+        setTotalIncome(isNaN(income) ? 0 : Math.round(income));
+        setTotalExpense(isNaN(expense) ? 0 : Math.round(expense));
+        setMarginResult(isNaN(margin) ? 0 : Math.round(margin));
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+};
+const FetchCurrentBalanceAmount = () => {
+  axios
+      .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}`)
+      .then((response) => {
+          const data = response.data[0]
+        setCurrentBalance(data.currentBalance);
+      })
+      .catch((error) => {
+          console.error(error);
+      });
+};
+
     const orderColumns = [
         { field: 'OrderNumber', headerName: 'Order#', width: 80},
         { field: 'OrderDate', headerName: 'Order Date', width: 100},
@@ -242,9 +337,11 @@ const Report = () => {
     //     { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
     // ] : [];
     const pieData = sumOfFinance.length > 0 ? [
-      { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
-      { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
+      { name: 'Income', value: parseFloat(sumOfFinance[0].income || 0) },
+      { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
     ] : [];
+
+    const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
     const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
 
@@ -272,17 +369,17 @@ const Report = () => {
       };
 
       // Styles
-const styles = {
-    chartContainer: {
-      width: '100%',
-      height: '250px',
-      background: '#ffffff',
-      borderRadius: '12px',
-      boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', // Add box shadow for 3D effect
-      marginTop: '20px', // Add margin to the top
-    marginBottom: '30px',
-    },
-  };
+      const styles = {
+        chartContainer: {
+          width: '100%',
+          height: '250px',
+          background: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
+          marginTop: '20px',
+          marginBottom: '30px',
+        },
+      };
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
@@ -314,31 +411,94 @@ const formatIndianNumber = (num) => {
   }
 };
 
+const handleDateChange = (range) => {
+  setSelectedRange({
+    startDate: range.startDate,
+    endDate: range.endDate,
+  });
+  const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
+  const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
+  setStartDate(formattedStartDate);
+  setEndDate(formattedEndDate);
+};
 
+ // Utility function to format number as Indian currency (₹)
+ const formatIndianCurrency = (number) => {
+  if (typeof number === 'number') {
+    return number.toLocaleString('en-IN');
+  }
+  return number;
+};
 
     return (
         <Box sx={{ width: '100%', padding: '0px' }}>
             <Tabs
                 value={value}
                 onChange={handleChange}
-                textColor="secondary"
-                indicatorColor="secondary"
+                textColor="primary"
+                indicatorColor="primary"
                 aria-label="secondary tabs example"
                 centered
                 variant="fullWidth"
             >
                 <Tab label="Orders" />
-                <Tab label="Finance" />
+                {appRights.includes('Administrator') || appRights.includes('Finance') ? <Tab label="Finance" /> : null}
             </Tabs>
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
   <div style={{ width: '100%' }}>
-   
+   <div className="flex justify-between items-start">
+  {/* Total Orders box */}
+  {/* Total Orders box */}
+<div className="w-40 h-36 rounded-lg shadow-md p-3 mb-5 flex flex-col items-start justify-start border border-gray-300">
+  <div className="text-4xl mt-5 font-bold">
+    {sumOfOrders}
+  </div>
+  <div className="text-lg text-gray-600">
+    Total Orders
+  </div>
+</div>
+
+  {/* <div style={{
+        width: '200px',
+        height: '143px',
+        borderRadius: '10px',
+        boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
+        padding: '12px',
+        paddingLeft: '18px',
+        marginBottom: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start:',
+        justifyContent: 'flex-start:',
+        border: '1px solid #e0e0e0'
+      }}>
+        <div style={{
+          fontSize: '36px',
+          marginTop: '20px',
+          fontWeight: 'bold'
+        }}>
+          {sumOfOrders}
+        </div>
+        <div style={{ fontSize: '18px', color: 'dimgray' }}>
+          Total Orders
+        </div>
+      </div> */}
+
+  {/* Spacer to center the DateRangePicker */}
+  <div className="flex flex-grow ml-2 mb-4">
+  <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+
+  </div>
+</div>
+
+
+   {/* <div>
       <div style={{
         width: '200px',
         height: '110px',
         borderRadius: '10px',
-        boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)',
+        boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
         padding: '12px',
         paddingLeft: '18px',
         marginBottom: '20px',
@@ -358,13 +518,18 @@ const formatIndianNumber = (num) => {
           Total Orders
         </div>
       </div>
+      <DateRangePicker dates={dates} setDates={setDates} />
+      </div> */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {orderDetails.length > 0 && (
-        <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
-          {/* Assuming DataGrid is properly defined */}
-          <DataGrid rows={orderDetails} columns={orderColumns} />
+        <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
+          <DataGrid rows={orderDetails} columns={orderColumns} 
+           sx={{
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: '#e3f2fd', // Light blue on hover
+            },
+          }}
+          />
         </div>
-      )}
     </div>
     {/* <div style={{ height: '500px', width: '100%' }}>
       <DataGrid
@@ -382,6 +547,95 @@ const formatIndianNumber = (num) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
+              <div className="flex flexgrow- ml-2 mb-4">
+               <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+               <div className="flex flex-grow items-end ml-2 mb-4">
+               <button className="custom-button" onClick={handleClickOpen}>
+                Show Balance
+              </button>
+                </div>
+             </div>
+             <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>Enter Password</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Please enter your password to proceed.
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="password"
+                        label="Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        error={passwordError}
+                        helperText={passwordError ? 'Invalid password. Please try again.' : ''}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handlePasswordSubmit} color="primary">
+                        Submit
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
+                <DialogTitle>Account Balance Information</DialogTitle>
+                {/* <div className="border-x-2 w-10 inline-block mb-4 border-gray-500 "></div> */}
+                <DialogContent>
+                    {/* <Box display="flex" justifyContent="space-around" p={2}> */}
+                    <div className="flex items-center space-x-1 sm:space-x-1">
+                    <p className="text-lg font-bold whitespace-nowrap">Margin Amount</p>
+                    <p className="text-xs  mt-1">({format(startDate, 'dd-MMM-yy')} - {format(endDate, 'dd-MMM-yy')})</p>
+                  </div>
+
+
+                    <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
+                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(totalIncome)}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Total Income</h2>
+                <p className="text-xl font-bold"> - </p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(totalExpense)}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Total Expense</h2>
+                <p className="text-xl font-bold"> = </p> */}
+                <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
+                {/* <h2 className="text-sm font-semibold text-gray-500">Margin Amount</h2> */}
+                
+            </div>
+            <div>
+                <p className="text-xs text-gray-500 mt-1">Income - Expense = Margin Amount</p></div>
+            <div className="flex items-center mt-5">
+                      <p className="text-lg font-bold">Current Bank Balance</p>
+                      <p className="text-xs ml-1 mt-1">(Overall)</p>
+                  </div>
+                    <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
+                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(ledgerBalance)}</p> */}
+                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
+                <p className="text-xl font-bold"> + </p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(cashInHand)}</p>
+                <h2 className="text-sm font-semibold text-gray-500">Cash In Hand</h2>
+                <p className="text-xl font-bold"> + </p>
+                <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
+                <h2 className="text-sm font-semibold text-gray-600">Margin Amount</h2>
+                <p className="text-xl font-bold"> = </p> */}
+                <p className="text-xl font-bold">₹{formatIndianCurrency(currentBalance)}</p>
+                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2> */}
+            </div>
+            <div>
+                <p className="text-xs text-gray-500 mt-1">Ledger Balance + Income - Expense = Current Bank Balance</p></div>
+                    {/* </Box> */}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
              {/* <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2, width: '40%'}}>
                  <InputLabel id="filter-label">Transaction Type</InputLabel>
                  <Select
@@ -428,6 +682,9 @@ const formatIndianNumber = (num) => {
     </ResponsiveContainer>
              </div> */}
              <div style={styles.chartContainer}>
+             {isPieEmpty ? (
+        <div className="text-center">No records found during this timeline!</div>
+      ) : (
 <ResponsiveContainer width="100%" height="100%">
         <PieChart width={400} height={400}>
           <Pie
@@ -454,6 +711,7 @@ const formatIndianNumber = (num) => {
         />
         </PieChart>
       </ResponsiveContainer>
+      )}
       </div>
              <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
                  <DataGrid
@@ -464,6 +722,11 @@ const formatIndianNumber = (num) => {
                     //  components={{
                     //      Toolbar: GridToolbar,
                     //  }}
+                    sx={{
+                      '& .MuiDataGrid-row:hover': {
+                        backgroundColor: '#e3f2fd', // Light blue on hover
+                      },
+                    }}
                  />
              </div>
          </div>

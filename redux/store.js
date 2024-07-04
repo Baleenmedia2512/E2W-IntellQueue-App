@@ -7,6 +7,7 @@ import { quoteReducer } from "./features/quote-slice";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import { rateReducer } from "./features/rate-slice";
 import { orderReducer } from "./features/order-slice";
+import { employeeReducer } from "./features/emp-slice"; 
 
 const createNoopStorage = () => {
   return {
@@ -30,7 +31,7 @@ const storage =
 const authPersistConfig = {
   key: "auth",
   storage: storage,
-  whitelist: ["userName", "companyName"], // Update to correct slice name
+  whitelist: ["userName", "companyName", "appRights"], // Update to correct slice name
 };
 
 const clientPersistConfig = {
@@ -54,21 +55,29 @@ const ratePersistConfig = {
 const orderPersistConfig = {
   key: "order",
   storage: storage,
-  whitelist: ["clientName", "clientNumber", "maxOrderNumber", "receivable", "remarks"]
+  whitelist: ["clientName", "clientNumber", "maxOrderNumber", "receivable", "remarks", "isOrderExist"]
 }
+
+const employeePersistConfig = {
+  key: "employee",
+  storage: storage,
+  whitelist: ["generalDetails", "proofDetails", "rolesGoals", "loginCredentials", "currentPage", "isRegistered"], // Define the fields you want to persist
+};
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer);
 const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer);
 const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer);
 const persistedOrderReducer = persistReducer(orderPersistConfig, orderReducer);
+const persistedEmployeeReducer = persistReducer(employeePersistConfig, employeeReducer);
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
   clientSlice: persistedClientReducer,
   quoteSlice: persistedQuoteReducer,
   rateSlice: persistedRateReducer,
-  orderSlice: persistedOrderReducer
+  orderSlice: persistedOrderReducer,
+  employeeSlice: persistedEmployeeReducer,
 });
 
 export const store = configureStore({

@@ -6,7 +6,7 @@ import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
 import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
-import { setOrderData, resetOrderData } from '@/redux/features/order-slice';
+import { setOrderData, resetOrderData, setIsOrderExist  } from '@/redux/features/order-slice';
 import Select from 'react-select';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
 import { TextField } from '@mui/material';
@@ -40,6 +40,7 @@ const CreateOrder = () => {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
     
   const [vendors, setVendors] = useState([]);
   const [ratesData, setRatesData] = useState([]);
@@ -577,9 +578,11 @@ const fetchRates = async () => {
             const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
+                // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
                 setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
+                dispatch(setIsOrderExist(true));
                 setTimeout(() => {
                 setSuccessMessage('');
                 router.push('/FinanceEntry');
