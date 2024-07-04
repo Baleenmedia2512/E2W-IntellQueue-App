@@ -106,16 +106,16 @@ const Report = () => {
 
     const fetchSumOfOrders = () => {
       axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
           .then((response) => {
-              const sumOfOrders = response.data;
-              setSumOfOrders(sumOfOrders);
+              const totalOrders = response.data;
+              setSumOfOrders(totalOrders);
+
           })
           .catch((error) => {
               console.error(error);
           });
   };
-
 
     const fetchOrderDetails = () => {
         axios
