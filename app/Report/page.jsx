@@ -106,16 +106,16 @@ const Report = () => {
 
     const fetchSumOfOrders = () => {
       axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
           .then((response) => {
-              const sumOfOrders = response.data;
-              setSumOfOrders(sumOfOrders);
+              const totalOrders = response.data;
+              setSumOfOrders(totalOrders);
+
           })
           .catch((error) => {
               console.error(error);
           });
   };
-
 
     const fetchOrderDetails = () => {
         axios
@@ -154,10 +154,11 @@ const Report = () => {
 
     const fetchSumOfFinance = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfFinance.php?JsonDBName=${companyName}`)
+            .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfFinance.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
             .then((response) => {
                 const data = response.data
                 setSumOfFinance(data);
+                
             })
             .catch((error) => {
                 console.error(error);
@@ -218,7 +219,6 @@ const Report = () => {
             const income = parseFloat(data.total_income);
         const expense = parseFloat(data.total_expense);
         const margin = parseFloat(data.margin_amount);
-
         setTotalIncome(isNaN(income) ? 0 : Math.round(income));
         setTotalExpense(isNaN(expense) ? 0 : Math.round(expense));
         setMarginResult(isNaN(margin) ? 0 : Math.round(margin));
@@ -232,7 +232,6 @@ const FetchCurrentBalanceAmount = () => {
       .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data[0]
-          
         setCurrentBalance(data.currentBalance);
       })
       .catch((error) => {
@@ -338,9 +337,11 @@ const FetchCurrentBalanceAmount = () => {
     //     { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
     // ] : [];
     const pieData = sumOfFinance.length > 0 ? [
-      { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
-      { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
+      { name: 'Income', value: parseFloat(sumOfFinance[0].income || 0) },
+      { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
     ] : [];
+
+    const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
     const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
 
@@ -448,7 +449,17 @@ const handleDateChange = (range) => {
   <div style={{ width: '100%' }}>
    <div className="flex justify-between items-start">
   {/* Total Orders box */}
-  <div style={{
+  {/* Total Orders box */}
+<div className="w-40 h-36 rounded-lg shadow-md p-3 mb-5 flex flex-col items-start justify-start border border-gray-300">
+  <div className="text-4xl mt-5 font-bold">
+    {sumOfOrders}
+  </div>
+  <div className="text-lg text-gray-600">
+    Total Orders
+  </div>
+</div>
+
+  {/* <div style={{
         width: '200px',
         height: '143px',
         borderRadius: '10px',
@@ -472,7 +483,7 @@ const handleDateChange = (range) => {
         <div style={{ fontSize: '18px', color: 'dimgray' }}>
           Total Orders
         </div>
-      </div>
+      </div> */}
 
   {/* Spacer to center the DateRangePicker */}
   <div className="flex flex-grow ml-2 mb-4">
@@ -657,6 +668,9 @@ const handleDateChange = (range) => {
     </ResponsiveContainer>
              </div> */}
              <div style={styles.chartContainer}>
+             {isPieEmpty ? (
+        <div className="text-center">No records found during this timeline!</div>
+      ) : (
 <ResponsiveContainer width="100%" height="100%">
         <PieChart width={400} height={400}>
           <Pie
@@ -683,6 +697,7 @@ const handleDateChange = (range) => {
         />
         </PieChart>
       </ResponsiveContainer>
+      )}
       </div>
              <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
                  <DataGrid
