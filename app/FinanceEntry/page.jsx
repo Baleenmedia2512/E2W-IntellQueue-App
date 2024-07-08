@@ -59,7 +59,7 @@ const paymentModeOptions = [
 
 const FinanceData = () => {
   const orderData = useAppSelector(state => state.orderSlice);
-  const { clientName: orderClientName, maxOrderNumber: orderOrderNumber, remarks: orderRemarks, receivable: orderReceivable } = orderData;
+  const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, remarks: orderRemarks } = orderData;
   // const username = "Grace Scans"
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
@@ -72,7 +72,7 @@ const FinanceData = () => {
   // const [remarks, setRemarks] = useState(null);
   const [clientName, setClientName] = useState(orderClientName || '');
   const [orderNumber, setOrderNumber] = useState(orderOrderNumber || '');
-  const [orderAmount, setOrderAmount] = useState(orderReceivable || '');
+  const [orderAmount, setOrderAmount] = useState('');
   const [remarks, setRemarks] = useState(orderRemarks || '');
   const [taxType, setTaxType] = useState(taxTypeOptions[2]);
   const [gstAmount, setGSTAmount] = useState(null);
@@ -101,10 +101,10 @@ const FinanceData = () => {
   useEffect(() => {
     // Use the orderData values to initialize the state
     setClientName(orderClientName || '');
-    setOrderAmount(orderReceivable || '');
     setOrderNumber(orderOrderNumber || '');
     setRemarks(orderRemarks || '')
-  }, [orderClientName, orderReceivable, orderOrderNumber, orderRemarks]);
+    fetchClientDetails(orderClientNumber, orderClientName);
+  }, [orderClientName, orderOrderNumber, orderRemarks, orderClientNumber]);
 
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
@@ -181,17 +181,18 @@ const FinanceData = () => {
 
     setClientNameSuggestions([]);
     setClientName(name);
-    fetchClientDetails(number);
+    fetchClientDetails(number, name);
 
   };
 
-  const fetchClientDetails = (clientNumber) => {
+  const fetchClientDetails = (clientNumber, clientName) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
+          console.log(clientDetails)
           dispatch(setIsOrderExist(true));
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);

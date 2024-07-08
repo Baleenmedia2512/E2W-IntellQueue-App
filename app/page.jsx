@@ -127,6 +127,7 @@ const ClientsData = () => {
   const handleConsultantNameChange = (event) => {
     const newName = event.target.value;
     setConsultantName(newName)
+    dispatch(setClientData({ consultantName: newName || "" }));
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
       .then((data) => {setConsultantNameSuggestions(data)});
@@ -164,6 +165,7 @@ const ClientsData = () => {
   
     setConsultantNameSuggestions([]);
     setConsultantName(name)
+    dispatch(setClientData({ consultantName: name || "" }));
     setConsultantNumber(number);
     // fetchConsultantDetails(name, number);
   };
@@ -190,6 +192,7 @@ const ClientsData = () => {
           setTitle(clientDetails.gender || "");
           setSelectedOption(clientDetails.gender || "");
           setConsultantName(clientDetails.consname || "");
+          dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber(clientDetails.consnumber || "");
           // setClientPAN(clientDetails.PAN || "");
           setClientGST(clientDetails.GST || "");
@@ -378,7 +381,7 @@ const ClientsData = () => {
   const submitDetails = async(event) => {
     event.preventDefault()
     
-    if(companyName !== 'Grace Scans'){
+    if(companyName !== 'Grace Scans' && companyName !== 'Baleen Test'){
       if (isEmpty === true){
       router.push('/adDetails')
     }
@@ -393,6 +396,7 @@ const ClientsData = () => {
               setSuccessMessage('');
             }, 3000);
             // router.push('/adDetails')
+            
       if (isDetails) {
         dispatch(setQuotesData({currentPage: "checkout"}))
       } 
@@ -437,8 +441,10 @@ const ClientsData = () => {
         setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
+    console.log(data)
     setIsNewClient(false);
-    fetchClientDetails(clientContact)
+    fetchClientDetails(clientContact);
+    router.push('/Create-Order');
           // window.location.reload();
         
         //setMessage(data.message);
@@ -466,6 +472,7 @@ const ClientsData = () => {
   }, 2000);
 }}
 }
+console.log(consultantNumber)
 // Function to format the date as dd-MON-yyyy
 function formatDate(inputValue) {
   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -683,6 +690,7 @@ const handleRemoveClient = () => {
           setDOB("");
           setAddress("");
           setConsultantName("");
+          dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber("");
           setClientPAN("");
           setClientGST("");

@@ -16,7 +16,9 @@ import SuccessToast from '../components/SuccessToast';
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
-    const [clientName, setClientName] = useState("");
+    const clientDetails = useAppSelector(state => state.clientSlice)
+    const {clientName: clientNameCR, consultantName: consultantNameCR} = clientDetails;
+    const [clientName, setClientName] = useState(clientNameCR || "");
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState("");
@@ -31,7 +33,7 @@ const CreateOrder = () => {
     const [receivable, setReceivable] = useState("");
     const [address, setAddress] = useState('');
     const [DOB, setDOB] = useState('');
-    const [consultantName, setConsultantName] = useState('');
+    const [consultantName, setConsultantName] = useState(consultantNameCR || '');
     const [clientContactPerson, setClientContactPerson] = useState("");
     const [clientGST, setClientGST] = useState("");
     const [clientPAN, setClientPAN] = useState("");
@@ -77,7 +79,10 @@ const CreateOrder = () => {
       calculateReceivable();
     },[])
 
-    
+    useEffect(() => {
+      setClientName(clientNameCR || '');
+      setConsultantName(consultantNameCR || '');
+    }, [clientNameCR]);
 
     useEffect(() => {
       calculateReceivable();
