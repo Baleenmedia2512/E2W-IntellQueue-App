@@ -441,7 +441,6 @@ const ClientsData = () => {
         setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
-    console.log(data)
     setIsNewClient(false);
     fetchClientDetails(clientContact);
     router.push('/Create-Order');
@@ -472,7 +471,6 @@ const ClientsData = () => {
   }, 2000);
 }}
 }
-console.log(consultantNumber)
 // Function to format the date as dd-MON-yyyy
 function formatDate(inputValue) {
   const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -759,9 +757,13 @@ const GSvalidateFields = () => {
   if (!DOB && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
     errors.ageAndDOB = 'Age and DOB are required';
   }
-  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName || !consultantNumber)) {
+  // if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName || !consultantNumber)) {
+  //   if (!consultantName) errors.consultantName = 'Consultant Name is required';
+  //   if (!consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
+  // }
+
+  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName)) {
     if (!consultantName) errors.consultantName = 'Consultant Name is required';
-    if (!consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
   }
   
   // if (selectedOption === 'Ms.' && !clientContactPerson) {
@@ -1160,7 +1162,7 @@ const BMvalidateFields = () => {
                     <input
                       className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantNumber ? 'border-red-400' : ''}`}
                       type="number" 
-                      placeholder="Consultant Number*" 
+                      placeholder="Consultant Number" 
                       id="10" 
                       name="ConsultantNumberInput" 
                       value={consultantNumber} 
