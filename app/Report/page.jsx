@@ -290,7 +290,7 @@ const FetchCurrentBalanceAmount = () => {
         { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
         { field: 'Amount', headerName: 'Amount(₹)', width: 130},
-        { field: 'OrderNumber', headerName: 'Order Number', width: 150 },
+        { field: 'OrderNumber', headerName: 'Order#', width: 100 },
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
         { field: 'Remarks', headerName: 'Remarks', width: 200 },
         { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
@@ -522,7 +522,12 @@ const handleDateChange = (range) => {
       </div> */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
-          <DataGrid rows={orderDetails} columns={orderColumns} 
+          <DataGrid rows={orderDetails} columns={orderColumns}
+          initialState={{
+            sorting: {
+              sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
+            },
+          }} 
            sx={{
             '& .MuiDataGrid-row:hover': {
               backgroundColor: '#e3f2fd', // Light blue on hover
@@ -717,6 +722,11 @@ const handleDateChange = (range) => {
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
+                     initialState={{
+                      sorting: {
+                        sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
+                      },
+                    }} 
                     //  filterModel={financeFilterModel}
                     //  onFilterModelChange={handleFinanceFilterChange}
                     //  components={{
