@@ -531,6 +531,7 @@ const fetchRates = async () => {
         dispatch(setOrderData({ clientName: name }))
         dispatch(setOrderData({ clientNumber: number }))
         fetchClientDetails(number);
+        fetchOrderDetails(number, name);
         setClientNameSuggestions([]);
       };
 
@@ -574,6 +575,27 @@ const fetchRates = async () => {
             console.error("Error fetching client details:", error);
           });
       };
+
+      const fetchOrderDetails = (clientNumber, clientName) => {
+        axios
+          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .then((response) => {
+            const data = response.data;
+            if (data.length > 0) {
+              const clientDetails = data[0];
+              console.log(clientDetails)
+              // dispatch(setIsOrderExist(true));
+              // setOrderNumber(clientDetails.orderNumber);
+              // setRemarks(clientDetails.remarks);
+              // setOrderAmount(clientDetails.balanceAmount);
+              // setBalanceAmount(clientDetails.balanceAmount);
+              // setGSTPercentage(clientDetails.gstPercentage);
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }; 
 
       const createNewOrder = async(event) => {
         event.preventDefault()
@@ -738,26 +760,26 @@ return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left half section */}
           <div className="md:col-span-1">
-            <h3 className="font-bold text-black mb-7">Client Details</h3>
-            <label className='text-black font-medium'>{clientName}</label>
+            <h3 className="font-bold text-blue-500 mb-7">Client Details</h3>
+            <label className='text-black font-medium font-sans'>{clientName}</label>
             <div>
-            <label className='text-gray-700 font-medium'>{consultantName}</label>
+            <label className='text-gray-700 font-medium font-sans'>{consultantName}</label>
             </div>
-            {/* <label className='text-gray-700 text-base'>Name:  
-                <span className='text-black'>{clientName}</span>
+            {/* <label className='text-blue-500 text-base'>Name   
+                <span className='text-gray-700'>  {clientName}</span>
                 </label> */}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:col-span-1">
             {/* Right top half section */}
             <div>
-              <h3 className="font-bold text-black mb-2">Previous Order Details</h3>
+              <h3 className="font-bold text-blue-500 mb-2">Previous Order Details</h3>
               <p>Some details about the customer.</p>
             </div>
 
             {/* Right bottom half section */}
             <div>
-              <h3 className="font-bold text-black mb-2">Current Order Details</h3>
+              <h3 className="font-bold text-blue-500">Current Order Details</h3>
               <p>Some additional details about the order or customer.</p>
             </div>
           </div>
