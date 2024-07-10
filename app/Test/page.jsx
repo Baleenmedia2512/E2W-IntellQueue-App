@@ -18,6 +18,8 @@ import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import './styles.css';
+import { Calendar } from 'primereact/calendar';
+import { format } from 'date-fns';
 
 const Orders = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -82,6 +84,18 @@ const Orders = () => {
     const [previousAdType, setPreviousAdType] = useState('');
     const [previousOrderAmount, setPreviousOrderAmount] = useState('');
     const [previousConsultantName, setPreviousConsultantName] = useState('');
+
+    const [orderDate, setOrderDate] = useState(new Date());
+    const [displayOrderDate, setDisplayOrderDate] = useState(new Date());
+    const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
+
+    const [isExpanded, setIsExpanded] = useState(true);
+    
+
+     // Function to toggle expand/collapse
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
     
     useEffect(() => {
       fetchMaxOrderNumber();
@@ -592,13 +606,13 @@ const fetchRates = async () => {
             if (data.length > 0) {
               const clientDetails = data[0];
               console.log(clientDetails);
-              // setOrderDate(clientDetails.orderDate);
-              // setConsultantName(clientDetails.consultantName);
-              // setOrderAmount(clientDetails.orderAmount);
-              // setOrderNumber(clientDetails.orderNumber);
-    
+              const formattedDate = parseDateFromDB(clientDetails.orderDate);
+              setOrderDate(clientDetails.orderDate);
+              setDisplayOrderDate(formattedDate);
+
+              const formattedOrderDate = format(clientDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
+              setPreviousOrderDate(formattedOrderDate);
               setPreviousOrderNumber(clientDetails.orderNumber);
-              setPreviousOrderDate(clientDetails.orderDate);
               setPreviousRateName(clientDetails.rateName);
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
@@ -614,6 +628,9 @@ const fetchRates = async () => {
                   value: clientDetails.adType,
                 },
               }));
+              setHasPreviousOrder(true);
+            } else {
+              setHasPreviousOrder(false); // Set to false if there are no details
             }
           })
           .catch((error) => {
@@ -773,6 +790,32 @@ const fetchRates = async () => {
     setErrors(errors);
     return Object.keys(errors).length === 0;
 };
+
+const handleDateChange = (e) => {
+  const dateValue = e.target.value;
+  setDisplayOrderDate(dateValue);
+  const formattedDate = formatDateToSave(e.value);
+  setOrderDate(formattedDate);
+  if (errors.ageAndDOB) {
+    setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
+  }
+};
+
+function formatDateToSave(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateFromDB(dateString) {
+  const [year, month, day] = dateString.split('-');
+  return new Date(year, month - 1, day);
+}
+
+const formattedOrderDate = format(orderDate, 'dd-MMM-yyyy').toUpperCase();
+
 return (
 <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
   <div className="w-full max-w-6xl">
@@ -781,26 +824,28 @@ return (
         <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
         <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Place your orders here</p>
       </div>
+      <button className="expand-button" onClick={() => setIsExpanded(!isExpanded)}>
+          {isExpanded ? 'Hide Client Details' : 'Show Client Details'}
+        </button>
       <button className="custom-button" onClick={createNewOrder}>Place Order</button>
     </div>
+    
     {/* Order Details */}
+    {isExpanded && (
     <div className="bg-white p-8 rounded-lg shadow-lg mt-1">
+    
       <form className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left half section */}
           <div className="md:col-span-1">
-          <h3 className="text-2xl font-bold text-blue-500 mb-4">Client Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Client Name:</p>
-              <p>{clientName}</p>
+          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Client Details</h3>
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Name</p>
+              <p className="truncate">{clientName}</p>
             </div>
-            {/* <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Client Contact:</p>
-              <p>{clientContact}</p>
-            </div> */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Consultant Name:</p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Consultant</p>
               <p>{consultantName}</p>
             </div>
           </div>
@@ -808,47 +853,79 @@ return (
 
           <div className="grid grid-cols-1 gap-4 md:col-span-1">
             {/* Right top half section */}
-            <div>
-              <h3 className="font-bold text-blue-500 mb-2">Previous Order Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Order Number:</p>
+          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-0">Previous Order Details</h3>
+          {hasPreviousOrder ? (
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Number</p>
               <p>{previousOrderNumber}</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Order Date:</p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Date</p>
               <p>{previousOrderDate}</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Rate Name:</p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Rate Card</p>
               <p>{previousRateName}</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Ad Type:</p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Type</p>
               <p>{previousAdType}</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Order Amount:</p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Amount</p>
               <p>{previousOrderAmount}</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <p className="font-semibold">Consultant Name:</p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Consultant</p>
               <p>{previousConsultantName}</p>
             </div>
-          </div>
-              </div>
+            </div>
+            ) : (
+              <p className="text-gray-500">No previous order details found.</p>
+            )}
             {/* Right bottom half section */}
             <div>
-              <h3 className="font-bold text-blue-500">Current Order Details</h3>
-              <p>Some additional details about the order or customer.</p>
+              <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Current Order Details</h3>
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Number</p>
+              <p>{maxOrderNumber}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Date</p>
+              <p>{formattedOrderDate}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Rate Card</p>
+              <p>{selectedValues.rateName.value}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Type</p>
+              <p>{selectedValues.adType.value}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Amount</p>
+              <p>{unitPrice}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Consultant</p>
+              <p>{consultantName}</p>
+            </div>
+            </div>
             </div>
           </div>
         </div>
       </form>
+      
     </div>
+    )}
     {/* Order Selection */}
     <div className="bg-white p-8 rounded-lg shadow-lg mt-6">
       <form className="space-y-6">
+      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Select Your Order</h3>
           {/* Client Name */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <div>
@@ -873,10 +950,10 @@ return (
             {(clientNameSuggestions.length > 0 && clientName !== '') && (
               <ul className="list-none bg-white shadow-lg rounded-md mt-2">
                 {clientNameSuggestions.map((name, index) => (
-                  <li key={index} className="text-black text-left pl-3 pt-1 pb-1 hover:bg-gray-200 cursor-pointer rounded-md">
+                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                     <button
                       type="button"
-                      className="text-black w-full text-left"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
                       onClick={handleClientNameSelection}
                       value={name}
                     >
@@ -888,6 +965,23 @@ return (
             )}
             {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
           </div>
+          <div>
+                    <label className="block mb-1 font-medium">Order Date</label>
+                    <div>
+                  <div>
+                    <Calendar
+                      type="date"
+                      value={displayOrderDate}
+                      onChange={handleDateChange}
+                      placeholder="dd-M-yyyy"
+                      showIcon
+                      dateFormat='dd-M-yy'
+                      className={`w-full px-4 h-12 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      inputClassName="p-inputtext-lg"
+                    />
+                  </div>
+                   </div>
+                  </div>
         </div>
         
         {/* Short Summary */}
@@ -907,7 +1001,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.rateName ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -915,7 +1009,7 @@ return (
                 }),
               }}
               placeholder="Select Rate Card Name"
-              value={selectedValues.rateName}
+              value={selectedValues.rateName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
               options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
             />
@@ -927,7 +1021,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Category</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.typeOfAd ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -935,7 +1029,7 @@ return (
                 }),
               }}
               placeholder="Select Category"
-              value={selectedValues.typeOfAd}
+              value={selectedValues.typeOfAd.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
               options={getOptions('typeOfAd', 'rateName')}
             />
@@ -946,7 +1040,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Type</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.adType ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -954,12 +1048,13 @@ return (
                 }),
               }}
               placeholder="Select Type"
-              value={selectedValues.adType}
+              value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
+          
         </div>
 
         <div id="19" name="RatesLocationSelect">
@@ -968,7 +1063,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Location</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -976,7 +1071,7 @@ return (
                 }),
               }}
               placeholder="Select Location"
-              value={selectedValues.Location}
+              value={selectedValues.Location.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
               options={getOptions('Location', 'adType')}
             />
@@ -986,7 +1081,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Package</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -994,7 +1089,7 @@ return (
                 }),
               }}
               placeholder="Select Package"
-              value={selectedValues.Package}
+              value={selectedValues.Package.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
               options={getOptions('Package', 'Location')}
             />
@@ -1005,7 +1100,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Vendor</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Vendor ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1013,7 +1108,7 @@ return (
                 }),
               }}
               placeholder="Select Vendor"
-              value={selectedValues.vendorName}
+              value={selectedValues.vendorName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
               options={vendors}
             />
@@ -1026,7 +1121,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
             <input 
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
               type="number"
               placeholder="Margin Amount"
               value={marginAmount || ''}
@@ -1039,7 +1134,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
             <input 
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`} 
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : ''}`} 
               type="number"
               placeholder="Margin %"
               value={marginPercentage || ''}
@@ -1048,34 +1143,72 @@ return (
             />
             {errors.marginPercentage && <span className="text-red-500 text-sm">{errors.marginPercentage}</span>}
           </div>
-          {/* Client Email */}
-          <div>
-            <label className='block text-gray-700 font-semibold mb-2'>Client Email</label>
-            <input 
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`} 
-              type="email"
-              placeholder='Client Email'
-              value={clientEmail}
-            //   onChange={handleEmailChange}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const inputs = document.querySelectorAll('input, select, textarea');
-                  const index = Array.from(inputs).findIndex(input => input === e.target);
-                  if (index !== -1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                  }
-                }
-              }}
-            />
-            {errors.clientEmail && <span className="text-red-500 text-sm">{errors.clientEmail}</span>}
-          </div>
+          <div id="25" name='OrderQuantityText'>
+                    <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
+                      <input 
+                        // required = {elementsToHide.includes("OrderQuantityText") ? false : true}
+                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : ''}`}
+                        type='number' 
+                        value={qty} 
+                        //onWheel={ event => event.currentTarget.blur() } 
+                        onChange={e => {setQty(e.target.value); 
+                          if (errors.orderNumber) {
+                          setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                        }
+                      }}  
+                        onFocus={(e) => {e.target.select()}}/>
+                        </div>
+                        {errors.qty && <span className="text-red-500 text-sm">{errors.qty}</span>}
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
+        <div name="OrderRemarks">
+                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
+                    <input 
+                        type='text' 
+                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
+                        placeholder='Remarks'    
+                        value={remarks}
+                        onChange={e => {setRemarks(e.target.value);
+                          if (errors.orderNumber) {
+                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                          }
+                        }}
+                    />
+                    </div>
+                    <div name="OrderReleaseDate">
+                    <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
+                    <input 
+                        type='date' 
+                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
+                        value={new Date()}
+                        onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
+                      />
+                    </div>
+                    <div className='text-center justify-start' name="OrderReleaseDate">
+                    {releaseDates.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Release-Dates</h2> : <></>}
+                    <ul className='mb-4'>
+                    {releaseDates.map((data, index) => (
+                      <div key={index} className='flex'>
+                        <option key={data} className="mt-1.5" 
+                          >
+                            {data}
+                          </option>
+                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
+                          <RemoveCircleOutline color='secondary' fontSize='small'/>
+                        </IconButton>
+                          </div>
+))}
+</ul>
+                  </div>
+                  </div>
         </div>
         
       </form>
     </div>
   </div>
+  {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
 </div>
 
 

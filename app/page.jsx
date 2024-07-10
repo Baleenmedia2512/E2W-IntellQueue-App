@@ -302,7 +302,7 @@ const ClientsData = () => {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
-                          dispatch(setClientData({ clientName: "" }));
+                          // dispatch(setClientData({ clientName: "" }));
                           setClientAge("");
                           setDOB("");
                           setAddress("");
