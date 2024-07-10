@@ -299,7 +299,6 @@ const ClientsData = () => {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
-                          dispatch(setClientData({ clientName: "" }));
                           setClientAge("");
                           setDOB("");
                           setAddress("");
