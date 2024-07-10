@@ -17,6 +17,7 @@ import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import './styles.css';
 
 const Orders = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -74,6 +75,13 @@ const Orders = () => {
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
+
+    const [previousOrderNumber, setPreviousOrderNumber] = useState('');
+    const [previousOrderDate, setPreviousOrderDate] = useState('');
+    const [previousRateName, setPreviousRateName] = useState('');
+    const [previousAdType, setPreviousAdType] = useState('');
+    const [previousOrderAmount, setPreviousOrderAmount] = useState('');
+    const [previousConsultantName, setPreviousConsultantName] = useState('');
     
     useEffect(() => {
       fetchMaxOrderNumber();
@@ -531,7 +539,7 @@ const fetchRates = async () => {
         dispatch(setOrderData({ clientName: name }))
         dispatch(setOrderData({ clientNumber: number }))
         fetchClientDetails(number);
-        fetchOrderDetails(number, name);
+        fetchPreviousOrderDetails(number, name);
         setClientNameSuggestions([]);
       };
 
@@ -576,26 +584,42 @@ const fetchRates = async () => {
           });
       };
 
-      const fetchOrderDetails = (clientNumber, clientName) => {
+      const fetchPreviousOrderDetails = (clientNumber, clientName) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetails.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data.length > 0) {
               const clientDetails = data[0];
-              console.log(clientDetails)
-              // dispatch(setIsOrderExist(true));
+              console.log(clientDetails);
+              // setOrderDate(clientDetails.orderDate);
+              // setConsultantName(clientDetails.consultantName);
+              // setOrderAmount(clientDetails.orderAmount);
               // setOrderNumber(clientDetails.orderNumber);
-              // setRemarks(clientDetails.remarks);
-              // setOrderAmount(clientDetails.balanceAmount);
-              // setBalanceAmount(clientDetails.balanceAmount);
-              // setGSTPercentage(clientDetails.gstPercentage);
+    
+              setPreviousOrderNumber(clientDetails.orderNumber);
+              setPreviousOrderDate(clientDetails.orderDate);
+              setPreviousRateName(clientDetails.rateName);
+              setPreviousAdType(clientDetails.adType);
+              setPreviousOrderAmount(clientDetails.orderAmount);
+              setPreviousConsultantName(clientDetails.consultantName);
+    
+              dispatch(setSelectedValues({
+                rateName: {
+                  label: clientDetails.rateName,
+                  value: clientDetails.rateName,
+                },
+                adType: {
+                  label: clientDetails.adType,
+                  value: clientDetails.adType,
+                },
+              }));
             }
           })
           .catch((error) => {
             console.error(error);
           });
-      }; 
+      };
 
       const createNewOrder = async(event) => {
         event.preventDefault()
@@ -752,31 +776,67 @@ const fetchRates = async () => {
 return (
 <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
   <div className="w-full max-w-6xl">
-    <h2 className="md:text-xl lg:text-2xl font-bold text-blue-500 mb-1">Order Generation</h2>
-    <p className="text-gray-400 text-sm mb-4">Place your orders here</p>
+  <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
+        <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Place your orders here</p>
+      </div>
+      <button className="custom-button" onClick={createNewOrder}>Place Order</button>
+    </div>
     {/* Order Details */}
     <div className="bg-white p-8 rounded-lg shadow-lg mt-1">
       <form className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left half section */}
           <div className="md:col-span-1">
-            <h3 className="font-bold text-blue-500 mb-7">Client Details</h3>
-            <label className='text-black font-medium font-sans'>{clientName}</label>
-            <div>
-            <label className='text-gray-700 font-medium font-sans'>{consultantName}</label>
+          <h3 className="text-2xl font-bold text-blue-500 mb-4">Client Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Client Name:</p>
+              <p>{clientName}</p>
             </div>
-            {/* <label className='text-blue-500 text-base'>Name   
-                <span className='text-gray-700'>  {clientName}</span>
-                </label> */}
+            {/* <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Client Contact:</p>
+              <p>{clientContact}</p>
+            </div> */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Consultant Name:</p>
+              <p>{consultantName}</p>
+            </div>
+          </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:col-span-1">
             {/* Right top half section */}
             <div>
               <h3 className="font-bold text-blue-500 mb-2">Previous Order Details</h3>
-              <p>Some details about the customer.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Order Number:</p>
+              <p>{previousOrderNumber}</p>
             </div>
-
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Order Date:</p>
+              <p>{previousOrderDate}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Rate Name:</p>
+              <p>{previousRateName}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Ad Type:</p>
+              <p>{previousAdType}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Order Amount:</p>
+              <p>{previousOrderAmount}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-semibold">Consultant Name:</p>
+              <p>{previousConsultantName}</p>
+            </div>
+          </div>
+              </div>
             {/* Right bottom half section */}
             <div>
               <h3 className="font-bold text-blue-500">Current Order Details</h3>
