@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
+import { Dropdown } from 'primereact/dropdown';
 import MuiAlert from '@mui/material/Alert';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Carousel } from 'primereact/carousel';
@@ -269,16 +270,16 @@ const AdDetailsPage = () => {
   const items = [
     {
       content: (
-        <div className="mb-4 bg-purple-800 rounded-md p-4 text-white">
+        <div class="mb-4 bg-blue-600 rounded-md p-4 text-white">
           <p className="font-bold text-sm mb-1">
             *Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}
           </p>
-          <p className="font-semibold text-sm mb-1">
+          <p className="font-semibold text-sm mb-1 ">
             *Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}
           </p>
-          <p className="text-sm text-gray-300">=
+          <p className="text-sm ">=
             ₹{formattedRupees(qty * (unitPrice * (Number(marginPercentage) + 100) / 100) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees((unitPrice / (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) /100)}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
-          <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
+          <p className="text-sm  mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
           <p className="font-semibold text-sm">
             * GST Amount : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (0.18))}
           </p>
@@ -294,7 +295,7 @@ const AdDetailsPage = () => {
           <p className="font-semibold text-sm mb-1">
             *Vendor Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
           </p>
-          <p className="text-sm text-gray-300">=
+          <p className="text-sm text-gray-300">
             ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
           <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
           <p className="font-semibold text-sm">
@@ -353,10 +354,27 @@ const AdDetailsPage = () => {
             </svg>
           </button>
             </div><div>
+            {/* <div class="relative flex flex-col w-fit h-fit  overflow-hidden font-sans text-base isolation-isolate before:absolute before:inset-[1px] before:rounded-lg before:bg-white after:absolute after:w-1 after:inset-y-[0.65rem] after:left-[0.5rem] after:rounded after:bg-gradient-to-b from-[#2eadff] via-[#3d83ff] to-[#7e61ff] after:transition-transform after:duration-300 hover:after:translate-x-[0.15rem]">
+    
+    <div class="notititle text-blue-500 px-5 pt-3 pb-1 pr-1 text-lg font-medium transition-transform duration-300 ease-out z-10">Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}</div>
+    <div class="notibody text-blue-500 px-5 text-lg font-semibold transition-transform duration-300 ease-out z-10">Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}</div>
+</div> */}
+
             <Carousel value={items} numVisible={1} numScroll={1} itemTemplate={customTemplate} />
 
               <div className="mb-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
-
+              {/* <div name="QuoteVendorSelect">
+                <label className="block mb-1 font-medium">Vendor</label>
+                <Dropdown
+                  className={`w-full border rounded-lg `} //${errors.clientSource ? 'border-red-400' : ''}
+                  id="8"
+                  name="ClientSourceSelect"
+                  options={filteredData}
+                  value={selectedVendor}
+                  onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
+                />
+              </div> */}
+              {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
                 <div className="mb-4">
                   <label className="font-bold">Vendor</label>
                   <select
