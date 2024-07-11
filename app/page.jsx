@@ -299,7 +299,6 @@ const ClientsData = () => {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
-                          dispatch(setClientData({ clientName: "" }));
                           setClientAge("");
                           setDOB("");
                           setAddress("");
@@ -847,49 +846,6 @@ const BMvalidateFields = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Left section */}
             <div className="space-y-4">
-            <div className="relative" name="ClientContactInput">
-            <label className="block mb-1 font-medium">Contact Number</label>
-            <input
-              type="number"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContact ? 'border-red-400' : ''}`}
-              placeholder="Contact Number*"
-              id="3"
-              name="ClientContactInput"
-              value={clientContact}
-              onChange={(e) => {
-                if (e.target.value.length <= 10) {
-                  handleClientContactChange(e.target.value);
-                }
-              }}
-              onBlur={() => {
-                setTimeout(() => {
-                  setClientNameSuggestions([]);
-                  setContactWarning('');
-                  if (clientContact.length === 10 && !isNewClient) {
-                    fetchClientDetails(clientContact);
-                  }
-                }, 200);
-              }}
-            />
-            {clientNameSuggestions.length > 0 && clientContact !== '' && (
-              <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                {clientNameSuggestions.map((name, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      onClick={handleClientNameSelection}
-                      value={name}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {contactWarning && <p className="text-red-500 text-xs">{contactWarning}</p>}
-            {errors.clientContact && <p className="text-red-500 text-xs">{errors.clientContact}</p>}
-          </div>
           <div className="relative">
           <label className="block mb-1 font-medium">Name</label>
           <div className="flex space-x-2" name="ClientNameInput">
@@ -962,6 +918,49 @@ const BMvalidateFields = () => {
               ) : (
                 <></>
               )}
+              <div className="relative" name="ClientContactInput">
+            <label className="block mb-1 font-medium">Contact Number</label>
+            <input
+              type="number"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContact ? 'border-red-400' : ''}`}
+              placeholder="Contact Number*"
+              id="3"
+              name="ClientContactInput"
+              value={clientContact}
+              onChange={(e) => {
+                if (e.target.value.length <= 10) {
+                  handleClientContactChange(e.target.value);
+                }
+              }}
+              onBlur={() => {
+                setTimeout(() => {
+                  setClientNameSuggestions([]);
+                  setContactWarning('');
+                  if (clientContact.length === 10 && !isNewClient) {
+                    fetchClientDetails(clientContact);
+                  }
+                }, 200);
+              }}
+            />
+            {clientNameSuggestions.length > 0 && clientContact !== '' && (
+              <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                {clientNameSuggestions.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleClientNameSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {contactWarning && <p className="text-red-500 text-xs">{contactWarning}</p>}
+            {errors.clientContact && <p className="text-red-500 text-xs">{errors.clientContact}</p>}
+          </div>
               <div name="ClientEmailInput">
                 <label className="block mb-1 font-medium">Email</label>
                 <input
