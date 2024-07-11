@@ -60,6 +60,10 @@
       padding: 1em 2.5em;
       font-size: 10px;
     }
+    .expand-button {
+      padding: 1em 2.5em;
+      font-size: 10px;
+    }
   }
 
   @media (max-width: 480px) {
@@ -67,10 +71,18 @@
       padding: 0.8em 2em;
       font-size: 9px;
     }
+    .expand-button {
+      padding: 0.8em 2em;
+      font-size: 9px;
+    }
   }
 
   @media (max-width: 320px) {
     .custom-button {
+      padding: 0.6em 1.5em;
+      font-size: 8px;
+    }
+    .expand-button {
       padding: 0.6em 1.5em;
       font-size: 8px;
     }

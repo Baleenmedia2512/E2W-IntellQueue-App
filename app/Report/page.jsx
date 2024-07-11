@@ -523,6 +523,7 @@ const handleDateChange = (range) => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
+          pageSize={10}
           initialState={{
             sorting: {
               sortModel: [{ field: 'OrderNumber', sort: 'desc' }],

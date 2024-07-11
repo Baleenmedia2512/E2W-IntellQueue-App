@@ -13,15 +13,23 @@ import { TextField } from '@mui/material';
 import { formattedMargin } from '../adDetails/ad-Details';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { Dropdown } from 'primereact/dropdown';
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
+import './styles.css';
+import { Calendar } from 'primereact/calendar';
+import { format } from 'date-fns';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice)
-    const {clientName: clientNameCR, consultantName: consultantNameCR} = clientDetails;
+    const {clientName: clientNameCR, consultantName: consultantNameCR, clientNumber: clientNumberCR} = clientDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
-    const [clientNumber, setClientNumber] = useState("");
+    const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState("");
@@ -32,8 +40,10 @@ const CreateOrder = () => {
     const [clientSource, setClientSource] = useState("")
     const [receivable, setReceivable] = useState("");
     const [address, setAddress] = useState('');
-    const [DOB, setDOB] = useState('');
+    const [clientID, setClientID] = useState('');
     const [consultantName, setConsultantName] = useState(consultantNameCR || '');
+    const [consultantNumber, setConsultantNumber] = useState('');
+    const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
     const [clientContactPerson, setClientContactPerson] = useState("");
     const [clientGST, setClientGST] = useState("");
     const [clientPAN, setClientPAN] = useState("");
@@ -70,6 +80,26 @@ const CreateOrder = () => {
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
+
+    const [previousOrderNumber, setPreviousOrderNumber] = useState('');
+    const [previousOrderDate, setPreviousOrderDate] = useState('');
+    const [previousRateName, setPreviousRateName] = useState('');
+    const [previousAdType, setPreviousAdType] = useState('');
+    const [previousOrderAmount, setPreviousOrderAmount] = useState('');
+    const [previousConsultantName, setPreviousConsultantName] = useState('');
+
+    const [orderDate, setOrderDate] = useState(new Date());
+    const [displayOrderDate, setDisplayOrderDate] = useState(new Date());
+    const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
+
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
+    
+
+     // Function to toggle expand/collapse
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
     
     useEffect(() => {
       fetchMaxOrderNumber();
@@ -527,6 +557,7 @@ const fetchRates = async () => {
         dispatch(setOrderData({ clientName: name }))
         dispatch(setOrderData({ clientNumber: number }))
         fetchClientDetails(number);
+        fetchPreviousOrderDetails(number, name);
         setClientNameSuggestions([]);
       };
 
@@ -537,7 +568,6 @@ const fetchRates = async () => {
             const data = response.data;
             if (data && data.length > 0) {
               const clientDetails = data[0];
-
               dispatch(setOrderData({ clientEmail: clientDetails.email }))
               dispatch(setOrderData({ clientSource: clientDetails.source }))
               dispatch(setOrderData({ address: clientDetails.address || "" }))
@@ -546,6 +576,7 @@ const fetchRates = async () => {
         dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
    
               //MP-69-New Record are not fetching in GS
+              setClientID(clientDetails.id);
               setClientEmail(clientDetails.email);
               setClientSource(clientDetails.source);
               setAddress(clientDetails.address || "");
@@ -571,6 +602,46 @@ const fetchRates = async () => {
           });
       };
 
+      const fetchPreviousOrderDetails = (clientNumber, clientName) => {
+        axios
+          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetails.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .then((response) => {
+            const data = response.data;
+            if (data.length > 0) {
+              const clientDetails = data[0];
+              console.log(clientDetails)
+              const formattedDate = parseDateFromDB(clientDetails.orderDate);
+              setOrderDate(clientDetails.orderDate);
+              setDisplayOrderDate(formattedDate);
+
+              const formattedOrderDate = format(clientDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
+              setPreviousOrderDate(formattedOrderDate);
+              setPreviousOrderNumber(clientDetails.orderNumber);
+              setPreviousRateName(clientDetails.rateName);
+              setPreviousAdType(clientDetails.adType);
+              setPreviousOrderAmount(clientDetails.orderAmount);
+              setPreviousConsultantName(clientDetails.consultantName);
+    
+              dispatch(setSelectedValues({
+                rateName: {
+                  label: clientDetails.rateName,
+                  value: clientDetails.rateName,
+                },
+                adType: {
+                  label: clientDetails.adType,
+                  value: clientDetails.adType,
+                },
+              }));
+              setHasPreviousOrder(true);
+            } else {
+              setHasPreviousOrder(false); // Set to false if there are no details
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      };
+
       const createNewOrder = async(event) => {
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
@@ -580,7 +651,7 @@ const fetchRates = async () => {
         if (validateFields()) {
         
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${orderDate}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -697,7 +768,9 @@ const fetchRates = async () => {
 
     if (!clientName) errors.clientName = 'Client Name is required';
     if (!selectedValues.rateName) errors.rateName = 'Rate Card Name is required';
+    if (elementsToHide.includes("OrderMarginAmount") === false) {
     if (!selectedValues.typeOfAd) errors.typeOfAd = 'Category is required';
+    }
     if (!selectedValues.adType) errors.adType = 'Type is required';
 
     if (elementsToHide.includes("OrderQuantityText") === false) {
@@ -723,248 +796,512 @@ const fetchRates = async () => {
     setErrors(errors);
     return Object.keys(errors).length === 0;
 };
+
+const handleDateChange = (e) => {
+  const dateValue = e.target.value;
+  setDisplayOrderDate(dateValue);
+  const formattedDate = formatDateToSave(e.value);
+  setOrderDate(formattedDate);
+  if (errors.ageAndDOB) {
+    setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
+  }
+};
+
+function formatDateToSave(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateFromDB(dateString) {
+  const [year, month, day] = dateString.split('-');
+  return new Date(year, month - 1, day);
+}
+
+const formattedOrderDate = format(orderDate, 'dd-MMM-yyyy').toUpperCase();
+
+const consultantDialog = () => {
+  setConsultantDialogOpen(true); 
+};
+
+const handleUpdateConsultant = () => {
+  setConsultantDialogOpen(false); 
+};
+
+const handleOpenDialog = () => {
+  setConsultantDialogOpen(true);
+};
+
+const handleCloseDialog = () => {
+  setConsultantName('');
+  setConsultantDialogOpen(false);
+};
+
+
+const handleConsultantUpdate = async(event) => {
+  event.preventDefault()
+
+  if (!consultantName) {
+    setErrors({ consultantName: 'Consultant Name is required' });
+    return;
+  }
+
+  if (!clientID) {
+    
+    setConsultantDialogOpen(false);
+          setToastMessage("Select a client!");
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+    setErrors({ clientName: 'Client Name is required' });
+    return;
+  }
   
-    return (
-        <div className="flex flex-col justify-center mt-8 mx-[8%]">
-            <form className="px-7 h-screen grid justify-center items-center" onSubmit={createNewOrder}>
-                <div className="grid gap-6" id="form">
-                    <h1 className="font-bold text-3xl text-center mb-4">Order Generation</h1>
+  try {
+  const response = await fetch(`https://orders.baleenmedia.com/API/Media/ChangeConsultant.php/?JsonUserName=${loggedInUser}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientID=${clientID}&JsonDBName=${companyName}`);
+  const data = await response.json();
+  
+  if (data.message === "Updated Successfully!") {
+    setSuccessMessage('Consultant Updated Successfully!');
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
+  } else {
+    alert(`The following error occurred while updating consultant: ${data.error || data}`);
+  }
+} catch (error) {
+  console.error('Error updating consultant:', error);
+}
+  setErrors({});
+  setConsultantDialogOpen(false);
+};
+
+const handleConsultantNameChange = (event) => {
+  const newName = event.target.value;
+  setConsultantName(newName)
+  // dispatch(setClientData({ consultantName: newName || "" }));
+  fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+    .then((response) => response.json())
+    .then((data) => {setConsultantNameSuggestions(data)});
+    if (errors.consultantName) {
+      setErrors((prevErrors) => ({ ...prevErrors, consultantName: undefined }));
+    }
+};
+
+const handleConsultantNameSelection = (event) => {
+  const input = event.target.value;
+  const name = input.substring(0, input.indexOf('(')).trim();
+  const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
+
+  setConsultantNameSuggestions([]);
+  setConsultantName(name)
+  // dispatch(setClientData({ consultantName: name || "" }));
+  setConsultantNumber(number);
+  // fetchConsultantDetails(name, number);
+};
+
+return (
+<div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
+<Dialog open={consultantDialogOpen} onClose={handleCloseDialog} fullWidth={true} maxWidth='sm'>
+<DialogTitle>Change Consultant</DialogTitle>
+        <DialogContent>
+          {/* Consultant Name Input */}
+          <div className="relative">
+            <label className="block mb-1 font-medium">Consultant Name</label>
+            <input
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
+              type="text"
+              placeholder="Consultant Name*"
+              name="ConsultantNameInput"
+              value={consultantName}
+              onChange={handleConsultantNameChange}
+              onBlur={() => {
+                setTimeout(() => {
+                  setConsultantNameSuggestions([]);
+                }, 200);
+              }}
+              onKeyPress={(e) => {
+                // Allow only alphabetic characters
+                const regex = /^[a-zA-Z\s]*$/;
+                if (!regex.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+            />
+            {consultantNameSuggestions.length > 0 && (
+              <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg">
+                {consultantNameSuggestions.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleConsultantNameSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {errors.consultantName && <p className="text-red-500 text-xs">{errors.consultantName}</p>}
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConsultantUpdate} color="primary">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+  <div className="w-full max-w-6xl">
+  <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
+        <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Place your orders here</p>
+      </div>
+      {/* <button className="expand-button" onClick={() => setIsExpanded(!isExpanded)}>
+          {isExpanded ? 'Hide Client Details' : 'Show Client Details'}
+        </button>*/}
+      <button className="custom-button" onClick={createNewOrder}>Place Order</button> 
+    </div>
+    
+{/* Order Details */}
+<div className="bg-white rounded-lg shadow-lg mt-1">
+<div className="p-4 md:p-8" >
+    <div className="flex justify-between items-center rounded-lg text-blue-500">
+      <div>
+        <h3 className="text-lg md:text-xl font-bold mb-2">Client Details</h3>
+      </div>
+      
+      <span className="cursor-pointer text-sm mb-2" onClick={() => setIsExpanded(!isExpanded)}>{isExpanded ? 'Show less' : 'Show more'}</span>
+    </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-1">
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+        <p className="text-gray-500 text-xs mb-1">Name</p>
+        <p className="truncate">{clientName}</p>
+      </div>
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+        <p className="text-gray-500 text-xs mb-1">Consultant</p>
+        <p>{consultantName}</p>
+      </div>
+       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+       <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
+       <p>{previousOrderNumber}</p>
+        </div>
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+      <p className="text-gray-500 text-xs mb-1">Next Order#</p>
+       <p>{maxOrderNumber}</p>
+       </div>
+    </div>
+    <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
+  </div>
+  {isExpanded && (
+    <form className="space-y-6 p-4 md:p-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+        {/* Left section */}
+        <div className="md:col-span-1">
+          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Previous Order Details</h3>
+          {hasPreviousOrder ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Order Number</p>
+                <p>{previousOrderNumber}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Order Date</p>
+                <p>{previousOrderDate}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Rate Card</p>
+                <p>{previousRateName}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Type</p>
+                <p>{previousAdType}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Order Amount</p>
+                <p>{previousOrderAmount}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Consultant</p>
+                <p>{previousConsultantName}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500">No previous order details found.</p>
+          )}
+        </div>
+        {/* Right section */}
+        <div className="md:col-span-1">
+          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Current Order Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Number</p>
+              <p>{maxOrderNumber}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Date</p>
+              <p>{formattedOrderDate}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Rate Card</p>
+              <p>{selectedValues.rateName.value}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Type</p>
+              <p>{selectedValues.adType.value}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Amount</p>
+              <p>{unitPrice}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Consultant</p>
+              <p>{consultantName}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  )}
+</div>
+
+
+    {/* Order Selection */}
+    <div className="bg-white p-4 rounded-lg shadow-lg mt-6">
+      <form className="space-y-4">
+      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Select Your Order</h3>
+          {/* Client Name */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
+            <input 
+              type='text' 
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              placeholder='Client Name'
+              value={clientName}
+              onChange={handleSearchTermChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const inputs = document.querySelectorAll('input, select, textarea');
+                  const index = Array.from(inputs).findIndex(input => input === e.target);
+                  if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                  }
+                }
+              }}
+            />
+            {(clientNameSuggestions.length > 0 && clientName !== '') && (
+              <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+                {clientNameSuggestions.map((name, index) => (
+                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleClientNameSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+          {/* New Client */}
+        <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
+          </div>
+          <div>
+                    <label className="block mb-1 font-medium">Order Date</label>
                     <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
-                    <input 
-                        type='text' 
-                        className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-                        placeholder='Client Name'    
-                        // required 
-                        value={clientName}
-                        onChange={handleSearchTermChange}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                            e.preventDefault();
-                            // Find the next input field and focus on it
-                            const inputs = document.querySelectorAll('input, select, textarea');
-                            const index = Array.from(inputs).findIndex(input => input === e.target);
-                            if (index !== -1 && index < inputs.length - 1) {
-                                inputs[index + 1].focus();
-                            }
-                            }
-                        }}
-                    />
-                    {(clientNameSuggestions.length > 0 && clientName !== '') && (
-                        <ul className="list-none">
-                            {clientNameSuggestions.map((name, index) => (
-                            <li key={index} className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md">
-                                <button
-                                type="button"
-                                className="text-black"
-                                onClick={handleClientNameSelection}
-                                value={name}
-                                >
-                                {name}
-                                </button>
-                            </li>
-                            ))}
-                        </ul>
-                        )}
- </div>   
- {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
-                        <ul className="list-none">
-                            <li className="p-2 text-black border bg-gradient-to-r from-green-300 via-green-300 to-green-500 hover:cursor-pointer transition rounded-md
-                            duration-300">
-                                <option className='font-bold '>Short Summary</option>
-                                <option>Rate Card Name: {selectedValues.rateName.value}</option>
-                                <option>Type: {selectedValues.adType.value}</option>
-                                <option>Unit Price: Rs. {unitPrice} per {selectedUnit.value}</option>
-                                <option>Consultant: {consultantName}</option>
-                            </li>
-                        </ul>
-                        
-                    {/* <label className='text-black hover:cursor-pointer' onClick={() => router.push('/')}>New Client? Click Here</label>  */}
-                    <label className='text-black hover:cursor-pointer'>New Client? <span 
-                      className='underline text-green-500 hover:text-green-600' 
-                      onClick={() => router.push('/')}
-                      >
-                    Click Here
-                   </span>
-                  </label>
-                   {/* MP-99 */}
                   <div>
-                      <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Rate Card Name</label>
-                      <div className='flex w-full'>
-                        <Select
-                          className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-                          styles={{
-                            control: (provided) => ({
-                              ...provided,
-                              width: 'auto', // adjust the width as needed
-                              minHeight: '50px', // adjust the height as needed
-                            }),
-                          }}
-                          id="13"
-                          name="RateCardNameSelect"
-                          // required
-                          placeholder="Select Rate Card Name"
-                          value={selectedValues.rateName}
-                          onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
-                          options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
-                        />
-                      </div>
-                    </div>
-                    {errors.rateName && <span className="text-red-500 text-sm">{errors.rateName}</span>}
-                    <div name="RatesCategorySelect" id="17">
-                    <label className='block mb-2 text-gray-700 font-semibold'>Category</label>
-                    <div className='flex w-full'>
-                      <Select
-                        className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-                        styles={{
-                          control: (provided) => ({
-                            ...provided,
-                            width: 'auto', // adjust the width as needed
-                            minHeight: '50px', // adjust the height as needed
-                          }),
-                        }}
-                        placeholder="Select Category"
-                        value={selectedValues.typeOfAd}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
-                        options={getOptions('typeOfAd', 'rateName')}
-                        // options={filters.typeOfAd}
-                        // required
-                      />
-                    </div>
-                  </div>
-                  {errors.typeOfAd && <span className="text-red-500 text-sm">{errors.typeOfAd}</span>}
-                  <div>
-                    <label className='block mb-2 text-gray-700 font-semibold'>Type</label>
-                    <div className='flex w-full'>
-                      <Select
-                        className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-                        styles={{
-                          control: (provided) => ({
-                            ...provided,
-                            width: 'auto', // adjust the width as needed
-                            minHeight: '50px', // adjust the height as needed
-                          }),
-                        }}
-                        id="adTypeSelect"
-                        name="adTypeSelect"
-                        placeholder="Select Type"
-                        // required
-                        value={selectedValues.adType}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-                        options={getOptions('adType', 'typeOfAd')}
-                      />
-                    </div>
-                  </div>
-                  {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
-                  
-
-                  {/* Location of the Rate for GS */}
-                  <div id="19" name="RatesLocationSelect">
-                    <label className='block mb-2 text-gray-700 font-semibold'>Location</label>
-                    <div className='flex w-full'>
-                      <Select
-                        className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-                        styles={{
-                          control: (provided) => ({
-                            ...provided,
-                            width: 'auto', // adjust the width as needed
-                            minHeight: '50px', // adjust the height as needed
-                          }),
-                        }}
-                        placeholder="Select Location"
-                        value={selectedValues.Location}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
-                        options={getOptions('Location', 'adType')}
-                        // required
-                      />
-                    </div>
-                  </div>
-                  {errors.Location && <span className="text-red-500 text-sm">{errors.Location}</span>}
-                  {/* {filters.package.length > 0 ?  */}
-                  
-                  {/* {(packageOptions.length > 1 || isNewRate) && ( */}
-                  <div name="RatesPackageSelect">
-                  <label className='block mb-2 text-gray-700 font-semibold' name="RatesPackageSelect">Package</label>
-                  <div className='flex w-full'>
-                    <Select
-                      className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-                      styles={{
-                        control: (provided) => ({
-                          ...provided,
-                          width: 'auto', // adjust the width as needed
-                          minHeight: '50px', // adjust the height as needed
-                        }),
-                      }}
-                      id="21"
-                      name="RatesPackageSelect"
-                      placeholder="Select Package"
-                      value={selectedValues.Package}
-                      onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
-                      options={getOptions('Package', 'Location')}
-                      // required = {isNewRate ? true : false}
+                    <Calendar
+                      type="date"
+                      value={displayOrderDate}
+                      onChange={handleDateChange}
+                      placeholder="dd-M-yyyy"
+                      showIcon
+                      dateFormat='dd-M-yy'
+                      className={`w-full px-4 h-12 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      inputClassName="p-inputtext-lg"
                     />
                   </div>
-                </div>
-                {errors.Package && <span className="text-red-500 text-sm">{errors.Package}</span>}
-                  {/* )} */}
-                <></>
-
-                <div id="23" name="RatesVendorSelect">
-                  <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
-                  <div className='flex w-full'>
-                  <Select
-                    className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
-                    styles={{
-                      control: (provided) => ({
-                        ...provided,
-                        width: 'auto', // adjust the width as needed
-                        minHeight: '50px', // adjust the height as needed
-                      }),
-                    }}
-                    placeholder="Select Vendor"
-                    value={selectedValues.vendorName}
-                    onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
-                    options={vendors}
-                    // required
-                  />
+                   </div>
                   </div>
-                </div>
-                {/* MP-99 */}
-                {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
-                    <div class="w-full gap-3 flex">
-                    <div name="OrderMarginAmount">
-                    <label className="block text-gray-700 font-semibold mb-2" name="OrderMarginAmount">Margin Amount</label>
-                        <input className="p-3 capitalize shadow-2xl glass w-52 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
-                            type="number"
-                            placeholder="Margin Amount" 
-                            name="MarginText" 
-                            // required = {elementsToHide.includes('OrderMarginAmount') ? false : true}
-                            value={marginAmount || ''}
-                            onChange={handleMarginAmountChange }
-                            onFocus={e => e.target.select()}
-                        />
-                        </div>
-                        <div name="OrderMarginPercentage">
-                    <label className="block text-gray-700 font-semibold mb-2" name="OrderMarginPercentage">Margin %</label>
-                        <input className="p-3 capitalize shadow-2xl glass w-28 outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
-                            type="number"
-                            placeholder="Margin %" 
-                            name="MarginText" 
-                            value={marginPercentage || ''}
-                            // required = {elementsToHide.includes("OrderMarginPercentage") ? false : true}
-                            onChange={handleMarginPercentageChange}
-                            onFocus={e => e.target.select()}
-                        />
-                        </div>
-                    </div>
-                    
-                    {errors.marginAmount && <span className="text-red-500 text-sm">{errors.marginAmount}</span>}
-                        {errors.marginPercentage && <span className="text-red-500 text-sm">{errors.marginPercentage}</span>}
-                    <div id="25" name='OrderQuantityText'>
+        </div>
+        
+        {/* Short Summary */}
+        {/* <div className="bg-gradient-to-r from-green-300 via-green-300 to-green-500 p-4 rounded-md shadow-lg mt-6">
+          <h3 className="font-bold text-black mb-2">Short Summary</h3>
+          <p>Rate Card Name: {selectedValues.rateName.value}</p>
+          <p>Type: {selectedValues.adType.value}</p>
+          <p>Unit Price: Rs. {unitPrice} per {selectedUnit.value}</p>
+          <p>Consultant: {consultantName}</p>
+        </div> */}
+
+        
+        
+        {/* Rate Card Name */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
+            <Dropdown
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.rateName ? 'border-red-400' : ''}`}
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '50px',
+                }),
+              }}
+              placeholder="Select Rate Card Name"
+              value={selectedValues.rateName.value}
+              onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
+              options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+            />
+            {errors.rateName && <span className="text-red-500 text-sm">{errors.rateName}</span>}
+          </div>
+
+          {/* Category */}
+          <div name="RatesCategorySelect" id="17">
+          <div>
+            <label className='block text-gray-700 font-semibold mb-2'>Category</label>
+            <Dropdown
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.typeOfAd ? 'border-red-400' : ''}`}
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '50px',
+                }),
+              }}
+              placeholder="Select Category"
+              value={selectedValues.typeOfAd.value}
+              onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
+              options={getOptions('typeOfAd', 'rateName')}
+            />
+            {errors.typeOfAd && <span className="text-red-500 text-sm">{errors.typeOfAd}</span>}
+          </div>
+          </div>
+            {/* Type */}
+          <div>
+            <label className='block text-gray-700 font-semibold mb-2'>Type</label>
+            <Dropdown
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.adType ? 'border-red-400' : ''}`}
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '50px',
+                }),
+              }}
+              placeholder="Select Type"
+              value={selectedValues.adType.value}
+              onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
+              options={getOptions('adType', 'typeOfAd')}
+            />
+            {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
+          </div>
+          
+        </div>
+
+        <div id="19" name="RatesLocationSelect">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Location */}
+          <div>
+            <label className='block text-gray-700 font-semibold mb-2'>Location</label>
+            <Dropdown
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : ''}`}
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '50px',
+                }),
+              }}
+              placeholder="Select Location"
+              value={selectedValues.Location.value}
+              onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
+              options={getOptions('Location', 'adType')}
+            />
+            {errors.Location && <span className="text-red-500 text-sm">{errors.Location}</span>}
+          </div>
+          {/* Package */}
+          <div>
+            <label className='block text-gray-700 font-semibold mb-2'>Package</label>
+            <Dropdown
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : ''}`}
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '50px',
+                }),
+              }}
+              placeholder="Select Package"
+              value={selectedValues.Package.value}
+              onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
+              options={getOptions('Package', 'Location')}
+            />
+            {errors.Package && <span className="text-red-500 text-sm">{errors.Package}</span>}
+          </div>
+
+          {/* Vendor */}
+          <div>
+            <label className='block text-gray-700 font-semibold mb-2'>Vendor</label>
+            <Dropdown
+              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Vendor ? 'border-red-400' : ''}`}
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '50px',
+                }),
+              }}
+              placeholder="Select Vendor"
+              value={selectedValues.vendorName.value}
+              onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
+              options={vendors}
+            />
+            {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
+          </div>
+        </div>
+
+        {/* Margin Amount and Margin Percentage */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
+            <input 
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+              type="number"
+              placeholder="Margin Amount"
+              value={marginAmount || ''}
+              onChange={handleMarginAmountChange}
+              onFocus={e => e.target.select()}
+            />
+            {errors.marginAmount && <span className="text-red-500 text-sm">{errors.marginAmount}</span>}
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
+            <input 
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : ''}`} 
+              type="number"
+              placeholder="Margin %"
+              value={marginPercentage || ''}
+              onChange={handleMarginPercentageChange}
+              onFocus={e => e.target.select()}
+            />
+            {errors.marginPercentage && <span className="text-red-500 text-sm">{errors.marginPercentage}</span>}
+          </div>
+          <div id="25" name='OrderQuantityText'>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
                       <input 
                         // required = {elementsToHide.includes("OrderQuantityText") ? false : true}
-                        className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : ''}`}
                         type='number' 
                         value={qty} 
                         //onWheel={ event => event.currentTarget.blur() } 
@@ -976,11 +1313,13 @@ const fetchRates = async () => {
                         onFocus={(e) => {e.target.select()}}/>
                         </div>
                         {errors.qty && <span className="text-red-500 text-sm">{errors.qty}</span>}
-                    <div name="OrderRemarks">
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
+        <div name="OrderRemarks">
                     <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
-                        className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
                         placeholder='Remarks'    
                         value={remarks}
                         onChange={e => {setRemarks(e.target.value);
@@ -994,7 +1333,7 @@ const fetchRates = async () => {
                     <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
                         type='date' 
-                        className="p-3 shadow-2xl glass w-full text-black outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
                         value={new Date()}
                         onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
                       />
@@ -1015,15 +1354,19 @@ const fetchRates = async () => {
 ))}
 </ul>
                   </div>
-                     <button className="outline-none glass shadow-2xl w-full p-3 mb-24 bg-[#ffffff] hover:border-[#b7e0a5] border-[2px] hover:border-solid hover:border-[3px]  hover:text-[#008000] font-bold rounded-md" type="submit">Submit</button>
-                </div>
-            </form>
-            {/* MP-101 */}
+                  </div>
+        </div>
+        
+      </form>
+    </div>
+  </div>
   {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
-        </div>
-    );
-}
+</div>
+
+
+);
+};
 
 export default CreateOrder;

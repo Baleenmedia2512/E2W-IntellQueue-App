@@ -97,6 +97,7 @@ const FinanceData = () => {
   const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const dispatch = useDispatch();
 
+  console.log(orderData)
 
   useEffect(() => {
     // Use the orderData values to initialize the state
@@ -192,6 +193,7 @@ const FinanceData = () => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
+          console.log(clientDetails)
           dispatch(setIsOrderExist(true));
           setOrderNumber(clientDetails.orderNumber);
           setRemarks(clientDetails.remarks);
