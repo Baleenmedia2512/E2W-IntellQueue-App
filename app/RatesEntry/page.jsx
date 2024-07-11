@@ -235,6 +235,12 @@ const AdDetailsPage = () => {
     }
    
   }
+
+  useEffect(() => {
+    if(combinedSlabData.length === 0){
+      elementsToShowList("Show");
+    }
+  },[combinedSlabData])
 //   const insertQtySlab = async() => {
 //   if (isNewRate) {
 //     const price = parseFloat(newUnitPrice);
@@ -286,10 +292,12 @@ const AdDetailsPage = () => {
 
     if (newUnitPrice > 0 && qty > 0) {
     try{
+      console.log(combinedSlabData)
       await Promise.all(combinedSlabData.map(async(item) => {
         try{
           const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
           const result = await response.json();
+          console.log("Iam in add" + result)
           if(result === "Failed to Insert" || result === "Failed to Update"){
             // showToastMessage("Error", "Error while updating data")
             setToastMessage('Error while updating data.');
@@ -332,6 +340,7 @@ const AdDetailsPage = () => {
               throw new Error(`Error: ${response.statusText}`);
             }
             const responseData = await response.json();
+            console.log("Update Slab: " + responseData)
             fetchQtySlab();
             setEditModal(false);
             setNewUnitPrice("");
@@ -364,10 +373,21 @@ const AdDetailsPage = () => {
       const data = await response.json();
       if(data === 'No rows updated'){
         setCombinedSlabData(combinedSlabData.filter((_, i) => i !== index));
+        if(slabData.length > 0 ){
+          setSlabData(slabData.filter((_, i) => i !== index))
+        } else if(tempSlabData.length > 0){
+          setTempSlabData(tempSlabData.filter((_, i) => i !== index))
+        }
+
       } else{
+        //setTempSlabData(tempSlabData.filter((_, i) => i !== index));
         fetchQtySlab();
       }
-  }}
+  }
+  if(combinedSlabData.length === 0 && tempSlabData.length === 0 && slabData.length === 0){
+    elementsToShowList("Show")
+  }
+}
 
   const fetchMaxRateID = async () => {
     try {
@@ -892,6 +912,7 @@ var selectedRate = '';
         if (data.error) {
           throw new Error(data.error);
         }
+        console.log("Update Rates: " + data)
         setEditMode(false);
         // showToastMessage('success', 'Updated Successfully!');
         setSuccessMessage('Updated Successfully!');
@@ -1135,7 +1156,7 @@ var selectedRate = '';
             setIsLeadDays(true)
         }else { 
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${tempSlabData[0].UnitPrice}`)
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
                 const data = await response.json();
                 addQtySlab()
                 // showToastMessage('success', 'Inserted Successfully!');
