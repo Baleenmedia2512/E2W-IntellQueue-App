@@ -292,12 +292,10 @@ const AdDetailsPage = () => {
 
     if (newUnitPrice > 0 && qty > 0) {
     try{
-      console.log(combinedSlabData)
       await Promise.all(combinedSlabData.map(async(item) => {
         try{
           const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
           const result = await response.json();
-          console.log("Iam in add" + result)
           if(result === "Failed to Insert" || result === "Failed to Update"){
             // showToastMessage("Error", "Error while updating data")
             setToastMessage('Error while updating data.');
@@ -308,10 +306,10 @@ const AdDetailsPage = () => {
             }, 2000);
           }else{
             // showToastMessage('success', result);
-            setSuccessMessage(result);
-            setTimeout(() => {
-            setSuccessMessage('');
-          }, 2000);
+          //   setSuccessMessage(result);
+          //   setTimeout(() => {
+          //   setSuccessMessage('');
+          // }, 2000);
             fetchQtySlab();
             setNewUnitPrice("");  
             setTempSlabData([]);
@@ -340,16 +338,15 @@ const AdDetailsPage = () => {
               throw new Error(`Error: ${response.statusText}`);
             }
             const responseData = await response.json();
-            console.log("Update Slab: " + responseData)
             fetchQtySlab();
             setEditModal(false);
             setNewUnitPrice("");
             setTempSlabData([]);
             // showToastMessage('success', responseData.message)
-            setSuccessMessage(responseData.message);
-              setTimeout(() => {
-            setSuccessMessage('');
-          }, 2000);
+          //   setSuccessMessage(responseData.message);
+          //     setTimeout(() => {
+          //   setSuccessMessage('');
+          // }, 2000);
           } catch (updateError) {
             console.error(`Failed to update quantity slab`, updateError);
           }
@@ -364,10 +361,13 @@ const AdDetailsPage = () => {
 
   const removeQtySlab = async(Qty, index) => {
     if (isNewRate) {
-      setIsSlabAvailable(false);
-      setQty(0);
-      setNewUnitPrice("");
+      //setIsSlabAvailable(false);
+      //setNewUnitPrice("");
       setCombinedSlabData(combinedSlabData.filter((_, i) => i !== index));
+      if(combinedSlabData.length === 0){
+        setTempSlabData([])
+        dispatch(setSlabData([]));
+      }
     } else {
       const response = await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}`);
       const data = await response.json();
@@ -912,7 +912,6 @@ var selectedRate = '';
         if (data.error) {
           throw new Error(data.error);
         }
-        console.log("Update Rates: " + data)
         setEditMode(false);
         // showToastMessage('success', 'Updated Successfully!');
         setSuccessMessage('Updated Successfully!');
@@ -998,6 +997,17 @@ var selectedRate = '';
   
     switch (newRateType) {
       case 'Rate Card Name':
+        if (getDistinctValues('ratename').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Rate Name already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };
         updatedOptions = [
           ...getDistinctValues('ratename').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -1005,6 +1015,17 @@ var selectedRate = '';
         changedRate = "rateName";
         break;
       case 'Type':
+        if (getDistinctValues('adType').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Ad Type already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };
         updatedOptions = [
           ...getDistinctValues('adType').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -1012,6 +1033,17 @@ var selectedRate = '';
         changedRate = "adType";
       break;
       case 'Category':
+        if (getDistinctValues('typeOfAd').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Ad Category already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };;
         updatedOptions = [
           ...getDistinctValues('typeOfAd').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -1019,6 +1051,17 @@ var selectedRate = '';
         changedRate = "typeOfAd";
         break;
       case 'Location':
+        if (getDistinctValues('Location').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Location already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };;
         updatedOptions = [
           ...getDistinctValues('Location').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -1026,6 +1069,17 @@ var selectedRate = '';
         changedRate = "Location";
         break;
         case 'Package':
+          if (getDistinctValues('Package').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+            setNewRateName("");
+            setNewRateModel(false);
+            setToastMessage('Package already exists');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            },3000);
+            return
+          };;
         updatedOptions = [
           ...getDistinctValues('Package').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -1158,7 +1212,6 @@ var selectedRate = '';
             try {
               const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
                 const data = await response.json();
-                addQtySlab()
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage('Rate Card Added Successfully!');
                 setTimeout(() => {
@@ -1169,6 +1222,7 @@ var selectedRate = '';
                 fetchMaxRateID()
                 fetchRates()
                 fetchQtySlab()
+                setTempSlabData([])
                 setEditMode(false)
             } catch (error) {
                 console.error(error);
