@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setOrderData, resetOrderData, setIsOrderExist  } from '@/redux/features/order-slice';
+
 import Select from 'react-select';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
 import { TextField } from '@mui/material';
@@ -25,7 +26,7 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice)
-    const {clientName: clientNameCR, consultantName: consultantNameCR, clientNumber: clientNumberCR, clientID: clientIDCR} = clientDetails;
+    const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
@@ -53,7 +54,6 @@ const CreateOrder = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
-    
   const [vendors, setVendors] = useState([]);
   const [ratesData, setRatesData] = useState([]);
   const [units, setUnits] = useState([])
@@ -75,7 +75,6 @@ const CreateOrder = () => {
     const rateGST = useAppSelector(state => state.rateSlice.rateGST);
     const startQty = useAppSelector(state => state.rateSlice.startQty);
 
-    
 
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
@@ -112,7 +111,11 @@ const CreateOrder = () => {
     useEffect(() => {
       setClientName(clientNameCR || '');
       setConsultantName(consultantNameCR || '');
-    }, [clientNameCR]);
+      setClientID(clientIDCR || '');
+      setClientNumber(clientNumberCR || '');
+      dispatch(setOrderData({ clientName: clientNameCR, clientNumber: clientNumberCR, clientID: clientIDCR, consultantName: consultantNameCR }))
+      fetchPreviousOrderDetails(clientNumberCR, clientNameCR);
+    }, [clientNameCR, clientIDCR]);
 
     useEffect(() => {
       calculateReceivable();
@@ -519,7 +522,6 @@ const fetchRates = async () => {
   }
 };
 // MP-99
-console.log(clientDetails)
 
 
     const findUnitPrice = () => {
@@ -534,7 +536,6 @@ console.log(clientDetails)
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
     }, [qty])
-    
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value
@@ -659,6 +660,7 @@ console.log(clientDetails)
                 // MP-101
                 setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
                 dispatch(setIsOrderExist(true));
+                
                 setTimeout(() => {
                 setSuccessMessage('');
                 router.push('/FinanceEntry');
@@ -832,7 +834,6 @@ const handleCloseDialog = () => {
   setConsultantDialogOpen(false);
 };
 
-console.log(clientID)
 const handleConsultantUpdate = async(event) => {
   event.preventDefault()
 
@@ -898,7 +899,7 @@ const handleConsultantNameSelection = (event) => {
 };
 
 return (
-<div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
+  <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
 <Dialog open={consultantDialogOpen} onClose={handleCloseDialog} fullWidth={true} maxWidth='sm'>
 <DialogTitle>Change Consultant</DialogTitle>
         <DialogContent>
@@ -906,7 +907,7 @@ return (
           <div className="relative">
             <label className="block mb-1 font-medium">Consultant Name</label>
             <input
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
               type="text"
               placeholder="Consultant Name*"
               name="ConsultantNameInput"
@@ -978,19 +979,19 @@ return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-1">
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Name</p>
-        <p className="truncate">{clientName}</p>
+        <p className="truncate text-black">{clientName}</p>
       </div>
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Consultant</p>
-        <p>{consultantName}</p>
+        <p className="truncate text-black">{consultantName}</p>
       </div>
        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
        <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
-       <p>{previousOrderNumber}</p>
+       <p className="text-black">{previousOrderNumber}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
       <p className="text-gray-500 text-xs mb-1">Next Order#</p>
-       <p>{maxOrderNumber}</p>
+       <p className="text-black">{maxOrderNumber}</p>
        </div>
     </div>
     <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
@@ -1005,27 +1006,27 @@ return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Order#</p>
-                <p>{previousOrderNumber}</p>
+                <p className="text-black">{previousOrderNumber}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Order Date</p>
-                <p>{previousOrderDate}</p>
+                <p className="text-black">{previousOrderDate}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Rate Card</p>
-                <p>{previousRateName}</p>
+                <p className="text-black">{previousRateName}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Type</p>
-                <p>{previousAdType}</p>
+                <p className="text-black">{previousAdType}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Order Amount</p>
-                <p>{previousOrderAmount}</p>
+                <p className="text-black">₹{previousOrderAmount}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Consultant</p>
-                <p>{previousConsultantName}</p>
+                <p className="text-black">{previousConsultantName}</p>
               </div>
             </div>
           ) : (
@@ -1038,27 +1039,27 @@ return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order#</p>
-              <p>{maxOrderNumber}</p>
+              <p className="text-black">{maxOrderNumber}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order Date</p>
-              <p>{formattedOrderDate}</p>
+              <p className="text-black">{formattedOrderDate}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Rate Card</p>
-              <p>{selectedValues.rateName.value}</p>
+              <p className="text-black">{selectedValues.rateName.value}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Type</p>
-              <p>{selectedValues.adType.value}</p>
+              <p className="text-black">{selectedValues.adType.value}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order Amount</p>
-              <p>₹{Math.floor(unitPrice)}</p>
+              <p className="text-black">₹{Math.floor(unitPrice)}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Consultant</p>
-              <p>{consultantName}</p>
+              <p className="text-black">{consultantName}</p>
             </div>
           </div>
         </div>
@@ -1078,7 +1079,7 @@ return (
             <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
             <input 
               type='text' 
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
               placeholder='Client Name'
               value={clientName}
               onChange={handleSearchTermChange}
@@ -1124,7 +1125,7 @@ return (
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1148,7 +1149,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.rateName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.rateName ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1168,7 +1169,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Category</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.typeOfAd ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.typeOfAd ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1187,7 +1188,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Type</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.adType ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.adType ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1210,7 +1211,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Location</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1228,7 +1229,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Package</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1247,7 +1248,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Vendor</label>
             <Dropdown
-              className={`w-full border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Vendor ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Vendor ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1258,6 +1259,9 @@ return (
               value={selectedValues.vendorName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
               options={vendors}
+              optionLabel="label"
+              optionGroupLabel="label"
+               optionGroupChildren="options"
             />
             {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
           </div>
@@ -1268,7 +1272,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
             <input 
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
               type="number"
               placeholder="Margin Amount"
               value={marginAmount || ''}
@@ -1281,7 +1285,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
             <input 
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : ''}`} 
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : ''}`} 
               type="number"
               placeholder="Margin %"
               value={marginPercentage || ''}
@@ -1294,7 +1298,7 @@ return (
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
                       <input 
                         // required = {elementsToHide.includes("OrderQuantityText") ? false : true}
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : ''}`}
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : ''}`}
                         type='number' 
                         value={qty} 
                         //onWheel={ event => event.currentTarget.blur() } 
@@ -1312,7 +1316,7 @@ return (
                     <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
                         placeholder='Remarks'    
                         value={remarks}
                         onChange={e => {setRemarks(e.target.value);
@@ -1326,7 +1330,7 @@ return (
                     <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
                         type='date' 
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
                         value={new Date()}
                         onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
                       />
