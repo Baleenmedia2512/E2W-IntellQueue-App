@@ -25,7 +25,7 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice)
-    const {clientName: clientNameCR, consultantName: consultantNameCR, clientNumber: clientNumberCR} = clientDetails;
+    const {clientName: clientNameCR, consultantName: consultantNameCR, clientNumber: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
@@ -40,7 +40,7 @@ const CreateOrder = () => {
     const [clientSource, setClientSource] = useState("")
     const [receivable, setReceivable] = useState("");
     const [address, setAddress] = useState('');
-    const [clientID, setClientID] = useState('');
+    const [clientID, setClientID] = useState(clientIDCR || '');
     const [consultantName, setConsultantName] = useState(consultantNameCR || '');
     const [consultantNumber, setConsultantNumber] = useState('');
     const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
@@ -49,10 +49,10 @@ const CreateOrder = () => {
     const [clientPAN, setClientPAN] = useState("");
     const [errors, setErrors] = useState({});
     const [toast, setToast] = useState(false);
-  const [severity, setSeverity] = useState('');
-  const [toastMessage, setToastMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
+    const [severity, setSeverity] = useState('');
+    const [toastMessage, setToastMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
     
   const [vendors, setVendors] = useState([]);
   const [ratesData, setRatesData] = useState([]);
@@ -519,6 +519,7 @@ const fetchRates = async () => {
   }
 };
 // MP-99
+console.log(clientDetails)
 
 
     const findUnitPrice = () => {
@@ -554,8 +555,7 @@ const fetchRates = async () => {
     
         setClientName(name);
         setClientNumber(number);
-        dispatch(setOrderData({ clientName: name }))
-        dispatch(setOrderData({ clientNumber: number }))
+        dispatch(setOrderData({ clientName: name, clientNumber: number  }))
         fetchClientDetails(number);
         fetchPreviousOrderDetails(number, name);
         setClientNameSuggestions([]);
@@ -571,9 +571,9 @@ const fetchRates = async () => {
               dispatch(setOrderData({ clientEmail: clientDetails.email }))
               dispatch(setOrderData({ clientSource: clientDetails.source }))
               dispatch(setOrderData({ address: clientDetails.address || "" }))
-        dispatch(setOrderData({ consultantName: clientDetails.consname || "" }))
-        dispatch(setOrderData({ clientGST: clientDetails.GST || "" }))
-        dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
+              dispatch(setOrderData({ consultantName: clientDetails.consname || "" }))
+              dispatch(setOrderData({ clientGST: clientDetails.GST || "" }))
+              dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
    
               //MP-69-New Record are not fetching in GS
               setClientID(clientDetails.id);
@@ -609,7 +609,6 @@ const fetchRates = async () => {
             const data = response.data;
             if (data.length > 0) {
               const clientDetails = data[0];
-              console.log(clientDetails)
               const formattedDate = parseDateFromDB(clientDetails.orderDate);
               setOrderDate(clientDetails.orderDate);
               setDisplayOrderDate(formattedDate);
@@ -642,6 +641,7 @@ const fetchRates = async () => {
           });
       };
 
+
       const createNewOrder = async(event) => {
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
@@ -649,9 +649,9 @@ const fetchRates = async () => {
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
 
         if (validateFields()) {
-        
+          const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${orderDate}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -826,20 +826,13 @@ const consultantDialog = () => {
   setConsultantDialogOpen(true); 
 };
 
-const handleUpdateConsultant = () => {
-  setConsultantDialogOpen(false); 
-};
-
-const handleOpenDialog = () => {
-  setConsultantDialogOpen(true);
-};
 
 const handleCloseDialog = () => {
   setConsultantName('');
   setConsultantDialogOpen(false);
 };
 
-
+console.log(clientID)
 const handleConsultantUpdate = async(event) => {
   event.preventDefault()
 
@@ -1011,7 +1004,7 @@ return (
           {hasPreviousOrder ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-                <p className="text-gray-500 text-xs mb-1">Order Number</p>
+                <p className="text-gray-500 text-xs mb-1">Order#</p>
                 <p>{previousOrderNumber}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
@@ -1044,7 +1037,7 @@ return (
           <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Current Order Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-500 text-xs mb-1">Order Number</p>
+              <p className="text-gray-500 text-xs mb-1">Order#</p>
               <p>{maxOrderNumber}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
@@ -1061,7 +1054,7 @@ return (
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order Amount</p>
-              <p>{unitPrice}</p>
+              <p>₹{Math.floor(unitPrice)}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Consultant</p>

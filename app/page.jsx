@@ -33,7 +33,7 @@ const ClientsData = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
-  const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
+  const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
@@ -63,7 +63,7 @@ const ClientsData = () => {
   const sources = companyName === 'Grace Scans' ? gssources : bmsources;
   const [contactWarning, setContactWarning] = useState('');
   const [consulantWarning, setConsulantWarning] = useState('');
-  const [clientID, setClientID] = useState('');
+  // const [clientID, setClientID] = useState('');
   const [emailWarning, setEmailWarning] = useState('');
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -178,7 +178,8 @@ const ClientsData = () => {
         if (data && data.length > 0) {
           setErrors({});
           const clientDetails = data[0];
-          setClientID(clientDetails.id);
+          // setClientID(clientDetails.id);
+          dispatch(setClientData({ clientID: clientDetails.id || "" }));
           dispatch(setClientData({ clientName: clientDetails.name || "" }));
           //MP-69-New Record are not fetching in GS
           // Convert DOB to dd-M-yy for display
@@ -311,7 +312,8 @@ const ClientsData = () => {
                           setClientPAN("");
                           setClientGST("");
                           setClientContactPerson("");
-                          setClientID("");
+                          // setClientID("");
+                          dispatch(setClientData({ clientID: "" }));
                           
                     }
                 })
@@ -693,7 +695,8 @@ const handleRemoveClient = () => {
           setClientPAN("");
           setClientGST("");
           setClientContactPerson("");
-          setClientID("");
+          // setClientID("");
+          dispatch(setClientData({ clientID: "" }));
           setIsNewClient(true);
           setTimeout(() => {
           setSuccessMessage('');
