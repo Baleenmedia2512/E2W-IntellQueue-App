@@ -21,6 +21,7 @@ import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData,
 import { useDispatch } from 'react-redux';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { useSafeMantineTheme } from '@mantine/core';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -34,7 +35,8 @@ const AdDetailsPage = () => {
   const unitRef = useRef();
   const qtyRef = useRef();
   const ldRef = useRef();
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  //const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
   const rateId = useAppSelector(state => state.rateSlice.rateId)
@@ -68,6 +70,7 @@ const AdDetailsPage = () => {
   const [toast, setToast] = useState(false); //toast
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [isQtySlab, setIsQtySlab] = useState(false)
   //const [rateId, setRateId] = useState("");
   const [invalidRates, setInvalidRates] = useState(false);
   const [isValidityDays, setIsValidityDays] = useState(false);
@@ -232,6 +235,12 @@ const AdDetailsPage = () => {
     }
    
   }
+
+  useEffect(() => {
+    if(combinedSlabData.length === 0){
+      elementsToShowList("Show");
+    }
+  },[combinedSlabData])
 //   const insertQtySlab = async() => {
 //   if (isNewRate) {
 //     const price = parseFloat(newUnitPrice);
@@ -297,10 +306,10 @@ const AdDetailsPage = () => {
             }, 2000);
           }else{
             // showToastMessage('success', result);
-            setSuccessMessage(result);
-            setTimeout(() => {
-            setSuccessMessage('');
-          }, 2000);
+          //   setSuccessMessage(result);
+          //   setTimeout(() => {
+          //   setSuccessMessage('');
+          // }, 2000);
             fetchQtySlab();
             setNewUnitPrice("");  
             setTempSlabData([]);
@@ -334,10 +343,10 @@ const AdDetailsPage = () => {
             setNewUnitPrice("");
             setTempSlabData([]);
             // showToastMessage('success', responseData.message)
-            setSuccessMessage(responseData.message);
-              setTimeout(() => {
-            setSuccessMessage('');
-          }, 2000);
+          //   setSuccessMessage(responseData.message);
+          //     setTimeout(() => {
+          //   setSuccessMessage('');
+          // }, 2000);
           } catch (updateError) {
             console.error(`Failed to update quantity slab`, updateError);
           }
@@ -352,19 +361,33 @@ const AdDetailsPage = () => {
 
   const removeQtySlab = async(Qty, index) => {
     if (isNewRate) {
-      setIsSlabAvailable(false);
-      setQty(0);
-      setNewUnitPrice("");
+      //setIsSlabAvailable(false);
+      //setNewUnitPrice("");
       setCombinedSlabData(combinedSlabData.filter((_, i) => i !== index));
+      if(combinedSlabData.length === 0){
+        setTempSlabData([])
+        dispatch(setSlabData([]));
+      }
     } else {
       const response = await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}`);
       const data = await response.json();
       if(data === 'No rows updated'){
         setCombinedSlabData(combinedSlabData.filter((_, i) => i !== index));
+        if(slabData.length > 0 ){
+          setSlabData(slabData.filter((_, i) => i !== index))
+        } else if(tempSlabData.length > 0){
+          setTempSlabData(tempSlabData.filter((_, i) => i !== index))
+        }
+
       } else{
+        //setTempSlabData(tempSlabData.filter((_, i) => i !== index));
         fetchQtySlab();
       }
-  }}
+  }
+  if(combinedSlabData.length === 0 && tempSlabData.length === 0 && slabData.length === 0){
+    elementsToShowList("Show")
+  }
+}
 
   const fetchMaxRateID = async () => {
     try {
@@ -407,8 +430,9 @@ const AdDetailsPage = () => {
   useEffect(() => {
     if(rateId > 0){
       handleRateId()
-      fetchQtySlab();
+      
     }
+    fetchQtySlab();
   }, [rateId]);
 
   const fetchCampaignUnits = async() => {
@@ -871,8 +895,8 @@ var selectedRate = '';
       } else if(selectedUnit === ""){
         setIsUnitsSelected(true)
       } else if(combinedSlabData.length === 0){
-        setIsQty(true);
-      }else if (validityDays <= 0) {
+        setIsQtySlab(true)
+      }else if(validityDays <= 0) {
         setIsValidityDays(true);
       }else{
       if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
@@ -973,6 +997,17 @@ var selectedRate = '';
   
     switch (newRateType) {
       case 'Rate Card Name':
+        if (getDistinctValues('ratename').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Rate Name already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };
         updatedOptions = [
           ...getDistinctValues('ratename').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -980,6 +1015,17 @@ var selectedRate = '';
         changedRate = "rateName";
         break;
       case 'Type':
+        if (getDistinctValues('adType').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Ad Type already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };
         updatedOptions = [
           ...getDistinctValues('adType').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -987,6 +1033,17 @@ var selectedRate = '';
         changedRate = "adType";
       break;
       case 'Category':
+        if (getDistinctValues('typeOfAd').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Ad Category already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };;
         updatedOptions = [
           ...getDistinctValues('typeOfAd').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -994,6 +1051,17 @@ var selectedRate = '';
         changedRate = "typeOfAd";
         break;
       case 'Location':
+        if (getDistinctValues('Location').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Location already exists');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        };;
         updatedOptions = [
           ...getDistinctValues('Location').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -1001,6 +1069,17 @@ var selectedRate = '';
         changedRate = "Location";
         break;
         case 'Package':
+          if (getDistinctValues('Package').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+            setNewRateName("");
+            setNewRateModel(false);
+            setToastMessage('Package already exists');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            },3000);
+            return
+          };;
         updatedOptions = [
           ...getDistinctValues('Package').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
@@ -1029,6 +1108,8 @@ var selectedRate = '';
     setIsNewRate(true);
     dispatch(setRateId(""));
     setNewRateName("");
+    setIsQtySlab(false);
+    elementsToShowList("Show")
     setNewRateModel(false);
   };  
 
@@ -1101,13 +1182,13 @@ var selectedRate = '';
     if(isUnitsSelected){
       unitRef.current.focus();
     }
-    if(isQty){
+    if(isQty || isQtySlab){
       qtyRef.current.focus()
     }
     if(isLeadDays) {
       ldRef.current.focus()
     }
-  }, [isValidityDays, isUnitsSelected, isQty, isLeadDays]);
+  }, [isValidityDays, isUnitsSelected, isQty, isLeadDays, isQtySlab]);
 
   const insertNewRate = async () => {
     try {
@@ -1121,17 +1202,16 @@ var selectedRate = '';
             }, 2000);
         } else if(selectedUnit === ""){
           setIsUnitsSelected(true)
-        } else if(qty === 0){
-          setIsQty(true);
+        } else if(combinedSlabData.length === 0){
+          setIsQtySlab(true);
         }else if (validityDays <= 0) {
             setIsValidityDays(true);
           } else if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
             setIsLeadDays(true)
-        } else {
+        }else { 
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${tempSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${tempSlabData[0].UnitPrice}`)
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
                 const data = await response.json();
-                addQtySlab()
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage('Rate Card Added Successfully!');
                 setTimeout(() => {
@@ -1142,6 +1222,7 @@ var selectedRate = '';
                 fetchMaxRateID()
                 fetchRates()
                 fetchQtySlab()
+                setTempSlabData([])
                 setEditMode(false)
             } catch (error) {
                 console.error(error);
@@ -1160,6 +1241,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     if (data.StartQty === qty) {
       return { ...data, newUnitPrice };
     }
+    
     return data;
   });
 
@@ -1171,7 +1253,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     }
     return data;
   });
-
+  setIsQtySlab(false)
   dispatch(setSlabData(updatedData));
 }
   setEditMode(true);
@@ -1471,7 +1553,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' 
                         type='number' 
                         defaultValue={qty} 
-                        onChange={e => {setQty(e.target.value); setIsQty(false)}} 
+                        onChange={e => {setQty(e.target.value); setIsQty(false); setIsQtySlab(false)}} 
                         helperText="Ex: 3 | Means this rate is applicable for Units > 3"
                         onFocus={(e) => {
                           e.target.select()
@@ -1489,6 +1571,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       </button> 
                     </div>
                     {isQty && <p className='text-red-500 mt-2 font-medium'>Please select a valid Quantity</p>}
+                    {isQtySlab && <p className='text-red-500 mt-2 font-medium'>Please enter a valid Slab Rate</p>}
                   </div> 
                   
                   <div>
