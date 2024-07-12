@@ -134,7 +134,6 @@ useEffect(() => {
 }, [rateId]);
 
 
-
 const [filters, setFilters] = useState({
   rateName: [],
   typeOfAd: [],
@@ -272,7 +271,7 @@ const handleRateId = async () => {
         }
       }))
 
-      dispatch(setRateId(data.RateID));
+      // dispatch(setRateId(data.RateID));
       dispatch(setSelectedUnit({label: data.Units, value: data.Units}));
 
     // setCampaignDuration(data['CampaignDuration(in Days)']);
@@ -593,7 +592,6 @@ const fetchRates = async () => {
               setClientPAN(clientDetails.ClientPAN || "");
         dispatch(setOrderData({ clientPAN: clientDetails.ClientPAN || "" }))
             }
-          
             } else {
               console.warn("No client details found for the given name and contact number.");
             }
@@ -611,9 +609,9 @@ const fetchRates = async () => {
             if (data.length > 0) {
               const clientDetails = data[0];
               const formattedDate = parseDateFromDB(clientDetails.orderDate);
+              // dispatch(setRateId(""));
               setOrderDate(clientDetails.orderDate);
               setDisplayOrderDate(formattedDate);
-
               const formattedOrderDate = format(clientDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
               setPreviousOrderDate(formattedOrderDate);
               setPreviousOrderNumber(clientDetails.orderNumber);
@@ -621,22 +619,16 @@ const fetchRates = async () => {
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
               setPreviousConsultantName(clientDetails.consultantName);
-    
-              dispatch(setSelectedValues({
-                rateName: {
-                  label: clientDetails.rateName,
-                  value: clientDetails.rateName,
-                },
-                adType: {
-                  label: clientDetails.adType,
-                  value: clientDetails.adType,
-                },
-              }));
+              // handleSelectChange(clientDetails.rateName, "rateName");
+              // handleSelectChange(clientDetails.adType, "adType");
+              
+              dispatch(setRateId(clientDetails.rateID));
               setHasPreviousOrder(true);
             } else {
               setHasPreviousOrder(false); // Set to false if there are no details
             }
           })
+          
           .catch((error) => {
             console.error(error);
           });
