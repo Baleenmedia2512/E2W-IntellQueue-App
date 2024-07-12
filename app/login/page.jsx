@@ -220,7 +220,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.1.26
+                        Version 1.2.0
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}

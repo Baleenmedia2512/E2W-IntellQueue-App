@@ -22,6 +22,7 @@ import SuccessToast from '../components/SuccessToast';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
 import { setIsOrderExist } from '@/redux/features/order-slice';
+import { resetClientData } from '@/redux/features/client-slice';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -273,6 +274,7 @@ const FinanceData = () => {
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
           dispatch(resetOrderData());
+          dispatch(resetClientData());
           // window.location.reload();
           setSuccessMessage('Finance Entry Added');
         setTimeout(() => {
