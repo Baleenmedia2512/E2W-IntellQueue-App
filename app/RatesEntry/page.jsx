@@ -35,7 +35,7 @@ const AdDetailsPage = () => {
   const unitRef = useRef();
   const qtyRef = useRef();
   const ldRef = useRef();
-  //const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.companyName);
   const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
@@ -748,7 +748,9 @@ var selectedRate = '';
   }, [slabData, tempSlabData]);
 
   useEffect(() => {
-    
+    if(isNewRate){
+      elementsToShowList("Show");
+    }
     if(slabData.length < 1 && selectedValues.adType !== ""){
       elementsToShowList("Show");
     } else{
@@ -1158,7 +1160,7 @@ var selectedRate = '';
 
   const elementsToHideList = () => {
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
         .then((data) => setElementsToHide(data));
     } catch(error){
