@@ -11,7 +11,7 @@ import { TextField } from '@mui/material';
 // import MuiAlert from '@mui/material/Alert';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { MdDeleteOutline , MdOutlineSave, MdAddCircle} from "react-icons/md";
+import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll} from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
@@ -999,7 +999,7 @@ var selectedRate = '';
   
     switch (newRateType) {
       case 'Rate Card Name':
-        if (getDistinctValues('ratename').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+        if (getDistinctValues('rateName').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
           setNewRateName("");
           setNewRateModel(false);
           setToastMessage('Rate Name already exists');
@@ -1011,13 +1011,24 @@ var selectedRate = '';
           return
         };
         updatedOptions = [
-          ...getDistinctValues('ratename').map((value) => ({ value, label: value })),
+          ...getDistinctValues('rateName').map((value) => ({ value, label: value })),
           { value: newRateName, label: newRateName },
         ];
         changedRate = "rateName";
         break;
       case 'Type':
-        if (getDistinctValues('adType').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+        if(selectedValues.rateName === ""){
+          setNewRateName("");
+          setNewRateModel(false);
+          setToastMessage('Select a valid Rate Name or add a new Rate Name');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          },3000);
+          return
+        }
+        if (getOptions('adType').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
           setNewRateName("");
           setNewRateModel(false);
           setToastMessage('Ad Type already exists');
@@ -1035,7 +1046,7 @@ var selectedRate = '';
         changedRate = "adType";
       break;
       case 'Category':
-        if (getDistinctValues('typeOfAd').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+        if (getOptions('typeOfAd').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
           setNewRateName("");
           setNewRateModel(false);
           setToastMessage('Ad Category already exists');
@@ -1053,7 +1064,7 @@ var selectedRate = '';
         changedRate = "typeOfAd";
         break;
       case 'Location':
-        if (getDistinctValues('Location').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+        if (getOptions('Location').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
           setNewRateName("");
           setNewRateModel(false);
           setToastMessage('Location already exists');
@@ -1071,7 +1082,7 @@ var selectedRate = '';
         changedRate = "Location";
         break;
         case 'Package':
-          if (getDistinctValues('Package').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          if (getOptions('Package').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
             setNewRateName("");
             setNewRateModel(false);
             setToastMessage('Package already exists');
@@ -1700,7 +1711,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     instanceId="RateGST"
     placeholder="Select Rate GST%"
     value={rateGST}
-    onChange={(selectedOption) => dispatch(setRateGST(selectedOption))}
+    onChange={(selectedOption) => {dispatch(setRateGST(selectedOption)); setEditMode(true)}}
     options={GSTOptions}
     required
   />
@@ -1708,7 +1719,9 @@ const updateSlabData = (qty, newUnitPrice) => {
                 </div>
                 {!(selectedValues.rateName === "" || selectedValues.adType === "" || selectedValues.vendorName === "") ? 
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
-                  
+                  <button className = "bg-yellow-400 text-white p-2 rounded-full ml-4 w-24 justify-center mr-4" onClick={() => {dispatch(resetRatesData()); }}>
+                          <span className='flex flex-row justify-center'><MdOutlineClearAll className='mt-1 mr-1'/> Clear</span>
+                        </button> 
                   <button className = "bg-red-400 text-white p-2 rounded-full w-24 justify-center" onClick={rejectRates}>
                     <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span>
                     </button> 
