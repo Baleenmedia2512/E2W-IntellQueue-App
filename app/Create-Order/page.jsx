@@ -28,7 +28,9 @@ const CreateOrder = () => {
     const clientDetails = useAppSelector(state => state.clientSlice)
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
-    const companyName = useAppSelector(state => state.authSlice.companyName);
+    const dbName = useAppSelector(state => state.authSlice.companyName);
+    const companyName = "Baleen Test";
+    // const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
@@ -692,7 +694,7 @@ const fetchRates = async () => {
 
       const elementsToHideList = () => {
         try{
-          fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+          fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
             .then((response) => response.json())
             .then((data) => setElementsToHide(data));
         } catch(error){

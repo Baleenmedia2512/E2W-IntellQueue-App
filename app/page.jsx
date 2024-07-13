@@ -29,8 +29,9 @@ const titleOptions = [
     
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
-  //const companyName = "Grace Scans"
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = "Baleen Test";
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
@@ -116,7 +117,7 @@ const ClientsData = () => {
 
   const elementsToHideList = () => {
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
         .then((data) => setElementsToHide(data));
     } catch(error){
