@@ -62,7 +62,9 @@ const FinanceData = () => {
   const orderData = useAppSelector(state => state.orderSlice);
   const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, remarks: orderRemarks } = orderData;
   // const username = "Grace Scans"
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = "Baleen Test";
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
