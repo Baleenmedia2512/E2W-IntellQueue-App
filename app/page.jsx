@@ -847,7 +847,7 @@ const BMvalidateFields = () => {
             {/* Left section */}
             <div className="space-y-4">
           <div className="relative">
-          <label className="block mb-1 font-medium">Name</label>
+          <label className="block mb-1 text-black font-medium">Name</label>
           <div className="flex space-x-2" name="ClientNameInput">
             <Dropdown
               value={selectedOption}
@@ -855,13 +855,13 @@ const BMvalidateFields = () => {
               onChange={(e) => {
                 setSelectedOption(e.target.value);
               }}
-              className={`w-1/4 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
               id="1"
               name="TitleSelect"
             />
             <input
               type="text"
-              className={`w-3/4 px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
               placeholder="Name*"
               id="2"
               name="ClientNameInput"
@@ -903,9 +903,9 @@ const BMvalidateFields = () => {
 
               {selectedOption === 'Ms.' ? (
                 <div name="ClientContactPersonInput">
-                  <label className="block mb-1 font-medium">Contact Person Name</label>
+                  <label className="block mb-1 text-black font-medium">Contact Person Name</label>
                   <input
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContactPerson ? 'border-red-400' : ''}`}
+                    className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContactPerson ? 'border-red-400' : ''}`}
                     type="text"
                     placeholder="Contact Person Name*"
                     id="30"
@@ -919,10 +919,10 @@ const BMvalidateFields = () => {
                 <></>
               )}
               <div className="relative" name="ClientContactInput">
-            <label className="block mb-1 font-medium">Contact Number</label>
+            <label className="block mb-1 text-black font-medium">Contact Number</label>
             <input
               type="number"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContact ? 'border-red-400' : ''}`}
+              className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContact ? 'border-red-400' : ''}`}
               placeholder="Contact Number*"
               id="3"
               name="ClientContactInput"
@@ -962,9 +962,9 @@ const BMvalidateFields = () => {
             {errors.clientContact && <p className="text-red-500 text-xs">{errors.clientContact}</p>}
           </div>
               <div name="ClientEmailInput">
-                <label className="block mb-1 font-medium">Email</label>
+                <label className="block mb-1 text-black font-medium">Email</label>
                 <input
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientEmail ? 'border-red-400' : ''}`}
+                  className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientEmail ? 'border-red-400' : ''}`}
                   type="email"
                   placeholder="Email"
                   id="4"
@@ -979,9 +979,9 @@ const BMvalidateFields = () => {
             {/* Middle section */}
             <div className="mt-0">
               <div name="ClientAddressTextArea">
-                <label className="block mb-1 font-medium">Address</label>
+                <label className="block text-black mb-1 font-medium">Address</label>
                 <textarea
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                  className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
                   id="7"
                   name="ClientAddressTextArea"
                   placeholder="Address"
@@ -992,9 +992,9 @@ const BMvalidateFields = () => {
               {selectedOption !== 'B/o.' && selectedOption !== 'Baby.' ? (
                 <div className="flex space-x-2 mt-3" name="ClientAgeInput">
                   <div className="w-1/2">
-                    <label className="block mb-1 font-medium">Age</label>
+                    <label className="block mb-1 text-black font-medium">Age</label>
                     <input
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       id="5"
                       name="ClientAgeInput"
@@ -1004,7 +1004,7 @@ const BMvalidateFields = () => {
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate</label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1016,7 +1016,7 @@ const BMvalidateFields = () => {
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1026,9 +1026,9 @@ const BMvalidateFields = () => {
               ) : (
                 <div className="flex space-x-2 mt-3">
                   <div className="w-1/2" name="MonthsInput">
-                    <label className="block mb-1 font-medium">Months</label>
+                    <label className="block mb-1 text-black font-medium">Months</label>
                     <input
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       name="MonthsInput"
                       placeholder="Months*"
@@ -1037,7 +1037,7 @@ const BMvalidateFields = () => {
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate</label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1049,7 +1049,7 @@ const BMvalidateFields = () => {
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
+                      className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1063,9 +1063,9 @@ const BMvalidateFields = () => {
               </div>
               <div className="mt-3" name="ClientGSTInput">
               <div>
-                <label className="block mb-1 font-medium">GST Number</label>
+                <label className="block mb-1 text-black font-medium">GST Number</label>
                 <input
-                  className={`w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientGST ? 'border-red-400' : ''}`}
+                  className={`w-full text-black mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientGST ? 'border-red-400' : ''}`}
                   placeholder="GST Number"
                   id="31"
                   name="ClientGSTInput"
@@ -1075,9 +1075,9 @@ const BMvalidateFields = () => {
                 />
                 {errors.clientGST && <p className="text-red-500 text-xs">{errors.clientGST}</p>}
               </div>
-                <label className="block mb-1 font-medium">PAN Number</label>
+                <label className="block mb-1 text-black font-medium">PAN Number</label>
                 <input
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientPAN ? 'border-red-400' : ''}`}
+                  className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientPAN ? 'border-red-400' : ''}`}
                   placeholder="PAN Number"
                   id="32"
                   name="ClientPANInput"
@@ -1091,9 +1091,9 @@ const BMvalidateFields = () => {
             {/* Right section */}
             <div className="space-y-4">
               <div name="ClientSourceSelect">
-                <label className="block mb-1 font-medium">Source</label>
+                <label className="block mb-1 text-black font-medium">Source</label>
                 <Dropdown
-                  className={`w-full border rounded-lg ${errors.clientSource ? 'border-red-400' : ''}`}
+                  className={`w-full text-black border rounded-lg ${errors.clientSource ? 'border-red-400' : ''}`}
                   id="8"
                   name="ClientSourceSelect"
                   options={sources}
@@ -1105,9 +1105,9 @@ const BMvalidateFields = () => {
               {(clientSource === '5.Consultant' || clientSource === 'Consultant') && (
                 <>
                   <div className="relative" name="ConsultantNameInput">
-                  <label className="block mb-1 font-medium">Consultant Name</label>
+                  <label className="block mb-1 text-black font-medium">Consultant Name</label>
                   <input
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
+                    className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
                     type="text"
                     placeholder="Consultant Name*"
                     id="9"
@@ -1147,9 +1147,9 @@ const BMvalidateFields = () => {
                 </div>
 
                   <div name="ConsultantNumberInput">
-                    <label className="block mb-1 font-medium">Consultant Number</label>
+                    <label className="block mb-1 text-black font-medium">Consultant Number</label>
                     <input
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantNumber ? 'border-red-400' : ''}`}
+                      className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantNumber ? 'border-red-400' : ''}`}
                       type="number" 
                       placeholder="Consultant Number*" 
                       id="10" 
