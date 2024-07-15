@@ -17,6 +17,8 @@ import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Te
 import './styles.css';
 
 const Report = () => {
+    const dbName = useAppSelector(state => state.authSlice.companyName);
+    // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
@@ -451,7 +453,7 @@ const handleDateChange = (range) => {
   {/* Total Orders box */}
   {/* Total Orders box */}
 <div className="w-40 h-36 rounded-lg shadow-md p-3 mb-5 flex flex-col items-start justify-start border border-gray-300">
-  <div className="text-4xl mt-5 font-bold">
+  <div className="text-4xl text-black mt-5 font-bold">
     {sumOfOrders}
   </div>
   <div className="text-lg text-gray-600">
@@ -486,7 +488,7 @@ const handleDateChange = (range) => {
       </div> */}
 
   {/* Spacer to center the DateRangePicker */}
-  <div className="flex flex-grow ml-2 mb-4">
+  <div className="flex flex-grow text-black ml-2 mb-4">
   <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
 
   </div>
@@ -523,6 +525,7 @@ const handleDateChange = (range) => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
+          pageSize={10}
           initialState={{
             sorting: {
               sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
@@ -552,7 +555,7 @@ const handleDateChange = (range) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <div className="flex flexgrow- ml-2 mb-4">
+              <div className="flex flex-grow text-black ml-2 mb-4">
                <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
                <div className="flex flex-grow items-end ml-2 mb-4">
                <button className="custom-button" onClick={handleClickOpen}>
@@ -592,9 +595,8 @@ const handleDateChange = (range) => {
 
             <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
                 <DialogTitle>Account Balance Information</DialogTitle>
-                {/* <div className="border-x-2 w-10 inline-block mb-4 border-gray-500 "></div> */}
+                <hr className="border-gray-300" />
                 <DialogContent>
-                    {/* <Box display="flex" justifyContent="space-around" p={2}> */}
                     <div className="flex items-center space-x-1 sm:space-x-1">
                     <p className="text-lg font-bold whitespace-nowrap">Margin Amount</p>
                     <p className="text-xs  mt-1">({format(startDate, 'dd-MMM-yy')} - {format(endDate, 'dd-MMM-yy')})</p>
@@ -602,39 +604,26 @@ const handleDateChange = (range) => {
 
 
                     <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
-                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(totalIncome)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Total Income</h2>
-                <p className="text-xl font-bold"> - </p>
-                <p className="text-xl font-bold">₹{formatIndianCurrency(totalExpense)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Total Expense</h2>
-                <p className="text-xl font-bold"> = </p> */}
                 <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
-                {/* <h2 className="text-sm font-semibold text-gray-500">Margin Amount</h2> */}
-                
             </div>
+            
             <div>
                 <p className="text-xs text-gray-500 mt-1">Income - Expense = Margin Amount</p></div>
+                <div className="flex justify-center my-4">
+            <div className="w-full border-t border-gray-300" />
+        </div>
+        
             <div className="flex items-center mt-5">
                       <p className="text-lg font-bold">Current Bank Balance</p>
                       <p className="text-xs ml-1 mt-1">(Overall)</p>
                   </div>
                     <div className="w-fit p-4 mt-2 border rounded-lg flex items-center space-x-4">
-                {/* <p className="text-xl font-bold">₹{formatIndianCurrency(ledgerBalance)}</p> */}
-                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2>
-                <p className="text-xl font-bold"> + </p>
-                <p className="text-xl font-bold">₹{formatIndianCurrency(cashInHand)}</p>
-                <h2 className="text-sm font-semibold text-gray-500">Cash In Hand</h2>
-                <p className="text-xl font-bold"> + </p>
-                <p className="text-xl font-bold">₹{formatIndianCurrency(marginResult)}</p>
-                <h2 className="text-sm font-semibold text-gray-600">Margin Amount</h2>
-                <p className="text-xl font-bold"> = </p> */}
                 <p className="text-xl font-bold">₹{formatIndianCurrency(currentBalance)}</p>
-                {/* <h2 className="text-sm font-semibold text-gray-500">Current Bank Balance</h2> */}
             </div>
             <div>
                 <p className="text-xs text-gray-500 mt-1">Ledger Balance + Income - Expense = Current Bank Balance</p></div>
-                    {/* </Box> */}
                 </DialogContent>
+                <hr className=" border-gray-300 w-full" />
                 <DialogActions>
                     <Button onClick={handleDialogClose} color="primary">
                         Close

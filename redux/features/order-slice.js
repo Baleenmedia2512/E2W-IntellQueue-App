@@ -17,6 +17,7 @@ const initialState = {
   clientGST: "",
   clientPAN: "",
   isOrderExist: false,
+  clientID: ""
 };
 
 export const orderSlice = createSlice({

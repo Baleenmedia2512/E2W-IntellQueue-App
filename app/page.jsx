@@ -29,11 +29,12 @@ const titleOptions = [
     
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
-  //const companyName = "Grace Scans"
+  const dbName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = "Baleen Test";
   const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
-  const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
+  const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
@@ -63,7 +64,7 @@ const ClientsData = () => {
   const sources = companyName === 'Grace Scans' ? gssources : bmsources;
   const [contactWarning, setContactWarning] = useState('');
   const [consulantWarning, setConsulantWarning] = useState('');
-  const [clientID, setClientID] = useState('');
+  // const [clientID, setClientID] = useState('');
   const [emailWarning, setEmailWarning] = useState('');
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -116,7 +117,7 @@ const ClientsData = () => {
 
   const elementsToHideList = () => {
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
         .then((data) => setElementsToHide(data));
     } catch(error){
@@ -127,6 +128,7 @@ const ClientsData = () => {
   const handleConsultantNameChange = (event) => {
     const newName = event.target.value;
     setConsultantName(newName)
+    dispatch(setClientData({ consultantName: newName || "" }));
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
       .then((data) => {setConsultantNameSuggestions(data)});
@@ -164,6 +166,7 @@ const ClientsData = () => {
   
     setConsultantNameSuggestions([]);
     setConsultantName(name)
+    dispatch(setClientData({ consultantName: name || "" }));
     setConsultantNumber(number);
     // fetchConsultantDetails(name, number);
   };
@@ -176,7 +179,8 @@ const ClientsData = () => {
         if (data && data.length > 0) {
           setErrors({});
           const clientDetails = data[0];
-          setClientID(clientDetails.id);
+          // setClientID(clientDetails.id);
+          dispatch(setClientData({ clientID: clientDetails.id || "" }));
           dispatch(setClientData({ clientName: clientDetails.name || "" }));
           //MP-69-New Record are not fetching in GS
           // Convert DOB to dd-M-yy for display
@@ -190,6 +194,7 @@ const ClientsData = () => {
           setTitle(clientDetails.gender || "");
           setSelectedOption(clientDetails.gender || "");
           setConsultantName(clientDetails.consname || "");
+          dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber(clientDetails.consnumber || "");
           // setClientPAN(clientDetails.PAN || "");
           setClientGST(clientDetails.GST || "");
@@ -299,6 +304,7 @@ const ClientsData = () => {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
+                          // dispatch(setClientData({ clientName: "" }));
                           setClientAge("");
                           setDOB("");
                           setAddress("");
@@ -307,7 +313,8 @@ const ClientsData = () => {
                           setClientPAN("");
                           setClientGST("");
                           setClientContactPerson("");
-                          setClientID("");
+                          // setClientID("");
+                          dispatch(setClientData({ clientID: "" }));
                           
                     }
                 })
@@ -377,7 +384,7 @@ const ClientsData = () => {
   const submitDetails = async(event) => {
     event.preventDefault()
     
-    if(companyName !== 'Grace Scans'){
+    if(companyName !== 'Grace Scans' && companyName !== 'Baleen Test'){
       if (isEmpty === true){
       router.push('/adDetails')
     }
@@ -392,6 +399,7 @@ const ClientsData = () => {
               setSuccessMessage('');
             }, 3000);
             // router.push('/adDetails')
+            
       if (isDetails) {
         dispatch(setQuotesData({currentPage: "checkout"}))
       } 
@@ -437,7 +445,8 @@ const ClientsData = () => {
       setSuccessMessage('');
     }, 3000);
     setIsNewClient(false);
-    fetchClientDetails(clientContact)
+    fetchClientDetails(clientContact);
+    router.push('/Create-Order');
           // window.location.reload();
         
         //setMessage(data.message);
@@ -682,11 +691,13 @@ const handleRemoveClient = () => {
           setDOB("");
           setAddress("");
           setConsultantName("");
+          dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber("");
           setClientPAN("");
           setClientGST("");
           setClientContactPerson("");
-          setClientID("");
+          // setClientID("");
+          dispatch(setClientData({ clientID: "" }));
           setIsNewClient(true);
           setTimeout(() => {
           setSuccessMessage('');
@@ -750,9 +761,13 @@ const GSvalidateFields = () => {
   if (!DOB && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
     errors.ageAndDOB = 'Age and DOB are required';
   }
-  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName || !consultantNumber)) {
+  // if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName || !consultantNumber)) {
+  //   if (!consultantName) errors.consultantName = 'Consultant Name is required';
+  //   if (!consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
+  // }
+
+  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName)) {
     if (!consultantName) errors.consultantName = 'Consultant Name is required';
-    if (!consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
   }
   
   // if (selectedOption === 'Ms.' && !clientContactPerson) {
@@ -1151,7 +1166,7 @@ const BMvalidateFields = () => {
                     <input
                       className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantNumber ? 'border-red-400' : ''}`}
                       type="number" 
-                      placeholder="Consultant Number*" 
+                      placeholder="Consultant Number" 
                       id="10" 
                       name="ConsultantNumberInput" 
                       value={consultantNumber} 
