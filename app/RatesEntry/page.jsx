@@ -36,7 +36,8 @@ const AdDetailsPage = () => {
   const qtyRef = useRef();
   const ldRef = useRef();
   const dbName = useAppSelector(state => state.authSlice.companyName);
-  const companyName = "Baleen Test";
+  // const companyName = "Baleen Test";
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
   const rateId = useAppSelector(state => state.rateSlice.rateId)

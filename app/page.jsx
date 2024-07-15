@@ -30,8 +30,8 @@ const titleOptions = [
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.companyName);
-  const companyName = "Baleen Test";
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = "Baleen Test";
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
