@@ -960,111 +960,11 @@ return (
       <button className="custom-button" onClick={createNewOrder}>Place Order</button> 
     </div>
     
-{/* Order Details */}
-<div className="bg-white rounded-lg shadow-lg mt-1">
-<div className="p-4 md:p-8" >
-    <div className="flex justify-between items-center rounded-lg text-blue-500">
-      <div>
-        <h3 className="text-lg md:text-xl font-bold mb-2">Client Details</h3>
-      </div>
-      
-      <span className="cursor-pointer text-sm mb-2" onClick={() => setIsExpanded(!isExpanded)}>{isExpanded ? 'Show less' : 'Show more'}</span>
-    </div>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-1">
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-        <p className="text-gray-500 text-xs mb-1">Name</p>
-        <p className="truncate text-black">{clientName}</p>
-      </div>
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-        <p className="text-gray-500 text-xs mb-1">Consultant</p>
-        <p className="truncate text-black">{consultantName}</p>
-      </div>
-       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-       <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
-       <p className="text-black">{previousOrderNumber}</p>
-        </div>
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-      <p className="text-gray-500 text-xs mb-1">Next Order#</p>
-       <p className="text-black">{maxOrderNumber}</p>
-       </div>
-    </div>
-    <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
-  </div>
-  {isExpanded && (
-    <form className="space-y-6 p-4 md:p-8">
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-        {/* Left section */}
-        <div className="md:col-span-1">
-          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Previous Order Details</h3>
-          {hasPreviousOrder ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-                <p className="text-gray-500 text-xs mb-1">Order#</p>
-                <p className="text-black">{previousOrderNumber}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-                <p className="text-gray-500 text-xs mb-1">Order Date</p>
-                <p className="text-black">{previousOrderDate}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-                <p className="text-gray-500 text-xs mb-1">Rate Card</p>
-                <p className="text-black">{previousRateName}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-                <p className="text-gray-500 text-xs mb-1">Type</p>
-                <p className="text-black">{previousAdType}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-                <p className="text-gray-500 text-xs mb-1">Order Amount</p>
-                <p className="text-black">₹{previousOrderAmount}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-                <p className="text-gray-500 text-xs mb-1">Consultant</p>
-                <p className="text-black">{previousConsultantName}</p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500">No previous order details found.</p>
-          )}
-        </div>
-        {/* Right section */}
-        <div className="md:col-span-1">
-          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Current Order Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-500 text-xs mb-1">Order#</p>
-              <p className="text-black">{maxOrderNumber}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-500 text-xs mb-1">Order Date</p>
-              <p className="text-black">{formattedOrderDate}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-500 text-xs mb-1">Rate Card</p>
-              <p className="text-black">{selectedValues.rateName.value}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-500 text-xs mb-1">Type</p>
-              <p className="text-black">{selectedValues.adType.value}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-500 text-xs mb-1">Order Amount</p>
-              <p className="text-black">₹{Math.floor(unitPrice)}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-500 text-xs mb-1">Consultant</p>
-              <p className="text-black">{consultantName}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
-  )}
-</div>
+
 
 
     {/* Order Selection */}
-    <div className="bg-white p-4 rounded-lg shadow-lg mt-6">
+    <div className="bg-white p-4 rounded-lg shadow-lg">
       <form className="space-y-4">
       <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Select Your Order</h3>
           {/* Client Name */}
@@ -1350,6 +1250,107 @@ return (
         
       </form>
     </div>
+    {/* Order Details */}
+<div className="bg-white rounded-lg shadow-lg mt-2">
+<div className="p-4 md:p-8" >
+    <div className="flex justify-between items-center rounded-lg text-blue-500">
+      <div>
+        <h3 className="text-lg md:text-xl font-bold mb-2">Client Details</h3>
+      </div>
+      
+      <span className="cursor-pointer text-sm mb-2" onClick={() => setIsExpanded(!isExpanded)}>{isExpanded ? 'Show less' : 'Show more'}</span>
+    </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-1">
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+        <p className="text-gray-500 text-xs mb-1">Name</p>
+        <p className="truncate text-black">{clientName}</p>
+      </div>
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+        <p className="text-gray-500 text-xs mb-1">Consultant</p>
+        <p className="truncate text-black">{consultantName}</p>
+      </div>
+       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+       <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
+       <p className="text-black">{previousOrderNumber}</p>
+        </div>
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+      <p className="text-gray-500 text-xs mb-1">Next Order#</p>
+       <p className="text-black">{maxOrderNumber}</p>
+       </div>
+    </div>
+    <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
+  </div>
+  {isExpanded && (
+    <form className="space-y-6 p-4 md:p-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+        {/* Left section */}
+        <div className="md:col-span-1">
+          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Previous Order Details</h3>
+          {hasPreviousOrder ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Order#</p>
+                <p className="text-black">{previousOrderNumber}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Order Date</p>
+                <p className="text-black">{previousOrderDate}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Rate Card</p>
+                <p className="text-black">{previousRateName}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Type</p>
+                <p className="text-black">{previousAdType}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Order Amount</p>
+                <p className="text-black">₹{previousOrderAmount}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                <p className="text-gray-500 text-xs mb-1">Consultant</p>
+                <p className="text-black">{previousConsultantName}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500">No previous order details found.</p>
+          )}
+        </div>
+        {/* Right section */}
+        <div className="md:col-span-1">
+          <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 mb-4">Current Order Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order#</p>
+              <p className="text-black">{maxOrderNumber}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Date</p>
+              <p className="text-black">{formattedOrderDate}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Rate Card</p>
+              <p className="text-black">{selectedValues.rateName.value}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Type</p>
+              <p className="text-black">{selectedValues.adType.value}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Order Amount</p>
+              <p className="text-black">₹{Math.floor(unitPrice)}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-500 text-xs mb-1">Consultant</p>
+              <p className="text-black">{consultantName}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  )}
+</div>
   </div>
   {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
