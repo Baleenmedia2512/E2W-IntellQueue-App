@@ -85,7 +85,6 @@ const AdTypePage = () => {
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
               dispatch(resetQuotesData());
-              routers.push('/');
             }}
           >
             <svg

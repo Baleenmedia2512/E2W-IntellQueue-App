@@ -384,7 +384,7 @@ const ClientsData = () => {
   const submitDetails = async(event) => {
     event.preventDefault()
     
-    if(companyName !== 'Grace Scans' && companyName !== 'Baleen Test'){
+    if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
       if (isEmpty === true){
       router.push('/adDetails')
     }
@@ -401,6 +401,7 @@ const ClientsData = () => {
             // router.push('/adDetails')
             
       if (isDetails) {
+        router.push('/adDetails')
         dispatch(setQuotesData({currentPage: "checkout"}))
       } 
           // window.location.reload();
@@ -461,7 +462,7 @@ const ClientsData = () => {
         alert(`The following error occurred while inserting data: ${data}`);
       }
   }catch (error) {
-    console.error('Error while data GS:', error);
+    console.error('Error while data GS: ', error);
   } 
   // setSeverity('success');
   // setToast(true);

@@ -11,7 +11,9 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetClientData } from '@/redux/features/client-slice';
+import { addItemsToCart } from '@/redux/features/cart-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -335,6 +337,7 @@ const AdDetailsPage = () => {
               <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
+              dispatch(resetQuotesData());
               routers.push('/');
             }}
           >
@@ -526,6 +529,14 @@ const AdDetailsPage = () => {
                       ))}
                     </ul>
                   )}
+                </div>
+                <div className="flex flex-col mt-4 items-center justify-center">
+                  <button
+                    className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    onClick={() => dispatch(addItemsToCart([{}]))}
+                  >
+                    Cart
+                  </button>
                 </div>
                 <div className="flex flex-col mt-4 items-center justify-center">
                   <button
