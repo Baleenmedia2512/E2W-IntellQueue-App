@@ -453,7 +453,7 @@ const handleDateChange = (range) => {
   {/* Total Orders box */}
   {/* Total Orders box */}
 <div className="w-40 h-36 rounded-lg shadow-md p-3 mb-5 flex flex-col items-start justify-start border border-gray-300">
-  <div className="text-4xl mt-5 font-bold">
+  <div className="text-4xl text-black mt-5 font-bold">
     {sumOfOrders}
   </div>
   <div className="text-lg text-gray-600">
@@ -488,7 +488,7 @@ const handleDateChange = (range) => {
       </div> */}
 
   {/* Spacer to center the DateRangePicker */}
-  <div className="flex flex-grow ml-2 mb-4">
+  <div className="flex flex-grow text-black ml-2 mb-4">
   <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
 
   </div>
@@ -555,7 +555,7 @@ const handleDateChange = (range) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <div className="flex flexgrow- ml-2 mb-4">
+              <div className="flex flex-grow text-black ml-2 mb-4">
                <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
                <div className="flex flex-grow items-end ml-2 mb-4">
                <button className="custom-button" onClick={handleClickOpen}>

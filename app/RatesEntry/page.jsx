@@ -1346,7 +1346,7 @@ const updateSlabData = (qty, newUnitPrice) => {
           <div onClick={toggleModal} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter Slab Rates for {qty}+ Quantities</h3>
-            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}}/>
+            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36 text-black' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}}/>
             <Button className='bg-blue-400 ml-4 text-white' onClick={() => insertQtySlab(qty, newUnitPrice)}>Submit</Button>
             </div>
           </div>
@@ -1356,8 +1356,8 @@ const updateSlabData = (qty, newUnitPrice) => {
           <div onClick={() => {setEditModal(false); setQty(0); setNewUnitPrice()}} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
           <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter the Slab Rate of the provided Quantity Slab</h3>
-            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {dispatch(setQty(e.target.value))}} disabled  onFocus={event => event.target.select()}/>
-            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}} onFocus={event => event.target.select()}/>
+            <TextField id="ratePerUnit" defaultValue={qty} label="Slab Rate" variant="outlined" size='small' className='w-36 text-black' type='number' onChange={(e) => {dispatch(setQty(e.target.value))}} disabled  onFocus={event => event.target.select()}/>
+            <TextField id="ratePerUnit" defaultValue={newUnitPrice} label="Slab Rate" variant="outlined" size='small' className='w-36 text-black' type='number' onChange={(e) => {setNewUnitPrice(e.target.value)}} onFocus={event => event.target.select()}/>
             <Button className='bg-blue-400 ml-4 text-white' onClick={() => updateSlabData(qty, newUnitPrice)}>Submit</Button>
             </div>
           </div>
@@ -1365,9 +1365,9 @@ const updateSlabData = (qty, newUnitPrice) => {
       { newRateModel && (
       <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
           <div onClick={() => setNewRateModel(!newRateModel)} className="bg-opacity-80 bg-gray-800 w-full h-full"></div>
-          <div className="absolute top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
+          <div className="absolute text-black top-40 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-100 to-gray-300 p-14 rounded-2xl w-auto min-w-80% z-50">
             <h3 className='normal-label mb-4 text-black'>Enter new {newRateType}</h3>
-            <TextField id="newRateType" defaultValue={newRateName} label={newRateType} variant="outlined" size='small' className='w-36' onChange={(e) => {setNewRateName(e.target.value)}}/>
+            <TextField id="newRateType" defaultValue={newRateName} label={newRateType} variant="outlined" size='small' className='w-36 text-black' onChange={(e) => {setNewRateName(e.target.value)}}/>
             <Button className='bg-blue-400 ml-4 text-white' onClick={() => handleSetNewRateName()}>Submit</Button>
             </div>
           </div>
@@ -1379,7 +1379,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                 <div name="RateSearchInput">
                 <label className='mb-4 text-gray-700 font-semibold' name="RateSearchInput">Search Rate Card</label><br/>
                 <input
-                  className="p-2 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3"
+                  className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3"
                   type="number"
                   id="RatesClearButton"
                  // name='RateSearchInput'
@@ -1403,7 +1403,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Rate Card Name</label>
                       <div className='flex mr-4'>
                         <CreatableSelect
-                          className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+                          className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
                           id="13"
                           name="RateCardNameSelect"
                           required
@@ -1427,7 +1427,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'> Category</label>
                     <div className='flex mr-4'>
                       <CreatableSelect
-                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
+                        className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-1"
                         placeholder="Select Category"
                         value={selectedValues.typeOfAd}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'typeOfAd')}
@@ -1445,7 +1445,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Type</label>
                     <div className='flex mr-4'>
                       <CreatableSelect
-                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
                         id="adTypeSelect"
                         name="adTypeSelect"
                         placeholder="Select Type"
@@ -1470,7 +1470,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <label className='block mb-2 mt-4 text-gray-700 font-semibold'>Location</label>
                     <div className='flex mr-4'>
                       <CreatableSelect
-                        className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                        className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
                         placeholder="Select Location"
                         value={selectedValues.Location}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
@@ -1492,7 +1492,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                   <label className='block mb-2 mt-4 text-gray-700 font-semibold' name="RatesPackageSelect">Package</label>
                   <div className='flex mr-4'>
                     <CreatableSelect
-                      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
+                      className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-6"
                       id="21"
                       name="RatesPackageSelect"
                       placeholder="Select Package"
@@ -1531,7 +1531,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                 <div className="mb-6 mt-4 mr-14" id="23" name="RatesVendorSelect">
                   <label className="block mb-2 text-gray-700 font-semibold">Vendor</label>
                   <CreatableSelect
-                    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+                    className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
                     
                     placeholder="Select Vendor"
                     value={selectedValues.vendorName}
@@ -1545,7 +1545,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                   <div className="mr-14 mt-4" id="24" name="RatesUnitsSelect"> 
                   <label className="text-gray-700 font-semibold">Units</label><br />
                     <CreatableSelect
-                      className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+                      className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
                       required = {isNewRate ? true : false}
                       ref={unitRef}
                       placeholder="Select Units"
@@ -1564,7 +1564,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         variant="outlined" 
                         size='small' 
                         inputRef={qtyRef}
-                        className='p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' 
+                        className='p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' 
                         type='number' 
                         defaultValue={qty} 
                         onChange={e => {setQty(e.target.value); setIsQty(false); setIsQtySlab(false)}} 
@@ -1591,8 +1591,8 @@ const updateSlabData = (qty, newUnitPrice) => {
                   <div>
                   {(isSlabAvailable) ? (
                     <div className='text-center justify-start mt-4'>
-                    {combinedSlabData.length > 0 ? <h2 className='mb-4 font-bold'>Rate-Slab</h2> : <></>}
-                    <ul className='mb-4 mr-4'>
+                    {combinedSlabData.length > 0 ? <h2 className='mb-4 text-black font-bold'>Rate-Slab</h2> : <></>}
+                    <ul className='mb-4 text-black mr-4'>
                     {combinedSlabData.map((data, index) => (
                       <div key={data.StartQty || index} className='flex'>
                         {data.isTemp ? (
@@ -1625,11 +1625,11 @@ const updateSlabData = (qty, newUnitPrice) => {
                     {showCampaignDuration && (
                     
                       <div className='flex mr-10'>
-                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-3 glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value); setEditMode(true)}} 
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-3 text-black glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value); setEditMode(true)}} 
                       onKeyDown = {handleKeyDown}
                       onFocus={(e) => e.target.select()}/>
                       <Select
-                        classNames='p-3 ml-2 glass shadow-2xl w-30 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md '
+                        classNames='p-3 ml-2 glass text-black shadow-2xl w-30 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md '
                         id='CUnits'
                         instanceId="CUnits"
                         placeholder="Units"
@@ -1645,7 +1645,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <div>
                     <div className='mr-5' id="27" name="RatesLeadDaysTextField">
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
-                    <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
+                    <div className='flex mb-4 p-0 text-black glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
                       <TextField 
                         value={leadDays} 
                         variant="outlined" 
@@ -1664,7 +1664,7 @@ const updateSlabData = (qty, newUnitPrice) => {
 
               <div className='mr-9 mt-4' name="RatesValidTillTextField">
                   <label className="block mb-2 text-gray-700 font-semibold">Valid Till</label>
-                  <div className='flex mb-4 p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-10'>
+                  <div className='flex mb-4 p-0 text-black glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-10'>
                     <TextField 
                       id="28"
                       name="RatesValidTillTextField" 
@@ -1706,7 +1706,7 @@ const updateSlabData = (qty, newUnitPrice) => {
 <div className='mr-9 mt-4' name="RateGSTSelect">
   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
   <Select
-    className="p-0 glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+    className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
     id="29"
    
     instanceId="RateGST"

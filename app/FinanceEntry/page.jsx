@@ -375,7 +375,7 @@ const FinanceData = () => {
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Transaction Type*</label>
             <div className='flex w-full'>
             <CreatableSelect
-              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              className="p-0 glass text-black shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
               id="1"
               name="TransactionTypeSelect"
               placeholder="Select Transaction Type"
@@ -399,7 +399,7 @@ const FinanceData = () => {
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Expense Category*</label>
             <div className='flex w-full'>
             <CreatableSelect
-              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              className="p-0 glass text-black shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
               id="1"
               name="ExpenseCategorySelect"
               placeholder="Select Expense Category"
@@ -424,7 +424,7 @@ const FinanceData = () => {
     <>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name*</label>
             <div className="w-full flex gap-3">
-            <input className="p-3 capitalize shadow-2xl glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+            <input className="p-3 text-black capitalize shadow-2xl glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Client Name" 
                 id='2'
@@ -470,7 +470,7 @@ const FinanceData = () => {
 {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number*</label>
             <div className="w-full flex gap-3">
-            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+            <input className="p-3 text-black capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Ex. 10000" 
                 id='3'
@@ -497,7 +497,7 @@ const FinanceData = () => {
   )}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount*</label>
             <div className="w-full flex gap-3">
-            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+            <input className="p-3 text-black capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Amount (₹)" 
                 id='4'
@@ -569,7 +569,7 @@ const FinanceData = () => {
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Tax Type*</label>
             <div className='flex w-full'>
             <CreatableSelect
-              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              className="p-0 glass text-black shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
               id="5"
               name="TaxTypeSelect"
               placeholder="Select Tax Type"
@@ -591,7 +591,7 @@ const FinanceData = () => {
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
           <div className="w-full flex gap-3">
-          <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+          <input className="p-3 text-black capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
               type="text"
               placeholder="GST%" 
               id='4'
@@ -617,7 +617,7 @@ const FinanceData = () => {
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
             <div className="w-full flex gap-3">
-            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+            <input className="p-3 text-black capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="GST Amount" 
                 id='7'
@@ -648,7 +648,7 @@ const FinanceData = () => {
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Remarks</label>
             <div className="w-full flex gap-3">
             <TextareaAutosize
-              className="p-3 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+              className="p-3 glass text-black shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
               id="7"
               name="RemarksTextArea"
               placeholder="Remarks"
@@ -711,7 +711,7 @@ const FinanceData = () => {
                 <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Payment Mode*</label>
             <div className='flex w-full'>
             <CreatableSelect
-              className="p-0 glass shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+              className="p-0 glass text-black shadow-2xl w-full focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
               id="5"
               name="PaymentModeSelect"
               placeholder="Select Payment Mode"
@@ -733,7 +733,7 @@ const FinanceData = () => {
               <>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number*</label>
             <div className="w-full flex gap-3">
-            <input className="p-3 capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+            <input className="p-3 capitalize text-black shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
                 type="text"
                 placeholder="Ex. 10000" 
                 id='3'
