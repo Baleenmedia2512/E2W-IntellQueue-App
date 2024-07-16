@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { resetClientData } from '@/redux/features/client-slice';
 import { addItemsToCart } from '@/redux/features/cart-slice';
+import { Category } from '@mui/icons-material';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -44,6 +45,7 @@ const AdDetailsPage = () => {
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
@@ -533,10 +535,11 @@ const AdDetailsPage = () => {
                 <div className="flex flex-col mt-4 items-center justify-center">
                   <button
                     className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    onClick={() => dispatch(addItemsToCart([{}]))}
+                    onClick={() => dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks}]))}
                   >
                     Cart
                   </button>
+                {cartItems.map(item => item.adMedium)}
                 </div>
                 <div className="flex flex-col mt-4 items-center justify-center">
                   <button
