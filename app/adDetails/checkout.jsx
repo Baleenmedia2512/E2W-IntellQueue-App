@@ -7,6 +7,8 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
+import { Padding, RemoveCircleOutline } from '@mui/icons-material';
+import IconButton from '@mui/material/IconButton';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
 import { resetClientData } from '@/redux/features/client-slice';
@@ -27,6 +29,7 @@ const CheckoutPage = () => {
   const [severity, setSeverity] = useState('');
   const [datas, setDatas] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
@@ -195,7 +198,22 @@ const CheckoutPage = () => {
                   <td> ₹ {formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18))} (incl. GST)</td>
                 </tr>
               </table>
-
+              <div className='text-center justify-start' name="OrderReleaseDate">
+                    {cartItems.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Cart Items</h2> : <></>}
+                    <ul className='mb-4'>
+                    {cartItems.map((data, index) => (
+                      <div key={index} className='flex'>
+                        <option key={data} className="mt-1.5" 
+                          >
+                            {data.adMedium}-{data.adType}-{data.adCategory}
+                          </option>
+                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
+                          <RemoveCircleOutline color='secondary' fontSize='small'/>
+                        </IconButton>
+                          </div>
+))}
+</ul>
+                  </div>
               <h1 className='mb-4 font-bold text-center'>Client Details</h1>
 
               <table className='mb-6'>

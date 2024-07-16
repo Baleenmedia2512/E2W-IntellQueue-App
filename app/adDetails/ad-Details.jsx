@@ -45,7 +45,6 @@ const AdDetailsPage = () => {
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
-  const cartItems = useAppSelector(state => state.cartSlice.cart);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
@@ -539,7 +538,6 @@ const AdDetailsPage = () => {
                   >
                     Cart
                   </button>
-                {cartItems.map(item => item.adMedium)}
                 </div>
                 <div className="flex flex-col mt-4 items-center justify-center">
                   <button
