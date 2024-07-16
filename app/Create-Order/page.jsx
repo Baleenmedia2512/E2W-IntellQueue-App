@@ -37,6 +37,7 @@ const CreateOrder = () => {
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState("");
     const [releaseDates, setReleaseDates] = useState([]);
+    const [displayReleaseDate, setDisplayReleaseDate] = useState([]);
     const [remarks, setRemarks] = useState("");
     const [elementsToHide, setElementsToHide] = useState([])
     const [clientEmail, setClientEmail] = useState("");
@@ -803,6 +804,16 @@ const handleDateChange = (e) => {
   }
 };
 
+const handleReleaseDatesChange = (e) => {
+  const dateValue = e.target.value;
+  setDisplayReleaseDate(dateValue);
+  const formattedDate = formatReleaseDatesToSave(e.value);
+  setReleaseDates(formattedDate);
+  if (errors.ageAndDOB) {
+    setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
+  }
+};
+
 function formatDateToSave(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -810,6 +821,17 @@ function formatDateToSave(date) {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+function formatReleaseDatesToSave(dates) {
+  return dates.map(date => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
+}
+
 
 function parseDateFromDB(dateString) {
   const [year, month, day] = dateString.split('-');
@@ -1221,15 +1243,34 @@ return (
                     />
                     </div>
                     <div name="OrderReleaseDate">
-                    <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
+                    {/* <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
                         type='date' 
                         className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
-                        value={new Date()}
+                        value={releaseDates}
                         onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
-                      />
+                      /> */}
+                      <div>
+                    <label className="block mb-1 font-medium">Release Dates</label>
+                    <div>
+                  <div>
+                    <Calendar
+                      type="date"
+                      value={displayReleaseDate}
+                      onChange={handleReleaseDatesChange}
+                      // onChange={(e) => setReleaseDates(e.value)}
+                      selectionMode="multiple"
+                      placeholder="dd-M-yyyy"
+                      showIcon
+                      dateFormat='dd-M-yy'
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      inputClassName="p-inputtext-lg"
+                    />
+                  </div>
+                   </div>
+                  </div>
                     </div>
-                    <div className='text-center justify-start' name="OrderReleaseDate">
+                    {/* <div className='text-center justify-start' name="OrderReleaseDate">
                     {releaseDates.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Release-Dates</h2> : <></>}
                     <ul className='mb-4'>
                     {releaseDates.map((data, index) => (
@@ -1244,7 +1285,7 @@ return (
                           </div>
 ))}
 </ul>
-                  </div>
+                  </div> */}
                   </div>
         </div>
         
