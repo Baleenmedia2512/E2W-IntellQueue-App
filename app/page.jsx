@@ -880,7 +880,7 @@ const BMvalidateFields = () => {
               placeholder="Name*"
               id="2"
               name="ClientNameInput"
-              maxLength={32}
+              maxLength={64}
               value={clientDetails.clientName}
               onChange={handleSearchTermChange}
               onBlur={() => {
