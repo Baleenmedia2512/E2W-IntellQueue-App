@@ -60,7 +60,7 @@ const paymentModeOptions = [
 
 const FinanceData = () => {
   const orderData = useAppSelector(state => state.orderSlice);
-  const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, remarks: orderRemarks } = orderData;
+  const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, rateWiseOrderNumber: nextRateWiseOrderNumber, remarks: orderRemarks } = orderData;
   // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.companyName);
   const companyName = "Baleen Test";
@@ -75,6 +75,7 @@ const FinanceData = () => {
   // const [remarks, setRemarks] = useState(null);
   const [clientName, setClientName] = useState(orderClientName || '');
   const [orderNumber, setOrderNumber] = useState(orderOrderNumber || '');
+  const [rateWiseOrderNumber, setRateWiseOrderNumber] = useState(nextRateWiseOrderNumber || '');
   const [orderAmount, setOrderAmount] = useState('');
   const [remarks, setRemarks] = useState(orderRemarks || '');
   const [taxType, setTaxType] = useState(taxTypeOptions[2]);
@@ -106,8 +107,9 @@ const FinanceData = () => {
     setClientName(orderClientName || '');
     setOrderNumber(orderOrderNumber || '');
     setRemarks(orderRemarks || '')
+    setRateWiseOrderNumber(nextRateWiseOrderNumber || '')
     fetchClientDetails(orderClientNumber, orderClientName);
-  }, [orderClientName, orderOrderNumber, orderRemarks, orderClientNumber]);
+  }, [orderClientName, orderOrderNumber, orderRemarks, orderClientNumber, nextRateWiseOrderNumber]);
 
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
@@ -190,13 +192,14 @@ const FinanceData = () => {
 
   const fetchClientDetails = (clientNumber, clientName) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
           const clientDetails = data[0];
           dispatch(setIsOrderExist(true));
           setOrderNumber(clientDetails.orderNumber);
+          setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
           setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
           setBalanceAmount(clientDetails.balanceAmount);
@@ -212,6 +215,7 @@ const FinanceData = () => {
     
     const newOrderNumber = event.target.value;
     setOrderNumber(newOrderNumber);
+    setRateWiseOrderNumber(newOrderNumber);
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
@@ -239,6 +243,7 @@ const FinanceData = () => {
   useEffect(()=>{
     if(transactionType.value === 'Operational Expense'){
       setOrderNumber(0);
+      setRateWiseOrderNumber(0);
     }
   },[transactionType])
 
@@ -265,7 +270,7 @@ const FinanceData = () => {
 
     if (validateFields()) {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntryTest.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}`);
 
 
           const data = await response.json();
@@ -277,6 +282,7 @@ const FinanceData = () => {
           setGSTPercentage('');
           setOrderAmount('');
           setOrderNumber('');
+          setRateWiseOrderNumber('');
           setPaymentMode(paymentModeOptions[0]);
           setRemarks('');
           setTaxType(taxTypeOptions[2]);
@@ -481,7 +487,7 @@ const FinanceData = () => {
                 placeholder="Ex. 10000" 
                 id='3'
                 name="OrderNumberInput"
-                value={orderNumber}
+                value={rateWiseOrderNumber}
                 pattern="\d*"
                 inputMode="numeric" 
                 onChange={handleOrderNumberChange}
