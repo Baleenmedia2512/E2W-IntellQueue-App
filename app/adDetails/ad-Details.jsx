@@ -213,6 +213,7 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
+      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
       if(clientName){
         dispatch(setQuotesData({currentPage: "checkout"}))
@@ -531,15 +532,16 @@ const AdDetailsPage = () => {
                     </ul>
                   )}
                 </div>
-                <div className="flex flex-col mt-4 items-center justify-center">
+                <span className='flex flex-row justify-center'>
+                <div className="flex flex-col mr-2 mt-4 items-center justify-center">
                   <button
                     className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    onClick={() => dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks}]))}
+                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                   >
-                    Cart
+                    Add to Cart
                   </button>
                 </div>
-                <div className="flex flex-col mt-4 items-center justify-center">
+                <div className="flex flex-col ml-2 mt-4 items-center justify-center">
                   <button
                     className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     onClick={() => handleSubmit()}
@@ -547,6 +549,7 @@ const AdDetailsPage = () => {
                     Checkout
                   </button>
                 </div>
+                </span>
                 <div className="flex flex-col justify-center items-center mt-4">
                   <p className="font-semibold text-red-500">
                     *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days from the date of payment received or the date of design approved, whichever is higher

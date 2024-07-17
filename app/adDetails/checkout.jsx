@@ -14,6 +14,7 @@ import { useAppSelector } from '@/redux/store';
 import { resetClientData } from '@/redux/features/client-slice';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch, useSelector } from 'react-redux';
+import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -59,37 +60,70 @@ const CheckoutPage = () => {
   const month = months[inputDate.getMonth()]; // Get month abbreviation from the array
   const year = inputDate.getFullYear();
 
-  const formattedDate = `${day}-${month}-${year}`;
+  // const formattedDate = `${day}-${month}-${year}`;
 
   const routers = useRouter();
 
-  const pdfGeneration = async () => {
-    const AmountExclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)));
-    const AmountInclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
-    const PDFArray = [adMedium, adCategory, edition, position, qty, campaignDurationVisibility === 1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, adType, formattedDate]
-    const GSTPerc = 18
+  const pdfGeneration = async (item) => {
+    const AmountExclGST = (((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount)));
+    const AmountInclGST = AmountExclGST * 1.18;
+  
+    return {
+      adMedium: item.adMedium,
+      adCategory: item.adCategory,
+      edition: item.edition,
+      position: item.position,
+      qty: item.qty,
+      campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
+      ratePerQty: formattedRupees(AmountExclGST / item.qty),
+      amountExclGst: formattedRupees(AmountExclGST),
+      gst: '18%',
+      amountInclGst: formattedRupees(AmountInclGST),
+      leadDays: item.leadDay,
+      durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
+      qtyUnit: item.unit,
+      adType: item.adType,
+      formattedDate: item.formattedDate
+    };
+  };
+  
+  const handlePdfGeneration = async () => {
+    const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+    await generatePdf(cart, clientName, clientEmail);
+    dispatch(resetCartItem());
+    dispatch(resetQuotesData());
+  };
+  // const pdfGeneration = async () => {
+  //   const AmountExclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)));
+  //   const AmountInclGST = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
+  //   const PDFArray = [adMedium, adCategory, edition, position, qty, campaignDurationVisibility === 1 ? campaignDuration : 'NA', (formattedRupees(AmountExclGST / qty)), formattedRupees(AmountExclGST), '18%', formattedRupees(AmountInclGST), leadDay.LeadDays, campaignDurationVisibility === 1 ? (leadDay.CampaignDurationUnit ? leadDay.CampaignDurationUnit : 'Day'): '' , unit, adType, formattedDate]
+  //   const GSTPerc = 18
 
-    generatePdf(PDFArray, clientName, clientEmail)
+  //   generatePdf(PDFArray, clientName, clientEmail)
 
-    try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${username}&
-    JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${clientSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}&JsonRemarks=${remarks}`)
-      const data = await response.json();
-      if (data === "Values Inserted Successfully!") {
-        alert("Quote Downloaded")
-        dispatch(resetClientData())
-        routers.push('/adMedium')
-        //setMessage(data.message);
-      } else {
-        alert(`The following error occurred while inserting data: ${data}`);
-        //setMessage("The following error occurred while inserting data: " + data);
-        // Update ratesData and filteredRates locally
+  //   try {
+  //     const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertCartQuoteData.php/?JsonUserName=${username}&
+  //   JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonLeadDays=${leadDay.LeadDays}&JsonSource=${clientSource}&JsonAdMedium=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonQuantity=${qty}&JsonUnits=${unit}&JsonAmountwithoutGst=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGST=${GSTPerc}&JsonRatePerUnit=${ratePerUnit}&JsonDiscountAmount=${extraDiscount}&JsonRemarks=${remarks}`)
+  //     const data = await response.json();
+  //     if (data === "Values Inserted Successfully!") {
+  //       alert("Quote Downloaded")
+  //       dispatch(resetClientData())
+  //       routers.push('/adMedium')
+  //       //setMessage(data.message);
+  //     } else {
+  //       alert(`The following error occurred while inserting data: ${data}`);
+  //       //setMessage("The following error occurred while inserting data: " + data);
+  //       // Update ratesData and filteredRates locally
 
-      }
-    } catch (error) {
-      console.error('Error updating rate:', error);
-    }
-  }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error updating rate:', error);
+  //   }
+  // }
+
+  const   handleRemoveRateId = (rateId) => {
+    dispatch(removeItem(rateId));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,6 +150,7 @@ const CheckoutPage = () => {
     fetchData();
   }, []);
 
+  // console.log(cartItems[0].qty, cartItems[0].unitPrice, (cartItems[0].campaignDuration, cartItems[0].minimumCampaignDuration), (cartItems[0].margin, cartItems[0].extraDiscount), (1.18))
   const formattedRupees = (number) => {
     const roundedNumber = (number / 1).toFixed(2);
     const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
@@ -165,55 +200,44 @@ const CheckoutPage = () => {
           <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
             <div>
               <h1 className='mb-4 font-bold text-center'>AD Details</h1>
-
-              <table className='mb-8'>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Ad Medium</td>
-                  <td>:</td><td>  {adMedium}</td>
-                </tr>
-                {adType !== "" && (<tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Ad Type</td>
-                  <td>:</td><td>  {adType}</td>
-                </tr>)}
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Ad Category</td>
-                  <td>:</td><td>  {adCategory}</td>
-                </tr>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Edition</td>
-                  <td>:</td><td>  {edition}</td>
-                </tr>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Quantity</td>
-                  <td>:</td><td>  {qty} {unit}</td>
-                </tr>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Campaign Duration</td>
-                  <td>:</td><td>  {(leadDay && (leadDay.CampaignDurationUnit)) ? campaignDuration + " " + leadDay.CampaignDurationUnit : 'NA'}</td>
-                </tr>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Price</td>
-                  <td>:</td>
-                  {/* <td>{unitPrice}</td> */}
-                  <td> ₹ {formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18))} (incl. GST)</td>
-                </tr>
-              </table>
-              <div className='text-center justify-start' name="OrderReleaseDate">
-                    {cartItems.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Cart Items</h2> : <></>}
-                    <ul className='mb-4'>
-                    {cartItems.map((data, index) => (
-                      <div key={index} className='flex'>
-                        <option key={data} className="mt-1.5" 
-                          >
-                            {data.adMedium}-{data.adType}-{data.adCategory}
-                          </option>
-                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
-                          <RemoveCircleOutline color='secondary' fontSize='small'/>
-                        </IconButton>
-                          </div>
-))}
-</ul>
-                  </div>
+                <div className='overflow-x-auto'>
+              <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
+        <thead>
+          <tr>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Medium</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Type</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Category</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Edition</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cartItems.map((item, index) => (
+            <tr key={index}>
+              <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
+              <td className='p-1.5 border border-gray-200'>{item.adType}</td>
+              <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
+              <td className='p-1.5 border border-gray-200'>{item.edition}</td>
+              <td className='p-1.5 border border-gray-200'>{item.qty} {item.unit}</td>
+              <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
+              <td className='p-1.5 border border-gray-200'>
+                ₹ {formattedRupees(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * (1.18)))} (incl. GST)
+              </td>
+              <td className='p-1.5 border border-gray-200'>
+                <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
+                  onClick={() => handleRemoveRateId(item.rateId)}
+                >
+                  <RemoveCircleOutline color='primary' fontSize='small'/>
+                </IconButton>
+              </td>
+            </tr>
+          ))}
+        </tbody>    
+      </table>
+      </div>
               <h1 className='mb-4 font-bold text-center'>Client Details</h1>
 
               <table className='mb-6'>
@@ -239,7 +263,7 @@ const CheckoutPage = () => {
 
             <button
               className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full transition-all duration-300 ease-in-out hover:bg-green-600"
-              onClick={pdfGeneration}
+              onClick={handlePdfGeneration}
             >
               Download Quote
             </button>
