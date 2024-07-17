@@ -236,6 +236,12 @@ const FinanceData = () => {
     }
   };
 
+  useEffect(()=>{
+    if(transactionType.value === 'Operational Expense'){
+      setOrderNumber(0);
+    }
+  },[transactionType])
+
   const insertNewFinance = async (e) => {
     e.preventDefault()
     if (!isOrderExist && !expenseCategory) {
