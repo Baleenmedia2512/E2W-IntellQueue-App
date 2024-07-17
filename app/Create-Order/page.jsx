@@ -34,6 +34,7 @@ const CreateOrder = () => {
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
+    const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState("");
     const [releaseDates, setReleaseDates] = useState([]);
@@ -218,6 +219,7 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
+  fetchMaxOrderNumber();
   fetchUnits();
   fetchAllVendor();
   fetchQtySlab()
@@ -647,7 +649,7 @@ const fetchRates = async () => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -681,12 +683,13 @@ const fetchRates = async () => {
 
       const fetchMaxOrderNumber = async () => {
         try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}`);
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumberTest.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
           const data = await response.json();
-          setMaxOrderNumber(data);
+          setMaxOrderNumber(data.nextOrderNumber);
+          setNextRateWiseOrderNumber(data.nextRateWiseOrderNumber);
         dispatch(setOrderData({ maxOrderNumber: data }))
         } catch (error) {
           console.error(error);
@@ -1316,7 +1319,7 @@ return (
         </div>
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
       <p className="text-gray-500 text-xs mb-1">Next Order#</p>
-       <p className="text-black">{maxOrderNumber}</p>
+       <p className="text-black">{nextRateWiseOrderNumber}</p>
        </div>
     </div>
     <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
@@ -1364,7 +1367,7 @@ return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order#</p>
-              <p className="text-black">{maxOrderNumber}</p>
+              <p className="text-black">{nextRateWiseOrderNumber}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order Date</p>
