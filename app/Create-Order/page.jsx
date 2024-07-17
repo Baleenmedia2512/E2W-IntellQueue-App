@@ -99,7 +99,7 @@ const CreateOrder = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
     
-
+// console.log(clientDetails)
      // Function to toggle expand/collapse
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
