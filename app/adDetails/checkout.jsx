@@ -11,7 +11,7 @@ import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
-import { resetClientData } from '@/redux/features/client-slice';
+import { Alert, Button, Box } from '@mui/material';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
@@ -176,8 +176,14 @@ const CheckoutPage = () => {
               <button
                 className=" px-2 py-1 rounded text-center"
                 onClick={() => {
-                  routers.push('/');
-                  dispatch(resetQuotesData());
+                  // routers.push('/'); 
+                  const userConfirmed = window.confirm("You have items in cart. Do you want to clear the items in cart too?");
+                  if(userConfirmed){
+                    dispatch(resetQuotesData());
+                    dispatch(resetCartItem());
+                  }else{
+                    dispatch(resetQuotesData());
+                  }
                 }}
               >
                 <svg

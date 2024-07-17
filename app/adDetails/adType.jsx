@@ -15,7 +15,7 @@ const AdTypePage = () => {
   const username = useAppSelector(state => state.authSlice.userName);
   const dispatch = useDispatch();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
-  const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
+  // const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
 
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);

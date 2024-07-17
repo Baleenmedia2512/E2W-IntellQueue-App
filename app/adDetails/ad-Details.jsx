@@ -340,7 +340,7 @@ const AdDetailsPage = () => {
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
               dispatch(resetQuotesData());
-              routers.push('/');
+              // routers.push('/');
             }}
           >
             <svg
