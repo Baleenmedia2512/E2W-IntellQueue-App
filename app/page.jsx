@@ -153,7 +153,7 @@ const ClientsData = () => {
     
     dispatch(setClientData({clientName: name}));
     dispatch(setClientData({clientContact: number}));
-    fetchClientDetails(number);
+    fetchClientDetails(number, name);
     setClientNameSuggestions([]);
     setIsNewClient(false);
     setContactWarning('');
@@ -171,14 +171,15 @@ const ClientsData = () => {
     // fetchConsultantDetails(name, number);
   };
 
-  const fetchClientDetails = (clientNumber) => {
+  const fetchClientDetails = (clientNumber, clientName) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
           setErrors({});
           const clientDetails = data[0];
+          console.log(clientDetails)
           // setClientID(clientDetails.id);
           dispatch(setClientData({ clientID: clientDetails.id || "" }));
           dispatch(setClientData({ clientName: clientDetails.name || "" }));
@@ -286,7 +287,7 @@ const ClientsData = () => {
 
         // Check if contact number already exists or not
         if (newValue !== '') {
-            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}&JsonDBName=${companyName}`)
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContactTest.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.isNewUser) {
@@ -391,7 +392,7 @@ const ClientsData = () => {
     const isValid = BMvalidateFields();
     if (isValid) {
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
@@ -436,9 +437,16 @@ const ClientsData = () => {
   else{
     const isValid = GSvalidateFields();
     if (isValid) {
+      let clientNumber;
+    if (clientContact === "") {
+        clientNumber = null;
+    } else {
+        clientNumber = clientContact;
+    }
+    console.log(clientNumber);
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientNumber}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -446,7 +454,7 @@ const ClientsData = () => {
       setSuccessMessage('');
     }, 3000);
     setIsNewClient(false);
-    fetchClientDetails(clientContact);
+    fetchClientDetails(clientContact, clientName);
     router.push('/Create-Order');
           // window.location.reload();
         
@@ -728,7 +736,7 @@ const handleRestoreClient = () => {
             setTimeout(() => {
             setSuccessMessage('');
           }, 3000);
-          fetchClientDetails(clientContact);
+          fetchClientDetails(clientContact, clientName);
           } else {
             setToastMessage("Failed to restore client: " + data.message);
             setSeverity('error');
@@ -749,10 +757,10 @@ const handleRestoreClient = () => {
 const GSvalidateFields = () => {
   let errors = {};
 
-  if (!clientContact) errors.clientContact = 'Contact Number is required';
-  if (!clientContact || clientContact.length < 10) {
-    errors.clientContact = 'Client contact must be exactly 10 digits.';
-  }
+  // if (!clientContact) errors.clientContact = 'Contact Number is required';
+  // if (!clientContact || clientContact.length < 10) {
+  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
+  // }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (!clientAge && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
@@ -806,10 +814,10 @@ const GSvalidateFields = () => {
 const BMvalidateFields = () => {
   let errors = {};
 
-  if (!clientContact) errors.clientContact = 'Contact Number is required';
-  if (!clientContact || clientContact.length !== 10) {
-    errors.clientContact = 'Client contact must be exactly 10 digits.';
-  }
+  // if (!clientContact) errors.clientContact = 'Contact Number is required';
+  // if (!clientContact || clientContact.length !== 10) {
+  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
+  // }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
@@ -939,7 +947,7 @@ const BMvalidateFields = () => {
             <input
               type="number"
               className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContact ? 'border-red-400' : ''}`}
-              placeholder="Contact Number*"
+              placeholder="Contact Number"
               id="3"
               name="ClientContactInput"
               value={clientContact}
@@ -953,7 +961,7 @@ const BMvalidateFields = () => {
                   setClientNameSuggestions([]);
                   setContactWarning('');
                   if (clientContact.length === 10 && !isNewClient) {
-                    fetchClientDetails(clientContact);
+                    fetchClientDetails(clientContact, clientName);
                   }
                 }, 200);
               }}

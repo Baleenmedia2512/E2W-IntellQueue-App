@@ -34,9 +34,11 @@ const CreateOrder = () => {
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
+    const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState("");
     const [releaseDates, setReleaseDates] = useState([]);
+    const [displayReleaseDate, setDisplayReleaseDate] = useState([]);
     const [remarks, setRemarks] = useState("");
     const [elementsToHide, setElementsToHide] = useState([])
     const [clientEmail, setClientEmail] = useState("");
@@ -83,6 +85,7 @@ const CreateOrder = () => {
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
 
     const [previousOrderNumber, setPreviousOrderNumber] = useState('');
+    const [previousRateWiseOrderNumber, setPreviousRateWiseOrderNumber] = useState('');
     const [previousOrderDate, setPreviousOrderDate] = useState('');
     const [previousRateName, setPreviousRateName] = useState('');
     const [previousAdType, setPreviousAdType] = useState('');
@@ -96,7 +99,7 @@ const CreateOrder = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
     
-
+// console.log(clientDetails)
      // Function to toggle expand/collapse
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -217,6 +220,7 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
+  fetchMaxOrderNumber();
   fetchUnits();
   fetchAllVendor();
   fetchQtySlab()
@@ -605,7 +609,7 @@ const fetchRates = async () => {
 
       const fetchPreviousOrderDetails = (clientNumber, clientName) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetails.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetailsTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data.length > 0) {
@@ -617,6 +621,7 @@ const fetchRates = async () => {
               const formattedOrderDate = format(clientDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
               setPreviousOrderDate(formattedOrderDate);
               setPreviousOrderNumber(clientDetails.orderNumber);
+              setPreviousRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
               setPreviousRateName(clientDetails.rateName);
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
@@ -646,13 +651,13 @@ const fetchRates = async () => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
-                setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
+                setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
                 dispatch(setIsOrderExist(true));
                 
                 setTimeout(() => {
@@ -680,13 +685,15 @@ const fetchRates = async () => {
 
       const fetchMaxOrderNumber = async () => {
         try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}`);
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumberTest.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
           const data = await response.json();
-          setMaxOrderNumber(data);
+          setMaxOrderNumber(data.nextOrderNumber);
+          setNextRateWiseOrderNumber(data.nextRateWiseOrderNumber);
         dispatch(setOrderData({ maxOrderNumber: data }))
+        dispatch(setOrderData({ nextRateWiseOrderNumber: data }))
         } catch (error) {
           console.error(error);
         }
@@ -803,6 +810,16 @@ const handleDateChange = (e) => {
   }
 };
 
+const handleReleaseDatesChange = (e) => {
+  const dateValue = e.target.value;
+  setDisplayReleaseDate(dateValue);
+  const formattedDate = formatReleaseDatesToSave(e.value);
+  setReleaseDates(formattedDate);
+  if (errors.ageAndDOB) {
+    setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
+  }
+};
+
 function formatDateToSave(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -810,6 +827,17 @@ function formatDateToSave(date) {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+function formatReleaseDatesToSave(dates) {
+  return dates.map(date => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
+}
+
 
 function parseDateFromDB(dateString) {
   const [year, month, day] = dateString.split('-');
@@ -1221,15 +1249,34 @@ return (
                     />
                     </div>
                     <div name="OrderReleaseDate">
-                    <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
+                    {/* <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
                         type='date' 
                         className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
-                        value={new Date()}
+                        value={releaseDates}
                         onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
-                      />
+                      /> */}
+                      <div>
+                    <label className="block mb-1 font-medium">Release Dates</label>
+                    <div>
+                  <div>
+                    <Calendar
+                      type="date"
+                      value={displayReleaseDate}
+                      onChange={handleReleaseDatesChange}
+                      // onChange={(e) => setReleaseDates(e.value)}
+                      selectionMode="multiple"
+                      placeholder="dd-M-yyyy"
+                      showIcon
+                      dateFormat='dd-M-yy'
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      inputClassName="p-inputtext-lg"
+                    />
+                  </div>
+                   </div>
+                  </div>
                     </div>
-                    <div className='text-center justify-start' name="OrderReleaseDate">
+                    {/* <div className='text-center justify-start' name="OrderReleaseDate">
                     {releaseDates.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Release-Dates</h2> : <></>}
                     <ul className='mb-4'>
                     {releaseDates.map((data, index) => (
@@ -1244,7 +1291,7 @@ return (
                           </div>
 ))}
 </ul>
-                  </div>
+                  </div> */}
                   </div>
         </div>
         
@@ -1271,11 +1318,11 @@ return (
       </div>
        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
        <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
-       <p className="text-black">{previousOrderNumber}</p>
+       <p className="text-black">{previousRateWiseOrderNumber}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
       <p className="text-gray-500 text-xs mb-1">Next Order#</p>
-       <p className="text-black">{maxOrderNumber}</p>
+       <p className="text-black">{nextRateWiseOrderNumber}</p>
        </div>
     </div>
     <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
@@ -1290,7 +1337,7 @@ return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Order#</p>
-                <p className="text-black">{previousOrderNumber}</p>
+                <p className="text-black">{previousRateWiseOrderNumber}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Order Date</p>
@@ -1323,7 +1370,7 @@ return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order#</p>
-              <p className="text-black">{maxOrderNumber}</p>
+              <p className="text-black">{nextRateWiseOrderNumber}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order Date</p>
