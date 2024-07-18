@@ -11,7 +11,10 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetClientData } from '@/redux/features/client-slice';
+import { addItemsToCart } from '@/redux/features/cart-slice';
+import { Category } from '@mui/icons-material';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -210,6 +213,7 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
+      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
       if(clientName){
         dispatch(setQuotesData({currentPage: "checkout"}))
@@ -335,7 +339,8 @@ const AdDetailsPage = () => {
               <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
-              routers.push('/');
+              dispatch(resetQuotesData());
+              // routers.push('/');
             }}
           >
             <svg
@@ -527,7 +532,16 @@ const AdDetailsPage = () => {
                     </ul>
                   )}
                 </div>
-                <div className="flex flex-col mt-4 items-center justify-center">
+                <span className='flex flex-row justify-center'>
+                <div className="flex flex-col mr-2 mt-4 items-center justify-center">
+                  <button
+                    className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+                <div className="flex flex-col ml-2 mt-4 items-center justify-center">
                   <button
                     className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     onClick={() => handleSubmit()}
@@ -535,6 +549,7 @@ const AdDetailsPage = () => {
                     Checkout
                   </button>
                 </div>
+                </span>
                 <div className="flex flex-col justify-center items-center mt-4">
                   <p className="font-semibold text-red-500">
                     *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days from the date of payment received or the date of design approved, whichever is higher
