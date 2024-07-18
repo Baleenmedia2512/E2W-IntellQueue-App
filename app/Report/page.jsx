@@ -189,6 +189,27 @@ const Report = () => {
           });
   };
 
+  const handleOrderDelete = (orderNum) => {
+    // axios
+    //     .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}`)
+    //     .then((response) => {
+    //         setSuccessMessage('Order Deleted!');
+    //               setTimeout(() => {
+    //                   setSuccessMessage('');
+    //               }, 2000);
+    //         fetchOrderDetails();
+    //     })
+    //     .catch((error) => {
+    //         console.error(error);
+    //         setToastMessage('Failed to delete order. Please try again.');
+    //               setSeverity('error');
+    //               setToast(true);
+    //               setTimeout(() => {
+    //                   setToast(false);
+    //               }, 2000);
+    //     });
+};
+
   const handleRestore = (orderNum) => {
       axios
           .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=restore`)
@@ -253,7 +274,7 @@ const FetchCurrentBalanceAmount = () => {
         {
           field: 'actions',
           headerName: 'Actions',
-          width: 250,
+          width: 450,
           renderCell: (params) => (
               <div>
                   <Button
@@ -262,13 +283,27 @@ const FetchCurrentBalanceAmount = () => {
                       size="small"
                       disabled={params.row.markInvalidDisabled}
                       onClick={() => handleMarkInvalid(params.row.OrderNumber)}
-                      style={{ marginRight: '12px',  backgroundColor: '#ff5252',
+                      style={{ marginRight: '12px',  backgroundColor: '#e79a26',
                         color: 'white',
                         fontWeight: 'bold',
                         opacity: params.row.markInvalidDisabled ? 0.5 : 1,
                         pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
                   >
                       Cancel Order
+                  </Button>
+                  <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      disabled={params.row.markInvalidDisabled}
+                      onClick={() => handleOrderDelete(params.row.OrderNumber)}
+                      style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        opacity: params.row.markInvalidDisabled ? 0.5 : 1,
+                        pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+                  >
+                      Delete Order
                   </Button>
                   <Button
                       variant="contained"
