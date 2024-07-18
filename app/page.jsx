@@ -236,6 +236,7 @@ const ClientsData = () => {
           setAddress(clientDetails.address || "");
           setTitle(clientDetails.gender || "");
           setSelectedOption(clientDetails.gender || "");
+          dispatch(setClientData({clientTitle: clientDetails.gender}));
           setConsultantName(clientDetails.consname || "");
           dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber(clientDetails.consnumber || "");
@@ -920,6 +921,7 @@ const BMvalidateFields = () => {
               options={titleOptions}
               onChange={(e) => {
                 setSelectedOption(e.target.value);
+                dispatch(setClientData({clientTitle: e.target.value}));
               }}
               className={`w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
               id="1"

@@ -31,7 +31,7 @@ const CheckoutPage = () => {
   const [datas, setDatas] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-  const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
+  const {clientName, clientContact, clientEmail, clientSource, clientTitle} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -89,7 +89,7 @@ const CheckoutPage = () => {
   
   const handlePdfGeneration = async () => {
     const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-    await generatePdf(cart, clientName, clientEmail);
+    await generatePdf(cart, clientName, clientEmail, clientTitle);
     dispatch(resetCartItem());
     dispatch(resetQuotesData());
   };
