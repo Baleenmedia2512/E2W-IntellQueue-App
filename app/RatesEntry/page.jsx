@@ -1758,16 +1758,25 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <div className='mb-8'>
                     {showCampaignDuration && (
                     
-                      <div className='flex mr-10'>
-                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-3 text-black glass shadow-2xl w-40 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value); setEditMode(true)}} 
+                      <div className='flex flex-row'>
+                        <div >
+                      <TextField id="qtySlab" defaultValue={campaignDuration} variant="outlined" size='small' className='p-3 text-black glass shadow-2xl w-3/4 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md' type='number' onChange={(e) => {setCampaignDuration(e.target.value); setEditMode(true)}} 
                       onKeyDown = {handleKeyDown}
                       onFocus={(e) => e.target.select()}/>
-                      <Select
-                        classNames='p-3 ml-2 glass text-black shadow-2xl w-30 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md '
+                      </div>
+                      <Dropdown
+                        className={`w-3/4 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                          // className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+                          styles={{
+                            control: (provided) => ({
+                              ...provided,
+                              minHeight: '50px',
+                            }),
+                          }}
                         id='CUnits'
                         instanceId="CUnits"
                         placeholder="Units"
-                        value={selectedCampaignUnits}
+                        value={selectedCampaignUnits.value}
                         onChange={(selectedOption) => {setSelectedCampaignUnits(selectedOption); setEditMode(true)}}
                         options={campaignUnits}
                       />
@@ -1778,26 +1787,29 @@ const updateSlabData = (qty, newUnitPrice) => {
                     <div>
                     <div className='mr-5' id="27" name="RatesLeadDaysTextField">
                     <label className="block mb-2 text-gray-700 font-semibold">Lead Days</label>
-                    <div className='flex mb-4 p-0 text-black glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-14'>
-                      <TextField 
-                        value={leadDays} 
-                        variant="outlined" 
-                        size='small' 
-                        inputRef={ldRef}
-                        className='w-44' 
-                        type='text'
-                        onChange={e => {setLeadDays(e.target.value); setIsLeadDays(false); setEditMode(true)}} onFocus={(e) => {e.target.select()}}
-                        onKeyDown ={handleKeyDown}
-                      />
-                      <p className='ml-4 mt-2 '>Day (s)</p>
+                    <div>
+                      <span className='flex flex-row border rounded-lg border-gray-400'>
+                        <TextField
+                          value={leadDays}
+                          variant="outlined" 
+                          size='small'
+                          className={`w-full px-4 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                          inputRef={ldRef}
+                          type='text'
+                          onChange={e => {setLeadDays(e.target.value); setIsLeadDays(false); setEditMode(true)}} onFocus={(e) => {e.target.select()}}
+                          onKeyDown ={handleKeyDown}
+                        />
+                        <p className='ml-2 mt-2 w-1/3'>Day (s)</p>
+                      </span>
                     </div>
                     </div>
                     {isLeadDays && <p className='text-red-500 font-medium'>Lead Days should be more than 0</p>}
                   </div>
 
-              <div className='mr-9 mt-4' name="RatesValidTillTextField">
+              <div className='mr-9' name="RatesValidTillTextField">
                   <label className="block mb-2 text-gray-700 font-semibold">Valid Till</label>
-                  <div className='flex mb-4 p-0 text-black glass shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-10'>
+                  <div >
+                  <span className='flex flex-row border rounded-lg border-gray-400'>
                     <TextField 
                       id="28"
                       name="RatesValidTillTextField" 
@@ -1806,7 +1818,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                       onChange={handleValidityChange} 
                       variant="outlined" 
                       size='small' 
-                      className='w-36' 
+                      className={`w-1/2 px-4 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
                       required
                       onKeyDown ={handleKeyDown}
                       type='number' 
@@ -1815,6 +1827,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         <Event color='primary'/>
                       </IconButton>
                     <p className='ml-1 mt-2'>Day (s)</p>
+                    </span>
                   </div>
                   {showDatePicker && (
                     <div>
@@ -1838,13 +1851,19 @@ const updateSlabData = (qty, newUnitPrice) => {
 
 <div className='mr-9 mt-4' name="RateGSTSelect">
   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
-  <Select
-    className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-5"
+  <Dropdown
+                        className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                          // className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+                          styles={{
+                            control: (provided) => ({
+                              ...provided,
+                              minHeight: '50px',
+                            }),
+                          }}
     id="29"
-   
     instanceId="RateGST"
     placeholder="Select Rate GST%"
-    value={rateGST}
+    value={rateGST.value}
     onChange={(selectedOption) => {dispatch(setRateGST(selectedOption)); setEditMode(true)}}
     options={GSTOptions}
     required
