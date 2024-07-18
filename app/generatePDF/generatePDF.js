@@ -178,7 +178,11 @@ Object.keys(columnWidths).forEach(columnName => {
       // },
       tableWidth: 'auto'
   })
-
+  const getMinLeadDays = () => {
+    const leadDaysArray = checkoutData.map(item => item.leadDays);
+    return Math.min(...leadDaysArray);
+  };
+  
   pdf.setFont('helvetica', 'normal', 'bold');
   pdf.setFontSize(16);
   pdf.text("IMPORTANT TERMS & CONDITIONS", 10, pdf.internal.pageSize.height - 135)
@@ -188,7 +192,7 @@ Object.keys(columnWidths).forEach(columnName => {
   pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, pdf.internal.pageSize.height - 120);
   pdf.text(`2.Ad. Material shall be shared by ${clientName}`, 10, pdf.internal.pageSize.height - 105)
   pdf.text("3.100% Upfront payment required for releasing the Ads", 10, pdf.internal.pageSize.height - 90)
-  pdf.text(`4.Lead time to book the Ad : ${checkoutData[10]} Days`, 10, pdf.internal.pageSize.height - 75)
+  pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
   pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, pdf.internal.pageSize.height - 60)
 
   pdf.setDrawColor("#df5f98");
