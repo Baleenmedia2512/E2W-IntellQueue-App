@@ -445,10 +445,15 @@ const ClientsData = () => {
             }, 3000);
             // router.push('/adDetails')
             
-      if (isDetails) {
-        router.push('/adDetails')
-        dispatch(setQuotesData({currentPage: "checkout"}))
-      } 
+            if (isDetails) {
+              router.push('/adDetails')
+              dispatch(setQuotesData({currentPage: "checkout"}))
+            } else {
+              if (!elementsToHide.includes('QuoteSenderNavigation')) {
+                router.push('/adDetails')
+                dispatch(setQuotesData({currentPage: ""}))
+              }
+            }
           // window.location.reload();
           // dispatch(resetQuotesData())
           
