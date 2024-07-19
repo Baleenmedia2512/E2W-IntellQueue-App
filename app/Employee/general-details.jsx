@@ -25,7 +25,7 @@ const GeneralDetailsPage = () => {
 
   return (
     <div>
-      <TabNavigation />
+      {/* <TabNavigation /> */}
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
           <h2 className="text-2xl font-bold text-blue-500 mb-1">General Details</h2>

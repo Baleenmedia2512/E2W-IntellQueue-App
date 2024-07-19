@@ -455,7 +455,6 @@ const orderColumns = [
           headerName: 'Actions',
           width: isMobile ? 100 : 450,
           renderCell: (params) => {
-              const [anchorEl, setAnchorEl] = useState(null);
   
               const handleClick = (event) => {
                   setAnchorEl(event.currentTarget);
