@@ -20,8 +20,8 @@ import { useMediaQuery } from '@mui/material';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    // const companyName = "Baleen Test";
-    const companyName = useAppSelector(state => state.authSlice.companyName);
+    const companyName = "Baleen Test";
+    // const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
