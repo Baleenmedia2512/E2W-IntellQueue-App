@@ -243,6 +243,7 @@ const FetchCurrentBalanceAmount = () => {
 
     const orderColumns = [
         { field: 'OrderNumber', headerName: 'Order#', width: 80},
+        { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
         { field: 'OrderDate', headerName: 'Order Date', width: 100},
         { field: 'ClientName', headerName: 'Client Name', width: 170 },
         { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
@@ -293,6 +294,7 @@ const FetchCurrentBalanceAmount = () => {
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
         { field: 'Amount', headerName: 'Amount(₹)', width: 130},
         { field: 'OrderNumber', headerName: 'Order#', width: 100 },
+        { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
         { field: 'Remarks', headerName: 'Remarks', width: 200 },
         { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },

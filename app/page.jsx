@@ -44,6 +44,7 @@ const ClientsData = () => {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+  const [clientNumberSuggestions, setClientNumberSuggestions] = useState([]);
   const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
   const [address, setAddress] = useState('');
   const [DOB, setDOB] = useState('');
@@ -96,6 +97,45 @@ const ClientsData = () => {
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
     // setIsNewClient(true);
+
+    if (newName !== '') {
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${clientContact}&ClientName=${newName}&JsonDBName=${companyName}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (!data.isNewUser) {
+                        // Contact number already exists
+                        setIsNewClient(false);
+                        // setContactWarning('Contact number already exists.');
+
+                        // MP-95-As a user, I should able to restore a removed client.
+                    if (data.warningMessage.includes('restore the client')) {
+                          setClientContactToRestore(newValue);
+                          setRestoreDialogOpen(true);
+                      }
+                    } else {
+                        // Contact number is new
+                        setIsNewClient(true);
+                        setContactWarning('');
+                          dispatch(setClientData({ clientEmail: "" }));
+                          // dispatch(setClientData({ clientName: "" }));
+                          setClientAge("");
+                          setDOB("");
+                          setAddress("");
+                          setConsultantName("");
+                          setConsultantNumber("");
+                          setClientPAN("");
+                          setClientGST("");
+                          setClientContactPerson("");
+                          // setClientID("");
+                          dispatch(setClientData({ clientID: "" }));
+                          
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error checking contact number: " + error);
+                });
+        }
+  
     
     if (newName !== '' && clientContact === '') {
     try{
@@ -147,14 +187,17 @@ const ClientsData = () => {
   
   const handleClientNameSelection = (names) => {
     const input = names.target.value;
-    const name = input.substring(0, input.indexOf('(')).trim();
-    const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
-
+    const splitInput = input.split('-');
+    const ID = splitInput[0].trim();
+    const rest = splitInput[1];
+    const name = rest.substring(0, rest.indexOf('(')).trim();
+    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
     dispatch(setClientData({clientName: name}));
     dispatch(setClientData({clientContact: number}));
-    fetchClientDetails(number);
+    fetchClientDetails(ID);
     setClientNameSuggestions([]);
+    setClientNumberSuggestions([]);
     setIsNewClient(false);
     setContactWarning('');
   };
@@ -171,9 +214,9 @@ const ClientsData = () => {
     // fetchConsultantDetails(name, number);
   };
 
-  const fetchClientDetails = (clientNumber) => {
+  const fetchClientDetails = (clientID) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -193,6 +236,7 @@ const ClientsData = () => {
           setAddress(clientDetails.address || "");
           setTitle(clientDetails.gender || "");
           setSelectedOption(clientDetails.gender || "");
+          dispatch(setClientData({clientTitle: clientDetails.gender}));
           setConsultantName(clientDetails.consname || "");
           dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber(clientDetails.consnumber || "");
@@ -286,7 +330,7 @@ const ClientsData = () => {
 
         // Check if contact number already exists or not
         if (newValue !== '') {
-            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}&JsonDBName=${companyName}`)
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.isNewUser) {
@@ -330,12 +374,12 @@ const ClientsData = () => {
         try {
             fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
                 .then((response) => response.json())
-                .then((data) => setClientNameSuggestions(data));
+                .then((data) => setClientNumberSuggestions(data));
         } catch (error) {
             console.error("Error suggesting client names: " + error);
         }
     } else {
-        setClientNameSuggestions([]);
+        setClientNumberSuggestions([]);
     }
 
     dispatch(setClientData({ clientContact: newValue }));
@@ -381,10 +425,12 @@ const ClientsData = () => {
       setErrors((prevErrors) => ({ ...prevErrors, clientContactPerson: undefined }));
     }
   };
+
+
   const submitDetails = async(event) => {
     event.preventDefault()
     
-    if(companyName !== 'Grace Scans' && companyName !== 'Baleen Test'){
+    if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
       if (isEmpty === true){
       router.push('/adDetails')
     }
@@ -400,9 +446,15 @@ const ClientsData = () => {
             }, 3000);
             // router.push('/adDetails')
             
-      if (isDetails) {
-        dispatch(setQuotesData({currentPage: "checkout"}))
-      } 
+            if (isDetails) {
+              router.push('/adDetails')
+              dispatch(setQuotesData({currentPage: "checkout"}))
+            } else {
+              if (!elementsToHide.includes('QuoteSenderNavigation')) {
+                router.push('/adDetails')
+                dispatch(setQuotesData({currentPage: ""}))
+              }
+            }
           // window.location.reload();
           // dispatch(resetQuotesData())
           
@@ -445,7 +497,7 @@ const ClientsData = () => {
       setSuccessMessage('');
     }, 3000);
     setIsNewClient(false);
-    fetchClientDetails(clientContact);
+    // fetchClientDetails(clientContact, clientName);
     router.push('/Create-Order');
           // window.location.reload();
         
@@ -461,7 +513,7 @@ const ClientsData = () => {
         alert(`The following error occurred while inserting data: ${data}`);
       }
   }catch (error) {
-    console.error('Error while data GS:', error);
+    console.error('Error while data GS: ', error);
   } 
   // setSeverity('success');
   // setToast(true);
@@ -727,7 +779,7 @@ const handleRestoreClient = () => {
             setTimeout(() => {
             setSuccessMessage('');
           }, 3000);
-          fetchClientDetails(clientContact);
+          fetchClientDetails(clientID);
           } else {
             setToastMessage("Failed to restore client: " + data.message);
             setSeverity('error');
@@ -748,10 +800,10 @@ const handleRestoreClient = () => {
 const GSvalidateFields = () => {
   let errors = {};
 
-  if (!clientContact) errors.clientContact = 'Contact Number is required';
-  if (!clientContact || clientContact.length < 10) {
-    errors.clientContact = 'Client contact must be exactly 10 digits.';
-  }
+  // if (!clientContact) errors.clientContact = 'Contact Number is required';
+  // if (!clientContact || clientContact.length < 10) {
+  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
+  // }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (!clientAge && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
@@ -805,10 +857,10 @@ const GSvalidateFields = () => {
 const BMvalidateFields = () => {
   let errors = {};
 
-  if (!clientContact) errors.clientContact = 'Contact Number is required';
-  if (!clientContact || clientContact.length !== 10) {
-    errors.clientContact = 'Client contact must be exactly 10 digits.';
-  }
+  // if (!clientContact) errors.clientContact = 'Contact Number is required';
+  // if (!clientContact || clientContact.length !== 10) {
+  //   errors.clientContact = 'Client contact must be exactly 10 digits.';
+  // }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
@@ -869,6 +921,7 @@ const BMvalidateFields = () => {
               options={titleOptions}
               onChange={(e) => {
                 setSelectedOption(e.target.value);
+                dispatch(setClientData({clientTitle: e.target.value}));
               }}
               className={`w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
               id="1"
@@ -897,7 +950,7 @@ const BMvalidateFields = () => {
               }}
             />
           </div>
-          {clientNameSuggestions.length > 0 && clientDetails.clientName !== '' && clientContact === '' && (
+          {clientNameSuggestions.length > 0 && (
             <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
             {clientNameSuggestions.map((name, index) => (
               <li key={index}>
@@ -938,7 +991,7 @@ const BMvalidateFields = () => {
             <input
               type="number"
               className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContact ? 'border-red-400' : ''}`}
-              placeholder="Contact Number*"
+              placeholder="Contact Number"
               id="3"
               name="ClientContactInput"
               value={clientContact}
@@ -952,14 +1005,14 @@ const BMvalidateFields = () => {
                   setClientNameSuggestions([]);
                   setContactWarning('');
                   if (clientContact.length === 10 && !isNewClient) {
-                    fetchClientDetails(clientContact);
+                    fetchClientDetails(clientID);
                   }
                 }, 200);
               }}
             />
-            {clientNameSuggestions.length > 0 && clientContact !== '' && (
+            {clientNumberSuggestions.length > 0 && (
               <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                {clientNameSuggestions.map((name, index) => (
+                {clientNumberSuggestions.map((name, index) => (
                   <li key={index}>
                     <button
                       type="button"
