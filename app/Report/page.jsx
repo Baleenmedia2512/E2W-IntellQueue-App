@@ -6,7 +6,7 @@ import Box from '@mui/material/Box';
 import { DataGrid, GridToolbar, getGridNumericOperators} from '@mui/x-data-grid';
 import axios from 'axios';
 import { useAppSelector } from '@/redux/store';
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Menu, MenuItem, IconButton } from '@mui/material';
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import Button from '@mui/material/Button';
 import ToastMessage from '../components/ToastMessage';
@@ -15,11 +15,13 @@ import DateRangePicker from './CustomDateRangePicker';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from '@mui/material';
 import './styles.css';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useMediaQuery } from '@mui/material';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
@@ -53,6 +55,9 @@ const Report = () => {
     const [currentBalance, setCurrentBalance] = useState('');
     const [cashInHand, setCashInHand] = useState('');
     const [ledgerBalance, setLedgerBalance] = useState('');
+    const [selectedOrder, setSelectedOrder] = useState('');
+    const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+    const [deletingOrder, setDeletingOrder] = useState('');
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -189,6 +194,74 @@ const Report = () => {
           });
   };
 
+  const handleOrderDelete = (rateWiseOrderNum, OrderNum) => {
+    axios
+        .get(`https://orders.baleenmedia.com/API/Media/DeleteOrder.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&JsonOrderNumber=${OrderNum}&JsonDBName=${companyName}`)
+        .then((response) => {
+            const data = response.data;
+            if (data.message === 'There is finance entry on this order.') {
+                setOrderDialogOpen(true);
+                setDeletingOrder(OrderNum)
+            } else {
+                setSuccessMessage('Order Deleted!');
+                setTimeout(() => {
+                    setSuccessMessage('');
+                }, 2000);
+                fetchOrderDetails();
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            setToastMessage('Failed to delete order. Please try again.');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        });
+};
+
+const handleTransactionDelete = (rateWiseOrderNum, orderNum) => {
+  axios
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&JsonOrderNumber=${orderNum}&JsonDBName=${companyName}`)
+      .then((response) => {
+          const data = response.data;
+          if (data.success) {
+            setSuccessMessage('Transaction Deleted!');
+            setTimeout(() => {
+              setSuccessMessage('');
+            }, 2000);
+            fetchFinanceDetails();
+          } else {
+            setToastMessage(data.message);
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+          }
+      })
+      .catch((error) => {
+          console.error(error);
+          setToastMessage('Failed to delete order. Please try again.');
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+              setToast(false);
+          }, 2000);
+      });
+};
+
+const handleGoToFinance = () => {
+  setSelectedOrder(deletingOrder);
+  setValue(1); // Switch to Finance tab
+  setOrderDialogOpen(false);
+};
+
+const handleCloseOrderDialog = () => {
+  setOrderDialogOpen(false);
+};
+
   const handleRestore = (orderNum) => {
       axios
           .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=restore`)
@@ -241,34 +314,112 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
-    const orderColumns = [
-        { field: 'OrderNumber', headerName: 'Order#', width: 80},
-        { field: 'OrderDate', headerName: 'Order Date', width: 100},
-        { field: 'ClientName', headerName: 'Client Name', width: 170 },
-        { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
-        { field: 'rateName', headerName: 'Rate Name', width: 150 },
-        { field: 'adType', headerName: 'Rate Type', width: 150 },
-        { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
-        {
-          field: 'actions',
-          headerName: 'Actions',
-          width: 250,
-          renderCell: (params) => (
+const isMobile = useMediaQuery('(max-width:640px)');
+const [anchorEl, setAnchorEl] = useState(null);
+
+const orderColumns = [
+  { field: 'OrderNumber', headerName: 'Order#', width: 80 },
+  { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80 },
+  { field: 'OrderDate', headerName: 'Order Date', width: 100 },
+  { field: 'ClientName', headerName: 'Client Name', width: 170 },
+  { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
+  { field: 'rateName', headerName: 'Rate Name', width: 150 },
+  { field: 'adType', headerName: 'Rate Type', width: 150 },
+  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+  {
+      field: 'actions',
+      headerName: 'Actions',
+      width: isMobile ? 100 : 450,
+      renderCell: (params) => {
+          const handleClick = (event) => {
+              setAnchorEl(event.currentTarget);
+          };
+          
+          const handleClose = () => {
+              setAnchorEl(null);
+          };
+          
+          const handleMenuItemClick = (action) => {
+              handleClose();
+              if (action === 'delete') handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
+              if (action === 'cancel') handleMarkInvalid(params.row.OrderNumber);
+              if (action === 'restore') handleRestore(params.row.OrderNumber);
+          };
+
+          // Calculate if the order is within the last 24 hours
+          const orderDate = new Date(params.row.OrderDate);
+          const now = new Date();
+          const isRecent = (now - orderDate) < 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+          return isMobile ? (
               <div>
+                  <IconButton
+                      aria-controls="simple-menu"
+                      aria-haspopup="true"
+                      onClick={handleClick}
+                  >
+                      <MoreVertIcon />
+                  </IconButton>
+                  <Menu
+                      id="simple-menu"
+                      anchorEl={anchorEl}
+                      keepMounted
+                      open={Boolean(anchorEl)}
+                      onClose={handleClose}
+                  >
+                      <MenuItem
+                          onClick={() => handleMenuItemClick('cancel')}
+                          disabled={params.row.markInvalidDisabled}
+                          className='hover:bg-gray-100'
+                      >
+                          Cancel Order
+                      </MenuItem>
+                      {isRecent && (
+                          <MenuItem
+                              onClick={() => handleMenuItemClick('delete')}
+                              className='hover:bg-gray-100'
+                          >
+                              Delete Order
+                          </MenuItem>
+                      )}
+                      <MenuItem
+                          onClick={() => handleMenuItemClick('restore')}
+                          disabled={params.row.restoreDisabled}
+                          className='hover:bg-gray-100'
+                      >
+                          Restore
+                      </MenuItem>
+                  </Menu>
+              </div>
+          ) : (
+              <div className="space-x-3">
                   <Button
                       variant="contained"
                       color="secondary"
                       size="small"
                       disabled={params.row.markInvalidDisabled}
                       onClick={() => handleMarkInvalid(params.row.OrderNumber)}
-                      style={{ marginRight: '12px',  backgroundColor: '#ff5252',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        opacity: params.row.markInvalidDisabled ? 0.5 : 1,
-                        pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+                      style={{ marginRight: '12px',  backgroundColor: '#e79a26',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+                          pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
                   >
                       Cancel Order
                   </Button>
+                  {isRecent && (
+                      <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+                          style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                              color: 'white',
+                              fontWeight: 'bold', }}
+                      >
+                          Delete Order
+                      </Button>
+                  )}
                   <Button
                       variant="contained"
                       color="primary"
@@ -276,26 +427,101 @@ const FetchCurrentBalanceAmount = () => {
                       disabled={params.row.restoreDisabled}
                       onClick={() => handleRestore(params.row.OrderNumber)}
                       style={{ backgroundColor: '#1976d2',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        opacity: params.row.restoreDisabled ? 0.5 : 1,
-                        pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+                          color: 'white',
+                          fontWeight: 'bold',
+                          opacity: params.row.restoreDisabled ? 0.2 : 1,
+                          pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
                   >
                       Restore
                   </Button>
               </div>
-          ),
+          );
       },
-    ];
+  },
+];
+
 
     const financeColumns = [
         { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
         { field: 'Amount', headerName: 'Amount(₹)', width: 130},
         { field: 'OrderNumber', headerName: 'Order#', width: 100 },
+        { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
         { field: 'Remarks', headerName: 'Remarks', width: 200 },
         { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+        {
+          field: 'actions',
+          headerName: 'Actions',
+          width: isMobile ? 100 : 450,
+          renderCell: (params) => {
+  
+              const handleClick = (event) => {
+                  setAnchorEl(event.currentTarget);
+              };
+  
+              const handleClose = () => {
+                  setAnchorEl(null);
+              };
+  
+              const handleMenuItemClick = (action) => {
+                  handleClose();
+                  if (action === 'delete') handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
+              };
+  
+              // Calculate if the transaction date is today
+              const transactionDate = new Date(params.row.TransactionDate);
+              const now = new Date();
+              const isToday = transactionDate.toDateString() === now.toDateString();
+  
+              return isMobile ? (
+                
+                <div>
+                {isToday && (
+                    <>
+                        <IconButton
+                            aria-controls="simple-menu"
+                            aria-haspopup="true"
+                            onClick={handleClick}
+                        >
+                            <MoreVertIcon />
+                        </IconButton>
+                        <Menu
+                            id="simple-menu"
+                            anchorEl={anchorEl}
+                            keepMounted
+                            open={Boolean(anchorEl)}
+                            onClose={handleClose}
+                        >
+                            <MenuItem
+                                onClick={() => handleMenuItemClick('delete')}
+                                className='hover:bg-gray-100'
+                            >
+                                Delete Transaction
+                            </MenuItem>
+                        </Menu>
+                    </>
+                )}
+            </div>
+            
+                
+              ) : (
+                  <div className="space-x-3">
+                      {isToday && (
+                          <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+                              style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+                          >
+                              Delete Transaction
+                          </Button>
+                      )}
+                  </div>
+              );
+          },
+      },
     ];
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
@@ -446,6 +672,30 @@ const handleDateChange = (range) => {
                 <Tab label="Orders" />
                 {appRights.includes('Administrator') || appRights.includes('Finance') ? <Tab label="Finance" /> : null}
             </Tabs>
+            <Dialog
+                open={orderDialogOpen}
+                onClose={handleCloseOrderDialog}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"Finance Entry Detected"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        There is a finance entry on this order.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                {appRights.includes('Administrator') || appRights.includes('Finance') ? (
+            <Button onClick={handleGoToFinance} color="primary">
+                Go to Finance Report
+            </Button>
+        ) : null}
+                    <Button onClick={handleCloseOrderDialog} color="primary" autoFocus>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
   <div style={{ width: '100%' }}>
@@ -630,51 +880,7 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-             {/* <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2, width: '40%'}}>
-                 <InputLabel id="filter-label">Transaction Type</InputLabel>
-                 <Select
-                     labelId="filter-label"
-                     id="filter"
-                     value={filter}
-                     onChange={handleFilterChange}
-                     label="Filter by Transaction Type"
-                 >
-                     <MenuItem value="All">All</MenuItem>
-                     <MenuItem value="Income">Income</MenuItem>
-                     <MenuItem value="Expense">Expense</MenuItem>
-                 </Select>
-             </FormControl> */}
-
-             {/* <div style={styles.chartContainer}>
-             <ResponsiveContainer width="100%" height={250}>
-      <PieChart>
-        <Pie
-          activeIndex={activeIndex}
-          activeShape={renderActiveShape}
-          data={pieData}
-          cx="50%"
-          cy="50%"
-          innerRadius={70}
-          outerRadius={90}
-          fill="#8884d8"
-          paddingAngle={5}
-          dataKey="value"
-          onMouseEnter={onPieEnter}
-        >
-          {pieData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend 
-          layout="vertical" 
-          align="right" 
-          verticalAlign="middle" 
-          wrapperStyle={{ paddingLeft: "20px" }} 
-        />
-      </PieChart>
-    </ResponsiveContainer>
-             </div> */}
+            
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
         <div className="text-center">No records found during this timeline!</div>
@@ -723,9 +929,15 @@ const handleDateChange = (range) => {
                     //  }}
                     sx={{
                       '& .MuiDataGrid-row:hover': {
-                        backgroundColor: '#e3f2fd', // Light blue on hover
+                          backgroundColor: '#e3f2fd', // Light blue on hover
                       },
-                    }}
+                      '& .highlighted-row': {
+                          backgroundColor: '#fff385', // Yellow highlight
+                      },
+                  }}
+                  getRowClassName={(params) =>
+                      params.row.OrderNumber === selectedOrder ? 'highlighted-row' : ''
+                  }
                  />
              </div>
          </div>

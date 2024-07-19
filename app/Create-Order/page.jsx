@@ -29,14 +29,16 @@ const CreateOrder = () => {
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
+    const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState("");
     const [releaseDates, setReleaseDates] = useState([]);
+    const [displayReleaseDate, setDisplayReleaseDate] = useState([]);
     const [remarks, setRemarks] = useState("");
     const [elementsToHide, setElementsToHide] = useState([])
     const [clientEmail, setClientEmail] = useState("");
@@ -83,6 +85,7 @@ const CreateOrder = () => {
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
 
     const [previousOrderNumber, setPreviousOrderNumber] = useState('');
+    const [previousRateWiseOrderNumber, setPreviousRateWiseOrderNumber] = useState('');
     const [previousOrderDate, setPreviousOrderDate] = useState('');
     const [previousRateName, setPreviousRateName] = useState('');
     const [previousAdType, setPreviousAdType] = useState('');
@@ -96,7 +99,7 @@ const CreateOrder = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
     
-
+// console.log(clientDetails)
      // Function to toggle expand/collapse
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -217,6 +220,7 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
+  fetchMaxOrderNumber();
   fetchUnits();
   fetchAllVendor();
   fetchQtySlab()
@@ -552,20 +556,23 @@ const fetchRates = async () => {
 
       const handleClientNameSelection = (event) => {
         const input = event.target.value;
-        const name = input.substring(0, input.indexOf('(')).trim();
-        const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
+        const splitInput = input.split('-');
+    const ID = splitInput[0].trim();
+    const rest = splitInput[1];
+    const name = rest.substring(0, rest.indexOf('(')).trim();
+    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
         setClientName(name);
         setClientNumber(number);
         dispatch(setOrderData({ clientName: name, clientNumber: number  }))
-        fetchClientDetails(number);
+        fetchClientDetails(ID);
         fetchPreviousOrderDetails(number, name);
         setClientNameSuggestions([]);
       };
 
-      const fetchClientDetails = (clientNumber) => {
+      const fetchClientDetails = (clientID) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data && data.length > 0) {
@@ -617,6 +624,7 @@ const fetchRates = async () => {
               const formattedOrderDate = format(clientDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
               setPreviousOrderDate(formattedOrderDate);
               setPreviousOrderNumber(clientDetails.orderNumber);
+              setPreviousRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
               setPreviousRateName(clientDetails.rateName);
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
@@ -646,13 +654,13 @@ const fetchRates = async () => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
-                setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
+                setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
                 dispatch(setIsOrderExist(true));
                 
                 setTimeout(() => {
@@ -680,13 +688,15 @@ const fetchRates = async () => {
 
       const fetchMaxOrderNumber = async () => {
         try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}`);
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
           const data = await response.json();
-          setMaxOrderNumber(data);
+          setMaxOrderNumber(data.nextOrderNumber);
+          setNextRateWiseOrderNumber(data.nextRateWiseOrderNumber);
         dispatch(setOrderData({ maxOrderNumber: data }))
+        dispatch(setOrderData({ nextRateWiseOrderNumber: data }))
         } catch (error) {
           console.error(error);
         }
@@ -803,6 +813,16 @@ const handleDateChange = (e) => {
   }
 };
 
+const handleReleaseDatesChange = (e) => {
+  const dateValue = e.target.value;
+  setDisplayReleaseDate(dateValue);
+  const formattedDate = formatReleaseDatesToSave(e.value);
+  setReleaseDates(formattedDate);
+  if (errors.ageAndDOB) {
+    setErrors((prevErrors) => ({ ...prevErrors, ageAndDOB: undefined }));
+  }
+};
+
 function formatDateToSave(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -810,6 +830,17 @@ function formatDateToSave(date) {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+function formatReleaseDatesToSave(dates) {
+  return dates.map(date => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
+}
+
 
 function parseDateFromDB(dateString) {
   const [year, month, day] = dateString.split('-');
@@ -1025,6 +1056,14 @@ return (
                   </div>
                    </div>
                   </div>
+
+                  <div>
+          <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
+          <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
+            </div>
+            </div>
+
         </div>
         
         {/* Short Summary */}
@@ -1096,7 +1135,6 @@ return (
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
-          
         </div>
 
         <div id="19" name="RatesLocationSelect">
@@ -1221,15 +1259,34 @@ return (
                     />
                     </div>
                     <div name="OrderReleaseDate">
-                    <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
+                    {/* <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
                         type='date' 
                         className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
-                        value={new Date()}
+                        value={releaseDates}
                         onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
-                      />
+                      /> */}
+                      <div>
+                    <label className="block mb-1 font-medium">Release Dates</label>
+                    <div>
+                  <div>
+                    <Calendar
+                      type="date"
+                      value={displayReleaseDate}
+                      onChange={handleReleaseDatesChange}
+                      // onChange={(e) => setReleaseDates(e.value)}
+                      selectionMode="multiple"
+                      placeholder="dd-M-yyyy"
+                      showIcon
+                      dateFormat='dd-M-yy'
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      inputClassName="p-inputtext-lg"
+                    />
+                  </div>
+                   </div>
+                  </div>
                     </div>
-                    <div className='text-center justify-start' name="OrderReleaseDate">
+                    {/* <div className='text-center justify-start' name="OrderReleaseDate">
                     {releaseDates.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Release-Dates</h2> : <></>}
                     <ul className='mb-4'>
                     {releaseDates.map((data, index) => (
@@ -1244,7 +1301,7 @@ return (
                           </div>
 ))}
 </ul>
-                  </div>
+                  </div> */}
                   </div>
         </div>
         
@@ -1271,11 +1328,11 @@ return (
       </div>
        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
        <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
-       <p className="text-black">{previousOrderNumber}</p>
+       <p className="text-black">{previousRateWiseOrderNumber}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
       <p className="text-gray-500 text-xs mb-1">Next Order#</p>
-       <p className="text-black">{maxOrderNumber}</p>
+       <p className="text-black">{nextRateWiseOrderNumber}</p>
        </div>
     </div>
     <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
@@ -1290,7 +1347,7 @@ return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Order#</p>
-                <p className="text-black">{previousOrderNumber}</p>
+                <p className="text-black">{previousRateWiseOrderNumber}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
                 <p className="text-gray-500 text-xs mb-1">Order Date</p>
@@ -1323,7 +1380,7 @@ return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order#</p>
-              <p className="text-black">{maxOrderNumber}</p>
+              <p className="text-black">{nextRateWiseOrderNumber}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Order Date</p>

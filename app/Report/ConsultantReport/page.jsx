@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { Tag } from 'primereact/tag';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -10,140 +9,142 @@ import 'primeicons/primeicons.css';
 // Mock data for consultants
 const getConsultants = () => {
     return [
-        { name: 'Logesh', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
-        { name: 'Logesh', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
-        { name: 'Logesh', scan: 'CT', scanType: 'Type A', count: 1, price: 1000 },
-        { name: 'Logesh', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
-        { name: 'Siva', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
-        { name: 'Asath', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
-        { name: 'Kumaran', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
+        { id: 1, name: 'Logesh', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
+        { id: 2, name: 'Logesh', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
+        // Add id property for each object
+        { id: 3, name: 'Logesh', scan: 'CT', scanType: 'Type A', count: 1, price: 1000 },
+        { id: 4, name: 'Logesh', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
+        { id: 5, name: 'Siva', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
+        { id: 6, name: 'Asath', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
+        { id: 7, name: 'Kumaran', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
     ];
 };
 
-export default function ExpandableRowGroupDemo() {
+export default function GroupedRowsDemo() {
     const [consultants, setConsultants] = useState([]);
-    const [expandedRows, setExpandedRows] = useState([]);
 
     useEffect(() => {
-        // Fetch consultants data
         const consultantsData = getConsultants();
-        // Merge rows with same scan and scanType into a single row
-        const mergedConsultants = mergeConsultants(consultantsData);
-        setConsultants(mergedConsultants);
+        const groupedConsultants = groupConsultants(consultantsData);
+        setConsultants(groupedConsultants);
     }, []);
 
-    const mergeConsultants = (data) => {
-        const mergedData = [];
+    const groupConsultants = (data) => {
+        const groupedData = [];
 
-        // Create a map to track merged entries
-        const mergeMap = {};
-
-        // Iterate through each consultant
         data.forEach((consultant) => {
-            // Generate a unique key for each name
-            const key = consultant.name;
+            let existingName = groupedData.find(group => group.name === consultant.name);
 
-            if (mergeMap[key]) {
-                // If entry exists, update scans array
-                const existingScan = mergeMap[key].scans.find(s => s.scan === consultant.scan && s.scanType === consultant.scanType);
-                if (existingScan) {
-                    existingScan.count += consultant.count;
-                    existingScan.price += consultant.price;
-                } else {
-                    mergeMap[key].scans.push({ scan: consultant.scan, scanType: consultant.scanType, count: consultant.count, price: consultant.price });
-                }
-            } else {
-                // If entry does not exist, add to merge map
-                mergeMap[key] = { name: consultant.name, scans: [{ scan: consultant.scan, scanType: consultant.scanType, count: consultant.count, price: consultant.price }] };
+            if (!existingName) {
+                existingName = { name: consultant.name, scans: [] };
+                groupedData.push(existingName);
             }
+
+            let existingScan = existingName.scans.find(scan => scan.scan === consultant.scan);
+
+            if (!existingScan) {
+                existingScan = { scan: consultant.scan, scanTypes: [] };
+                existingName.scans.push(existingScan);
+            }
+
+            let existingScanType = existingScan.scanTypes.find(scanType => scanType.scanType === consultant.scanType);
+
+            if (!existingScanType) {
+                existingScanType = { scanType: consultant.scanType, count: 0, price: 0 };
+                existingScan.scanTypes.push(existingScanType);
+            }
+
+            existingScanType.count += consultant.count;
+            existingScanType.price += consultant.price;
         });
 
-        // Convert merge map back to array
-        Object.values(mergeMap).forEach((entry) => {
-            mergedData.push({
-                ...entry,
-                scans: entry.scans // flatten scans array
+        return groupedData;
+    };
+
+    const renderGroupedData = (groupedData) => {
+        const rows = [];
+
+        groupedData.forEach(group => {
+            rows.push({ ...group, isGroup: true });
+
+            group.scans.forEach(scan => {
+                scan.scanTypes.forEach(scanType => {
+                    rows.push({
+                        name: group.name,
+                        scan: scan.scan,
+                        scanType: scanType.scanType,
+                        count: scanType.count,
+                        price: scanType.price,
+                        isGroup: false
+                    });
+                });
             });
         });
 
-        return mergedData;
+        return rows;
+    };
+
+    const groupedData = renderGroupedData(consultants);
+
+    const nameBodyTemplate = (rowData) => {
+        if (rowData.isGroup) {
+            return <span className="font-bold">{rowData.name}</span>;
+        }
+        return null;
     };
 
     const scanBodyTemplate = (rowData) => {
-        // Render all scans for the consultant
-        return (
-            <React.Fragment>
-                {rowData.scans && rowData.scans.map((scan, index) => (
-                    <div key={index}>{scan.scan}</div>
-                ))}
-            </React.Fragment>
-        );
+        if (!rowData.isGroup) {
+            return rowData.scan;
+        }
+        return null;
     };
 
     const scanTypeBodyTemplate = (rowData) => {
-        // Render all scan types for the consultant
-        return (
-            <React.Fragment>
-                {rowData.scans && rowData.scans.map((scan, index) => (
-                    <div key={index}>{scan.scanType}</div>
-                ))}
-            </React.Fragment>
-        );
+        if (!rowData.isGroup) {
+            return rowData.scanType;
+        }
+        return null;
     };
 
-    const statusBodyTemplate = (rowData) => {
-        // Render count and price for all scans of the consultant
-        return (
-            <React.Fragment>
-                {rowData.scans && rowData.scans.map((scan, index) => (
-                    <div key={index}>{scan.count} - {scan.price}</div>
-                ))}
-            </React.Fragment>
-        );
+    const countBodyTemplate = (rowData) => {
+        if (!rowData.isGroup) {
+            return rowData.count;
+        }
+        return null;
     };
 
-    const headerTemplate = (data) => {
-        return (
-            <React.Fragment>
-                <span className="ml-2 font-bold text-blue-600">{data.name}</span>
-            </React.Fragment>
-        );
+    const priceBodyTemplate = (rowData) => {
+        if (!rowData.isGroup) {
+            return (
+                <input
+                    type="number"
+                    value={rowData.price}
+                    onChange={(e) => {
+                        const updatedData = [...groupedData];
+                        updatedData[rowData.tableData.id].price = parseInt(e.target.value, 10) || 0;
+                        setConsultants(updatedData);
+                    }}
+                    className="p-inputtext p-component"
+                />
+            );
+        }
+        return null;
     };
 
-    const footerTemplate = (data) => {
-        return (
-            <React.Fragment>
-                <td colSpan={5}>
-                    <div className="flex justify-content-end font-bold w-full">Total Consultants: {calculateConsultantTotal(data.name)}</div>
-                </td>
-            </React.Fragment>
-        );
-    };
-
-    const calculateConsultantTotal = (name) => {
-        return consultants.filter((consultant) => consultant.name === name).length;
+    const rowClassName = (rowData) => {
+        return rowData.isGroup ? 'bg-gray-200' : '';
     };
 
     return (
         <div className="container mx-auto">
             <div className="overflow-x-auto">
-                <DataTable
-                    value={consultants}
-                    rowGroupMode="subheader"
-                    groupRowsBy="name"
-                    sortMode="single"
-                    sortField="name"
-                    sortOrder={1}
-                    expandableRowGroups
-                    expandedRows={expandedRows}
-                    onRowToggle={(e) => setExpandedRows(e.data)}
-                    rowGroupHeaderTemplate={headerTemplate}
-                    rowGroupFooterTemplate={footerTemplate}
-                    className="text-center border border-gray-300"
-                >
-                    <Column field="scans" header="Scans" body={scanBodyTemplate} style={{ width: '30%' }} className="bg-gray-100 border border-gray-300 p-2"></Column>
-                    <Column field="scans" header="Scan Type" body={scanTypeBodyTemplate} style={{ width: '30%' }} className="bg-gray-100 border border-gray-300 p-2"></Column>
-                    <Column field="scans" header="Count - Price" body={statusBodyTemplate} style={{ width: '40%' }} className="bg-gray-100 border border-gray-300 p-2"></Column>
+                <DataTable value={groupedData} rowClassName={rowClassName} className="text-center border border-gray-300">
+                    <Column field="name" header="Consultant" body={nameBodyTemplate} className="bg-gray-100 border border-gray-300 p-2"></Column>
+                    <Column field="scan" header="Scan" body={scanBodyTemplate} className="bg-gray-100 border border-gray-300 p-2"></Column>
+                    <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} className="bg-gray-100 border border-gray-300 p-2"></Column>
+                    <Column field="count" header="Count" body={countBodyTemplate} className="bg-gray-100 border border-gray-300 p-2"></Column>
+                    <Column field="price" header="Price" body={priceBodyTemplate} className="bg-gray-100 border border-gray-300 p-2"></Column>
                 </DataTable>
             </div>
         </div>
