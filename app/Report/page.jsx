@@ -315,6 +315,7 @@ const FetchCurrentBalanceAmount = () => {
 };
 
 const isMobile = useMediaQuery('(max-width:640px)');
+const [anchorEl, setAnchorEl] = useState(null);
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
@@ -330,8 +331,6 @@ const orderColumns = [
       headerName: 'Actions',
       width: isMobile ? 100 : 450,
       renderCell: (params) => {
-          const [anchorEl, setAnchorEl] = useState(null);
-          
           const handleClick = (event) => {
               setAnchorEl(event.currentTarget);
           };

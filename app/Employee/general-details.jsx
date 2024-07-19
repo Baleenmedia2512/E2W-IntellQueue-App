@@ -3,7 +3,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import { setGeneralDetails, setCurrentPage } from '@/redux/features/emp-slice'; // Import your actions
-import TabNavigation from './components/TabNavigation'; // Ensure the path is correct and that TabNavigation is properly exported
+// import TabNavigation from './components/TabNavigation';
 
 const GeneralDetailsPage = () => {
   const dispatch = useDispatch();
