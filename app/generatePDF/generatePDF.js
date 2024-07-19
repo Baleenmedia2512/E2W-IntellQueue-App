@@ -169,7 +169,8 @@ Object.keys(columnWidths).forEach(columnName => {
       valign: 'middle',
     },
     headStyles: {
-      textColor: [41, 128, 185]
+      textColor: [255, 255, 255],
+      fillColor: [50, 50, 50]
     },
       margin: {top: 210, left: 10},
       columnStyles: columnStyles,
