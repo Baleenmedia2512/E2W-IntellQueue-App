@@ -685,9 +685,11 @@ const handleDateChange = (range) => {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleGoToFinance} color="primary">
-                        Go to Finance Report
-                    </Button>
+                {appRights.includes('Administrator') || appRights.includes('Finance') ? (
+            <Button onClick={handleGoToFinance} color="primary">
+                Go to Finance Report
+            </Button>
+        ) : null}
                     <Button onClick={handleCloseOrderDialog} color="primary" autoFocus>
                         Close
                     </Button>
