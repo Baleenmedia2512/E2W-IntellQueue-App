@@ -552,7 +552,7 @@ const AdDetailsPage = () => {
                 </span>
                 <div className="flex flex-col justify-center items-center mt-4">
                   <p className="font-semibold text-red-500">
-                    *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days from the date of payment received or the date of design approved, whichever is higher
+                    *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
                   <p className="font-bold">Quote Valid till {formattedDate}</p>
                 </div>

@@ -1056,6 +1056,14 @@ return (
                   </div>
                    </div>
                   </div>
+
+                  <div>
+          <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
+          <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
+            </div>
+            </div>
+
         </div>
         
         {/* Short Summary */}
@@ -1127,7 +1135,6 @@ return (
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
-          
         </div>
 
         <div id="19" name="RatesLocationSelect">
