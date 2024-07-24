@@ -10,6 +10,7 @@ import { TextField } from '@mui/material';
 // import Snackbar from '@mui/material/Snackbar';
 // import MuiAlert from '@mui/material/Alert';
 import DatePicker from 'react-datepicker';
+import { FetchRateSeachTerm } from '../api/FetchAPI';
 import 'react-datepicker/dist/react-datepicker.css';
 import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll} from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
@@ -93,6 +94,8 @@ const AdDetailsPage = () => {
   const [isQty, setIsQty] = useState(false);
   const [combinedSlabData, setCombinedSlabData] = useState([]);
   const [editMode, setEditMode] = useState(false);
+  const [rateSearchText, setRateSearchText] = useState("");
+  const [rateSearchSuggestion, setRateSearchSuggestion] = useState([]);
   const elementsNeeded = [""];
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -1294,6 +1297,12 @@ const updateSlabData = (qty, newUnitPrice) => {
     }
   },[validTill])
 
+  const handleRateSearch = async(e) => {
+    setRateSearchText(e.target.value);
+    const suggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    setRateSearchSuggestion(suggestions);
+  }
+
   const handleClearRateId = () => {
     setEditMode(false)
     dispatch(setRateId(""));
@@ -1376,19 +1385,35 @@ const updateSlabData = (qty, newUnitPrice) => {
             
                 <div className="mb-4 flex flex-col items-center justify-center">
 
-                <div name="RateSearchInput">
+                <div >
                 <label className='mb-4 text-gray-700 font-semibold' name="RateSearchInput">Search Rate Card</label><br/>
                 <input
                   className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3"
-                  type="number"
-                  id="RatesClearButton"
+                  type="text"
+                  
                  // name='RateSearchInput'
                   placeholder="Ex. 4000"
-                  value={rateId}
-                  onChange = {(e) => dispatch(setRateId(e.target.value))}
+                  value={rateSearchText}
+                  onChange = {(e) => {handleRateSearch}}
                   onFocus={(e) => {e.target.select()}}
                   // oange = {(e) => setSearchingRateId(e.target.value)}
                 />
+                {(rateSearchSuggestion.length > 0 && companyName !== '') && (
+                                <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                                    {rateSearchSuggestion.map((name, index) => (
+                                        <li key={index}>
+                                            <button
+                                                type="button"
+                                                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                                                //onClick={handleCompanyNameSelection}
+                                                value={name}
+                                            >
+                                                {name}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                 <Button 
                   className='border' 
                   id='RatesClearButton'

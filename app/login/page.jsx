@@ -23,11 +23,25 @@ const Login = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
+  const [elementsToHide, setElementsToHide] = useState([]);
 
   useEffect(() => {
-    dispatch(logout())
-
+    dispatch(logout());
+    
   },[])
+
+  useEffect(()=>{
+    elementsToHideList();
+  },[companyName])
+  const elementsToHideList = () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+        .then((response) => response.json())
+        .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -92,15 +106,20 @@ const handleLogin = (event) => {
                     dispatch(resetRatesData());
                     dispatch(resetQuotesData());
                     dispatch(resetOrderData());
-                    if (companyName === 'Grace Scans') {
-                        router.push("/"); // Navigate to the main screen
-                    } else {
-                        router.push("/adDetails");
+                    if(elementsToHide.includes("QuoteSenderNavigation")){
+                        router.push("/")
+                    } else{
+                        router.push("/adDetails")
                     }
+                    // if (companyName === 'Grace Scans') {
+                    //     router.push("/"); // Navigate to the main screen
+                    // } else {
+                    //     router.push("/adDetails");
+                    // }
                 } else {
                     // Handle invalid credentials scenario
-                    setPassword(''); // Clear password field if needed
-                    setToastMessage('Invalid username or password. Please try again.');
+                    //setPassword(''); // Clear password field if needed
+                    setToastMessage('Invalid credentials. Please check your User Name, Password and Company Name.');
                     setSeverity('error');
                     setToast(true);
                     setTimeout(() => {
