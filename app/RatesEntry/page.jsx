@@ -842,7 +842,7 @@ var selectedRate = '';
           }
         }))
 
-        dispatch(setRateId(data.RateID));
+      dispatch(setRateId(data.RateID));
       setCampaignDuration(data['CampaignDuration(in Days)']);
       if(data.campaignDurationVisibility === 1){
         setShowCampaignDuration(true)
