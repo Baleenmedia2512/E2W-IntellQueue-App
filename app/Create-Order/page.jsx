@@ -556,20 +556,23 @@ const fetchRates = async () => {
 
       const handleClientNameSelection = (event) => {
         const input = event.target.value;
-        const name = input.substring(0, input.indexOf('(')).trim();
-        const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
+        const splitInput = input.split('-');
+    const ID = splitInput[0].trim();
+    const rest = splitInput[1];
+    const name = rest.substring(0, rest.indexOf('(')).trim();
+    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
         setClientName(name);
         setClientNumber(number);
         dispatch(setOrderData({ clientName: name, clientNumber: number  }))
-        fetchClientDetails(number);
+        fetchClientDetails(ID);
         fetchPreviousOrderDetails(number, name);
         setClientNameSuggestions([]);
       };
 
-      const fetchClientDetails = (clientNumber) => {
+      const fetchClientDetails = (clientID) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientID=${clientID}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data && data.length > 0) {
@@ -1053,6 +1056,14 @@ return (
                   </div>
                    </div>
                   </div>
+
+                  <div>
+          <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
+          <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
+              <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
+            </div>
+            </div>
+
         </div>
         
         {/* Short Summary */}
@@ -1124,7 +1135,6 @@ return (
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
-          
         </div>
 
         <div id="19" name="RatesLocationSelect">

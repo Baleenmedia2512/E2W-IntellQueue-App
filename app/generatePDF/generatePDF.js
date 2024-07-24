@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 
-export const generatePdf = async(checkoutData, clientName, clientEmail) => {
+export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle) => {
   const ImageUrl = '/images/WHITE PNG.png';
   const quoteNumber = await fetchNextQuoteNumber();
   // Create a new jsPDF instance
@@ -169,7 +169,8 @@ Object.keys(columnWidths).forEach(columnName => {
       valign: 'middle',
     },
     headStyles: {
-      textColor: [41, 128, 185]
+      textColor: [255, 255, 255],
+      fillColor: [50, 50, 50]
     },
       margin: {top: 210, left: 10},
       columnStyles: columnStyles,
@@ -179,6 +180,11 @@ Object.keys(columnWidths).forEach(columnName => {
       tableWidth: 'auto'
   })
 
+  const getMinLeadDays = () => {
+    const leadDaysArray = checkoutData.map(item => item.leadDays);
+    return Math.min(...leadDaysArray);
+  };
+
   pdf.setFont('helvetica', 'normal', 'bold');
   pdf.setFontSize(16);
   pdf.text("IMPORTANT TERMS & CONDITIONS", 10, pdf.internal.pageSize.height - 135)
@@ -186,9 +192,9 @@ Object.keys(columnWidths).forEach(columnName => {
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(12);
   pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, pdf.internal.pageSize.height - 120);
-  pdf.text(`2.Ad. Material shall be shared by ${clientName}`, 10, pdf.internal.pageSize.height - 105)
+  pdf.text(`2.Ad. Material shall be shared by ${clientTitle} ${clientName}`, 10, pdf.internal.pageSize.height - 105)
   pdf.text("3.100% Upfront payment required for releasing the Ads", 10, pdf.internal.pageSize.height - 90)
-  pdf.text(`4.Lead time to book the Ad : ${checkoutData[10]} Days`, 10, pdf.internal.pageSize.height - 75)
+  pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
   pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, pdf.internal.pageSize.height - 60)
 
   pdf.setDrawColor("#df5f98");
