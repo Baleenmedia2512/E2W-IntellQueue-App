@@ -436,7 +436,7 @@ const AdDetailsPage = () => {
 
   useEffect(() => {
     if(rateId > 0){
-      handleRateId()    
+      handleRateId(rateId)    
     }
     fetchQtySlab();
   }, [rateId]);
@@ -791,10 +791,10 @@ var selectedRate = '';
     }
   };
 
-  const handleRateId = async () => {
-    if(rateId > 0){
+  const handleRateId = async (selectedRateId) => {
+    if(selectedRateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -1354,6 +1354,8 @@ const updateSlabData = (qty, newUnitPrice) => {
     const selectedRate = e.target.value;
     const selectedRateId = selectedRate.split('-')[0];
     setRatesSearchSuggestion([]);
+    setRateSearchTerm("");
+    handleRateId(selectedRateId)
     setRateId(selectedRateId)
   }
 
