@@ -403,8 +403,8 @@ const orderColumns = [
   { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
   { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
   { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
-  { field: 'rateName', headerName: 'Rate Name', width: 150 },
-  { field: 'adType', headerName: 'Rate Type', width: 150 },
+  { field: 'Card', headerName: 'Rate Name', width: 150 },
+  { field: 'AdType', headerName: 'Rate Type', width: 150 },
   { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
   {
     field: 'actions',
@@ -431,7 +431,7 @@ const orderColumns = [
                 color="primary"
                 size="small"
                 disabled={params.row.restoreDisabled}
-                onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.rateName)}
+                onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
                 style={{ backgroundColor: '#1976d2',
                   color: 'white',
                   fontWeight: 'bold',
@@ -516,7 +516,7 @@ const orderColumns = [
         {
           field: 'actions',
           headerName: 'Actions',
-          width: isMobile ? 100 : 450,
+          width: 100,
           renderCell: (params) => (
               <div>
                   <Button
@@ -526,7 +526,7 @@ const orderColumns = [
                               onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
                               style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
                           >
-                              Delete Transaction
+                              Delete
                           </Button>
               </div>
           ),
