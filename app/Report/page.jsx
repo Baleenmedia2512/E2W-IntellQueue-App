@@ -135,6 +135,7 @@ const Report = () => {
                     ...order,
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
+                    TotalAmountReceived: order.TotalAmountReceived !== null ? `₹ ${order.TotalAmountReceived}` : '',
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                 }));
@@ -144,7 +145,6 @@ const Report = () => {
                 console.error(error);
             });
     };
-    
     const fetchFinanceDetails = () => {
         axios
             .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
@@ -153,6 +153,7 @@ const Report = () => {
                     ...transaction,
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
+                    OrderValue: `₹ ${transaction.OrderValue}`,
                 }));
                 setFinanceDetails(financeDetails);
                 
@@ -400,6 +401,8 @@ const orderColumns = [
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
   { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
+  { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
+  { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
   { field: 'rateName', headerName: 'Rate Name', width: 150 },
   { field: 'adType', headerName: 'Rate Type', width: 150 },
   { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
@@ -503,7 +506,8 @@ const orderColumns = [
     const financeColumns = [
         { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
-        { field: 'Amount', headerName: 'Amount(₹)', width: 130},
+        { field: 'Amount', headerName: 'Amount(₹)', width: 100},
+        { field: 'OrderValue', headerName: 'Order Amount(₹)', width: 100},
         { field: 'OrderNumber', headerName: 'Order#', width: 100 },
         { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
@@ -666,7 +670,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, val
 
   return (
     <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fontSize}>
-      {value}
+      ₹{value}
     </text>
   );
 };
