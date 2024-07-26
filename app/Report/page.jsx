@@ -58,6 +58,9 @@ const Report = () => {
     const [selectedOrder, setSelectedOrder] = useState('');
     const [orderDialogOpen, setOrderDialogOpen] = useState(false);
     const [deletingOrder, setDeletingOrder] = useState('');
+    const [restoredialogOpen, setRestoreDialogOpen] = useState(false);
+    const [newRateWiseOrderNumber, setNewRateWiseOrderNumber] = useState(null);
+    const [orderNum, setOrderNum] = useState(null);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -132,8 +135,8 @@ const Report = () => {
                     ...order,
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
-                    markInvalidDisabled: order.CancelFlag === 1,
-                    restoreDisabled: order.CancelFlag === 0,
+                    markInvalidDisabled: order.RateWiseOrderNumber < 0,
+                    restoreDisabled: order.RateWiseOrderNumber > 0,
                 }));
                 setOrderDetails(data);
             })
@@ -203,7 +206,7 @@ const Report = () => {
                 setOrderDialogOpen(true);
                 setDeletingOrder(OrderNum)
             } else {
-                setSuccessMessage('Order Deleted!');
+                setSuccessMessage('Order Cancelled!');
                 setTimeout(() => {
                     setSuccessMessage('');
                 }, 2000);
@@ -262,35 +265,109 @@ const handleCloseOrderDialog = () => {
   setOrderDialogOpen(false);
 };
 
-  const handleRestore = (orderNum) => {
-      axios
-          .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=restore`)
-          .then((response) => {
-              setSuccessMessage('Order Restored!');
-                    setTimeout(() => {
-                        setSuccessMessage('');
-                    }, 2000);
-              fetchOrderDetails();
-          })
-          .catch((error) => {
-              console.error(error);
-              setToastMessage('Failed to restore. Please try again.');
-              setSeverity('error');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-                }, 2000);
-          });
-  };
+const RestoreOrderDialog = ({ open, onClose, onConfirm, newRateWiseOrderNumber }) => (
+  <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Confirm Restore</DialogTitle>
+      <DialogContent>
+          <p>Rate Wise Order Number is already occupied. Do you want to continue with the new number <strong>{newRateWiseOrderNumber}</strong>?</p>
+      </DialogContent>
+      <DialogActions>
+          <Button onClick={onConfirm} color="primary">Yes</Button>
+          <Button onClick={onClose} color="primary">No</Button>
+      </DialogActions>
+  </Dialog>
+);
+
+const handleRestoreClose = () => {
+  setRestoreDialogOpen(false);
+};
+
+const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+  try {
+      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&Action=restore`);
+      
+      if (response.data.conflict) {
+          // Fetch next available RateWiseOrderNumber
+          const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
+          const data = await fetchResponse.json();
+          setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
+          setOrderNum(orderNum);
+          setRestoreDialogOpen(true);
+      } else {
+          // Successful restore
+          setSuccessMessage('Order Restored!');
+          setTimeout(() => setSuccessMessage(''), 2000);
+          fetchOrderDetails();
+      }
+  } catch (error) {
+      console.error('Error during restore operation:', error);
+      setToastMessage(`Failed to restore. Error: ${error.message}`);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+  }
+};
+
+const handleConfirm = async () => {
+  try {
+      await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+      setSuccessMessage('Order Restored with new number!');
+      setTimeout(() => setSuccessMessage(''), 2000);
+      fetchOrderDetails();
+  } catch (error) {
+      console.error('Restore failed:', error);
+      setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+  }
+  setRestoreDialogOpen(false);
+};
+
+// const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+//   try {
+//       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}`);
+
+//       if (response.data.conflict) {
+//           const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
+//           if (!fetchResponse.ok) {
+//               throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
+//           }
+//           const data = await fetchResponse.json();
+//           const newRateWiseOrderNumber = data.nextRateWiseOrderNumber;
+
+//           if (confirm(`RateWiseOrderNumber is already occupied. Do you want to continue with the new number ${newRateWiseOrderNumber}?`)) {
+//               // User agrees to use a new RateWiseOrderNumber
+//               const restoreResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+//               setSuccessMessage('Order Restored with new number!');
+//               setTimeout(() => {
+//                   setSuccessMessage('');
+//               }, 2000);
+//               fetchOrderDetails();
+//           }
+//       } else {
+//           setSuccessMessage('Order Restored!');
+//           setTimeout(() => {
+//               setSuccessMessage('');
+//           }, 2000);
+//           fetchOrderDetails();
+//       }
+//   } catch (error) {
+//       console.error(error);
+//       setToastMessage('Failed to restore. Please try again.');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//           setToast(false);
+//       }, 2000);
+//   }
+// };
 
   const fetchMarginAmount = () => {
     axios
         .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
         .then((response) => {
             const data = response.data[0]
-            // setTotalIncome(data.total_income);
-            // setTotalExpense(data.total_expense);
-            // setMarginResult(data.margin_amount);
             const income = parseFloat(data.total_income);
         const expense = parseFloat(data.total_expense);
         const margin = parseFloat(data.margin_amount);
@@ -327,117 +404,99 @@ const orderColumns = [
   { field: 'adType', headerName: 'Rate Type', width: 150 },
   { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
   {
-      field: 'actions',
-      headerName: 'Actions',
-      width: isMobile ? 100 : 450,
-      renderCell: (params) => {
-          const handleClick = (event) => {
-              setAnchorEl(event.currentTarget);
-          };
-          
-          const handleClose = () => {
-              setAnchorEl(null);
-          };
-          
-          const handleMenuItemClick = (action) => {
-              handleClose();
-              if (action === 'delete') handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
-              if (action === 'cancel') handleMarkInvalid(params.row.OrderNumber);
-              if (action === 'restore') handleRestore(params.row.OrderNumber);
-          };
-
-          // Calculate if the order is within the last 24 hours
-          const orderDate = new Date(params.row.OrderDate);
-          const now = new Date();
-          const isRecent = (now - orderDate) < 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-          return isMobile ? (
-              <div>
-                  <IconButton
-                      aria-controls="simple-menu"
-                      aria-haspopup="true"
-                      onClick={handleClick}
-                  >
-                      <MoreVertIcon />
-                  </IconButton>
-                  <Menu
-                      id="simple-menu"
-                      anchorEl={anchorEl}
-                      keepMounted
-                      open={Boolean(anchorEl)}
-                      onClose={handleClose}
-                  >
-                      <MenuItem
-                          onClick={() => handleMenuItemClick('cancel')}
-                          disabled={params.row.markInvalidDisabled}
-                          className='hover:bg-gray-100'
-                      >
-                          Cancel Order
-                      </MenuItem>
-                      {isRecent && (
-                          <MenuItem
-                              onClick={() => handleMenuItemClick('delete')}
-                              className='hover:bg-gray-100'
-                          >
-                              Delete Order
-                          </MenuItem>
-                      )}
-                      <MenuItem
-                          onClick={() => handleMenuItemClick('restore')}
-                          disabled={params.row.restoreDisabled}
-                          className='hover:bg-gray-100'
-                      >
-                          Restore
-                      </MenuItem>
-                  </Menu>
-              </div>
-          ) : (
-              <div className="space-x-3">
-                  <Button
-                      variant="contained"
-                      color="secondary"
-                      size="small"
-                      disabled={params.row.markInvalidDisabled}
-                      onClick={() => handleMarkInvalid(params.row.OrderNumber)}
-                      style={{ marginRight: '12px',  backgroundColor: '#e79a26',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          opacity: params.row.markInvalidDisabled ? 0.2 : 1,
-                          pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
-                  >
-                      Cancel Order
-                  </Button>
-                  {isRecent && (
-                      <Button
+    field: 'actions',
+    headerName: 'Actions',
+    width: 250,
+    renderCell: (params) => (
+        <div>
+            <Button
                           variant="contained"
                           color="primary"
                           size="small"
+                          disabled={params.row.markInvalidDisabled}
                           onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
                           style={{ marginRight: '12px', backgroundColor: '#ff5252',
                               color: 'white',
-                              fontWeight: 'bold', }}
+                              fontWeight: 'bold', 
+                              opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+                              pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
                       >
-                          Delete Order
+                          Cancel Order
                       </Button>
-                  )}
-                  <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      disabled={params.row.restoreDisabled}
-                      onClick={() => handleRestore(params.row.OrderNumber)}
-                      style={{ backgroundColor: '#1976d2',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          opacity: params.row.restoreDisabled ? 0.2 : 1,
-                          pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
-                  >
-                      Restore
-                  </Button>
-              </div>
-          );
-      },
-  },
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                disabled={params.row.restoreDisabled}
+                onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.rateName)}
+                style={{ backgroundColor: '#1976d2',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: params.row.restoreDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+            >
+                Restore
+            </Button>
+        </div>
+    ),
+},
+  // {
+  //     field: 'actions',
+  //     headerName: 'Actions',
+  //     width: isMobile ? 100 : 450,
+  //     renderCell: (params) => {
+  //         const handleClick = (event) => {
+  //             setAnchorEl(event.currentTarget);
+  //         };
+          
+  //         const handleClose = () => {
+  //             setAnchorEl(null);
+  //         };
+          
+  //         const handleMenuItemClick = (action) => {
+  //             handleClose();
+  //             if (action === 'delete') handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
+  //             if (action === 'cancel') handleMarkInvalid(params.row.OrderNumber);
+  //             if (action === 'restore') handleRestore(params.row.OrderNumber);
+  //         };
+
+  //         // Calculate if the order is within the last 24 hours
+  //         const orderDate = new Date(params.row.OrderDate);
+  //         const now = new Date();
+  //         const isRecent = (now - orderDate) < 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  //             <div className="space-x-3">
+  //                     <Button
+  //                         variant="contained"
+  //                         color="primary"
+  //                         size="small"
+  //                         disabled={params.row.markInvalidDisabled}
+  //                         onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+  //                         style={{ marginRight: '12px', backgroundColor: '#ff5252',
+  //                             color: 'white',
+  //                             fontWeight: 'bold', 
+  //                             opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+  //                             pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+  //                     >
+  //                         Cancel Order
+  //                     </Button>
+  //                 <Button
+  //                     variant="contained"
+  //                     color="primary"
+  //                     size="small"
+  //                     disabled={params.row.restoreDisabled}
+  //                     onClick={() => handleRestore(params.row.OrderNumber)}
+  //                     style={{ backgroundColor: '#1976d2',
+  //                         color: 'white',
+  //                         fontWeight: 'bold',
+  //                         opacity: params.row.restoreDisabled ? 0.2 : 1,
+  //                         pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+  //                 >
+  //                     Restore
+  //                 </Button>
+  //             </div>
+  //     },
+  // },
 ];
 
 
@@ -454,61 +513,9 @@ const orderColumns = [
           field: 'actions',
           headerName: 'Actions',
           width: isMobile ? 100 : 450,
-          renderCell: (params) => {
-  
-              const handleClick = (event) => {
-                  setAnchorEl(event.currentTarget);
-              };
-  
-              const handleClose = () => {
-                  setAnchorEl(null);
-              };
-  
-              const handleMenuItemClick = (action) => {
-                  handleClose();
-                  if (action === 'delete') handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
-              };
-  
-              // Calculate if the transaction date is today
-              const transactionDate = new Date(params.row.TransactionDate);
-              const now = new Date();
-              const isToday = transactionDate.toDateString() === now.toDateString();
-  
-              return isMobile ? (
-                
-                <div>
-                {isToday && (
-                    <>
-                        <IconButton
-                            aria-controls="simple-menu"
-                            aria-haspopup="true"
-                            onClick={handleClick}
-                        >
-                            <MoreVertIcon />
-                        </IconButton>
-                        <Menu
-                            id="simple-menu"
-                            anchorEl={anchorEl}
-                            keepMounted
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                        >
-                            <MenuItem
-                                onClick={() => handleMenuItemClick('delete')}
-                                className='hover:bg-gray-100'
-                            >
-                                Delete Transaction
-                            </MenuItem>
-                        </Menu>
-                    </>
-                )}
-            </div>
-            
-                
-              ) : (
-                  <div className="space-x-3">
-                      {isToday && (
-                          <Button
+          renderCell: (params) => (
+              <div>
+                  <Button
                               variant="contained"
                               color="primary"
                               size="small"
@@ -517,11 +524,48 @@ const orderColumns = [
                           >
                               Delete Transaction
                           </Button>
-                      )}
-                  </div>
-              );
-          },
+              </div>
+          ),
       },
+        
+      //   {
+      //     field: 'actions',
+      //     headerName: 'Actions',
+      //     width: isMobile ? 100 : 450,
+      //     renderCell: (params) => {
+  
+      //         const handleClick = (event) => {
+      //             setAnchorEl(event.currentTarget);
+      //         };
+  
+      //         const handleClose = () => {
+      //             setAnchorEl(null);
+      //         };
+  
+      //         const handleMenuItemClick = (action) => {
+      //             handleClose();
+      //             if (action === 'delete') handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
+      //         };
+  
+      //         // Calculate if the transaction date is today
+      //         const transactionDate = new Date(params.row.TransactionDate);
+      //         const now = new Date();
+      //         const isToday = transactionDate.toDateString() === now.toDateString();
+  
+            
+      //             <div className="space-x-3">
+      //                     <Button
+      //                         variant="contained"
+      //                         color="primary"
+      //                         size="small"
+      //                         onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+      //                         style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+      //                     >
+      //                         Delete Transaction
+      //                     </Button>
+      //             </div>
+      //     },
+      // },
     ];
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
@@ -618,10 +662,11 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, val
 
   // Convert the value to Indian format (10K, 10L, 10Cr)
   const formattedValue = formatIndianNumber(value);
+  const fontSize = window.innerWidth > 768 ? "20px" : "14px";
 
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="20px">
-      {formattedValue}
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fontSize}>
+      {value}
     </text>
   );
 };
@@ -695,10 +740,19 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+            
 
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
   <div style={{ width: '100%' }}>
+    <div>
+    <RestoreOrderDialog
+                open={restoredialogOpen}
+                onClose={handleRestoreClose}
+                onConfirm={handleConfirm}
+                newRateWiseOrderNumber={newRateWiseOrderNumber}
+            />
+            </div>
    <div className="flex justify-between items-start">
   {/* Total Orders box */}
   {/* Total Orders box */}
@@ -772,7 +826,7 @@ const handleDateChange = (range) => {
       </div>
       <DateRangePicker dates={dates} setDates={setDates} />
       </div> */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
           pageSize={10}
@@ -880,7 +934,7 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+            <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
         <div className="text-center">No records found during this timeline!</div>
@@ -909,11 +963,14 @@ const handleDateChange = (range) => {
           verticalAlign="middle" 
           wrapperStyle={{ paddingLeft: "20px" }} 
         />
+        
         </PieChart>
+      
       </ResponsiveContainer>
       )}
       </div>
-             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
+      </div>
+             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', marginBottom: '54px' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
