@@ -247,8 +247,8 @@ const FetchCurrentBalanceAmount = () => {
         { field: 'OrderDate', headerName: 'Order Date', width: 100},
         { field: 'ClientName', headerName: 'Client Name', width: 170 },
         { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
-        { field: 'rateName', headerName: 'Rate Name', width: 150 },
-        { field: 'adType', headerName: 'Rate Type', width: 150 },
+        { field: 'Card', headerName: 'Rate Name', width: 150 },
+        { field: 'AdType', headerName: 'Rate Type', width: 150 },
         { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
         {
           field: 'actions',
