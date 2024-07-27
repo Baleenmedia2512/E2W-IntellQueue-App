@@ -41,13 +41,13 @@ const CheckoutPage = () => {
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition)
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
   const rateId = useAppSelector(state => state.quoteSlice.rateId)
-  const qty = useAppSelector(state => state.quoteSlice.quantity);
-  const unit = useAppSelector(state => state.quoteSlice.unit);
-  const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
-  const campaignDuration = useAppSelector(state => state.quoteSlice.campaignDuration);
-  const margin = useAppSelector(state => state.quoteSlice.marginAmount);
-  const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
-  const remarks = useAppSelector(state => state.quoteSlice.remarks);
+  // const qty = useAppSelector(state => state.quoteSlice.quantity);
+  // const unit = useAppSelector(state => state.quoteSlice.unit);
+  // const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
+  // const campaignDuration = useAppSelector(state => state.quoteSlice.campaignDuration);
+  // const margin = useAppSelector(state => state.quoteSlice.marginAmount);
+  // const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
+  // const remarks = useAppSelector(state => state.quoteSlice.remarks);
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
@@ -172,7 +172,7 @@ const CheckoutPage = () => {
               <button
                 className="mr-8 hover:scale-110 hover:text-blue-500 hover:animate-bounce"
                 onClick={() => {
-                  dispatch(setQuotesData({currentPage: "adDetails"}))
+                  rateId >= 1 ? dispatch(setQuotesData({currentPage: "adDetails"})) : dispatch(setQuotesData({currentPage: "adMedium"}))
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back

@@ -303,37 +303,37 @@ const AdDetailsPage = () => {
   const items = [
     {
       content: (
-        <div class="mb-4 bg-blue-600 rounded-md p-4 text-white">
+        <div class="mb-4 bg-blue-300 rounded-md p-4 text-black">
           <p className="font-bold text-sm mb-1">
             *Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}
           </p>
           <p className="font-semibold text-sm mb-1 ">
             *Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}
           </p>
-          <p className="text-sm ">=
+          {/* <p className="text-sm ">=
             ₹{formattedRupees(qty * (unitPrice * (Number(marginPercentage) + 100) / 100) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees((unitPrice / (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) /100)}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
           <p className="text-sm  mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
           <p className="font-semibold text-sm">
             * GST Amount : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (0.18))}
-          </p>
+          </p> */}
         </div>
       )
     },
     {
       content: (
-        <div className="mb-4 bg-green-600 rounded-md p-4 text-white">
+        <div className="mb-4 bg-yellow-300 rounded-md p-4 text-black">
           <p className="font-bold text-sm mb-1">
             *Vendor Cost(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (1.18)))}
           </p>
           <p className="font-semibold text-sm mb-1">
             *Vendor Cost(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
           </p>
-          <p className="text-sm text-gray-300">
+          {/* <p className="text-sm text-gray-300">
             ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
           <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
           <p className="font-semibold text-sm">
             * GST Amount(net) : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (0.18))}
-          </p>
+          </p> */}
         </div>
       )
     }
