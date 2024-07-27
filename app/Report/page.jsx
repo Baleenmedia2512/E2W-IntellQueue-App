@@ -61,6 +61,9 @@ const Report = () => {
     const [restoredialogOpen, setRestoreDialogOpen] = useState(false);
     const [newRateWiseOrderNumber, setNewRateWiseOrderNumber] = useState(null);
     const [orderNum, setOrderNum] = useState(null);
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -518,59 +521,51 @@ const orderColumns = [
           headerName: 'Actions',
           width: 100,
           renderCell: (params) => (
-              <div>
-                  <Button
-                              variant="contained"
-                              color="primary"
-                              size="small"
-                              onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                              style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
-                          >
-                              Delete
-                          </Button>
-              </div>
+            <div>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+                style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+              >
+                Delete
+              </Button>
+            </div>
           ),
-      },
-        
+        },
       //   {
       //     field: 'actions',
       //     headerName: 'Actions',
-      //     width: isMobile ? 100 : 450,
-      //     renderCell: (params) => {
-  
-      //         const handleClick = (event) => {
-      //             setAnchorEl(event.currentTarget);
-      //         };
-  
-      //         const handleClose = () => {
-      //             setAnchorEl(null);
-      //         };
-  
-      //         const handleMenuItemClick = (action) => {
-      //             handleClose();
-      //             if (action === 'delete') handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
-      //         };
-  
-      //         // Calculate if the transaction date is today
-      //         const transactionDate = new Date(params.row.TransactionDate);
-      //         const now = new Date();
-      //         const isToday = transactionDate.toDateString() === now.toDateString();
-  
-            
-      //             <div className="space-x-3">
-      //                     <Button
+      //     width: 100,
+      //     renderCell: (params) => (
+      //         <div>
+      //             <Button
       //                         variant="contained"
       //                         color="primary"
       //                         size="small"
       //                         onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
       //                         style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
       //                     >
-      //                         Delete Transaction
+      //                         Delete
       //                     </Button>
-      //             </div>
-      //     },
+      //         </div>
+      //     ),
       // },
     ];
+
+    const handleOpenConfirmDialog = (rateWiseOrderNum, orderNum) => {
+      setSelectedTransaction({ rateWiseOrderNum, orderNum });
+      setOpenConfirmDialog(true);
+    };
+    
+
+    const handleConfirmDelete = () => {
+      const { rateWiseOrderNum, orderNum } = selectedTransaction;
+      handleTransactionDelete(rateWiseOrderNum, orderNum);
+      setOpenConfirmDialog(false);
+    };
+    
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
         filter === 'All' || transaction.TransactionType.toLowerCase().includes(filter.toLowerCase())
@@ -757,6 +752,7 @@ const handleDateChange = (range) => {
                 newRateWiseOrderNumber={newRateWiseOrderNumber}
             />
             </div>
+            
    <div className="flex justify-between items-start">
   {/* Total Orders box */}
   {/* Total Orders box */}
@@ -871,6 +867,34 @@ const handleDateChange = (range) => {
               </button>
                 </div>
              </div>
+             {/* Delete Transaction Confirmation */}
+             <Dialog
+  open={openConfirmDialog}
+  onClose={() => setOpenConfirmDialog(false)}
+  aria-labelledby="confirm-dialog-title"
+  aria-describedby="confirm-dialog-description"
+>
+  <DialogTitle id="confirm-dialog-title">Confirm Deletion</DialogTitle>
+  <DialogContent>
+    <DialogContentText id="confirm-dialog-description">
+      Are you sure you want to delete this transaction?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenConfirmDialog(false)} color="primary">
+      Cancel
+    </Button>
+    <Button 
+      onClick={handleConfirmDelete} 
+      style={{ color: '#ff5252', borderColor: '#ff5252' }}
+      autoFocus
+    >
+      Delete
+    </Button>
+  </DialogActions>
+</Dialog>
+{/* Delete Transaction Confirmation */}
+
              <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>Enter Password</DialogTitle>
                 <DialogContent>
