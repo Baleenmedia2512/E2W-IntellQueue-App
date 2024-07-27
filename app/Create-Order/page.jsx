@@ -69,6 +69,7 @@ const CreateOrder = () => {
   const [campaignUnits, setCampaignUnits] = useState([]); 
   // const [validityDays, setValidityDays] = useState(0)
   // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
+  const [discountAmount, setDiscountAmount] = useState(0);
     
     const dispatch = useDispatch();
     const router = useRouter();
@@ -82,6 +83,7 @@ const CreateOrder = () => {
 
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
+    const [originalUnitPrice , setOriginalUnitPrice] = useState(unitPrice);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
 
     const [previousOrderNumber, setPreviousOrderNumber] = useState('');
@@ -135,6 +137,7 @@ useEffect(() => {
     fetchQtySlab()
   } else {
     setUnitPrice(0);
+    setOriginalUnitPrice(0);
   }
 }, [rateId]);
 
@@ -163,6 +166,7 @@ const fetchQtySlab = async () => {
       dispatch(setStartQty(firstSelectedSlab.StartQty));
       setQty(firstSelectedSlab.StartQty);
       setUnitPrice(firstSelectedSlab.UnitPrice);
+      setOriginalUnitPrice(firstSelectedSlab.UnitPrice);
     }
   }  catch (error) {
     console.error(error);
@@ -223,7 +227,8 @@ useEffect(() => {
   fetchMaxOrderNumber();
   fetchUnits();
   fetchAllVendor();
-  fetchQtySlab()
+  fetchQtySlab();
+  setDiscountAmount(0);
 },[selectedValues.adType, selectedValues.rateName])
 
 const handleRateId = async () => {
@@ -540,6 +545,7 @@ const fetchRates = async () => {
     useEffect(() => {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
+      setOriginalUnitPrice(newUnitPrice);
     }, [qty])
 
     const handleSearchTermChange = (event) => {
@@ -572,7 +578,7 @@ const fetchRates = async () => {
 
       const fetchClientDetails = (clientID) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientID=${clientID}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data && data.length > 0) {
@@ -612,7 +618,7 @@ const fetchRates = async () => {
 
       const fetchPreviousOrderDetails = (clientNumber, clientName) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetailsTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetails.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data.length > 0) {
@@ -654,7 +660,7 @@ const fetchRates = async () => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -688,7 +694,7 @@ const fetchRates = async () => {
 
       const fetchMaxOrderNumber = async () => {
         try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumberTest.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
@@ -923,6 +929,24 @@ const handleConsultantNameSelection = (event) => {
   // fetchConsultantDetails(name, number);
 };
 
+const handleDiscountChange = (e) => {
+  const value = e.target.value;
+
+  // Handle the case where the input is cleared
+  if (value === '') {
+    // Reset the discount amount and unit price to the original values
+    setDiscountAmount(0);
+    setUnitPrice(originalUnitPrice);
+    return;
+  }
+
+  const parsedValue = parseFloat(value);
+  const newDiscountAmount = parsedValue;
+  setDiscountAmount(newDiscountAmount);
+
+  setUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount); 
+};
+
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
 <Dialog open={consultantDialogOpen} onClose={handleCloseDialog} fullWidth={true} maxWidth='sm'>
@@ -1057,12 +1081,25 @@ return (
                    </div>
                   </div>
 
-                  <div>
-          <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
-          <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
-            </div>
-            </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
+      <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
+        <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
+      </div>
+    </div>
+    <div>
+      <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
+      <input 
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+        type="number"
+        placeholder="Amount Adjustment"
+        value={discountAmount || ''}
+        onChange={handleDiscountChange}
+        onFocus={e => e.target.select()}
+      />
+    </div>
+  </div>
 
         </div>
         
@@ -1135,6 +1172,8 @@ return (
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
+
+          
         </div>
 
         <div id="19" name="RatesLocationSelect">

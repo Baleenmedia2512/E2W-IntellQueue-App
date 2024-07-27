@@ -99,7 +99,7 @@ const ClientsData = () => {
     // setIsNewClient(true);
 
     if (newName !== '') {
-            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContactTest.php?ClientContact=${clientContact}&ClientName=${newName}&JsonDBName=${companyName}`)
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${clientContact}&ClientName=${newName}&JsonDBName=${companyName}`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.isNewUser) {
@@ -216,7 +216,7 @@ const ClientsData = () => {
 
   const fetchClientDetails = (clientID) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientID=${clientID}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -330,7 +330,7 @@ const ClientsData = () => {
 
         // Check if contact number already exists or not
         if (newValue !== '') {
-            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContactTest.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.isNewUser) {
@@ -437,7 +437,7 @@ const ClientsData = () => {
     const isValid = BMvalidateFields();
     if (isValid) {
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
@@ -489,7 +489,7 @@ const ClientsData = () => {
     if (isValid) {
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
