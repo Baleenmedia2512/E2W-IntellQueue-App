@@ -615,8 +615,8 @@ const orderColumns = [
     // ] : [];
     
     const pieData = sumOfFinance.length > 0 ? [
-      { name: 'Income - Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
-      { name: 'Income - Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
+      { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
+      { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
       { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
     ] : [];
     
