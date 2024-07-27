@@ -18,6 +18,7 @@ import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
 
+
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
     const companyName = "Baleen Test";
@@ -58,6 +59,12 @@ const Report = () => {
     const [selectedOrder, setSelectedOrder] = useState('');
     const [orderDialogOpen, setOrderDialogOpen] = useState(false);
     const [deletingOrder, setDeletingOrder] = useState('');
+    const [restoredialogOpen, setRestoreDialogOpen] = useState(false);
+    const [newRateWiseOrderNumber, setNewRateWiseOrderNumber] = useState(null);
+    const [orderNum, setOrderNum] = useState(null);
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -132,8 +139,9 @@ const Report = () => {
                     ...order,
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
-                    markInvalidDisabled: order.CancelFlag === 1,
-                    restoreDisabled: order.CancelFlag === 0,
+                    TotalAmountReceived: order.TotalAmountReceived !== null ? `₹ ${order.TotalAmountReceived}` : '',
+                    markInvalidDisabled: order.RateWiseOrderNumber < 0,
+                    restoreDisabled: order.RateWiseOrderNumber > 0,
                 }));
                 setOrderDetails(data);
             })
@@ -141,7 +149,6 @@ const Report = () => {
                 console.error(error);
             });
     };
-    
     const fetchFinanceDetails = () => {
         axios
             .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
@@ -150,6 +157,7 @@ const Report = () => {
                     ...transaction,
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
+                    OrderValue: `₹ ${transaction.OrderValue}`,
                 }));
                 setFinanceDetails(financeDetails);
                 
@@ -165,6 +173,7 @@ const Report = () => {
             .then((response) => {
                 const data = response.data
                 setSumOfFinance(data);
+                console.log(data)
                 
             })
             .catch((error) => {
@@ -203,7 +212,7 @@ const Report = () => {
                 setOrderDialogOpen(true);
                 setDeletingOrder(OrderNum)
             } else {
-                setSuccessMessage('Order Deleted!');
+                setSuccessMessage('Order Cancelled!');
                 setTimeout(() => {
                     setSuccessMessage('');
                 }, 2000);
@@ -262,35 +271,109 @@ const handleCloseOrderDialog = () => {
   setOrderDialogOpen(false);
 };
 
-  const handleRestore = (orderNum) => {
-      axios
-          .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=restore`)
-          .then((response) => {
-              setSuccessMessage('Order Restored!');
-                    setTimeout(() => {
-                        setSuccessMessage('');
-                    }, 2000);
-              fetchOrderDetails();
-          })
-          .catch((error) => {
-              console.error(error);
-              setToastMessage('Failed to restore. Please try again.');
-              setSeverity('error');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-                }, 2000);
-          });
-  };
+const RestoreOrderDialog = ({ open, onClose, onConfirm, newRateWiseOrderNumber }) => (
+  <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Confirm Restore</DialogTitle>
+      <DialogContent>
+          <p>Rate Wise Order Number is already occupied. Do you want to continue with the new number <strong>{newRateWiseOrderNumber}</strong>?</p>
+      </DialogContent>
+      <DialogActions>
+          <Button onClick={onConfirm} color="primary">Yes</Button>
+          <Button onClick={onClose} color="primary">No</Button>
+      </DialogActions>
+  </Dialog>
+);
+
+const handleRestoreClose = () => {
+  setRestoreDialogOpen(false);
+};
+
+const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+  try {
+      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&Action=restore`);
+      
+      if (response.data.conflict) {
+          // Fetch next available RateWiseOrderNumber
+          const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
+          const data = await fetchResponse.json();
+          setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
+          setOrderNum(orderNum);
+          setRestoreDialogOpen(true);
+      } else {
+          // Successful restore
+          setSuccessMessage('Order Restored!');
+          setTimeout(() => setSuccessMessage(''), 2000);
+          fetchOrderDetails();
+      }
+  } catch (error) {
+      console.error('Error during restore operation:', error);
+      setToastMessage(`Failed to restore. Error: ${error.message}`);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+  }
+};
+
+const handleConfirm = async () => {
+  try {
+      await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+      setSuccessMessage('Order Restored with new number!');
+      setTimeout(() => setSuccessMessage(''), 2000);
+      fetchOrderDetails();
+  } catch (error) {
+      console.error('Restore failed:', error);
+      setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+  }
+  setRestoreDialogOpen(false);
+};
+
+// const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+//   try {
+//       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}`);
+
+//       if (response.data.conflict) {
+//           const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
+//           if (!fetchResponse.ok) {
+//               throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
+//           }
+//           const data = await fetchResponse.json();
+//           const newRateWiseOrderNumber = data.nextRateWiseOrderNumber;
+
+//           if (confirm(`RateWiseOrderNumber is already occupied. Do you want to continue with the new number ${newRateWiseOrderNumber}?`)) {
+//               // User agrees to use a new RateWiseOrderNumber
+//               const restoreResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+//               setSuccessMessage('Order Restored with new number!');
+//               setTimeout(() => {
+//                   setSuccessMessage('');
+//               }, 2000);
+//               fetchOrderDetails();
+//           }
+//       } else {
+//           setSuccessMessage('Order Restored!');
+//           setTimeout(() => {
+//               setSuccessMessage('');
+//           }, 2000);
+//           fetchOrderDetails();
+//       }
+//   } catch (error) {
+//       console.error(error);
+//       setToastMessage('Failed to restore. Please try again.');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//           setToast(false);
+//       }, 2000);
+//   }
+// };
 
   const fetchMarginAmount = () => {
     axios
         .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
         .then((response) => {
             const data = response.data[0]
-            // setTotalIncome(data.total_income);
-            // setTotalExpense(data.total_expense);
-            // setMarginResult(data.margin_amount);
             const income = parseFloat(data.total_income);
         const expense = parseFloat(data.total_expense);
         const margin = parseFloat(data.margin_amount);
@@ -323,128 +406,113 @@ const orderColumns = [
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
   { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
-  { field: 'rateName', headerName: 'Rate Name', width: 150 },
-  { field: 'adType', headerName: 'Rate Type', width: 150 },
+  { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
+  { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
+  { field: 'Card', headerName: 'Rate Name', width: 150 },
+  { field: 'AdType', headerName: 'Rate Type', width: 150 },
   { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
   {
-      field: 'actions',
-      headerName: 'Actions',
-      width: isMobile ? 100 : 450,
-      renderCell: (params) => {
-          const handleClick = (event) => {
-              setAnchorEl(event.currentTarget);
-          };
-          
-          const handleClose = () => {
-              setAnchorEl(null);
-          };
-          
-          const handleMenuItemClick = (action) => {
-              handleClose();
-              if (action === 'delete') handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
-              if (action === 'cancel') handleMarkInvalid(params.row.OrderNumber);
-              if (action === 'restore') handleRestore(params.row.OrderNumber);
-          };
-
-          // Calculate if the order is within the last 24 hours
-          const orderDate = new Date(params.row.OrderDate);
-          const now = new Date();
-          const isRecent = (now - orderDate) < 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-          return isMobile ? (
-              <div>
-                  <IconButton
-                      aria-controls="simple-menu"
-                      aria-haspopup="true"
-                      onClick={handleClick}
-                  >
-                      <MoreVertIcon />
-                  </IconButton>
-                  <Menu
-                      id="simple-menu"
-                      anchorEl={anchorEl}
-                      keepMounted
-                      open={Boolean(anchorEl)}
-                      onClose={handleClose}
-                  >
-                      <MenuItem
-                          onClick={() => handleMenuItemClick('cancel')}
-                          disabled={params.row.markInvalidDisabled}
-                          className='hover:bg-gray-100'
-                      >
-                          Cancel Order
-                      </MenuItem>
-                      {isRecent && (
-                          <MenuItem
-                              onClick={() => handleMenuItemClick('delete')}
-                              className='hover:bg-gray-100'
-                          >
-                              Delete Order
-                          </MenuItem>
-                      )}
-                      <MenuItem
-                          onClick={() => handleMenuItemClick('restore')}
-                          disabled={params.row.restoreDisabled}
-                          className='hover:bg-gray-100'
-                      >
-                          Restore
-                      </MenuItem>
-                  </Menu>
-              </div>
-          ) : (
-              <div className="space-x-3">
-                  <Button
-                      variant="contained"
-                      color="secondary"
-                      size="small"
-                      disabled={params.row.markInvalidDisabled}
-                      onClick={() => handleMarkInvalid(params.row.OrderNumber)}
-                      style={{ marginRight: '12px',  backgroundColor: '#e79a26',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          opacity: params.row.markInvalidDisabled ? 0.2 : 1,
-                          pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
-                  >
-                      Cancel Order
-                  </Button>
-                  {isRecent && (
-                      <Button
+    field: 'actions',
+    headerName: 'Actions',
+    width: 250,
+    renderCell: (params) => (
+        <div>
+            <Button
                           variant="contained"
                           color="primary"
                           size="small"
+                          disabled={params.row.markInvalidDisabled}
                           onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
                           style={{ marginRight: '12px', backgroundColor: '#ff5252',
                               color: 'white',
-                              fontWeight: 'bold', }}
+                              fontWeight: 'bold', 
+                              opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+                              pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
                       >
-                          Delete Order
+                          Cancel Order
                       </Button>
-                  )}
-                  <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      disabled={params.row.restoreDisabled}
-                      onClick={() => handleRestore(params.row.OrderNumber)}
-                      style={{ backgroundColor: '#1976d2',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          opacity: params.row.restoreDisabled ? 0.2 : 1,
-                          pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
-                  >
-                      Restore
-                  </Button>
-              </div>
-          );
-      },
-  },
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                disabled={params.row.restoreDisabled}
+                onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
+                style={{ backgroundColor: '#1976d2',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: params.row.restoreDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+            >
+                Restore
+            </Button>
+        </div>
+    ),
+},
+  // {
+  //     field: 'actions',
+  //     headerName: 'Actions',
+  //     width: isMobile ? 100 : 450,
+  //     renderCell: (params) => {
+  //         const handleClick = (event) => {
+  //             setAnchorEl(event.currentTarget);
+  //         };
+          
+  //         const handleClose = () => {
+  //             setAnchorEl(null);
+  //         };
+          
+  //         const handleMenuItemClick = (action) => {
+  //             handleClose();
+  //             if (action === 'delete') handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
+  //             if (action === 'cancel') handleMarkInvalid(params.row.OrderNumber);
+  //             if (action === 'restore') handleRestore(params.row.OrderNumber);
+  //         };
+
+  //         // Calculate if the order is within the last 24 hours
+  //         const orderDate = new Date(params.row.OrderDate);
+  //         const now = new Date();
+  //         const isRecent = (now - orderDate) < 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  //             <div className="space-x-3">
+  //                     <Button
+  //                         variant="contained"
+  //                         color="primary"
+  //                         size="small"
+  //                         disabled={params.row.markInvalidDisabled}
+  //                         onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+  //                         style={{ marginRight: '12px', backgroundColor: '#ff5252',
+  //                             color: 'white',
+  //                             fontWeight: 'bold', 
+  //                             opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+  //                             pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+  //                     >
+  //                         Cancel Order
+  //                     </Button>
+  //                 <Button
+  //                     variant="contained"
+  //                     color="primary"
+  //                     size="small"
+  //                     disabled={params.row.restoreDisabled}
+  //                     onClick={() => handleRestore(params.row.OrderNumber)}
+  //                     style={{ backgroundColor: '#1976d2',
+  //                         color: 'white',
+  //                         fontWeight: 'bold',
+  //                         opacity: params.row.restoreDisabled ? 0.2 : 1,
+  //                         pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+  //                 >
+  //                     Restore
+  //                 </Button>
+  //             </div>
+  //     },
+  // },
 ];
 
 
     const financeColumns = [
         { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
-        { field: 'Amount', headerName: 'Amount(₹)', width: 130},
+        { field: 'Amount', headerName: 'Amount(₹)', width: 100},
+        { field: 'OrderValue', headerName: 'Order Amount(₹)', width: 100},
         { field: 'OrderNumber', headerName: 'Order#', width: 100 },
         { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
@@ -453,76 +521,53 @@ const orderColumns = [
         {
           field: 'actions',
           headerName: 'Actions',
-          width: isMobile ? 100 : 450,
-          renderCell: (params) => {
-  
-              const handleClick = (event) => {
-                  setAnchorEl(event.currentTarget);
-              };
-  
-              const handleClose = () => {
-                  setAnchorEl(null);
-              };
-  
-              const handleMenuItemClick = (action) => {
-                  handleClose();
-                  if (action === 'delete') handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
-              };
-  
-              // Calculate if the transaction date is today
-              const transactionDate = new Date(params.row.TransactionDate);
-              const now = new Date();
-              const isToday = transactionDate.toDateString() === now.toDateString();
-  
-              return isMobile ? (
-                
-                <div>
-                {isToday && (
-                    <>
-                        <IconButton
-                            aria-controls="simple-menu"
-                            aria-haspopup="true"
-                            onClick={handleClick}
-                        >
-                            <MoreVertIcon />
-                        </IconButton>
-                        <Menu
-                            id="simple-menu"
-                            anchorEl={anchorEl}
-                            keepMounted
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                        >
-                            <MenuItem
-                                onClick={() => handleMenuItemClick('delete')}
-                                className='hover:bg-gray-100'
-                            >
-                                Delete Transaction
-                            </MenuItem>
-                        </Menu>
-                    </>
-                )}
+          width: 100,
+          renderCell: (params) => (
+            <div>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+                style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+              >
+                Delete
+              </Button>
             </div>
-            
-                
-              ) : (
-                  <div className="space-x-3">
-                      {isToday && (
-                          <Button
-                              variant="contained"
-                              color="primary"
-                              size="small"
-                              onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                              style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
-                          >
-                              Delete Transaction
-                          </Button>
-                      )}
-                  </div>
-              );
-          },
-      },
+          ),
+        },
+      //   {
+      //     field: 'actions',
+      //     headerName: 'Actions',
+      //     width: 100,
+      //     renderCell: (params) => (
+      //         <div>
+      //             <Button
+      //                         variant="contained"
+      //                         color="primary"
+      //                         size="small"
+      //                         onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+      //                         style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+      //                     >
+      //                         Delete
+      //                     </Button>
+      //         </div>
+      //     ),
+      // },
     ];
+
+    const handleOpenConfirmDialog = (rateWiseOrderNum, orderNum) => {
+      setSelectedTransaction({ rateWiseOrderNum, orderNum });
+      setOpenConfirmDialog(true);
+    };
+    
+
+    const handleConfirmDelete = () => {
+      const { rateWiseOrderNum, orderNum } = selectedTransaction;
+      handleTransactionDelete(rateWiseOrderNum, orderNum);
+      setOpenConfirmDialog(false);
+    };
+    
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
         filter === 'All' || transaction.TransactionType.toLowerCase().includes(filter.toLowerCase())
@@ -564,14 +609,21 @@ const orderColumns = [
     //     { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
     //     { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
     // ] : [];
+    // const pieData = sumOfFinance.length > 0 ? [
+    //   { name: 'Income', value: parseFloat(sumOfFinance[0].income || 0) },
+    //   { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
+    // ] : [];
+    
     const pieData = sumOfFinance.length > 0 ? [
-      { name: 'Income', value: parseFloat(sumOfFinance[0].income || 0) },
+      { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
+      { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
       { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
     ] : [];
+    
 
     const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
-    const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
+    const COLORS = ['#2196F3', '#4CAF50', '#FF5722'];
 
     const renderActiveShape = (props) => {
         const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
@@ -618,11 +670,32 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, val
 
   // Convert the value to Indian format (10K, 10L, 10Cr)
   const formattedValue = formatIndianNumber(value);
+  const fontSize = window.innerWidth > 768 ? "20px" : "14px";
 
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="20px">
-      {formattedValue}
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fontSize}>
+      ₹{value}
     </text>
+  );
+};
+
+const CustomLegend = ({ payload }) => {
+  if (!payload || !payload.length) return null;
+
+  return (
+    <div style={{ padding: '10px' }}>
+      {payload.map((entry, index) => {
+        const { value, color, payload: item } = entry;
+        const formattedValue = formatIndianNumber(value);
+
+        return (
+          <div key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+            <div style={{ width: '10px', height: '10px', backgroundColor: color, marginRight: '10px' }}></div>
+            <span>{`₹ ${formattedValue} (${item.name})`}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -695,10 +768,20 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+            
 
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
   <div style={{ width: '100%' }}>
+    <div>
+    <RestoreOrderDialog
+                open={restoredialogOpen}
+                onClose={handleRestoreClose}
+                onConfirm={handleConfirm}
+                newRateWiseOrderNumber={newRateWiseOrderNumber}
+            />
+            </div>
+            
    <div className="flex justify-between items-start">
   {/* Total Orders box */}
   {/* Total Orders box */}
@@ -772,7 +855,7 @@ const handleDateChange = (range) => {
       </div>
       <DateRangePicker dates={dates} setDates={setDates} />
       </div> */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
           pageSize={10}
@@ -813,6 +896,34 @@ const handleDateChange = (range) => {
               </button>
                 </div>
              </div>
+             {/* Delete Transaction Confirmation */}
+             <Dialog
+  open={openConfirmDialog}
+  onClose={() => setOpenConfirmDialog(false)}
+  aria-labelledby="confirm-dialog-title"
+  aria-describedby="confirm-dialog-description"
+>
+  <DialogTitle id="confirm-dialog-title">Confirm Deletion</DialogTitle>
+  <DialogContent>
+    <DialogContentText id="confirm-dialog-description">
+      Are you sure you want to delete this transaction?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenConfirmDialog(false)} color="primary">
+      Cancel
+    </Button>
+    <Button 
+      onClick={handleConfirmDelete} 
+      style={{ color: '#ff5252', borderColor: '#ff5252' }}
+      autoFocus
+    >
+      Delete
+    </Button>
+  </DialogActions>
+</Dialog>
+{/* Delete Transaction Confirmation */}
+
              <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>Enter Password</DialogTitle>
                 <DialogContent>
@@ -880,7 +991,7 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+            <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
         <div className="text-center">No records found during this timeline!</div>
@@ -909,11 +1020,14 @@ const handleDateChange = (range) => {
           verticalAlign="middle" 
           wrapperStyle={{ paddingLeft: "20px" }} 
         />
+        
         </PieChart>
+      
       </ResponsiveContainer>
       )}
       </div>
-             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)' }}>
+      </div>
+             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', marginBottom: '54px' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
