@@ -925,7 +925,7 @@ var selectedRate = '';
         }
         setEditMode(false);
         // showToastMessage('success', 'Updated Successfully!');
-        setSuccessMessage('Updated Successfully!');
+        setSuccessMessage('Updated Successfully! ' + data.message);
           setTimeout(() => {
         setSuccessMessage('');
       }, 2000);
@@ -1232,7 +1232,7 @@ var selectedRate = '';
             setIsLeadDays(true)
         }else { 
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}${selectedValues.Package ? ':' + selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage('Rate Card Added Successfully!');
@@ -1309,6 +1309,7 @@ const updateSlabData = (qty, newUnitPrice) => {
 
   const handleClearRateId = () => {
     setEditMode(false)
+    setRateSearchTerm("")
     dispatch(setRateId(""));
     dispatch(setSelectedValues({
       rateName: "",
@@ -1354,7 +1355,7 @@ const updateSlabData = (qty, newUnitPrice) => {
     const selectedRate = e.target.value;
     const selectedRateId = selectedRate.split('-')[0];
     setRatesSearchSuggestion([]);
-    setRateSearchTerm("");
+    setRateSearchTerm(e.target.value);
     handleRateId(selectedRateId)
     setRateId(selectedRateId)
   }
@@ -1469,7 +1470,7 @@ const updateSlabData = (qty, newUnitPrice) => {
       )} */}
             <div className="bg-white p-4 rounded-lg shadow-lg">
       <form className="space-y-4">
-      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Add or Edit your Rates here</h3>
+      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3>
             
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <div className='mt-4' > {/*name="RateSearchInput"*/}
@@ -1481,7 +1482,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                   type="text"
                   id="RateSearchInput"
                  // name='RateSearchInput'
-                  placeholder="Ex. 4000"
+                  placeholder="Ex: RateName Type"
                   value={rateSearchTerm}
                   onChange = {handleRateSearch}
                   onFocus={(e) => {e.target.select()}}
@@ -1495,7 +1496,7 @@ const updateSlabData = (qty, newUnitPrice) => {
               </Button>
               </span>
               {ratesSearchSuggestion && (
-              <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg">
+              <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                 {ratesSearchSuggestion.map((name, index) => (
                   <li key={index}>
                     <button

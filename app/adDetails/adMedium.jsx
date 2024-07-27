@@ -9,15 +9,24 @@ import { useDispatch } from 'react-redux';
 import { resetClientData } from '@/redux/features/client-slice';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { useAppSelector } from '@/redux/store';
+import Badge from '@mui/material/Badge';
+import { styled } from '@mui/material/styles';
+import IconButton from '@mui/material/IconButton';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { FetchRateSeachTerm } from '../api/FetchAPI';
 
 export const AdMediumPage = () => {
   const dispatch = useDispatch();
   //const [selectedAdMedium, setSelectedAdMedium] = useState('');
   const [datas, setDatas] = useState([]);
+  const [rateSearchTerm,setRateSearchTerm] = useState("");
+  const [ratesSearchSuggestion, setRatesSearchSuggestion] = useState([]);
   //const [showAdTypePage, setShowAdTypePage] = useState(false);
   const routers = useRouter();
-
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
   const [searchInput, setSearchInput] = useState('');
+  const companyName = 'Baleen Test';
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   // const datas = useAppSelector(state => state.quoteSlice.validRates);
   
@@ -42,6 +51,15 @@ export const AdMediumPage = () => {
     option.rateName.toLowerCase().includes(searchInput.toLowerCase())
   );
 
+  const StyledBadge = styled(Badge)(({ theme }) => ({
+    '& .MuiBadge-badge': {
+      right: -3,
+      top: 13,
+      border: `2px solid ${theme.palette.background.paper}`,
+      padding: '0 4px',
+    },
+  }));
+
   const icons = (iconValue) => {
     if (iconValue === 'Automobile') {
       return (<Image src="/images/school-bus.png" alt="car Icon" width={60} height={60} />);
@@ -64,12 +82,43 @@ export const AdMediumPage = () => {
     }
   }
 
+  const handleRateSearch = async(e) =>{
+    setRateSearchTerm(e.target.value);
+    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    setRatesSearchSuggestion(searchSuggestions);
+  }
+
+  const fetchRate = async() => {
+    try {
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
+      if(!response.ok){
+        throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
+      }
+      const data = await response.json();
+      const firstData = data[0];
+      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true}))
+      console.log(data)
+    } catch (error) {
+      console.error("Error while fetching rates: " + error)
+    }
+  }
+
+  const handleRateSelection = (e) => {
+    const selectedRate = e.target.value;
+    const selectedRateId = selectedRate.split('-')[0];
+    setRatesSearchSuggestion([]);
+    setRateSearchTerm(selectedRate);
+
+    fetchRate();
+    dispatch(setQuotesData({currentPage: "adDetails", rateId: selectedRateId}))
+  }
+
   useEffect(() => {
     const FetchValidRates = async() => {
       if (!username) {
           routers.push('/login');
       } else{
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
           const data = await response.json();
           setDatas(data)
       }
@@ -77,7 +126,7 @@ export const AdMediumPage = () => {
 
     FetchValidRates()
     
-    dispatch(setQuotesData({currentPage: "adMedium"}))
+    //dispatch(setQuotesData({currentPage: "adMedium"}))
   }, []);
 
   return (
@@ -90,8 +139,13 @@ export const AdMediumPage = () => {
               routers.push('/');
               dispatch(resetClientData()); }}
             > 
-          <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> </button>
-            <button
+          <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back </button>
+          <IconButton aria-label="cart" className='rounded-none text-center shadow-md left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+                <StyledBadge badgeContent={cartItems.length} color="primary">
+                  <ShoppingCartIcon className='text-black' />
+                </StyledBadge>
+              </IconButton>
+            {/* <button
               className="px-2 py-1 rounded text-center"
               onClick={() => {
                 routers.push('/');
@@ -113,18 +167,45 @@ export const AdMediumPage = () => {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </button></>
+              </button> */}</>
           </div>
           <br/>
           <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
           <div className='mx-[8%] relative'>
-          <input
+          {/* <input
           className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
         type="text"
         value={searchInput}
         onChange={handleSearchInputChange}
         placeholder="Search"
-      />
+      /> */}
+       <input
+          className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+          // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
+          type="text"
+          id="RateSearchInput"
+          // name='RateSearchInput'
+          placeholder="Ex: RateName Type"
+          value={rateSearchTerm}
+          onChange = {handleRateSearch}
+          onFocus={(e) => {e.target.select()}}
+        />
+      {ratesSearchSuggestion && (
+              <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+                {ratesSearchSuggestion.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleRateSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
       <div className="absolute top-0 right-0 mt-2 mr-3">
           <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
         </div></div>

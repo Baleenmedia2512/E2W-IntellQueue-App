@@ -3,11 +3,11 @@ import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import AdCategoryPage from './adCategory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
-import { Padding, RemoveCircleOutline } from '@mui/icons-material';
+import { Padding, RemoveCircleOutline, plus } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
@@ -15,6 +15,7 @@ import { Alert, Button, Box } from '@mui/material';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
+import { setClientData } from '@/redux/features/client-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -49,6 +50,7 @@ const CheckoutPage = () => {
   const remarks = useAppSelector(state => state.quoteSlice.remarks);
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
+  const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
   const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1;
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
@@ -161,50 +163,30 @@ const CheckoutPage = () => {
     <div className=" mt-8 text-black">
 
         <div className='mx-[8%]'>
+        {cartItems.length >= 1 ? (
+          <div>
           <div className="flex flex-row justify-between mt-8">
+          
           <div className="mb-8 flex items-center">
+
               <button
-                className="mr-8 hover:scale-110 hover:text-orange-900"
+                className="mr-8 hover:scale-110 hover:text-blue-500 hover:animate-bounce"
                 onClick={() => {
                   dispatch(setQuotesData({currentPage: "adDetails"}))
                 }}
               >
-                <FontAwesomeIcon icon={faArrowLeft} className=' text-xl' />
+                <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
               </button>
               </div>
-              <> <h1 className='text-2xl font-bold text-center mb-4'>Checkout</h1>
-              <button
-                className=" px-2 py-1 rounded text-center"
-                onClick={() => {
-                  // routers.push('/'); 
-                  const userConfirmed = window.confirm("You have items in cart. Do you want to clear the items in cart too?");
-                  if(userConfirmed){
-                    dispatch(resetQuotesData());
-                    dispatch(resetCartItem());
-                  }else{
-                    dispatch(resetQuotesData());
-                  }
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="h-6 w-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button></>
+              <> <h1 className='text-2xl font-bold text-center mb-4'>Cart</h1>
+              <button className='border px-2 py-2 h-fit bg-blue-500 text-white rounded-xl hover:bg-blue-200 hover:text-black hover:animate-bounce' onClick={() => dispatch(resetCartItem())}>Clear All</button>
+              </>
           </div>
-          <h1 className='mb-14 font-semibold'>Verify before sending quote</h1>
+          <h1 className="text-md md:text-md lg:text-lg font-bold text-blue-500 mb-4">Verify before sending Quote</h1>
           <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
+            
             <div>
+              
               <h1 className='mb-4 font-bold text-center'>AD Details</h1>
                 <div className='overflow-x-auto'>
               <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
@@ -244,36 +226,75 @@ const CheckoutPage = () => {
         </tbody>    
       </table>
       </div>
+      <div className='flex justify-center mb-4'>
+        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adMedium'}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
+      </div>
               <h1 className='mb-4 font-bold text-center'>Client Details</h1>
 
               <table className='mb-6'>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Client Name</td>
-                  <td>:</td><td>  {clientName}</td>
+                  <td>:</td><td> <input placeholder="Ex: Tony" className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value = {clientName} onChange={(e) => dispatch(setClientData({clientName: e.target.value}))}></input></td>
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Client Number</td>
-                  <td>:</td><td>  {clientContact}</td>
+                  <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" maxLength={10} className='w=full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => dispatch(setClientData({clientContact: e.target.value}))}></input></td>
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Client E-Mail</td>
-                  <td>:</td><td>  {clientEmail}</td>
+                  <td>:</td><td> <input placeholder="Ex: client@email.com" className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientEmail} onChange={(e) => dispatch(setClientData({clientEmail: e.target.value}))}></input></td>
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Source</td>
-                  <td>:</td><td>  {clientSource}</td>
+                  <td>:</td><td> <select className='py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value={clientSource} onChange={(e) => dispatch(setClientData({clientSource: e.target.value}))}>{bmsources.map((item, index) => (
+                    <option key={index}>{item}</option>
+                  ))}</select></td>
                 </tr>
               </table>
-            </div></div>
+            </div>
+
+</div>
           <div className='flex flex-col justify-center items-center'>
 
             <button
-              className="bg-green-500 text-white px-4 py-2 mb-4 rounded-full transition-all duration-300 ease-in-out hover:bg-green-600"
+              className="bg-blue-500 text-white px-4 py-2 mb-4 rounded-xl transition-all duration-300 ease-in-out hover:bg-blue-200 hover:text-black"
               onClick={handlePdfGeneration}
             >
               Download Quote
             </button>
+            
           </div>
+          </div>
+        ):(
+          <div>
+          <div className="flex flex-row justify-between mt-8">
+          
+          <div className="mb-8 flex items-center">
+
+              <button
+                className="mr-8 hover:scale-110 hover:text-blue-500 hover:animate-bounce"
+                onClick={() => {
+                  dispatch(setQuotesData({currentPage: "adDetails"}))
+                }}
+              >
+                <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
+              </button>
+              </div>
+              <> <h1 className='text-2xl font-bold text-center mb-4'>Cart</h1>
+              <button disabled className='border px-2 py-2 h-fit bg-gray-500 text-white rounded-xl cursor-not-allowed'>Clear All</button>
+              </>
+          </div>
+          <div className='text-center justify-center'>
+            <label className='font-800 text-xl'> Oops! No Items in Cart</label>
+            <span className='flex flex-row justify-center mt-4'>
+              <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adMedium"}))}>Add Items </button>
+              <label className='ml-2 text-xl'> in cart to generate quote</label>
+            </span>
+          </div>
+          
+          </div>
+        )}
+        
         </div>       
       <div className="bg-surface-card p-8 rounded-2xl mb-4">
                 <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
@@ -282,6 +303,7 @@ const CheckoutPage = () => {
                   </MuiAlert>
                 </Snackbar>
               </div>
+              
     </div>
   )
 

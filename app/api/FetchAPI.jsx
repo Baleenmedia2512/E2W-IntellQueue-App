@@ -7,6 +7,9 @@ const api = axios.create({
 export const FetchRateSeachTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
     const response = await api.get("SearchRates.php/get",{
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
         params:{
             JsonDBName: DBName,
             JsonSearchTerm: SearchTerm

@@ -6,6 +6,10 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
+import Badge from '@mui/material/Badge';
+import { styled } from '@mui/material/styles';
+import IconButton from '@mui/material/IconButton';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useAppSelector } from '@/redux/store';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 
@@ -18,12 +22,25 @@ const RemarksPage = () => {
   const selectedAdType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
+  const companyName = 'Baleen Test'
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
+
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const [searchInput, setSearchInput] = useState('');
 
   const handleSearchInputChange = (event) => {
     setSearchInput(event.target.value);
   };
+
+  const StyledBadge = styled(Badge)(({ theme }) => ({
+    '& .MuiBadge-badge': {
+      right: -3,
+      top: 13,
+      border: `2px solid ${theme.palette.background.paper}`,
+      padding: '0 4px',
+    },
+  }));
 
   //Choose data based on AdCategory - also sorting and removing duplicates
   const filteredData = datas
@@ -52,7 +69,7 @@ const RemarksPage = () => {
         if (!username) {
           routers.push('/login');
         } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
           const data = await response.json();
           const filData = data.filter(item => item.adType === adCategory && item.rateName === adMedium);
           setDatas(filData);
@@ -76,11 +93,15 @@ const RemarksPage = () => {
     onClick={() => {
       dispatch(setQuotesData({currentPage: 'edition', selectedEdition: ''}))
   }
-    }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> </button>
+    }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> Back</button>
     {adMedium} {greater} { selectedAdType} {greater} {adCategory} {greater} {edition}</h1>
 
-        
-    <button
+    <IconButton aria-label="cart" className='rounded-none text-center shadow-md left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+                <StyledBadge badgeContent={cartItems.length} color="primary">
+                  <ShoppingCartIcon className='text-black' />
+                </StyledBadge>
+              </IconButton>
+    {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
               dispatch(resetQuotesData());
@@ -100,7 +121,7 @@ const RemarksPage = () => {
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button></>
+          </button> */}</>
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
       <br />
