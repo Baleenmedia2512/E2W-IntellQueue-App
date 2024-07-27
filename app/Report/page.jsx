@@ -18,6 +18,7 @@ import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
 
+
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
     const companyName = "Baleen Test";
@@ -172,6 +173,7 @@ const Report = () => {
             .then((response) => {
                 const data = response.data
                 setSumOfFinance(data);
+                console.log(data)
                 
             })
             .catch((error) => {
@@ -607,14 +609,21 @@ const orderColumns = [
     //     { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
     //     { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
     // ] : [];
+    // const pieData = sumOfFinance.length > 0 ? [
+    //   { name: 'Income', value: parseFloat(sumOfFinance[0].income || 0) },
+    //   { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
+    // ] : [];
+    
     const pieData = sumOfFinance.length > 0 ? [
-      { name: 'Income', value: parseFloat(sumOfFinance[0].income || 0) },
+      { name: 'Income - Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
+      { name: 'Income - Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
       { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
     ] : [];
+    
 
     const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
-    const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
+    const COLORS = ['#2196F3', '#4CAF50', '#FF5722'];
 
     const renderActiveShape = (props) => {
         const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
@@ -667,6 +676,26 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, val
     <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fontSize}>
       ₹{value}
     </text>
+  );
+};
+
+const CustomLegend = ({ payload }) => {
+  if (!payload || !payload.length) return null;
+
+  return (
+    <div style={{ padding: '10px' }}>
+      {payload.map((entry, index) => {
+        const { value, color, payload: item } = entry;
+        const formattedValue = formatIndianNumber(value);
+
+        return (
+          <div key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+            <div style={{ width: '10px', height: '10px', backgroundColor: color, marginRight: '10px' }}></div>
+            <span>{`₹ ${formattedValue} (${item.name})`}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
