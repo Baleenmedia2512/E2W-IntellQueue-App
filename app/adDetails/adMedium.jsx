@@ -135,7 +135,7 @@ export const AdMediumPage = () => {
           <div className="flex flex-row justify-between mx-[8%] mt-8">
 
             <> 
-            <button className='hover:scale-110 hover:text-orange-900' onClick={() => {
+            <button  className="mr-8 hover:scale-110 text-blue-500 font-semibold hover:animate-pulse border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg " onClick={() => {
               routers.push('/');
               dispatch(resetClientData()); }}
             > 

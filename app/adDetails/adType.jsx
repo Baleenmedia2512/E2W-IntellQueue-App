@@ -89,7 +89,7 @@ const AdTypePage = () => {
         <>
           
             <button 
-              className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out ' 
+              className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
               onClick={() => {moveToPreviousPage()}}
             > 
               <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back 
