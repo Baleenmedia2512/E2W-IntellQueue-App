@@ -244,11 +244,7 @@ const AdDetailsPage = () => {
       Cookies.set('isAdDetails', true);
       dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
-      if(clientName){
-        dispatch(setQuotesData({currentPage: "checkout"}))
-      } else{
-        routers.push('/');
-      }
+      dispatch(setQuotesData({currentPage: "checkout"}))
     }
   }
 
@@ -352,7 +348,7 @@ const AdDetailsPage = () => {
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             <div className="mb-8 flex items-center justify-between">
               <button
-                className="mr-8 hover:scale-110 hover:text-orange-900"
+                 className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
                   position === "" ?
                   dispatch(setQuotesData({selectedEdition: "", currentPage: "edition"})) :
