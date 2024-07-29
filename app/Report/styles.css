@@ -47,3 +47,14 @@
       font-size: 8px;
     }
   }
+
+  .chartContainer {
+    width: 100%;
+    height: 100%;
+    max-width: 100%; /* Ensure it scales properly */
+    overflow: hidden; /* Prevent overflow */
+  }
+
+  .pie-chart text {
+    pointer-events: none; /* Prevent text from blocking interactions */
+  }

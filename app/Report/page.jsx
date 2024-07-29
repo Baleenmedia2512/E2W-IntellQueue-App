@@ -32,7 +32,7 @@ const Report = () => {
     const [filter, setFilter] = useState('All');
     // const [orderFilterModel, setOrderFilterModel] = useState({ items: [] });
     // const [financeFilterModel, setFinanceFilterModel] = useState({ items: [] });
-    const [activeIndex, setActiveIndex] = React.useState(0);
+    const [activeIndex, setActiveIndex] = useState(0);
     const [sumOfOrders, setSumOfOrders] = useState([]);
     const [toastMessage, setToastMessage] = useState('');
      const [successMessage, setSuccessMessage] = useState('');
@@ -95,10 +95,6 @@ const Report = () => {
 
     const handleDialogClose = () => {
         setDialogOpen(false);
-    };
-
-    const onPieEnter = (_, index) => {
-      setActiveIndex(index);
     };
 
     const handleChange = (event, newValue) => {
@@ -173,7 +169,6 @@ const Report = () => {
             .then((response) => {
                 const data = response.data
                 setSumOfFinance(data);
-                console.log(data)
                 
             })
             .catch((error) => {
@@ -407,6 +402,7 @@ const orderColumns = [
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
   { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
   { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
+  { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
   { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
   { field: 'Card', headerName: 'Rate Name', width: 150 },
   { field: 'AdType', headerName: 'Rate Type', width: 150 },
@@ -513,6 +509,7 @@ const orderColumns = [
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
         { field: 'Amount', headerName: 'Amount(₹)', width: 100},
         { field: 'OrderValue', headerName: 'Order Amount(₹)', width: 100},
+        { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
         { field: 'OrderNumber', headerName: 'Order#', width: 100 },
         { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
@@ -600,19 +597,6 @@ const orderColumns = [
     // };
 
     // Data for the pie chart
-    // const pieData = [
-    //     { name: 'Income', value: 'income' },
-    //     { name: 'Expense', value: 'income' },
-    // ];
-
-    // const pieData = sumOfFinance.length > 0 ? [
-    //     { name: 'Income', value: parseFloat(sumOfFinance[0].income.replace(/,/g, '')) },
-    //     { name: 'Expense', value: parseFloat(sumOfFinance[0].expense.replace(/,/g, '')) },
-    // ] : [];
-    // const pieData = sumOfFinance.length > 0 ? [
-    //   { name: 'Income', value: parseFloat(sumOfFinance[0].income || 0) },
-    //   { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
-    // ] : [];
     
     const pieData = sumOfFinance.length > 0 ? [
       { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
@@ -625,28 +609,7 @@ const orderColumns = [
 
     const COLORS = ['#2196F3', '#4CAF50', '#FF5722'];
 
-    const renderActiveShape = (props) => {
-        const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
-        
-        return (
-          <g>
-            <text x={cx} y={cy} textAnchor="middle" fill="#333"
-            dominantBaseline="central">
-                <tspan style={{ fontSize: '36px', fontWeight: 'bold', fontFamily: 'Roboto, sans-serif' }}>{`${(percent * 100).toFixed(0)}`}</tspan>
-                <tspan dx="0" dy="4" style={{ fontSize: '16px' }}>%</tspan>
-                </text>
-            <Sector
-              cx={cx}
-              cy={cy}
-              innerRadius={innerRadius}
-              outerRadius={outerRadius}
-              startAngle={startAngle}
-              endAngle={endAngle}
-              fill={fill}
-            />
-          </g>
-        );
-      };
+ 
 
       // Styles
       const styles = {
@@ -661,23 +624,67 @@ const orderColumns = [
         },
       };
 
-const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
- // Calculate new coordinates based on angle and radius
- const x = cx + (radius + 10) * Math.cos(-midAngle * RADIAN); // Adjusted x position
- const y = cy + (radius + 10) * Math.sin(-midAngle * RADIAN); // Adjusted y position
+      const pieChartWidth = window.innerWidth > 768 ? 400 : 300; // Adjust width for mobile
+      const pieChartHeight = window.innerWidth > 768 ? 400 : 300; // Adjust height for mobile
+      
+// Function to render the active shape with proper adjustments for negative values
+const renderActiveShape = (props) => {
+  const RADIAN = Math.PI / 180;
+  const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  const sin = Math.sin(-RADIAN * midAngle);
+  const cos = Math.cos(-RADIAN * midAngle);
+  const sx = cx + (outerRadius + 10) * cos;
+  const sy = cy + (outerRadius + 10) * sin;
+  const mx = cx + (outerRadius + 15) * cos;
+  const my = cy + (outerRadius + 30) * sin;
+  const ex = mx;
+  const ey = my;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+  const sign = value < 0 ? '-' : '';
+  
 
-  // Convert the value to Indian format (10K, 10L, 10Cr)
-  const formattedValue = formatIndianNumber(value);
-  const fontSize = window.innerWidth > 768 ? "20px" : "14px";
+  // Adjust text position for smaller screens
+  const textOffset = 0; 
 
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fontSize}>
-      ₹{value}
-    </text>
+    <g>
+      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
+        {payload.name}
+      </text>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
+        fill={fill}
+      />
+      {/* <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
+      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" /> */}
+      <text x={ex + (cos >= 0 ? 1 : -1) * textOffset} y={ey} textAnchor={textAnchor} fill={fill}>{`${sign}₹${formatIndianNumber(Math.abs(value))}`}</text>
+      <text x={ex + (cos >= 0 ? 1 : -1) * textOffset} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
+        {`(${(percent * 100).toFixed(2)}%)`}
+      </text>
+    </g>
   );
 };
+
+
+
+const onPieEnter = (_, index) => {
+  setActiveIndex(index);
+};
+
 
 const CustomLegend = ({ payload }) => {
   if (!payload || !payload.length) return null;
@@ -699,17 +706,22 @@ const CustomLegend = ({ payload }) => {
   );
 };
 
-// Function to format numbers in Indian format
-const formatIndianNumber = (num) => {
-  if (num >= 10000000) {
-    return `${(num / 10000000).toFixed(2)}Cr`;
-  } else if (num >= 100000) {
-    return `${(num / 100000).toFixed(1)}L`;
-  } else if (num >= 1000) {
-    return `${(num / 1000).toFixed(0)}K`;
+// Utility function to format numbers with commas in Indian format
+const formatIndianNumber = (number) => {
+  const parts = number.toString().split('.');
+  let integerPart = parts[0];
+  const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
+
+  // Adding commas to the integer part
+  const lastThree = integerPart.substring(integerPart.length - 3);
+  const otherDigits = integerPart.substring(0, integerPart.length - 3);
+  if (otherDigits !== '') {
+    integerPart = otherDigits.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
   } else {
-    return `${num}`;
+    integerPart = lastThree;
   }
+
+  return integerPart + decimalPart;
 };
 
 const handleDateChange = (range) => {
@@ -730,6 +742,7 @@ const handleDateChange = (range) => {
   }
   return number;
 };
+
 
     return (
         <Box sx={{ width: '100%', padding: '0px' }}>
@@ -996,34 +1009,36 @@ const handleDateChange = (range) => {
              {isPieEmpty ? (
         <div className="text-center">No records found during this timeline!</div>
       ) : (
+        <div className=" chartContainer">
 <ResponsiveContainer width="100%" height="100%">
-        <PieChart width={400} height={400}>
-          <Pie
-            data={pieData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={renderCustomizedLabel}
-            outerRadius={100}
-            fill="#8884d8"
-            dataKey="value"
-            stroke='none'
-          >
-            {pieData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip />
-        <Legend 
-          layout="vertical" 
-          align="right" 
-          verticalAlign="middle" 
-          wrapperStyle={{ paddingLeft: "20px" }} 
-        />
-        
-        </PieChart>
-      
-      </ResponsiveContainer>
+  <PieChart width={pieChartWidth} height={pieChartHeight}>
+    <Pie
+      activeIndex={activeIndex}
+      activeShape={renderActiveShape}
+      data={pieData}
+      cx="50%"
+      cy="50%"
+      innerRadius={window.innerWidth > 768 ? 60 : 50} // Adjust for mobile
+      outerRadius={window.innerWidth > 768 ? 80 : 70} // Adjust for mobile
+      fill="#8884d8"
+      dataKey="value"
+      onMouseEnter={onPieEnter}
+      labelLine={false}
+      stroke="none"
+    >
+      {pieData.map((entry, index) => (
+        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+      ))}
+    </Pie>
+    {/* <Legend 
+      layout="vertical" 
+      align="right" 
+      verticalAlign="middle" 
+      wrapperStyle={{ paddingLeft: "20px" }} 
+    /> */}
+  </PieChart>
+</ResponsiveContainer>
+</div>
       )}
       </div>
       </div>
