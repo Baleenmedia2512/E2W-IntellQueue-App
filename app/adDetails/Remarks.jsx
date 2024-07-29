@@ -89,7 +89,7 @@ const RemarksPage = () => {
       <div className="flex flex-row justify-between mx-[8%] mt-8">
         <>
       
-    <h1 className='font-semibold'><button className='  hover:scale-110 hover:text-orange-900 mr-8' 
+    <h1 className='font-semibold'><button  className="mr-8 hover:scale-110 font-semibold text-blue-500 hover:animate-pulse border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
     onClick={() => {
       dispatch(setQuotesData({currentPage: 'edition', selectedEdition: ''}))
   }

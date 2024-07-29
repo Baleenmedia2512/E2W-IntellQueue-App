@@ -100,7 +100,7 @@ const EditionPage = () => {
         <div className='flex flex-row'>
          
             <button 
-              className='hover:scale-110 hover:text-orange-900 mr-4' 
+               className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
               onClick={() => {
               dispatch(setQuotesData({adCategory: "", currentPage: "adCategory"}))
               }}
