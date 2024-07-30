@@ -9,6 +9,10 @@ import { useRouter } from 'next/navigation';
 //import { AdMediumPage } from './page';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
+import Badge from '@mui/material/Badge';
+import { styled } from '@mui/material/styles';
+import IconButton from '@mui/material/IconButton';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 
 const AdTypePage = () => {
@@ -16,7 +20,9 @@ const AdTypePage = () => {
   const dispatch = useDispatch();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   // const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
-
+  const companyName = 'Baleen Test'
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const routers = useRouter();
@@ -26,6 +32,15 @@ const AdTypePage = () => {
     setSearchInput(event.target.value);
   };
 
+  const StyledBadge = styled(Badge)(({ theme }) => ({
+    '& .MuiBadge-badge': {
+      right: -3,
+      top: 13,
+      border: `2px solid ${theme.palette.background.paper}`,
+      padding: '0 4px',
+    },
+  }));
+
   //fetch all the valid rates at the loading of the page
   useEffect(() => {
     const fetchData = async () => {
@@ -34,7 +49,7 @@ const AdTypePage = () => {
         if (!username) {
           routers.push('/login');
         } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
           const data = await response.json();
           setDatas(data);
         }
@@ -70,18 +85,24 @@ const AdTypePage = () => {
   return (
     <div>
       <div className='text-black'>
-      <div className="flex flex-row justify-between mx-[8%] mt-8">
+      <div className="flex flex-row justify-between mx-[2%] mt-4">
         <>
-          <h1 className='font-semibold'>
+          
             <button 
-              className='hover:transform hover:scale-110 transition-transform duration-300 ease-in-out mr-8' 
+              className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
               onClick={() => {moveToPreviousPage()}}
             > 
-              <FontAwesomeIcon icon={faArrowLeft} className=' text-xl'/> 
+              <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back 
             </button> 
+            <h1 className='font-semibold mt-2'>
             {adMedium}
           </h1>
-          <button
+          <IconButton aria-label="cart" className='rounded-none text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+                <StyledBadge badgeContent={cartItems.length} color="primary">
+                  <ShoppingCartIcon className='text-black' />
+                </StyledBadge>
+              </IconButton>
+          {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
               dispatch(resetQuotesData());
@@ -101,7 +122,7 @@ const AdTypePage = () => {
               d="M6 18L18 6M6 6l12 12"
             />
             </svg>
-          </button>
+          </button> */}
         </>
       </div>
       <br />

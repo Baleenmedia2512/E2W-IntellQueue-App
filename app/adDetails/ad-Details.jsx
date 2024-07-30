@@ -12,9 +12,11 @@ import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
-import { resetClientData } from '@/redux/features/client-slice';
+import Badge from '@mui/material/Badge';
+import { styled } from '@mui/material/styles';
+import IconButton from '@mui/material/IconButton';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { addItemsToCart } from '@/redux/features/cart-slice';
-import { Category } from '@mui/icons-material';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -44,6 +46,8 @@ const AdDetailsPage = () => {
   const [datas, setDatas] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
+  const companyName = 'Baleen Test'
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -64,7 +68,8 @@ const AdDetailsPage = () => {
   const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
   const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
-  
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
+
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
@@ -87,24 +92,31 @@ const AdDetailsPage = () => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
     }
-    if (adMedium === '') {
-      dispatch(setQuotesData({currentPage: 'adMedium'}));
-    } else if (adType === '') {
-      dispatch(setQuotesData({currentPage: 'adType'}));
-    } else if (adCategory === '') {
-      dispatch(setQuotesData({currentPage: 'adCategory'}));
-    } else if (edition === '') {
-      dispatch(setQuotesData({currentPage: 'edition'}));
-    }
+    // if (adMedium === '') {
+    //   dispatch(setQuotesData({currentPage: 'adMedium'}));
+    // } else if (adType === '') {
+    //   dispatch(setQuotesData({currentPage: 'adType'}));
+    // } else if (adCategory === '') {
+    //   dispatch(setQuotesData({currentPage: 'adCategory'}));
+    // } else if (edition === '') {
+    //   dispatch(setQuotesData({currentPage: 'edition'}));
+    // }
     
   },[])
 
-  
+  const StyledBadge = styled(Badge)(({ theme }) => ({
+    '& .MuiBadge-badge': {
+      right: -3,
+      top: 13,
+      border: `2px solid ${theme.palette.background.paper}`,
+      padding: '0 4px',
+    },
+  }));
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -122,26 +134,42 @@ const AdDetailsPage = () => {
       }
     };
 
+    const fetchRate = async() => {
+      try {
+        const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
+        if(!response.ok){
+          throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
+        }
+        const data = await response.json();
+        const firstData = data[0];
+        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true}))
+        console.log(data)
+      } catch (error) {
+        console.error("Error while fetching rates: " + error)
+      }
+    }
+
+    fetchRate();
     fetchData();
   }, [rateId]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchRateId.php/?JsonRateName=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonVendorName=${selectedVendor}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        dispatch(setQuotesData({rateId: data}));
-      }
-      catch (error) {
-        console.error(error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchRateId.php/?JsonRateName=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonVendorName=${selectedVendor}&JsonDBName=${companyName}`);
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! Status: ${response.status}`);
+  //       }
+  //       const data = await response.json();
+  //       dispatch(setQuotesData({rateId: data}));
+  //     }
+  //     catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
 
-    fetchData();
-  }, [selectedVendor]);
+  //   fetchData();
+  // }, [selectedVendor]);
 
   const handleQtySlabChange = () => {
     const qtySlabNumber = parseInt(qtySlab)
@@ -173,7 +201,7 @@ const AdDetailsPage = () => {
         if (!username) {
           routers.push('/login');
         } else {
-          const response = await fetch('https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php');
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
           const data = await response.json();
 
           //filter rates according to adMedium, adType and adCategory
@@ -183,8 +211,8 @@ const AdDetailsPage = () => {
             )
             .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
           setDatas(filterdata);
-          dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-          // setMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2))
+          //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
+          dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2)}))
         }
       } catch (error) {
         console.error(error);
@@ -192,8 +220,9 @@ const AdDetailsPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [adMedium]);
 
+ 
   const dispatch = useDispatch();
   const handleSubmit = () => {
     if (qty === '' || campaignDuration === '' || margin === '') {
@@ -215,11 +244,7 @@ const AdDetailsPage = () => {
       Cookies.set('isAdDetails', true);
       dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
-      if(clientName){
-        dispatch(setQuotesData({currentPage: "checkout"}))
-      } else{
-        routers.push('/');
-      }
+      dispatch(setQuotesData({currentPage: "checkout"}))
     }
   }
 
@@ -274,37 +299,37 @@ const AdDetailsPage = () => {
   const items = [
     {
       content: (
-        <div class="mb-4 bg-blue-600 rounded-md p-4 text-white">
+        <div class="mb-4 bg-blue-300 rounded-md p-4 text-black">
           <p className="font-bold text-sm mb-1">
             *Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}
           </p>
           <p className="font-semibold text-sm mb-1 ">
             *Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}
           </p>
-          <p className="text-sm ">=
+          {/* <p className="text-sm ">=
             ₹{formattedRupees(qty * (unitPrice * (Number(marginPercentage) + 100) / 100) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees((unitPrice / (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) /100)}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
           <p className="text-sm  mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
           <p className="font-semibold text-sm">
             * GST Amount : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (0.18))}
-          </p>
+          </p> */}
         </div>
       )
     },
     {
       content: (
-        <div className="mb-4 bg-green-600 rounded-md p-4 text-white">
+        <div className="mb-4 bg-yellow-300 rounded-md p-4 text-black">
           <p className="font-bold text-sm mb-1">
             *Vendor Cost(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (1.18)))}
           </p>
           <p className="font-semibold text-sm mb-1">
             *Vendor Cost(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
           </p>
-          <p className="text-sm text-gray-300">
+          {/* <p className="text-sm text-gray-300">
             ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
           <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
           <p className="font-semibold text-sm">
             * GST Amount(net) : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (0.18))}
-          </p>
+          </p> */}
         </div>
       )
     }
@@ -321,22 +346,27 @@ const AdDetailsPage = () => {
     <div className=" mt-8 text-black">    
       <div className="fixed left-[8%] right-[8%] overflow-hidden no-pull-to-refresh">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
-            <div className="mb-8 flex items-center">
+            <div className="mb-8 flex items-center justify-between">
               <button
-                className="mr-8 hover:scale-110 hover:text-orange-900"
+                 className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
                   position === "" ?
                   dispatch(setQuotesData({selectedEdition: "", currentPage: "edition"})) :
                   dispatch(setQuotesData({selectedPosition: "", currentPage: "remarks"}))
                 }}
               >
-                <FontAwesomeIcon icon={faArrowLeft} className=' text-xl' />
+                <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
               </button>
 
               <h2 className="font-semibold text-wrap mb-1">
                 {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {position === "" ? "" : greater} {position === "" ? "" : position} {greater} {rateId}
               </h2>
-              <button
+              <IconButton aria-label="cart" className='rounded-none text-center shadow-md right-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+                <StyledBadge badgeContent={cartItems.length} color="primary">
+                  <ShoppingCartIcon className='text-black' />
+                </StyledBadge>
+              </IconButton>
+              {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
               dispatch(resetQuotesData());
@@ -357,8 +387,10 @@ const AdDetailsPage = () => {
               d="M6 18L18 6M6 6l12 12"
             />
             </svg>
-          </button>
-            </div><div>
+          </button> */}
+            </div>
+            
+              <div>
             {/* <div class="relative flex flex-col w-fit h-fit  overflow-hidden font-sans text-base isolation-isolate before:absolute before:inset-[1px] before:rounded-lg before:bg-white after:absolute after:w-1 after:inset-y-[0.65rem] after:left-[0.5rem] after:rounded after:bg-gradient-to-b from-[#2eadff] via-[#3d83ff] to-[#7e61ff] after:transition-transform after:duration-300 hover:after:translate-x-[0.15rem]">
     
     <div class="notititle text-blue-500 px-5 pt-3 pb-1 pr-1 text-lg font-medium transition-transform duration-300 ease-out z-10">Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}</div>
@@ -387,7 +419,7 @@ const AdDetailsPage = () => {
                     value={selectedVendor}
                     onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
                   >
-                    {filteredData.map((option, index) => (
+                    {datas.map((option, index) => (
                       <option className="rounded-lg" key={index} value={option.VendorName}>
                         {option.VendorName === '' && filteredData.length === 1
                           ? 'No Vendors'
@@ -535,7 +567,8 @@ const AdDetailsPage = () => {
                 <span className='flex flex-row justify-center'>
                 <div className="flex flex-col mr-2 mt-4 items-center justify-center">
                   <button
-                    className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
+                    //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                   >
                     Add to Cart
@@ -543,10 +576,10 @@ const AdDetailsPage = () => {
                 </div>
                 <div className="flex flex-col ml-2 mt-4 items-center justify-center">
                   <button
-                    className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
                     onClick={() => handleSubmit()}
                   >
-                    Checkout
+                    Go to Cart
                   </button>
                 </div>
                 </span>

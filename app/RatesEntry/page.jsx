@@ -10,6 +10,7 @@ import { TextField } from '@mui/material';
 // import MuiAlert from '@mui/material/Alert';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { FetchRateSeachTerm } from '../api/FetchAPI';
 import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll} from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -62,7 +63,8 @@ const AdDetailsPage = () => {
   //const [slabData, setSlabData] = useState([]);
   const [editModal, setEditModal] = useState(false);
   //const [qty, setQty] = useState(0)
-  const [validityDays, setValidityDays] = useState(0)
+  const [validityDays, setValidityDays] = useState(0);
+  const [ratesSearchSuggestion, setRatesSearchSuggestion] = useState([]);
   const [units, setUnits] = useState([])
   const [newUnitPrice, setNewUnitPrice] = useState("")
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
@@ -96,6 +98,7 @@ const AdDetailsPage = () => {
   const [isQty, setIsQty] = useState(false);
   const [combinedSlabData, setCombinedSlabData] = useState([]);
   const [editMode, setEditMode] = useState(false);
+  const [rateSearchTerm,setRateSearchTerm] = useState("");
   const elementsNeeded = [""];
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -433,8 +436,7 @@ const AdDetailsPage = () => {
 
   useEffect(() => {
     if(rateId > 0){
-      handleRateId()
-      
+      handleRateId(rateId)    
     }
     fetchQtySlab();
   }, [rateId]);
@@ -789,10 +791,10 @@ var selectedRate = '';
     }
   };
 
-  const handleRateId = async () => {
-    if(rateId > 0){
+  const handleRateId = async (selectedRateId) => {
+    if(selectedRateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -840,7 +842,7 @@ var selectedRate = '';
           }
         }))
 
-        dispatch(setRateId(data.RateID));
+      dispatch(setRateId(data.RateID));
       setCampaignDuration(data['CampaignDuration(in Days)']);
       if(data.campaignDurationVisibility === 1){
         setShowCampaignDuration(true)
@@ -923,7 +925,7 @@ var selectedRate = '';
         }
         setEditMode(false);
         // showToastMessage('success', 'Updated Successfully!');
-        setSuccessMessage('Updated Successfully!');
+        setSuccessMessage('Updated Successfully! ' + data.message);
           setTimeout(() => {
         setSuccessMessage('');
       }, 2000);
@@ -1230,7 +1232,7 @@ var selectedRate = '';
             setIsLeadDays(true)
         }else { 
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}:${selectedValues.Package ? selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}${selectedValues.Package ? ':' + selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage('Rate Card Added Successfully!');
@@ -1253,6 +1255,11 @@ var selectedRate = '';
     }
 }
 
+const handleRateSearch = async(e) =>{
+  setRateSearchTerm(e.target.value);
+  const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+  setRatesSearchSuggestion(searchSuggestions);
+}
 
 const updateSlabData = (qty, newUnitPrice) => {
   
@@ -1302,6 +1309,7 @@ const updateSlabData = (qty, newUnitPrice) => {
 
   const handleClearRateId = () => {
     setEditMode(false)
+    setRateSearchTerm("")
     dispatch(setRateId(""));
     dispatch(setSelectedValues({
       rateName: "",
@@ -1341,6 +1349,15 @@ const updateSlabData = (qty, newUnitPrice) => {
     ) {
       event.preventDefault();
     }
+  }
+
+  const handleRateSelection = (e) => {
+    const selectedRate = e.target.value;
+    const selectedRateId = selectedRate.split('-')[0];
+    setRatesSearchSuggestion([]);
+    setRateSearchTerm(e.target.value);
+    handleRateId(selectedRateId)
+    setRateId(selectedRateId)
   }
 
   return (
@@ -1453,21 +1470,21 @@ const updateSlabData = (qty, newUnitPrice) => {
       )} */}
             <div className="bg-white p-4 rounded-lg shadow-lg">
       <form className="space-y-4">
-      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Add or Edit your Rates here</h3>
+      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3>
             
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-          <div className='mt-4' name= "RateSearchInput"> {/*name="RateSearchInput"*/}
+          <div className='mt-4' > {/*name="RateSearchInput"*/}
                 <label className='mt-4 mb-2 text-gray-700 font-semibold' >Search Rate Card</label>
                 <span className='flex flex-row mt-2'>
                 <input
                   className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                   // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
-                  type="number"
+                  type="text"
                   id="RateSearchInput"
                  // name='RateSearchInput'
-                  placeholder="Ex. 4000"
-                  value={rateId}
-                  onChange = {(e) => dispatch(setRateId(e.target.value))}
+                  placeholder="Ex: RateName Type"
+                  value={rateSearchTerm}
+                  onChange = {handleRateSearch}
                   onFocus={(e) => {e.target.select()}}
                 />
                 <Button 
@@ -1478,6 +1495,22 @@ const updateSlabData = (qty, newUnitPrice) => {
                 <FontAwesomeIcon icon={faTimesCircle} className=' w-6 h-6'/>
               </Button>
               </span>
+              {ratesSearchSuggestion && (
+              <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+                {ratesSearchSuggestion.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleRateSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
               </div>
 
 
