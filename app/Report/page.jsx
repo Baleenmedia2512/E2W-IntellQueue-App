@@ -17,6 +17,7 @@ import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Te
 import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
+import CountUp from 'react-countup';
 
 
 const Report = () => {
@@ -64,6 +65,8 @@ const Report = () => {
     const [orderNum, setOrderNum] = useState(null);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [totalOrderAmount, setTotalOrderAmount] = useState('');
+  const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
 
 
     const handleClickOpen = () => {
@@ -108,6 +111,7 @@ const Report = () => {
         fetchSumOfFinance();
         fetchSumOfOrders();
         FetchCurrentBalanceAmount();
+        fetchAmounts();
     }, [startDate, endDate]);
 
     useEffect(() => {
@@ -177,26 +181,28 @@ const Report = () => {
             });
     };
 
-    const handleMarkInvalid = (orderNum) => {
-      axios
-          .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=invalid`)
-          .then((response) => {
-              setSuccessMessage('Order Cancelled!');
-                    setTimeout(() => {
-                        setSuccessMessage('');
-                    }, 2000);
-              fetchOrderDetails();
-          })
-          .catch((error) => {
-              console.error(error);
-              setToastMessage('Failed to cancel order. Please try again.');
-                    setSeverity('error');
-                    setToast(true);
-                    setTimeout(() => {
-                        setToast(false);
-                    }, 2000);
-          });
-  };
+    const fetchAmounts = async () => {
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+    
+        // Ensure the fetched data is formatted correctly
+        const TotalOrderAmt = formatIndianNumber(data.order_amount);
+        const TotalFinanceAmt = formatIndianNumber(data.finance_amount);
+    
+        // Update state with formatted values
+        setTotalOrderAmount(TotalOrderAmt);
+        setTotalFinanceAmount(TotalFinanceAmt);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    
+
+  console.log(totalOrderAmount, totalFinanceAmount);
 
   const handleOrderDelete = (rateWiseOrderNum, OrderNum) => {
     axios
@@ -212,6 +218,7 @@ const Report = () => {
                     setSuccessMessage('');
                 }, 2000);
                 fetchOrderDetails();
+                fetchAmounts();
             }
         })
         .catch((error) => {
@@ -236,6 +243,8 @@ const handleTransactionDelete = (rateWiseOrderNum, orderNum) => {
               setSuccessMessage('');
             }, 2000);
             fetchFinanceDetails();
+            fetchAmounts();
+            fetchSumOfFinance();
           } else {
             setToastMessage(data.message);
             setSeverity('error');
@@ -299,6 +308,7 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
           setSuccessMessage('Order Restored!');
           setTimeout(() => setSuccessMessage(''), 2000);
           fetchOrderDetails();
+          fetchAmounts();
       }
   } catch (error) {
       console.error('Error during restore operation:', error);
@@ -743,6 +753,17 @@ const handleDateChange = (range) => {
   return number;
 };
 
+const RevenueBox = ({ value, label }) => (
+  <div className="flex-1 bg-white bg-opacity-40 backdrop-blur-sm rounded-lg shadow-md p-2 flex flex-col items-center">
+    <div className="text-sm sm:text-base lg:text-lg text-gray-900 font-bold">
+      <CountUp end={value} duration={2} /> {/* Adjust duration as needed */}
+    </div>
+    <div className="text-xs sm:text-xs lg:text-sm text-gray-800 mt-1">
+      {label}
+    </div>
+  </div>
+);
+
 
     return (
         <Box sx={{ width: '100%', padding: '0px' }}>
@@ -795,50 +816,44 @@ const handleDateChange = (range) => {
             />
             </div>
             
-   <div className="flex justify-between items-start">
-  {/* Total Orders box */}
-  {/* Total Orders box */}
-<div className="w-40 h-36 rounded-lg shadow-md p-3 mb-5 flex flex-col items-start justify-start border border-gray-300">
-  <div className="text-4xl text-black mt-5 font-bold">
-    {sumOfOrders}
-  </div>
-  <div className="text-lg text-gray-600">
-    Total Orders
-  </div>
-</div>
-
-  {/* <div style={{
-        width: '200px',
-        height: '143px',
-        borderRadius: '10px',
-        boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
-        padding: '12px',
-        paddingLeft: '18px',
-        marginBottom: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start:',
-        justifyContent: 'flex-start:',
-        border: '1px solid #e0e0e0'
-      }}>
-        <div style={{
-          fontSize: '36px',
-          marginTop: '20px',
-          fontWeight: 'bold'
-        }}>
-          {sumOfOrders}
+            <div className="flex flex-nowrap overflow-x-auto p-2">
+      {/* Combined Total Orders and Amounts box */}
+      <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mx-2 flex-shrink-0">
+        {/* Sum of Orders */}
+        <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
+          <CountUp end={sumOfOrders} duration={2.5} />
         </div>
-        <div style={{ fontSize: '18px', color: 'dimgray' }}>
+        <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
           Total Orders
         </div>
-      </div> */}
+        
+        {/* Amounts Section */}
+        <div className="flex mt-4 w-fit">
+          {/* Order Amount */}
+          <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
+            <CountUp end={totalOrderAmount} duration={2.5} prefix="₹" />
+            <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit">Order Revenue</div>
+          </div>
+          {/* Finance Amount */}
+          <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
+            <CountUp end={totalFinanceAmount} duration={2.5} prefix="₹" />
+            <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">Finance Revenue</div>
+          </div>
+        </div>
+      </div>
 
-  {/* Spacer to center the DateRangePicker */}
-  <div className="flex flex-grow text-black ml-2 mb-4">
-  <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+      {/* Spacer to center the DateRangePicker */}
+      <div className="flex flex-grow text-black ml-2 mb-4 flex-shrink-0">
+        <DateRangePicker 
+          startDate={selectedRange.startDate} 
+          endDate={selectedRange.endDate} 
+          onDateChange={handleDateChange} 
+        />
+      </div>
+    </div>
 
-  </div>
-</div>
+
+
 
 
    {/* <div>
