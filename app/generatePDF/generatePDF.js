@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 
-export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle) => {
+export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, grandTotalAmount) => {
   const ImageUrl = '/images/WHITE PNG.png';
   const quoteNumber = await fetchNextQuoteNumber();
   // Create a new jsPDF instance
@@ -30,7 +30,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   pdf.setLineWidth(lineThickness);
 
   const pageWidth = pdf.internal.pageSize.width;
-  var textWidth = pdf.getStringUnitWidth('Kasturba Nagar, Adyar, Chennai-20.   ') * 12; // Adjust the font size multiplier as needed
+  var textWidth = pdf.getStringUnitWidth('Kasturba Nagar, Adyar, Chennai-20.') * 12; // Adjust the font size multiplier as needed
   var xCoordinate = pageWidth - textWidth - 40;
   pdf.setDrawColor("#df5f98");
   pdf.line(xCoordinate, 60, xCoordinate, 135);
@@ -73,7 +73,6 @@ const today = new Date();
 const proposedDay = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
 const proposedMonth = months[today.getMonth()]; // Get month abbreviation from the array
 const proposedYear = today.getFullYear();
-let validityDate = [];
 const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
 
   textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
@@ -184,6 +183,15 @@ Object.keys(columnWidths).forEach(columnName => {
     const leadDaysArray = checkoutData.map(item => item.leadDays);
     return Math.min(...leadDaysArray);
   };
+
+  let grandTotalText = 'Grand Total: Rs.' + grandTotalAmount;
+  let grandTotalTextWidth = pdf.getTextWidth(grandTotalText);
+
+  let grandTotalXPosition = pdf.internal.pageSize.width - grandTotalTextWidth - 100;
+
+  pdf.setFont('helvetica', 'normal', 'bold');
+  pdf.setFontSize(16);
+  pdf.text(grandTotalText, grandTotalXPosition, pdf.lastAutoTable.finalY + 20);
 
   pdf.setFont('helvetica', 'normal', 'bold');
   pdf.setFontSize(16);
