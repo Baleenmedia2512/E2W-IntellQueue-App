@@ -806,7 +806,7 @@ const handleDateChange = (range) => {
 
     return (
 
-        <Box sx={{ width: '100%', padding: '0px' }}>
+        <Box sx={{ width: '100%'}}>
             <Tabs
                 value={value}
                 onChange={handleChange}
@@ -856,9 +856,9 @@ const handleDateChange = (range) => {
             />
             </div>
             
-            <div className="flex flex-nowrap overflow-x-auto p-2">
+            <div className="flex flex-nowrap overflow-x-auto ">
   {/* Combined Total Orders and Amounts box */}
-  <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mx-2 flex-shrink-0">
+  <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
     {/* Sum of Orders */}
     <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
       {sumOfOrders}
@@ -955,8 +955,8 @@ const handleDateChange = (range) => {
 )}
 
         {value === 1 && (
-             <div style={{ width: '100%' }}>
-              <div className="flex flex-grow text-black ml-2 mb-4">
+             <div style={{ width: '100%'}}>
+              <div className="flex flex-grow text-black mb-4">
                <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
                <div className="flex flex-grow items-end ml-2 mb-4">
                <button className="custom-button" onClick={handleClickOpen}>
@@ -1074,8 +1074,8 @@ const handleDateChange = (range) => {
                   data={incomeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={window.innerWidth > 768 ? 70 : 60} // Adjusted for larger size
-                  outerRadius={window.innerWidth > 768 ? 100 : 80}
+                  innerRadius={window.innerWidth > 768 ? 70 : 55} // Adjusted for larger size
+                  outerRadius={window.innerWidth > 768 ? 100 : 75}
                   fill="#8884d8"
                   dataKey="value"
                   onMouseEnter={onPieEnter}
@@ -1103,8 +1103,8 @@ const handleDateChange = (range) => {
                   data={expenseData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={window.innerWidth > 768 ? 70 : 60} // Adjusted for larger size
-                  outerRadius={window.innerWidth > 768 ? 100 : 80}
+                  innerRadius={window.innerWidth > 768 ? 70 : 55} // Adjusted for larger size
+                  outerRadius={window.innerWidth > 768 ? 100 : 75}
                   fill="#8884d8"
                   dataKey="value"
                   onMouseEnter={onPieEnter}
