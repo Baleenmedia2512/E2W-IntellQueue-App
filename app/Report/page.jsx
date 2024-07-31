@@ -1074,8 +1074,8 @@ const handleDateChange = (range) => {
                   data={incomeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
+                  innerRadius={window.innerWidth > 768 ? 70 : 60} // Adjusted for larger size
+                  outerRadius={window.innerWidth > 768 ? 100 : 80}
                   fill="#8884d8"
                   dataKey="value"
                   onMouseEnter={onPieEnter}
@@ -1103,8 +1103,8 @@ const handleDateChange = (range) => {
                   data={expenseData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
+                  innerRadius={window.innerWidth > 768 ? 70 : 60} // Adjusted for larger size
+                  outerRadius={window.innerWidth > 768 ? 100 : 80}
                   fill="#8884d8"
                   dataKey="value"
                   onMouseEnter={onPieEnter}
