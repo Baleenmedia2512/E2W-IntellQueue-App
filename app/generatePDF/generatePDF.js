@@ -2,9 +2,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 
-export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, grandTotalAmount) => {
+export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber) => {
   const ImageUrl = '/images/WHITE PNG.png';
-  const quoteNumber = await fetchNextQuoteNumber();
+  
   // Create a new jsPDF instance
   const pdf = new jsPDF({
     orientation: "landscape",
@@ -64,9 +64,9 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text('www.baleenmedia.com', xCoordinate, 150)
 
-  textWidth = pdf.getStringUnitWidth(`Proposal ID: ${quoteNumber}`) * 12; // Adjust the font size multiplier as needed
-  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
+  // textWidth = pdf.getStringUnitWidth(`Proposal ID: ${quoteNumber}`) * 12; // Adjust the font size multiplier as needed
+  // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+  // pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const today = new Date();
@@ -77,7 +77,7 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
 
   textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
+  pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 165)
 
   // textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
   // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
@@ -106,7 +106,7 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
   // Create a table
   let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Validity Date"]];
   let data = checkoutData.map((item, index) => ([
-    (index + 1).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.package ? item.package : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, ChangeDateFormat(item.formattedDate)
+    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, ChangeDateFormat(item.formattedDate)
   ])); 
 
   // if (!checkoutData.some(item => item.package)) {
