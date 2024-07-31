@@ -753,19 +753,10 @@ const handleDateChange = (range) => {
   return number;
 };
 
-const RevenueBox = ({ value, label }) => (
-  <div className="flex-1 bg-white bg-opacity-40 backdrop-blur-sm rounded-lg shadow-md p-2 flex flex-col items-center">
-    <div className="text-sm sm:text-base lg:text-lg text-gray-900 font-bold">
-      <CountUp end={value} duration={2} /> {/* Adjust duration as needed */}
-    </div>
-    <div className="text-xs sm:text-xs lg:text-sm text-gray-800 mt-1">
-      {label}
-    </div>
-  </div>
-);
 
 
     return (
+
         <Box sx={{ width: '100%', padding: '0px' }}>
             <Tabs
                 value={value}
@@ -817,40 +808,40 @@ const RevenueBox = ({ value, label }) => (
             </div>
             
             <div className="flex flex-nowrap overflow-x-auto p-2">
-      {/* Combined Total Orders and Amounts box */}
-      <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mx-2 flex-shrink-0">
-        {/* Sum of Orders */}
-        <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
-          <CountUp end={sumOfOrders} duration={2.5} />
-        </div>
-        <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
-          Total Orders
-        </div>
-        
-        {/* Amounts Section */}
-        <div className="flex mt-4 w-fit">
-          {/* Order Amount */}
-          <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-            <CountUp end={totalOrderAmount} duration={2.5} prefix="₹" />
-            <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit">Order Revenue</div>
-          </div>
-          {/* Finance Amount */}
-          <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
-            <CountUp end={totalFinanceAmount} duration={2.5} prefix="₹" />
-            <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">Finance Revenue</div>
-          </div>
-        </div>
+  {/* Combined Total Orders and Amounts box */}
+  <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mx-2 flex-shrink-0">
+    {/* Sum of Orders */}
+    <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
+      {sumOfOrders}
+    </div>
+    <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
+      Total Orders
+    </div>
+    
+    {/* Amounts Section */}
+    <div className="flex mt-4 w-fit">
+      {/* Order Amount */}
+      <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
+        ₹{totalOrderAmount}
+        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit">Order Revenue</div>
       </div>
-
-      {/* Spacer to center the DateRangePicker */}
-      <div className="flex flex-grow text-black ml-2 mb-4 flex-shrink-0">
-        <DateRangePicker 
-          startDate={selectedRange.startDate} 
-          endDate={selectedRange.endDate} 
-          onDateChange={handleDateChange} 
-        />
+      {/* Finance Amount */}
+      <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold ">
+        ₹{totalFinanceAmount}
+        <div className="text-xs sm:text-sm lg:text-base text-sky-500  text-opacity-80 font-normal text-nowrap">Finance Revenue</div>
       </div>
     </div>
+  </div>
+
+  {/* Spacer to center the DateRangePicker */}
+  <div className="flex flex-grow text-black ml-2 mb-4 flex-shrink-0">
+    <DateRangePicker 
+      startDate={selectedRange.startDate} 
+      endDate={selectedRange.endDate} 
+      onDateChange={handleDateChange} 
+    />
+  </div>
+</div>
 
 
 
