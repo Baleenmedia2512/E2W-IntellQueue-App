@@ -17,7 +17,6 @@ import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Te
 import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
-import CountUp from 'react-countup';
 
 
 const Report = () => {
@@ -202,7 +201,7 @@ const Report = () => {
     };
     
 
-  console.log(totalOrderAmount, totalFinanceAmount);
+  
 
   const handleOrderDelete = (rateWiseOrderNum, OrderNum) => {
     axios
@@ -608,16 +607,34 @@ const orderColumns = [
 
     // Data for the pie chart
     
-    const pieData = sumOfFinance.length > 0 ? [
+    // const pieData = sumOfFinance.length > 0 ? [
+    //   { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
+    //   { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
+    //   { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
+    // ] : [];
+
+    const incomeData = sumOfFinance.length > 0 ? [
       { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
       { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
-      { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
+    ] : [];
+
+
+  
+    const expenseData = sumOfFinance.length > 0 ? [
+      { name: 'Commission', value: parseFloat(sumOfFinance[0].expense_commission || 0) },
+      { name: 'Conveyance', value: parseFloat(sumOfFinance[0].expense_conveyance || 0) },
+      { name: 'Consumables', value: parseFloat(sumOfFinance[0].expense_consumables || 0) },
+      { name: 'Labor Cost', value: parseFloat(sumOfFinance[0].expense_labor || 0) },
+      { name: 'Others', value: parseFloat(sumOfFinance[0].expense_others || 0) },
     ] : [];
     
+    const isIncomePieEmpty = !incomeData || incomeData.every(data => data.value === 0);
+    const isExpensePieEmpty = !expenseData || expenseData.every(data => data.value === 0);
+    
+    // const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
-    const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
-
-    const COLORS = ['#2196F3', '#4CAF50', '#FF5722'];
+    const incomeColors = ['#2196F3', '#4CAF50'];
+    const expenseColors = ['#FF5722', '#FF9800', '#FFC107', '#F9A825', '#FF6F61'];
 
  
 
@@ -625,12 +642,44 @@ const orderColumns = [
       const styles = {
         chartContainer: {
           width: '100%',
-          height: '250px',
+          height: '350px', // Adjust height as needed
           background: '#ffffff',
           borderRadius: '12px',
           boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
-          marginTop: '20px',
-          marginBottom: '30px',
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'center', // Center horizontally
+          alignItems: 'center', // Center vertically
+          flexDirection: 'column', // Column direction for title and chart
+        },
+        slideContainer: {
+          display: 'flex',
+          width: '100%',
+          height: '350px',
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          width: '100%',
+          '-webkit-overflow-scrolling': 'touch', // Enable smooth scrolling on iOS
+        },
+        slide: {
+          minWidth: '100%',
+          scrollSnapAlign: 'center',
+          display: 'flex',
+          justifyContent: 'center', // Center the chart horizontally
+          alignItems: 'center', // Center the chart vertically
+          height: '350px',
+          flexDirection: 'column', // Ensures the title is above the chart
+        },
+        title: {
+          fontWeight: 'bold',
+          textAlign: 'center',
+          fontSize: '20px', 
+        },
+        incomeTitle: {
+          color: '#4CAF50', // Green color for income
+        },
+        expenseTitle: {
+          color: '#FF5722', // Red color for expense
         },
       };
 
@@ -645,7 +694,7 @@ const renderActiveShape = (props) => {
   const cos = Math.cos(-RADIAN * midAngle);
   const sx = cx + (outerRadius + 10) * cos;
   const sy = cy + (outerRadius + 10) * sin;
-  const mx = cx + (outerRadius + 15) * cos;
+  const mx = cx + (outerRadius + 13) * cos;
   const my = cy + (outerRadius + 30) * sin;
   const ex = mx;
   const ey = my;
@@ -1010,7 +1059,69 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <div>
+            <div style={styles.chartContainer}>
+      <div style={styles.slideContainer}>
+        <div style={styles.slide}>
+        <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
+          {isIncomePieEmpty ? (
+            <div className="text-center">No income records found during this timeline!</div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%" >
+              <PieChart width="100%" height="100%">
+                <Pie
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  data={incomeData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  fill="#8884d8"
+                  dataKey="value"
+                  onMouseEnter={onPieEnter}
+                  labelLine={false}
+                  stroke="none"
+                >
+                  {incomeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={incomeColors[index % incomeColors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+        <div style={styles.slide}>
+        <div style={{ ...styles.title, ...styles.expenseTitle }}>Expense Breakdown</div>
+          {isExpensePieEmpty ? (
+            <div className="text-center">No expense records found during this timeline!</div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%" >
+              <PieChart width="100%" height="100%">
+                <Pie
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  data={expenseData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  fill="#8884d8"
+                  dataKey="value"
+                  onMouseEnter={onPieEnter}
+                  labelLine={false}
+                  stroke="none"
+                >
+                  {expenseData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+    </div>
+            {/* <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
         <div className="text-center">No records found during this timeline!</div>
@@ -1035,19 +1146,19 @@ const handleDateChange = (range) => {
       {pieData.map((entry, index) => (
         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
       ))}
-    </Pie>
+    </Pie> */}
     {/* <Legend 
       layout="vertical" 
       align="right" 
       verticalAlign="middle" 
       wrapperStyle={{ paddingLeft: "20px" }} 
     /> */}
-  </PieChart>
+  {/* </PieChart>
 </ResponsiveContainer>
 </div>
-      )}
-      </div>
-      </div>
+      )} */}
+      {/* </div>
+      </div> */}
              <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', marginBottom: '54px' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}
