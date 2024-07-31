@@ -72,6 +72,7 @@ const CreateOrder = () => {
   const [campaignUnits, setCampaignUnits] = useState([]); 
   // const [validityDays, setValidityDays] = useState(0)
   // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
+  const [discountAmount, setDiscountAmount] = useState(0);
     
     const dispatch = useDispatch();
     const router = useRouter();
@@ -85,6 +86,7 @@ const CreateOrder = () => {
 
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
+    const [originalUnitPrice , setOriginalUnitPrice] = useState(unitPrice);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
 
     const [previousOrderNumber, setPreviousOrderNumber] = useState('');
@@ -138,6 +140,7 @@ useEffect(() => {
     fetchQtySlab()
   } else {
     setUnitPrice(0);
+    setOriginalUnitPrice(0);
   }
 }, [rateId]);
 
@@ -166,6 +169,7 @@ const fetchQtySlab = async () => {
       dispatch(setStartQty(firstSelectedSlab.StartQty));
       setQty(firstSelectedSlab.StartQty);
       setUnitPrice(firstSelectedSlab.UnitPrice);
+      setOriginalUnitPrice(firstSelectedSlab.UnitPrice);
     }
   }  catch (error) {
     console.error(error);
@@ -226,7 +230,8 @@ useEffect(() => {
   fetchMaxOrderNumber();
   fetchUnits();
   fetchAllVendor();
-  fetchQtySlab()
+  fetchQtySlab();
+  setDiscountAmount(0);
 },[selectedValues.adType, selectedValues.rateName])
 
 const handleRateId = async () => {
@@ -543,6 +548,7 @@ const fetchRates = async () => {
     useEffect(() => {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
+      setOriginalUnitPrice(newUnitPrice);
     }, [qty])
 
     const handleSearchTermChange = (event) => {
@@ -962,6 +968,24 @@ const handleConsultantNameSelection = (event) => {
   // fetchConsultantDetails(name, number);
 };
 
+const handleDiscountChange = (e) => {
+  const value = e.target.value;
+
+  // Handle the case where the input is cleared
+  if (value === '') {
+    // Reset the discount amount and unit price to the original values
+    setDiscountAmount(0);
+    setUnitPrice(originalUnitPrice);
+    return;
+  }
+
+  const parsedValue = parseFloat(value);
+  const newDiscountAmount = parsedValue;
+  setDiscountAmount(newDiscountAmount);
+
+  setUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount); 
+};
+
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
 <Dialog open={consultantDialogOpen} onClose={handleCloseDialog} fullWidth={true} maxWidth='sm'>
@@ -1096,12 +1120,25 @@ return (
                    </div>
                   </div>
 
-                  <div>
-          <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
-          <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
-              <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
-            </div>
-            </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
+      <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
+        <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
+      </div>
+    </div>
+    <div>
+      <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
+      <input 
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+        type="number"
+        placeholder="Amount Adjustment"
+        value={discountAmount || ''}
+        onChange={handleDiscountChange}
+        onFocus={e => e.target.select()}
+      />
+    </div>
+  </div>
 
         </div>
         
@@ -1174,6 +1211,8 @@ return (
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
+
+          
         </div>
 
         <div id="19" name="RatesLocationSelect">
