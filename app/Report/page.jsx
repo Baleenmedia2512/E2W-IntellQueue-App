@@ -1072,7 +1072,7 @@ const handleDateChange = (range) => {
                   activeIndex={activeIndex}
                   activeShape={renderActiveShape}
                   data={incomeData}
-                  cx="50%"
+                  cx="51%"
                   cy="50%"
                   innerRadius={window.innerWidth > 768 ? 70 : 55} // Adjusted for larger size
                   outerRadius={window.innerWidth > 768 ? 100 : 75}
