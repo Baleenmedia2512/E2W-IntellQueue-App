@@ -11,8 +11,9 @@ import { RemoveCircleOutline } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { setQuotesData, resetQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
+import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
 import { setClientData } from '@/redux/features/client-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
@@ -35,7 +36,7 @@ const CheckoutPage = () => {
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-  const {clientName, clientContact, clientEmail, clientSource, clientTitle} = clientDetails;
+  const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -89,20 +90,34 @@ const CheckoutPage = () => {
       amountInclGst: formattedRupees(AmountInclGST),
       leadDays: item.leadDay,
       durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
-      qtyUnit: item.unit,
+      qtyUnit: item.unit ? item.unit : 'Unit',
       adType: item.adType,
       formattedDate: item.formattedDate,
     };
   };
   
+  let isGeneratingPdf = false;
+
   const handlePdfGeneration = async () => {
+    if (isGeneratingPdf) {
+      const promises = cartItems.map(item => addQuoteToDB(item));
+      await Promise.all(promises);
+      return; // Prevent further execution if PDF is already being generated
+    }
+
+    isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
+    const quoteNumber = await fetchNextQuoteNumber(companyName);
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== "" && clientContact !== ""){
       const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-      await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount);
+      await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber);
+      const promises = cartItems.map(item => addQuoteToDB(item));
+      await Promise.all(promises);
+      setTimeout(() => {
       dispatch(resetCartItem());
       dispatch(resetQuotesData());
+      },3000)
     } else{
       if(clientName === ""){
         setIsClientName(false)
@@ -112,6 +127,20 @@ const CheckoutPage = () => {
     }
   };
 
+  const addQuoteToDB = async(item) => {
+    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let AmountInclGST = Math.round(AmountExclGST * 1.18);
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${'18%'}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
+      const data = await response.text();
+      if (!response.ok) {
+        alert(`The following error occurred while inserting data: ${data}`);
+      }
+    } catch (error) {
+      console.error('Error inserting Quote:', error);
+    }
+  }
+  
   useEffect(()=>{
     if(clientName === ""){
       clientNameRef.current.focus()
@@ -377,8 +406,9 @@ const CheckoutPage = () => {
           <div className='text-center justify-center'>
             <label className='font-800 text-xl'> Oops! No Items in Cart</label>
             <span className='flex flex-row justify-center mt-4'>
+            <label className='ml-2 text-xl'>
               <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adMedium"}))}>Add Items </button>
-              <label className='ml-2 text-xl'> in cart to generate quote</label>
+              &nbsp; in cart to generate quote</label>
             </span>
           </div>
           
