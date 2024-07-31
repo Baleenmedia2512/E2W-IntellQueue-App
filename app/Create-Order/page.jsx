@@ -25,12 +25,15 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
-    const clientDetails = useAppSelector(state => state.clientSlice)
+    const clientDetails = useAppSelector(state => state.clientSlice);
+    const orderDetails = useAppSelector(state => state.orderSlice);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
+    const {orderNumber: orderNumberRP} = orderDetails;
+    console.log(orderNumberRP)
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    // const companyName = "Baleen Test";
-    const companyName = useAppSelector(state => state.authSlice.companyName);
+    const companyName = "Baleen Test";
+    // const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
@@ -78,7 +81,7 @@ const CreateOrder = () => {
     const slabData = useAppSelector(state => state.rateSlice.slabData); 
     const rateGST = useAppSelector(state => state.rateSlice.rateGST);
     const startQty = useAppSelector(state => state.rateSlice.startQty);
-
+    
 
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
@@ -643,7 +646,43 @@ const fetchRates = async () => {
             console.error(error);
           });
       };
+//report oderenumber data fetch --SK--
+// const [orderNumber, setOrderNumber] = useState(null);
+// const [companyName, setCompanyName] = useState('');
 
+const fetchOrderDetailsByOrderNumber = () => {
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/FetchOrderDetails.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      if (data.length > 0) {
+        const orderDetails = data[0];
+        const formattedDate = parseDateFromDB(orderDetails.orderDate); // Format the date if needed
+        const formattedOrderDate = format(orderDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
+
+        setClientName(orderDetails.clientName);
+        setOrderDate(orderDetails.orderDate);
+        setDisplayOrderDate(formattedOrderDate);
+        setOrderAmount(orderDetails.orderAmount);
+        setRateCardNumber(orderDetails.rateCardNumber);
+        setType(orderDetails.type);
+        
+        dispatch(setRateId(orderDetails.rateID));
+        setHasOrderDetails(true);
+      } else {
+        setHasOrderDetails(false); // Set to false if there are no details
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
+
+// useEffect(() => {
+//   if (orderNumber && companyName) {
+//     fetchOrderDetailsByOrderNumber(orderNumber, companyName);
+//   }
+// }, [orderNumber, companyName]);
 
       const createNewOrder = async(event) => {
         event.preventDefault()

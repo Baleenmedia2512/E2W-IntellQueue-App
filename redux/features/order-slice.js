@@ -18,7 +18,8 @@ const initialState = {
   clientPAN: "",
   isOrderExist: false,
   clientID: "",
-  nextRateWiseOrderNumber: ""
+  nextRateWiseOrderNumber: "",
+  orderNumber: ""
 };
 
 export const orderSlice = createSlice({

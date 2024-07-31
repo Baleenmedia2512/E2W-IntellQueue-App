@@ -17,11 +17,14 @@ import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Te
 import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { setOrderData } from '@/redux/features/order-slice';
+import { useDispatch } from 'react-redux';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    // const companyName = "Baleen Test";
-    const companyName = useAppSelector(state => state.authSlice.companyName);
+     const companyName = "Baleen Test";
+    //const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
@@ -58,6 +61,8 @@ const Report = () => {
     const [selectedOrder, setSelectedOrder] = useState('');
     const [orderDialogOpen, setOrderDialogOpen] = useState(false);
     const [deletingOrder, setDeletingOrder] = useState('');
+    const router = useRouter();
+    const dispatch = useDispatch();
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -317,128 +322,86 @@ const FetchCurrentBalanceAmount = () => {
 const isMobile = useMediaQuery('(max-width:640px)');
 const [anchorEl, setAnchorEl] = useState(null);
 
+
+
+const [orderRepotrtDialogOpen, setOrderReportDialogOpen] = useState(false);
+const [selectedColumn, setSelectedColumn] = useState('');
+const [selectedRow, setSelectedRow] = useState(null);
+
+const handleDoubleClick = (column, row) => {
+   setSelectedColumn(column);
+   setSelectedRow(row);
+  setOrderReportDialogOpen(true);
+};
+
+const handleCloseOrderReportDialog = () => {
+  setOrderReportDialogOpen(false);
+  setSelectedColumn('');
+  setSelectedRow(null);
+};
+
+const handleEditConfirm = () => {
+  if (selectedRow) {
+    const { OrderNumber } = selectedRow;
+    dispatch(setOrderData({ orderNumber: selectedRow  }))
+    router.push('/Create-Order');
+  }
+
+  handleCloseOrderReportDialog();
+};
+
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
   { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
-  { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
-  { field: 'rateName', headerName: 'Rate Name', width: 150 },
-  { field: 'adType', headerName: 'Rate Type', width: 150 },
-  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+  { 
+    field: 'Receivable', 
+    headerName: 'Amount(₹)', 
+    width: 100,
+    renderCell: (params) => (
+      <div onDoubleClick={() => handleDoubleClick('Receivable', params.row)}>
+        {params.value || 'Add'} {/* Display 'Add' if value is empty */}
+      </div>
+    )
+  },
+  { 
+    field: 'rateName', 
+    headerName: 'Rate Name', 
+    width: 150,
+    renderCell: (params) => (
+      <div onDoubleClick={() => handleDoubleClick('rateName', params.row)}>
+         {params.value || 'Add'} {/* Display 'Add' if value is empty */}
+      </div>
+    )
+  },
+  { 
+    field: 'adType', 
+    headerName: 'Rate Type', 
+    width: 150,
+    renderCell: (params) => (
+      <div onDoubleClick={() => handleDoubleClick('adType', params.row)}>
+         {params.value || 'Add'} {/* Display 'Add' if value is empty */}
+      </div>
+    )
+  },
+  { 
+    field: 'ConsultantName', 
+    headerName: 'Consultant Name', 
+    width: 150 
+  },
   {
-      field: 'actions',
-      headerName: 'Actions',
-      width: isMobile ? 100 : 450,
-      renderCell: (params) => {
-          const handleClick = (event) => {
-              setAnchorEl(event.currentTarget);
-          };
-          
-          const handleClose = () => {
-              setAnchorEl(null);
-          };
-          
-          const handleMenuItemClick = (action) => {
-              handleClose();
-              if (action === 'delete') handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
-              if (action === 'cancel') handleMarkInvalid(params.row.OrderNumber);
-              if (action === 'restore') handleRestore(params.row.OrderNumber);
-          };
-
-          // Calculate if the order is within the last 24 hours
-          const orderDate = new Date(params.row.OrderDate);
-          const now = new Date();
-          const isRecent = (now - orderDate) < 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-          return isMobile ? (
-              <div>
-                  <IconButton
-                      aria-controls="simple-menu"
-                      aria-haspopup="true"
-                      onClick={handleClick}
-                  >
-                      <MoreVertIcon />
-                  </IconButton>
-                  <Menu
-                      id="simple-menu"
-                      anchorEl={anchorEl}
-                      keepMounted
-                      open={Boolean(anchorEl)}
-                      onClose={handleClose}
-                  >
-                      <MenuItem
-                          onClick={() => handleMenuItemClick('cancel')}
-                          disabled={params.row.markInvalidDisabled}
-                          className='hover:bg-gray-100'
-                      >
-                          Cancel Order
-                      </MenuItem>
-                      {isRecent && (
-                          <MenuItem
-                              onClick={() => handleMenuItemClick('delete')}
-                              className='hover:bg-gray-100'
-                          >
-                              Delete Order
-                          </MenuItem>
-                      )}
-                      <MenuItem
-                          onClick={() => handleMenuItemClick('restore')}
-                          disabled={params.row.restoreDisabled}
-                          className='hover:bg-gray-100'
-                      >
-                          Restore
-                      </MenuItem>
-                  </Menu>
-              </div>
-          ) : (
-              <div className="space-x-3">
-                  <Button
-                      variant="contained"
-                      color="secondary"
-                      size="small"
-                      disabled={params.row.markInvalidDisabled}
-                      onClick={() => handleMarkInvalid(params.row.OrderNumber)}
-                      style={{ marginRight: '12px',  backgroundColor: '#e79a26',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          opacity: params.row.markInvalidDisabled ? 0.2 : 1,
-                          pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
-                  >
-                      Cancel Order
-                  </Button>
-                  {isRecent && (
-                      <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                          style={{ marginRight: '12px', backgroundColor: '#ff5252',
-                              color: 'white',
-                              fontWeight: 'bold', }}
-                      >
-                          Delete Order
-                      </Button>
-                  )}
-                  <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      disabled={params.row.restoreDisabled}
-                      onClick={() => handleRestore(params.row.OrderNumber)}
-                      style={{ backgroundColor: '#1976d2',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          opacity: params.row.restoreDisabled ? 0.2 : 1,
-                          pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
-                  >
-                      Restore
-                  </Button>
-              </div>
-          );
-      },
+    field: 'actions',
+    headerName: 'Actions',
+    width: isMobile ? 100 : 450,
+    renderCell: (params) => {
+      // Your actions render logic here
+    },
   },
 ];
+
+
+
 
 
     const financeColumns = [
@@ -695,6 +658,28 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+<Dialog
+  open={orderRepotrtDialogOpen}
+  onClose={handleCloseOrderReportDialog}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+>
+  <DialogTitle id="alert-dialog-title">{"DO YOU WANT TO EDIT?"}</DialogTitle>
+  <DialogContent>
+    <DialogContentText id="alert-dialog-description">
+    You have selected the {selectedColumn || 'unknown'} field with value "{(selectedRow && selectedRow[selectedColumn]) || 'Add'}". Do you want to edit this field?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleEditConfirm} color="primary">
+      Yes
+    </Button>
+    <Button onClick={handleCloseOrderReportDialog} color="primary" autoFocus>
+      No
+    </Button>
+  </DialogActions>
+</Dialog>
 
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
