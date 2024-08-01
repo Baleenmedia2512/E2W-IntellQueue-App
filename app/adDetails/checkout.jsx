@@ -143,9 +143,9 @@ const CheckoutPage = () => {
   
   useEffect(()=>{
     if(clientName === ""){
-      clientNameRef.current.focus()
+      clientNameRef.current?.focus()
     }else if(clientContact === ""){
-      clientContactRef.current.focus()
+      clientContactRef.current?.focus()
     }
   },[isClientContact, isClientName])
 
