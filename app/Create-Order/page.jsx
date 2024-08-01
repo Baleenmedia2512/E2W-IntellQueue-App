@@ -195,7 +195,7 @@ const fetchUnits = async () => {
 useEffect(() => {
   fetchMaxOrderNumber();
   fetchUnits();
-  fetchAllVendor();
+  // fetchAllVendor();
   fetchQtySlab();
   setDiscountAmount(0);
 },[selectedValues.adType, selectedValues.rateName])

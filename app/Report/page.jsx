@@ -450,7 +450,7 @@ const orderColumns = [
     )
   },
   { 
-    field: 'rateName', 
+    field: 'Card', 
     headerName: 'Rate Name', 
     width: 150,
     renderCell: (params) => (
@@ -460,7 +460,7 @@ const orderColumns = [
     )
   },
   { 
-    field: 'adType', 
+    field: 'AdType', 
     headerName: 'Rate Type', 
     width: 150,
     renderCell: (params) => (
