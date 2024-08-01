@@ -393,7 +393,7 @@ const CheckoutPage = () => {
               <button
                  className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  dispatch(setQuotesData({currentPage: "adDetails"}))
+                  dispatch(setQuotesData({currentPage: "adMedium"}))
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
