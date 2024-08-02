@@ -187,8 +187,8 @@ const Report = () => {
         const data = await response.json();
     
         // Ensure the fetched data is formatted correctly
-        const TotalOrderAmt = formatIndianNumber(data.order_amount);
-        const TotalFinanceAmt = formatIndianNumber(data.finance_amount);
+        const TotalOrderAmt = data.order_amount !== null ? formatIndianNumber(data.order_amount) : '0';
+        const TotalFinanceAmt = data.finance_amount !== null ? formatIndianNumber(data.finance_amount) : '0';
     
         // Update state with formatted values
         setTotalOrderAmount(TotalOrderAmt);
