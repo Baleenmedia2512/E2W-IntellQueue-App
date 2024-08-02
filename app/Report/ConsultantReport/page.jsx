@@ -91,7 +91,7 @@ export default function GroupedRowsDemo() {
                         id: `${group.name}-${scan.scan}-${scanType.scanType}`, // Add a unique identifier
                         name: scanIndex === 0 && scanTypeIndex === 0 ? group.name : null,
                         scan: scanTypeIndex === 0 ? scan.scan : null,
-                        scanType: scanType.scanType,
+                        // scanType: scanType.scanType,
                         count: scanType.count,
                         price: scanType.price,
                         total: scanType.count * scanType.price, // Total for each row
@@ -105,11 +105,11 @@ export default function GroupedRowsDemo() {
             rows.push({
                 id: `${group.name}-total`, // Unique identifier for total row
                 name: '',
-                scan: '',
-                scanType: '',
+                scan: 'Total',
+                // scanType: '',
                 count: '',
                 price: '',
-                total: `Total: ₹${Math.round(group.total)}`, // Total amount without decimal points
+                total: `₹${Math.round(group.total)}`, // Total amount without decimal points
                 isGroup: true, // Mark as a group total row
                 isScanGroup: false
             });
@@ -160,7 +160,7 @@ export default function GroupedRowsDemo() {
                 value={rowData.price}
                 onChange={handleChange}
                 min="0"
-                className="p-inputtext p-component w-32 md:w-fit lg:w-fit h-full m-0 p-2 box-border bg-white"
+                className="p-inputtext p-component w-32 md:w-fit lg:w-fit h-full m-0 p-2 box-border border border-sky-400 bg-white"
             />
         );
     }
@@ -230,7 +230,7 @@ const numberOfScans = filteredScanRows.length;
         const ws = XLSX.utils.json_to_sheet(rowsToExport.map(row => ({
             Consultant: row.name || '',
             Scan: row.scan || '',
-            'Scan Type': row.scanType || '',
+            // 'Scan Type': row.scanType || '',
             Count: row.count || '',
             Price: row.price || '',
             Total: row.total || ''
@@ -338,7 +338,7 @@ const handleSelectionChange = (e) => {
                         <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100"></Column>
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
                             <Column field="scan" header="Scan" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"></Column>
-                            <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"></Column>
+                            {/* <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"></Column> */}
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"></Column>
                             <Column field="price" header="Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"></Column>
                             <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
