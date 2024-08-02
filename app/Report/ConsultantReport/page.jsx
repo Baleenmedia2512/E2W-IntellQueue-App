@@ -5,22 +5,37 @@ import { Column } from 'primereact/column';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import './ConsultantStyles.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import './consultantStyles.css';
 
 // Mock data for consultants
 const getConsultants = () => {
     return [
-        { id: 1, name: 'Logesh', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
-        { id: 2, name: 'Logesh', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
-        { id: 3, name: 'Logesh', scan: 'CT', scanType: 'Type A', count: 1, price: 1000 },
-        { id: 4, name: 'Logesh', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
-        { id: 5, name: 'Siva', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
-        { id: 6, name: 'Asath', scan: 'USG', scanType: 'Type A', count: 1, price: 1000 },
-        { id: 7, name: 'Kumaran', scan: 'CT', scanType: 'Type B', count: 1, price: 1000 },
+        { id: 1, name: 'Dr. Ravi Kumar', scan: 'CT', scanType: 'Head', count: 2, price: 1500 },
+        { id: 2, name: 'Dr. Ravi Kumar', scan: 'CT', scanType: 'Chest', count: 1, price: 2000 },
+        { id: 3, name: 'Dr. Sundar Raj', scan: 'USG', scanType: 'Abdomen', count: 1, price: 1200 },
+        { id: 4, name: 'Dr. Sundar Raj', scan: 'USG', scanType: 'Pelvis', count: 1, price: 1300 },
+        { id: 5, name: 'Dr. Arunachalam R', scan: 'MRI', scanType: 'Spine', count: 1, price: 2500 },
+        { id: 6, name: 'Dr. Kumaravel S', scan: 'X-Ray', scanType: 'Chest', count: 3, price: 500 },
+        { id: 7, name: 'Dr. Vijayalakshmi P', scan: 'CT', scanType: 'Abdomen', count: 2, price: 1800 },
+        { id: 8, name: 'Dr. Nandakumar R', scan: 'USG', scanType: 'Thyroid', count: 1, price: 1100 },
+        { id: 9, name: 'Dr. Lakshmi Narayanan', scan: 'MRI', scanType: 'Brain', count: 1, price: 2700 },
+        { id: 10, name: 'Dr. Ramesh Babu', scan: 'X-Ray', scanType: 'Limb', count: 2, price: 400 },
+        { id: 11, name: 'Dr. Arul Selvan', scan: 'CT', scanType: 'Pelvis', count: 2, price: 1600 },
+        { id: 12, name: 'Dr. Mani Shankar', scan: 'USG', scanType: 'Kidney', count: 1, price: 1250 },
+        { id: 13, name: 'Dr. Divya Rani', scan: 'CT', scanType: 'Chest', count: 2, price: 2200 },
+        { id: 14, name: 'Dr. Ganesh Kannan', scan: 'MRI', scanType: 'Shoulder', count: 1, price: 2400 },
+        { id: 15, name: 'Dr. Kalpana Devi', scan: 'USG', scanType: 'Pelvis', count: 1, price: 1350 },
+        { id: 16, name: 'Dr. Ravi Shankar', scan: 'X-Ray', scanType: 'Spine', count: 2, price: 450 },
+        { id: 17, name: 'Dr. Siva Prasad', scan: 'MRI', scanType: 'Knee', count: 1, price: 2600 },
+        { id: 18, name: 'Dr. Gopalakrishnan', scan: 'CT', scanType: 'Head', count: 2, price: 1500 },
+        { id: 19, name: 'Dr. Janani R', scan: 'USG', scanType: 'Abdomen', count: 1, price: 1150 },
+        { id: 20, name: 'Dr. Lakshmi Priya', scan: 'MRI', scanType: 'Pelvis', count: 1, price: 2300 },
     ];
 };
+
+
 
 export default function GroupedRowsDemo() {
     const [consultants, setConsultants] = useState([]);
@@ -142,7 +157,8 @@ export default function GroupedRowsDemo() {
                 type="number"
                 value={rowData.price}
                 onChange={handleChange}
-                className="p-inputtext p-component w-32 h-full m-0 p-2 box-border bg-white"
+                min="0"
+                className="p-inputtext p-component w-32 md:w-fit lg:w-fit h-full m-0 p-2 box-border bg-white"
             />
         );
     }
@@ -158,7 +174,7 @@ export default function GroupedRowsDemo() {
 
     const nameBodyTemplate = (rowData) => {
         if (rowData.name) {
-            return <span className="font-bold">{rowData.name}</span>;
+            return <span className="font-bold ml-2">{rowData.name}</span>;
         }
         return null;
     };
@@ -180,21 +196,36 @@ export default function GroupedRowsDemo() {
 
     const customRowClassName = (rowData) => {   
         const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
-        return `${baseClass} border-b border-sky-100`; // Add bottom border class here
+        return `${baseClass} border-b border-gray-200`; // Add bottom border class here
     };
 
-    // Calculate totals and counts for the information section
-    const totalAmount = groupedData.reduce((sum, row) => {
-        if (typeof row.total === 'string' && row.total.startsWith('Total:')) {
-            return sum + parseFloat(row.total.split('₹')[1]);
-        }
-        return sum;
-    }, 0);
-    const numberOfConsultants = [...new Set(groupedData.map(row => row.name))].length;
-    const numberOfScans = groupedData.length;
+   // Determine the rows to calculate based on selection
+const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
+
+// Filter rows where total starts with "Total:"
+const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.total.startsWith('Total:'));
+
+// Filter out rows with null or empty values for name and scan
+const filteredNameRows = rowsToCalculate.filter(row => row.name);
+const filteredScanRows = rowsToCalculate.filter(row => row.scan);
+
+// Calculate total amount
+const totalAmount = filteredRows.reduce((sum, row) => {
+    return sum + parseFloat(row.total.split('₹')[1]);
+}, 0);
+
+// Calculate number of unique consultants
+const numberOfConsultants = new Set(filteredNameRows.map(row => row.name)).size;
+
+// Calculate number of scans
+const numberOfScans = filteredScanRows.length;
 
     const handleExport = () => {
-        const ws = XLSX.utils.json_to_sheet(groupedData.map(row => ({
+        // Check if there are any selected rows
+        const rowsToExport = selectedRows.length > 0 ? selectedRows : groupedData;
+    
+        // Convert the rows to a format suitable for exporting
+        const ws = XLSX.utils.json_to_sheet(rowsToExport.map(row => ({
             Consultant: row.name || '',
             Scan: row.scan || '',
             'Scan Type': row.scanType || '',
@@ -202,19 +233,37 @@ export default function GroupedRowsDemo() {
             Price: row.price || '',
             Total: row.total || ''
         })));
-
+    
+        // Create a new workbook and append the sheet
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Consultants');
-
+    
+        // Write the workbook to a file and trigger download
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'ConsultantsReport.xlsx');
     };
+    
+
+const handleSelectionChange = (e) => {
+    const selectedRows = e.value; // Get the array of selected rows
+    const selectedNames = new Set(selectedRows.map(row => row.name)); // Collect unique names from selected rows
+
+    const newSelection = [];
+    groupedData.forEach(row => {
+        if (row.id.startsWith(`${Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`))}-`)) {
+            newSelection.push(row);
+        }
+    });
+
+    setSelectedRows(newSelection);
+};
+
 
     return (
         <div className="relative min-h-screen mb-20">
             {/* Background colors */}
-            <div className="absolute inset-0 bg-blue-600 h-1/2"></div>
-            <div className="absolute inset-x-0 bottom-0 bg-white h-1/2 "></div>
+            <div className="absolute inset-0 bg-blue-600 h-1/3"></div>
+            <div className="absolute inset-x-0 bottom-0 bg-white h-2/3 "></div>
 
             {/* Main content */}
             <div className="relative z-10 pt-8 px-4 sm:px-8 lg:px-12">
@@ -252,31 +301,45 @@ export default function GroupedRowsDemo() {
                 </div>
 
                 {/* Content container */}
-                <div className="mt-20 p-4">
-                <div className="flex justify-between items-center mb-4">
-        <div></div> {/* Placeholder div to push the button to the right */}
-        <button
-                            onClick={handleExport}
-                            className="bg-green-500 text-white py-2 px-4 rounded shadow hover:bg-green-600 flex items-center"
-                        >
-                            <i className="pi pi-file-excel mr-2"></i>
-                            Export to Excel
-                        </button>
-    </div>
-                    <div className="overflow-x-auto border border-sky-100 rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
+                <div className="mt-8 p-4">
+                <div className="flex justify-end mb-4 gap-2 flex-wrap">
+    <button
+        onClick={handleExport}
+        className="bg-green-500 text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+    >
+        <i className="pi pi-file-excel mr-1 sm:mr-2"></i>
+        Export to Excel
+    </button>
+    <button
+        // onClick={handleProcessIncentive}
+        className="bg-blue-500 text-white py-1.5 px-3 rounded shadow hover:bg-blue-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+    >
+        <i className="pi pi-check mr-1 sm:mr-2"></i>
+        Process Incentive
+    </button>
+</div>
+
+
+    <div className="overflow-x-auto border rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                         <DataTable
                             value={groupedData}
                             rowClassName={customRowClassName}
                             selection={selectedRows}
-                            onSelectionChange={(e) => setSelectedRows(e.value)}
+                            onSelectionChange={handleSelectionChange}
                             className="text-left"
+                            dataKey="id"
+                            selectionMode="multiple"
+                            metaKeySelection={false}
+                            paginator
+                            rows={20}
                         >
-                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-200 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
-                            <Column field="scan" header="Scan" body={scanBodyTemplate} headerClassName="bg-gray-200 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"></Column>
-                            <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-200 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
-                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-200 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"></Column>
-                            <Column field="price" header="Price" body={priceBodyTemplate} headerClassName="bg-gray-200 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2 text-nowrap"></Column>
-                            <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-200 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
+                        <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100"></Column>
+                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
+                            <Column field="scan" header="Scan" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"></Column>
+                            <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"></Column>
+                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"></Column>
+                            <Column field="price" header="Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"></Column>
+                            <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
                         </DataTable>
                     </div>
                 </div>
