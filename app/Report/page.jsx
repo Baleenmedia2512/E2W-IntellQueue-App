@@ -111,6 +111,7 @@ const Report = () => {
         fetchAmounts();
     }, [startDate, endDate]);
 
+
     useEffect(() => {
       FetchCurrentBalanceAmount();
   }, [marginResult]);
@@ -177,7 +178,6 @@ const Report = () => {
                 
             });
     };
-
     const fetchAmounts = async () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
