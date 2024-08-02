@@ -5,8 +5,8 @@ import { Column } from 'primereact/column';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx/xlsx';
+const { saveAs } = require('file-saver');
 import './consultantStyles.css';
 
 // Mock data for consultants
