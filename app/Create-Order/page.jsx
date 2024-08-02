@@ -17,13 +17,14 @@ import { Calendar } from 'primereact/calendar';
 import { format } from 'date-fns';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/material';
 
+
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP} = orderDetails;
-    console.log(orderNumberRP)
+  
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
     const companyName = "Baleen Test";
@@ -59,6 +60,7 @@ const CreateOrder = () => {
   // const [validityDays, setValidityDays] = useState(0)
   // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
   const [discountAmount, setDiscountAmount] = useState(0);
+  
     
     const dispatch = useDispatch();
     const router = useRouter();
@@ -74,7 +76,7 @@ const CreateOrder = () => {
     const [unitPrice, setUnitPrice] = useState(0);
     const [originalUnitPrice , setOriginalUnitPrice] = useState(unitPrice);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
-
+    const [units, setUnits]=useState("");
     const [previousOrderNumber, setPreviousOrderNumber] = useState('');
     const [previousRateWiseOrderNumber, setPreviousRateWiseOrderNumber] = useState('');
     const [previousOrderDate, setPreviousOrderDate] = useState('');
@@ -87,6 +89,8 @@ const CreateOrder = () => {
     const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
+    const [hasOrderDetails, setHasOrderDetails] = useState(false);
+    const [isUpdateMode, setIsUpdateMode] = useState(false); 
     
 // console.log(clientDetails)
      // Function to toggle expand/collapse
@@ -610,22 +614,22 @@ const fetchRates = async () => {
 
 const fetchOrderDetailsByOrderNumber = () => {
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchOrderDetails.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
-      if (data.length > 0) {
-        const orderDetails = data[0];
-        const formattedDate = parseDateFromDB(orderDetails.orderDate); // Format the date if needed
-        const formattedOrderDate = format(orderDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
-
-        setClientName(orderDetails.clientName);
-        setOrderDate(orderDetails.orderDate);
+      console.log(data); // Log the data to inspect the structure
+      if (data) {
+        // Assuming orderDetails is a typo and you meant data
+        const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
+        console.log(data)
+        setClientName(data.clientName);
+        setOrderDate(data.orderDate);
         setDisplayOrderDate(formattedOrderDate);
-        setOrderAmount(orderDetails.orderAmount);
-        setRateCardNumber(orderDetails.rateCardNumber);
-        setType(orderDetails.type);
+        setUnitPrice(data.receivable);
         
-        dispatch(setRateId(orderDetails.rateID));
+        // setRateCardNumber(data.rateCardNumber);
+        
+        dispatch(setRateId(data.rateId));
         setHasOrderDetails(true);
       } else {
         setHasOrderDetails(false); // Set to false if there are no details
@@ -636,11 +640,10 @@ const fetchOrderDetailsByOrderNumber = () => {
     });
 };
 
-// useEffect(() => {
-//   if (orderNumber && companyName) {
-//     fetchOrderDetailsByOrderNumber(orderNumber, companyName);
-//   }
-// }, [orderNumber, companyName]);
+useEffect(() => {
+  fetchOrderDetailsByOrderNumber();
+}, [orderNumberRP]);
+
 
       const createNewOrder = async(event) => {
         event.preventDefault()
@@ -682,7 +685,85 @@ const fetchOrderDetailsByOrderNumber = () => {
     }, 2000);
       }
        }
+//update order-SK (02-08-2024)------------------------------------
+const updateNewOrder = async (event) => {
+  event.preventDefault();
+  const receivable = (unitPrice * qty) + marginAmount;
+  const payable = unitPrice * qty;
+  const orderOwner = companyName === 'Baleen Media' ? (clientSource === '6.Own' ? loggedInUser : 'leenah_cse') : loggedInUser;
 
+  if (validateFields()) {
+    const formattedOrderDate = formatDateToSave(orderDate);
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php`, {
+        method: 'POST', // Or 'PUT' depending on your API design
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          JsonUserName: loggedInUser,
+          JsonOrderNumber: orderNumberRP, // Assuming orderNumberRP is the order number to update
+          JsonRateId: rateId,
+          JsonClientName: clientName,
+          JsonClientContact: clientNumber,
+          JsonClientSource: clientSource,
+          JsonOwner: orderOwner,
+          JsonCSE: loggedInUser,
+          JsonReceivable: receivable,
+          JsonPayable: payable,
+          JsonRatePerUnit: unitPrice,
+          JsonConsultantName: consultantName,
+          JsonMarginAmount: marginAmount,
+          JsonRateName: selectedValues.rateName.value,
+          JsonVendorName: selectedValues.vendorName.value,
+          JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
+          JsonType: selectedValues.adType.value,
+          JsonHeight: qty,
+          JsonWidth: 1,
+          JsonLocation: selectedValues.Location.value,
+          JsonPackage: selectedValues.Package.value,
+          JsonGST: rateGST.value,
+          JsonClientGST: clientGST,
+          JsonClientPAN: clientPAN,
+          JsonClientAddress: address,
+          JsonBookedStatus: 'Booked',
+          JsonUnits: selectedUnit.value,
+          JsonMinPrice: unitPrice,
+          JsonRemarks: remarks,
+          JsonContactPerson: clientContactPerson,
+          JsonReleaseDates: releaseDates,
+          JsonDBName: companyName,
+          JsonClientAuthorizedPersons: clientEmail,
+          JsonOrderDate: formattedOrderDate,
+          JsonRateWiseOrderNumber: nextRateWiseOrderNumber
+        })
+      });
+
+      const data = await response.json();
+      if (data === "Values Updated Successfully!") {
+        setSuccessMessage('Work Order #' + nextRateWiseOrderNumber + ' Updated Successfully!');
+        dispatch(setIsOrderExist(true));
+
+        setTimeout(() => {
+          setSuccessMessage('');
+          router.push('/FinanceEntry');
+        }, 3000);
+      } else {
+        alert(`The following error occurred while updating data: ${data}`);
+      }
+    } catch (error) {
+      console.error('Error updating order:', error);
+    }
+  } else {
+    setToastMessage('Please fill all necessary fields.');
+    setSeverity('error');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+  }
+};
+//end update order-sk(02-08-2024)-----------------------------------
       const fetchMaxOrderNumber = async () => {
         try {
           const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
@@ -993,18 +1074,20 @@ return (
           </Button>
         </DialogActions>
       </Dialog>
-  <div className="w-full max-w-6xl">
-  <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
-        <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Place your orders here</p>
+      <div className="w-full max-w-6xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
+          <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Place your orders here</p>
+        </div>
+        <button
+          className="custom-button"
+          onClick={isUpdateMode ? updateNewOrder : createNewOrder}
+        >
+          {isUpdateMode ? 'Update Order' : 'Place Order'}
+        </button>
       </div>
-      {/* <button className="expand-button" onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? 'Hide Client Details' : 'Show Client Details'}
-        </button>*/}
-      <button className="custom-button" onClick={createNewOrder}>Place Order</button> 
-    </div>
-    
+      
 
 
 

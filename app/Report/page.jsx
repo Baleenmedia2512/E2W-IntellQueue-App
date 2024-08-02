@@ -413,9 +413,15 @@ const [selectedColumn, setSelectedColumn] = useState('');
 const [selectedRow, setSelectedRow] = useState(null);
 
 const handleDoubleClick = (column, row) => {
-   setSelectedColumn(column);
-   setSelectedRow(row);
-  setOrderReportDialogOpen(true);
+  const { RateWiseOrderNumber } = row;
+  
+  if (RateWiseOrderNumber >= 0) {
+    setSelectedColumn(column);
+    setSelectedRow(row);
+    setOrderReportDialogOpen(true);
+  } else {
+    console.log("RateWiseOrderNumber is negative, dialog will not open.");
+  }
 };
 
 const handleCloseOrderReportDialog = () => {
@@ -426,8 +432,9 @@ const handleCloseOrderReportDialog = () => {
 
 const handleEditConfirm = () => {
   if (selectedRow) {
-    const { OrderNumber } = selectedRow;
-    dispatch(setOrderData({ orderNumber: selectedRow  }))
+    const OrderNumber  = selectedRow.OrderNumber;
+    dispatch(setOrderData({ orderNumber: OrderNumber  }))
+    //console.log(selectedRow.OrderNumber);
     router.push('/Create-Order');
   }
 
@@ -445,7 +452,7 @@ const orderColumns = [
     width: 100,
     renderCell: (params) => (
       <div onDoubleClick={() => handleDoubleClick('Receivable', params.row)}>
-        {params.value || 'Add'} {/* Display 'Add' if value is empty */}
+        {params.value} 
       </div>
     )
   },
@@ -455,7 +462,7 @@ const orderColumns = [
     width: 150,
     renderCell: (params) => (
       <div onDoubleClick={() => handleDoubleClick('rateName', params.row)}>
-         {params.value || 'Add'} {/* Display 'Add' if value is empty */}
+         {params.value} 
       </div>
     )
   },
@@ -465,7 +472,7 @@ const orderColumns = [
     width: 150,
     renderCell: (params) => (
       <div onDoubleClick={() => handleDoubleClick('adType', params.row)}>
-         {params.value || 'Add'} {/* Display 'Add' if value is empty */}
+         {params.value} 
       </div>
     )
   },
@@ -936,7 +943,7 @@ const handleDateChange = (range) => {
   <DialogTitle id="alert-dialog-title">{"DO YOU WANT TO EDIT?"}</DialogTitle>
   <DialogContent>
     <DialogContentText id="alert-dialog-description">
-    You have selected the {selectedColumn || 'unknown'} field with value "{(selectedRow && selectedRow[selectedColumn]) || 'Add'}". Do you want to edit this field?
+    You have selected the {selectedColumn} field with value "{selectedRow && selectedRow[selectedColumn]}". Do you want to edit this field?
     </DialogContentText>
   </DialogContent>
   <DialogActions>
