@@ -92,6 +92,9 @@ const AdDetailsPage = () => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
     }
+    if(!rateId){
+      dispatch(setQuotesData({currentPage: "adMedium"}));
+    }
     // if (adMedium === '') {
     //   dispatch(setQuotesData({currentPage: 'adMedium'}));
     // } else if (adType === '') {
