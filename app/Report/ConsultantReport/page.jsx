@@ -5,7 +5,7 @@ import { Column } from 'primereact/column';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import * as XLSX from 'xlsx/xlsx';
+import * as XLSX from 'xlsx';
 const { saveAs } = require('file-saver');
 import './consultantStyles.css';
 
