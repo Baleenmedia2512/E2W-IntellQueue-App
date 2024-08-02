@@ -32,6 +32,8 @@ const getConsultants = () => {
         { id: 18, name: 'Dr. Gopalakrishnan', scan: 'CT', scanType: 'Head', count: 2, price: 1500 },
         { id: 19, name: 'Dr. Janani R', scan: 'USG', scanType: 'Abdomen', count: 1, price: 1150 },
         { id: 20, name: 'Dr. Lakshmi Priya', scan: 'MRI', scanType: 'Pelvis', count: 1, price: 2300 },
+        { id: 21, name: 'Dr. Ravi Kumar', scan: 'USG', scanType: 'Brain', count: 1, price: 2000 },
+        { id: 22, name: 'Dr. Ravi Kumar', scan: 'X-Ray', scanType: 'Hand', count: 1, price: 2000 },
     ];
 };
 
