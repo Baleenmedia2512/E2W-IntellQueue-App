@@ -8,6 +8,8 @@ import 'primeicons/primeicons.css';
 import * as XLSX from 'xlsx';
 const { saveAs } = require('file-saver');
 import './consultantStyles.css';
+import DateRangePicker from '../CustomDateRangePicker';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 // Mock data for consultants
 const getConsultants = () => {
@@ -37,6 +39,7 @@ const getConsultants = () => {
         { id: 23, name: 'Dr. Vijayalakshmi P', scan: 'CT', scanType: 'Abdomen', count: 2, price: 1800 },
         { id: 24, name: 'Dr. Nandakumar R', scan: 'X-Ray', scanType: 'Hand', count: 1, price: 1100 },
         { id: 25, name: 'Dr. Lakshmi Narayanan', scan: 'X-Ray', scanType: 'Neck', count: 1, price: 2700 },
+        { id: 25, name: 'Dr. Lakshmi Narayanan', scan: 'USG', scanType: 'Neck', count: 1, price: 2700 },
     ];
 };
 
@@ -45,12 +48,31 @@ const getConsultants = () => {
 export default function GroupedRowsDemo() {
     const [consultants, setConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
+    const currentStartDate = startOfMonth(new Date());
+  const currentEndDate = endOfMonth(new Date());
+    const [selectedRange, setSelectedRange] = useState({
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+      });
+      const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
+      const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
 
     useEffect(() => {
         const consultantsData = getConsultants();
         const groupedConsultants = groupConsultants(consultantsData);
         setConsultants(groupedConsultants);
     }, []);
+
+    const handleDateChange = (range) => {
+        setSelectedRange({
+          startDate: range.startDate,
+          endDate: range.endDate,
+        });
+        const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
+        const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
+        setStartDate(formattedStartDate);
+        setEndDate(formattedEndDate);
+      };
 
     const groupConsultants = (data) => {
         const groupedData = [];
@@ -98,6 +120,7 @@ export default function GroupedRowsDemo() {
                         id: `${group.name}-${scan.scan}-${scanType.scanType}`,
                         name: currentIndex === middleIndex ? group.name : null,
                         scan: scanTypeIndex === 0 ? scan.scan : null,
+                        scanType: scanType.scanType,
                         count: scanType.count,
                         price: scanType.price,
                         total: scanType.count * scanType.price,
@@ -213,8 +236,35 @@ export default function GroupedRowsDemo() {
         
     };
 
+    const selectionBodyTemplate = (rowData) => {
+        // Check if the rowData contains a consultant name
+        if (rowData.name) {
+            return <input type="checkbox" checked={selectedRows.includes(rowData)} readOnly />;
+        }
+        return null; // Render nothing if no consultant name
+    };
+    
+    // Utility function to format numbers with commas in Indian format
+const formatIndianNumber = (number) => {
+    const parts = number.toString().split('.');
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
+  
+    // Adding commas to the integer part
+    const lastThree = integerPart.substring(integerPart.length - 3);
+    const otherDigits = integerPart.substring(0, integerPart.length - 3);
+    if (otherDigits !== '') {
+      integerPart = otherDigits.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
+    } else {
+      integerPart = lastThree;
+    }
+  
+    return integerPart + decimalPart;
+  };
+
    // Determine the rows to calculate based on selection
 const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
+
 
 // Filter rows where total starts with "Total:"
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.scan.startsWith('Total'));
@@ -228,6 +278,8 @@ const totalAmount = filteredRows.reduce((sum, row) => {
     return sum + parseFloat(row.total.split('₹')[1]);
 }, 0);
 
+const formattedtotalAmount = formatIndianNumber(totalAmount);
+
 // Calculate number of unique consultants
 const numberOfConsultants = new Set(filteredNameRows.map(row => row.name)).size;
 
@@ -236,8 +288,20 @@ const extractNameFromId = (id) => {
     return id.split('-')[0];
 };
 
+const extractRateCardFromId = (id) => {
+    // Split the id by '-' and return the first part (the name)
+    return id.split('-')[1];
+};
+
 // Calculate number of scans
-const numberOfScans = filteredCountRows.length;
+// Get the sum of values from the count column
+const totalCount = rowsToCalculate.reduce((accumulator, row) => {
+  // Add the value of count column to the accumulator if it exists and is a number
+  return accumulator + (row.count || 0);
+}, 0);
+
+const numberOfScans = totalCount;
+
 
 const handleExport = () => {
     // Filter out rows where the scan field is 'Total'
@@ -249,7 +313,8 @@ const handleExport = () => {
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
         Consultant: extractNameFromId(row.id), // Default to an empty string if name is null
-        RateCard: row.scan,
+        RateCard: extractRateCardFromId(row.id),
+        RateType: row.scanType,
         Count: row.count,
         Price: row.price,
         Total: row.total
@@ -303,32 +368,34 @@ const handleSelectionChange = (e) => {
                 </div>
 
                 {/* Information section */}
-                <div className="relative top-12 mx-5 mb-8 flex overflow-x-auto gap-4">
+                <div className="relative top-12 mx-5 mb-8 flex overflow-x-auto gap-3">
                     <div className="w-fit h-auto rounded-lg shadow-lg p-4 mb-5 flex flex-col border border-gray-300 flex-shrink-0 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
-                        <div className="text-2xl sm:text-3xl lg:text-4xl text-white font-bold">
-                          ₹{totalAmount}
+                        <div className="text-xl sm:text-3xl lg:text-4xl text-white font-bold">
+                          ₹{formattedtotalAmount}
                         </div>
-                        <div className="text-sm sm:text-base lg:text-lg text-gray-200">
-                          Total Amount
+                        <div className="text-xs sm:text-base lg:text-lg text-gray-200">
+                        Total Amount
                         </div>
                     </div>
                     <div className="w-fit h-auto rounded-lg shadow-lg p-4 mb-5 flex flex-col border border-gray-300 flex-shrink-0 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
-                        <div className="text-2xl sm:text-3xl lg:text-4xl text-white font-bold">
+                        <div className="text-xl sm:text-3xl lg:text-4xl text-white font-bold">
                           {numberOfConsultants}
                         </div>
-                        <div className="text-sm sm:text-base lg:text-lg text-blue-100">
-                          No. of Consultants
+                        <div className="text-xs sm:text-base lg:text-lg text-blue-100">
+                          Consultants
                         </div>
                     </div>
-                    <div className="w-fit h-auto rounded-lg shadow-lg p-4 mb-5 flex flex-col border border-gray-300 flex-shrink-0 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
-                        <div className="text-2xl sm:text-3xl lg:text-4xl text-white font-bold">
+                    <div className="w-fit lg:w-32 h-auto rounded-lg shadow-lg p-4 mb-5 flex flex-col border border-gray-300 flex-shrink-0 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
+                        <div className="text-xl sm:text-3xl lg:text-4xl text-white font-bold">
                           {numberOfScans}
                         </div>
-                        <div className="text-sm sm:text-base lg:text-lg text-gray-200">
-                          No. of Visits
+                        <div className="text-xs sm:text-base lg:text-lg text-gray-200">
+                          Clients
                         </div>
                     </div>
                 </div>
+
+                
 
                 {/* Content container */}
                 <div className="mt-8 p-4">
@@ -363,10 +430,10 @@ const handleSelectionChange = (e) => {
                             paginator
                             rows={20}
                         >
-                        <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100"></Column>
+                        <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
                             <Column field="scan" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"></Column>
-                            {/* <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"></Column> */}
+                            <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"></Column>
                             <Column field="price" header="Price (per Count)" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"></Column>
                             <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
