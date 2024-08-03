@@ -410,7 +410,7 @@ const orderColumns = [
   { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
   { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
   { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
-  {field: 'Remarks', headerName: 'Discount Remarks', width: 160},
+  {field: 'Remarks', headerName: 'Adjustment Remarks', width: 160},
   { field: 'Card', headerName: 'Rate Name', width: 150 },
   { field: 'AdType', headerName: 'Rate Type', width: 150 },
   { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },

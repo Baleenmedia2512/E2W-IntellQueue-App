@@ -106,7 +106,7 @@ const FinanceData = () => {
     // Use the orderData values to initialize the state
     setClientName(orderClientName || '');
     setOrderNumber(orderOrderNumber || '');
-    setRemarks(orderRemarks || '')
+    // setRemarks(orderRemarks || '')
     setRateWiseOrderNumber(nextRateWiseOrderNumber || '')
     fetchClientDetails(orderClientNumber, orderClientName);
   }, [orderClientName, orderOrderNumber, orderRemarks, orderClientNumber, nextRateWiseOrderNumber]);
