@@ -83,25 +83,23 @@ const AdTypePage = () => {
   }
 
   return (
-    <div>
-      <div className='text-black'>
-      <div className="flex flex-row justify-between mx-[2%] mt-4">
-        <>
-          
+    <div className='bg-gray-100'>
+      <div className='text-black bg-gray-100'>
+      <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
             <button 
-              className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
+              className="mr-8 mt-4 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white"
               onClick={() => {moveToPreviousPage()}}
             > 
               <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back 
             </button> 
-            <h1 className='font-semibold mt-2'>
+            <h1 className='font-semibold mt-4 text-center self-center'>
             {adMedium}
           </h1>
-          <IconButton aria-label="cart" className='rounded-none text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
-                <StyledBadge badgeContent={cartItems.length} color="primary">
-                  <ShoppingCartIcon className='text-black' />
+          <button aria-label="cart" className='rounded-full mr-4 mt-4 p-1 bg-white border border-blue-500 shadow-blue-500 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+                <StyledBadge badgeContent={cartItems.length} color="error">
+                  <ShoppingCartIcon className='text-blue-500' />
                 </StyledBadge>
-              </IconButton>
+              </button>
           {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -123,14 +121,15 @@ const AdTypePage = () => {
             />
             </svg>
           </button> */}
-        </>
       </div>
       <br />
-      <h1 className='text-2xl font-bold text-center  mb-4'>Select Ad Type</h1>
+      <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
+            <br/>
+      <h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Ad Type</h1>
     
-      <div className='mx-[8%] relative'>
+      <div className='mx-[8%] relative bg-blue-500'>
         <input
-          className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+          className="w-full border border-gray-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200"
           type="text"
           value={searchInput}
           onChange={handleSearchInputChange}
@@ -138,28 +137,29 @@ const AdTypePage = () => {
         />
       
         <div className="absolute top-0 right-0 mt-2 mr-3">
-          <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
+          <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div>
       </div>
 
-      <div>
-        <div className="flex flex-col mx-[8%]">
+        <div className="flex flex-col mx-[8%] justify-stretch">
         {searchedTypeofAd.map((optionss) => (
-          <label
+          <button
             key={optionss.typeOfAd}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
+            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-8 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
             onClick={() => {
             {
               dispatch(setQuotesData({selectedAdType: optionss.typeOfAd}))
               dispatch(setQuotesData({currentPage: "adCategory"}))
           }}}
           >
-            <div className="text-lg font-bold flex items-center justify-center">{optionss.typeOfAd}</div>
-          </label>
+            <div className='flex flex-row items-center mx-4 justify-start'>
+                    <div className='text-blue-500 text-xl font-bold'>•</div>
+            <div className="text-xl font-bold mb-2 items-center ml-4">{optionss.typeOfAd !== "" ? optionss.typeOfAd : 'Others'}</div>
+            </div>
+          </button>
         ))}
         </div>
-      </div>
-      
+      </form>
     </div>
   </div>
   )
