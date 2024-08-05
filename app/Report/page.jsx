@@ -893,7 +893,7 @@ const handleDateChange = (range) => {
       {/* Order Amount */}
       <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
         ₹{totalOrderAmount}
-        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit">Order Value</div>
+        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">Order Value</div>
       </div>
       {/* Finance Amount */}
       <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold ">
