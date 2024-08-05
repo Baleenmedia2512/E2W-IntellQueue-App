@@ -3,9 +3,15 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
+import IconButton from '@mui/material/IconButton';
+import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
-import { setOrderData, setIsOrderExist  } from '@/redux/features/order-slice';
-import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty} from '@/redux/features/rate-slice';
+import { setOrderData, resetOrderData, setIsOrderExist  } from '@/redux/features/order-slice';
+
+import Select from 'react-select';
+import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
+import { TextField } from '@mui/material';
+import { formattedMargin } from '../adDetails/ad-Details';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { Dropdown } from 'primereact/dropdown';
@@ -15,7 +21,7 @@ import 'primeicons/primeicons.css';
 import './styles.css';
 import { Calendar } from 'primereact/calendar';
 import { format } from 'date-fns';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -37,6 +43,7 @@ const CreateOrder = () => {
     const [elementsToHide, setElementsToHide] = useState([])
     const [clientEmail, setClientEmail] = useState("");
     const [clientSource, setClientSource] = useState("")
+    const [receivable, setReceivable] = useState("");
     const [address, setAddress] = useState('');
     const [clientID, setClientID] = useState(clientIDCR || '');
     const [consultantName, setConsultantName] = useState(consultantNameCR || '');
@@ -53,6 +60,13 @@ const CreateOrder = () => {
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const [vendors, setVendors] = useState([]);
   const [ratesData, setRatesData] = useState([]);
+  const [units, setUnits] = useState([])
+  const [isSlabAvailable, setIsSlabAvailable] = useState(false)
+  const [showCampaignDuration, setShowCampaignDuration] = useState(false)
+  const [leadDays, setLeadDays] = useState(0);
+  const [campaignDuration, setCampaignDuration] = useState("");
+  const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("");
+  const [campaignUnits, setCampaignUnits] = useState([]); 
   // const [validityDays, setValidityDays] = useState(0)
   // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -79,9 +93,11 @@ const CreateOrder = () => {
     const [previousAdType, setPreviousAdType] = useState('');
     const [previousOrderAmount, setPreviousOrderAmount] = useState('');
     const [previousConsultantName, setPreviousConsultantName] = useState('');
+
     const [orderDate, setOrderDate] = useState(new Date());
     const [displayOrderDate, setDisplayOrderDate] = useState(new Date());
     const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
+
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
     
@@ -95,6 +111,7 @@ const CreateOrder = () => {
       fetchMaxOrderNumber();
       elementsToHideList();
       fetchRates();
+      fetchCampaignUnits();
       calculateReceivable();
     },[])
 
@@ -187,6 +204,23 @@ const fetchUnits = async () => {
   } catch (error) {
     console.error(error);
   }
+}
+
+
+const fetchCampaignUnits = async() => {
+  const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchCampaignUnits.php/`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+  const data = await response.json();
+
+  const options = data.map(item => ({
+    value: item, 
+    label: item,  
+  }));
+  
+  // Update the state campaignUnits with the new options
+  setCampaignUnits(options);
 }
 
 useEffect(() => {
@@ -455,6 +489,20 @@ if (filterKey === 'Location' && selectedOption) {
         item.Package === selectedOption.value 
       );}
 
+  if (selectedRate) {
+    dispatch(setRateId(selectedRate.RateID));
+    setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
+    if(selectedRate.campaignDurationVisibility === 1){
+      setShowCampaignDuration(true)
+    }
+    setSelectedCampaignUnits({label: selectedRate.CampaignDurationUnit, value: selectedRate.CampaignDurationUnit})
+    // // setRateGST({label: selectedRate.rategst, value: selectedRate.rategst})
+    // dispatch(setRateGST({label: selectedRate.rategst, value: selectedRate.rategst}));
+    setLeadDays(selectedRate.LeadDays);
+    // setValidTill(selectedRate.ValidityDate)
+    // setValidityDate(selectedRate.ValidityDate)
+  }
+
 if (filterKey !== 'vendorName'){
   // setIsNewRate(false)
 }
@@ -692,7 +740,8 @@ const fetchRates = async () => {
     const subtotalWithoutGST = validQty * validUnitPrice + validMarginAmount;
     const gstAmount = subtotalWithoutGST * (validRateGST / 100);
     const amountInclGST = subtotalWithoutGST + gstAmount;
-
+    // Set the state with amountInclGST
+    setReceivable(amountInclGST);
     // Dispatch action to set order data with receivable amount
     dispatch(setOrderData({ receivable: amountInclGST }));
   };
@@ -1051,7 +1100,7 @@ return (
       />
     </div>
   </div>
-  
+
         </div>
         
         {/* Short Summary */}
@@ -1067,21 +1116,6 @@ return (
         
         {/* Rate Card Name */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        { (discountAmount > 0 || discountAmount < 0) && (
-        <div >
-                    <label className="block text-gray-700 font-semibold mb-2">Adjustment Remarks</label>
-                    <input 
-                        type='text' 
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
-                        placeholder='Remarks'    
-                        value={remarks}
-                        onChange={e => {setRemarks(e.target.value);
-                          if (errors.orderNumber) {
-                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-                          }
-                        }}
-                    />
-                    </div>)}
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
@@ -1249,7 +1283,20 @@ return (
                         {errors.qty && <span className="text-red-500 text-sm">{errors.qty}</span>}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
-        
+        <div name="OrderRemarks">
+                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
+                    <input 
+                        type='text' 
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
+                        placeholder='Remarks'    
+                        value={remarks}
+                        onChange={e => {setRemarks(e.target.value);
+                          if (errors.orderNumber) {
+                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                          }
+                        }}
+                    />
+                    </div>
                     <div name="OrderReleaseDate">
                     {/* <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
@@ -1275,7 +1322,6 @@ return (
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
-                  
                    </div>
                   </div>
                     </div>
