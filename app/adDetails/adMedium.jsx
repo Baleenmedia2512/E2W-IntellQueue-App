@@ -25,8 +25,8 @@ export const AdMediumPage = () => {
   const routers = useRouter();
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const [searchInput, setSearchInput] = useState('');
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test';
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   // const datas = useAppSelector(state => state.quoteSlice.validRates);
   
@@ -62,23 +62,25 @@ export const AdMediumPage = () => {
 
   const icons = (iconValue) => {
     if (iconValue === 'Automobile') {
-      return (<Image src="/images/school-bus.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/bus (1).png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Newspaper') {
       return (<Image src="/images/newspaper.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Print Services') {
-      return (<Image src="/images/printer.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/brochure.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Production') {
-      return (<Image src="/images/smart-tv.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/marketing.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Radio Ads') {
-      return (<Image src="/images/radio.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/radio-rounded.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Road Side') {
-      return (<Image src="/images/road-map.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/boarding.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Screen Branding') {
       return (<Image src="/images/branding.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Test') {
-      return (<Image src="/images/test.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/testing.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'TV') {
       return (<Image src="/images/tv-monitor.png" alt="car Icon" width={60} height={60} />);
+    } else if (iconValue === 'Digital Platform') {
+      return (<Image src="/images/social-media.png" alt="car Icon" width={60} height={60} />);
     }
   }
 
@@ -174,7 +176,7 @@ export const AdMediumPage = () => {
               </button> */}
           </div>
           <br/>
-          <form className='bg-white rounded-t-2xl shadow-2xl pb-8 shadow-black'>
+          <form className='bg-white rounded-t-2xl shadow-2xl pb-8 h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
             <br/>
           <h1 className='text-2xl font-bold text-center text-blue-500'>Select AD Medium</h1>
 
@@ -222,7 +224,7 @@ export const AdMediumPage = () => {
               {option.rateName !== 'Newspaper' && (
                 <button
                   key={option.rateName}
-                  className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-8 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+                  className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
                   onClick={() => {
                     //setSelectedAdMedium(option.rateName);
                     dispatch(setQuotesData({selectedAdMedium: option.rateName, currentPage: "adType"}))

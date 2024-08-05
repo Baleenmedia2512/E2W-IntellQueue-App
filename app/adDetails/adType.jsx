@@ -20,9 +20,9 @@ const AdTypePage = () => {
   const dispatch = useDispatch();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   // const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
-  const companyName = 'Baleen Test'
+  // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const routers = useRouter();
@@ -129,7 +129,7 @@ const AdTypePage = () => {
     
       <div className='mx-[8%] relative bg-blue-500'>
         <input
-          className="w-full border border-gray-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200"
+          className="w-full border border-gray-500 text-black p-2 rounded-lg focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200"
           type="text"
           value={searchInput}
           onChange={handleSearchInputChange}
@@ -141,7 +141,7 @@ const AdTypePage = () => {
         </div>
       </div>
 
-        <div className="flex flex-col mx-[8%] justify-stretch">
+        <div className="flex flex-col mx-[8%] mt-4 justify-stretch">
         {searchedTypeofAd.map((optionss) => (
           <button
             key={optionss.typeOfAd}
