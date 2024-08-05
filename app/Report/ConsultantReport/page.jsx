@@ -10,6 +10,7 @@ const { saveAs } = require('file-saver');
 import './consultantStyles.css';
 import DateRangePicker from '../CustomDateRangePicker';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { FilterMatchMode, FilterOperator } from 'primereact/api';
 
 // Mock data for consultants
 const getConsultants = () => {
@@ -56,6 +57,17 @@ export default function GroupedRowsDemo() {
       });
       const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
       const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
+
+      const [filters, setFilters] = useState({
+        global: { value: null, matchMode: 'contains' },
+        name: { value: null, matchMode: 'contains' },
+        scan: { value: null, matchMode: 'contains' },
+        scanType: { value: null, matchMode: 'contains' },
+        count: { value: null, matchMode: 'equals' },
+        price: { value: null, matchMode: 'equals' },
+        total: { value: null, matchMode: 'equals' }
+    });
+
 
     useEffect(() => {
         const consultantsData = getConsultants();
@@ -353,6 +365,26 @@ const handleSelectionChange = (e) => {
     setSelectedRows(newSelection);
 };
 
+const filterHeaderTemplate = (column, filterField) => {
+    return (
+        <div>
+            <span className="p-column-title">{column.header}</span>
+            <input
+                type="text"
+                value={filters[filterField] ? filters[filterField].value : ''}
+                onChange={(e) => {
+                    let newFilters = { ...filters };
+                    newFilters[filterField] = { value: e.target.value, matchMode: 'contains' };
+                    setFilters(newFilters);
+                }}
+                placeholder={`Search ${column.header}`}
+                className="p-inputtext p-component"
+                style={{ width: '100%' }}
+            />
+        </div>
+    );
+};
+
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -429,14 +461,28 @@ const handleSelectionChange = (e) => {
                             metaKeySelection={false}
                             paginator
                             rows={20}
+                            filters={filters}
+                            globalFilterFields={['name', 'scan', 'scanType', 'count', 'price', 'total']}
+            
                         >
                         <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
-                            <Column field="scan" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"></Column>
-                            <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"></Column>
-                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"></Column>
-                            <Column field="price" header="Price (per Count)" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"></Column>
-                            <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"></Column>
+                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'name')}></Column>
+                            <Column field="scan" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Scan' }, 'scan')}></Column>
+                            <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
+                            filterElement={filterHeaderTemplate({ header: 'Scan Type' }, 'scanType')}></Column>
+                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Count' }, 'count', 'number')}></Column>
+                            <Column field="price" header="Price (per Count)" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Count' }, 'count', 'number')}></Column>
+                            <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Count' }, 'count', 'number')}></Column>
                         </DataTable>
                     </div>
                 </div>
