@@ -32,8 +32,8 @@ const CheckoutPage = () => {
   const clientNameRef = useRef(null);
   const clientContactRef = useRef(null);
   const [datas, setDatas] = useState([]);
-  // const companyName = 'Baleen Test';
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = 'Baleen Test';
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);

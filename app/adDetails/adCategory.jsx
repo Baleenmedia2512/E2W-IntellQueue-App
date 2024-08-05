@@ -18,10 +18,10 @@ const AdCategoryPage = () => {
   const dispatch = useDispatch();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
-  // const companyName = 'Baleen Test'
+  const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const routers = useRouter();

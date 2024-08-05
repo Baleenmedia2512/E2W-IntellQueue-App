@@ -25,8 +25,8 @@ export const AdMediumPage = () => {
   const routers = useRouter();
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const [searchInput, setSearchInput] = useState('');
-  // const companyName = 'Baleen Test';
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = 'Baleen Test';
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   // const datas = useAppSelector(state => state.quoteSlice.validRates);
   
