@@ -145,7 +145,7 @@ const AdTypePage = () => {
         {searchedTypeofAd.map((optionss) => (
           <button
             key={optionss.typeOfAd}
-            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-8 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
             onClick={() => {
             {
               dispatch(setQuotesData({selectedAdType: optionss.typeOfAd}))

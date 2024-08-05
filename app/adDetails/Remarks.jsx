@@ -84,23 +84,24 @@ const RemarksPage = () => {
 
   const greater = ">>"
   return (
-    <div>
-        <div className='text-black'>
-      <div className="flex flex-row justify-between mx-[8%] mt-8">
+    <div className='bg-gray-100'>
+        <div className='text-black bg-gray-100'>
+      <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
         <>
-      
-    <h1 className='font-semibold'><button  className="mr-8 hover:scale-110 font-semibold text-blue-500 hover:animate-pulse border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
+        <button  className="mr-8  mt-8 hover:scale-110 font-semibold text-blue-500 hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
     onClick={() => {
       dispatch(setQuotesData({currentPage: 'edition', selectedEdition: ''}))
   }
     }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> Back</button>
+      
+    <h1 className='font-semibold mt-10'>
     {adMedium} {greater} { selectedAdType} {greater} {adCategory} {greater} {edition}</h1>
 
-    <IconButton aria-label="cart" className='rounded-none text-center shadow-md left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+    <button aria-label="cart" className='rounded-full p-2 mt-8 text-center shadow-sm shadow-blue-500 border border-blue-500 left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </IconButton>
+              </button>
     {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -125,27 +126,29 @@ const RemarksPage = () => {
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
       <br />
+      <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
+            <br/>
 <h1 className='text-2xl font-bold text-center  mb-4'>Select Package</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
           <input
-          className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+          className="w-full border border-gray-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-200"
         type="text"
         value={searchInput}
         onChange={handleSearchInputChange}
         placeholder="Search"
       />
       <div className="absolute top-0 right-0 mt-2 mr-3">
-          <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
+          <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div></div>
       <div>
       {/* check if only one item is available, if only one move to ad-details page*/}
       
        <ul className="flex flex-col flex-wrap items-center list-disc list-inside mx-[8%]">
               {searchedPosition.filter(item => item.Edition === edition).map((options) => (
-          <label
+          <button
             key={options.adCategory}
-            className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
+            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
             onClick={() => {
               //options contain Edition:Position values
               //the edition position is saved in adCategory Cookie\
@@ -153,11 +156,15 @@ const RemarksPage = () => {
               Cookies.remove('isAdDetails');
             }}
           >
-            <div className="text-sm font-bold items-center justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.Position === "" ? 'Skip' : options.Position}</div>
-</label>))
+            <div className='flex flex-row items-center mx-4 justify-start'>
+                    <div className='text-blue-500 text-xl font-bold'>•</div>
+            <div className="text-sm font-bold items-center ml-4 justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.Position === "" ? 'Skip' : options.Position}</div>
+            </div>
+</button>))
               }
             </ul> 
       </div>
+      </form> 
       </div>
       </div>
   )
