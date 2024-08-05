@@ -2,19 +2,18 @@
 import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
-import AdCategoryPage from './adCategory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
-import { Padding, RemoveCircleOutline, plus } from '@mui/icons-material';
+import { RemoveCircleOutline } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
-import { Alert, Button, Box } from '@mui/material';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
-import { useDispatch, useSelector } from 'react-redux';
+import { setQuotesData, resetQuotesData } from '@/redux/features/quote-slice';
+import { useDispatch } from 'react-redux';
+import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
 import { setClientData } from '@/redux/features/client-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
@@ -30,12 +29,15 @@ const CheckoutPage = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+  const clientNameRef = useRef(null);
+  const clientContactRef = useRef(null);
   const [datas, setDatas] = useState([]);
-  const companyName = 'Baleen Test';
+  // const companyName = 'Baleen Test';
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-  const {clientName, clientContact, clientEmail, clientSource, clientTitle} = clientDetails;
+  const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -43,7 +45,10 @@ const CheckoutPage = () => {
   const ratePerUnit = useAppSelector(state => state.quoteSlice.ratePerUnit);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition)
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
-  const rateId = useAppSelector(state => state.quoteSlice.rateId)
+  const rateId = useAppSelector(state => state.quoteSlice.rateId);
+  const [isClientNameFocus, setIsClientNameFocus] = useState(false);
+  const [isClientContact, setIsClientContact] = useState(true);
+  const [isClientName, setIsClientName] = useState(true)
   // const qty = useAppSelector(state => state.quoteSlice.quantity);
   // const unit = useAppSelector(state => state.quoteSlice.unit);
   // const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
@@ -70,9 +75,9 @@ const CheckoutPage = () => {
   const routers = useRouter();
 
   const pdfGeneration = async (item) => {
-    const AmountExclGST = (((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount)));
-    const AmountInclGST = AmountExclGST * 1.18;
-  
+    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let AmountInclGST = Math.round(AmountExclGST * 1.18);
+    
     return {
       adMedium: item.adMedium,
       adCategory: item.adCategory,
@@ -86,18 +91,64 @@ const CheckoutPage = () => {
       amountInclGst: formattedRupees(AmountInclGST),
       leadDays: item.leadDay,
       durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
-      qtyUnit: item.unit,
+      qtyUnit: item.unit ? item.unit : 'Unit',
       adType: item.adType,
-      formattedDate: item.formattedDate
+      formattedDate: item.formattedDate,
     };
   };
   
+  let isGeneratingPdf = false;
+
   const handlePdfGeneration = async () => {
-    const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-    await generatePdf(cart, clientName, clientEmail, clientTitle);
-    dispatch(resetCartItem());
-    dispatch(resetQuotesData());
+    if (isGeneratingPdf) {
+      const promises = cartItems.map(item => addQuoteToDB(item));
+      await Promise.all(promises);
+      return; // Prevent further execution if PDF is already being generated
+    }
+
+    isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
+    const quoteNumber = await fetchNextQuoteNumber(companyName);
+    let grandTotalAmount = calculateGrandTotal();
+    grandTotalAmount = grandTotalAmount.replace('₹', '');
+    if(clientName !== "" && clientContact !== ""){
+      const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+      await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber);
+      const promises = cartItems.map(item => addQuoteToDB(item));
+      await Promise.all(promises);
+      setTimeout(() => {
+      dispatch(resetCartItem());
+      dispatch(resetQuotesData());
+      },3000)
+    } else{
+      if(clientName === ""){
+        setIsClientName(false)
+      }else if(clientContact === ""){
+        setIsClientContact(false)
+      }
+    }
   };
+
+  const addQuoteToDB = async(item) => {
+    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let AmountInclGST = Math.round(AmountExclGST * 1.18);
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${'18%'}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
+      const data = await response.text();
+      if (!response.ok) {
+        alert(`The following error occurred while inserting data: ${data}`);
+      }
+    } catch (error) {
+      console.error('Error inserting Quote:', error);
+    }
+  }
+  
+  useEffect(()=>{
+    if(clientName === ""){
+      clientNameRef.current?.focus()
+    }else if(clientContact === ""){
+      clientContactRef.current?.focus()
+    }
+  },[isClientContact, isClientName])
 
   const handleSearchTermChange = (event) => {
     const newName = event.target.value
@@ -116,6 +167,7 @@ const CheckoutPage = () => {
       setClientNameSuggestions([]);
     }
       dispatch(setClientData({clientName: newName}));
+      setIsClientName(true)
     //   if (errors.clientName) {
     //     setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
     // }
@@ -282,8 +334,9 @@ const CheckoutPage = () => {
               <table className='mb-6'>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Name</td>
-                  <td>:</td><td> <input placeholder="Ex: Tony" className='sm:w-40 py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value = {clientName} onChange={handleSearchTermChange}></input>
-                  {clientNameSuggestions.length > 0 && (
+                  <td>:</td><td> <input placeholder="Ex: Tony" ref={clientNameRef} onFocus={() => setIsClientNameFocus(true)} onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} className=' py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value = {clientName} onChange={handleSearchTermChange} ></input>
+                  {!isClientName && <label className='text-red-500'>Please enter client name</label>}
+                  {clientNameSuggestions.length > 0 && isClientNameFocus && (
                     <ul className="absolute z-10 mt-1 w-auto bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
                     {clientNameSuggestions.map((name, index) => (
                       <li key={index}>
@@ -303,15 +356,17 @@ const CheckoutPage = () => {
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Number</td>
-                  <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" maxLength={10} className='w-full sm:w-40 py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => dispatch(setClientData({clientContact: e.target.value}))}></input></td>
+                  <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" ref={clientContactRef} maxLength={10} className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => {dispatch(setClientData({clientContact: e.target.value})); setIsClientContact(true)}}></input>
+                  {!isClientContact && clientContact.length === 0 && <label className='text-red-500'>Please enter client contact</label>}
+                  </td>
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>E-Mail</td>
-                  <td>:</td><td> <input type="email" placeholder="Ex: client@email.com" className='w-full sm:w-40 py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientEmail} onChange={(e) => dispatch(setClientData({clientEmail: e.target.value}))}></input></td>
+                  <td>:</td><td> <input type="email" placeholder="Ex: client@email.com" className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientEmail} onChange={(e) => dispatch(setClientData({clientEmail: e.target.value}))}></input></td>
                 </tr>
                 <tr>
                   <td className='py-1 text-blue-600 font-semibold'>Source</td>
-                  <td>:</td><td> <select className='py-1 px-2 border-gray-500 sm:w-40 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value={clientSource} onChange={(e) => dispatch(setClientData({clientSource: e.target.value}))}>{bmsources.map((item, index) => (
+                  <td>:</td><td> <select className='py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value={clientSource} onChange={(e) => dispatch(setClientData({clientSource: e.target.value}))}>{bmsources.map((item, index) => (
                     <option key={index}>{item}</option>
                   ))}</select></td>
                 </tr>
@@ -339,7 +394,11 @@ const CheckoutPage = () => {
               <button
                  className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  dispatch(setQuotesData({currentPage: "adDetails"}))
+                  if(!rateId){
+                    dispatch(setQuotesData({currentPage: "adMedium"}))
+                  }else{
+                    dispatch(setQuotesData({currentPage: "adDetails"}))
+                  }
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
@@ -352,8 +411,9 @@ const CheckoutPage = () => {
           <div className='text-center justify-center'>
             <label className='font-800 text-xl'> Oops! No Items in Cart</label>
             <span className='flex flex-row justify-center mt-4'>
+            <label className='ml-2 text-xl'>
               <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adMedium"}))}>Add Items </button>
-              <label className='ml-2 text-xl'> in cart to generate quote</label>
+              &nbsp; in cart to generate quote</label>
             </span>
           </div>
           

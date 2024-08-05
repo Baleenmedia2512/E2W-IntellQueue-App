@@ -54,8 +54,6 @@ const Report = () => {
     const [totalExpense, setTotalExpense] = useState('');
     const [marginResult, setMarginResult] = useState('');
     const [currentBalance, setCurrentBalance] = useState('');
-    const [cashInHand, setCashInHand] = useState('');
-    const [ledgerBalance, setLedgerBalance] = useState('');
     const [selectedOrder, setSelectedOrder] = useState('');
     const [orderDialogOpen, setOrderDialogOpen] = useState(false);
     const [deletingOrder, setDeletingOrder] = useState('');
@@ -64,6 +62,8 @@ const Report = () => {
     const [orderNum, setOrderNum] = useState(null);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [totalOrderAmount, setTotalOrderAmount] = useState('');
+  const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
 
 
     const handleClickOpen = () => {
@@ -108,7 +108,9 @@ const Report = () => {
         fetchSumOfFinance();
         fetchSumOfOrders();
         FetchCurrentBalanceAmount();
+        fetchAmounts();
     }, [startDate, endDate]);
+
 
     useEffect(() => {
       FetchCurrentBalanceAmount();
@@ -176,27 +178,28 @@ const Report = () => {
                 
             });
     };
+    const fetchAmounts = async () => {
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+    
+        // Ensure the fetched data is formatted correctly
+        const TotalOrderAmt = data.order_amount !== null ? formatIndianNumber(data.order_amount) : '0';
+        const TotalFinanceAmt = data.finance_amount !== null ? formatIndianNumber(data.finance_amount) : '0';
+    
+        // Update state with formatted values
+        setTotalOrderAmount(TotalOrderAmt);
+        setTotalFinanceAmount(TotalFinanceAmt);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    
 
-    const handleMarkInvalid = (orderNum) => {
-      axios
-          .get(`https://orders.baleenmedia.com/API/Media/MakeOrderInvalidOrRestore.php?JsonDBName=${companyName}&OrderNumber=${orderNum}&Action=invalid`)
-          .then((response) => {
-              setSuccessMessage('Order Cancelled!');
-                    setTimeout(() => {
-                        setSuccessMessage('');
-                    }, 2000);
-              fetchOrderDetails();
-          })
-          .catch((error) => {
-              console.error(error);
-              setToastMessage('Failed to cancel order. Please try again.');
-                    setSeverity('error');
-                    setToast(true);
-                    setTimeout(() => {
-                        setToast(false);
-                    }, 2000);
-          });
-  };
+  
 
   const handleOrderDelete = (rateWiseOrderNum, OrderNum) => {
     axios
@@ -212,6 +215,7 @@ const Report = () => {
                     setSuccessMessage('');
                 }, 2000);
                 fetchOrderDetails();
+                fetchAmounts();
             }
         })
         .catch((error) => {
@@ -236,6 +240,8 @@ const handleTransactionDelete = (rateWiseOrderNum, orderNum) => {
               setSuccessMessage('');
             }, 2000);
             fetchFinanceDetails();
+            fetchAmounts();
+            fetchSumOfFinance();
           } else {
             setToastMessage(data.message);
             setSeverity('error');
@@ -299,6 +305,7 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
           setSuccessMessage('Order Restored!');
           setTimeout(() => setSuccessMessage(''), 2000);
           fetchOrderDetails();
+          fetchAmounts();
       }
   } catch (error) {
       console.error('Error during restore operation:', error);
@@ -392,8 +399,7 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
-const isMobile = useMediaQuery('(max-width:640px)');
-const [anchorEl, setAnchorEl] = useState(null);
+
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
@@ -404,6 +410,7 @@ const orderColumns = [
   { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
   { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
   { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
+  {field: 'Remarks', headerName: 'Adjustment Remarks', width: 160},
   { field: 'Card', headerName: 'Rate Name', width: 150 },
   { field: 'AdType', headerName: 'Rate Type', width: 150 },
   { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
@@ -598,16 +605,48 @@ const orderColumns = [
 
     // Data for the pie chart
     
-    const pieData = sumOfFinance.length > 0 ? [
+    // const pieData = sumOfFinance.length > 0 ? [
+    //   { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
+    //   { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
+    //   { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
+    // ] : [];
+
+    const incomeData = sumOfFinance.length > 0 ? [
       { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
       { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
-      { name: 'Expense', value: parseFloat(sumOfFinance[0].expense || 0) },
+    ] : [];
+
+
+  
+    const expenseData = sumOfFinance.length > 0 ? [
+      { name: 'Bank', value: parseFloat(sumOfFinance[0].expense_bank || 0) },
+      { name: 'Communication', value: parseFloat(sumOfFinance[0].expense_communication || 0) },
+      { name: 'Commission', value: parseFloat(sumOfFinance[0].expense_commission || 0) },
+      { name: 'Consumables', value: parseFloat(sumOfFinance[0].expense_consumables || 0) },
+      { name: 'Conveyance', value: parseFloat(sumOfFinance[0].expense_conveyance || 0) },
+      { name: 'EB', value: parseFloat(sumOfFinance[0].expense_eb || 0) },
+      { name: 'Maintainance', value: parseFloat(sumOfFinance[0].expense_maintainance || 0) },
+      { name: 'Offering', value: parseFloat(sumOfFinance[0].expense_offering || 0) },
+      { name: 'PC', value: parseFloat(sumOfFinance[0].expense_pc || 0) },
+      { name: 'Promotion', value: parseFloat(sumOfFinance[0].expense_promotion || 0) },
+      { name: 'Rent', value: parseFloat(sumOfFinance[0].expense_rent || 0) },
+      { name: 'Labor Cost', value: parseFloat(sumOfFinance[0].expense_laborcost || 0) },
+      { name: 'Stationary', value: parseFloat(sumOfFinance[0].expense_stationary || 0) },
+      { name: 'Refund', value: parseFloat(sumOfFinance[0].expense_refund || 0) },
     ] : [];
     
+    const isIncomePieEmpty = !incomeData || incomeData.every(data => data.value === 0);
+    const isExpensePieEmpty = !expenseData || expenseData.every(data => data.value === 0);
+    
+    // const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
-    const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
-
-    const COLORS = ['#2196F3', '#4CAF50', '#FF5722'];
+    
+    const incomeColors = ['#D2B48C', '#8BC34A'];
+    const expenseColors = [
+      '#FF5722', '#FF9800', '#FFC107', '#F9A825', '#FF6F61', 
+      '#4CAF50', '#2196F3', '#9C27B0', '#E91E63', '#3F51B5', 
+      '#00BCD4', '#8BC34A', '#CDDC39', '#607D8B'
+    ];
 
  
 
@@ -615,18 +654,59 @@ const orderColumns = [
       const styles = {
         chartContainer: {
           width: '100%',
-          height: '250px',
+          height: '370px', // Adjust height as needed
           background: '#ffffff',
           borderRadius: '12px',
           boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
-          marginTop: '20px',
-          marginBottom: '30px',
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'center', // Center horizontally
+          alignItems: 'center', // Center vertically
+          flexDirection: 'column', // Column direction for title and chart
+        },
+        slideContainer: {
+          display: 'flex',
+          width: '100%',
+          height: '370px',
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          '-webkit-overflow-scrolling': 'touch', // Enable smooth scrolling on iOS
+        },
+        slide: {
+          minWidth: '100%',
+          scrollSnapAlign: 'center',
+          display: 'flex',
+          justifyContent: 'center', // Center the chart horizontally
+          alignItems: 'center', // Center the chart vertically
+          flexDirection: 'column', // Ensures the title is above the chart
+          padding: '10px 0', // Adjust padding to reduce gaps
+        },
+        title: {
+          fontWeight: 'bold',
+          textAlign: 'center',
+          fontSize: '20px',
+          marginBottom: '0px', // Increase margin to add gap between title and chart
+        },
+        incomeTitle: {
+          color: '#4CAF50', // Green color for income
+        },
+        expenseTitle: {
+          color: '#FF5722', // Red color for expense
+        },
+        totalIncomeText: {
+          marginTop: '0px', // Increase margin to add gap between chart and total text
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#4CAF50', // Green color for total income text
+        },
+        totalExpenseText: {
+          marginTop: '0px', // Increase margin to add gap between chart and total text
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#FF5722', // Red color for total expense text
         },
       };
 
-      const pieChartWidth = window.innerWidth > 768 ? 400 : 300; // Adjust width for mobile
-      const pieChartHeight = window.innerWidth > 768 ? 400 : 300; // Adjust height for mobile
-      
 // Function to render the active shape with proper adjustments for negative values
 const renderActiveShape = (props) => {
   const RADIAN = Math.PI / 180;
@@ -635,7 +715,7 @@ const renderActiveShape = (props) => {
   const cos = Math.cos(-RADIAN * midAngle);
   const sx = cx + (outerRadius + 10) * cos;
   const sy = cy + (outerRadius + 10) * sin;
-  const mx = cx + (outerRadius + 15) * cos;
+  const mx = cx + (outerRadius + 13) * cos;
   const my = cy + (outerRadius + 30) * sin;
   const ex = mx;
   const ey = my;
@@ -744,8 +824,10 @@ const handleDateChange = (range) => {
 };
 
 
+
     return (
-        <Box sx={{ width: '100%', padding: '0px' }}>
+
+        <Box sx={{ width: '100%'}}>
             <Tabs
                 value={value}
                 onChange={handleChange}
@@ -795,50 +877,44 @@ const handleDateChange = (range) => {
             />
             </div>
             
-   <div className="flex justify-between items-start">
-  {/* Total Orders box */}
-  {/* Total Orders box */}
-<div className="w-40 h-36 rounded-lg shadow-md p-3 mb-5 flex flex-col items-start justify-start border border-gray-300">
-  <div className="text-4xl text-black mt-5 font-bold">
-    {sumOfOrders}
+            <div className="flex flex-nowrap overflow-x-auto ">
+  {/* Combined Total Orders and Amounts box */}
+  <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
+    {/* Sum of Orders */}
+    <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
+      {sumOfOrders}
+    </div>
+    <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
+      Total Orders
+    </div>
+    
+    {/* Amounts Section */}
+    <div className="flex mt-4 w-fit">
+      {/* Order Amount */}
+      <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
+        ₹{totalOrderAmount}
+        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">Order Value</div>
+      </div>
+      {/* Finance Amount */}
+      <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold ">
+        ₹{totalFinanceAmount}
+        <div className="text-xs sm:text-sm lg:text-base text-sky-500  text-opacity-80 font-normal text-nowrap">Income</div>
+      </div>
+    </div>
   </div>
-  <div className="text-lg text-gray-600">
-    Total Orders
-  </div>
-</div>
-
-  {/* <div style={{
-        width: '200px',
-        height: '143px',
-        borderRadius: '10px',
-        boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
-        padding: '12px',
-        paddingLeft: '18px',
-        marginBottom: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start:',
-        justifyContent: 'flex-start:',
-        border: '1px solid #e0e0e0'
-      }}>
-        <div style={{
-          fontSize: '36px',
-          marginTop: '20px',
-          fontWeight: 'bold'
-        }}>
-          {sumOfOrders}
-        </div>
-        <div style={{ fontSize: '18px', color: 'dimgray' }}>
-          Total Orders
-        </div>
-      </div> */}
 
   {/* Spacer to center the DateRangePicker */}
-  <div className="flex flex-grow text-black ml-2 mb-4">
-  <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-
+  <div className="flex flex-grow text-black ml-2 mb-4 flex-shrink-0">
+    <DateRangePicker 
+      startDate={selectedRange.startDate} 
+      endDate={selectedRange.endDate} 
+      onDateChange={handleDateChange} 
+    />
   </div>
 </div>
+
+
+
 
 
    {/* <div>
@@ -900,8 +976,8 @@ const handleDateChange = (range) => {
 )}
 
         {value === 1 && (
-             <div style={{ width: '100%' }}>
-              <div className="flex flex-grow text-black ml-2 mb-4">
+             <div style={{ width: '100%'}}>
+              <div className="flex flex-grow text-black mb-4">
                <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
                <div className="flex flex-grow items-end ml-2 mb-4">
                <button className="custom-button" onClick={handleClickOpen}>
@@ -1004,7 +1080,75 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <div>
+            <div style={styles.chartContainer}>
+    <div style={styles.slideContainer}>
+      <div style={styles.slide}>
+        <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
+        {isIncomePieEmpty ? (
+          <div className="text-center">No income records found during this timeline!</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
+                data={incomeData}
+                cx="50%"
+                cy="50%"
+                innerRadius={window.innerWidth > 768 ? 70 : 55} // Adjusted for larger size
+                outerRadius={window.innerWidth > 768 ? 100 : 75}
+                fill="#8884d8"
+                dataKey="value"
+                onMouseEnter={onPieEnter}
+                labelLine={false}
+                stroke="none"
+              >
+                {incomeData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={incomeColors[index % incomeColors.length]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+        <div style={{ ...styles.totalIncomeText, color: '#4CAF50' }}>
+          Total Income: ₹{formatIndianNumber(totalIncome)}
+        </div>
+      </div>
+      <div style={styles.slide}>
+        <div style={{ ...styles.title, ...styles.expenseTitle }}>Expense Breakdown</div>
+        {isExpensePieEmpty ? (
+          <div className="text-center">No expense records found during this timeline!</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
+                data={expenseData}
+                cx="50%"
+                cy="50%"
+                innerRadius={window.innerWidth > 768 ? 70 : 70} // Adjusted for larger size
+                outerRadius={window.innerWidth > 768 ? 100 : 90}
+                fill="#8884d8"
+                dataKey="value"
+                onMouseEnter={onPieEnter}
+                labelLine={false}
+                stroke="none"
+              >
+                {expenseData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+        <div style={{ ...styles.totalExpenseText, color: '#FF5722' }}>
+          Total Expense: ₹{formatIndianNumber(totalExpense)}
+        </div>
+      </div>
+    </div>
+  </div>
+            {/* <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
         <div className="text-center">No records found during this timeline!</div>
@@ -1029,19 +1173,19 @@ const handleDateChange = (range) => {
       {pieData.map((entry, index) => (
         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
       ))}
-    </Pie>
+    </Pie> */}
     {/* <Legend 
       layout="vertical" 
       align="right" 
       verticalAlign="middle" 
       wrapperStyle={{ paddingLeft: "20px" }} 
     /> */}
-  </PieChart>
+  {/* </PieChart>
 </ResponsiveContainer>
 </div>
-      )}
-      </div>
-      </div>
+      )} */}
+      {/* </div>
+      </div> */}
              <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', marginBottom: '54px' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}

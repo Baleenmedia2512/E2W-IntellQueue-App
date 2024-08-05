@@ -46,8 +46,8 @@ const AdDetailsPage = () => {
   const [datas, setDatas] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
-  const companyName = 'Baleen Test'
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test'
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -91,6 +91,9 @@ const AdDetailsPage = () => {
   useEffect(() => {
     if (selectedDayRange === "") {
       setSelectedDayRange(dayRange[1]);
+    }
+    if(!rateId){
+      dispatch(setQuotesData({currentPage: "adMedium"}));
     }
     // if (adMedium === '') {
     //   dispatch(setQuotesData({currentPage: 'adMedium'}));
@@ -142,7 +145,7 @@ const AdDetailsPage = () => {
         }
         const data = await response.json();
         const firstData = data[0];
-        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true}))
+        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
         console.log(data)
       } catch (error) {
         console.error("Error while fetching rates: " + error)

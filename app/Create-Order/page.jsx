@@ -1064,7 +1064,7 @@ return (
         <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
           </div>
           <div>
-                    <label className="block mb-1 font-medium">Order Date</label>
+                    <label className="block mb-1 text-gray-700 font-medium">Order Date</label>
                     <div>
                   <div>
                     <Calendar

@@ -2,9 +2,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 
-export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle) => {
+export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber) => {
   const ImageUrl = '/images/WHITE PNG.png';
-  const quoteNumber = await fetchNextQuoteNumber();
+  
   // Create a new jsPDF instance
   const pdf = new jsPDF({
     orientation: "landscape",
@@ -30,7 +30,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   pdf.setLineWidth(lineThickness);
 
   const pageWidth = pdf.internal.pageSize.width;
-  var textWidth = pdf.getStringUnitWidth('Kasturba Nagar, Adyar, Chennai-20.   ') * 12; // Adjust the font size multiplier as needed
+  var textWidth = pdf.getStringUnitWidth('Kasturba Nagar, Adyar, Chennai-20.') * 12; // Adjust the font size multiplier as needed
   var xCoordinate = pageWidth - textWidth - 40;
   pdf.setDrawColor("#df5f98");
   pdf.line(xCoordinate, 60, xCoordinate, 135);
@@ -64,21 +64,20 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text('www.baleenmedia.com', xCoordinate, 150)
 
-  textWidth = pdf.getStringUnitWidth(`Proposal ID: ${quoteNumber}`) * 12; // Adjust the font size multiplier as needed
-  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
+  // textWidth = pdf.getStringUnitWidth(`Proposal ID: ${quoteNumber}`) * 12; // Adjust the font size multiplier as needed
+  // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+  // pdf.text(`Proposal ID: ${quoteNumber}`, xCoordinate, 165)
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const today = new Date();
 const proposedDay = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
 const proposedMonth = months[today.getMonth()]; // Get month abbreviation from the array
 const proposedYear = today.getFullYear();
-let validityDate = [];
 const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
 
   textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-  pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 180)
+  pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 165)
 
   // textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
   // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
@@ -107,7 +106,7 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
   // Create a table
   let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Validity Date"]];
   let data = checkoutData.map((item, index) => ([
-    (index + 1).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.package ? item.package : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, ChangeDateFormat(item.formattedDate)
+    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, ChangeDateFormat(item.formattedDate)
   ])); 
 
   // if (!checkoutData.some(item => item.package)) {
@@ -184,6 +183,15 @@ Object.keys(columnWidths).forEach(columnName => {
     const leadDaysArray = checkoutData.map(item => item.leadDays);
     return Math.min(...leadDaysArray);
   };
+
+  let grandTotalText = 'Grand Total: Rs.' + grandTotalAmount;
+  let grandTotalTextWidth = pdf.getTextWidth(grandTotalText);
+
+  let grandTotalXPosition = pdf.internal.pageSize.width - grandTotalTextWidth - 100;
+
+  pdf.setFont('helvetica', 'normal', 'bold');
+  pdf.setFontSize(16);
+  pdf.text(grandTotalText, grandTotalXPosition, pdf.lastAutoTable.finalY + 20);
 
   pdf.setFont('helvetica', 'normal', 'bold');
   pdf.setFontSize(16);
