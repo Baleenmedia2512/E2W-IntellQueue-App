@@ -9,8 +9,10 @@ import * as XLSX from 'xlsx';
 const { saveAs } = require('file-saver');
 import './consultantStyles.css';
 import DateRangePicker from '../CustomDateRangePicker';
-import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { startOfMonth, endOfMonth, format, isValid } from 'date-fns';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
+import { Calendar } from 'primereact/calendar';
+        
 
 // Mock data for consultants
 const getConsultants = () => {
@@ -67,6 +69,8 @@ export default function GroupedRowsDemo() {
         price: { value: null, matchMode: 'equals' },
         total: { value: null, matchMode: 'equals' }
     });
+    const [dates, setDates] = useState([currentStartDate, currentEndDate]);
+    
 
 
     useEffect(() => {
@@ -76,15 +80,26 @@ export default function GroupedRowsDemo() {
     }, []);
 
     const handleDateChange = (range) => {
-        setSelectedRange({
-          startDate: range.startDate,
-          endDate: range.endDate,
-        });
-        const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
-        const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
-        setStartDate(formattedStartDate);
-        setEndDate(formattedEndDate);
+        if (range && range.length === 2) {
+          const [start, end] = range;
+            setDates(range);
+            if (start && end) {
+            
+            const formattedStartDate = format(start, 'yyyy-MM-dd');
+            const formattedEndDate = format(end, 'yyyy-MM-dd');
+            setStartDate(formattedStartDate);
+            setEndDate(formattedEndDate);
+            }
+        }
       };
+      console.log(startDate, endDate);
+    
+    // const handleDateChange = (dates) => {
+    //     setSelectedRange(dates);
+    //     const [startDate, endDate] = dates;
+    //     // Perform any filtering or other operations needed with the startDate and endDate
+    // };
+    
 
     const groupConsultants = (data) => {
         const groupedData = [];
@@ -378,7 +393,7 @@ const filterHeaderTemplate = (column, filterField) => {
                     setFilters(newFilters);
                 }}
                 placeholder={`Search ${column.header}`}
-                className="p-inputtext p-component"
+                className="p-inputtext-custom"
                 style={{ width: '100%' }}
             />
         </div>
@@ -422,7 +437,7 @@ const filterHeaderTemplate = (column, filterField) => {
                           {numberOfScans}
                         </div>
                         <div className="text-xs sm:text-base lg:text-lg text-gray-200">
-                          Clients
+                          Orders
                         </div>
                     </div>
                 </div>
@@ -432,21 +447,37 @@ const filterHeaderTemplate = (column, filterField) => {
                 {/* Content container */}
                 <div className="mt-8 p-4">
                 <div className="flex justify-end mb-4 gap-2 flex-wrap">
-    <button
-        onClick={handleExport}
-        className="bg-green-500 text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
-    >
-        <i className="pi pi-file-excel mr-1 sm:mr-2"></i>
-        Export to Excel
-    </button>
-    <button
-        // onClick={handleProcessIncentive}
-        className="bg-blue-500 text-white py-1.5 px-3 rounded shadow hover:bg-blue-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
-    >
-        <i className="pi pi-check mr-1 sm:mr-2"></i>
-        Process Incentive
-    </button>
+                <div className="flex flex-col justify-end w-full sm:w-auto">
+  <label className="text-white font-semibold items-center text-sm sm:text-base md:text-sm lg:text-base">Select Date Range</label>
+  <Calendar 
+    value={dates} 
+    onChange={(e) => handleDateChange(e.value)} 
+    selectionMode="range" 
+    dateFormat='dd-M-yy' 
+    readOnlyInput 
+    hideOnRangeSelection 
+    className="w-56 text-sm sm:text-base md:text-sm lg:text-base"
+    inputClassName="w-full border border-sky-300 rounded-lg pl-2 py-1 bg-white text-gray-900"
+  />
 </div>
+
+            <div className="mt-auto flex justify-end gap-2 flex-wrap">
+        <button
+          onClick={handleExport}
+          className="bg-green-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+        >
+          <i className="pi pi-file-excel mr-1 sm:mr-2"></i>
+          Export to Excel
+        </button>
+        <button
+          // onClick={handleProcessIncentive}
+          className="bg-blue-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-blue-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+        >
+          <i className="pi pi-check mr-1 sm:mr-2"></i>
+          Process Incentive
+        </button>
+      </div>
+        </div>
 
 
     <div className="overflow-x-auto border rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
@@ -472,12 +503,12 @@ const filterHeaderTemplate = (column, filterField) => {
                             <Column field="scan" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Scan' }, 'scan')}></Column>
-                            <Column field="scanType" header="Scan Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
-                            filterElement={filterHeaderTemplate({ header: 'Scan Type' }, 'scanType')}></Column>
+                            <Column field="scanType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
+                            filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'scanType')}></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Count' }, 'count', 'number')}></Column>
-                            <Column field="price" header="Price (per Count)" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
+                            filterElement={filterHeaderTemplate({ header: 'Unit Price' }, 'count', 'number')}></Column>
+                            <Column field="price" header="Unit Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Count' }, 'count', 'number')}></Column>
                             <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
