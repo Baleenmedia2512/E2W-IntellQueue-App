@@ -46,8 +46,8 @@ const AdDetailsPage = () => {
   const [datas, setDatas] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
-  const companyName = 'Baleen Test'
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test'
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -117,6 +117,12 @@ const AdDetailsPage = () => {
   }));
 
   useEffect(() => {
+    const changeMarginPercentage = () =>{
+      dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100))}))
+    }
+    changeMarginPercentage()
+  },[marginPercentage])
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
@@ -127,8 +133,11 @@ const AdDetailsPage = () => {
         setSlabData(data);
         const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
         const firstSelectedSlab = sortedData[0];
+        console.log(firstSelectedSlab.AgencyCommission);
         setQtySlab(firstSelectedSlab.StartQty);
-        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
+        setMarginPercentage(firstSelectedSlab.AgencyCommission)
+        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * firstSelectedSlab.AgencyCommission) / 100).toFixed(2)}))
+        console.log(rateId, firstSelectedSlab.UnitPrice)
         //setUnitPrice(firstSelectedSlab.UnitPrice);
         //setUnit(firstSelectedSlab.Unit)
         //setMargin(((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2))
@@ -145,8 +154,8 @@ const AdDetailsPage = () => {
         }
         const data = await response.json();
         const firstData = data[0];
-        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
-        console.log(data)
+        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
+
       } catch (error) {
         console.error("Error while fetching rates: " + error)
       }
@@ -187,6 +196,7 @@ const AdDetailsPage = () => {
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
       dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}));
+      console.log(rateId, firstSelectedSlab.UnitPrice)
       // setUnitPrice(firstSelectedSlab.UnitPrice);
       // setUnit(firstSelectedSlab.Unit)
     }
@@ -215,7 +225,7 @@ const AdDetailsPage = () => {
             .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
           setDatas(filterdata);
           //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-          dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2)}))
+          dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
         }
       } catch (error) {
         console.error(error);

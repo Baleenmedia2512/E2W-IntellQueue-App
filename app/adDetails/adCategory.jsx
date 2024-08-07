@@ -93,7 +93,7 @@ const greater = '>>'
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back 
               </button>
               <h1 className='font-semibold mt-6'> 
-              {adMedium} {greater} {adType}
+              {adMedium} {adType === "" ? greater : ""} {adType}
             </h1>
             <button aria-label="cart" className='rounded-full p-2 mt-4 text-center mr-2 shadow-sm border border-blue-500 shadow-blue-500' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
