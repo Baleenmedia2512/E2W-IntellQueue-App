@@ -461,7 +461,7 @@ const orderColumns = [
     headerName: 'Rate Name', 
     width: 150,
     renderCell: (params) => (
-      <div onDoubleClick={() => handleDoubleClick('rateName', params.row)}>
+      <div onDoubleClick={() => handleDoubleClick('Card', params.row)}>
          {params.value} 
       </div>
     )
@@ -471,7 +471,7 @@ const orderColumns = [
     headerName: 'Rate Type', 
     width: 150,
     renderCell: (params) => (
-      <div onDoubleClick={() => handleDoubleClick('adType', params.row)}>
+      <div onDoubleClick={() => handleDoubleClick('AdType', params.row)}>
          {params.value} 
       </div>
     )
