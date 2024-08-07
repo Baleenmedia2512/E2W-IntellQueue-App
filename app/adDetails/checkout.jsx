@@ -33,6 +33,7 @@ const CheckoutPage = () => {
   const clientContactRef = useRef(null);
   const [datas, setDatas] = useState([]);
   const companyName = 'Baleen Test';
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);
@@ -393,7 +394,11 @@ const CheckoutPage = () => {
               <button
                  className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  dispatch(setQuotesData({currentPage: "adMedium"}))
+                  if(!rateId){
+                    dispatch(setQuotesData({currentPage: "adMedium"}))
+                  }else{
+                    dispatch(setQuotesData({currentPage: "adDetails"}))
+                  }
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
