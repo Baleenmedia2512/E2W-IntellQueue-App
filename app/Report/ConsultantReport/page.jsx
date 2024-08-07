@@ -401,6 +401,7 @@ const filterHeaderTemplate = (column, filterField) => {
 };
 
 
+
     return (
         <div className="relative min-h-screen mb-20">
             {/* Background colors */}
@@ -447,7 +448,7 @@ const filterHeaderTemplate = (column, filterField) => {
                 {/* Content container */}
                 <div className="mt-8 p-4">
                 <div className="flex justify-end mb-4 gap-2 flex-wrap">
-                <div className="flex flex-col justify-end w-full sm:w-auto">
+                <div className="flex flex-col justify-end w-fit sm:w-auto">
   <label className="text-white font-semibold items-center text-sm sm:text-base md:text-sm lg:text-base">Select Date Range</label>
   <Calendar 
     value={dates} 
