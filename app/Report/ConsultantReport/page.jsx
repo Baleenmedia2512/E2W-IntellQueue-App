@@ -12,43 +12,25 @@ import DateRangePicker from '../CustomDateRangePicker';
 import { startOfMonth, endOfMonth, format, isValid } from 'date-fns';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { Calendar } from 'primereact/calendar';
+import axios from 'axios';
         
 
 // Mock data for consultants
-const getConsultants = () => {
-    return [
-        { id: 1, name: 'Dr. Ravi Kumar', scan: 'CT', scanType: 'Head', count: 2, price: 1500 },
-        { id: 2, name: 'Dr. Ravi Kumar', scan: 'CT', scanType: 'Chest', count: 1, price: 2000 },
-        { id: 3, name: 'Dr. Sundar Raj', scan: 'USG', scanType: 'Abdomen', count: 1, price: 1200 },
-        { id: 4, name: 'Dr. Sundar Raj', scan: 'CT', scanType: 'Pelvis', count: 1, price: 1300 },
-        { id: 5, name: 'Dr. Arunachalam R', scan: 'MRI', scanType: 'Spine', count: 1, price: 2500 },
-        { id: 6, name: 'Dr. Kumaravel S', scan: 'X-Ray', scanType: 'Chest', count: 3, price: 500 },
-        { id: 7, name: 'Dr. Vijayalakshmi P', scan: 'CT', scanType: 'Abdomen', count: 2, price: 1800 },
-        { id: 8, name: 'Dr. Nandakumar R', scan: 'USG', scanType: 'Thyroid', count: 1, price: 1100 },
-        { id: 9, name: 'Dr. Lakshmi Narayanan', scan: 'MRI', scanType: 'Brain', count: 1, price: 2700 },
-        { id: 10, name: 'Dr. Ramesh Babu', scan: 'X-Ray', scanType: 'Limb', count: 2, price: 400 },
-        { id: 11, name: 'Dr. Arul Selvan', scan: 'CT', scanType: 'Pelvis', count: 2, price: 1600 },
-        { id: 12, name: 'Dr. Mani Shankar', scan: 'USG', scanType: 'Kidney', count: 1, price: 1250 },
-        { id: 13, name: 'Dr. Divya Rani', scan: 'CT', scanType: 'Chest', count: 2, price: 2200 },
-        { id: 14, name: 'Dr. Ganesh Kannan', scan: 'MRI', scanType: 'Shoulder', count: 1, price: 2400 },
-        { id: 15, name: 'Dr. Kalpana Devi', scan: 'USG', scanType: 'Pelvis', count: 1, price: 1350 },
-        { id: 16, name: 'Dr. Ravi Shankar', scan: 'X-Ray', scanType: 'Spine', count: 2, price: 450 },
-        { id: 17, name: 'Dr. Siva Prasad', scan: 'MRI', scanType: 'Knee', count: 1, price: 2600 },
-        { id: 18, name: 'Dr. Gopalakrishnan', scan: 'CT', scanType: 'Head', count: 2, price: 1500 },
-        { id: 19, name: 'Dr. Janani R', scan: 'USG', scanType: 'Abdomen', count: 1, price: 1150 },
-        { id: 20, name: 'Dr. Lakshmi Priya', scan: 'MRI', scanType: 'Pelvis', count: 1, price: 2300 },
-        { id: 21, name: 'Dr. Ravi Kumar', scan: 'USG', scanType: 'Brain', count: 1, price: 2000 },
-        { id: 22, name: 'Dr. Ravi Kumar', scan: 'X-Ray', scanType: 'Hand', count: 1, price: 2000 },
-        { id: 23, name: 'Dr. Vijayalakshmi P', scan: 'CT', scanType: 'Abdomen', count: 2, price: 1800 },
-        { id: 24, name: 'Dr. Nandakumar R', scan: 'X-Ray', scanType: 'Hand', count: 1, price: 1100 },
-        { id: 25, name: 'Dr. Lakshmi Narayanan', scan: 'X-Ray', scanType: 'Neck', count: 1, price: 2700 },
-        { id: 25, name: 'Dr. Lakshmi Narayanan', scan: 'USG', scanType: 'Neck', count: 1, price: 2700 },
-    ];
+const getConsultants = async (companyName, startDate, endDate) => {
+    try {
+        const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 };
 
 
 
 export default function GroupedRowsDemo() {
+    const companyName = "Baleen Test";
+    // const companyName = useAppSelector(state => state.authSlice.companyName);
     const [consultants, setConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
@@ -63,8 +45,8 @@ export default function GroupedRowsDemo() {
       const [filters, setFilters] = useState({
         global: { value: null, matchMode: 'contains' },
         name: { value: null, matchMode: 'contains' },
-        scan: { value: null, matchMode: 'contains' },
-        scanType: { value: null, matchMode: 'contains' },
+        rateCard: { value: null, matchMode: 'contains' },
+        rateType: { value: null, matchMode: 'contains' },
         count: { value: null, matchMode: 'equals' },
         price: { value: null, matchMode: 'equals' },
         total: { value: null, matchMode: 'equals' }
@@ -73,11 +55,174 @@ export default function GroupedRowsDemo() {
     
 
 
+    // useEffect(() => {
+    //     const consultantsData = getConsultants();
+    //     const groupedConsultants = groupConsultants(consultantsData);
+    //     setConsultants(groupedConsultants);
+    // }, [startDate, endDate]);
+
     useEffect(() => {
-        const consultantsData = getConsultants();
-        const groupedConsultants = groupConsultants(consultantsData);
-        setConsultants(groupedConsultants);
-    }, []);
+        const fetchConsultants = async () => {
+            const data = await getConsultants(companyName, startDate, endDate);
+            const groupedData = groupConsultants(data);
+            setConsultants(groupedData);
+        };
+
+        fetchConsultants();
+    }, [startDate, endDate]);
+
+
+    // const saveConsultant = async (event) => {
+    //     event.preventDefault();
+    
+    //     let dataToSave = null;
+        
+    //     // Function to filter out rows where id contains "total"
+    //     const filterRows = (rows) => rows.filter(row => !row.id.includes("total"));
+
+    //     // Helper function to extract data from id
+    //     const extractDataFromId = (id) => {
+    //         const parts = id.split('-');
+    //         let name, rateCard, rateType;
+    //         if (parts.length > 3) {
+    //             name = parts[0];
+    //             rateCard = 'X-Ray';
+    //             rateType = parts[3];
+    //         }
+    //         return { name, rateCard, rateType };
+    //     };
+    
+    //     // Check if selectedRows has data
+    //     if (selectedRows && selectedRows.length > 0) {
+    //         // Filter out rows where id contains "total"
+    //         const filteredRows = filterRows(selectedRows);
+    // console.log(filteredRows)
+    //         // Extract data from filteredRows
+    //         dataToSave = filteredRows.map(row => {
+    //             const { name, rateCard, rateType } = extractDataFromId(row.id);
+    //             return {
+    //                 consultantName: name, // Use extracted name as consultant name
+    //                 rateCard: rateCard, // Use extracted rateCard or default to 'X-Ray'
+    //                 rateType: rateType, // Use extracted rateType or fallback to an empty string
+    //                 unitPrice: row.price, // Fallback to '0' if price is null
+    //             };
+    //         });
+    // } else if (consultants && consultants.length > 0) {
+    //     // Extract data from consultants
+    //     dataToSave = consultants.flatMap(consultant => 
+    //         consultant.rates.flatMap(rate => 
+    //             rate.rateTypes.map(rateType => ({
+    //                 consultantName: consultant.name,
+    //                 rateCard: rate.rateCard,
+    //                 rateType: rateType.rateType,
+    //                 unitPrice: rateType.price
+    //             }))
+    //         )
+    //     );
+    // }
+    //     if (dataToSave) {
+    //         try {
+    //             // Save each consultant entry
+    //             for (const data of dataToSave) {
+    //                 const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
+    //                 const result = await response.text();
+    //                 console.log(result)
+    //                 if (result !== "Values Inserted Successfully!") {
+    //                     alert(`The following error occurred while saving data: ${result}`);
+    //                     return;
+    //                 }
+    //             }
+    
+    //             // setSuccessMessage('Consultant(s) saved successfully!');
+    //         } catch (error) {
+    //             console.error('Error saving consultant:', error);
+    //         }
+    //     } else {
+    //         setToastMessage('No data to save.');
+    //         setSeverity('error');
+    //         setToast(true);
+    //         setTimeout(() => {
+    //             setToast(false);
+    //         }, 2000);
+    //     }
+    // };
+
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const saveConsultant = async (event) => {
+    event.preventDefault();
+    
+    let dataToSave = null;
+
+    const filterRows = (rows) => rows.filter(row => !row.id.includes("total"));
+
+    const extractDataFromId = (id) => {
+        const parts = id.split('-');
+        let name, rateCard, rateType;
+        if (parts.length > 3) {
+            name = parts[0];
+            rateCard = 'X-Ray';
+            rateType = parts[3];
+        }
+        return { name, rateCard, rateType };
+    };
+
+    if (selectedRows && selectedRows.length > 0) {
+        const filteredRows = filterRows(selectedRows);
+        console.log(filteredRows);
+        dataToSave = filteredRows.map(row => {
+            const { name, rateCard, rateType } = extractDataFromId(row.id);
+            return {
+                consultantName: name,
+                rateCard: rateCard,
+                rateType: rateType,
+                unitPrice: row.price || 0, // Ensure unitPrice is not null
+            };
+        });
+    } else if (consultants && consultants.length > 0) {
+        dataToSave = consultants.flatMap(consultant => 
+            consultant.rates.flatMap(rate => 
+                rate.rateTypes.map(rateType => ({
+                    consultantName: consultant.name,
+                    rateCard: rate.rateCard,
+                    rateType: rateType.rateType,
+                    unitPrice: rateType.price || 0 // Ensure unitPrice is not null
+                }))
+            )
+        );
+    }
+
+    if (dataToSave) {
+        try {
+            for (const data of dataToSave) {
+                const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
+                const result = await response.text();
+                console.log(result);
+                if (result !== "Values Inserted Successfully!") {
+                    alert(`The following error occurred while saving data: ${result}`);
+                    return;
+                }
+
+                // Add a delay between requests to avoid rate limiting
+                await delay(500); // Delay of 500ms
+            }
+
+            // setSuccessMessage('Consultant(s) saved successfully!');
+        } catch (error) {
+            console.error('Error saving consultant:', error);
+        }
+    } else {
+        setToastMessage('No data to save.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+            setToast(false);
+        }, 2000);
+    }
+};
+
+    
+  
 
     const handleDateChange = (range) => {
         if (range && range.length === 2) {
@@ -92,14 +237,6 @@ export default function GroupedRowsDemo() {
             }
         }
       };
-      console.log(startDate, endDate);
-    
-    // const handleDateChange = (dates) => {
-    //     setSelectedRange(dates);
-    //     const [startDate, endDate] = dates;
-    //     // Perform any filtering or other operations needed with the startDate and endDate
-    // };
-    
 
     const groupConsultants = (data) => {
         const groupedData = [];
@@ -108,22 +245,22 @@ export default function GroupedRowsDemo() {
             let existingName = groupedData.find(group => group.name === consultant.name);
 
             if (!existingName) {
-                existingName = { name: consultant.name, scans: [], total: 0 }; // Initialize total
+                existingName = { name: consultant.name, rates: [], total: 0 }; // Initialize total
                 groupedData.push(existingName);
             }
 
-            let existingScan = existingName.scans.find(scan => scan.scan === consultant.scan);
+            let existingScan = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
 
             if (!existingScan) {
-                existingScan = { scan: consultant.scan, scanTypes: [] };
-                existingName.scans.push(existingScan);
+                existingScan = { rateCard: consultant.rateCard, rateTypes: [] };
+                existingName.rates.push(existingScan);
             }
 
-            let existingScanType = existingScan.scanTypes.find(scanType => scanType.scanType === consultant.scanType);
+            let existingScanType = existingScan.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
 
             if (!existingScanType) {
-                existingScanType = { scanType: consultant.scanType, count: 0, price: consultant.price };
-                existingScan.scanTypes.push(existingScanType);
+                existingScanType = { rateType: consultant.rateType, count: 0, price: consultant.price };
+                existingScan.rateTypes.push(existingScanType);
             }
 
             existingScanType.count += consultant.count;
@@ -137,20 +274,20 @@ export default function GroupedRowsDemo() {
         const rows = [];
     
         groupedData.forEach(group => {
-            let totalRows = group.scans.reduce((sum, scan) => sum + scan.scanTypes.length, 0);
+            let totalRows = group.rates.reduce((sum, rateCard) => sum + rateCard.rateTypes.length, 0);
             let middleIndex = Math.floor(totalRows / 2);
     
             let currentIndex = 0;
-            group.scans.forEach((scan, scanIndex) => {
-                scan.scanTypes.forEach((scanType, scanTypeIndex) => {
+            group.rates.forEach((rateCard, scanIndex) => {
+                rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
                     rows.push({
-                        id: `${group.name}-${scan.scan}-${scanType.scanType}`,
+                        id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
                         name: currentIndex === middleIndex ? group.name : null,
-                        scan: scanTypeIndex === 0 ? scan.scan : null,
-                        scanType: scanType.scanType,
-                        count: scanType.count,
-                        price: scanType.price,
-                        total: scanType.count * scanType.price,
+                        rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+                        rateType: rateType.rateType,
+                        count: rateType.count,
+                        price: rateType.price,
+                        total: rateType.count * rateType.price,
                         isGroup: currentIndex === middleIndex,
                         isScanGroup: scanTypeIndex === 0
                     });
@@ -162,7 +299,7 @@ export default function GroupedRowsDemo() {
             rows.push({
                 id: `${group.name}-total`,
                 name: '',
-                scan: 'Total',
+                rateCard: 'Total',
                 count: '',
                 price: '',
                 total: `₹${Math.round(group.total)}`,
@@ -182,14 +319,14 @@ export default function GroupedRowsDemo() {
             
             // Find the row by id and update price
             updatedConsultants.forEach(group => {
-                group.scans.forEach(scan => {
-                    scan.scanTypes.forEach(scanType => {
-                        if (`${group.name}-${scan.scan}-${scanType.scanType}` === id) {
-                            scanType.price = newPrice;
-                            scanType.total = scanType.count * newPrice;
-                            group.total = group.scans.reduce((sum, scan) => 
-                                sum + scan.scanTypes.reduce((innerSum, scanType) => 
-                                    innerSum + (scanType.count * scanType.price), 0), 0);
+                group.rates.forEach(rateCard => {
+                    rateCard.rateTypes.forEach(rateType => {
+                        if (`${group.name}-${rateCard.rateCard}-${rateType.rateType}` === id) {
+                            rateType.price = newPrice;
+                            rateType.total = rateType.count * newPrice;
+                            group.total = group.rates.reduce((sum, rateCard) => 
+                                sum + rateCard.rateTypes.reduce((innerSum, rateType) => 
+                                    innerSum + (rateType.count * rateType.price), 0), 0);
                         }
                     });
                 });
@@ -197,11 +334,20 @@ export default function GroupedRowsDemo() {
 
             return updatedConsultants;
         });
+        setSelectedRows(prevSelectedRows => 
+            prevSelectedRows.map(row => 
+                row.id === id ? { 
+                    ...row, 
+                    price: newPrice, 
+                    total: newPrice * row.count  // Calculate the new total based on the price and count
+                } : row
+            )
+        );
     };
 
     const priceBodyTemplate = (rowData) => {
 
-        if (typeof rowData.total === 'string' && rowData.scan.startsWith('Total')) {
+        if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
             return null; // Do not render the input for total rows
         } else {
 
@@ -224,7 +370,7 @@ export default function GroupedRowsDemo() {
 
     const totalBodyTemplate = (rowData) => {
         // Check if it's a total row and format accordingly
-        if (typeof rowData.total === 'string' && rowData.scan.startsWith('Total')) {
+        if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
             return <span className="font-bold text-blue-500">{rowData.total}</span>;
         }
         return <span>₹{rowData.total}</span>; // Ensure this displays properly if it's a number
@@ -238,17 +384,17 @@ export default function GroupedRowsDemo() {
     };
 
     const scanBodyTemplate = (rowData) => {
-        if (rowData.scan === 'Total') {
-            return <span className="font-bold text-blue-500">{rowData.scan}</span>;
-        } else if (rowData.scan) {
-            return <span className="font-bold">{rowData.scan}</span>;
+        if (rowData.rateCard === 'Total') {
+            return <span className="font-bold text-blue-500">{rowData.rateCard}</span>;
+        } else if (rowData.rateCard) {
+            return <span className="font-bold">{rowData.rateCard}</span>;
         }
         return null;
     };
     
 
     const scanTypeBodyTemplate = (rowData) => {
-        return rowData.scanType;
+        return rowData.rateType;
     };
 
     const countBodyTemplate = (rowData) => {
@@ -256,7 +402,7 @@ export default function GroupedRowsDemo() {
     };
 
     const customRowClassName = (rowData) => {
-        if (typeof rowData.total === 'string' && rowData.scan.startsWith('Total')) {
+        if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
             const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
             return `${baseClass} border-b-2 border-gray-300`; // Add bottom border class here
         }   
@@ -294,9 +440,9 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 
 // Filter rows where total starts with "Total:"
-const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.scan.startsWith('Total'));
+const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
 
-// Filter out rows with null or empty values for name and scan
+// Filter out rows with null or empty values for name and rateCard
 const filteredNameRows = rowsToCalculate.filter(row => row.name);
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
 
@@ -320,7 +466,7 @@ const extractRateCardFromId = (id) => {
     return id.split('-')[1];
 };
 
-// Calculate number of scans
+// Calculate number of rates
 // Get the sum of values from the count column
 const totalCount = rowsToCalculate.reduce((accumulator, row) => {
   // Add the value of count column to the accumulator if it exists and is a number
@@ -331,9 +477,9 @@ const numberOfScans = totalCount;
 
 
 const handleExport = () => {
-    // Filter out rows where the scan field is 'Total'
-    const filteredData = groupedData.filter(row => row.scan !== 'Total');
-    const filteredRows = selectedRows.filter(row => row.scan !== 'Total');
+    // Filter out rows where the rateCard field is 'Total'
+    const filteredData = groupedData.filter(row => row.rateCard !== 'Total');
+    const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
 
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
 
@@ -341,7 +487,7 @@ const handleExport = () => {
     const exportData = rowsToExport.map(row => ({
         Consultant: extractNameFromId(row.id), // Default to an empty string if name is null
         RateCard: extractRateCardFromId(row.id),
-        RateType: row.scanType,
+        RateType: row.rateType,
         Count: row.count,
         Price: row.price,
         Total: row.total
@@ -366,19 +512,40 @@ const handleExport = () => {
 };
     
 
+// const handleSelectionChange = (e) => {
+//     const selectedRows = e.value; // Get the array of selected rows
+//     const selectedNames = new Set(selectedRows.map(row => row.name)); // Collect unique names from selected rows
+
+//     const newSelection = [];
+//     groupedData.forEach(row => {
+//         if (row.id.startsWith(`${Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`))}-`)) {
+//             newSelection.push(row);
+//         }
+//     });
+
+//     setSelectedRows(newSelection);
+// };
+
 const handleSelectionChange = (e) => {
     const selectedRows = e.value; // Get the array of selected rows
     const selectedNames = new Set(selectedRows.map(row => row.name)); // Collect unique names from selected rows
 
-    const newSelection = [];
-    groupedData.forEach(row => {
-        if (row.id.startsWith(`${Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`))}-`)) {
-            newSelection.push(row);
+    const newSelection = groupedData.reduce((acc, row) => {
+        const matchingName = Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`));
+        if (matchingName) {
+            const existingSelection = selectedRows.find(selectedRow => selectedRow.id === row.id);
+            acc.push({
+                ...row,
+                price: existingSelection ? existingSelection.price : row.price, // Preserve the price or use the existing price if available
+            });
         }
-    });
+        return acc;
+    }, []);
 
     setSelectedRows(newSelection);
 };
+
+
 
 const filterHeaderTemplate = (column, filterField) => {
     return (
@@ -471,7 +638,7 @@ const filterHeaderTemplate = (column, filterField) => {
           Export to Excel
         </button>
         <button
-          // onClick={handleProcessIncentive}
+          onClick={saveConsultant}
           className="bg-blue-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-blue-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
         >
           <i className="pi pi-check mr-1 sm:mr-2"></i>
@@ -494,18 +661,18 @@ const filterHeaderTemplate = (column, filterField) => {
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['name', 'scan', 'scanType', 'count', 'price', 'total']}
+                            globalFilterFields={['name', 'rateCard', 'rateType', 'count', 'price', 'total']}
             
                         >
                         <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'name')}></Column>
-                            <Column field="scan" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Scan' }, 'scan')}></Column>
-                            <Column field="scanType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
-                            filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'scanType')}></Column>
+                            filterElement={filterHeaderTemplate({ header: 'rateCard' }, 'rateCard')}></Column>
+                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
+                            filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Unit Price' }, 'count', 'number')}></Column>
