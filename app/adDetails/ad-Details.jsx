@@ -65,6 +65,8 @@ const AdDetailsPage = () => {
   const remarks = useAppSelector(state => state.quoteSlice.remarks);
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
+  console.log(datas)
+  console.log(newData)
   const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
   const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
@@ -255,7 +257,7 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
-      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}]))
+      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
       dispatch(setQuotesData({currentPage: "checkout"}))
     }
@@ -582,7 +584,7 @@ const AdDetailsPage = () => {
                   <button
                     className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                   >
                     Add to Cart
                   </button>
@@ -600,7 +602,7 @@ const AdDetailsPage = () => {
                   <p className="font-semibold text-red-500">
                     *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
-                  <p className="font-bold">Quote Valid till {formattedDate}</p>
+                  <p className="font-bold">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
                 </div>
               </div>
               </div>
