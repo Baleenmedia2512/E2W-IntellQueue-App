@@ -115,6 +115,7 @@ const Report = () => {
         fetchAmounts();
     }, [startDate, endDate]);
 
+
     useEffect(() => {
       FetchCurrentBalanceAmount();
   }, [marginResult]);
@@ -181,7 +182,6 @@ const Report = () => {
                 
             });
     };
-
     const fetchAmounts = async () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
@@ -191,8 +191,8 @@ const Report = () => {
         const data = await response.json();
     
         // Ensure the fetched data is formatted correctly
-        const TotalOrderAmt = formatIndianNumber(data.order_amount);
-        const TotalFinanceAmt = formatIndianNumber(data.finance_amount);
+        const TotalOrderAmt = data.order_amount !== null ? formatIndianNumber(data.order_amount) : '0';
+        const TotalFinanceAmt = data.finance_amount !== null ? formatIndianNumber(data.finance_amount) : '0';
     
         // Update state with formatted values
         setTotalOrderAmount(TotalOrderAmt);
@@ -481,6 +481,14 @@ const orderColumns = [
     headerName: 'Consultant Name', 
     width: 150 
   },
+  { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
+  { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
+  { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
+  { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
+  {field: 'Remarks', headerName: 'Adjustment Remarks', width: 160},
+  { field: 'Card', headerName: 'Rate Name', width: 150 },
+  { field: 'AdType', headerName: 'Rate Type', width: 150 },
+  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
   {
     field: 'actions',
     headerName: 'Actions',
@@ -984,12 +992,12 @@ const handleDateChange = (range) => {
       {/* Order Amount */}
       <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
         ₹{totalOrderAmount}
-        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit">Order Revenue</div>
+        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">Order Value</div>
       </div>
       {/* Finance Amount */}
       <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold ">
         ₹{totalFinanceAmount}
-        <div className="text-xs sm:text-sm lg:text-base text-sky-500  text-opacity-80 font-normal text-nowrap">Finance Revenue</div>
+        <div className="text-xs sm:text-sm lg:text-base text-sky-500  text-opacity-80 font-normal text-nowrap">Income</div>
       </div>
     </div>
   </div>

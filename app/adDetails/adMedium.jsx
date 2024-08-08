@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faBus } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useDispatch } from 'react-redux';
@@ -25,8 +25,8 @@ export const AdMediumPage = () => {
   const routers = useRouter();
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const [searchInput, setSearchInput] = useState('');
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test';
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   // const datas = useAppSelector(state => state.quoteSlice.validRates);
   
@@ -62,23 +62,25 @@ export const AdMediumPage = () => {
 
   const icons = (iconValue) => {
     if (iconValue === 'Automobile') {
-      return (<Image src="/images/school-bus.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/bus (1).png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Newspaper') {
       return (<Image src="/images/newspaper.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Print Services') {
-      return (<Image src="/images/printer.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/brochure.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Production') {
-      return (<Image src="/images/smart-tv.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/marketing.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Radio Ads') {
-      return (<Image src="/images/radio.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/radio-rounded.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Road Side') {
-      return (<Image src="/images/road-map.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/boarding.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Screen Branding') {
       return (<Image src="/images/branding.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'Test') {
-      return (<Image src="/images/test.png" alt="car Icon" width={60} height={60} />);
+      return (<Image src="/images/testing.png" alt="car Icon" width={60} height={60} />);
     } else if (iconValue === 'TV') {
       return (<Image src="/images/tv-monitor.png" alt="car Icon" width={60} height={60} />);
+    } else if (iconValue === 'Digital Platform') {
+      return (<Image src="/images/social-media.png" alt="car Icon" width={60} height={60} />);
     }
   }
 
@@ -130,21 +132,25 @@ export const AdMediumPage = () => {
   }, []);
 
   return (
-    <div>
-        <div className='text-black'>
-          <div className="flex flex-row justify-between mx-[8%] mt-8">
+    <div className='bg-gray-100 w-full h-full'>
+        <div className='text-black '>
+          <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
 
-            <> 
-            <button  className="mr-8 hover:scale-110 text-blue-500 font-semibold hover:animate-pulse border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg " onClick={() => {
+            <button  className="mr-8 mt-8 hover:scale-110 text-blue-500 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
               routers.push('/');
               dispatch(resetClientData()); }}
             > 
           <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back </button>
-          <IconButton aria-label="cart" className='rounded-none text-center shadow-md left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
-                <StyledBadge badgeContent={cartItems.length} color="primary">
-                  <ShoppingCartIcon className='text-black' />
-                </StyledBadge>
-              </IconButton>
+          <button
+            aria-label="cart"
+            className="relative text-center shadow-sm bg-white mt-8 left-[2%] border border-blue-500 shadow-blue-500 rounded-full p-1"
+            onClick={() => dispatch(setQuotesData({ currentPage: "checkout" }))}
+          >
+            <StyledBadge badgeContent={cartItems.length} color="error">
+              <ShoppingCartIcon className="text-blue-500 " />
+            </StyledBadge>
+          </button>
+          
             {/* <button
               className="px-2 py-1 rounded text-center"
               onClick={() => {
@@ -167,11 +173,15 @@ export const AdMediumPage = () => {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </button> */}</>
+              </button> */}
           </div>
           <br/>
-          <h1 className='text-2xl font-bold text-center  mb-4'>Select AD Medium</h1>
-          <div className='mx-[8%] relative'>
+          <form className='bg-white rounded-t-2xl shadow-2xl pb-8 h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
+            <br/>
+          <h1 className='text-2xl font-bold text-center text-blue-500'>Select AD Medium</h1>
+
+          <div className='mx-[8%] relative bg-blue-500 mt-4'>
+          
           {/* <input
           className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
         type="text"
@@ -190,8 +200,8 @@ export const AdMediumPage = () => {
           onChange = {handleRateSearch}
           onFocus={(e) => {e.target.select()}}
         />
-      {ratesSearchSuggestion && (
-              <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+      {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "") && (
+              <ul className="z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                 {ratesSearchSuggestion.map((name, index) => (
                   <li key={index}>
                     <button
@@ -207,15 +217,14 @@ export const AdMediumPage = () => {
               </ul>
             )}
       <div className="absolute top-0 right-0 mt-2 mr-3">
-          <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
+          <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div></div>
-          <ul className="mx-[8%] mb-8 justify-stretch grid gap-1 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2">
+          <ul className="mx-[8%] mb-8 justify-stretch mt-4">
             {searchedOptions.map((option,index) => (<>
               {option.rateName !== 'Newspaper' && (
-                <label
+                <button
                   key={option.rateName}
-                  className={`relative flex flex-col items-center justify-center px-[-10] hover:text-white w-full h-64 border cursor-pointer transition duration-300 rounded-lg hover:bg-purple-500 ${(index)%4==0 || (index)%4==1 ? ' bg-blue-300' : ' bg-gray-500 '
-                    }`}
+                  className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
                   onClick={() => {
                     //setSelectedAdMedium(option.rateName);
                     dispatch(setQuotesData({selectedAdMedium: option.rateName, currentPage: "adType"}))
@@ -223,13 +232,20 @@ export const AdMediumPage = () => {
                     //setShowAdTypePage(true);
                   }}
                 >
-                  <div className="text-lg font-bold mb-2 text-black flex items-center justify-center">{option.rateName}</div>
-                  <div className='mb-2 flex items-center justify-center'>{icons(option.rateName)}</div>
-                </label>)}</>
+                  <div className='flex flex-row items-center mx-4 justify-start'>
+                    {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
+                  <div className='mb-2 h-10 w-10'>{icons(option.rateName)}</div>
+                  {/* <FontAwesomeIcon icon={faBus} /> */}
+                  <div className="text-xl font-bold mb-2 items-center ml-4"> {option.rateName}</div>
+                  </div>
+                  
+                </button>)}</>
             ))
             }
           </ul>
+          </form>
         </div>
+        
     </div>
   );
 };
