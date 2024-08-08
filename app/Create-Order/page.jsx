@@ -625,14 +625,13 @@ const fetchOrderDetailsByOrderNumber = () => {
         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
         //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
         const formattedDate = parseDateFromDB(data.orderDate);
-        const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
-        console.log(data)
+        // console.log(data)
         setClientName(data.clientName);
       //console.log(data.clientName)
         setOrderDate(data.orderDate);
-      //console.log(data.orderDate)
-        setDisplayOrderDate(formattedOrderDate);
-      //console.log(formattedOrderDate)
+      // console.log(data.orderDate)
+        setDisplayOrderDate(formattedDate);
+      console.log(formattedDate)
         setUnitPrice(data.receivable);
         //console.log(data.receivable)
         // setRateCardNumber(data.rateCardNumber);
@@ -694,7 +693,6 @@ useEffect(() => {
       }
        }
 //update order-SK (02-08-2024)------------------------------------
-
 const updateNewOrder = async (event) => {
   event.preventDefault();
   const receivable = (unitPrice * qty) + marginAmount;
@@ -757,7 +755,7 @@ const updateNewOrder = async (event) => {
 
         setTimeout(() => {
           setSuccessMessage('');
-          router.push('/FinanceEntry');
+          router.push('/Report');
         }, 3000);
       } else {
         alert(`The following error occurred while updating data: ${data}`);
