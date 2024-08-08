@@ -66,7 +66,7 @@ const CreateOrder = () => {
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const [vendors, setVendors] = useState([]);
   const [ratesData, setRatesData] = useState([]);
-  const [units, setUnits] = useState([])
+  // const [units, setUnitsor] = useState([])
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [showCampaignDuration, setShowCampaignDuration] = useState(false)
   const [leadDays, setLeadDays] = useState(0);
