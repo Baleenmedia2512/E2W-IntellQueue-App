@@ -19,7 +19,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { setOrderData , setIsOrderUpdate} from '@/redux/features/order-slice';
-import { useDispatch } from 'react-redux';import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
 
 
 const Report = () => {
@@ -471,8 +471,8 @@ const orderColumns = [
   },
   { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
   { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
-  { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
-  { field: 'Remarks', headerName: 'Adjustment Remarks', width: 160},
+  { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: 130 },
+  { field: 'Remarks', headerName: 'Order Remarks', width: 160},
   { 
     field: 'Card', 
     headerName: 'Rate Name', 
