@@ -109,7 +109,7 @@ const BottomBar = () => {
   );
   
   return (
-    <div className="fixed z-50 w-full h-16 -translate-x-1/2 bg-white border border-gray-200 rounded-full bottom-4 left-1/2 dark:bg-gray-700 dark:border-gray-600 overflow-x-auto max-w-full">
+    <div className="fixed z-50 w-full h-16 -translate-x-1/2 bg-white border border-gray-200 rounded-full bottom-4 left-1/2 dark:bg-gray-700 dark:border-gray-600 overflow-x-auto max-w-full sm:max-w-[70%]">
   <div className="flex justify-evenly h-full max-w-lg mx-auto">
     {/* rate validation button */}
     <button data-tooltip-target="tooltip-home"

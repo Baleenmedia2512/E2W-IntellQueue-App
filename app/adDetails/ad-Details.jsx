@@ -16,7 +16,10 @@ import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
 import { addItemsToCart } from '@/redux/features/cart-slice';
+import CreatableSelect from 'react-select/creatable';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -71,7 +74,7 @@ const AdDetailsPage = () => {
   const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-
+  
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
@@ -97,7 +100,11 @@ const AdDetailsPage = () => {
     if(!rateId){
       dispatch(setQuotesData({currentPage: "adMedium"}));
     }
-    
+    dispatch(setQuotesData({
+      selectedVendor: {
+      label: selectedVendor,
+      value: selectedVendor
+    }}))
     // if (adMedium === '') {
     //   dispatch(setQuotesData({currentPage: 'adMedium'}));
     // } else if (adType === '') {
@@ -126,6 +133,7 @@ const AdDetailsPage = () => {
     }
     changeMarginPercentage()
   },[marginPercentage])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -308,57 +316,117 @@ const AdDetailsPage = () => {
     return totalAmount.toLocaleString('en-IN');
   };
   
+  // const items = [
+  //   content: {
+  //     {
+  //     label: 'Customer Price(incl. GST 18%)',
+  //     value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * 1.18))}`
+  //     },{      
+  //     label: 'Customer Price(excl. GST)',
+  //     value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}`
+  //     }
+  //   },
+  //   {
+  //     content: (
+  //       <div className="mb-4 border-gray-300 rounded-lg p-2 w-full mx-4 border text-black">
+  //         <p className="font-bold text-sm mb-1">
+  //           *Vendor Cost(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (1.18)))}
+  //         </p>
+  //         <p className="font-semibold text-sm mb-1">
+  //           *Vendor Cost(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
+  //         </p>
+  //         {/* <p className="text-sm text-gray-300">
+  //           ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
+  //         <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
+  //         <p className="font-semibold text-sm">
+  //           * GST Amount(net) : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (0.18))}
+  //         </p> */}
+  //       </div>
+  //     )
+  //   }
+  // ];
+
   const items = [
     {
-      content: (
-        <div class="mb-4 bg-blue-300 rounded-md p-4 text-black">
-          <p className="font-bold text-sm mb-1">
-            *Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}
-          </p>
-          <p className="font-semibold text-sm mb-1 ">
-            *Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}
-          </p>
-          {/* <p className="text-sm ">=
-            ₹{formattedRupees(qty * (unitPrice * (Number(marginPercentage) + 100) / 100) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees((unitPrice / (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) /100)}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
-          <p className="text-sm  mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
-          <p className="font-semibold text-sm">
-            * GST Amount : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (0.18))}
-          </p> */}
-        </div>
-      )
+      content: [
+        {
+          label: 'Customer Price (incl. GST 18%)',
+          value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * 1.18))}`
+        },
+        {
+          label: 'Customer Price (excl. GST)',
+          value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}`
+        }
+      ]
     },
     {
-      content: (
-        <div className="mb-4 bg-yellow-300 rounded-md p-4 text-black">
-          <p className="font-bold text-sm mb-1">
-            *Vendor Cost(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (1.18)))}
-          </p>
-          <p className="font-semibold text-sm mb-1">
-            *Vendor Cost(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
-          </p>
-          {/* <p className="text-sm text-gray-300">
-            ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
-          <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
-          <p className="font-semibold text-sm">
-            * GST Amount(net) : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (0.18))}
-          </p> */}
-        </div>
-      )
+      content: [
+        {
+          label: 'Vendor Cost (incl. GST 18%)',
+          value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount) * 1.18))}`
+        },
+        {
+          label: 'Vendor Cost (excl. GST)',
+          value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount))}`
+        }
+      ]
     }
-  ];
+  ];  
 
-  const customTemplate = (item) => {
-    return item.content; // Return the content of each item
+  const itemTemplate = (item) => {
+    return (
+      <div className="p-2 justify-center flex">
+        <div className="mb-4 border-gray-500 bg-gradient-to-br from-gray-100 to-white rounded-lg justify-center shadow-md shadow-gray-500 p-2 text-xl text-left mx-2 py-3 border text-black">
+          {item.content.map((entry, i) => (
+            <div className='flex flex-row font-inter'>
+            <p key={i} 
+            className={`font-${i === 0 ? 'bold' : 'normal'} text-nowrap text-[16px] mb-2 text-gray-800`}
+            //className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 "
+            >
+              {entry.label}: 
+            </p>
+            <p key={i} 
+            className={`font-${i === 0 ? 'bold' : 'semibold'} text-[16px] mb-1`}
+            //className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 "
+            >&nbsp;&nbsp;&nbsp;{entry.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
+
+  const responsiveOptions = [
+    {
+        breakpoint: '1024px',
+        numVisible: 1,
+        numScroll: 1
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 1,
+        numScroll: 1
+    },
+    {
+        breakpoint: '560px',
+        numVisible: 1,
+        numScroll: 1
+    }
+];
 
   const greater = ">>"
 
+  const vendorOptions = datas.map(option => ({
+    value: option.VendorName,
+    label: option.VendorName === '' && filteredData.length === 1 ? 'No Vendors' : option.VendorName,
+  }));
+
   return (
     
-    <div className=" mt-8 text-black">    
+    <div className="  text-black">    
       <div className="fixed left-[2%] right-[2%] overflow-hidden">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
-            <div className="mb-8 flex items-center justify-between">
+            {/* <div className="mb-8 flex items-center justify-between">
               <button
                  className="mr-4 hover:scale-110 text-blue-500 text-nowrap hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
@@ -367,15 +435,35 @@ const AdDetailsPage = () => {
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
               </button>
-
+                <span className='flex flex-row'>
               <h2 className="font-semibold text-wrap mb-1">
-                {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {position === "" ? "" : greater} {position === "" ? "" : position} {greater} {rateId}
+                {adMedium} 
               </h2>
+              {adType !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""}
+              <h2 className='font-semibold text-wrap mb-1'>
+                 {adType} 
+              </h2>
+              {adCategory !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""} 
+              <h2 className='font-semibold text-wrap mb-1'>
+              {adCategory}
+              </h2>
+               {edition !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""}
+               <h2 className='font-semibold text-wrap mb-1'>
+              {edition}
+              </h2>  
+              {position === "" ? "" : <>&nbsp;{greater}&nbsp;</>}
+              <h2 className='font-semibold text-wrap mb-1'>
+              {position}
+              </h2> &nbsp;{greater}&nbsp;
+              <h2 className='font-semibold text-wrap mb-1'>
+              {rateId}
+              </h2>
+              </span>
               <IconButton aria-label="cart" className='rounded-none ml-4 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </IconButton>
+              </IconButton> */}
               {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -398,7 +486,7 @@ const AdDetailsPage = () => {
             />
             </svg>
           </button> */}
-            </div>
+            {/* </div> */}
             
               <div>
             {/* <div class="relative flex flex-col w-fit h-fit  overflow-hidden font-sans text-base isolation-isolate before:absolute before:inset-[1px] before:rounded-lg before:bg-white after:absolute after:w-1 after:inset-y-[0.65rem] after:left-[0.5rem] after:rounded after:bg-gradient-to-b from-[#2eadff] via-[#3d83ff] to-[#7e61ff] after:transition-transform after:duration-300 hover:after:translate-x-[0.15rem]">
@@ -406,8 +494,13 @@ const AdDetailsPage = () => {
     <div class="notititle text-blue-500 px-5 pt-3 pb-1 pr-1 text-lg font-medium transition-transform duration-300 ease-out z-10">Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}</div>
     <div class="notibody text-blue-500 px-5 text-lg font-semibold transition-transform duration-300 ease-out z-10">Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}</div>
 </div> */}
-
-            <Carousel value={items} numVisible={1} numScroll={1} itemTemplate={customTemplate} />
+            <Carousel value={items}  
+                itemTemplate={itemTemplate} 
+                responsiveOptions={responsiveOptions} 
+                numVisible={2} 
+                numScroll={1}
+                circular 
+                showIndicators={false} />
 
               <div className="mb-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
               {/* <div name="QuoteVendorSelect">
@@ -424,21 +517,15 @@ const AdDetailsPage = () => {
               {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
                 <div className="mb-4">
                   <label className="font-bold">Vendor</label>
-                  <select
-                    className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={selectedVendor}
-                    onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
-                  >
-                    {datas.map((option, index) => (
-                      <option className="rounded-lg" key={index} value={option.VendorName}>
-                        {option.VendorName === '' && filteredData.length === 1
-                          ? 'No Vendors'
-                          :
-                          // `₹${formattedRupees(qty * unitPrice * (campaignDuration / minimumCampaignDuration) + margin)} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - 
-                          `${option.VendorName}`}
-                      </option>
-                    ))}
-                  </select>
+                  <CreatableSelect
+                  //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                  className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}  
+                  //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                    value={selectedVendor.value}
+                    onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
+                    // onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
+                    options={vendorOptions}
+                  />
                 </div>
                 <div className="mb-4">
                   <label className="font-bold">Quantity Slab wise rates</label>

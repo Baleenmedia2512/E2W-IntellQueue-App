@@ -92,7 +92,8 @@ const AdTypePage = () => {
               onClick={() => {moveToPreviousPage()}}
             > 
               <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back
-            </button> 
+            </button>
+             
             <h1 className='font-semibold mt-4 text-center self-center'>
             {adMedium}
           </h1>

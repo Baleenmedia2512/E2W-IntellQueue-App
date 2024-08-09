@@ -14,6 +14,7 @@ import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { FetchRateSeachTerm } from '../api/FetchAPI';
+import BreadCrumbs from '../components/BreadCrumbs';
 
 export const AdMediumPage = () => {
   const dispatch = useDispatch();

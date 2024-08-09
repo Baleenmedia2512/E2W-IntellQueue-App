@@ -100,7 +100,7 @@ const EditionPage = () => {
         <div className='flex flex-row'>
          
             <button 
-               className="mr-8 hover:scale-110 mt-4 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
+               className="mr-8 hover:scale-110 mt-4 max-h-10 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
               onClick={() => {
               console.log(previousPage)
               dispatch(setQuotesData({adCategory: "", currentPage: (previousPage === "edition" ? "adCategory" : previousPage)}))
@@ -116,7 +116,7 @@ const EditionPage = () => {
             {adMedium} {greater} {adType} {greater} {adCategory}
           </h1> 
           <div >
-          <button aria-label="cart" className='rounded-full mt-4 text-center shadow-sm shadow-blue-500 border border-blue-500 p-2' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "edition"}))}> 
+          <button aria-label="cart" className='rounded-full mt-4 max-h-10 text-center shadow-sm shadow-blue-500 border border-blue-500 p-2' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "edition"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>

@@ -11,6 +11,7 @@ import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useAppSelector } from '@/redux/store';
+import BreadCrumbs from '../components/BreadCrumbs';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 
 const RemarksPage = () => {
@@ -95,6 +96,7 @@ const RemarksPage = () => {
   }
     }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> Back</button>
       
+      {/* <BreadCrumbs /> */}
     <h1 className='font-semibold mt-10'>
     {adMedium} {greater} { selectedAdType} {greater} {adCategory} {greater} {edition}</h1>
 
