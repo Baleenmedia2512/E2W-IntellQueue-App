@@ -44,7 +44,7 @@ const clientPersistConfig = {
 const quotePersistConfig = {
   key: "quote",
   storage: storage,
-  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId"]
+  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId", "previousPage"]
 }
 
 const cartPersistConfig = {

@@ -21,7 +21,8 @@ const initialState = {
   remarks: "",
   currentPage: "",
   validRates: [],
-  isDetails: false
+  isDetails: false,
+  previousPage: ''
 };
 
 export const quoteSlice = createSlice({

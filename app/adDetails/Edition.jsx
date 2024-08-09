@@ -11,20 +11,20 @@ import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
-import { resetClientData } from '@/redux/features/client-slice';
 
 const EditionPage = () => {
   const dispatch = useDispatch();
   const username = useAppSelector(state => state.authSlice.userName);
   const [datas, setDatas] = useState([]);
   const routers = useRouter();
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
-  const companyName = 'Baleen Test'
+  // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const [searchInput, setSearchInput] = useState('');
 
@@ -94,31 +94,33 @@ const EditionPage = () => {
 
   const greater = ">>"
   return (
-    <div>
-      <div className='text-black'>
-      <div className="flex flex-row justify-between mx-[2%] mt-4">
+    <div className='bg-gray-100'>
+      <div className='text-black bg-gray-100'>
+      <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
         <div className='flex flex-row'>
          
             <button 
-               className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
+               className="mr-8 hover:scale-110 mt-4 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
               onClick={() => {
-              dispatch(setQuotesData({adCategory: "", currentPage: "adCategory"}))
+              console.log(previousPage)
+              dispatch(setQuotesData({adCategory: "", currentPage: (previousPage === "edition" ? "adCategory" : previousPage)}))
               }}
             > 
               <FontAwesomeIcon 
                 icon={faArrowLeft}
               /> Back 
             </button>
-            <h1 className='font-semibold mt-2 text-wrap'>
-            {adMedium} {greater} {adType} {greater} {adCategory}
-          </h1>  
+             
           </div>
+          <h1 className='font-semibold mt-6 text-wrap'>
+            {adMedium} {greater} {adType} {greater} {adCategory}
+          </h1> 
           <div >
-          <IconButton aria-label="cart" className='rounded-none text-center shadow-md' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+          <button aria-label="cart" className='rounded-full mt-4 text-center shadow-sm shadow-blue-500 border border-blue-500 p-2' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "edition"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </IconButton>
+              </button>
               </div>
           {/* <button
             className=" px-2 py-1 rounded text-center"
@@ -145,42 +147,48 @@ const EditionPage = () => {
         
       </div>
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
-      <br />
+      <br/>
+      <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
+            <br/>
       <h1 className='text-2xl font-bold text-center  mb-4'>Select Edition</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
         <input
-          className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+          className="w-full border border-gray-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-200"
           type="text"
           value={searchInput}
           onChange={handleSearchInputChange}
           placeholder="Search"
         />
         <div className="absolute top-0 right-0 mt-2 mr-3">
-          <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
+          <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div>
       </div>
+      
       <div>
         {/* Check whether the edition is chosen. If chosen move to Position page*/}
         <ul className="flex flex-col mx-[8%]">
           {searchedEdition.map((option) => (
-            <label
+            <button
               key={option.Edition}
-              className='flex flex-col items-center justify-center w-full min-h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
+              className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
               onClick={()=> {
                 const filteredPositions = searchedPosition.filter(item => item.Edition === option.Edition);
                 filteredPositions.length > 0 ?
-                dispatch(setQuotesData({selectedEdition: option.Edition, currentPage: "remarks"})) :
-                dispatch(setQuotesData({selectedEdition: option.Edition, ratePerUnit: option.ratePerUnit, minimumUnit: option.minimumUnit, unit: option.Unit, rateId: option.rateId, validityDate: option.ValidityDate, selectedVendor: option.VendorName, currentPage: "adDetails"}))
+                dispatch(setQuotesData({selectedEdition: option.Edition, currentPage: "remarks", previousPage: "edition"})) :
+                dispatch(setQuotesData({selectedEdition: option.Edition, ratePerUnit: option.ratePerUnit, minimumUnit: option.minimumUnit, unit: option.Unit, rateId: option.rateId, validityDate: option.ValidityDate, selectedVendor: option.VendorName, currentPage: "adDetails", previousPage: "edition"}))
             }}
             >
               {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.Edition):(categories.adType)}</div> */}
-              <div className="text-lg font-bold items-center text-wrap text-center justify-center">{option.Edition === "" ? 'Skip' : option.Edition.split('|').join(' | ').split(",").join(", ")}</div>
-              
-            </label>
+              <div className='flex flex-row items-center mx-4 justify-start'>
+                    <div className='text-blue-500 text-xl font-bold'>•</div>
+              <div className="text-lg font-bold items-center text-wrap text-center ml-4 justify-center">{option.Edition === "" ? 'Skip' : option.Edition.split('|').join(' | ').split(",").join(", ")}</div>
+              </div>
+            </button>
           ))}
         </ul> 
       </div>
+      </form>
     </div>
   </div>
   )

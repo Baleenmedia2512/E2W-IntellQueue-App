@@ -48,6 +48,7 @@ const AdDetailsPage = () => {
   const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit);  
   const rateGST = useAppSelector(state => state.rateSlice.rateGST);
   const slabData = useAppSelector(state => state.rateSlice.slabData);
+  const startQty = useAppSelector(state => state.rateSlice.startQty)
   const [ratesData, setRatesData] = useState([]);
   const [validityDate, setValidityDate] = useState(new Date());
   //const [selectedUnit, setSelectedUnit] = useState("");
@@ -99,10 +100,9 @@ const AdDetailsPage = () => {
   const [combinedSlabData, setCombinedSlabData] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [rateSearchTerm,setRateSearchTerm] = useState("");
-  const elementsNeeded = [""];
-  const [errors, setErrors] = useState({});
+  const [marginPercentage, setMarginPercentage] = useState(0);
   const [successMessage, setSuccessMessage] = useState('');
-
+  const newData = ratesData.filter(item => Number(item.rateId) === Number(rateId));
   
 
   const [filters, setFilters] = useState({
@@ -736,6 +736,7 @@ var selectedRate = '';
       setLeadDays(selectedRate.LeadDays);
       setValidTill(selectedRate.ValidityDate)
       setValidityDate(selectedRate.ValidityDate)
+      setMarginPercentage(selectedRate.AgencyCommission);
     }
   
   if (filterKey !== 'vendorName'){
@@ -855,6 +856,7 @@ var selectedRate = '';
       setLeadDays(data.LeadDays);
       setValidTill(data.ValidityDate)
       setValidityDate(data.ValidityDate)
+      setMarginPercentage(data.AgencyCommission);
       // const validityDate = new Date(data.ValidityDate);
       // const currentDate = new Date()
       // if (validityDate < currentDate){
@@ -912,7 +914,7 @@ var selectedRate = '';
       }else{
       if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}`);
     
         // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
@@ -925,7 +927,7 @@ var selectedRate = '';
         }
         setEditMode(false);
         // showToastMessage('success', 'Updated Successfully!');
-        setSuccessMessage('Updated Successfully! ' + data.message);
+        setSuccessMessage('Updated Successfully! ');
           setTimeout(() => {
         setSuccessMessage('');
       }, 2000);
@@ -1213,6 +1215,12 @@ var selectedRate = '';
 
   const insertNewRate = async (e) => {
     e.preventDefault();
+    const typeOfAdEncoded = encodeURIComponent(selectedValues.typeOfAd.value);
+    const adTypeEncoded = encodeURIComponent(selectedValues.adType.value);
+    const locationEncoded = encodeURIComponent(selectedValues.Location.value);
+    const packageEncoded = encodeURIComponent(selectedValues.Package.value);
+    const adMediumEncoded = encodeURIComponent(selectedValues.rateName.value);
+  
     try {
         if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
             // showToastMessage('warning', "Please fill all the fields!");
@@ -1232,7 +1240,7 @@ var selectedRate = '';
             setIsLeadDays(true)
         }else { 
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location ? selectedValues.Location.value : ''}${selectedValues.Package ? ':' + selectedValues.Package.value : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? selectedValues.typeOfAd.value : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}`)
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}`)
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage('Rate Card Added Successfully!');
@@ -1495,7 +1503,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                 <FontAwesomeIcon icon={faTimesCircle} className=' w-6 h-6'/>
               </Button>
               </span>
-              {ratesSearchSuggestion && (
+              {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "")&& (
               <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                 {ratesSearchSuggestion.map((name, index) => (
                   <li key={index}>
@@ -1760,8 +1768,8 @@ const updateSlabData = (qty, newUnitPrice) => {
                   
                   <div>
                   {(isSlabAvailable) ? (
-                    <div className='w-3/4 text-center justify-center mt-4'>
-                    {combinedSlabData.length > 0 ? <h2 className='block mb-4 text-black font-bold'>Rate-Slab</h2> : <p className='block mb-4 mt-16 text-black font-bold'>No Rate-Slab currently available</p>}
+                    <div className='w-3/4 text-center justify-center mt-2'>
+                    {combinedSlabData.length > 0 ? <h2 className='block mb-4 text-black font-bold'>Rate-Slab</h2> : <p className='block mb-4 text-black font-bold '>No Rate-Slab currently available</p>}
                     <ul className='mb-4 text-black'>
                     {combinedSlabData.map((data, index) => (
                       <div key={data.StartQty || index} className='flex justify-center'>
@@ -1841,7 +1849,19 @@ const updateSlabData = (qty, newUnitPrice) => {
                     </div>
                     {isLeadDays && <p className='text-red-500 font-medium'>Lead Days should be more than 0</p>}
                   </div>
-
+                  <div className='mb-4' name="RatesMarginPercentText">
+                    <label className="block mb-2 text-gray-700 font-semibold">Margin %</label>
+                      <TextField 
+                        size='small' 
+                        className={`w-[80%] px-4 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                        type='number' 
+                        value={marginPercentage} 
+                        onChange={e => {setMarginPercentage(e.target.value); setEditMode(true);}}
+                        onFocus={(e) => {
+                          e.target.select()
+                        }}
+                      />
+                  </div>
               <div className='mr-9' name="RatesValidTillTextField">
                   <label className="block mb-2 text-gray-700 font-semibold">Valid Till</label>
                   <div >

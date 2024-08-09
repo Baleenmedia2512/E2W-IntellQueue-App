@@ -46,8 +46,8 @@ const AdDetailsPage = () => {
   const [datas, setDatas] = useState([]);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
-  const companyName = 'Baleen Test'
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test'
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -63,6 +63,8 @@ const AdDetailsPage = () => {
   const margin = useAppSelector(state => state.quoteSlice.marginAmount);
   const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
   const remarks = useAppSelector(state => state.quoteSlice.remarks);
+  const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
@@ -95,6 +97,7 @@ const AdDetailsPage = () => {
     if(!rateId){
       dispatch(setQuotesData({currentPage: "adMedium"}));
     }
+    
     // if (adMedium === '') {
     //   dispatch(setQuotesData({currentPage: 'adMedium'}));
     // } else if (adType === '') {
@@ -107,6 +110,7 @@ const AdDetailsPage = () => {
     
   },[])
 
+  
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
       right: -3,
@@ -116,6 +120,12 @@ const AdDetailsPage = () => {
     },
   }));
 
+  useEffect(() => {
+    const changeMarginPercentage = () =>{
+      dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100))}))
+    }
+    changeMarginPercentage()
+  },[marginPercentage])
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -128,7 +138,9 @@ const AdDetailsPage = () => {
         const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
         const firstSelectedSlab = sortedData[0];
         setQtySlab(firstSelectedSlab.StartQty);
-        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
+        setMarginPercentage(firstSelectedSlab.AgencyCommission)
+        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * firstSelectedSlab.AgencyCommission) / 100).toFixed(2)}))
+
         //setUnitPrice(firstSelectedSlab.UnitPrice);
         //setUnit(firstSelectedSlab.Unit)
         //setMargin(((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2))
@@ -145,8 +157,8 @@ const AdDetailsPage = () => {
         }
         const data = await response.json();
         const firstData = data[0];
-        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
-        console.log(data)
+        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
+
       } catch (error) {
         console.error("Error while fetching rates: " + error)
       }
@@ -154,8 +166,10 @@ const AdDetailsPage = () => {
 
     fetchRate();
     fetchData();
+    fetchRateData();
   }, [rateId]);
 
+  useEffect(() => {fetchRateData();},[adMedium, rateId])
   // useEffect(() => {
   //   const fetchData = async () => {
   //     try {
@@ -198,33 +212,28 @@ const AdDetailsPage = () => {
     }
   }, [qtySlab])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!username) {
-          routers.push('/login');
-        } else {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
-          const data = await response.json();
+  const fetchRateData = async () => {
+    try {
+      if (!username) {
+        routers.push('/login');
+      } else {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
+        const data = await response.json();
 
-          //filter rates according to adMedium, adType and adCategory
-          const filterdata = data.filter(item => (item.adCategory.includes(":") ? (edition + " : " + position) : edition) && item.adType === adCategory && item.rateName === adMedium)
-            .filter((value, index, self) =>
-              self.findIndex(obj => obj.VendorName === value.VendorName) === index
-            )
-            .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
-          setDatas(filterdata);
-          //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-          dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2)}))
-        }
-      } catch (error) {
-        console.error(error);
+        //filter rates according to adMedium, adType and adCategory
+        const filterdata = data.filter(item => (item.rateId === parseInt(rateId)))
+          .filter((value, index, self) =>
+            self.findIndex(obj => obj.VendorName === value.VendorName) === index
+          )
+          .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
+        setDatas(filterdata);
+        //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
+        dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
       }
-    };
-
-    fetchData();
-  }, [adMedium]);
-
+    } catch (error) {
+      console.error(error);
+    }
+  };
  
   const dispatch = useDispatch();
   const handleSubmit = () => {
@@ -245,9 +254,9 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
-      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}]))
+      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
-      dispatch(setQuotesData({currentPage: "checkout"}))
+      dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
     }
   }
 
@@ -347,15 +356,13 @@ const AdDetailsPage = () => {
   return (
     
     <div className=" mt-8 text-black">    
-      <div className="fixed left-[8%] right-[8%] overflow-hidden no-pull-to-refresh">
+      <div className="fixed left-[2%] right-[2%] overflow-hidden">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             <div className="mb-8 flex items-center justify-between">
               <button
-                 className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
+                 className="mr-4 hover:scale-110 text-blue-500 text-nowrap hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  position === "" ?
-                  dispatch(setQuotesData({selectedEdition: "", currentPage: "edition"})) :
-                  dispatch(setQuotesData({selectedPosition: "", currentPage: "remarks"}))
+                  dispatch(setQuotesData({selectedEdition: "", currentPage: previousPage === "adDetails" ? position !== "" ? "remarks" : "edition" : previousPage}))
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
@@ -364,7 +371,7 @@ const AdDetailsPage = () => {
               <h2 className="font-semibold text-wrap mb-1">
                 {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {position === "" ? "" : greater} {position === "" ? "" : position} {greater} {rateId}
               </h2>
-              <IconButton aria-label="cart" className='rounded-none text-center shadow-md right-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+              <IconButton aria-label="cart" className='rounded-none ml-4 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
@@ -572,7 +579,7 @@ const AdDetailsPage = () => {
                   <button
                     className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                   >
                     Add to Cart
                   </button>
@@ -590,7 +597,7 @@ const AdDetailsPage = () => {
                   <p className="font-semibold text-red-500">
                     *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
-                  <p className="font-bold">Quote Valid till {formattedDate}</p>
+                  <p className="font-bold">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
                 </div>
               </div>
               </div>
