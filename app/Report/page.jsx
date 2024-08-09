@@ -422,6 +422,7 @@ const [selectedRow, setSelectedRow] = useState(null);
 const handleDoubleClick = (column, row) => {
   const { RateWiseOrderNumber } = row;
   
+
   if (RateWiseOrderNumber >= 0) {
     setSelectedColumn(column);
     setSelectedRow(row);
