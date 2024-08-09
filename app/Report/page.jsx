@@ -17,6 +17,9 @@ import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Te
 import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { setOrderData , setIsOrderUpdate} from '@/redux/features/order-slice';
+import { useDispatch } from 'react-redux';
 
 
 const Report = () => {
@@ -64,7 +67,15 @@ const Report = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [totalOrderAmount, setTotalOrderAmount] = useState('');
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
+ 
+  
+  const handleConsultantReportOpen = () => {
+    router.push('/Report/ConsultantReport');
+};
 
+
+    const router = useRouter();
+    const dispatch = useDispatch();
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -399,6 +410,49 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
+const isMobile = useMediaQuery('(max-width:640px)');
+const [anchorEl, setAnchorEl] = useState(null);
+
+
+
+const [orderRepotrtDialogOpen, setOrderReportDialogOpen] = useState(false);
+const [selectedColumn, setSelectedColumn] = useState('');
+const [selectedRow, setSelectedRow] = useState(null);
+
+const handleDoubleClick = (column, row) => {
+  const { RateWiseOrderNumber } = row;
+  
+
+  if (RateWiseOrderNumber >= 0) {
+    setSelectedColumn(column);
+    setSelectedRow(row);
+    setOrderReportDialogOpen(true);
+  } else {
+    console.log("RateWiseOrderNumber is negative, dialog will not open.");
+  }
+};
+
+const handleCloseOrderReportDialog = () => {
+  setOrderReportDialogOpen(false);
+  setSelectedColumn('');
+  setSelectedRow(null);
+};
+
+const handleEditConfirm = () => {
+  if (selectedRow) {
+    const OrderNumber = selectedRow.OrderNumber;
+
+    // Dispatch the order data and set `isOrderUpdate` to true
+    dispatch(setOrderData({ orderNumber: OrderNumber }));
+    dispatch(setIsOrderUpdate(true)); // Assuming you have an action to set `isOrderUpdate`
+    
+    // Navigate to the Create Order page
+    router.push('/Create-Order');
+  }
+
+  handleCloseOrderReportDialog();
+};
+
 
 
 const orderColumns = [
@@ -406,14 +460,46 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
-  { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
+  { 
+    field: 'Receivable', 
+    headerName: 'Amount(₹)', 
+    width: 100,
+    renderCell: (params) => (
+      <div onDoubleClick={() => handleDoubleClick('Receivable', params.row)}>
+        {params.value} 
+      </div>
+    )
+  },
   { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
   { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
-  { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
-  {field: 'Remarks', headerName: 'Adjustment Remarks', width: 160},
-  { field: 'Card', headerName: 'Rate Name', width: 150 },
-  { field: 'AdType', headerName: 'Rate Type', width: 150 },
-  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+  { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: 130 },
+  { field: 'Remarks', headerName: 'Order Remarks', width: 160},
+  { 
+    field: 'Card', 
+    headerName: 'Rate Name', 
+    width: 150,
+    renderCell: (params) => (
+      <div onDoubleClick={() => handleDoubleClick('Card', params.row)}>
+         {params.value} 
+      </div>
+    )
+  },
+  { 
+    field: 'AdType', 
+    headerName: 'Rate Type', 
+    width: 150,
+    renderCell: (params) => (
+      <div onDoubleClick={() => handleDoubleClick('AdType', params.row)}>
+         {params.value} 
+      </div>
+    )
+  },
+  { 
+    field: 'ConsultantName', 
+    headerName: 'Consultant Name', 
+    width: 150 
+  },
+
   {
     field: 'actions',
     headerName: 'Actions',
@@ -509,6 +595,9 @@ const orderColumns = [
   //     },
   // },
 ];
+
+
+
 
 
     const financeColumns = [
@@ -863,7 +952,28 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+
+<Dialog
+  open={orderRepotrtDialogOpen}
+  onClose={handleCloseOrderReportDialog}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+>
+  <DialogTitle id="alert-dialog-title">{"DO YOU WANT TO EDIT?"}</DialogTitle>
+  <DialogContent>
+    <DialogContentText id="alert-dialog-description">
+    You have selected the {selectedColumn} field with value "{selectedRow && selectedRow[selectedColumn]}". Do you want to edit this field?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleEditConfirm} color="primary">
+      Yes
+    </Button>
+    <Button onClick={handleCloseOrderReportDialog} color="primary" autoFocus>
+      No
+    </Button>
+  </DialogActions>
+</Dialog>
 
             <Box sx={{ padding: 3 }}>
             {value === 0 && (
@@ -976,15 +1086,24 @@ const handleDateChange = (range) => {
 )}
 
         {value === 1 && (
-             <div style={{ width: '100%'}}>
-              <div className="flex flex-grow text-black mb-4">
-               <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-               <div className="flex flex-grow items-end ml-2 mb-4">
-               <button className="custom-button" onClick={handleClickOpen}>
-                Show Balance
-              </button>
-                </div>
-             </div>
+             <div style={{ width: '100%' }}>
+             <div className="flex flex-grow text-black mb-4">
+    <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+    <div className="flex flex-grow items-end ml-2 mb-4">
+      <div className="flex flex-col sm:flex-row">
+        <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
+          Show Balance
+        </button>
+        {appRights.includes('Administrator') && (
+          <button className="consultant-button" onClick={handleConsultantReportOpen}>
+            Consultant Report
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+           
+           
              {/* Delete Transaction Confirmation */}
              <Dialog
   open={openConfirmDialog}

@@ -6,11 +6,11 @@ import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
 import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
-import { setOrderData, resetOrderData, setIsOrderExist  } from '@/redux/features/order-slice';
+import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} from '@/redux/features/order-slice';
 
 import Select from 'react-select';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
-import { TextField } from '@mui/material';
+// import { TextField } from '@mui/material';
 import { formattedMargin } from '../adDetails/ad-Details';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
@@ -22,11 +22,17 @@ import './styles.css';
 import { Calendar } from 'primereact/calendar';
 import { format } from 'date-fns';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
+import { TextField } from '@mui/material';
+
+
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
-    const clientDetails = useAppSelector(state => state.clientSlice)
+    const clientDetails = useAppSelector(state => state.clientSlice);
+    const orderDetails = useAppSelector(state => state.orderSlice);
+    const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
+    const {orderNumber: orderNumberRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
     const companyName = "Baleen Test";
@@ -35,6 +41,7 @@ const CreateOrder = () => {
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
     const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
+    const [UpdateRateWiseOrderNumber, setUpdateRateWiseOrderNumber] = useState("");
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState("");
     const [releaseDates, setReleaseDates] = useState([]);
@@ -60,7 +67,7 @@ const CreateOrder = () => {
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const [vendors, setVendors] = useState([]);
   const [ratesData, setRatesData] = useState([]);
-  const [units, setUnits] = useState([])
+  // const [units, setUnits] = useState([])
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [showCampaignDuration, setShowCampaignDuration] = useState(false)
   const [leadDays, setLeadDays] = useState(0);
@@ -70,6 +77,7 @@ const CreateOrder = () => {
   // const [validityDays, setValidityDays] = useState(0)
   // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
   const [discountAmount, setDiscountAmount] = useState(0);
+  
     
     const dispatch = useDispatch();
     const router = useRouter();
@@ -80,12 +88,12 @@ const CreateOrder = () => {
     const rateGST = useAppSelector(state => state.rateSlice.rateGST);
     const startQty = useAppSelector(state => state.rateSlice.startQty);
 
-
+    
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
     const [originalUnitPrice , setOriginalUnitPrice] = useState(unitPrice);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
-
+    const [units, setUnits]=useState("");
     const [previousOrderNumber, setPreviousOrderNumber] = useState('');
     const [previousRateWiseOrderNumber, setPreviousRateWiseOrderNumber] = useState('');
     const [previousOrderDate, setPreviousOrderDate] = useState('');
@@ -100,6 +108,8 @@ const CreateOrder = () => {
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
+    const [hasOrderDetails, setHasOrderDetails] = useState(false);
+   // const [isUpdateMode, setIsUpdateMode] = useState(false); 
     
 // console.log(clientDetails)
      // Function to toggle expand/collapse
@@ -226,7 +236,7 @@ const fetchCampaignUnits = async() => {
 useEffect(() => {
   fetchMaxOrderNumber();
   fetchUnits();
-  fetchAllVendor();
+  // fetchAllVendor();
   fetchQtySlab();
   setDiscountAmount(0);
 },[selectedValues.adType, selectedValues.rateName])
@@ -649,6 +659,40 @@ const fetchRates = async () => {
             console.error(error);
           });
       };
+//report oderenumber data fetch --SK--
+// const [orderNumber, setOrderNumber] = useState(null);
+// const [companyName, setCompanyName] = useState('');
+
+const fetchOrderDetailsByOrderNumber = () => {
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      //console.log(data); // Log the data to inspect the structure
+      if (data) {
+        // Assuming orderDetails is a typo and you meant data
+        //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
+        //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
+        const formattedDate = parseDateFromDB(data.orderDate);
+        setClientName(data.clientName);
+        setOrderDate(data.orderDate);
+        setDisplayOrderDate(formattedDate);
+        setUnitPrice(data.receivable);
+        setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
+        dispatch(setRateId(data.rateId));
+        setHasOrderDetails(true);
+      } else {
+        setHasOrderDetails(false); // Set to false if there are no details
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
+
+useEffect(() => {
+  fetchOrderDetailsByOrderNumber();
+}, [orderNumberRP]);
 
 
       const createNewOrder = async(event) => {
@@ -691,7 +735,93 @@ const fetchRates = async () => {
     }, 2000);
       }
        }
+//update order-SK (02-08-2024)------------------------------------
+const updateNewOrder = async (event) => {
+  if (event) event.preventDefault();
+  // Now you can use the updateReason for your logic
+  // console.log('Reason for update:', updateReason);
 
+  const receivable = (unitPrice * qty) + marginAmount;
+  const payable = unitPrice * qty;
+  const orderOwner = companyName === 'Baleen Media' ? (clientSource === '6.Own' ? loggedInUser : 'leenah_cse') : loggedInUser;
+
+  if (validateFields()) {
+    const formattedOrderDate = formatDateToSave(orderDate);
+
+    const params = new URLSearchParams({
+      JsonUserName: loggedInUser,
+      JsonOrderNumber: orderNumberRP, // Assuming orderNumberRP is the order number to update
+      JsonRateId: rateId,
+      JsonClientName: clientName,
+      JsonClientContact: clientNumber,
+      JsonClientSource: clientSource,
+      JsonOwner: orderOwner,
+      JsonCSE: loggedInUser,
+      JsonReceivable: receivable.toString(), // Ensure numerical values are converted to strings
+      JsonPayable: payable.toString(),
+      JsonRatePerUnit: unitPrice.toString(),
+      JsonConsultantName: consultantName,
+      JsonMarginAmount: marginAmount.toString(),
+      JsonRateName: selectedValues.rateName.value,
+      JsonVendorName: selectedValues.vendorName.value,
+      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
+      JsonType: selectedValues.adType.value,
+      JsonHeight: qty.toString(),
+      JsonWidth: '1',
+      JsonLocation: selectedValues.Location.value,
+      JsonPackage: selectedValues.Package.value,
+      JsonGST: rateGST.value.toString(),
+      JsonClientGST: clientGST,
+      JsonClientPAN: clientPAN,
+      JsonClientAddress: address,
+      JsonBookedStatus: 'Booked',
+      JsonUnits: selectedUnit.value,
+      JsonMinPrice: unitPrice.toString(),
+      JsonRemarks: updateReason,
+      JsonContactPerson: clientContactPerson,
+      JsonReleaseDates: releaseDates,
+      JsonDBName: companyName,
+      JsonClientAuthorizedPersons: clientEmail,
+      JsonOrderDate: formattedOrderDate,
+      // JsonRateWiseOrderNumber: nextRateWiseOrderNumber
+       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber
+    });
+
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
+        method: 'GET', // Or 'PUT' depending on your API design
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data === "Values Updated Successfully!") {
+        setSuccessMessage('Work Order #' + UpdateRateWiseOrderNumber + ' Updated Successfully!');
+        dispatch(setIsOrderExist(true));
+        dispatch(setIsOrderUpdate(false));
+        dispatch(resetOrderData());
+        setTimeout(() => {
+          setSuccessMessage('');
+          router.push('/Report');
+        }, 3000);
+      } else {
+        alert(`The following error occurred while updating data: ${data}`);
+      }
+    } catch (error) {
+      console.error('Error updating order:', error);
+    }
+  } else {
+    setToastMessage('Please fill all necessary fields.');
+    setSeverity('error');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+  }
+};
+
+//end update order-sk(02-08-2024)-----------------------------------
       const fetchMaxOrderNumber = async () => {
         try {
           const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
@@ -947,6 +1077,30 @@ const handleDiscountChange = (e) => {
   setUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount); 
 };
 
+
+const [dialogOpen, setDialogOpen] = useState(false);
+  const [updateReason, setUpdateReason] = useState('');
+
+  const handleOpenDialog = () => {
+    setDialogOpen(true);
+  };
+
+  const handleUpdateCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
+  const handleUpdateConfirm = () => {
+    // Execute the update operation here with the provided reason
+    updateNewOrder();
+    handleUpdateCloseDialog();
+  };
+
+  const handleReasonChange = (event) => {
+    setUpdateReason(event.target.value);
+  };
+
+
+
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
 <Dialog open={consultantDialogOpen} onClose={handleCloseDialog} fullWidth={true} maxWidth='sm'>
@@ -1003,18 +1157,63 @@ return (
           </Button>
         </DialogActions>
       </Dialog>
-  <div className="w-full max-w-6xl">
-  <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
-        <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Place your orders here</p>
-      </div>
-      {/* <button className="expand-button" onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? 'Hide Client Details' : 'Show Client Details'}
-        </button>*/}
-      <button className="custom-button" onClick={createNewOrder}>Place Order</button> 
+      <div className="w-full max-w-6xl">
+    <div className="flex items-center justify-between">
+    <div>
+      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
+      
+      {/* Conditional text based on isOrderUpdate */}
+      <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
+      {isOrderUpdate ? (
+          <>Updating order number: <strong>{orderNumberRP}</strong></>
+        ) : (
+          'Place your orders here'
+        )}
+      </p>
     </div>
     
+    {/* Conditional rendering based on isOrderUpdate */}
+    {isOrderUpdate ? (
+      <button className="custom-button" onClick={handleOpenDialog}>Update Order</button>
+    ) : (
+      <button className="custom-button" onClick={createNewOrder}>Place Order</button>
+    )}
+    
+    <Dialog
+      open={dialogOpen}
+      onClose={handleUpdateCloseDialog}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">{"Provide a Reason for Update"}</DialogTitle>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin="dense"
+          id="update-reason"
+          label="Reason"
+          type="text"
+          fullWidth
+          variant="outlined"
+          value={updateReason}
+          onChange={handleReasonChange}
+        />
+      </DialogContent>
+      <DialogActions>
+      <Button
+          onClick={handleUpdateConfirm}
+          color="primary"
+          disabled={!updateReason} // Disable if updateReason is empty
+        >Confirm
+        </Button>
+        <Button onClick={handleUpdateCloseDialog} color="primary">
+          Cancel
+        </Button>
+      </DialogActions>
+    </Dialog>
+  </div>
+
+
 
 
 
