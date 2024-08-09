@@ -67,7 +67,7 @@ const Report = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [totalOrderAmount, setTotalOrderAmount] = useState('');
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
-    const router = useRouter();
+ 
   
   const handleConsultantReportOpen = () => {
     router.push('/Report/ConsultantReport');
