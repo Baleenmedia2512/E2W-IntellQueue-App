@@ -45,6 +45,7 @@ const CheckoutPage = () => {
   const ratePerUnit = useAppSelector(state => state.quoteSlice.ratePerUnit);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition)
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const rateId = useAppSelector(state => state.quoteSlice.rateId);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
   const [isClientContact, setIsClientContact] = useState(true);
@@ -271,7 +272,7 @@ const CheckoutPage = () => {
               <button
                 className=" hover:scale-110 text-blue-500 hover:animate-pulse border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  rateId >= 1 ? dispatch(setQuotesData({currentPage: "adDetails"})) : dispatch(setQuotesData({currentPage: "adMedium"}))
+                   dispatch(setQuotesData({currentPage: previousPage}))
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
@@ -327,7 +328,7 @@ const CheckoutPage = () => {
       <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1>
       </div>
       <div className='flex justify-center mb-4'>
-        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adMedium'}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
+        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adMedium', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
       </div>
               <h1 className='mb-4 font-bold text-center'>Client Details</h1>
 
@@ -394,11 +395,7 @@ const CheckoutPage = () => {
               <button
                  className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  if(!rateId){
-                    dispatch(setQuotesData({currentPage: "adMedium"}))
-                  }else{
-                    dispatch(setQuotesData({currentPage: "adDetails"}))
-                  }
+                    dispatch(setQuotesData({currentPage: previousPage !== "checkout" ? previousPage : "adDetails"}))
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
@@ -412,7 +409,7 @@ const CheckoutPage = () => {
             <label className='font-800 text-xl'> Oops! No Items in Cart</label>
             <span className='flex flex-row justify-center mt-4'>
             <label className='ml-2 text-xl'>
-              <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adMedium"}))}>Add Items </button>
+              <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adMedium", previousPage: "checkout"}))}>Add Items </button>
               &nbsp; in cart to generate quote</label>
             </span>
           </div>

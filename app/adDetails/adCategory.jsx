@@ -20,7 +20,7 @@ const AdCategoryPage = () => {
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
@@ -58,6 +58,7 @@ const AdCategoryPage = () => {
     };
   
     fetchData();
+    
   }, []);
   
   //filter using adMedium - also sorting and removing duplicates
@@ -77,7 +78,7 @@ const AdCategoryPage = () => {
   //to move to Ad Medium page
   const moveToPreviousPage = () => {
       //To move to adType from adCategory
-      dispatch(setQuotesData({selectedAdCategory: "", currentPage: "adType"}));
+      dispatch(setQuotesData({selectedAdCategory: "", currentPage: previousPage === "adCategory" ? "adType" : previousPage}));
     }
 
 const greater = '>>'
@@ -95,7 +96,7 @@ const greater = '>>'
               <h1 className='font-semibold mt-6'> 
               {adMedium} {adType === "" ? greater : ""} {adType}
             </h1>
-            <button aria-label="cart" className='rounded-full p-2 mt-4 text-center mr-2 shadow-sm border border-blue-500 shadow-blue-500' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+            <button aria-label="cart" className='rounded-full p-2 mt-4 text-center mr-2 shadow-sm border border-blue-500 shadow-blue-500' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adCategory"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
@@ -154,7 +155,7 @@ const greater = '>>'
                   key={option.adType}
                   className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
                   onClick={() => {
-                    dispatch(setQuotesData({selectedAdCategory: option.adType, currentPage: "edition"}))
+                    dispatch(setQuotesData({selectedAdCategory: option.adType, currentPage: "edition", previousPage: "adCategory"}))
                   }}
                 >
                   <div className='flex flex-row items-center mx-4 justify-start'>

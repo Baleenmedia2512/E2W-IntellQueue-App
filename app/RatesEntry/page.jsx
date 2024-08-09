@@ -927,7 +927,7 @@ var selectedRate = '';
         }
         setEditMode(false);
         // showToastMessage('success', 'Updated Successfully!');
-        setSuccessMessage('Updated Successfully! ' + data.message);
+        setSuccessMessage('Updated Successfully! ');
           setTimeout(() => {
         setSuccessMessage('');
       }, 2000);
@@ -1503,7 +1503,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                 <FontAwesomeIcon icon={faTimesCircle} className=' w-6 h-6'/>
               </Button>
               </span>
-              {ratesSearchSuggestion.length > 0 && (
+              {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "")&& (
               <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                 {ratesSearchSuggestion.map((name, index) => (
                   <li key={index}>
@@ -1849,7 +1849,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     </div>
                     {isLeadDays && <p className='text-red-500 font-medium'>Lead Days should be more than 0</p>}
                   </div>
-                  <div className='mb-4'>
+                  <div className='mb-4' name="RatesMarginPercentText">
                     <label className="block mb-2 text-gray-700 font-semibold">Margin %</label>
                       <TextField 
                         size='small' 

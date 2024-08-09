@@ -19,6 +19,7 @@ const AdTypePage = () => {
   const username = useAppSelector(state => state.authSlice.userName);
   const dispatch = useDispatch();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   // const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
@@ -79,7 +80,7 @@ const AdTypePage = () => {
   const moveToPreviousPage = () => {
     //To move to adMedium from AdType
       dispatch(resetQuotesData());
-      dispatch(setQuotesData({currentPage: "adMedium"}));
+      dispatch(setQuotesData({currentPage: previousPage === "adType" ? "adMedium" : previousPage}));
   }
 
   return (
@@ -90,12 +91,12 @@ const AdTypePage = () => {
               className="mr-8 mt-4 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white"
               onClick={() => {moveToPreviousPage()}}
             > 
-              <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back 
+              <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back
             </button> 
             <h1 className='font-semibold mt-4 text-center self-center'>
             {adMedium}
           </h1>
-          <button aria-label="cart" className='rounded-full mr-4 mt-4 p-1 bg-white border border-blue-500 shadow-blue-500 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+          <button aria-label="cart" className='rounded-full mr-4 mt-4 p-1 bg-white border border-blue-500 shadow-blue-500 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adType"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="error">
                   <ShoppingCartIcon className='text-blue-500' />
                 </StyledBadge>
@@ -149,7 +150,7 @@ const AdTypePage = () => {
             onClick={() => {
             {
               dispatch(setQuotesData({selectedAdType: optionss.typeOfAd}))
-              dispatch(setQuotesData({currentPage: "adCategory"}))
+              dispatch(setQuotesData({currentPage: "adCategory", previousPage: "adType"}))
           }}}
           >
             <div className='flex flex-row items-center mx-4 justify-start'>

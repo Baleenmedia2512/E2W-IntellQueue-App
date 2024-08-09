@@ -24,6 +24,7 @@ export const AdMediumPage = () => {
   //const [showAdTypePage, setShowAdTypePage] = useState(false);
   const routers = useRouter();
   const cartItems = useAppSelector(state => state.cartSlice.cart);
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const [searchInput, setSearchInput] = useState('');
   // const companyName = 'Baleen Test';
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -90,7 +91,7 @@ export const AdMediumPage = () => {
     setRatesSearchSuggestion(searchSuggestions);
   }
 
-  const fetchRate = async() => {
+  const fetchRate = async(rateId) => {
     try {
       const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
       if(!response.ok){
@@ -99,7 +100,6 @@ export const AdMediumPage = () => {
       const data = await response.json();
       const firstData = data[0];
       dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true}))
-      console.log(data)
     } catch (error) {
       console.error("Error while fetching rates: " + error)
     }
@@ -111,8 +111,8 @@ export const AdMediumPage = () => {
     setRatesSearchSuggestion([]);
     setRateSearchTerm(selectedRate);
 
-    fetchRate();
-    dispatch(setQuotesData({currentPage: "adDetails", rateId: selectedRateId}))
+    fetchRate(selectedRateId);
+    dispatch(setQuotesData({currentPage: "adDetails", rateId: selectedRateId, previousPage: "adMedium"}))
   }
 
   useEffect(() => {
@@ -137,14 +137,19 @@ export const AdMediumPage = () => {
           <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
 
             <button  className="mr-8 mt-8 hover:scale-110 text-blue-500 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
-              routers.push('/');
-              dispatch(resetClientData()); }}
+              if(previousPage === "adMedium" || previousPage === "" ){
+                routers.push('/');
+                dispatch(resetClientData()); 
+              }else{
+                dispatch(setQuotesData({currentPage: previousPage}));
+              }
+            }}
             > 
           <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back </button>
           <button
             aria-label="cart"
             className="relative text-center shadow-sm bg-white mt-8 left-[2%] border border-blue-500 shadow-blue-500 rounded-full p-1"
-            onClick={() => dispatch(setQuotesData({ currentPage: "checkout" }))}
+            onClick={() => dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adMedium" }))}
           >
             <StyledBadge badgeContent={cartItems.length} color="error">
               <ShoppingCartIcon className="text-blue-500 " />
@@ -227,7 +232,7 @@ export const AdMediumPage = () => {
                   className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
                   onClick={() => {
                     //setSelectedAdMedium(option.rateName);
-                    dispatch(setQuotesData({selectedAdMedium: option.rateName, currentPage: "adType"}))
+                    dispatch(setQuotesData({selectedAdMedium: option.rateName, currentPage: "adType", previousPage: "adMedium"}))
                     //Cookies.set('ratename', option.rateName);
                     //setShowAdTypePage(true);
                   }}

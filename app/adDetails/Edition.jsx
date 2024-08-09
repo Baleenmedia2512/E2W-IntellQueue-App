@@ -11,21 +11,20 @@ import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
-import { resetClientData } from '@/redux/features/client-slice';
-import { Button } from '@mantine/core';
 
 const EditionPage = () => {
   const dispatch = useDispatch();
   const username = useAppSelector(state => state.authSlice.userName);
   const [datas, setDatas] = useState([]);
   const routers = useRouter();
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
-  const companyName = 'Baleen Test'
+  // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const [searchInput, setSearchInput] = useState('');
 
@@ -103,7 +102,8 @@ const EditionPage = () => {
             <button 
                className="mr-8 hover:scale-110 mt-4 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
               onClick={() => {
-              dispatch(setQuotesData({adCategory: "", currentPage: "adCategory"}))
+              console.log(previousPage)
+              dispatch(setQuotesData({adCategory: "", currentPage: (previousPage === "edition" ? "adCategory" : previousPage)}))
               }}
             > 
               <FontAwesomeIcon 
@@ -116,7 +116,7 @@ const EditionPage = () => {
             {adMedium} {greater} {adType} {greater} {adCategory}
           </h1> 
           <div >
-          <button aria-label="cart" className='rounded-full mt-4 text-center shadow-sm shadow-blue-500 border border-blue-500 p-2' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+          <button aria-label="cart" className='rounded-full mt-4 text-center shadow-sm shadow-blue-500 border border-blue-500 p-2' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "edition"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
@@ -175,8 +175,8 @@ const EditionPage = () => {
               onClick={()=> {
                 const filteredPositions = searchedPosition.filter(item => item.Edition === option.Edition);
                 filteredPositions.length > 0 ?
-                dispatch(setQuotesData({selectedEdition: option.Edition, currentPage: "remarks"})) :
-                dispatch(setQuotesData({selectedEdition: option.Edition, ratePerUnit: option.ratePerUnit, minimumUnit: option.minimumUnit, unit: option.Unit, rateId: option.rateId, validityDate: option.ValidityDate, selectedVendor: option.VendorName, currentPage: "adDetails"}))
+                dispatch(setQuotesData({selectedEdition: option.Edition, currentPage: "remarks", previousPage: "edition"})) :
+                dispatch(setQuotesData({selectedEdition: option.Edition, ratePerUnit: option.ratePerUnit, minimumUnit: option.minimumUnit, unit: option.Unit, rateId: option.rateId, validityDate: option.ValidityDate, selectedVendor: option.VendorName, currentPage: "adDetails", previousPage: "edition"}))
             }}
             >
               {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.Edition):(categories.adType)}</div> */}
