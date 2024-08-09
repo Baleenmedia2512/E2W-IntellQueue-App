@@ -13,18 +13,12 @@ import { startOfMonth, endOfMonth, format, isValid } from 'date-fns';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { Calendar } from 'primereact/calendar';
 import axios from 'axios';
+import ToastMessage from '../../components/ToastMessage';
+import SuccessToast from '../../components/SuccessToast';
         
 
 // Mock data for consultants
-const getConsultants = async (companyName, startDate, endDate) => {
-    try {
-        const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
-};
+
 
 
 
@@ -52,177 +46,151 @@ export default function GroupedRowsDemo() {
         total: { value: null, matchMode: 'equals' }
     });
     const [dates, setDates] = useState([currentStartDate, currentEndDate]);
+    const [toast, setToast] = useState(false);
+    const [severity, setSeverity] = useState('');
+    const [toastMessage, setToastMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const [orderNumbers, setOrderNumbers] = useState([]);
+    const [selectedOrderNumbers, setSelectedOrderNumbers] = useState([]);
     
 
+    const getConsultants = async (companyName, startDate, endDate) => {
+        try {
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+            const constData = response.data;
 
-    // useEffect(() => {
-    //     const consultantsData = getConsultants();
-    //     const groupedConsultants = groupConsultants(consultantsData);
-    //     setConsultants(groupedConsultants);
-    // }, [startDate, endDate]);
+            // Extract all order numbers
+            const allOrderNumbers = constData.map(item => item.OrderNumber);
+            setOrderNumbers(allOrderNumbers);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    };
+
+    const fetchConsultants = async () => {
+        const data = await getConsultants(companyName, startDate, endDate);
+        const groupedData = groupConsultants(data);
+        setConsultants(groupedData);
+    };
+
 
     useEffect(() => {
-        const fetchConsultants = async () => {
-            const data = await getConsultants(companyName, startDate, endDate);
-            const groupedData = groupConsultants(data);
-            setConsultants(groupedData);
-        };
-
         fetchConsultants();
     }, [startDate, endDate]);
 
 
-    // const saveConsultant = async (event) => {
-    //     event.preventDefault();
     
-    //     let dataToSave = null;
-        
-    //     // Function to filter out rows where id contains "total"
-    //     const filterRows = (rows) => rows.filter(row => !row.id.includes("total"));
-
-    //     // Helper function to extract data from id
-    //     const extractDataFromId = (id) => {
-    //         const parts = id.split('-');
-    //         let name, rateCard, rateType;
-    //         if (parts.length > 3) {
-    //             name = parts[0];
-    //             rateCard = 'X-Ray';
-    //             rateType = parts[3];
-    //         }
-    //         return { name, rateCard, rateType };
-    //     };
-    
-    //     // Check if selectedRows has data
-    //     if (selectedRows && selectedRows.length > 0) {
-    //         // Filter out rows where id contains "total"
-    //         const filteredRows = filterRows(selectedRows);
-    // console.log(filteredRows)
-    //         // Extract data from filteredRows
-    //         dataToSave = filteredRows.map(row => {
-    //             const { name, rateCard, rateType } = extractDataFromId(row.id);
-    //             return {
-    //                 consultantName: name, // Use extracted name as consultant name
-    //                 rateCard: rateCard, // Use extracted rateCard or default to 'X-Ray'
-    //                 rateType: rateType, // Use extracted rateType or fallback to an empty string
-    //                 unitPrice: row.price, // Fallback to '0' if price is null
-    //             };
-    //         });
-    // } else if (consultants && consultants.length > 0) {
-    //     // Extract data from consultants
-    //     dataToSave = consultants.flatMap(consultant => 
-    //         consultant.rates.flatMap(rate => 
-    //             rate.rateTypes.map(rateType => ({
-    //                 consultantName: consultant.name,
-    //                 rateCard: rate.rateCard,
-    //                 rateType: rateType.rateType,
-    //                 unitPrice: rateType.price
-    //             }))
-    //         )
-    //     );
-    // }
-    //     if (dataToSave) {
-    //         try {
-    //             // Save each consultant entry
-    //             for (const data of dataToSave) {
-    //                 const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
-    //                 const result = await response.text();
-    //                 console.log(result)
-    //                 if (result !== "Values Inserted Successfully!") {
-    //                     alert(`The following error occurred while saving data: ${result}`);
-    //                     return;
-    //                 }
-    //             }
-    
-    //             // setSuccessMessage('Consultant(s) saved successfully!');
-    //         } catch (error) {
-    //             console.error('Error saving consultant:', error);
-    //         }
-    //     } else {
-    //         setToastMessage('No data to save.');
-    //         setSeverity('error');
-    //         setToast(true);
-    //         setTimeout(() => {
-    //             setToast(false);
-    //         }, 2000);
-    //     }
-    // };
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const saveConsultant = async (event) => {
-    event.preventDefault();
+    const saveConsultant = async (event) => {
+            event.preventDefault();
     
-    let dataToSave = null;
+        let dataToSave = null;
+        
+        // Function to filter out rows where id contains "total"
+        const filterRows = (rows) => rows.filter(row => !row.id.includes("total"));
 
-    const filterRows = (rows) => rows.filter(row => !row.id.includes("total"));
+        // Helper function to extract data from id
+        const extractDataFromId = (id) => {
+            const parts = id.split('-');
+            let name, rateCard, rateType;
 
-    const extractDataFromId = (id) => {
-        const parts = id.split('-');
-        let name, rateCard, rateType;
-        if (parts.length > 3) {
-            name = parts[0];
-            rateCard = 'X-Ray';
-            rateType = parts[3];
-        }
-        return { name, rateCard, rateType };
-    };
+            if (parts.length === 3) {
+                // When id contains three parts, map them to name, rateCard, and rateType
+                name = parts[0];
+                rateCard = parts[1];
+                rateType = parts[2];
+            } else if (parts.length === 4) {
+                // When id contains two parts, assume the rateCard is 'X-Ray'
+                name = parts[0];
+                rateCard = 'X-Ray';
+                rateType = parts[3];
+            }
+            
+            return { name, rateCard, rateType };
+        };
 
-    if (selectedRows && selectedRows.length > 0) {
-        const filteredRows = filterRows(selectedRows);
-        console.log(filteredRows);
-        dataToSave = filteredRows.map(row => {
-            const { name, rateCard, rateType } = extractDataFromId(row.id);
-            return {
-                consultantName: name,
-                rateCard: rateCard,
-                rateType: rateType,
-                unitPrice: row.price || 0, // Ensure unitPrice is not null
-            };
-        });
+          // Determine which order numbers to use
+    const orderNumbersToUse = selectedRows && selectedRows.length > 0
+    ? selectedRows.map(row => row.orderNumber) // Use selectedOrderNumbers if selectedRows has data
+    : orderNumbers; // Fall back to all orderNumbers if no selectedRows
+    
+        // Check if selectedRows has data
+        if (selectedRows && selectedRows.length > 0) {
+            // Filter out rows where id contains "total"
+            const filteredRows = filterRows(selectedRows);
+    
+            // Extract data from filteredRows
+            dataToSave = filteredRows.map(row => {
+                const { name, rateCard, rateType } = extractDataFromId(row.id);
+                return {
+                    consultantName: name, // Use extracted name as consultant name
+                    rateCard: rateCard, // Use extracted rateCard or default to 'X-Ray'
+                    rateType: rateType, // Use extracted rateType or fallback to an empty string
+                    unitPrice: row.price, // Fallback to '0' if price is null
+                };
+            });
     } else if (consultants && consultants.length > 0) {
+        // Extract data from consultants
         dataToSave = consultants.flatMap(consultant => 
             consultant.rates.flatMap(rate => 
                 rate.rateTypes.map(rateType => ({
                     consultantName: consultant.name,
                     rateCard: rate.rateCard,
                     rateType: rateType.rateType,
-                    unitPrice: rateType.price || 0 // Ensure unitPrice is not null
+                    unitPrice: rateType.price
                 }))
             )
         );
     }
-
-    if (dataToSave) {
-        try {
-            for (const data of dataToSave) {
-                const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
-                const result = await response.text();
-                console.log(result);
-                if (result !== "Values Inserted Successfully!") {
-                    alert(`The following error occurred while saving data: ${result}`);
-                    return;
-                }
-
-                // Add a delay between requests to avoid rate limiting
-                await delay(500); // Delay of 500ms
-            }
-
-            // setSuccessMessage('Consultant(s) saved successfully!');
-        } catch (error) {
-            console.error('Error saving consultant:', error);
-        }
-    } else {
-        setToastMessage('No data to save.');
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => {
-            setToast(false);
-        }, 2000);
-    }
-};
-
+        if (dataToSave) {
+            try {
+                for (const data of dataToSave) {
+                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
+                    const result = await response.json();
     
-  
+                    if (result !== "Values Inserted Successfully!") {
+                        
+                        return; // Stop the loop if there's an error
+                    }
+    
+                    // Add a delay between requests to avoid rate limiting
+                    await delay(500); // Delay of 500ms
+                }
+                // Update incentive status
+                if (orderNumbersToUse && orderNumbersToUse.length > 0) {
+                    const orderNumbersString = orderNumbersToUse.join(',');
+                    const updateResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateConsultantStatusOnOrderTable.php?JsonDBName=${companyName}&JsonOrderNumbers=${encodeURIComponent(orderNumbersString)}`);
+                    const updateResult = await updateResponse.json();
+
+                    if (updateResult.error) {
+                        console.error('Error updating incentive status:', updateResult.error);
+                    } else {
+                        console.log('Incentive status updated:', updateResult.success);
+                    }
+                }
+                setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
+                setTimeout(() => {
+                setSuccessMessage('');
+                fetchConsultants();
+              }, 3000);
+            } catch (error) {
+                console.error('Error saving consultant:', error);
+            }
+        } else {
+            setToastMessage('No data to save.');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        }
+        
+    };
+    
 
     const handleDateChange = (range) => {
         if (range && range.length === 2) {
@@ -238,37 +206,80 @@ const saveConsultant = async (event) => {
         }
       };
 
+    // const groupConsultants = (data) => {
+    //     const groupedData = [];
+
+    //     data.forEach((consultant) => {
+    //         let existingName = groupedData.find(group => group.name === consultant.name);
+
+    //         if (!existingName) {
+    //             existingName = { name: consultant.name, rates: [], total: 0 }; // Initialize total
+    //             groupedData.push(existingName);
+    //         }
+
+    //         let existingScan = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
+
+    //         if (!existingScan) {
+    //             existingScan = { rateCard: consultant.rateCard, rateTypes: [] };
+    //             existingName.rates.push(existingScan);
+    //         }
+
+    //         let existingScanType = existingScan.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
+
+    //         if (!existingScanType) {
+    //             existingScanType = { rateType: consultant.rateType, count: 0, price: consultant.price };
+    //             existingScan.rateTypes.push(existingScanType);
+    //         }
+
+    //         existingScanType.count += consultant.count;
+    //         existingName.total += consultant.count * consultant.price; // Update total for the consultant
+    //     });
+
+    //     return groupedData;
+    // };
+
     const groupConsultants = (data) => {
         const groupedData = [];
-
+    
         data.forEach((consultant) => {
             let existingName = groupedData.find(group => group.name === consultant.name);
-
+    
             if (!existingName) {
-                existingName = { name: consultant.name, rates: [], total: 0 }; // Initialize total
+                existingName = { 
+                    name: consultant.name, 
+                    rates: [], 
+                    total: 0,
+                    orderNumber: consultant.OrderNumber // Add orderNumbers array
+                };
                 groupedData.push(existingName);
             }
-
+    
             let existingScan = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
-
+    
             if (!existingScan) {
                 existingScan = { rateCard: consultant.rateCard, rateTypes: [] };
                 existingName.rates.push(existingScan);
             }
-
+    
             let existingScanType = existingScan.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
-
+    
             if (!existingScanType) {
                 existingScanType = { rateType: consultant.rateType, count: 0, price: consultant.price };
                 existingScan.rateTypes.push(existingScanType);
             }
-
+    
             existingScanType.count += consultant.count;
             existingName.total += consultant.count * consultant.price; // Update total for the consultant
+    
+            // Add orderNumber if not already included
+            // if (!existingName.orderNumber.includes(consultant.OrderNumber)) {
+            //     existingName.orderNumber.push(consultant.OrderNumber);
+            // }
         });
-
+    
         return groupedData;
     };
+    
 
     const renderGroupedData = (groupedData) => {
         const rows = [];
@@ -289,7 +300,8 @@ const saveConsultant = async (event) => {
                         price: rateType.price,
                         total: rateType.count * rateType.price,
                         isGroup: currentIndex === middleIndex,
-                        isScanGroup: scanTypeIndex === 0
+                        isScanGroup: scanTypeIndex === 0,
+                        orderNumber: group.orderNumber,
                     });
                     currentIndex++;
                 });
@@ -334,15 +346,29 @@ const saveConsultant = async (event) => {
 
             return updatedConsultants;
         });
-        setSelectedRows(prevSelectedRows => 
-            prevSelectedRows.map(row => 
+        setSelectedRows(prevSelectedRows => {
+            const updatedSelectedRows = prevSelectedRows.map(row => 
                 row.id === id ? { 
                     ...row, 
                     price: newPrice, 
-                    total: newPrice * row.count  // Calculate the new total based on the price and count
+                    total: newPrice * row.count  // Update total for the specific row
                 } : row
-            )
-        );
+            );
+    
+            // Update the total in the "total" row
+            const totalRowIndex = updatedSelectedRows.findIndex(row => row.id.includes('-total'));
+            if (totalRowIndex !== -1) {
+                const groupName = updatedSelectedRows[totalRowIndex].id.split('-')[0];
+                const groupTotal = updatedSelectedRows.reduce((sum, row) => 
+                    row.id.startsWith(groupName) && row.id !== `${groupName}-total`
+                        ? sum + row.total 
+                        : sum, 0);
+    
+                updatedSelectedRows[totalRowIndex].total = `₹${groupTotal}`;
+            }
+    
+            return updatedSelectedRows;
+        });
     };
 
     const priceBodyTemplate = (rowData) => {
@@ -445,7 +471,6 @@ const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string'
 // Filter out rows with null or empty values for name and rateCard
 const filteredNameRows = rowsToCalculate.filter(row => row.name);
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
-
 // Calculate total amount
 const totalAmount = filteredRows.reduce((sum, row) => {
     return sum + parseFloat(row.total.split('₹')[1]);
@@ -537,13 +562,26 @@ const handleSelectionChange = (e) => {
             acc.push({
                 ...row,
                 price: existingSelection ? existingSelection.price : row.price, // Preserve the price or use the existing price if available
+                orderNumber: existingSelection ? existingSelection.orderNumber : row.orderNumber, 
             });
         }
         return acc;
     }, []);
 
+    if (selectedRows.length === 0) {
+        // If no rows are selected, reset to all orderNumbers
+        setSelectedOrderNumbers(orderNumbers); // Ensure `allOrderNumbers` is available in the scope
+    } else {
+        // Extract the unique orderNumbers from the selected rows
+        const selectedOrderNumbs = selectedRows.map(row => row.orderNumber);
+        
+        // Set the selectedOrderNumbers in state
+        setSelectedOrderNumbers(selectedOrderNumbs);
+    }
+
     setSelectedRows(newSelection);
 };
+
 
 
 
@@ -569,11 +607,12 @@ const filterHeaderTemplate = (column, filterField) => {
 
 
 
+
     return (
         <div className="relative min-h-screen mb-20">
             {/* Background colors */}
-            <div className="absolute inset-0 bg-blue-600 h-1/3"></div>
-            <div className="absolute inset-x-0 bottom-0 bg-white h-2/3 "></div>
+            <div className="absolute inset-0 bg-blue-600 h-96"></div>
+            {/* <div className="absolute inset-x-0 bottom-0 bg-white h-52"></div> */}
 
             {/* Main content */}
             <div className="relative z-10 pt-8 px-4 sm:px-8 lg:px-12">
@@ -669,23 +708,23 @@ const filterHeaderTemplate = (column, filterField) => {
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'name')}></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
-                            filter
-                            filterElement={filterHeaderTemplate({ header: 'rateCard' }, 'rateCard')}></Column>
+                            ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
-                            filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}></Column>
+                            ></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
-                            filter
-                            filterElement={filterHeaderTemplate({ header: 'Unit Price' }, 'count', 'number')}></Column>
+                            ></Column>
                             <Column field="price" header="Unit Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
-                            filter
-                            filterElement={filterHeaderTemplate({ header: 'Count' }, 'count', 'number')}></Column>
+                            ></Column>
                             <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
-                            filter
-                            filterElement={filterHeaderTemplate({ header: 'Count' }, 'count', 'number')}></Column>
+                            ></Column>
                         </DataTable>
                     </div>
                 </div>
+                {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
             </div>
+            
         </div>
     );
 }
