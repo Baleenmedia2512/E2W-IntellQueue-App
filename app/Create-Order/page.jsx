@@ -80,7 +80,7 @@ const CreateOrder = () => {
     const rateGST = useAppSelector(state => state.rateSlice.rateGST);
     const startQty = useAppSelector(state => state.rateSlice.startQty);
 
-    const [units, setUnits] = useState([]);
+    
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
     const [originalUnitPrice , setOriginalUnitPrice] = useState(unitPrice);
