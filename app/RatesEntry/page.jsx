@@ -1849,7 +1849,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     </div>
                     {isLeadDays && <p className='text-red-500 font-medium'>Lead Days should be more than 0</p>}
                   </div>
-                  <div className='mb-4'>
+                  <div className='mb-4' name="RatesMarginPercentText">
                     <label className="block mb-2 text-gray-700 font-semibold">Margin %</label>
                       <TextField 
                         size='small' 

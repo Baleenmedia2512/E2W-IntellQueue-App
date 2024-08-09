@@ -63,10 +63,10 @@ const AdDetailsPage = () => {
   const margin = useAppSelector(state => state.quoteSlice.marginAmount);
   const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
   const remarks = useAppSelector(state => state.quoteSlice.remarks);
+  const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
-  console.log(datas)
-  console.log(newData)
   const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
   const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
@@ -97,6 +97,7 @@ const AdDetailsPage = () => {
     if(!rateId){
       dispatch(setQuotesData({currentPage: "adMedium"}));
     }
+    
     // if (adMedium === '') {
     //   dispatch(setQuotesData({currentPage: 'adMedium'}));
     // } else if (adType === '') {
@@ -109,6 +110,7 @@ const AdDetailsPage = () => {
     
   },[])
 
+  
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
       right: -3,
@@ -135,11 +137,10 @@ const AdDetailsPage = () => {
         setSlabData(data);
         const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
         const firstSelectedSlab = sortedData[0];
-        console.log(firstSelectedSlab.AgencyCommission);
         setQtySlab(firstSelectedSlab.StartQty);
         setMarginPercentage(firstSelectedSlab.AgencyCommission)
         dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * firstSelectedSlab.AgencyCommission) / 100).toFixed(2)}))
-        console.log(rateId, firstSelectedSlab.UnitPrice)
+
         //setUnitPrice(firstSelectedSlab.UnitPrice);
         //setUnit(firstSelectedSlab.Unit)
         //setMargin(((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2))
@@ -165,8 +166,10 @@ const AdDetailsPage = () => {
 
     fetchRate();
     fetchData();
+    fetchRateData();
   }, [rateId]);
 
+  useEffect(() => {fetchRateData();},[adMedium, rateId])
   // useEffect(() => {
   //   const fetchData = async () => {
   //     try {
@@ -198,7 +201,6 @@ const AdDetailsPage = () => {
     if (selectedSlab) {
       const firstSelectedSlab = selectedSlab[0];
       dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}));
-      console.log(rateId, firstSelectedSlab.UnitPrice)
       // setUnitPrice(firstSelectedSlab.UnitPrice);
       // setUnit(firstSelectedSlab.Unit)
     }
@@ -210,33 +212,28 @@ const AdDetailsPage = () => {
     }
   }, [qtySlab])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!username) {
-          routers.push('/login');
-        } else {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
-          const data = await response.json();
+  const fetchRateData = async () => {
+    try {
+      if (!username) {
+        routers.push('/login');
+      } else {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
+        const data = await response.json();
 
-          //filter rates according to adMedium, adType and adCategory
-          const filterdata = data.filter(item => (item.adCategory.includes(":") ? (edition + " : " + position) : edition) && item.adType === adCategory && item.rateName === adMedium)
-            .filter((value, index, self) =>
-              self.findIndex(obj => obj.VendorName === value.VendorName) === index
-            )
-            .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
-          setDatas(filterdata);
-          //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-          dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
-        }
-      } catch (error) {
-        console.error(error);
+        //filter rates according to adMedium, adType and adCategory
+        const filterdata = data.filter(item => (item.rateId === parseInt(rateId)))
+          .filter((value, index, self) =>
+            self.findIndex(obj => obj.VendorName === value.VendorName) === index
+          )
+          .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
+        setDatas(filterdata);
+        //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
+        dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
       }
-    };
-
-    fetchData();
-  }, [adMedium]);
-
+    } catch (error) {
+      console.error(error);
+    }
+  };
  
   const dispatch = useDispatch();
   const handleSubmit = () => {
@@ -259,7 +256,7 @@ const AdDetailsPage = () => {
       Cookies.set('isAdDetails', true);
       dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
-      dispatch(setQuotesData({currentPage: "checkout"}))
+      dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
     }
   }
 
@@ -359,15 +356,13 @@ const AdDetailsPage = () => {
   return (
     
     <div className=" mt-8 text-black">    
-      <div className="fixed left-[8%] right-[8%] overflow-hidden no-pull-to-refresh">
+      <div className="fixed left-[2%] right-[2%] overflow-hidden">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             <div className="mb-8 flex items-center justify-between">
               <button
-                 className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
+                 className="mr-4 hover:scale-110 text-blue-500 text-nowrap hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  position === "" ?
-                  dispatch(setQuotesData({selectedEdition: "", currentPage: "edition"})) :
-                  dispatch(setQuotesData({selectedPosition: "", currentPage: "remarks"}))
+                  dispatch(setQuotesData({selectedEdition: "", currentPage: previousPage === "adDetails" ? position !== "" ? "remarks" : "edition" : previousPage}))
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
@@ -376,7 +371,7 @@ const AdDetailsPage = () => {
               <h2 className="font-semibold text-wrap mb-1">
                 {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {position === "" ? "" : greater} {position === "" ? "" : position} {greater} {rateId}
               </h2>
-              <IconButton aria-label="cart" className='rounded-none text-center shadow-md right-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+              <IconButton aria-label="cart" className='rounded-none ml-4 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>

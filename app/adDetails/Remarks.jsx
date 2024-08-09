@@ -19,13 +19,14 @@ const RemarksPage = () => {
   const [datas, setDatas] = useState([]);
   const routers = useRouter();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const selectedAdType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
-  const companyName = 'Baleen Test'
+  // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const [searchInput, setSearchInput] = useState('');
 
@@ -90,14 +91,14 @@ const RemarksPage = () => {
         <>
         <button  className="mr-8  mt-8 hover:scale-110 font-semibold text-blue-500 hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
     onClick={() => {
-      dispatch(setQuotesData({currentPage: 'edition', selectedEdition: ''}))
+      dispatch(setQuotesData({currentPage: previousPage === "remarks" ? "edition" : previousPage, selectedEdition: ''}))
   }
     }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> Back</button>
       
     <h1 className='font-semibold mt-10'>
     {adMedium} {greater} { selectedAdType} {greater} {adCategory} {greater} {edition}</h1>
 
-    <button aria-label="cart" className='rounded-full p-2 mt-8 text-center shadow-sm shadow-blue-500 border border-blue-500 left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+    <button aria-label="cart" className='rounded-full p-2 mt-8 text-center shadow-sm shadow-blue-500 border border-blue-500 left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "remarks"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
@@ -152,7 +153,7 @@ const RemarksPage = () => {
             onClick={() => {
               //options contain Edition:Position values
               //the edition position is saved in adCategory Cookie\
-              dispatch(setQuotesData({selectedPosition: options.adCategory, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: options.VendorName, currentPage: "adDetails"}))
+              dispatch(setQuotesData({selectedPosition: options.adCategory, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: options.VendorName, currentPage: "adDetails", previousPage: "remarks"}))
               Cookies.remove('isAdDetails');
             }}
           >
