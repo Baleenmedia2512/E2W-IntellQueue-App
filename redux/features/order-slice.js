@@ -19,7 +19,8 @@ const initialState = {
   isOrderExist: false,
   clientID: "",
   nextRateWiseOrderNumber: "",
-  orderNumber: ""
+  orderNumber: "",
+  isOrderUpdate: false
 };
 
 export const orderSlice = createSlice({
@@ -35,8 +36,11 @@ export const orderSlice = createSlice({
     setIsOrderExist: (state, action) => {
       state.isOrderExist = action.payload;
     },
+    setIsOrderUpdate: (state, action) => {
+      state.isOrderUpdate = action.payload;
+    },
   }
 });
 
-export const { setOrderData, resetOrderData, setIsOrderExist} = orderSlice.actions;
+export const { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} = orderSlice.actions;
 export const orderReducer = orderSlice.reducer;

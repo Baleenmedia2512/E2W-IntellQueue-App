@@ -18,7 +18,7 @@ import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { setOrderData } from '@/redux/features/order-slice';
+import { setOrderData , setIsOrderUpdate} from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
 
 const Report = () => {
@@ -66,6 +66,7 @@ const Report = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [totalOrderAmount, setTotalOrderAmount] = useState('');
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
+  
 
     const router = useRouter();
     const dispatch = useDispatch();
@@ -432,14 +433,20 @@ const handleCloseOrderReportDialog = () => {
 
 const handleEditConfirm = () => {
   if (selectedRow) {
-    const OrderNumber  = selectedRow.OrderNumber;
-    dispatch(setOrderData({ orderNumber: OrderNumber  }))
-    //console.log(selectedRow.OrderNumber);
+    const OrderNumber = selectedRow.OrderNumber;
+
+    // Dispatch the order data and set `isOrderUpdate` to true
+    dispatch(setOrderData({ orderNumber: OrderNumber }));
+    dispatch(setIsOrderUpdate(true)); // Assuming you have an action to set `isOrderUpdate`
+    
+    // Navigate to the Create Order page
     router.push('/Create-Order');
   }
 
   handleCloseOrderReportDialog();
 };
+
+
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
@@ -481,14 +488,7 @@ const orderColumns = [
     headerName: 'Consultant Name', 
     width: 150 
   },
-  { field: 'Receivable', headerName: 'Amount(₹)', width: 100 },
-  { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
-  { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
-  { field: 'CombinedRemarks', headerName: 'Remarks', width: 130 },
-  {field: 'Remarks', headerName: 'Adjustment Remarks', width: 160},
-  { field: 'Card', headerName: 'Rate Name', width: 150 },
-  { field: 'AdType', headerName: 'Rate Type', width: 150 },
-  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+
   {
     field: 'actions',
     headerName: 'Actions',

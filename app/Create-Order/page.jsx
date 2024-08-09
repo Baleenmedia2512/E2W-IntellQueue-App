@@ -6,11 +6,11 @@ import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
 import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
-import { setOrderData, resetOrderData, setIsOrderExist  } from '@/redux/features/order-slice';
+import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} from '@/redux/features/order-slice';
 
 import Select from 'react-select';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
-import { TextField } from '@mui/material';
+// import { TextField } from '@mui/material';
 import { formattedMargin } from '../adDetails/ad-Details';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
@@ -30,9 +30,9 @@ const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
+    const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP} = orderDetails;
-  
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
     const companyName = "Baleen Test";
@@ -41,6 +41,7 @@ const CreateOrder = () => {
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
     const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
+    const [UpdateRateWiseOrderNumber, setUpdateRateWiseOrderNumber] = useState("");
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState("");
     const [releaseDates, setReleaseDates] = useState([]);
@@ -66,7 +67,7 @@ const CreateOrder = () => {
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const [vendors, setVendors] = useState([]);
   const [ratesData, setRatesData] = useState([]);
-  // const [units, setUnitsor] = useState([])
+  // const [units, setUnits] = useState([])
   const [isSlabAvailable, setIsSlabAvailable] = useState(false)
   const [showCampaignDuration, setShowCampaignDuration] = useState(false)
   const [leadDays, setLeadDays] = useState(0);
@@ -673,17 +674,11 @@ const fetchOrderDetailsByOrderNumber = () => {
         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
         //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
         const formattedDate = parseDateFromDB(data.orderDate);
-        // console.log(data)
         setClientName(data.clientName);
-      //console.log(data.clientName)
         setOrderDate(data.orderDate);
-      // console.log(data.orderDate)
         setDisplayOrderDate(formattedDate);
-      console.log(formattedDate)
         setUnitPrice(data.receivable);
-        //console.log(data.receivable)
-        // setRateCardNumber(data.rateCardNumber);
-        
+        setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
         dispatch(setRateId(data.rateId));
         setHasOrderDetails(true);
       } else {
@@ -742,7 +737,10 @@ useEffect(() => {
        }
 //update order-SK (02-08-2024)------------------------------------
 const updateNewOrder = async (event) => {
-  event.preventDefault();
+  if (event) event.preventDefault();
+  // Now you can use the updateReason for your logic
+  // console.log('Reason for update:', updateReason);
+
   const receivable = (unitPrice * qty) + marginAmount;
   const payable = unitPrice * qty;
   const orderOwner = companyName === 'Baleen Media' ? (clientSource === '6.Own' ? loggedInUser : 'leenah_cse') : loggedInUser;
@@ -779,13 +777,14 @@ const updateNewOrder = async (event) => {
       JsonBookedStatus: 'Booked',
       JsonUnits: selectedUnit.value,
       JsonMinPrice: unitPrice.toString(),
-      JsonRemarks: remarks,
+      JsonRemarks: updateReason,
       JsonContactPerson: clientContactPerson,
       JsonReleaseDates: releaseDates,
       JsonDBName: companyName,
       JsonClientAuthorizedPersons: clientEmail,
       JsonOrderDate: formattedOrderDate,
       // JsonRateWiseOrderNumber: nextRateWiseOrderNumber
+       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber
     });
 
     try {
@@ -798,9 +797,10 @@ const updateNewOrder = async (event) => {
 
       const data = await response.json();
       if (data === "Values Updated Successfully!") {
-        setSuccessMessage('Work Order #' + orderNumberRP + ' Updated Successfully!');
+        setSuccessMessage('Work Order #' + UpdateRateWiseOrderNumber + ' Updated Successfully!');
         dispatch(setIsOrderExist(true));
-
+        dispatch(setIsOrderUpdate(false));
+        dispatch(resetOrderData());
         setTimeout(() => {
           setSuccessMessage('');
           router.push('/Report');
@@ -1091,8 +1091,8 @@ const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleUpdateConfirm = () => {
     // Execute the update operation here with the provided reason
-    updateNewOrder(updateReason);
-    handleCloseDialog();
+    updateNewOrder();
+    handleUpdateCloseDialog();
   };
 
   const handleReasonChange = (event) => {
@@ -1158,18 +1158,62 @@ return (
         </DialogActions>
       </Dialog>
       <div className="w-full max-w-6xl">
-      <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
-        <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Place your orders here</p>
-      </div>
-      {/* <button className="expand-button" onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? 'Hide Client Details' : 'Show Client Details'}
-        </button>*/}
-      <button className="custom-button" onClick={createNewOrder}>Place Order</button> 
-      <button className="custom-button" onClick={updateNewOrder}>Update Order</button> 
-    </div>
+    <div className="flex items-center justify-between">
+    <div>
+      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
       
+      {/* Conditional text based on isOrderUpdate */}
+      <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
+      {isOrderUpdate ? (
+          <>Updating order number: <strong>{orderNumberRP}</strong></>
+        ) : (
+          'Place your orders here'
+        )}
+      </p>
+    </div>
+    
+    {/* Conditional rendering based on isOrderUpdate */}
+    {isOrderUpdate ? (
+      <button className="custom-button" onClick={handleOpenDialog}>Update Order</button>
+    ) : (
+      <button className="custom-button" onClick={createNewOrder}>Place Order</button>
+    )}
+    
+    <Dialog
+      open={dialogOpen}
+      onClose={handleUpdateCloseDialog}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">{"Provide a Reason for Update"}</DialogTitle>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin="dense"
+          id="update-reason"
+          label="Reason"
+          type="text"
+          fullWidth
+          variant="outlined"
+          value={updateReason}
+          onChange={handleReasonChange}
+        />
+      </DialogContent>
+      <DialogActions>
+      <Button
+          onClick={handleUpdateConfirm}
+          color="primary"
+          disabled={!updateReason} // Disable if updateReason is empty
+        >Confirm
+        </Button>
+        <Button onClick={handleUpdateCloseDialog} color="primary">
+          Cancel
+        </Button>
+      </DialogActions>
+    </Dialog>
+  </div>
+
+
 
 
 
