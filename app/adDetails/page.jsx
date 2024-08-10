@@ -15,8 +15,9 @@ import { IconButton } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
 import Badge from '@mui/material/Badge';
-import { setQuotesData } from '@/redux/features/quote-slice';
+import { goBack, resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
+import { resetClientData } from '@/redux/features/client-slice';
 
 export const AdDetails = () => {
   const routers = useRouter();
@@ -77,12 +78,7 @@ export const AdDetails = () => {
   
           {/* Back Button */}
           <button className="mr-4 mt-8 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
-            if (previousPage === "adMedium" || previousPage === "") {
-              routers.push('/');
-              dispatch(resetClientData());
-            } else {
-              dispatch(setQuotesData({ currentPage: previousPage }));
-            }
+              dispatch(goBack());
           }}>
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
@@ -94,7 +90,7 @@ export const AdDetails = () => {
               <h2 className='font-semibold mb-1 text-gray-800 text-[15px] mx-2'>{adMedium}
               {adType !== "" && greater} {adType}
               {adCategory !== "" && greater} {adCategory} {edition !== "" &&greater} {edition} {position !== "" && greater} {position}
-              {rateId !== "" && greater} {rateId}</h2>
+              {rateId !== 0 && greater} {rateId !== 0 && rateId}</h2>
             </div>
           </div>
           )}
@@ -104,7 +100,7 @@ export const AdDetails = () => {
           ):(
             <button aria-label="cart" 
             className="relative text-center shadow-sm max-h-10  bg-white mt-8 border border-blue-500 shadow-blue-500 rounded-full p-2"
-            onClick={() => dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }))}>
+            onClick={() => dispatch(updateCurrentPage("checkout"))}>
               <StyledBadge badgeContent={cartItems.length} color="primary">
                 <ShoppingCartIcon className='text-black' />
               </StyledBadge>
@@ -115,7 +111,7 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <form className='bg-white rounded-t-2xl shadow-2xl pb-8 h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
+        <form className='bg-white rounded-t-3xl shadow-2xl pb-8 h-[100vh] overflow-y-auto max-h-[100vh] mx-2 shadow-black'>
           <br />
           {showCurrentPage()}
         </form>

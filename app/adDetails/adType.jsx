@@ -13,7 +13,7 @@ import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 
 const AdTypePage = () => {
   const username = useAppSelector(state => state.authSlice.userName);
@@ -77,16 +77,16 @@ const AdTypePage = () => {
   );
 
   //to move to Ad Medium page
-  const moveToPreviousPage = () => {
-    //To move to adMedium from AdType
-      dispatch(resetQuotesData());
-      dispatch(setQuotesData({currentPage: previousPage === "adType" ? "adMedium" : previousPage}));
-  }
+  // const moveToPreviousPage = () => {
+  //   //To move to adMedium from AdType
+  //     dispatch(resetQuotesData());
+  //     dispatch(setQuotesData({currentPage: previousPage === "adType" ? "adMedium" : previousPage}));
+  // }
 
   return (
-    <div className='bg-gray-100'>
-      <div className='text-black bg-gray-100'>
-      <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
+    <div className=''>
+      <div className='text-black'>
+      {/* <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
             <button 
               className="mr-8 mt-4 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white"
               onClick={() => {moveToPreviousPage()}}
@@ -101,7 +101,7 @@ const AdTypePage = () => {
                 <StyledBadge badgeContent={cartItems.length} color="error">
                   <ShoppingCartIcon className='text-blue-500' />
                 </StyledBadge>
-              </button>
+              </button> */}
           {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -123,10 +123,10 @@ const AdTypePage = () => {
             />
             </svg>
           </button> */}
-      </div>
+      {/* </div>
       <br />
       <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
-            <br/>
+            <br/> */}
       <h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Ad Type</h1>
     
       <div className='mx-[8%] relative bg-blue-500'>
@@ -148,10 +148,12 @@ const AdTypePage = () => {
           <button
             key={optionss.typeOfAd}
             className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
-            onClick={() => {
+            onClick={(event) => {
             {
+              event.preventDefault()
               dispatch(setQuotesData({selectedAdType: optionss.typeOfAd}))
-              dispatch(setQuotesData({currentPage: "adCategory", previousPage: "adType"}))
+              dispatch(updateCurrentPage("adCategory"));
+              // dispatch(setQuotesData({currentPage: "adCategory", previousPage: "adType"}))
           }}}
           >
             <div className='flex flex-row items-center mx-4 justify-start'>
@@ -161,7 +163,7 @@ const AdTypePage = () => {
           </button>
         ))}
         </div>
-      </form>
+      {/* </form> */}
     </div>
   </div>
   )

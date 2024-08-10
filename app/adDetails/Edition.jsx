@@ -10,7 +10,7 @@ import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 
 const EditionPage = () => {
   const dispatch = useDispatch();
@@ -94,10 +94,10 @@ const EditionPage = () => {
 
   const greater = ">>"
   return (
-    <div className='bg-gray-100'>
-      <div className='text-black bg-gray-100'>
-      <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
-        <div className='flex flex-row'>
+    <div className=''>
+      <div className='text-black'>
+      {/* <div className="flex flex-row justify-between mx-[2%] bg-gray-100"> */}
+        {/* <div className='flex flex-row'>
          
             <button 
                className="mr-8 hover:scale-110 mt-4 max-h-10 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
@@ -121,7 +121,7 @@ const EditionPage = () => {
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
               </button>
-              </div>
+              </div> */}
           {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -145,11 +145,11 @@ const EditionPage = () => {
             </svg>
           </button> */}
         
-      </div>
+      {/* </div> */}
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
-      <br/>
+      {/* <br/>
       <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
-            <br/>
+            <br/> */}
       <h1 className='text-2xl font-bold text-center  mb-4'>Select Edition</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
@@ -172,11 +172,16 @@ const EditionPage = () => {
             <button
               key={option.Edition}
               className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
-              onClick={()=> {
+              onClick={(event)=> {
+                event.preventDefault()
                 const filteredPositions = searchedPosition.filter(item => item.Edition === option.Edition);
-                filteredPositions.length > 0 ?
-                dispatch(setQuotesData({selectedEdition: option.Edition, currentPage: "remarks", previousPage: "edition"})) :
-                dispatch(setQuotesData({selectedEdition: option.Edition, ratePerUnit: option.ratePerUnit, minimumUnit: option.minimumUnit, unit: option.Unit, rateId: option.rateId, validityDate: option.ValidityDate, selectedVendor: option.VendorName, currentPage: "adDetails", previousPage: "edition"}))
+                if(filteredPositions.length > 0){
+                  dispatch(setQuotesData({selectedEdition: option.Edition})) 
+                  dispatch(updateCurrentPage("remarks"));
+                  }else{
+                dispatch(setQuotesData({selectedEdition: option.Edition, ratePerUnit: option.ratePerUnit, minimumUnit: option.minimumUnit, unit: option.Unit, rateId: option.rateId, validityDate: option.ValidityDate, selectedVendor: option.VendorName}))
+                dispatch(updateCurrentPage("adDetails"));
+                  }
             }}
             >
               {/* <div className="text-lg font-bold mt-8">{(option.adCategory.includes(":"))?(option.Edition):(categories.adType)}</div> */}
@@ -188,7 +193,7 @@ const EditionPage = () => {
           ))}
         </ul> 
       </div>
-      </form>
+      {/* </form> */}
     </div>
   </div>
   )

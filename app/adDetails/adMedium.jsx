@@ -1,20 +1,15 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { faSearch, faBus } from '@fortawesome/free-solid-svg-icons';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useDispatch } from 'react-redux';
-import { resetClientData } from '@/redux/features/client-slice';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import { useAppSelector } from '@/redux/store';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
-import IconButton from '@mui/material/IconButton';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { FetchRateSeachTerm } from '../api/FetchAPI';
-import BreadCrumbs from '../components/BreadCrumbs';
 
 export const AdMediumPage = () => {
   const dispatch = useDispatch();
@@ -113,7 +108,8 @@ export const AdMediumPage = () => {
     setRateSearchTerm(selectedRate);
 
     fetchRate(selectedRateId);
-    dispatch(setQuotesData({currentPage: "adDetails", rateId: selectedRateId, previousPage: "adMedium"}))
+    dispatch(setQuotesData({rateId: selectedRateId}));
+    dispatch(updateCurrentPage("adDetails"));
   }
 
   useEffect(() => {
@@ -133,9 +129,9 @@ export const AdMediumPage = () => {
   }, []);
 
   return (
-    <div className='bg-gray-100 w-full h-full'>
+    <div className='w-full h-full'>
         <div className='text-black '>
-          <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
+          {/* <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
 
             <button  className="mr-8 mt-8 hover:scale-110 text-blue-500 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
               if(previousPage === "adMedium" || previousPage === "" ){
@@ -155,7 +151,7 @@ export const AdMediumPage = () => {
             <StyledBadge badgeContent={cartItems.length} color="error">
               <ShoppingCartIcon className="text-blue-500 " />
             </StyledBadge>
-          </button>
+          </button> */}
           
             {/* <button
               className="px-2 py-1 rounded text-center"
@@ -180,10 +176,10 @@ export const AdMediumPage = () => {
                   />
                 </svg>
               </button> */}
-          </div>
-          <br/>
-          <form className='bg-white rounded-t-2xl shadow-2xl pb-8 h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
-            <br/>
+          {/* </div> */}
+          {/* <br/> */}
+          {/* <form className='bg-white rounded-t-2xl shadow-2xl pb-8 h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'> */}
+            {/* <br/> */}
           <h1 className='text-2xl font-bold text-center text-blue-500'>Select AD Medium</h1>
 
           <div className='mx-[8%] relative bg-blue-500 mt-4'>
@@ -225,31 +221,33 @@ export const AdMediumPage = () => {
       <div className="absolute top-0 right-0 mt-2 mr-3">
           <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div></div>
-          <ul className="mx-[8%] mb-8 justify-stretch mt-4">
-            {searchedOptions.map((option,index) => (<>
-              {option.rateName !== 'Newspaper' && (
-                <button
-                  key={option.rateName}
-                  className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
-                  onClick={() => {
-                    //setSelectedAdMedium(option.rateName);
-                    dispatch(setQuotesData({selectedAdMedium: option.rateName, currentPage: "adType", previousPage: "adMedium"}))
-                    //Cookies.set('ratename', option.rateName);
-                    //setShowAdTypePage(true);
-                  }}
-                >
-                  <div className='flex flex-row items-center mx-4 justify-start'>
-                    {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
-                  <div className='mb-2 h-10 w-10'>{icons(option.rateName)}</div>
-                  {/* <FontAwesomeIcon icon={faBus} /> */}
-                  <div className="text-xl font-bold mb-2 items-center ml-4"> {option.rateName}</div>
-                  </div>
-                  
-                </button>)}</>
-            ))
+            <ul className="mx-[8%] mb-8 justify-stretch mt-4">
+              {searchedOptions.map((option,index) => (<>
+                {option.rateName !== 'Newspaper' && (
+                  <button
+                    key={option.rateName}
+                    className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+                    onClick={(event) => {
+                      //setSelectedAdMedium(option.rateName);
+                      event.preventDefault();
+                      dispatch(setQuotesData({selectedAdMedium: option.rateName}));
+                      dispatch(updateCurrentPage("adType"));
+                      //Cookies.set('ratename', option.rateName);
+                      //setShowAdTypePage(true);
+                    }}
+                  >
+                    <div className='flex flex-row items-center mx-4 justify-start'>
+                      {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
+                    <div className='mb-2 h-10 w-10'>{icons(option.rateName)}</div>
+                    {/* <FontAwesomeIcon icon={faBus} /> */}
+                    <div className="text-xl font-bold mb-2 items-center ml-4"> {option.rateName}</div>
+                    </div>
+                    
+                  </button>)}</>
+              ))
             }
           </ul>
-          </form>
+          {/* </form> */}
         </div>
         
     </div>

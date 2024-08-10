@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 //import { AdMediumPage } from './page';
@@ -9,9 +8,7 @@ import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
-import IconButton from '@mui/material/IconButton';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 
 const AdCategoryPage = () => {
   const username = useAppSelector(state => state.authSlice.userName);
@@ -76,16 +73,16 @@ const AdCategoryPage = () => {
   );
 
   //to move to Ad Medium page
-  const moveToPreviousPage = () => {
-      //To move to adType from adCategory
-      dispatch(setQuotesData({selectedAdCategory: "", currentPage: previousPage === "adCategory" ? "adType" : previousPage}));
-    }
+  // const moveToPreviousPage = () => {
+  //     //To move to adType from adCategory
+  //     dispatch(setQuotesData({selectedAdCategory: "", currentPage: previousPage === "adCategory" ? "adType" : previousPage}));
+  //   }
 
 const greater = '>>'
   return (
-    <div className='bg-gray-100'>
-      <div className='text-black bg-gray-100'>
-        <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
+    <div className=''>
+      <div className='text-black'>
+        {/* <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
             
               <button 
                className="mr-8 hover:scale-110 text-blue-500 mt-4 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1  ml-2 rounded-lg "
@@ -100,7 +97,7 @@ const greater = '>>'
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </button>
+              </button> */}
             {/* <button
               className=" px-2 py-1 rounded text-center"
               onClick={() => {
@@ -122,17 +119,17 @@ const greater = '>>'
               />
               </svg>
             </button> */}
-        </div>
+        {/* </div> */}
         {/* <div className="flex flex-row justify-center mx-[8%] mt-8">
         <h1 className='font-semibold'> 
               {adMedium} {greater} {adType}
             </h1>
             </div> */}
         {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
-        <br />
+        {/* <br />
       <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
-            <br/>
-        <h1 className='text-2xl font-bold text-center  mb-4'>Select Ad Category</h1>
+            <br/> */}
+        <h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Ad Category</h1>
         <div className='mx-[8%] relative'>
           <input
             className="w-full border border-gray-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-200"
@@ -154,8 +151,10 @@ const greater = '>>'
                 <button
                   key={option.adType}
                   className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
-                  onClick={() => {
-                    dispatch(setQuotesData({selectedAdCategory: option.adType, currentPage: "edition", previousPage: "adCategory"}))
+                  onClick={(event) => {
+                    event.preventDefault()
+                    dispatch(setQuotesData({selectedAdCategory: option.adType}))
+                    dispatch(updateCurrentPage("edition"));
                   }}
                 >
                   <div className='flex flex-row items-center mx-4 justify-start'>
@@ -166,7 +165,7 @@ const greater = '>>'
               ))}
           </ul>
         </div>
-      </form>
+      {/* </form> */}
       </div>
       </div>
   )

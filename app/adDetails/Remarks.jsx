@@ -12,7 +12,7 @@ import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useAppSelector } from '@/redux/store';
 import BreadCrumbs from '../components/BreadCrumbs';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 
 const RemarksPage = () => {
   const dispatch = useDispatch();
@@ -86,9 +86,9 @@ const RemarksPage = () => {
 
   const greater = ">>"
   return (
-    <div className='bg-gray-100'>
-        <div className='text-black bg-gray-100'>
-      <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
+    <div className=''>
+        <div className='text-black '>
+      {/* <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
         <>
         <button  className="mr-8  mt-8 hover:scale-110 font-semibold text-blue-500 hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
     onClick={() => {
@@ -97,14 +97,14 @@ const RemarksPage = () => {
     }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> Back</button>
       
       {/* <BreadCrumbs /> */}
-    <h1 className='font-semibold mt-10'>
+    {/* <h1 className='font-semibold mt-10'>
     {adMedium} {greater} { selectedAdType} {greater} {adCategory} {greater} {edition}</h1>
 
     <button aria-label="cart" className='rounded-full p-2 mt-8 text-center shadow-sm shadow-blue-500 border border-blue-500 left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "remarks"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </button>
+              </button>  */}
     {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -125,12 +125,12 @@ const RemarksPage = () => {
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button> */}</>
-      </div>
+          </button> */}
+      {/* </></div> */}
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
-      <br />
+      {/* <br />
       <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
-            <br/>
+            <br/> */}
 <h1 className='text-2xl font-bold text-center  mb-4'>Select Package</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
@@ -155,7 +155,8 @@ const RemarksPage = () => {
             onClick={() => {
               //options contain Edition:Position values
               //the edition position is saved in adCategory Cookie\
-              dispatch(setQuotesData({selectedPosition: options.adCategory, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: options.VendorName, currentPage: "adDetails", previousPage: "remarks"}))
+              dispatch(setQuotesData({selectedPosition: options.adCategory, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: options.VendorName}));
+              dispatch(updateCurrentPage("adDetails"));
               Cookies.remove('isAdDetails');
             }}
           >
@@ -167,7 +168,7 @@ const RemarksPage = () => {
               }
             </ul> 
       </div>
-      </form> 
+      {/* </form>  */}
       </div>
       </div>
   )

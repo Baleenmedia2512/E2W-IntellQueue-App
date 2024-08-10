@@ -376,7 +376,7 @@ const AdDetailsPage = () => {
   const itemTemplate = (item) => {
     return (
       <div className="p-2 justify-center flex">
-        <div className="mb-4 border-gray-500 bg-gradient-to-br from-gray-100 to-white rounded-lg justify-center shadow-md shadow-gray-500 p-2 text-xl text-left mx-2 py-3 border text-black">
+        <div className="mb-4 border-gray-500 bg-gradient-to-br from-gray-100 to-white sm:w-full rounded-lg justify-center shadow-md shadow-gray-500 p-2 text-xl text-left mx-2 py-3 border text-black">
           {item.content.map((entry, i) => (
             <div className='flex flex-row font-inter'>
             <p key={i} 
@@ -413,8 +413,6 @@ const AdDetailsPage = () => {
         numScroll: 1
     }
 ];
-
-  const greater = ">>"
 
   const vendorOptions = datas.map(option => ({
     value: option.VendorName,
