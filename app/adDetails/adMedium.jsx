@@ -182,7 +182,7 @@ export const AdMediumPage = () => {
             {/* <br/> */}
           <h1 className='text-2xl font-bold text-center text-blue-500'>Select AD Medium</h1>
 
-          <div className='mx-[8%] relative bg-blue-500 mt-4'>
+          <div className='mx-[8%] relative mt-4'>
           
           {/* <input
           className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
@@ -226,7 +226,7 @@ export const AdMediumPage = () => {
                 {option.rateName !== 'Newspaper' && (
                   <button
                     key={option.rateName}
-                    className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+                    className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
                     onClick={(event) => {
                       //setSelectedAdMedium(option.rateName);
                       event.preventDefault();
@@ -240,7 +240,7 @@ export const AdMediumPage = () => {
                       {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
                     <div className='mb-2 h-10 w-10'>{icons(option.rateName)}</div>
                     {/* <FontAwesomeIcon icon={faBus} /> */}
-                    <div className="text-xl font-bold mb-2 items-center ml-4"> {option.rateName}</div>
+                    <div className="text-lg font-medium mb-2 items-center ml-4"> {option.rateName}</div>
                     </div>
                     
                   </button>)}</>

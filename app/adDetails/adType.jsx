@@ -130,7 +130,7 @@ const AdTypePage = () => {
             <br/> */}
       <h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Ad Type</h1>
     
-      <div className='mx-[8%] relative bg-blue-500'>
+      <div className='mx-[8%] relative'>
         <input
           className="w-full border border-gray-500 text-black p-2 rounded-lg focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200"
           type="text"
@@ -148,7 +148,8 @@ const AdTypePage = () => {
         {searchedTypeofAd.map((optionss) => (
           <button
             key={optionss.typeOfAd}
-            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+            //className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
             onClick={(event) => {
             {
               event.preventDefault()
@@ -158,8 +159,8 @@ const AdTypePage = () => {
           }}}
           >
             <div className='flex flex-row items-center mx-4 justify-start'>
-                    <div className='text-blue-500 text-xl font-bold'>•</div>
-            <div className="text-xl font-bold mb-2 items-center ml-4">{optionss.typeOfAd !== "" ? optionss.typeOfAd : 'Others'}</div>
+                    {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
+            <div className="text-lg font-medium mb-2 items-center ml-4">{optionss.typeOfAd !== "" ? optionss.typeOfAd : 'Others'}</div>
             </div>
           </button>
         ))}

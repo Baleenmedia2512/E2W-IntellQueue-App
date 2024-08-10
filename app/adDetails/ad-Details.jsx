@@ -269,6 +269,13 @@ const AdDetailsPage = () => {
  
   const dispatch = useDispatch();
   const handleSubmit = () => {
+    const isDuplicate = cartItems.some(item => item.rateId === rateId);
+    if (isDuplicate) {
+      // Display an error message or handle the duplicate case
+      alert("This item is already in the cart.");
+      return;
+    }
+
     if (qty === '' || campaignDuration === '' || margin === '') {
       setSeverity('warning');
       setToastMessage('Please fill all the Client Details!');
@@ -453,7 +460,7 @@ const AdDetailsPage = () => {
   return (
     
     <div className="  text-black overscroll-none">    
-      <div className="fixed left-[2%] right-[2%] ">
+      <div className="fixed left-[2%] right-[2%] overscroll-none">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -608,7 +615,8 @@ const AdDetailsPage = () => {
                     <label className="font-bold">Campaign Duration</label>
                     <div className="flex w-full">
                       <input
-                        className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                        className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                        //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                         type="number"
                         placeholder="Ex: 1000"
                         // defaultValue={campaignDuration}
@@ -626,20 +634,22 @@ const AdDetailsPage = () => {
                     </div>
                     <p className="text-red-700">{campaignDuration < minimumCampaignDuration ? 'Minimum Duration should be ' + minimumCampaignDuration : ''}</p>
                   </div>)}
-                <div className="mb-4">
-                  <label className="font-bold">Margin Amount(₹)</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2 mb-1">Margin Amount(₹)</label>
                   <input
-                    className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    //className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
                     placeholder="Ex: 4000"
                     value={margin}
                     onChange={handleMarginChange}
                     onFocus={(e) => e.target.select()}
                   />
-                  <div className='flex items-center'>
-                    <p className="mr-5">Margin Percentage :</p><br />
+                  <div className='flex items-center mt-4'>
+                    <p className="font-bold ml-2">Margin Percentage :</p><br />
                     <input
-                      className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className={`w-20 ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                      //className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
                       defaultValue="15"
@@ -647,14 +657,15 @@ const AdDetailsPage = () => {
                       onChange={handleMarginPercentageChange}
                       onFocus={(e) => e.target.select()}
                     />
-                    <p className="mt-1 text-sm">%</p><br />
+                    <p className="mt-1 font-bold ml-2">%</p><br />
                   </div>
 
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Extra Discount(₹)</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
                   <input
-                    className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    //className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
                     placeholder="Ex: 1000"
                     value={extraDiscount}
@@ -662,11 +673,12 @@ const AdDetailsPage = () => {
                     onFocus={(e) => e.target.select()}
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Remarks</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2 mb-1">Remarks</label>
                   <InputTextarea
                     autoResize
-                    className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    //className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     placeholder="Remarks"
                     value={remarks}
                     onChange={handleRemarks}
@@ -714,11 +726,12 @@ const AdDetailsPage = () => {
                   </button>
                 </div>
                 </span>
-                <div className="flex flex-col justify-center items-center mt-4">
-                  <p className="font-semibold text-red-500">
-                    *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
+                <div className="flex flex-col justify-center bg-gradient-to-br from-gray-100 to-white items-center mx-4 px-3 py-1 mt-2 rounded-lg shadow-md shadow-gray-400 border border-gray-400">
+                <p className="font-medium text-lg text-[#333333] mt-2">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
+                  <p className="font-medium text-[#1A1A1A] text-lg mt-2  text-center">
+                    Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
-                  <p className="font-bold">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
+                  
                 </div>
               </div>
               </div>

@@ -150,7 +150,8 @@ const greater = '>>'
               {searchedAdType.filter(item => item.typeOfAd === adType).map((option) => (
                 <button
                   key={option.adType}
-                  className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+                  className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+                  //className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
                   onClick={(event) => {
                     event.preventDefault()
                     dispatch(setQuotesData({selectedAdCategory: option.adType}))
@@ -158,8 +159,8 @@ const greater = '>>'
                   }}
                 >
                   <div className='flex flex-row items-center mx-4 justify-start'>
-                    <div className='text-blue-500 text-xl font-bold'>•</div>
-                  <div className="text-xl ml-4 font-bold items-center">{option.adType}</div>
+                    {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
+                  <div className="text-lg ml-4 font-medium items-center capitalize">{option.adType}</div>
                   </div>
                 </button>
               ))}

@@ -152,7 +152,8 @@ const RemarksPage = () => {
               {searchedPosition.filter(item => item.Edition === edition).map((options) => (
           <button
             key={options.adCategory}
-            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+            //className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
             onClick={() => {
               //options contain Edition:Position value
               const position = options.adCategory.split(':')[1];
@@ -163,8 +164,8 @@ const RemarksPage = () => {
             }}
           >
             <div className='flex flex-row items-center mx-4 justify-start'>
-                    <div className='text-blue-500 text-xl font-bold'>•</div>
-            <div className="text-sm font-bold items-center ml-4 justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.Position === "" ? 'Skip' : options.Position}</div>
+                    {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
+            <div className="text-lg font-medium items-center ml-4 justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.Position === "" ? 'Skip' : options.Position}</div>
             </div>
 </button>))
               }
