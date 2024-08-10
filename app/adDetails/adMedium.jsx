@@ -5,7 +5,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useDispatch } from 'react-redux';
-import { setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import { useAppSelector } from '@/redux/store';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
@@ -125,6 +125,7 @@ export const AdMediumPage = () => {
 
     FetchValidRates()
     dispatch(setQuotesData({selectedAdMedium: ""}));
+    dispatch(resetQuotesData())
     //dispatch(setQuotesData({currentPage: "adMedium"}))
   }, []);
 

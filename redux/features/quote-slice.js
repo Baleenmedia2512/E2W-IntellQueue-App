@@ -51,7 +51,10 @@ export const quoteSlice = createSlice({
         const previousPage = state.history.pop(); // Get the last entry in history
         state.currentPage = previousPage; // Update the current page
         state.previousPage = state.history.length > 0 ? state.history[state.history.length - 1] : ""
-      } else {
+      } else if(state.history.length === 0)
+      {
+        state.currentPage = "adMedium";
+      }else {
         state = initialState; // Default to adMedium if no history is available
       }
       // Do not return anything here. Just modify the state directly.
