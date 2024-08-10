@@ -6,7 +6,7 @@ const initialState = {
   selectedAdCategory: "",
   selectedEdition: "",
   selectedPosition: "",
-  selectedVendor: "",
+  selectedVendor: {label: "", value: ""},
   selectedSlab: "",
   quantity: 1,
   ratePerUnit: 0,

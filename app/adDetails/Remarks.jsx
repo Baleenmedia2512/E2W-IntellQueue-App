@@ -154,9 +154,10 @@ const RemarksPage = () => {
             key={options.adCategory}
             className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
             onClick={() => {
-              //options contain Edition:Position values
+              //options contain Edition:Position value
+              const position = options.adCategory.split(':')[1];
               //the edition position is saved in adCategory Cookie\
-              dispatch(setQuotesData({selectedPosition: options.adCategory, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: options.VendorName}));
+              dispatch(setQuotesData({selectedPosition: position, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: {value: options.VendorName, label: options.VendorName}}));
               dispatch(updateCurrentPage("adDetails"));
               Cookies.remove('isAdDetails');
             }}

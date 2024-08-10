@@ -166,7 +166,7 @@ const AdDetailsPage = () => {
         }
         const data = await response.json();
         const firstData = data[0];
-        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
+        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
 
       } catch (error) {
         console.error("Error while fetching rates: " + error)
@@ -198,22 +198,45 @@ const AdDetailsPage = () => {
   // }, [selectedVendor]);
 
   const handleQtySlabChange = () => {
-    const qtySlabNumber = parseInt(qtySlab)
+    const qtySlabNumber = parseInt(qtySlab); // Convert the value to a number
     // Find the corresponding slabData for the selected QtySlab
-    const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
-
-    { !changing && dispatch(setQuotesData({quantity: qtySlab})); }
-    { changing && setChanging(false) }
-    dispatch(setQuotesData({marginAmount: formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)}))
-    //setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
-    // Update UnitPrice based on the selected QtySlab
-    if (selectedSlab) {
-      const firstSelectedSlab = selectedSlab[0];
-      dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}));
-      // setUnitPrice(firstSelectedSlab.UnitPrice);
-      // setUnit(firstSelectedSlab.Unit)
+    const selectedSlab = sortedSlabData.find(item => item.StartQty === qtySlabNumber);
+  
+    if (!selectedSlab) {
+      console.error("No matching slab data found.");
+      return;
     }
+  
+    if (!changing) {
+      dispatch(setQuotesData({ quantity: qtySlab}));
+    } else {
+      setChanging(false);
+    }
+  
+    const marginAmount = formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100);
+    dispatch(setQuotesData({ marginAmount }));
+  
+    // Update UnitPrice based on the selected QtySlab
+    dispatch(setQuotesData({ ratePerUnit: selectedSlab.UnitPrice, unit: selectedSlab.Unit }));
   };
+
+  // const handleQtySlabChange = () => {
+  //   const qtySlabNumber = parseInt(qtySlab)
+  //   // Find the corresponding slabData for the selected QtySlab
+  //   const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
+
+  //   { !changing && dispatch(setQuotesData({quantity: qtySlab.value})); }
+  //   { changing && setChanging(false) }
+  //   dispatch(setQuotesData({marginAmount: formattedMargin((qtySlab.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)}))
+  //   //setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
+  //   // Update UnitPrice based on the selected QtySlab
+  //   if (selectedSlab) {
+  //     const firstSelectedSlab = selectedSlab[0];
+  //     dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}));
+  //     // setUnitPrice(firstSelectedSlab.UnitPrice);
+  //     // setUnit(firstSelectedSlab.Unit)
+  //   }
+  // };
 
   useEffect(() => {
     if (qtySlab) {
@@ -421,10 +444,16 @@ const AdDetailsPage = () => {
     label: option.VendorName === '' && filteredData.length === 1 ? 'No Vendors' : option.VendorName,
   }));
 
+  const slabOptions = sortedSlabData.map(opt => ({
+      value: opt.StartQty,
+      label: `${opt.StartQty}+ ${unit} : ₹${formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
+    }
+  ))
+
   return (
     
-    <div className="  text-black">    
-      <div className="fixed left-[2%] right-[2%] overflow-hidden">
+    <div className="  text-black overscroll-none">    
+      <div className="fixed left-[2%] right-[2%] ">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -515,45 +544,50 @@ const AdDetailsPage = () => {
                 />
               </div> */}
               {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
-                <div className="mb-4">
-                  <label className="font-bold">Vendor</label>
-                  <CreatableSelect
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2">Vendor</label>
+                  <Dropdown
                   //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                  className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}  
+                  className={`w-[80%] mt-1 ml-2 border border-1 bg-gradient-to-br from-gray-100 to-white border-gray-400 rounded-lg shadow-md shadow-gray-400  text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
                   //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={selectedVendor.value}
+                    value={selectedVendor}
                     onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
                     // onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
                     options={vendorOptions}
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Quantity Slab wise rates</label>
-                  <select
-                    className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold mb-1 ml-2">Quantity Slab wise rates</label>
+                  <Dropdown
+                   className={`w-[80%] ml-2 mt-1 bg-gradient-to-br from-gray-100 to-white border border-1 border-gray-400 rounded-lg shadow-md shadow-gray-400 text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
+                    //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
                     value={qtySlab}
                     onChange={(e) => {
-                      setQtySlab(e.target.value);
+                      setQtySlab({
+                        value: e.target.value,
+                        label: e.target.value
+                      });
                       // {changing && setQty(e.target.value);}
                       dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100))}))
                       // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
                     }}
-                  >
-                    {sortedSlabData.map((opt, index) => (
+                    options={slabOptions}
+                  />
+                    {/* {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
                         {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per {campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}
                       </option>
-                    ))}
-                  </select>
+                    ))} */}
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Quantity</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold mb-1 ml-2">Quantity</label>
                   <div className="flex w-full">
                     <input
-                      className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                      //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
-                      defaultValue={qtySlab}
+                      min={qtySlab}
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
