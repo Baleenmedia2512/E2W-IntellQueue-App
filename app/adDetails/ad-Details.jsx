@@ -11,7 +11,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
@@ -98,7 +98,8 @@ const AdDetailsPage = () => {
       setSelectedDayRange(dayRange[1]);
     }
     if(!rateId){
-      dispatch(setQuotesData({currentPage: "adMedium"}));
+      //dispatch(setQuotesData({currentPage: "adMedium"}));
+      dispatch(resetQuotesData())
     }
     dispatch(setQuotesData({
       selectedVendor: {
@@ -264,7 +265,8 @@ const AdDetailsPage = () => {
       Cookies.set('isAdDetails', true);
       dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
-      dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
+      dispatch(updateCurrentPage("checkout"))
+      //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
     }
   }
 
@@ -399,8 +401,8 @@ const AdDetailsPage = () => {
   const responsiveOptions = [
     {
         breakpoint: '1024px',
-        numVisible: 1,
-        numScroll: 1
+        numVisible: 2,
+        numScroll: 2
     },
     {
         breakpoint: '768px',

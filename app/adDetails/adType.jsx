@@ -60,6 +60,7 @@ const AdTypePage = () => {
     };
   
     fetchData();
+    dispatch(setQuotesData({selectedAdType: ""}));
   }, []);
   
   //filter using adMedium - also sorting and removing duplicates

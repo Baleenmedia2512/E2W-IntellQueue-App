@@ -90,6 +90,7 @@ const EditionPage = () => {
     };
   
     fetchData();
+    dispatch(setQuotesData({selectedEdition: "", rateId: 0}));
   }, []);
 
   const greater = ">>"
@@ -150,7 +151,7 @@ const EditionPage = () => {
       {/* <br/>
       <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
             <br/> */}
-      <h1 className='text-2xl font-bold text-center  mb-4'>Select Edition</h1>
+      <h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Edition</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
         <input

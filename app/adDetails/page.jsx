@@ -31,7 +31,7 @@ export const AdDetails = () => {
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
-  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
+  //const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
 
   useEffect(() => {
       if (!username) {
@@ -89,7 +89,7 @@ export const AdDetails = () => {
             <div className='flex flex-row items-center'>
               <h2 className='font-semibold mb-1 text-gray-800 text-[15px] mx-2'>{adMedium}
               {adType !== "" && greater} {adType}
-              {adCategory !== "" && greater} {adCategory} {edition !== "" &&greater} {edition} {position !== "" && greater} {position}
+              {adCategory !== "" && greater} {adCategory} {edition !==  "" && greater} {edition} {position !== "" && greater} {position}
               {rateId !== 0 && greater} {rateId !== 0 && rateId}</h2>
             </div>
           </div>

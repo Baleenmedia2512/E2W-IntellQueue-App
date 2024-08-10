@@ -124,7 +124,7 @@ export const AdMediumPage = () => {
     }
 
     FetchValidRates()
-    
+    dispatch(setQuotesData({selectedAdMedium: ""}));
     //dispatch(setQuotesData({currentPage: "adMedium"}))
   }, []);
 

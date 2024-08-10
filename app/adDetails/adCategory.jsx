@@ -55,7 +55,7 @@ const AdCategoryPage = () => {
     };
   
     fetchData();
-    
+    dispatch(setQuotesData({selectedAdCategory: ""}));
   }, []);
   
   //filter using adMedium - also sorting and removing duplicates
