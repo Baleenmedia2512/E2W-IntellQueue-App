@@ -1299,9 +1299,24 @@ return (
       />
     </div>
   </div>
-
+  
         </div>
-        
+        { (discountAmount !== 0) && (<div >
+                   <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
+                    <input 
+                        type='text' 
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
+                        placeholder='Remarks'    
+                        value={remarks}
+                        onChange={e => {setRemarks(e.target.value);
+                          if (errors.orderNumber) {
+                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                          }
+                        }}
+                    />
+                     
+                    </div>)
+}
         {/* Short Summary */}
         {/* <div className="bg-gradient-to-r from-green-300 via-green-300 to-green-500 p-4 rounded-md shadow-lg mt-6">
           <h3 className="font-bold text-black mb-2">Short Summary</h3>
@@ -1315,6 +1330,7 @@ return (
         
         {/* Rate Card Name */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
@@ -1482,22 +1498,7 @@ return (
                         {errors.qty && <span className="text-red-500 text-sm">{errors.qty}</span>}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
-        <div >
-                   <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
-                    <input 
-                        type='text' 
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
-                        placeholder='Remarks'    
-                        value={remarks}
-                        onChange={e => {setRemarks(e.target.value);
-                          if (errors.orderNumber) {
-                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-                          }
-                        }}
-                    />
-                     
-                    </div>
-                    
+       
                     <div name="OrderReleaseDate">
                     {/* <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
                     <input 
