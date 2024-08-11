@@ -962,7 +962,7 @@ const handleDateChange = (range) => {
   <DialogTitle id="alert-dialog-title">{"DO YOU WANT TO EDIT?"}</DialogTitle>
   <DialogContent>
     <DialogContentText id="alert-dialog-description">
-    You have selected the {selectedColumn} field with value "{selectedRow && selectedRow[selectedColumn]}". Do you want to edit this field?
+    You have selected the {selectedColumn} field with value &quot;{selectedRow && selectedRow[selectedColumn]}&quot;. Do you want to edit this field?
     </DialogContentText>
   </DialogContent>
   <DialogActions>
