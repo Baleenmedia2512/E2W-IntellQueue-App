@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 //import { AdMediumPage } from './page';
@@ -9,9 +8,7 @@ import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
-import IconButton from '@mui/material/IconButton';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 
 const AdCategoryPage = () => {
   const username = useAppSelector(state => state.authSlice.userName);
@@ -20,7 +17,7 @@ const AdCategoryPage = () => {
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
@@ -58,6 +55,7 @@ const AdCategoryPage = () => {
     };
   
     fetchData();
+    dispatch(setQuotesData({selectedAdCategory: ""}));
   }, []);
   
   //filter using adMedium - also sorting and removing duplicates
@@ -75,32 +73,31 @@ const AdCategoryPage = () => {
   );
 
   //to move to Ad Medium page
-  const moveToPreviousPage = () => {
-      //To move to adType from adCategory
-      dispatch(setQuotesData({selectedAdCategory: "", currentPage: "adType"}));
-    }
+  // const moveToPreviousPage = () => {
+  //     //To move to adType from adCategory
+  //     dispatch(setQuotesData({selectedAdCategory: "", currentPage: previousPage === "adCategory" ? "adType" : previousPage}));
+  //   }
 
 const greater = '>>'
   return (
-    <div>
+    <div className=''>
       <div className='text-black'>
-        <div className="flex flex-row justify-between mx-[2%] mt-4">
-          <>
+        {/* <div className="flex flex-row justify-between mx-[2%] bg-gray-100">
             
               <button 
-               className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
+               className="mr-8 hover:scale-110 text-blue-500 mt-4 hover:animate-pulse font-semibold border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1  ml-2 rounded-lg "
               onClick={() => {moveToPreviousPage()}}
               > 
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md'/> Back 
               </button>
-              <h1 className='font-semibold mt-2'> 
-              {adMedium} {greater} {adType}
+              <h1 className='font-semibold mt-6'> 
+              {adMedium} {adType === "" ? greater : ""} {adType}
             </h1>
-            <IconButton aria-label="cart" className='rounded-none text-center shadow-md' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+            <button aria-label="cart" className='rounded-full p-2 mt-4 text-center mr-2 shadow-sm border border-blue-500 shadow-blue-500' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adCategory"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </IconButton>
+              </button> */}
             {/* <button
               className=" px-2 py-1 rounded text-center"
               onClick={() => {
@@ -122,26 +119,27 @@ const greater = '>>'
               />
               </svg>
             </button> */}
-          </>
-        </div>
+        {/* </div> */}
         {/* <div className="flex flex-row justify-center mx-[8%] mt-8">
         <h1 className='font-semibold'> 
               {adMedium} {greater} {adType}
             </h1>
             </div> */}
         {/* <h1 className='mx-[8%] mb-8 font-semibold'>Select any one</h1> */}
-        <br />
-        <h1 className='text-2xl font-bold text-center  mb-4'>Select Ad Category</h1>
+        {/* <br />
+      <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
+            <br/> */}
+        <h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Ad Category</h1>
         <div className='mx-[8%] relative'>
           <input
-            className="w-full border border-purple-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-purple-700 focus:ring focus:ring-purple-200"
+            className="w-full border border-gray-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-200"
             type="text"
             value={searchInput}
             onChange={handleSearchInputChange}
             placeholder="Search"
           />
           <div className="absolute top-0 right-0 mt-2 mr-3">
-            <FontAwesomeIcon icon={faSearch} className="text-purple-500" />
+            <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
           </div>
         </div>
         <div>
@@ -150,19 +148,25 @@ const greater = '>>'
           {/* Check if page has single value. If single value move to adCategory*/}
           <ul className="flex flex-col items-center mx-[8%]">
               {searchedAdType.filter(item => item.typeOfAd === adType).map((option) => (
-                <label
+                <button
                   key={option.adType}
-                  className='flex flex-col items-center justify-center w-full h-16 border mb-4 cursor-pointer transition duration-300 rounded-lg border-gray-300 text-black bg-gradient-to-r from-blue-300  to-blue-500 hover:bg-gradient-to-r hover:from-purple-500 '
-                  onClick={() => {
-                    dispatch(setQuotesData({selectedAdCategory: option.adType, currentPage: "edition"}))
+                  className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+                  //className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    dispatch(setQuotesData({selectedAdCategory: option.adType}))
+                    dispatch(updateCurrentPage("edition"));
                   }}
                 >
-                  <div className="text-lg font-bold flex items-center justify-center">{option.adType}</div>
-                </label>
+                  <div className='flex flex-row items-center mx-4 justify-start'>
+                    {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
+                  <div className="text-lg ml-4 font-medium items-center capitalize">{option.adType}</div>
+                  </div>
+                </button>
               ))}
           </ul>
         </div>
-      
+      {/* </form> */}
       </div>
       </div>
   )

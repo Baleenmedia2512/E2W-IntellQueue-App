@@ -11,12 +11,15 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
 import { addItemsToCart } from '@/redux/features/cart-slice';
+import CreatableSelect from 'react-select/creatable';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -63,13 +66,15 @@ const AdDetailsPage = () => {
   const margin = useAppSelector(state => state.quoteSlice.marginAmount);
   const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
   const remarks = useAppSelector(state => state.quoteSlice.remarks);
+  const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
+  const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
   const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-
+  
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
@@ -93,8 +98,14 @@ const AdDetailsPage = () => {
       setSelectedDayRange(dayRange[1]);
     }
     if(!rateId){
-      dispatch(setQuotesData({currentPage: "adMedium"}));
+      //dispatch(setQuotesData({currentPage: "adMedium"}));
+      dispatch(resetQuotesData())
     }
+    dispatch(setQuotesData({
+      selectedVendor: {
+      label: selectedVendor,
+      value: selectedVendor
+    }}))
     // if (adMedium === '') {
     //   dispatch(setQuotesData({currentPage: 'adMedium'}));
     // } else if (adType === '') {
@@ -107,6 +118,7 @@ const AdDetailsPage = () => {
     
   },[])
 
+  
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
       right: -3,
@@ -115,6 +127,13 @@ const AdDetailsPage = () => {
       padding: '0 4px',
     },
   }));
+
+  useEffect(() => {
+    const changeMarginPercentage = () =>{
+      dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100))}))
+    }
+    changeMarginPercentage()
+  },[marginPercentage])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -128,7 +147,9 @@ const AdDetailsPage = () => {
         const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
         const firstSelectedSlab = sortedData[0];
         setQtySlab(firstSelectedSlab.StartQty);
-        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
+        setMarginPercentage(firstSelectedSlab.AgencyCommission)
+        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * firstSelectedSlab.AgencyCommission) / 100).toFixed(2)}))
+
         //setUnitPrice(firstSelectedSlab.UnitPrice);
         //setUnit(firstSelectedSlab.Unit)
         //setMargin(((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2))
@@ -145,8 +166,8 @@ const AdDetailsPage = () => {
         }
         const data = await response.json();
         const firstData = data[0];
-        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
-        console.log(data)
+        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true}))
+
       } catch (error) {
         console.error("Error while fetching rates: " + error)
       }
@@ -154,8 +175,10 @@ const AdDetailsPage = () => {
 
     fetchRate();
     fetchData();
+    fetchRateData();
   }, [rateId]);
 
+  useEffect(() => {fetchRateData();},[adMedium, rateId])
   // useEffect(() => {
   //   const fetchData = async () => {
   //     try {
@@ -175,22 +198,45 @@ const AdDetailsPage = () => {
   // }, [selectedVendor]);
 
   const handleQtySlabChange = () => {
-    const qtySlabNumber = parseInt(qtySlab)
+    const qtySlabNumber = parseInt(qtySlab); // Convert the value to a number
     // Find the corresponding slabData for the selected QtySlab
-    const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
-
-    { !changing && dispatch(setQuotesData({quantity: qtySlab})); }
-    { changing && setChanging(false) }
-    dispatch(setQuotesData({marginAmount: formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)}))
-    //setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
-    // Update UnitPrice based on the selected QtySlab
-    if (selectedSlab) {
-      const firstSelectedSlab = selectedSlab[0];
-      dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}));
-      // setUnitPrice(firstSelectedSlab.UnitPrice);
-      // setUnit(firstSelectedSlab.Unit)
+    const selectedSlab = sortedSlabData.find(item => item.StartQty === qtySlabNumber);
+  
+    if (!selectedSlab) {
+      console.error("No matching slab data found.");
+      return;
     }
+  
+    if (!changing) {
+      dispatch(setQuotesData({ quantity: qtySlab}));
+    } else {
+      setChanging(false);
+    }
+  
+    const marginAmount = formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100);
+    dispatch(setQuotesData({ marginAmount }));
+  
+    // Update UnitPrice based on the selected QtySlab
+    dispatch(setQuotesData({ ratePerUnit: selectedSlab.UnitPrice, unit: selectedSlab.Unit }));
   };
+
+  // const handleQtySlabChange = () => {
+  //   const qtySlabNumber = parseInt(qtySlab)
+  //   // Find the corresponding slabData for the selected QtySlab
+  //   const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
+
+  //   { !changing && dispatch(setQuotesData({quantity: qtySlab.value})); }
+  //   { changing && setChanging(false) }
+  //   dispatch(setQuotesData({marginAmount: formattedMargin((qtySlab.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)}))
+  //   //setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
+  //   // Update UnitPrice based on the selected QtySlab
+  //   if (selectedSlab) {
+  //     const firstSelectedSlab = selectedSlab[0];
+  //     dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}));
+  //     // setUnitPrice(firstSelectedSlab.UnitPrice);
+  //     // setUnit(firstSelectedSlab.Unit)
+  //   }
+  // };
 
   useEffect(() => {
     if (qtySlab) {
@@ -198,36 +244,38 @@ const AdDetailsPage = () => {
     }
   }, [qtySlab])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!username) {
-          routers.push('/login');
-        } else {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
-          const data = await response.json();
+  const fetchRateData = async () => {
+    try {
+      if (!username) {
+        routers.push('/login');
+      } else {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
+        const data = await response.json();
 
-          //filter rates according to adMedium, adType and adCategory
-          const filterdata = data.filter(item => (item.adCategory.includes(":") ? (edition + " : " + position) : edition) && item.adType === adCategory && item.rateName === adMedium)
-            .filter((value, index, self) =>
-              self.findIndex(obj => obj.VendorName === value.VendorName) === index
-            )
-            .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
-          setDatas(filterdata);
-          //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-          dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2)}))
-        }
-      } catch (error) {
-        console.error(error);
+        //filter rates according to adMedium, adType and adCategory
+        const filterdata = data.filter(item => (item.rateId === parseInt(rateId)))
+          .filter((value, index, self) =>
+            self.findIndex(obj => obj.VendorName === value.VendorName) === index
+          )
+          .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
+        setDatas(filterdata);
+        //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
+        dispatch(setQuotesData({marginAmount: ((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2)}))
       }
-    };
-
-    fetchData();
-  }, [adMedium]);
-
+    } catch (error) {
+      console.error(error);
+    }
+  };
  
   const dispatch = useDispatch();
   const handleSubmit = () => {
+    const isDuplicate = cartItems.some(item => item.rateId === rateId);
+    if (isDuplicate) {
+      // Display an error message or handle the duplicate case
+      alert("This item is already in the cart.");
+      return;
+    }
+
     if (qty === '' || campaignDuration === '' || margin === '') {
       setSeverity('warning');
       setToastMessage('Please fill all the Client Details!');
@@ -245,9 +293,10 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
-      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}]))
+      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate}]))
       dispatch(setQuotesData({isDetails: true}))
-      dispatch(setQuotesData({currentPage: "checkout"}))
+      dispatch(updateCurrentPage("checkout"))
+      //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
     }
   }
 
@@ -299,76 +348,158 @@ const AdDetailsPage = () => {
     return totalAmount.toLocaleString('en-IN');
   };
   
+  // const items = [
+  //   content: {
+  //     {
+  //     label: 'Customer Price(incl. GST 18%)',
+  //     value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * 1.18))}`
+  //     },{      
+  //     label: 'Customer Price(excl. GST)',
+  //     value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}`
+  //     }
+  //   },
+  //   {
+  //     content: (
+  //       <div className="mb-4 border-gray-300 rounded-lg p-2 w-full mx-4 border text-black">
+  //         <p className="font-bold text-sm mb-1">
+  //           *Vendor Cost(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (1.18)))}
+  //         </p>
+  //         <p className="font-semibold text-sm mb-1">
+  //           *Vendor Cost(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
+  //         </p>
+  //         {/* <p className="text-sm text-gray-300">
+  //           ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
+  //         <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
+  //         <p className="font-semibold text-sm">
+  //           * GST Amount(net) : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (0.18))}
+  //         </p> */}
+  //       </div>
+  //     )
+  //   }
+  // ];
+
   const items = [
     {
-      content: (
-        <div class="mb-4 bg-blue-300 rounded-md p-4 text-black">
-          <p className="font-bold text-sm mb-1">
-            *Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}
-          </p>
-          <p className="font-semibold text-sm mb-1 ">
-            *Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}
-          </p>
-          {/* <p className="text-sm ">=
-            ₹{formattedRupees(qty * (unitPrice * (Number(marginPercentage) + 100) / 100) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees((unitPrice / (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) /100)}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
-          <p className="text-sm  mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
-          <p className="font-semibold text-sm">
-            * GST Amount : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (0.18))}
-          </p> */}
-        </div>
-      )
+      content: [
+        {
+          label: 'Customer Price (incl. GST 18%)',
+          value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * 1.18))}`
+        },
+        {
+          label: 'Customer Price (excl. GST)',
+          value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}`
+        }
+      ]
     },
     {
-      content: (
-        <div className="mb-4 bg-yellow-300 rounded-md p-4 text-black">
-          <p className="font-bold text-sm mb-1">
-            *Vendor Cost(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (1.18)))}
-          </p>
-          <p className="font-semibold text-sm mb-1">
-            *Vendor Cost(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
-          </p>
-          {/* <p className="text-sm text-gray-300">
-            ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
-          <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
-          <p className="font-semibold text-sm">
-            * GST Amount(net) : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (0.18))}
-          </p> */}
-        </div>
-      )
+      content: [
+        {
+          label: 'Vendor Cost (incl. GST 18%)',
+          value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount) * 1.18))}`
+        },
+        {
+          label: 'Vendor Cost (excl. GST)',
+          value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount))}`
+        }
+      ]
     }
-  ];
+  ];  
 
-  const customTemplate = (item) => {
-    return item.content; // Return the content of each item
+  const itemTemplate = (item) => {
+    return (
+      <div className="p-2 justify-center flex">
+        <div className="mb-4 border-gray-500 bg-gradient-to-br from-gray-100 to-white sm:w-full rounded-lg justify-center shadow-md shadow-gray-500 p-2 text-xl text-left mx-2 py-3 border text-black">
+          {item.content.map((entry, i) => (
+            <div key={i}  className='flex flex-row font-inter'>
+            <p 
+            className={`font-${i === 0 ? 'bold' : 'normal'} text-nowrap text-[16px] mb-2 text-gray-800`}
+            //className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 "
+            >
+              {entry.label}: 
+            </p>
+            <p 
+            className={`font-${i === 0 ? 'bold' : 'semibold'} text-[16px] mb-1`}
+            //className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 "
+            >&nbsp;&nbsp;&nbsp;{entry.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
-  const greater = ">>"
+  const responsiveOptions = [
+    {
+        breakpoint: '1024px',
+        numVisible: 2,
+        numScroll: 2
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 1,
+        numScroll: 1
+    },
+    {
+        breakpoint: '560px',
+        numVisible: 1,
+        numScroll: 1
+    }
+];
+
+  const vendorOptions = datas.map(option => ({
+    value: option.VendorName,
+    label: option.VendorName === '' && filteredData.length === 1 ? 'No Vendors' : option.VendorName,
+  }));
+
+  const slabOptions = sortedSlabData.map(opt => ({
+      value: opt.StartQty,
+      label: `${opt.StartQty}+ ${unit} : ₹${formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
+    }
+  ))
 
   return (
     
-    <div className=" mt-8 text-black">    
-      <div className="fixed left-[8%] right-[8%] overflow-hidden no-pull-to-refresh">
+    <div className="  text-black overscroll-none">    
+      <div className="fixed left-[2%] right-[2%] overscroll-none">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
-            <div className="mb-8 flex items-center justify-between">
+            {/* <div className="mb-8 flex items-center justify-between">
               <button
-                 className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
+                 className="mr-4 hover:scale-110 text-blue-500 text-nowrap hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
                 onClick={() => {
-                  position === "" ?
-                  dispatch(setQuotesData({selectedEdition: "", currentPage: "edition"})) :
-                  dispatch(setQuotesData({selectedPosition: "", currentPage: "remarks"}))
+                  dispatch(setQuotesData({selectedEdition: "", currentPage: previousPage === "adDetails" ? position !== "" ? "remarks" : "edition" : previousPage}))
                 }}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
               </button>
-
+                <span className='flex flex-row'>
               <h2 className="font-semibold text-wrap mb-1">
-                {adMedium} {greater} {adType} {greater} {adCategory} {greater} {edition} {position === "" ? "" : greater} {position === "" ? "" : position} {greater} {rateId}
+                {adMedium} 
               </h2>
-              <IconButton aria-label="cart" className='rounded-none text-center shadow-md right-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout"}))}> 
+              {adType !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""}
+              <h2 className='font-semibold text-wrap mb-1'>
+                 {adType} 
+              </h2>
+              {adCategory !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""} 
+              <h2 className='font-semibold text-wrap mb-1'>
+              {adCategory}
+              </h2>
+               {edition !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""}
+               <h2 className='font-semibold text-wrap mb-1'>
+              {edition}
+              </h2>  
+              {position === "" ? "" : <>&nbsp;{greater}&nbsp;</>}
+              <h2 className='font-semibold text-wrap mb-1'>
+              {position}
+              </h2> &nbsp;{greater}&nbsp;
+              <h2 className='font-semibold text-wrap mb-1'>
+              {rateId}
+              </h2>
+              </span>
+              <IconButton aria-label="cart" className='rounded-none ml-4 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </IconButton>
+              </IconButton> */}
               {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -391,7 +522,7 @@ const AdDetailsPage = () => {
             />
             </svg>
           </button> */}
-            </div>
+            {/* </div> */}
             
               <div>
             {/* <div class="relative flex flex-col w-fit h-fit  overflow-hidden font-sans text-base isolation-isolate before:absolute before:inset-[1px] before:rounded-lg before:bg-white after:absolute after:w-1 after:inset-y-[0.65rem] after:left-[0.5rem] after:rounded after:bg-gradient-to-b from-[#2eadff] via-[#3d83ff] to-[#7e61ff] after:transition-transform after:duration-300 hover:after:translate-x-[0.15rem]">
@@ -399,8 +530,13 @@ const AdDetailsPage = () => {
     <div class="notititle text-blue-500 px-5 pt-3 pb-1 pr-1 text-lg font-medium transition-transform duration-300 ease-out z-10">Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}</div>
     <div class="notibody text-blue-500 px-5 text-lg font-semibold transition-transform duration-300 ease-out z-10">Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}</div>
 </div> */}
-
-            <Carousel value={items} numVisible={1} numScroll={1} itemTemplate={customTemplate} />
+            <Carousel value={items}  
+                itemTemplate={itemTemplate} 
+                responsiveOptions={responsiveOptions} 
+                numVisible={2} 
+                numScroll={1}
+                circular 
+                showIndicators={false} />
 
               <div className="mb-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
               {/* <div name="QuoteVendorSelect">
@@ -415,51 +551,50 @@ const AdDetailsPage = () => {
                 />
               </div> */}
               {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
-                <div className="mb-4">
-                  <label className="font-bold">Vendor</label>
-                  <select
-                    className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2">Vendor</label>
+                  <Dropdown
+                  //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                  className={`w-[80%] mt-1 ml-2 border border-1 bg-gradient-to-br from-gray-100 to-white border-gray-400 rounded-lg shadow-md shadow-gray-400  text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
+                  //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
                     value={selectedVendor}
-                    onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
-                  >
-                    {datas.map((option, index) => (
-                      <option className="rounded-lg" key={index} value={option.VendorName}>
-                        {option.VendorName === '' && filteredData.length === 1
-                          ? 'No Vendors'
-                          :
-                          // `₹${formattedRupees(qty * unitPrice * (campaignDuration / minimumCampaignDuration) + margin)} - ${(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : ''} days - 
-                          `${option.VendorName}`}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
+                    // onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
+                    options={vendorOptions}
+                  />
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Quantity Slab wise rates</label>
-                  <select
-                    className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold mb-1 ml-2">Quantity Slab wise rates</label>
+                  <Dropdown
+                   className={`w-[80%] ml-2 mt-1 bg-gradient-to-br from-gray-100 to-white border border-1 border-gray-400 rounded-lg shadow-md shadow-gray-400 text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
+                    //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
                     value={qtySlab}
                     onChange={(e) => {
-                      setQtySlab(e.target.value);
+                      setQtySlab({
+                        value: e.target.value,
+                        label: e.target.value
+                      });
                       // {changing && setQty(e.target.value);}
                       dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100))}))
                       // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
                     }}
-                  >
-                    {sortedSlabData.map((opt, index) => (
+                    options={slabOptions}
+                  />
+                    {/* {sortedSlabData.map((opt, index) => (
                       <option className="rounded-lg" key={index} value={opt.StartQty}>
                         {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per {campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}
                       </option>
-                    ))}
-                  </select>
+                    ))} */}
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Quantity</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold mb-1 ml-2">Quantity</label>
                   <div className="flex w-full">
                     <input
-                      className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                      className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                      //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
-                      defaultValue={qtySlab}
+                      min={qtySlab}
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
@@ -480,7 +615,8 @@ const AdDetailsPage = () => {
                     <label className="font-bold">Campaign Duration</label>
                     <div className="flex w-full">
                       <input
-                        className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                        className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                        //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                         type="number"
                         placeholder="Ex: 1000"
                         // defaultValue={campaignDuration}
@@ -498,20 +634,22 @@ const AdDetailsPage = () => {
                     </div>
                     <p className="text-red-700">{campaignDuration < minimumCampaignDuration ? 'Minimum Duration should be ' + minimumCampaignDuration : ''}</p>
                   </div>)}
-                <div className="mb-4">
-                  <label className="font-bold">Margin Amount(₹)</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2 mb-1">Margin Amount(₹)</label>
                   <input
-                    className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    //className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
                     placeholder="Ex: 4000"
                     value={margin}
                     onChange={handleMarginChange}
                     onFocus={(e) => e.target.select()}
                   />
-                  <div className='flex items-center'>
-                    <p className="mr-5">Margin Percentage :</p><br />
+                  <div className='flex items-center mt-4'>
+                    <p className="font-bold ml-2">Margin Percentage :</p><br />
                     <input
-                      className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className={`w-20 ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                      //className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
                       defaultValue="15"
@@ -519,14 +657,15 @@ const AdDetailsPage = () => {
                       onChange={handleMarginPercentageChange}
                       onFocus={(e) => e.target.select()}
                     />
-                    <p className="mt-1 text-sm">%</p><br />
+                    <p className="mt-1 font-bold ml-2">%</p><br />
                   </div>
 
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Extra Discount(₹)</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
                   <input
-                    className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    //className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
                     placeholder="Ex: 1000"
                     value={extraDiscount}
@@ -534,11 +673,12 @@ const AdDetailsPage = () => {
                     onFocus={(e) => e.target.select()}
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="font-bold">Remarks</label>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2 mb-1">Remarks</label>
                   <InputTextarea
                     autoResize
-                    className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    //className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     placeholder="Remarks"
                     value={remarks}
                     onChange={handleRemarks}
@@ -572,7 +712,7 @@ const AdDetailsPage = () => {
                   <button
                     className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay.CampaignDurationUnit, leadDay: leadDay.LeadDays, minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                   >
                     Add to Cart
                   </button>
@@ -586,11 +726,12 @@ const AdDetailsPage = () => {
                   </button>
                 </div>
                 </span>
-                <div className="flex flex-col justify-center items-center mt-4">
-                  <p className="font-semibold text-red-500">
-                    *Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
+                <div className="flex flex-col justify-center bg-gradient-to-br from-gray-100 to-white items-center mx-4 px-3 py-1 mt-2 rounded-lg shadow-md shadow-gray-400 border border-gray-400">
+                <p className="font-medium text-lg text-[#333333] mt-2">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
+                  <p className="font-medium text-[#1A1A1A] text-lg mt-2  text-center">
+                    Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
-                  <p className="font-bold">Quote Valid till {formattedDate}</p>
+                  
                 </div>
               </div>
               </div>

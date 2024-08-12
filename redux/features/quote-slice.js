@@ -6,7 +6,7 @@ const initialState = {
   selectedAdCategory: "",
   selectedEdition: "",
   selectedPosition: "",
-  selectedVendor: "",
+  selectedVendor: {label: "", value: ""},
   selectedSlab: "",
   quantity: 1,
   ratePerUnit: 0,
@@ -19,9 +19,11 @@ const initialState = {
   marginAmount: 0,
   extraDiscount: 0,
   remarks: "",
-  currentPage: "",
+  currentPage: "adMedium",
   validRates: [],
-  isDetails: false
+  isDetails: false,
+  previousPage: '',
+  history: []
 };
 
 export const quoteSlice = createSlice({
@@ -39,9 +41,26 @@ export const quoteSlice = createSlice({
     },
     removeValidRates: (state, action) => {
       state.validRates = []
-    }
-  }
+    },
+    updateCurrentPage: (state, action) => {
+      state.history.push(state.currentPage); // Add current page to history before updating
+      state.currentPage = action.payload; // Update to the new page
+    },
+    goBack: (state) => {
+      if (state.history.length > 0) {
+        const previousPage = state.history.pop(); // Get the last entry in history
+        state.currentPage = previousPage; // Update the current page
+        state.previousPage = state.history.length > 0 ? state.history[state.history.length - 1] : ""
+      } else if(state.history.length === 0)
+      {
+        state.currentPage = "adMedium";
+      }else {
+        state = initialState; // Default to adMedium if no history is available
+      }
+      // Do not return anything here. Just modify the state directly.
+    },
+}
 });
 
-export const { setQuotesData, resetQuotesData, addValidRates, removeValidRates } = quoteSlice.actions;
+export const { setQuotesData, resetQuotesData, addValidRates, removeValidRates, goBack, updateCurrentPage } = quoteSlice.actions;
 export const quoteReducer = quoteSlice.reducer;
