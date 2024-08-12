@@ -26,6 +26,7 @@ export default function GroupedRowsDemo() {
     const companyName = "Baleen Test";
     // const companyName = useAppSelector(state => state.authSlice.companyName);
     const [consultants, setConsultants] = useState([]);
+    const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
   const currentEndDate = endOfMonth(new Date());
@@ -38,6 +39,7 @@ export default function GroupedRowsDemo() {
 
       const [filters, setFilters] = useState({
         global: { value: null, matchMode: 'contains' },
+        id:{ value: null, matchMode: 'contains' },
         name: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
@@ -507,7 +509,6 @@ const handleExport = () => {
     const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
 
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
-
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
         Consultant: extractNameFromId(row.id), // Default to an empty string if name is null
@@ -583,8 +584,6 @@ const handleSelectionChange = (e) => {
 };
 
 
-
-
 const filterHeaderTemplate = (column, filterField) => {
     return (
         <div>
@@ -604,8 +603,6 @@ const filterHeaderTemplate = (column, filterField) => {
         </div>
     );
 };
-
-
 
 
     return (
@@ -689,7 +686,8 @@ const filterHeaderTemplate = (column, filterField) => {
 
     <div className="overflow-x-auto border rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                         <DataTable
-                            value={groupedData}
+                            // value={groupedData}
+                            value={filteredConsultants && filteredConsultants.length > 0 ? filteredConsultants : groupedData}
                             rowClassName={customRowClassName}
                             selection={selectedRows}
                             onSelectionChange={handleSelectionChange}
@@ -706,7 +704,7 @@ const filterHeaderTemplate = (column, filterField) => {
                         <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'name')}></Column>
+                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'id')}></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
                             ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
