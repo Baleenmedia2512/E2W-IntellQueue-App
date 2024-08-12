@@ -11,7 +11,8 @@ import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useAppSelector } from '@/redux/store';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
+import BreadCrumbs from '../components/BreadCrumbs';
+import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 
 const RemarksPage = () => {
   const dispatch = useDispatch();
@@ -81,13 +82,14 @@ const RemarksPage = () => {
     };
   
     fetchData();
+    dispatch(setQuotesData({selectedPosition: "", rateId: 0}));
   }, []);
 
   const greater = ">>"
   return (
-    <div className='bg-gray-100'>
-        <div className='text-black bg-gray-100'>
-      <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
+    <div className=''>
+        <div className='text-black '>
+      {/* <div className="flex flex-row justify-between mx-[8%] bg-gray-100">
         <>
         <button  className="mr-8  mt-8 hover:scale-110 font-semibold text-blue-500 hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg "
     onClick={() => {
@@ -95,14 +97,15 @@ const RemarksPage = () => {
   }
     }> <FontAwesomeIcon icon={faArrowLeft} onSelect={() => {setQuotesData({selectedAdCategory: "", selectedAdType: ""}); setShowAdTypePage(true)}}/> Back</button>
       
-    <h1 className='font-semibold mt-10'>
+      {/* <BreadCrumbs /> */}
+    {/* <h1 className='font-semibold mt-10'>
     {adMedium} {greater} { selectedAdType} {greater} {adCategory} {greater} {edition}</h1>
 
     <button aria-label="cart" className='rounded-full p-2 mt-8 text-center shadow-sm shadow-blue-500 border border-blue-500 left-[2%]' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "remarks"}))}> 
                 <StyledBadge badgeContent={cartItems.length} color="primary">
                   <ShoppingCartIcon className='text-black' />
                 </StyledBadge>
-              </button>
+              </button>  */}
     {/* <button
             className=" px-2 py-1 rounded text-center"
             onClick={() => {
@@ -123,13 +126,13 @@ const RemarksPage = () => {
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button> */}</>
-      </div>
+          </button> */}
+      {/* </></div> */}
       {/* <h1 className='mx-[8%] font-semibold mb-8'>Select any one</h1> */}
-      <br />
+      {/* <br />
       <form className='bg-white rounded-t-2xl shadow-2xl h-[100vh] overflow-y-auto max-h-[100vh] shadow-black'>
-            <br/>
-<h1 className='text-2xl font-bold text-center  mb-4'>Select Package</h1>
+            <br/> */}
+<h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Package</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
           <input
@@ -149,23 +152,26 @@ const RemarksPage = () => {
               {searchedPosition.filter(item => item.Edition === edition).map((options) => (
           <button
             key={options.adCategory}
-            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+            className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
+            //className={`slide-in relative text-black items-center flex flex-row h-16 justify-start w-full bg-gradient-to-r from-gray-100 to-white border-l-4 border-l-blue-500 border-blue-500 shadow-md mt-2 border cursor-pointer transition duration-300 rounded-md hover:bg-gray-500 hover:opacity-15`}
             onClick={() => {
-              //options contain Edition:Position values
+              //options contain Edition:Position value
+              const position = options.adCategory.split(':')[1];
               //the edition position is saved in adCategory Cookie\
-              dispatch(setQuotesData({selectedPosition: options.adCategory, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: options.VendorName, currentPage: "adDetails", previousPage: "remarks"}))
+              dispatch(setQuotesData({selectedPosition: position, ratePerUnit: options.ratePerUnit, minimumUnit: options.minimumUnit, unit: options.Unit, rateId: options.rateId, validityDate: options.ValidityDate, selectedVendor: {value: options.VendorName, label: options.VendorName}}));
+              dispatch(updateCurrentPage("adDetails"));
               Cookies.remove('isAdDetails');
             }}
           >
             <div className='flex flex-row items-center mx-4 justify-start'>
-                    <div className='text-blue-500 text-xl font-bold'>•</div>
-            <div className="text-sm font-bold items-center ml-4 justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.Position === "" ? 'Skip' : options.Position}</div>
+                    {/* <div className='text-blue-500 text-xl font-bold'>•</div> */}
+            <div className="text-lg font-medium items-center ml-4 justify-center text-wrap flex-wrap whitespace-pre-wrap">{options.Position === "" ? 'Skip' : options.Position}</div>
             </div>
 </button>))
               }
             </ul> 
       </div>
-      </form> 
+      {/* </form>  */}
       </div>
       </div>
   )

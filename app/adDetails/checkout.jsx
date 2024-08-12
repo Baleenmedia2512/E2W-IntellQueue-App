@@ -29,12 +29,10 @@ const CheckoutPage = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
-  const clientNameRef = useRef(null);
-  const clientContactRef = useRef(null);
   const [datas, setDatas] = useState([]);
   const companyName = 'Baleen Test';
   // const companyName = useAppSelector(state => state.authSlice.companyName);
-  const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+  
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
@@ -47,9 +45,7 @@ const CheckoutPage = () => {
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const rateId = useAppSelector(state => state.quoteSlice.rateId);
-  const [isClientNameFocus, setIsClientNameFocus] = useState(false);
-  const [isClientContact, setIsClientContact] = useState(true);
-  const [isClientName, setIsClientName] = useState(true)
+
   // const qty = useAppSelector(state => state.quoteSlice.quantity);
   // const unit = useAppSelector(state => state.quoteSlice.unit);
   // const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
@@ -74,143 +70,6 @@ const CheckoutPage = () => {
   // const formattedDate = `${day}-${month}-${year}`;
 
   const routers = useRouter();
-
-  const pdfGeneration = async (item) => {
-    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
-    let AmountInclGST = Math.round(AmountExclGST * 1.18);
-    
-    return {
-      adMedium: item.adMedium,
-      adCategory: item.adCategory,
-      edition: item.edition,
-      position: item.position,
-      qty: item.qty,
-      campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
-      ratePerQty: formattedRupees(AmountExclGST / item.qty),
-      amountExclGst: formattedRupees(AmountExclGST),
-      gst: '18%',
-      amountInclGst: formattedRupees(AmountInclGST),
-      leadDays: item.leadDay,
-      durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
-      qtyUnit: item.unit ? item.unit : 'Unit',
-      adType: item.adType,
-      formattedDate: item.formattedDate,
-    };
-  };
-  
-  let isGeneratingPdf = false;
-
-  const handlePdfGeneration = async () => {
-    if (isGeneratingPdf) {
-      const promises = cartItems.map(item => addQuoteToDB(item));
-      await Promise.all(promises);
-      return; // Prevent further execution if PDF is already being generated
-    }
-
-    isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
-    const quoteNumber = await fetchNextQuoteNumber(companyName);
-    let grandTotalAmount = calculateGrandTotal();
-    grandTotalAmount = grandTotalAmount.replace('₹', '');
-    if(clientName !== "" && clientContact !== ""){
-      const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-      await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber);
-      const promises = cartItems.map(item => addQuoteToDB(item));
-      await Promise.all(promises);
-      setTimeout(() => {
-      dispatch(resetCartItem());
-      dispatch(resetQuotesData());
-      },3000)
-    } else{
-      if(clientName === ""){
-        setIsClientName(false)
-      }else if(clientContact === ""){
-        setIsClientContact(false)
-      }
-    }
-  };
-
-  const addQuoteToDB = async(item) => {
-    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
-    let AmountInclGST = Math.round(AmountExclGST * 1.18);
-    try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${'18%'}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
-      const data = await response.text();
-      if (!response.ok) {
-        alert(`The following error occurred while inserting data: ${data}`);
-      }
-    } catch (error) {
-      console.error('Error inserting Quote:', error);
-    }
-  }
-  
-  useEffect(()=>{
-    if(clientName === ""){
-      clientNameRef.current?.focus()
-    }else if(clientContact === ""){
-      clientContactRef.current?.focus()
-    }
-  },[isClientContact, isClientName])
-
-  const handleSearchTermChange = (event) => {
-    const newName = event.target.value
-    // setIsNewClient(true);
-    
-    if (newName !== '') {
-      try{
-        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
-          .then((response) => response.json())
-          .then((data) => setClientNameSuggestions(data));
-        
-      } catch(error){
-        console.error("Error Suggesting Client Names: " + error)
-      }
-    } else {
-      setClientNameSuggestions([]);
-    }
-      dispatch(setClientData({clientName: newName}));
-      setIsClientName(true)
-    //   if (errors.clientName) {
-    //     setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
-    // }
-  };
-
-  const fetchClientDetails = (clientID) => {
-    axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
-      .then((response) => {
-        const data = response.data;
-        if (data && data.length > 0) {
-          
-          const clientDetails = data[0];
-          dispatch(setClientData({ clientID: clientDetails.id || "" }));
-          dispatch(setClientData({ clientName: clientDetails.name || "" }));
-          //MP-69-New Record are not fetching in GS
-          // Convert DOB to dd-M-yy for display
-          dispatch(setClientData({ clientEmail: clientDetails.email }));
-          dispatch(setClientData({ clientSource: clientDetails.source || "" }));
-          dispatch(setClientData({clientTitle: clientDetails.gender}));   
-        } else {
-          console.warn("No client details found for the given name and contact number.");
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching client details:", error);
-      });
-  };
-
-  const handleClientNameSelection = (names) => {
-    const input = names.target.value;
-    const splitInput = input.split('-');
-    const rest = splitInput[1];
-    const ID = splitInput[0].trim();
-    const name = rest.substring(0, rest.indexOf('(')).trim();
-    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
-    
-    dispatch(setClientData({clientName: name}));
-    dispatch(setClientData({clientContact: number}));
-    fetchClientDetails(ID);
-    setClientNameSuggestions([]);
-  };
 
   const   handleRemoveRateId = (rateId) => {
     dispatch(removeItem(rateId));
@@ -260,12 +119,13 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className=" mt-8 text-black w-screen">
+    <div className=" mt-2 text-black w-screen">
 
         <div className='mx-[8%]'>
         {cartItems.length >= 1 ? (
           <div>
-          <div className="flex flex-row justify-between mt-8">
+            <h1 className='text-2xl mt-6 font-bold text-center mb-4 text-blue-500'>Cart</h1>
+          {/* <div className="flex flex-row justify-between mt-8">
           
           <div className="mb-8 flex items-center">
 
@@ -281,8 +141,8 @@ const CheckoutPage = () => {
               <> <h1 className='text-2xl font-bold text-center mb-4'>Cart</h1>
               <button className='border px-2 py-1 h-fit bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
               </>
-          </div>
-          <h1 className="text-md md:text-md lg:text-lg font-bold text-blue-500 mb-4">Verify before sending Quote</h1>
+          </div> */}
+          <h1 className="text-lg font-medium text-blue-500 mb-4">Verify before sending Quote</h1>
           <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
             
             <div>
@@ -327,70 +187,20 @@ const CheckoutPage = () => {
       </table>
       <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1>
       </div>
-      <div className='flex justify-center mb-4'>
+      <div className='flex justify-center mt-4'>
         <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adMedium', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
       </div>
-              <h1 className='mb-4 font-bold text-center'>Client Details</h1>
-
-              <table className='mb-6'>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Name</td>
-                  <td>:</td><td> <input placeholder="Ex: Tony" ref={clientNameRef} onFocus={() => setIsClientNameFocus(true)} onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} className=' py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value = {clientName} onChange={handleSearchTermChange} ></input>
-                  {!isClientName && <label className='text-red-500'>Please enter client name</label>}
-                  {clientNameSuggestions.length > 0 && isClientNameFocus && (
-                    <ul className="absolute z-10 mt-1 w-auto bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
-                    {clientNameSuggestions.map((name, index) => (
-                      <li key={index}>
-                        <button
-                          type="button"
-                          className=" z-10  text-left px-2 py-1 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none ml-2"
-                          onClick={handleClientNameSelection}
-                          value={name}
-                        >
-                            {name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  </td>
-                </tr>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Number</td>
-                  <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" ref={clientContactRef} maxLength={10} className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => {dispatch(setClientData({clientContact: e.target.value})); setIsClientContact(true)}}></input>
-                  {!isClientContact && clientContact.length === 0 && <label className='text-red-500'>Please enter client contact</label>}
-                  </td>
-                </tr>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>E-Mail</td>
-                  <td>:</td><td> <input type="email" placeholder="Ex: client@email.com" className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientEmail} onChange={(e) => dispatch(setClientData({clientEmail: e.target.value}))}></input></td>
-                </tr>
-                <tr>
-                  <td className='py-1 text-blue-600 font-semibold'>Source</td>
-                  <td>:</td><td> <select className='py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value={clientSource} onChange={(e) => dispatch(setClientData({clientSource: e.target.value}))}>{bmsources.map((item, index) => (
-                    <option key={index}>{item}</option>
-                  ))}</select></td>
-                </tr>
-              </table>
+              
             </div>
 
 </div>
-          <div className='flex flex-col justify-center items-center'>
-
-            <button
-              className="bg-blue-500 text-white px-4 py-2 mb-4 rounded-xl transition-all duration-300 ease-in-out hover:bg-blue-200 hover:text-black"
-              onClick={handlePdfGeneration}
-            >
-              Download Quote
-            </button>
-            
-          </div>
+          
           </div>
         ):(
           <div>
-          <div className="flex flex-row justify-between mt-8">
+          {/* <div className="flex flex-row justify-between mt-8"> */}
           
-          <div className="mb-8 flex items-center">
+          {/* <div className="mb-8 flex items-center">
 
               <button
                  className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
@@ -404,7 +214,8 @@ const CheckoutPage = () => {
               <> <h1 className='text-2xl font-bold text-center mb-4'>Cart</h1>
               <button disabled className='border px-2 py-2 h-fit bg-gray-500 text-white rounded-xl cursor-not-allowed'>Clear All</button>
               </>
-          </div>
+          </div> */}
+          <h1 className='text-2xl mt-2 font-bold text-center mb-4 text-blue-500'>Cart</h1>
           <div className='text-center justify-center'>
             <label className='font-800 text-xl'> Oops! No Items in Cart</label>
             <span className='flex flex-row justify-center mt-4'>

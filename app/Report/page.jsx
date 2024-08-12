@@ -430,6 +430,7 @@ const [touchStart, setTouchStart] = useState(0);
 const handleDoubleClick = (column, row) => {
   const { RateWiseOrderNumber } = row;
   
+
   if (RateWiseOrderNumber >= 0) {
     setSelectedColumn(column);
     setSelectedRow(row);
@@ -930,7 +931,7 @@ const handleDateChange = (range) => {
   const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
   const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
   setStartDate(formattedStartDate);
-  setEndDate(formattedEndDate);
+  setEndDate(formattedEndDate); //
 };
 
  // Utility function to format number as Indian currency (₹)
@@ -991,7 +992,7 @@ const handleDateChange = (range) => {
   <DialogTitle id="alert-dialog-title">{"DO YOU WANT TO EDIT?"}</DialogTitle>
   <DialogContent>
     <DialogContentText id="alert-dialog-description">
-    You have selected the {selectedColumn} field with value "{selectedRow && selectedRow[selectedColumn]}". Do you want to edit this field?
+    You have selected the {selectedColumn} field with value &quot;{selectedRow && selectedRow[selectedColumn]}&quot;. Do you want to edit this field?
     </DialogContentText>
   </DialogContent>
   <DialogActions>

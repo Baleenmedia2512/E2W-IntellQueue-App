@@ -2,7 +2,7 @@
 'use client';
 import { useSelector, useDispatch } from 'react-redux';
 import { setLoginCredentials, setCurrentPage, resetEmployeeData } from '@/redux/features/emp-slice';
-import { TabNavigation } from './components/TabNavigation';
+// import { TabNavigation } from './components/TabNavigation';
 
 const LoginCredentialPage = () => {
   const dispatch = useDispatch();
@@ -39,7 +39,7 @@ const LoginCredentialPage = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
-        <TabNavigation />
+        {/* <TabNavigation /> */}
         <h2 className="text-2xl font-bold text-blue-500 mb-1">Login Credentials</h2>
         <p className="text-gray-400 text-sm mb-3">Please enter your login credentials</p>
         <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>

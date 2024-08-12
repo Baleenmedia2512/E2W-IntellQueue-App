@@ -201,7 +201,7 @@ const FinanceData = () => {
           dispatch(setIsOrderExist(true));
           setOrderNumber(clientDetails.orderNumber);
           setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
-          setRemarks(clientDetails.remarks);
+          //setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
           setBalanceAmount(clientDetails.balanceAmount);
           setGSTPercentage(clientDetails.gstPercentage);
@@ -224,7 +224,7 @@ const FinanceData = () => {
       if (data.length > 0) {
         const clientDetails = data[0];
         dispatch(setIsOrderExist(true));
-        setRemarks(clientDetails.remarks);
+        //setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
