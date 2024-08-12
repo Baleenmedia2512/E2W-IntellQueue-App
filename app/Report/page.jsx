@@ -23,6 +23,8 @@ import { useDispatch } from 'react-redux';
 import { Select  } from '@mui/material';
 
 
+
+
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
     const companyName = "Baleen Test";
@@ -771,58 +773,65 @@ const orderColumns = [
  
 
       // Styles
-      const styles = {
-        chartContainer: {
-          width: '100%',
-          height: '380px',
-          background: '#ffffff',
-          borderRadius: '12px',
-          boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
-          marginBottom: '20px',
-          position: 'relative',
-        },
-        dropdown: {
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          padding: '8px',
-          fontSize: '14px',
-          borderRadius: '5px',
-          zIndex: 10,
-        },
-        pieContainer: {
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'column',
-          height: '100%',
-        },
-        title: {
-          fontWeight: 'bold',
-          textAlign: 'center',
-          fontSize: '20px',
-          marginBottom: '0px',
-        },
-        incomeTitle: {
-          color: '#4CAF50',
-        },
-        expenseTitle: {
-          color: '#FF5722',
-        },
-        totalIncomeText: {
-          marginTop: '10px',
-          marginBottom: '10px',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          color: '#4CAF50',
-        },
-        totalExpenseText: {
-          marginTop: '10px',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          color: '#FF5722',
-        },
-      };
+      const isPhone = useMediaQuery('(max-width:768px)');
+
+  const styles = {
+    chartContainer: {
+      width: '100%',
+      height: '380px',
+      background: '#ffffff',
+      borderRadius: '12px',
+      boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
+      marginBottom: '20px',
+      position: 'relative',
+    },
+    dropdown: {
+      position: 'absolute',
+      top: isPhone ? '40px' : '10px',
+      right: '10px',
+      padding: isPhone ? '0px' : '2px',  // Adjust padding for phone
+      fontSize: isPhone ? '14px' : '14px',  // Smaller font size on phone
+      borderRadius: '5px',
+      zIndex: 10,
+      width: isPhone ? '35%' : 'auto',  // Full width on phone
+      height: isPhone ? '10%' : 'auto',  // Full width on phone
+      //left: isPhone ? '0px' : 'auto',  // Center dropdown on phone
+      right: isPhone ? '5px' : '10px',
+    },
+    pieContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'column',
+      height: '100%',
+    },
+    title: {
+      fontWeight: 'bold',
+      textAlign: 'center',
+      fontSize: '20px',
+      marginBottom: '0px',
+    },
+    incomeTitle: {
+      color: '#4CAF50',
+    },
+    expenseTitle: {
+      color: '#FF5722',
+    },
+    totalIncomeText: {
+      marginTop: '10px',
+      marginBottom: '10px',
+      fontSize: '14px',
+      fontWeight: 'bold',
+      color: '#4CAF50',
+    },
+    totalExpenseText: {
+      marginTop: '10px',
+      fontSize: '14px',
+      fontWeight: 'bold',
+      color: '#FF5722',
+    },
+  };
+
       
       
 
@@ -1235,6 +1244,7 @@ const handleDateChange = (range) => {
             onChange={handleDropdownChange}
             style={styles.dropdown}
             variant="outlined"
+            fullWidth={isPhone}  // Make full width on phone
           >
             <MenuItem value="income">Income Breakdown</MenuItem>
             <MenuItem value="expense">Expense Breakdown</MenuItem>
