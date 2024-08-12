@@ -1246,8 +1246,8 @@ const handleDateChange = (range) => {
             variant="outlined"
             fullWidth={isPhone}  // Make full width on phone
           >
-            <MenuItem value="income">Income Breakdown</MenuItem>
-            <MenuItem value="expense">Expense Breakdown</MenuItem>
+            <MenuItem value="income">Income </MenuItem>
+            <MenuItem value="expense">Expense </MenuItem>
           </Select>
 
           {selectedChart === 'income' && (
