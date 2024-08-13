@@ -21,6 +21,8 @@ import { useRouter } from 'next/navigation';
 import { setOrderData , setIsOrderUpdate} from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
 import { Select  } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+
 
 
 
@@ -35,6 +37,7 @@ const Report = () => {
     const [orderDetails, setOrderDetails] = useState([]);
     const [financeDetails, setFinanceDetails] = useState([]);
     const [sumOfFinance, setSumOfFinance] = useState([]);
+    const [rateBaseIncome, setRateBaseIncome] = useState([]);
     const [filter, setFilter] = useState('All');
     // const [orderFilterModel, setOrderFilterModel] = useState({ items: [] });
     // const [financeFilterModel, setFinanceFilterModel] = useState({ items: [] });
@@ -125,6 +128,7 @@ const Report = () => {
         fetchOrderDetails();
         fetchFinanceDetails();
         fetchSumOfFinance();
+        fetchRateBaseIncome();
         fetchSumOfOrders();
         FetchCurrentBalanceAmount();
         fetchAmounts();
@@ -197,6 +201,21 @@ const Report = () => {
                 
             });
     };
+
+    const fetchRateBaseIncome = () => {
+      axios
+          .get(`https://orders.baleenmedia.com/API/Media/FetchRateBaseIncome.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+          .then((response) => {
+              const data = response.data
+              setRateBaseIncome(data);
+              
+          })
+          .catch((error) => {
+              console.error(error);
+              
+          });
+  };
+
     const fetchAmounts = async () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
@@ -261,6 +280,7 @@ const handleTransactionDelete = (rateWiseOrderNum, orderNum) => {
             fetchFinanceDetails();
             fetchAmounts();
             fetchSumOfFinance();
+            fetchRateBaseIncome();
           } else {
             setToastMessage(data.message);
             setSeverity('error');
@@ -423,39 +443,16 @@ const [anchorEl, setAnchorEl] = useState(null);
 
 
 
-const [orderRepotrtDialogOpen, setOrderReportDialogOpen] = useState(false);
-const [selectedColumn, setSelectedColumn] = useState('');
+const [orderReportDialogOpen, setOrderReportDialogOpen] = useState(false);
 const [selectedRow, setSelectedRow] = useState(null);
 
-const [touchStart, setTouchStart] = useState(0);
-
-const handleDoubleClick = (column, row) => {
-  const { RateWiseOrderNumber } = row;
-  
-
-  if (RateWiseOrderNumber >= 0) {
-    setSelectedColumn(column);
-    setSelectedRow(row);
-    setOrderReportDialogOpen(true);
-  } else {
-    console.log("RateWiseOrderNumber is negative, dialog will not open.");
-  }
+const handleEditIconClick = (row) => {
+  setSelectedRow(row);
+  setOrderReportDialogOpen(true);
 };
 
-const handleTouchStart = () => {
-  setTouchStart(Date.now());
-};
-
-const handleTouchEnd = (column, row) => {
-  const touchDuration = Date.now() - touchStart;
-
-  if (touchDuration > 500) { // Detects a long press
-    handleDoubleClick(column, row);
-  }
-};
 const handleCloseOrderReportDialog = () => {
   setOrderReportDialogOpen(false);
-  setSelectedColumn('');
   setSelectedRow(null);
 };
 
@@ -476,6 +473,7 @@ const handleEditConfirm = () => {
 
 
 
+
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
   { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80 },
@@ -486,13 +484,7 @@ const orderColumns = [
     headerName: 'Amount(₹)', 
     width: 100,
     renderCell: (params) => (
-      <div 
-      onDoubleClick={() => handleDoubleClick('Receivable', params.row)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={() => handleTouchEnd('Receivable', params.row)}
-    >
-      {params.value} 
-    </div>
+      <div>{params.value}</div>
     )
   },
   { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
@@ -504,13 +496,7 @@ const orderColumns = [
     headerName: 'Rate Name', 
     width: 150,
     renderCell: (params) => (
-      <div 
-      onDoubleClick={() => handleDoubleClick('Card', params.row)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={() => handleTouchEnd('Card', params.row)}
-    >
-       {params.value} 
-    </div>
+      <div>{params.value}</div>
     )
   },
   { 
@@ -518,13 +504,7 @@ const orderColumns = [
     headerName: 'Rate Type', 
     width: 150,
     renderCell: (params) => (
-      <div 
-      onDoubleClick={() => handleDoubleClick('AdType', params.row)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={() => handleTouchEnd('AdType', params.row)}
-    >
-       {params.value} 
-    </div>
+      <div>{params.value}</div>
     )
   },
   { 
@@ -536,23 +516,23 @@ const orderColumns = [
   {
     field: 'actions',
     headerName: 'Actions',
-    width: 250,
+    width: 270,
     renderCell: (params) => (
         <div>
             <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          disabled={params.row.markInvalidDisabled}
-                          onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                          style={{ marginRight: '12px', backgroundColor: '#ff5252',
-                              color: 'white',
-                              fontWeight: 'bold', 
-                              opacity: params.row.markInvalidDisabled ? 0.2 : 1,
-                              pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
-                      >
-                          Cancel Order
-                      </Button>
+                variant="contained"
+                color="primary"
+                size="small"
+                disabled={params.row.markInvalidDisabled}
+                onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+                style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                    color: 'white',
+                    fontWeight: 'bold', 
+                    opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+                    pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+            >
+                Cancel 
+            </Button>
             <Button
                 variant="contained"
                 color="primary"
@@ -566,6 +546,19 @@ const orderColumns = [
                   pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
             >
                 Restore
+            </Button>
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleEditIconClick(params.row)}
+                style={{ marginLeft: '8px',
+                  backgroundColor: '#69b789',
+                  color: 'white',
+                  fontWeight: 'bold',
+                 }}  // Adjust the value as needed
+            >  
+               Edit
             </Button>
         </div>
     ),
@@ -773,64 +766,61 @@ const orderColumns = [
  
 
       // Styles
-      const isPhone = useMediaQuery('(max-width:768px)');
-
-  const styles = {
-    chartContainer: {
-      width: '100%',
-      height: '380px',
-      background: '#ffffff',
-      borderRadius: '12px',
-      boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
-      marginBottom: '20px',
-      position: 'relative',
-    },
-    dropdown: {
-      position: 'absolute',
-      top: isPhone ? '40px' : '10px',
-      right: '10px',
-      padding: isPhone ? '0px' : '2px',  // Adjust padding for phone
-      fontSize: isPhone ? '14px' : '14px',  // Smaller font size on phone
-      borderRadius: '5px',
-      zIndex: 10,
-      width: isPhone ? '35%' : 'auto',  // Full width on phone
-      height: isPhone ? '10%' : 'auto',  // Full width on phone
-      //left: isPhone ? '0px' : 'auto',  // Center dropdown on phone
-      right: isPhone ? '5px' : '10px',
-    },
-    pieContainer: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'column',
-      height: '100%',
-    },
-    title: {
-      fontWeight: 'bold',
-      textAlign: 'center',
-      fontSize: '20px',
-      marginBottom: '0px',
-    },
-    incomeTitle: {
-      color: '#4CAF50',
-    },
-    expenseTitle: {
-      color: '#FF5722',
-    },
-    totalIncomeText: {
-      marginTop: '10px',
-      marginBottom: '10px',
-      fontSize: '14px',
-      fontWeight: 'bold',
-      color: '#4CAF50',
-    },
-    totalExpenseText: {
-      marginTop: '10px',
-      fontSize: '14px',
-      fontWeight: 'bold',
-      color: '#FF5722',
-    },
-  };
+      const styles = {
+        chartContainer: {
+          width: '100%',
+          height: '370px', // Adjust height as needed
+          background: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'center', // Center horizontally
+          alignItems: 'center', // Center vertically
+          flexDirection: 'column', // Column direction for title and chart
+        },
+        slideContainer: {
+          display: 'flex',
+          width: '100%',
+          height: '370px',
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          '-webkit-overflow-scrolling': 'touch', // Enable smooth scrolling on iOS
+        },
+        slide: {
+          minWidth: '100%',
+          scrollSnapAlign: 'center',
+          display: 'flex',
+          justifyContent: 'center', // Center the chart horizontally
+          alignItems: 'center', // Center the chart vertically
+          flexDirection: 'column', // Ensures the title is above the chart
+          padding: '10px 0', // Adjust padding to reduce gaps
+        },
+        title: {
+          fontWeight: 'bold',
+          textAlign: 'center',
+          fontSize: '20px',
+          marginBottom: '0px', // Increase margin to add gap between title and chart
+        },
+        incomeTitle: {
+          color: '#4CAF50', // Green color for income
+        },
+        expenseTitle: {
+          color: '#FF5722', // Red color for expense
+        },
+        totalIncomeText: {
+          marginTop: '0px', // Increase margin to add gap between chart and total text
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#4CAF50', // Green color for total income text
+        },
+        totalExpenseText: {
+          marginTop: '0px', // Increase margin to add gap between chart and total text
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#FF5722', // Red color for total expense text
+        },
+      };
 
       
       
@@ -993,7 +983,7 @@ const handleDateChange = (range) => {
             </Dialog>
 
 <Dialog
-  open={orderRepotrtDialogOpen}
+  open={orderReportDialogOpen}
   onClose={handleCloseOrderReportDialog}
   aria-labelledby="alert-dialog-title"
   aria-describedby="alert-dialog-description"
@@ -1001,7 +991,7 @@ const handleDateChange = (range) => {
   <DialogTitle id="alert-dialog-title">{"DO YOU WANT TO EDIT?"}</DialogTitle>
   <DialogContent>
     <DialogContentText id="alert-dialog-description">
-    You have selected the {selectedColumn} field with value &quot;{selectedRow && selectedRow[selectedColumn]}&quot;. Do you want to edit this field?
+      You have selected the order with Rate Wise Order# <strong>{selectedRow && selectedRow.RateWiseOrderNumber}</strong> and Client Name <strong>{selectedRow && selectedRow.ClientName}</strong>. Do you want to edit this order?
     </DialogContentText>
   </DialogContent>
   <DialogActions>
@@ -1239,87 +1229,73 @@ const handleDateChange = (range) => {
                 </DialogActions>
             </Dialog>
             <div style={styles.chartContainer}>
-          <Select
-            value={selectedChart}
-            onChange={handleDropdownChange}
-            style={styles.dropdown}
-            variant="outlined"
-            fullWidth={isPhone}  // Make full width on phone
-          >
-            <MenuItem value="income">Income </MenuItem>
-            <MenuItem value="expense">Expense </MenuItem>
-          </Select>
-
-          {selectedChart === 'income' && (
-            <div style={styles.pieContainer}>
-              <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
-              {isIncomePieEmpty ? (
-                <div className="text-center">No income records found during this timeline!</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      activeIndex={activeIndex}
-                      activeShape={renderActiveShape}
-                      data={incomeData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={window.innerWidth > 768 ? 70 : 55}
-                      outerRadius={window.innerWidth > 768 ? 100 : 75}
-                      fill="#8884d8"
-                      dataKey="value"
-                      onMouseEnter={onPieEnter}
-                      labelLine={false}
-                      stroke="none"
-                    >
-                      {incomeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={incomeColors[index % incomeColors.length]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-              <div style={{ ...styles.totalIncomeText, color: '#4CAF50' }}>
-                Total Income: ₹{formatIndianNumber(totalIncome)}
-              </div>
-            </div>
-          )}
-
-          {selectedChart === 'expense' && (
-            <div style={styles.pieContainer}>
-              <div style={{ ...styles.title, ...styles.expenseTitle }}>Expense Breakdown</div>
-              {isExpensePieEmpty ? (
-                <div className="text-center">No expense records found during this timeline!</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      activeIndex={activeIndex}
-                      activeShape={renderActiveShape}
-                      data={expenseData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={window.innerWidth > 768 ? 70 : 70}
-                      outerRadius={window.innerWidth > 768 ? 100 : 90}
-                      fill="#8884d8"
-                      dataKey="value"
-                      onMouseEnter={onPieEnter}
-                      labelLine={false}
-                      stroke="none"
-                    >
-                      {expenseData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-              <div style={{ ...styles.totalExpenseText, color: '#FF5722' }}>
-                Total Expense: ₹{formatIndianNumber(totalExpense)}
-              </div>
-            </div>
-          )}
+        <div style={styles.slideContainer}>
+      <div style={styles.slide}>
+        <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
+        {isIncomePieEmpty ? (
+          <div className="text-center">No income records found during this timeline!</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
+                data={incomeData}
+                cx="50%"
+                cy="50%"
+                innerRadius={window.innerWidth > 768 ? 70 : 55} // Adjusted for larger size
+                outerRadius={window.innerWidth > 768 ? 100 : 75}
+                fill="#8884d8"
+                dataKey="value"
+                onMouseEnter={onPieEnter}
+                labelLine={false}
+                stroke="none"
+              >
+                {incomeData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={incomeColors[index % incomeColors.length]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+        <div style={{ ...styles.totalIncomeText, color: '#4CAF50' }}>
+          Total Income: ₹{formatIndianNumber(totalIncome)}
         </div>
+      </div>
+      <div style={styles.slide}>
+        <div style={{ ...styles.title, ...styles.expenseTitle }}>Expense Breakdown</div>
+        {isExpensePieEmpty ? (
+          <div className="text-center">No expense records found during this timeline!</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
+                data={expenseData}
+                cx="50%"
+                cy="50%"
+                innerRadius={window.innerWidth > 768 ? 70 : 70} // Adjusted for larger size
+                outerRadius={window.innerWidth > 768 ? 100 : 90}
+                fill="#8884d8"
+                dataKey="value"
+                onMouseEnter={onPieEnter}
+                labelLine={false}
+                stroke="none"
+              >
+                {expenseData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+        <div style={{ ...styles.totalExpenseText, color: '#FF5722' }}>
+          Total Expense: ₹{formatIndianNumber(totalExpense)}
+        </div>
+      </div>
+    </div>
+  </div>
             {/* <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
