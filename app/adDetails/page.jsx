@@ -173,7 +173,7 @@ export const AdDetails = () => {
     const quoteNumber = await fetchNextQuoteNumber(companyName);
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
-    if(clientName !== "" && clientContact !== ""){
+    if(clientName !== ""){
       const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
       await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber);
       const promises = cartItems.map(item => addQuoteToDB(item));
@@ -314,9 +314,9 @@ export const AdDetails = () => {
               </td>
             </tr>
             <tr>
-              <td className='py-1 text-blue-600 font-semibold'>Number</td>
-              <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" ref={clientContactRef} maxLength={10} className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => {dispatch(setClientData({clientContact: e.target.value})); setIsClientContact(true)}}></input>
-              {!isClientContact && clientContact.length === 0 && <label className='text-red-500'>Please enter client contact</label>}
+              <td className='py-1 text-blue-600 font-semibold'>Contact Number</td>
+              <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" maxLength={10} className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => {dispatch(setClientData({clientContact: e.target.value})); setIsClientContact(true)}}></input>
+              {/* {!isClientContact && clientContact.length === 0 && <label className='text-red-500'>Please enter client contact</label>} */}
               </td>
             </tr>
             <tr>
