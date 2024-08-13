@@ -710,7 +710,11 @@ useEffect(() => {
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
+                if (elementsToHide.includes('OrderNumberText')) {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
+                } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
+                  setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
+                }
                 dispatch(setIsOrderExist(true));
                 
                 setTimeout(() => {
@@ -1567,13 +1571,21 @@ return (
         <p className="text-gray-500 text-xs mb-1">Consultant</p>
         <p className="truncate text-black">{consultantName}</p>
       </div>
-       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative" id="4" name="RateWiseOrderNumberText">
        <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
        <p className="text-black">{previousRateWiseOrderNumber}</p>
         </div>
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative" id="4" name="RateWiseOrderNumberText">
       <p className="text-gray-500 text-xs mb-1">Next Order#</p>
        <p className="text-black">{nextRateWiseOrderNumber}</p>
+       </div>
+       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative" id="21" name="OrderNumberText">
+       <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
+       <p className="text-black">{previousOrderNumber}</p>
+        </div>
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative" id="21" name="OrderNumberText">
+      <p className="text-gray-500 text-xs mb-1">Next Order#</p>
+       <p className="text-black">{maxOrderNumber}</p>
        </div>
     </div>
     <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
