@@ -635,7 +635,7 @@ const handleClose = () => {
             {/* <div className="absolute inset-x-0 bottom-0 bg-white h-52"></div> */}
 
             {/* Main content */}
-            <div className="relative z-10 pt-8 px-4 sm:px-8 lg:px-12">
+            <div className="relative z-10 pt-8 px-0 sm:px-8 lg:px-12">
                 {/* Page title */}
                 <div className="absolute top-6 left-7 sm:left-12 lg:left-16 text-2xl font-bold text-white">
                     Consultant Report
