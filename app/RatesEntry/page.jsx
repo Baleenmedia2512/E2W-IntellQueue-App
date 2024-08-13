@@ -757,6 +757,7 @@ var selectedRate = '';
   useEffect(() => {
     if(isNewRate){
       elementsToShowList("Show");
+      
     }
     if(!isNewRate){
       if(slabData.length < 1 && selectedValues.adType !== ""){
@@ -765,6 +766,7 @@ var selectedRate = '';
         elementsToShowList()
       }
     }
+    
   },[slabData, tempSlabData, isNewRate])
 
   const fetchRates = async () => {
@@ -1270,11 +1272,11 @@ const handleRateSearch = async(e) =>{
 }
 
 const updateSlabData = (qty, newUnitPrice) => {
-  
+  console.log(tempSlabData.length)
   if(tempSlabData.length > 0){
   const updatedData = tempSlabData.map((data) => {
     if (data.StartQty === qty) {
-      return { ...data, newUnitPrice };
+      return { ...data, UnitPrice: newUnitPrice };
     }
     
     return data;
@@ -1291,8 +1293,8 @@ const updateSlabData = (qty, newUnitPrice) => {
   setIsQtySlab(false)
   dispatch(setSlabData(updatedData));
 }
+setEditModal(false);
   setEditMode(true);
-  setEditModal(false);
 };
 
   const handleValidityChange = (e) => {
@@ -1316,17 +1318,11 @@ const updateSlabData = (qty, newUnitPrice) => {
   },[validTill])
 
   const handleClearRateId = () => {
+    
     setEditMode(false)
     setRateSearchTerm("")
     dispatch(setRateId(""));
-    dispatch(setSelectedValues({
-      rateName: "",
-      adType: "",
-      vendorName: "",
-      typeOfAd: "",
-      Location: "",
-      Package: ""
-    }));
+    
     setValidityDays(0);
     setValidityDate(new Date());
     setValidTill("");
@@ -1344,8 +1340,26 @@ const updateSlabData = (qty, newUnitPrice) => {
     setUnitPrice(0);
     setNewUnitPrice(0);
     setTempSlabData([]);
+    setMarginPercentage(0);
+    if(isNewRate){
+      return
+    }else{
+      dispatch(setSelectedValues({
+        rateName: "",
+        adType: "",
+        vendorName: "",
+        typeOfAd: "",
+        Location: "",
+        Package: ""
+      }));
+    }
   }
 
+  useEffect(() => {
+    if(isNewRate){
+      handleClearRateId();
+    }
+  }, [isNewRate, rateId])
   const handleKeyDown = (event) => {
     if (
       !/[0-9]/.test(event.key) && // Allow numbers
