@@ -15,10 +15,8 @@ import { Calendar } from 'primereact/calendar';
 import axios from 'axios';
 import ToastMessage from '../../components/ToastMessage';
 import SuccessToast from '../../components/SuccessToast';
-        
-
-// Mock data for consultants
-
+import { useAppSelector } from '@/redux/store';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 
 
@@ -54,6 +52,8 @@ export default function GroupedRowsDemo() {
     const [successMessage, setSuccessMessage] = useState('');
     const [orderNumbers, setOrderNumbers] = useState([]);
     const [selectedOrderNumbers, setSelectedOrderNumbers] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     
 
     const getConsultants = async (companyName, startDate, endDate) => {
@@ -83,7 +83,6 @@ export default function GroupedRowsDemo() {
     }, [startDate, endDate]);
 
 
-    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -604,6 +603,30 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 
+useEffect(() => {
+    const zeroPriceConsultants = consultants.filter(consultant => 
+        consultant.rates.some(rate => 
+            rate.rateTypes.some(rateType => rateType.price === 0 || rateType.price === '')
+        )
+    );
+    setConsultantsWithZeroPrice(zeroPriceConsultants);
+}, [groupedData]);
+
+const handleClickOpen = () => {
+    setOpen(true);
+};
+
+console.log(consultantsWithZeroPrice)
+
+const handleClose = () => {
+    setOpen(false);
+};
+
+// const handleConfirm = () => {
+//     // Add your incentive processing logic here
+//     setOpen(false);
+// };
+
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -674,12 +697,43 @@ const filterHeaderTemplate = (column, filterField) => {
           Export to Excel
         </button>
         <button
-          onClick={saveConsultant}
+          onClick={handleClickOpen}
           className="bg-blue-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-blue-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
         >
           <i className="pi pi-check mr-1 sm:mr-2"></i>
           Process Incentive
         </button>
+        <Dialog
+                open={open}
+                onClose={handleClose}
+            >
+                <DialogTitle>Confirm Incentive Processing</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {consultantsWithZeroPrice.length > 0 ? (
+                            <>
+                                The following consultants have a price of 0:
+                                <ul>
+                                    {consultantsWithZeroPrice.map((consultant, index) => (
+                                        <li key={index}>{consultant.name}</li>
+                                    ))}
+                                </ul>
+                                Are you sure you want to process incentives?
+                            </>
+                        ) : (
+                            "Are you sure you want to process incentives?"
+                        )}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={saveConsultant} color="primary" autoFocus>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
       </div>
         </div>
 

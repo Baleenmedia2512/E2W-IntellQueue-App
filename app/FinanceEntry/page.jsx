@@ -100,6 +100,11 @@ const FinanceData = () => {
   // const [isOrderExist, setIsOrderExist] = useState(false);
   const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const dispatch = useDispatch();
+  const [elementsToHide, setElementsToHide] = useState([]);
+
+  useEffect(() => {
+    elementsToHideList();
+  },[companyName])
 
 
   useEffect(() => {
@@ -216,9 +221,8 @@ const FinanceData = () => {
     
     const newOrderNumber = event.target.value;
     setOrderNumber(newOrderNumber);
-    setRateWiseOrderNumber(newOrderNumber);
     axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.length > 0) {
@@ -228,6 +232,38 @@ const FinanceData = () => {
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
+        setBalanceAmount(clientDetails.balanceAmount);
+        setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
+      } else {
+        dispatch(setIsOrderExist(false));
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    // Clear validation errors
+    if (errors.orderNumber) {
+      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+    }
+  };
+
+  const handleRateWiseOrderNumberChange = (event) => {
+    
+    const newOrderNumber = event.target.value;
+    setRateWiseOrderNumber(newOrderNumber);
+    axios
+    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      if (data.length > 0) {
+        const clientDetails = data[0];
+        dispatch(setIsOrderExist(true));
+        setRemarks(clientDetails.remarks);
+        setOrderAmount(clientDetails.balanceAmount);
+        setGSTPercentage(clientDetails.gstPercentage);
+        setClientName(clientDetails.clientName);
+        setBalanceAmount(clientDetails.balanceAmount);
+        setOrderNumber(clientDetails.orderNumber);
       } else {
         dispatch(setIsOrderExist(false));
       }
@@ -311,6 +347,28 @@ const FinanceData = () => {
             
   }
 }
+
+const elementsToHideList = () => {
+  try{
+    fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
+      .then((response) => response.json())
+      .then((data) => setElementsToHide(data));
+  } catch(error){
+    console.error("Error showing element names: " + error)
+  }
+}
+
+
+useEffect(() => {
+  //searching elements to Hide from database
+
+  elementsToHide.forEach((name) => {
+    const elements = document.getElementsByName(name);
+    elements.forEach((element) => {
+      element.style.display = 'none'; // Hide the element
+    });
+  });
+}, [elementsToHide])
 
   // const getOptions = (filterKey, selectedValues) => {
   //   const filteredData = ordersData.filter(item => {
@@ -481,31 +539,75 @@ const FinanceData = () => {
                 </ul>
             )}
 {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Order Number*</label>
-            <div className="w-full flex gap-3">
-            <input className="p-3 text-black capitalize shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
-                type="text"
-                placeholder="Ex. 10000" 
-                id='3'
-                name="OrderNumberInput"
-                value={rateWiseOrderNumber}
-                pattern="\d*"
-                inputMode="numeric" 
-                onChange={handleOrderNumberChange}
-                onFocus={(e) => {e.target.select()}}
-                onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const inputs = document.querySelectorAll('input, select, textarea');
-                    const index = Array.from(inputs).findIndex(input => input === e.target);
-                    if (index !== -1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                    }
+{/* <>
+    {!elementsToHide.includes("RateWiseOrderNumber") ? (
+      <> */}
+      <div id="4" name="RateWiseOrderNumberText">
+        <label className='block mb-2 mt-5 text-gray-700 font-semibold' >
+          Rate Wise Order Number*
+        </label>
+        <div className="w-full flex gap-3">
+          <input
+            className="p-3 text-black capitalize shadow-2xl glass w-full outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+            type="text"
+            placeholder="Ex. 10000"
+            id='3'
+            name="OrderNumberInput"
+            value={rateWiseOrderNumber}
+            pattern="\d*"
+            inputMode="numeric"
+            onChange={handleRateWiseOrderNumberChange}
+            onFocus={(e) => { e.target.select(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const inputs = document.querySelectorAll('input, select, textarea');
+                const index = Array.from(inputs).findIndex(input => input === e.target);
+                if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
                 }
-                }}
-                />
-            </div>
-            {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
+              }
+            }}
+          />
+        </div>
+        {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
+        </div>
+      {/* </>
+    ) : (
+      <> */}
+      <div id="21" name="OrderNumberText">
+        <label className='block mb-2 mt-5 text-gray-700 font-semibold'>
+          Order Number*
+        </label>
+        <div className="w-full flex gap-3">
+          <input
+            className="p-3 text-black capitalize shadow-2xl glass w-full outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
+            type="text"
+            placeholder="Ex. 10000"
+            id='3'
+            name="OrderNumberInput"
+            value={orderNumber}
+            pattern="\d*"
+            inputMode="numeric"
+            onChange={handleOrderNumberChange}
+            onFocus={(e) => { e.target.select(); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const inputs = document.querySelectorAll('input, select, textarea');
+                const index = Array.from(inputs).findIndex(input => input === e.target);
+                if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
+                }
+              }
+            }}
+          />
+        </div>
+        {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
+        </div>
+      {/* </>
+    )}
+  </> */}
             </>
   )}
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Amount*</label>
