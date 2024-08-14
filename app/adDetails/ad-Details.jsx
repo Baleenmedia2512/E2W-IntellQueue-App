@@ -251,7 +251,7 @@ const AdDetailsPage = () => {
       } else {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
         const data = await response.json();
-
+        
         //filter rates according to adMedium, adType and adCategory
         const filterdata = data.filter(item => (item.rateId === parseInt(rateId)))
           .filter((value, index, self) =>
@@ -266,6 +266,8 @@ const AdDetailsPage = () => {
       console.error(error);
     }
   };
+
+  
  
   const dispatch = useDispatch();
   const handleSubmit = () => {
@@ -456,6 +458,7 @@ const AdDetailsPage = () => {
       label: `${opt.StartQty}+ ${unit} : ₹${formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
     }
   ))
+
 
   return (
     

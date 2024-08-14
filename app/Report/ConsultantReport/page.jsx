@@ -606,17 +606,16 @@ const filterHeaderTemplate = (column, filterField) => {
 useEffect(() => {
     const zeroPriceConsultants = consultants.filter(consultant => 
         consultant.rates.some(rate => 
-            rate.rateTypes.some(rateType => rateType.price === 0 || rateType.price === '')
+            rate.rateTypes.some(rateType => rateType.price === '0' || rateType.price === 0)
         )
     );
     setConsultantsWithZeroPrice(zeroPriceConsultants);
-}, [groupedData]);
+}, [consultants]);
 
 const handleClickOpen = () => {
     setOpen(true);
 };
 
-console.log(consultantsWithZeroPrice)
 
 const handleClose = () => {
     setOpen(false);
@@ -707,22 +706,26 @@ const handleClose = () => {
                 open={open}
                 onClose={handleClose}
             >
-                <DialogTitle>Confirm Incentive Processing</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
+                <DialogTitle
+                >Confirm Incentive Processing</DialogTitle>
+                <DialogContent className='mt-2'>
+                    <DialogContentText 
+                    >
                         {consultantsWithZeroPrice.length > 0 ? (
                             <>
-                                The following consultants have a price of 0:
-                                <ul>
-                                    {consultantsWithZeroPrice.map((consultant, index) => (
-                                        <li key={index}>{consultant.name}</li>
-                                    ))}
-                                </ul>
-                                Are you sure you want to process incentives?
-                            </>
-                        ) : (
-                            "Are you sure you want to process incentives?"
-                        )}
+                            <strong>The following consultant(s) have a price of 0:</strong>
+                            <ul className="mt-2 ml-4 list-disc">
+                                {consultantsWithZeroPrice.map((consultant, index) => (
+                                    <li key={index}>{consultant.name}</li>
+                                ))}
+                            </ul>
+                            <p className="mt-2">
+                                <strong>Are you sure you want to process incentives?</strong>
+                            </p>
+                        </>
+                    ) : (
+                        <p><strong>Are you sure you want to process incentives?</strong></p>
+                    )}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

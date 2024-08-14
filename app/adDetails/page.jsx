@@ -51,6 +51,7 @@ export const AdDetails = () => {
       if (!username) {
         routers.push('/login');
       }
+      
   }, []);
 
   useEffect(()=>{
@@ -142,6 +143,7 @@ export const AdDetails = () => {
       qtyUnit: item.unit ? item.unit : 'Unit',
       adType: item.adType,
       formattedDate: item.formattedDate,
+      remarks: item.remarks,
     };
   };
   
@@ -190,6 +192,7 @@ export const AdDetails = () => {
       }
     }
   };
+  
 
   function showCurrentPage(){
     let showPage = '' 
