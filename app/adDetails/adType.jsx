@@ -21,9 +21,9 @@ const AdTypePage = () => {
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   // const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
-  // const companyName = 'Baleen Test'
+  const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const routers = useRouter();

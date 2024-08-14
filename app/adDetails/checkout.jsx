@@ -120,7 +120,6 @@ const CheckoutPage = () => {
   }
 
 
-
   return (
     <div className=" mt-2 text-black w-screen">
 

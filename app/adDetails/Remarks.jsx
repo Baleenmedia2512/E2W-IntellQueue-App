@@ -24,10 +24,10 @@ const RemarksPage = () => {
   const selectedAdType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
-  // const companyName = 'Baleen Test'
+  const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const [searchInput, setSearchInput] = useState('');
 
