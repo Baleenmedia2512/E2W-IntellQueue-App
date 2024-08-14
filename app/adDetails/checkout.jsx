@@ -99,6 +99,7 @@ const CheckoutPage = () => {
 
     fetchData();
   }, []);
+  
 
   // console.log(cartItems[0].qty, cartItems[0].unitPrice, (cartItems[0].campaignDuration, cartItems[0].minimumCampaignDuration), (cartItems[0].margin, cartItems[0].extraDiscount), (1.18))
   const formattedRupees = (number) => {
@@ -117,6 +118,7 @@ const CheckoutPage = () => {
   grandTotalAmount = `₹ ${formattedRupees(Math.round(grandTotalAmount))}`
   return grandTotalAmount;
   }
+
 
   return (
     <div className=" mt-2 text-black w-screen">
@@ -158,6 +160,7 @@ const CheckoutPage = () => {
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Edition</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th>
           </tr>
@@ -171,6 +174,7 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{item.edition}</td>
               <td className='p-1.5 border border-gray-200'>{item.qty} {item.unit}</td>
               <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
+              <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
               <td className='p-1.5 border border-gray-200'>
                 ₹ {formattedRupees(Math.round(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * (1.18))))} (incl. GST)
               </td>

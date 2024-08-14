@@ -15,10 +15,8 @@ import { Calendar } from 'primereact/calendar';
 import axios from 'axios';
 import ToastMessage from '../../components/ToastMessage';
 import SuccessToast from '../../components/SuccessToast';
-        
-
-// Mock data for consultants
-
+import { useAppSelector } from '@/redux/store';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 
 
@@ -26,6 +24,7 @@ export default function GroupedRowsDemo() {
     const companyName = "Baleen Test";
     // const companyName = useAppSelector(state => state.authSlice.companyName);
     const [consultants, setConsultants] = useState([]);
+    const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
   const currentEndDate = endOfMonth(new Date());
@@ -38,6 +37,7 @@ export default function GroupedRowsDemo() {
 
       const [filters, setFilters] = useState({
         global: { value: null, matchMode: 'contains' },
+        id:{ value: null, matchMode: 'contains' },
         name: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
@@ -52,6 +52,8 @@ export default function GroupedRowsDemo() {
     const [successMessage, setSuccessMessage] = useState('');
     const [orderNumbers, setOrderNumbers] = useState([]);
     const [selectedOrderNumbers, setSelectedOrderNumbers] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     
 
     const getConsultants = async (companyName, startDate, endDate) => {
@@ -81,7 +83,6 @@ export default function GroupedRowsDemo() {
     }, [startDate, endDate]);
 
 
-    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -507,7 +508,6 @@ const handleExport = () => {
     const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
 
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
-
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
         Consultant: extractNameFromId(row.id), // Default to an empty string if name is null
@@ -583,8 +583,6 @@ const handleSelectionChange = (e) => {
 };
 
 
-
-
 const filterHeaderTemplate = (column, filterField) => {
     return (
         <div>
@@ -605,7 +603,28 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 
+useEffect(() => {
+    const zeroPriceConsultants = consultants.filter(consultant => 
+        consultant.rates.some(rate => 
+            rate.rateTypes.some(rateType => rateType.price === '0' || rateType.price === 0)
+        )
+    );
+    setConsultantsWithZeroPrice(zeroPriceConsultants);
+}, [consultants]);
 
+const handleClickOpen = () => {
+    setOpen(true);
+};
+
+
+const handleClose = () => {
+    setOpen(false);
+};
+
+// const handleConfirm = () => {
+//     // Add your incentive processing logic here
+//     setOpen(false);
+// };
 
 
     return (
@@ -677,19 +696,55 @@ const filterHeaderTemplate = (column, filterField) => {
           Export to Excel
         </button>
         <button
-          onClick={saveConsultant}
+          onClick={handleClickOpen}
           className="bg-blue-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-blue-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
         >
           <i className="pi pi-check mr-1 sm:mr-2"></i>
           Process Incentive
         </button>
+        <Dialog
+                open={open}
+                onClose={handleClose}
+            >
+                <DialogTitle
+                >Confirm Incentive Processing</DialogTitle>
+                <DialogContent className='mt-2'>
+                    <DialogContentText 
+                    >
+                        {consultantsWithZeroPrice.length > 0 ? (
+                            <>
+                            <strong>The following consultant(s) have a price of 0:</strong>
+                            <ul className="mt-2 ml-4 list-disc">
+                                {consultantsWithZeroPrice.map((consultant, index) => (
+                                    <li key={index}>{consultant.name}</li>
+                                ))}
+                            </ul>
+                            <p className="mt-2">
+                                <strong>Are you sure you want to process incentives?</strong>
+                            </p>
+                        </>
+                    ) : (
+                        <p><strong>Are you sure you want to process incentives?</strong></p>
+                    )}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={saveConsultant} color="primary" autoFocus>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
       </div>
         </div>
 
 
     <div className="overflow-x-auto border rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                         <DataTable
-                            value={groupedData}
+                            // value={groupedData}
+                            value={filteredConsultants && filteredConsultants.length > 0 ? filteredConsultants : groupedData}
                             rowClassName={customRowClassName}
                             selection={selectedRows}
                             onSelectionChange={handleSelectionChange}
@@ -706,7 +761,7 @@ const filterHeaderTemplate = (column, filterField) => {
                         <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'name')}></Column>
+                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'id')}></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
                             ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"

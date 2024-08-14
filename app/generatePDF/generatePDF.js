@@ -104,9 +104,9 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
 // const formattedValidityDate = `${day}-${month}-${yearYY}`;
 
   // Create a table
-  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Validity Date"]];
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Validity Date", "Remarks"]];
   let data = checkoutData.map((item, index) => ([
-    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, ChangeDateFormat(item.formattedDate)
+    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, ChangeDateFormat(item.formattedDate), item.remarks ? item.remarks : 'NA'
   ])); 
 
   // if (!checkoutData.some(item => item.package)) {
@@ -129,16 +129,17 @@ let columnWidths = {
   'S.No.': 35,
   'Ad Medium': 60,
   'Ad Type': 60,
-    'Ad Category': { minCellWidth: 100 },
+    'Ad Category': 60,
     'Edition': 60,
-    'Package': { minCellWidth: 65 },
+    'Package': 60,
     'Qty': 45,
     'Campaign Duration': 65,
     'Rate Per Qty (in Rs.)': 50,
     'Amount (Excl. GST) (in Rs.)': 65,
     'GST': 30,
     'Amount (incl. GST) (in Rs.)': 65,
-    'Validity Date': 60
+    'Validity Date': 60,
+    'Remarks': 60
 };
 
 // Map column names to their indices

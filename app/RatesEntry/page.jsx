@@ -900,7 +900,9 @@ var selectedRate = '';
     // Update state with the calculated difference
     setValidityDays(differenceInDays);
   };
-  
+  console.log(showCampaignDuration)
+  console.log(showCampaignDuration === true ? 1 : 0)
+  console.log(rateId)
   const updateRates = async (e) => {
     e.preventDefault()
     if(editMode){
@@ -915,8 +917,9 @@ var selectedRate = '';
         setIsValidityDays(true);
       }else{
       if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
+        const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${showCampaignDuration === true ? 1 : 0}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}`);
     
         // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
@@ -1241,8 +1244,9 @@ var selectedRate = '';
           } else if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
             setIsLeadDays(true)
         }else { 
+          const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${showCampaignDuration ? 1 : 0}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}`)
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}`)
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage('Rate Card Added Successfully!');

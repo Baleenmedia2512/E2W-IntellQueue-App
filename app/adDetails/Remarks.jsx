@@ -54,7 +54,6 @@ const RemarksPage = () => {
 
   //Splitting the Edition and Position using :
   const splitNames = filteredData.map(item => {
-    console.log(item.adCategory)
     const [firstPart, secondPart] = item.adCategory.split(':');
     return { ...item, Edition: firstPart.trim() , Position: secondPart || ''};
   });
