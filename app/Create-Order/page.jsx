@@ -1089,6 +1089,11 @@ const [dialogOpen, setDialogOpen] = useState(false);
     setDialogOpen(true);
   };
 
+  const handleCancelUpdate = () => {
+    dispatch(resetOrderData());
+    //window.location.reload(); // Reload the page
+  };
+
   const handleUpdateCloseDialog = () => {
     setDialogOpen(false);
   };
@@ -1178,10 +1183,13 @@ return (
     
     {/* Conditional rendering based on isOrderUpdate */}
     {isOrderUpdate ? (
-      <button className="custom-button" onClick={handleOpenDialog}>Update Order</button>
-    ) : (
-      <button className="custom-button" onClick={createNewOrder}>Place Order</button>
-    )}
+  <>
+    <button className="custom-button" onClick={handleOpenDialog}>Update Order</button>
+    <button className="custom-button" onClick={handleCancelUpdate} style={{ backgroundColor: '#d98880', color: 'white' }}>Cancel Update</button>
+  </>
+) : (
+  <button className="custom-button" onClick={createNewOrder}>Place Order</button>
+)}
     
     <Dialog
       open={dialogOpen}

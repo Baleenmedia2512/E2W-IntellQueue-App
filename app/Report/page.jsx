@@ -552,7 +552,7 @@ const orderColumns = [
                 color="primary"
                 size="small"
                 onClick={() => handleEditIconClick(params.row)}
-                style={{ marginLeft: '8px',
+                style={{ marginLeft: '12px',
                   backgroundColor: '#69b789',
                   color: 'white',
                   fontWeight: 'bold',
@@ -761,7 +761,26 @@ const orderColumns = [
     
     // const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
-    const rateBaseColors = ['#FFA726', '#66BB6A', '#29B6F6', '#AB47BC', '#FF7043'];
+    const rateBaseColors = [
+      '#FFA726', '#66BB6A', '#29B6F6', '#AB47BC', '#FF7043',  // Original Colors
+      '#FFCA28',  // Light Yellow Orange
+      '#8D6E63',  // Brownish Gray
+      '#4FC3F7',  // Light Sky Blue
+      '#D4E157',  // Lime Green
+      '#BA68C8',  // Soft Purple
+      '#FF5722',  // Deep Orange
+      '#9575CD',  // Lavender Purple
+      '#4DB6AC',  // Aquamarine
+      '#F06292',  // Soft Pink
+      '#AED581',  // Light Green
+      '#FFEB3B',  // Bright Yellow
+      '#F44336',  // Red
+      '#26A69A',  // Teal
+      '#EF5350',  // Soft Red
+      '#81C784',  // Mint Green
+      '#7E57C2',  // Indigo Purple
+      '#FFB74D',  // Soft Orange
+    ];
     const incomeColors = ['#D2B48C', '#8BC34A'];
     const expenseColors = [
       '#FF5722', '#FF9800', '#FFC107', '#F9A825', '#FF6F61', 
@@ -774,19 +793,19 @@ const orderColumns = [
       // Styles
       const isPhone = useMediaQuery('(max-width:768px)');
 const [selectedIncomeView, setSelectedIncomeView] = useState('Income Breakdown');
-const title = selectedIncomeView === 'Income Breakdown' ? 'Income Breakdown' : 'Rate Base Income Breakdown';
+//const title = selectedIncomeView === 'Income Breakdown' ? 'Income Breakdown' : 'Rate Base Income Breakdown';
 const handleIncomeViewChange = (event) => {
   setSelectedIncomeView(event.target.value);
 };
 
 const incomeOptions = [
-  { label: 'Income Breakdown', value: 'Income Breakdown' },
-  { label: 'Rate Base Income Breakdown', value: 'Rate Base Income Breakdown' },
+  { label: 'By Payment mode', value: 'Income Breakdown' },
+  { label: 'By Rate Card', value: 'Rate Base Income Breakdown' },
 ];
       const styles = {
         chartContainer: {
           width: '100%',
-          height: '370px', // Adjust height as needed
+          height: '440px', // Adjust height as needed
           background: '#ffffff',
           borderRadius: '12px',
           boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
@@ -799,7 +818,7 @@ const incomeOptions = [
         slideContainer: {
           display: 'flex',
           width: '100%',
-          height: '370px',
+          height: '440px',
           overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           '-webkit-overflow-scrolling': 'touch', // Enable smooth scrolling on iOS
@@ -839,17 +858,21 @@ const incomeOptions = [
         },
         dropdownContainer: {
           display: 'flex',
-          justifyContent: 'flex-end', // Aligns the dropdown to the right
-          alignItems: 'center',
-          marginBottom: '10px',
+          justifyContent: 'space-between', // Ensures the title and dropdown are on the same line
+          alignItems: 'center', 
+          marginBottom: '1px',
+          padding: '0 20px', // Adjust the padding to your preference
           width: '100%',
         },
         dropdown: {
-          padding: isPhone ? '2px' : '2px',  // Adjust padding for phone
+          marginTop: '10px',
+          marginLeft: 'auto', // Ensures the dropdown is pushed to the right
+          padding: isPhone ? '1px' : '2px',  // Adjust padding for phone
           fontSize: isPhone ? '12px' : '14px',  // Smaller font size on phone
           borderRadius: '5px',
-          zIndex: 10,
-          width: isPhone ? '40%' : 'auto',  // Full width on phone
+          zIndex: 0,
+          width: isPhone ? '45%' : 'auto',  // Full width on phone
+
         },
       };
 
@@ -1264,10 +1287,9 @@ const handleDateChange = (range) => {
       <div style={styles.slideContainer}>
         {/* Income Breakdown Chart */}
         <div style={styles.slide}>
+          
+          <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
           <div style={styles.dropdownContainer}>
-          <div style={{ ...styles.title, ...styles.incomeTitle }}>
-              {title}
-            </div>
             <Select
               value={selectedIncomeView}
               onChange={handleIncomeViewChange}
