@@ -51,6 +51,7 @@ export const AdDetails = () => {
       if (!username) {
         routers.push('/login');
       }
+      
   }, []);
 
   useEffect(()=>{
@@ -138,13 +139,16 @@ export const AdDetails = () => {
       gst: '18%',
       amountInclGst: formattedRupees(AmountInclGST),
       leadDays: item.leadDay,
-      durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
+      // durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
+      CampaignDurationUnit: item.campaignDurationVisibility === 1 ? item.CampaignDurationUnit : '',
       qtyUnit: item.unit ? item.unit : 'Unit',
       adType: item.adType,
       formattedDate: item.formattedDate,
+      remarks: item.remarks,
     };
   };
-  
+
+
   let isGeneratingPdf = false;
 
   const addQuoteToDB = async(item) => {
@@ -160,6 +164,8 @@ export const AdDetails = () => {
       console.error('Error inserting Quote:', error);
     }
   }
+
+  
 
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
@@ -190,6 +196,7 @@ export const AdDetails = () => {
       }
     }
   };
+  
 
   function showCurrentPage(){
     let showPage = '' 
