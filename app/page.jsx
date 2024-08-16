@@ -137,7 +137,7 @@ const ClientsData = () => {
         }
   
     
-    if (newName !== '' && clientContact === '') {
+    if (newName !== '') {
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
         .then((response) => response.json())
@@ -941,16 +941,17 @@ const BMvalidateFields = () => {
                   setClientNameSuggestions([]);
                 }, 200); // Adjust the delay time according to your preference
               }}
-              onKeyPress={(e) => {
-                // Allow only alphabetic characters
-                const regex = /^[a-zA-Z\s]*$/;
-                if (!regex.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
+              onFocus={e => e.target.select()}
+              // onKeyPress={(e) => {
+              //   // Allow only alphabetic characters
+              //   const regex = /^[a-zA-Z\s]*$/;
+              //   if (!regex.test(e.key)) {
+              //     e.preventDefault();
+              //   }
+              // }}
             />
           </div>
-          {clientNameSuggestions.length > 0 && (
+          {(clientNameSuggestions.length > 0 && clientDetails.clientName !== "") && (
             <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
             {clientNameSuggestions.map((name, index) => (
               <li key={index}>
@@ -980,6 +981,7 @@ const BMvalidateFields = () => {
                     name="ClientContactPersonInput"
                     value={clientDetails.clientContactPerson}
                     onChange={handleClientContactPersonChange}
+                    onFocus={e => e.target.select()}
                   />
                   {errors.clientContactPerson && <p className="text-red-500 text-xs">{errors.clientContactPerson}</p>}
                 </div>
@@ -995,6 +997,7 @@ const BMvalidateFields = () => {
               id="3"
               name="ClientContactInput"
               value={clientContact}
+              onFocus={e => e.target.select()}
               onChange={(e) => {
                 if (e.target.value.length <= 10) {
                   handleClientContactChange(e.target.value);
@@ -1006,11 +1009,13 @@ const BMvalidateFields = () => {
                   setContactWarning('');
                   if (clientContact.length === 10 && !isNewClient) {
                     fetchClientDetails(clientID);
+                  } else{
+                    setClientNumberSuggestions([]);
                   }
                 }, 200);
               }}
             />
-            {clientNumberSuggestions.length > 0 && (
+            {(clientNumberSuggestions.length > 0 && clientContact !== "") && (
               <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                 {clientNumberSuggestions.map((name, index) => (
                   <li key={index}>
@@ -1038,6 +1043,7 @@ const BMvalidateFields = () => {
                   id="4"
                   name="ClientEmailInput"
                   value={clientEmail}
+                  onFocus={e => e.target.select()}
                   onChange={(e) => handleClientEmailChange(e.target.value)}
                 />
                 {emailWarning && <p className="text-red-500 text-xs">{emailWarning}</p>}
@@ -1054,6 +1060,7 @@ const BMvalidateFields = () => {
                   name="ClientAddressTextArea"
                   placeholder="Address"
                   value={address}
+                  onFocus={e => e.target.select()}
                   onChange={e => setAddress(e.target.value)}
                 />
               </div>
