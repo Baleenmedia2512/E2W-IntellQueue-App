@@ -254,11 +254,13 @@ export const AdDetails = () => {
         <div className="flex flex-row justify-between mx-[8%] bg-gray-100 max-h-full overscroll-none">
   
           {/* Back Button */}
-          <button className="mr-4 mt-8 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
+         { (currentPage !== "adMedium" && currentPage !== "") &&  
+         (<button className="mr-4 mt-8 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
               dispatch(goBack());
           }}>
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
+         )}
           {currentPage === "checkout" ?( 
             <></>
           ): (
