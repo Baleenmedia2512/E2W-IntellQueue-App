@@ -55,7 +55,7 @@ const AdDetailsPage = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const router = useRouter();
   const [vendors, setVendors] = useState([]);
-  const [qty, setQty] = useState("")
+  const [qty, setQty] = useState(0)
   const [campaignDuration, setCampaignDuration] = useState("");
   const [leadDays, setLeadDays] = useState(0);
   const [validTill, setValidTill] = useState("");
@@ -404,7 +404,7 @@ const AdDetailsPage = () => {
       }
       const data = await response.json();
       setMaxRateID(data);
-      
+      //handleRateId(data)
     } catch (error) {
       console.error(error);
     }
@@ -757,6 +757,7 @@ var selectedRate = '';
   useEffect(() => {
     if(isNewRate){
       elementsToShowList("Show");
+      
     }
     if(!isNewRate){
       if(slabData.length < 1 && selectedValues.adType !== ""){
@@ -765,6 +766,7 @@ var selectedRate = '';
         elementsToShowList()
       }
     }
+    
   },[slabData, tempSlabData, isNewRate])
 
   const fetchRates = async () => {
@@ -898,9 +900,7 @@ var selectedRate = '';
     // Update state with the calculated difference
     setValidityDays(differenceInDays);
   };
-  console.log(showCampaignDuration)
-  console.log(showCampaignDuration === true ? 1 : 0)
-  console.log(rateId)
+
   const updateRates = async (e) => {
     e.preventDefault()
     if(editMode){
@@ -917,7 +917,7 @@ var selectedRate = '';
       if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
         const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${unitPrice}`);
     
         // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
@@ -1251,13 +1251,15 @@ var selectedRate = '';
                 setTimeout(() => {
                 setSuccessMessage('');
               }, 2000);
+
                 // Setting the new Rate into Old Rate
                 setIsNewRate(false);
                 fetchMaxRateID()
                 fetchRates()
+                handleRateId(maxRateID)
                 fetchQtySlab()
                 setTempSlabData([])
-                setEditMode(false)
+                setEditMode(true)
             } catch (error) {
                 console.error(error);
             }
@@ -1274,11 +1276,11 @@ const handleRateSearch = async(e) =>{
 }
 
 const updateSlabData = (qty, newUnitPrice) => {
-  
+  console.log(tempSlabData.length)
   if(tempSlabData.length > 0){
   const updatedData = tempSlabData.map((data) => {
     if (data.StartQty === qty) {
-      return { ...data, newUnitPrice };
+      return { ...data, UnitPrice: newUnitPrice };
     }
     
     return data;
@@ -1295,8 +1297,8 @@ const updateSlabData = (qty, newUnitPrice) => {
   setIsQtySlab(false)
   dispatch(setSlabData(updatedData));
 }
+setEditModal(false);
   setEditMode(true);
-  setEditModal(false);
 };
 
   const handleValidityChange = (e) => {
@@ -1320,17 +1322,11 @@ const updateSlabData = (qty, newUnitPrice) => {
   },[validTill])
 
   const handleClearRateId = () => {
+    
     setEditMode(false)
     setRateSearchTerm("")
     dispatch(setRateId(""));
-    dispatch(setSelectedValues({
-      rateName: "",
-      adType: "",
-      vendorName: "",
-      typeOfAd: "",
-      Location: "",
-      Package: ""
-    }));
+    
     setValidityDays(0);
     setValidityDate(new Date());
     setValidTill("");
@@ -1348,8 +1344,26 @@ const updateSlabData = (qty, newUnitPrice) => {
     setUnitPrice(0);
     setNewUnitPrice(0);
     setTempSlabData([]);
+    setMarginPercentage(0);
+    if(isNewRate){
+      return
+    }else{
+      dispatch(setSelectedValues({
+        rateName: "",
+        adType: "",
+        vendorName: "",
+        typeOfAd: "",
+        Location: "",
+        Package: ""
+      }));
+    }
   }
 
+  useEffect(() => {
+    if(isNewRate){
+      handleClearRateId();
+    }
+  }, [isNewRate, rateId])
   const handleKeyDown = (event) => {
     if (
       !/[0-9]/.test(event.key) && // Allow numbers
@@ -1377,18 +1391,19 @@ const updateSlabData = (qty, newUnitPrice) => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
             {/* text-blue-500 */}
       <Dialog open={modal} onClose={toggleModal} fullWidth={true} maxWidth='sm'>
-        <DialogTitle>Add Price</DialogTitle>
+        <DialogTitle>Add Cost</DialogTitle>
         <DialogContent>
           <div className="relative">
             <h3 className="block mb-1 font-medium">Enter Slab Rates for {qty}+ Quantities</h3>
             <TextField 
               id="ratePerUnit" 
-              defaultValue={newUnitPrice} 
+              value={newUnitPrice} 
               label="Slab Rate" 
               variant="outlined" 
               size='small' 
               className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
               type='number' 
+              onFocus={e => e.target.select()}
               onChange={(e) => {setNewUnitPrice(e.target.value)}}
             />
             <DialogActions className='mt-2'>
@@ -1397,8 +1412,8 @@ const updateSlabData = (qty, newUnitPrice) => {
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog open={editModal} onClose={toggleModal} fullWidth={true} maxWidth='sm'>
-        <DialogTitle>Update Price</DialogTitle>
+      <Dialog open={editModal} onClose={() => setEditModal(false)} fullWidth={true} maxWidth='sm'>
+        <DialogTitle>Update Cost</DialogTitle>
         <DialogContent>
           <div className="relative p-2">
             <h3 className="mb-4 font-medium">Enter the Slab Rate of the provided Quantity Slab</h3>
@@ -1745,7 +1760,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                         inputRef={qtyRef}
                         className={`w-full px-4 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
                         type='number' 
-                        defaultValue={qty} 
+                        value={qty} 
                         onChange={e => {setQty(e.target.value); setIsQty(false); setIsQtySlab(false)}} 
                         helperText="Ex: 3 | Means this rate is applicable for Units > 3"
                         onFocus={(e) => {
@@ -1943,7 +1958,7 @@ const updateSlabData = (qty, newUnitPrice) => {
                     {/* <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span> */}
                     </button> 
                   )}
-                    {isNewRate ? (
+                    {(isNewRate && (rateId === 0 || rateId === ''))  ? (
                       <button 
                       className="px-6 py-2 mr-3 bg-green-500 text-white rounded-lg w-fit" 
                       onClick={insertNewRate}>Add
