@@ -450,18 +450,19 @@ const ClientsData = () => {
                 setSuccessMessage('Client Details Are Saved!');
                 setTimeout(() => {
               setSuccessMessage('');
-            }, 3000);
+              if (isDetails) {
+                router.push('/adDetails')
+                dispatch(setQuotesData({currentPage: "checkout"}))
+              } else {
+                if (!elementsToHide.includes('QuoteSenderNavigation')) {
+                  router.push('/adDetails')
+                  dispatch(setQuotesData({currentPage: ""}))
+                }
+              }
+            }, 2000);
             // router.push('/adDetails')
             
-            if (isDetails) {
-              router.push('/adDetails')
-              dispatch(setQuotesData({currentPage: "checkout"}))
-            } else {
-              if (!elementsToHide.includes('QuoteSenderNavigation')) {
-                router.push('/adDetails')
-                dispatch(setQuotesData({currentPage: ""}))
-              }
-            }
+            
           // window.location.reload();
           // dispatch(resetQuotesData())
           
