@@ -468,7 +468,7 @@ const ClientsData = () => {
           
           
         // setMessage(data.message);
-      } else if (data === "Contact Number Already Exists!"){
+      } else if (data === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
           setSeverity('error');
           setToast(true);
@@ -510,7 +510,7 @@ const ClientsData = () => {
           // window.location.reload();
         
         //setMessage(data.message);
-      } else if (data === "Contact Number Already Exists!"){
+      } else if (data === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
   setSeverity('error');
   setToast(true);
@@ -928,14 +928,14 @@ const BMvalidateFields = () => {
         <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
         <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
         {!isNewClient && clientID && (
-  <div className="w-full max-w-lg bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md">
+  <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
       onClick={handleEditMode}
     >
       Exit Edit
     </button>
-    <div className="flex flex-row text-left text-sm md:text-base">
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
       <p className="text-gray-600 font-semibold">{clientID}</p>
       <p className="text-gray-600 font-semibold mx-1">-</p>
       <p className="text-gray-600 font-semibold">{clientName}</p>
