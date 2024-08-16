@@ -20,8 +20,8 @@ import { useMediaQuery } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { setOrderData , setIsOrderUpdate} from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
-import { Select  } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import { Select } from '@mui/material';
+
 
 
 
@@ -552,7 +552,7 @@ const orderColumns = [
                 color="primary"
                 size="small"
                 onClick={() => handleEditIconClick(params.row)}
-                style={{ marginLeft: '8px',
+                style={{ marginLeft: '12px',
                   backgroundColor: '#69b789',
                   color: 'white',
                   fontWeight: 'bold',
@@ -731,6 +731,12 @@ const orderColumns = [
       { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
     ] : [];
 
+    
+    const rateBaseData = rateBaseIncome.length > 0 ? 
+    rateBaseIncome.map((item) => ({
+        name: item.Card,
+        value: parseFloat(item.total_amount || 0)
+    })) : [];
 
   
     const expenseData = sumOfFinance.length > 0 ? [
@@ -755,7 +761,26 @@ const orderColumns = [
     
     // const isPieEmpty = !pieData || pieData.length < 2 || (pieData[0]?.value === 0 && pieData[1]?.value === 0);
 
-    
+    const rateBaseColors = [
+      '#FFA726', '#66BB6A', '#29B6F6', '#AB47BC', '#FF7043',  // Original Colors
+      '#FFCA28',  // Light Yellow Orange
+      '#8D6E63',  // Brownish Gray
+      '#4FC3F7',  // Light Sky Blue
+      '#D4E157',  // Lime Green
+      '#BA68C8',  // Soft Purple
+      '#FF5722',  // Deep Orange
+      '#9575CD',  // Lavender Purple
+      '#4DB6AC',  // Aquamarine
+      '#F06292',  // Soft Pink
+      '#AED581',  // Light Green
+      '#FFEB3B',  // Bright Yellow
+      '#F44336',  // Red
+      '#26A69A',  // Teal
+      '#EF5350',  // Soft Red
+      '#81C784',  // Mint Green
+      '#7E57C2',  // Indigo Purple
+      '#FFB74D',  // Soft Orange
+    ];
     const incomeColors = ['#D2B48C', '#8BC34A'];
     const expenseColors = [
       '#FF5722', '#FF9800', '#FFC107', '#F9A825', '#FF6F61', 
@@ -766,10 +791,21 @@ const orderColumns = [
  
 
       // Styles
+      const isPhone = useMediaQuery('(max-width:768px)');
+const [selectedIncomeView, setSelectedIncomeView] = useState('Income Breakdown');
+//const title = selectedIncomeView === 'Income Breakdown' ? 'Income Breakdown' : 'Rate Base Income Breakdown';
+const handleIncomeViewChange = (event) => {
+  setSelectedIncomeView(event.target.value);
+};
+
+const incomeOptions = [
+  { label: 'By Payment mode', value: 'Income Breakdown' },
+  { label: 'By Rate Card', value: 'Rate Base Income Breakdown' },
+];
       const styles = {
         chartContainer: {
           width: '100%',
-          height: '370px', // Adjust height as needed
+          height: '440px', // Adjust height as needed
           background: '#ffffff',
           borderRadius: '12px',
           boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
@@ -782,7 +818,7 @@ const orderColumns = [
         slideContainer: {
           display: 'flex',
           width: '100%',
-          height: '370px',
+          height: '440px',
           overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           '-webkit-overflow-scrolling': 'touch', // Enable smooth scrolling on iOS
@@ -798,9 +834,9 @@ const orderColumns = [
         },
         title: {
           fontWeight: 'bold',
-          textAlign: 'center',
+          textAlign: 'center', // Center align text horizontally
           fontSize: '20px',
-          marginBottom: '0px', // Increase margin to add gap between title and chart
+          marginBottom: '0px',
         },
         incomeTitle: {
           color: '#4CAF50', // Green color for income
@@ -819,6 +855,24 @@ const orderColumns = [
           fontSize: '14px',
           fontWeight: 'bold',
           color: '#FF5722', // Red color for total expense text
+        },
+        dropdownContainer: {
+          display: 'flex',
+          justifyContent: 'space-between', // Ensures the title and dropdown are on the same line
+          alignItems: 'center', 
+          marginBottom: '1px',
+          padding: '0 20px', // Adjust the padding to your preference
+          width: '100%',
+        },
+        dropdown: {
+          marginTop: '10px',
+          marginLeft: 'auto', // Ensures the dropdown is pushed to the right
+          padding: isPhone ? '1px' : '2px',  // Adjust padding for phone
+          fontSize: isPhone ? '12px' : '14px',  // Smaller font size on phone
+          borderRadius: '5px',
+          zIndex: 0,
+          width: isPhone ? '45%' : 'auto',  // Full width on phone
+
         },
       };
 
@@ -1228,74 +1282,121 @@ const handleDateChange = (range) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+            
             <div style={styles.chartContainer}>
-        <div style={styles.slideContainer}>
-      <div style={styles.slide}>
-        <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
-        {isIncomePieEmpty ? (
-          <div className="text-center">No income records found during this timeline!</div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                activeIndex={activeIndex}
-                activeShape={renderActiveShape}
-                data={incomeData}
-                cx="50%"
-                cy="50%"
-                innerRadius={window.innerWidth > 768 ? 70 : 55} // Adjusted for larger size
-                outerRadius={window.innerWidth > 768 ? 100 : 75}
-                fill="#8884d8"
-                dataKey="value"
-                onMouseEnter={onPieEnter}
-                labelLine={false}
-                stroke="none"
-              >
-                {incomeData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={incomeColors[index % incomeColors.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-        <div style={{ ...styles.totalIncomeText, color: '#4CAF50' }}>
-          Total Income: ₹{formatIndianNumber(totalIncome)}
+      <div style={styles.slideContainer}>
+        {/* Income Breakdown Chart */}
+        <div style={styles.slide}>
+          
+          <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
+          <div style={styles.dropdownContainer}>
+            <Select
+              value={selectedIncomeView}
+              onChange={handleIncomeViewChange}
+              style={styles.dropdown}
+              variant="outlined"
+              fullWidth
+            >
+              {incomeOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </div>
+
+          {selectedIncomeView === 'Income Breakdown' ? (
+            isIncomePieEmpty ? (
+              <div className="text-center">No income records found during this timeline!</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    data={incomeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={window.innerWidth > 768 ? 70 : 55}
+                    outerRadius={window.innerWidth > 768 ? 100 : 75}
+                    fill="#8884d8"
+                    dataKey="value"
+                    onMouseEnter={onPieEnter}
+                    labelLine={false}
+                    stroke="none"
+                  >
+                    {incomeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={incomeColors[index % incomeColors.length]} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  data={rateBaseData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={window.innerWidth > 768 ? 70 : 55}
+                  outerRadius={window.innerWidth > 768 ? 100 : 75}
+                  fill="#8884d8"
+                  dataKey="value"
+                  onMouseEnter={onPieEnter}
+                  labelLine={false}
+                  stroke="none"
+                >
+                  {rateBaseData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={rateBaseColors[index % rateBaseColors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+
+          <div style={{ ...styles.totalIncomeText, color: '#4CAF50' }}>
+            Total Income: ₹{formatIndianNumber(totalIncome)}
+          </div>
         </div>
-      </div>
-      <div style={styles.slide}>
-        <div style={{ ...styles.title, ...styles.expenseTitle }}>Expense Breakdown</div>
-        {isExpensePieEmpty ? (
-          <div className="text-center">No expense records found during this timeline!</div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                activeIndex={activeIndex}
-                activeShape={renderActiveShape}
-                data={expenseData}
-                cx="50%"
-                cy="50%"
-                innerRadius={window.innerWidth > 768 ? 70 : 70} // Adjusted for larger size
-                outerRadius={window.innerWidth > 768 ? 100 : 90}
-                fill="#8884d8"
-                dataKey="value"
-                onMouseEnter={onPieEnter}
-                labelLine={false}
-                stroke="none"
-              >
-                {expenseData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-        <div style={{ ...styles.totalExpenseText, color: '#FF5722' }}>
-          Total Expense: ₹{formatIndianNumber(totalExpense)}
+
+        {/* Expense Breakdown Chart */}
+        <div style={styles.slide}>
+          <div style={{ ...styles.title, ...styles.expenseTitle }}>Expense Breakdown</div>
+          {isExpensePieEmpty ? (
+            <div className="text-center">No expense records found during this timeline!</div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  data={expenseData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={window.innerWidth > 768 ? 70 : 70}
+                  outerRadius={window.innerWidth > 768 ? 100 : 90}
+                  fill="#8884d8"
+                  dataKey="value"
+                  onMouseEnter={onPieEnter}
+                  labelLine={false}
+                  stroke="none"
+                >
+                  {expenseData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+          <div style={{ ...styles.totalExpenseText, color: '#FF5722' }}>
+            Total Expense: ₹{formatIndianNumber(totalExpense)}
+          </div>
         </div>
       </div>
     </div>
-  </div>
             {/* <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
