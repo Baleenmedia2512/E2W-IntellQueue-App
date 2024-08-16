@@ -930,15 +930,17 @@ const BMvalidateFields = () => {
         {!isNewClient && clientID && (
   <div className="w-full max-w-lg bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md">
     <button 
-      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2"
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
       onClick={handleEditMode}
     >
       Exit Edit
     </button>
     <div className="flex flex-row text-left text-sm md:text-base">
-      <p className="text-gray-600 font-semibold">{clientID} -</p>
-      <p className="text-gray-600 font-semibold ml-1">{clientName} -</p>
-      <p className="text-gray-600 font-semibold ml-1">{clientContact}</p>
+      <p className="text-gray-600 font-semibold">{clientID}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{clientName}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{clientContact}</p>
     </div>
   </div>
 )}
