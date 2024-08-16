@@ -173,6 +173,7 @@ export default function GroupedRowsDemo() {
                         console.log('Incentive status updated:', updateResult.success);
                     }
                 }
+                setOpen(false);
                 setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
                 setTimeout(() => {
                 setSuccessMessage('');
@@ -603,14 +604,24 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 
+
+
 useEffect(() => {
-    const zeroPriceConsultants = consultants.filter(consultant => 
-        consultant.rates.some(rate => 
-            rate.rateTypes.some(rateType => rateType.price === '0' || rateType.price === 0)
-        )
-    );
-    setConsultantsWithZeroPrice(zeroPriceConsultants);
-}, [consultants]);
+    if (selectedRows.length > 0) {
+        const zeroPriceConsultants = selectedRows.filter(
+            row => row.price === '0' || row.price === 0
+        );
+        setConsultantsWithZeroPrice(zeroPriceConsultants);
+    } else {
+        const zeroPriceConsultants = consultants.filter(consultant => 
+            consultant.rates.some(rate => 
+                rate.rateTypes.some(rateType => rateType.price === '0' || rateType.price === 0)
+            )
+        );
+        setConsultantsWithZeroPrice(zeroPriceConsultants);
+    }
+}, [consultants, selectedRows]);
+
 
 const handleClickOpen = () => {
     setOpen(true);
@@ -714,7 +725,7 @@ const handleClose = () => {
                         {consultantsWithZeroPrice.length > 0 ? (
                             <>
                             <strong>The following consultant(s) have a price of 0:</strong>
-                            <ul className="mt-2 ml-4 list-disc">
+                            <ul className="mt-2 ml-4 list-disc ">
                                 {consultantsWithZeroPrice.map((consultant, index) => (
                                     <li key={index}>{consultant.name}</li>
                                 ))}

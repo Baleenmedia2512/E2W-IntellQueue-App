@@ -72,6 +72,7 @@ const ClientsData = () => {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [clientContactToRestore, setClientContactToRestore] = useState('');
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails)
+  const [editMode, setEditMode] = useState(false);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -105,6 +106,7 @@ const ClientsData = () => {
                     if (!data.isNewUser) {
                         // Contact number already exists
                         setIsNewClient(false);
+                        setEditMode(true);
                         // setContactWarning('Contact number already exists.');
 
                         // MP-95-As a user, I should able to restore a removed client.
@@ -114,6 +116,7 @@ const ClientsData = () => {
                       }
                     } else {
                         // Contact number is new
+                        if (!editMode) {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
@@ -128,7 +131,7 @@ const ClientsData = () => {
                           setClientContactPerson("");
                           // setClientID("");
                           dispatch(setClientData({ clientID: "" }));
-                          
+                        }
                     }
                 })
                 .catch((error) => {
@@ -199,6 +202,7 @@ const ClientsData = () => {
     setClientNameSuggestions([]);
     setClientNumberSuggestions([]);
     setIsNewClient(false);
+    setEditMode(true);
     setContactWarning('');
   };
   
@@ -336,6 +340,7 @@ const ClientsData = () => {
                     if (!data.isNewUser) {
                         // Contact number already exists
                         setIsNewClient(false);
+                        setEditMode(true);
                         setContactWarning('Contact number already exists.');
 
                         // MP-95-As a user, I should able to restore a removed client.
@@ -345,6 +350,7 @@ const ClientsData = () => {
                       }
                     } else {
                         // Contact number is new
+                        if(!editMode) {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
@@ -359,6 +365,7 @@ const ClientsData = () => {
                           setClientContactPerson("");
                           // setClientID("");
                           dispatch(setClientData({ clientID: "" }));
+                        }
                           
                     }
                 })
@@ -443,18 +450,19 @@ const ClientsData = () => {
                 setSuccessMessage('Client Details Are Saved!');
                 setTimeout(() => {
               setSuccessMessage('');
-            }, 3000);
+              if (isDetails) {
+                router.push('/adDetails')
+                dispatch(setQuotesData({currentPage: "checkout"}))
+              } else {
+                if (!elementsToHide.includes('QuoteSenderNavigation')) {
+                  router.push('/adDetails')
+                  dispatch(setQuotesData({currentPage: ""}))
+                }
+              }
+            }, 2000);
             // router.push('/adDetails')
             
-            if (isDetails) {
-              router.push('/adDetails')
-              dispatch(setQuotesData({currentPage: "checkout"}))
-            } else {
-              if (!elementsToHide.includes('QuoteSenderNavigation')) {
-                router.push('/adDetails')
-                dispatch(setQuotesData({currentPage: ""}))
-              }
-            }
+            
           // window.location.reload();
           // dispatch(resetQuotesData())
           
@@ -886,19 +894,65 @@ const BMvalidateFields = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
+  const handleEditMode = () => {
+    // Clear the contact warning
+    setContactWarning('');
+  
+    // Reset client data fields
+    dispatch(setClientData({ clientEmail: "" }));
+    dispatch(setClientData({ clientName: "" }));
+    dispatch(setClientData({ clientID: "" }));
+    dispatch(setClientData({ clientContact: "" }));
+  
+    // Reset other client-related fields
+    setClientAge("");
+    setDOB("");
+    setAddress("");
+    setConsultantName("");
+    setConsultantNumber("");
+    setClientPAN("");
+    setClientGST("");
+    setClientContactPerson("");
+  
+    // Set edit mode and any other necessary state changes
+    setEditMode(true);
+    setIsNewClient(true);  // Assuming you want to mark the client as new when entering edit mode
+  };
+  
+
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-2">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
         <h2 className="text-2xl font-bold text-blue-500 mb-1">Client Registration</h2>
         <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
         <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+        {!isNewClient && clientID && (
+  <div className="w-full max-w-lg bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md">
+    <button 
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2"
+      onClick={handleEditMode}
+    >
+      Exit Edit
+    </button>
+    <div className="flex flex-row text-left text-sm md:text-base">
+      <p className="text-gray-600 font-semibold">{clientID} -</p>
+      <p className="text-gray-600 font-semibold ml-1">{clientName} -</p>
+      <p className="text-gray-600 font-semibold ml-1">{clientContact}</p>
+    </div>
+  </div>
+)}
+
+
+
+
         <form className="space-y-6">
           {/* Restore client dialog */}
           <Dialog open={restoreDialogOpen} onClose={() => setRestoreDialogOpen(false)}>
             <DialogTitle>Restore Client</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                This client is invalid. Do you want to restore the client?
+              This record appears to be a duplicate. Would you like to restore the existing record?
               </DialogContentText>
             </DialogContent>
             <DialogActions>
@@ -923,13 +977,13 @@ const BMvalidateFields = () => {
                 setSelectedOption(e.target.value);
                 dispatch(setClientData({clientTitle: e.target.value}));
               }}
-              className={`w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-1/3 sm:w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} overflow-visible`}
               id="1"
               name="TitleSelect"
             />
             <input
               type="text"
-              className={`w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-2/3 sm:w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
               placeholder="Name*"
               id="2"
               name="ClientNameInput"
@@ -1247,7 +1301,7 @@ const BMvalidateFields = () => {
           </div>
           <div className="text-center">
             {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
-            {isNewClient ? (
+            {clientID === '' ? (
               <button
                 className="px-6 py-2 bg-blue-500 text-white rounded-lg"
                 onClick={submitDetails}
