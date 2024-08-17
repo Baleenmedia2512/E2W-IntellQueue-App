@@ -599,7 +599,8 @@ const fetchRates = async () => {
               dispatch(setOrderData({ consultantName: clientDetails.consname || "" }))
               dispatch(setOrderData({ clientGST: clientDetails.GST || "" }))
               dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
-   
+              
+              
               //MP-69-New Record are not fetching in GS
               setClientID(clientDetails.id);
               setClientEmail(clientDetails.email);
@@ -625,6 +626,8 @@ const fetchRates = async () => {
             console.error("Error fetching client details:", error);
           });
       };
+
+
 
       const fetchPreviousOrderDetails = (clientNumber, clientName) => {
         axios
@@ -681,6 +684,8 @@ const fetchOrderDetailsByOrderNumber = () => {
         setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
         dispatch(setRateId(data.rateId));
         setHasOrderDetails(true);
+        setClientID(data.clientID);
+        setConsultantName(data.consultantName);
       } else {
         setHasOrderDetails(false); // Set to false if there are no details
       }
