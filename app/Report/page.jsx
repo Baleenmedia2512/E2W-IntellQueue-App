@@ -17,6 +17,7 @@ import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Te
 import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMediaQuery } from '@mui/material';
+import { useRouter } from 'next/navigation';
 
 
 const Report = () => {
@@ -65,6 +66,7 @@ const Report = () => {
   const [totalOrderAmount, setTotalOrderAmount] = useState('');
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
 
+  const router = useRouter();
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -824,6 +826,10 @@ const handleDateChange = (range) => {
 };
 
 
+const handleConsultantReportOpen = () => {
+router.push('/Report/ConsultantReport');
+};  
+
 
     return (
 
@@ -976,15 +982,23 @@ const handleDateChange = (range) => {
 )}
 
         {value === 1 && (
-             <div style={{ width: '100%'}}>
-              <div className="flex flex-grow text-black mb-4">
-               <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-               <div className="flex flex-grow items-end ml-2 mb-4">
-               <button className="custom-button" onClick={handleClickOpen}>
-                Show Balance
-              </button>
-                </div>
-             </div>
+             <div style={{ width: '100%' }}>
+             <div className="flex flex-grow text-black mb-4">
+    <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+    <div className="flex flex-grow items-end ml-2 mb-4">
+      <div className="flex flex-col sm:flex-row">
+        <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
+          Show Balance
+        </button>
+        {appRights.includes('Administrator') && (
+          <button className="consultant-button" onClick={handleConsultantReportOpen}>
+            Consultant Report
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+
              {/* Delete Transaction Confirmation */}
              <Dialog
   open={openConfirmDialog}
