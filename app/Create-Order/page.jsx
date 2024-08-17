@@ -1370,6 +1370,7 @@ return (
               value={selectedValues.rateName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
               options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+              disabled={isOrderUpdate} 
             />
             {errors.rateName && <span className="text-red-500 text-sm">{errors.rateName}</span>}
           </div>
