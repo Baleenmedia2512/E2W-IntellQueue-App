@@ -695,6 +695,7 @@ const fetchOrderDetailsByOrderNumber = () => {
     });
 };
 
+
 useEffect(() => {
   fetchOrderDetailsByOrderNumber();
 }, [orderNumberRP]);
@@ -1095,6 +1096,13 @@ const [dialogOpen, setDialogOpen] = useState(false);
   };
 
   const handleCancelUpdate = () => {
+    setClientName('');
+    setOrderDate(new Date());
+    setDisplayOrderDate(new Date())
+    setUpdateRateWiseOrderNumber('');
+    dispatch(setRateId(''));
+    setClientID('');
+    setConsultantName('');
     dispatch(resetOrderData());
     //window.location.reload(); // Reload the page
   };
