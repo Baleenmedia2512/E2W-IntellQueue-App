@@ -1342,15 +1342,7 @@ return (
                      
                     </div>)
 }
-        {/* Short Summary */}
-        {/* <div className="bg-gradient-to-r from-green-300 via-green-300 to-green-500 p-4 rounded-md shadow-lg mt-6">
-          <h3 className="font-bold text-black mb-2">Short Summary</h3>
-          <p>Rate Card Name: {selectedValues.rateName.value}</p>
-          <p>Type: {selectedValues.adType.value}</p>
-          <p>Unit Price: Rs. {unitPrice} per {selectedUnit.value}</p>
-          <p>Consultant: {consultantName}</p>
-        </div> */}
-
+   
         
         
         {/* Rate Card Name */}
