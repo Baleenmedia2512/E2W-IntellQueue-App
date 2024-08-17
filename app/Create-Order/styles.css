@@ -63,15 +63,17 @@
     cursor: pointer;
     outline: none;
     display: inline-block;
+    
 }
 
 .update-button {
     background-color: #23c483;
+    margin-right: 10px;
 }
 
 .update-button:hover {
-    background-color: #2376c4;
-    box-shadow: 0px 15px 20px rgba(17, 111, 165, 0.4);
+    background-color: #23c483;
+    box-shadow: 0px 15px 20px rgba(23, 219, 111, 0.4);
     transform: translateY(-7px);
 }
 
@@ -100,21 +102,23 @@
         font-size: 10px;
         letter-spacing: 0.5px;
     }
+    .button-container{
+      width: 38%;
+    }
     .update-button {
-      right: 3px; /* Position cancel button below update button */
-      margin-top: px; /* Add spacing between buttons */
-      margin-bottom: 70px;   
+      right: 5px; /* Position cancel button below update button */
+      margin-bottom: 10px;   
       position: relative;
-      width:39%;
+      width:100%;
       height:40px;
       
   }
   .cancel-button {
-    right: 20px; /* Position cancel button below update button */
-    margin-top: 40px; /* Add spacing between buttons */
-    position: absolute;
-    height: 40px;
-    width:35%;
+    right: 5px; /* Position cancel button below update button */
+      margin-bottom: 10px;   
+      position: relative;
+      width:100%;
+      height:40px;
 }
 }
 
