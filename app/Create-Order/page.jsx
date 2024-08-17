@@ -1184,8 +1184,8 @@ return (
     {/* Conditional rendering based on isOrderUpdate */}
     {isOrderUpdate ? (
   <>
-    <button className="custom-button" onClick={handleOpenDialog}>Update Order</button>
-    <button className="custom-button" onClick={handleCancelUpdate} style={{ backgroundColor: '#d98880', color: 'white' }}>Cancel Update</button>
+    <button className="update-button" onClick={handleOpenDialog}>Update Order</button>
+    <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button>
   </>
 ) : (
   <button className="custom-button" onClick={createNewOrder}>Place Order</button>
