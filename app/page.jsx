@@ -73,6 +73,9 @@ const ClientsData = () => {
   const [clientContactToRestore, setClientContactToRestore] = useState('');
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails)
   const [editMode, setEditMode] = useState(false);
+  const [displayClientName, setDisplayClientName] = useState(clientName);
+  const [displayClientNumber, setDisplayClientNumber] = useState('');
+  const [displayClientID, setDisplayClientID] = useState(clientID);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -204,6 +207,7 @@ const ClientsData = () => {
     setIsNewClient(false);
     setEditMode(true);
     setContactWarning('');
+    setDisplayClientNumber(number);
   };
   
   const handleConsultantNameSelection = (event) => {
@@ -250,6 +254,8 @@ const ClientsData = () => {
           setMonths(clientDetails.Age || "");
           const age = calculateAge(clientDetails.DOB);
           setClientAge(age);
+          setDisplayClientID(clientDetails.id);
+          setDisplayClientName(clientDetails.name);
           // Extract PAN from GST if necessary
         if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.PAN || clientDetails.PAN === "")) {
           const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
@@ -914,7 +920,11 @@ const BMvalidateFields = () => {
     setClientPAN("");
     setClientGST("");
     setClientContactPerson("");
-  
+
+    setDisplayClientID("");
+    setDisplayClientName("");
+    setDisplayClientNumber("");
+
     // Set edit mode and any other necessary state changes
     setEditMode(true);
     setIsNewClient(true);  // Assuming you want to mark the client as new when entering edit mode
@@ -936,11 +946,11 @@ const BMvalidateFields = () => {
       Exit Edit
     </button>
     <div className="flex flex-row text-left text-sm md:text-base pr-2">
-      <p className="text-gray-600 font-semibold">{clientID}</p>
+      <p className="text-gray-600 font-semibold">{displayClientID}</p>
       <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">{clientName}</p>
+      <p className="text-gray-600 font-semibold">{displayClientName}</p>
       <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">{clientContact}</p>
+      <p className="text-gray-600 font-semibold">{displayClientNumber}</p>
     </div>
   </div>
 )}
