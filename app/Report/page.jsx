@@ -556,7 +556,7 @@ const orderColumns = [
                   backgroundColor: '#69b789',
                   color: 'white',
                   fontWeight: 'bold',
-                 }}  // Adjust the value as needed
+                 }}  
             >  
                Edit
             </Button>

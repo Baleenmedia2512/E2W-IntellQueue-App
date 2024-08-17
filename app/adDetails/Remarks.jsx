@@ -13,11 +13,14 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useAppSelector } from '@/redux/store';
 import BreadCrumbs from '../components/BreadCrumbs';
 import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
+import { FetchRateSeachTerm } from '../api/FetchAPI';
 
 const RemarksPage = () => {
   const dispatch = useDispatch();
   const username = useAppSelector(state => state.authSlice.userName);
   const [datas, setDatas] = useState([]);
+  const [rateSearchTerm,setRateSearchTerm] = useState("");
+  const [ratesSearchSuggestion, setRatesSearchSuggestion] = useState([]);
   const routers = useRouter();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
@@ -84,6 +87,37 @@ const RemarksPage = () => {
     dispatch(setQuotesData({selectedPosition: "", rateId: 0}));
   }, []);
 
+  const handleRateSearch = async(e) =>{
+    setRateSearchTerm(e.target.value);
+    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    setRatesSearchSuggestion(searchSuggestions);
+  }
+
+  const fetchRate = async(rateId) => {
+    try {
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
+      if(!response.ok){
+        throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
+      }
+      const data = await response.json();
+      const firstData = data[0];
+      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true}))
+    } catch (error) {
+      console.error("Error while fetching rates: " + error)
+    }
+  }
+  
+  const handleRateSelection = (e) => {
+    const selectedRate = e.target.value;
+    const selectedRateId = selectedRate.split('-')[0];
+    setRatesSearchSuggestion([]);
+    setRateSearchTerm(selectedRate);
+
+    fetchRate(selectedRateId);
+    dispatch(setQuotesData({rateId: selectedRateId}));
+    dispatch(updateCurrentPage("adDetails"));
+  }
+
   const greater = ">>"
   return (
     <div className=''>
@@ -134,13 +168,33 @@ const RemarksPage = () => {
 <h1 className='text-2xl font-bold text-center text-blue-500 mb-4'>Select Package</h1>
       {/* <h1 className='mx-[8%] mb-2 font-semibold'>Ad Type : {adType}</h1> */}
       <div className='mx-[8%] relative'>
-          <input
-          className="w-full border border-gray-500 text-black p-2 rounded-lg mb-4 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-200"
-        type="text"
-        value={searchInput}
-        onChange={handleSearchInputChange}
-        placeholder="Search"
-      />
+      <input
+          className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+          // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
+          type="text"
+          id="RateSearchInput"
+          // name='RateSearchInput'
+          placeholder="Ex: RateName Type"
+          value={rateSearchTerm}
+          onChange = {handleRateSearch}
+          onFocus={(e) => {e.target.select()}}
+        />
+      {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "") && (
+              <ul className="z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+                {ratesSearchSuggestion.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleRateSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
       <div className="absolute top-0 right-0 mt-2 mr-3">
           <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div></div>

@@ -72,6 +72,7 @@ const ClientsData = () => {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [clientContactToRestore, setClientContactToRestore] = useState('');
   const isDetails = useAppSelector(state => state.quoteSlice.isDetails)
+  const [editMode, setEditMode] = useState(false);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -105,6 +106,7 @@ const ClientsData = () => {
                     if (!data.isNewUser) {
                         // Contact number already exists
                         setIsNewClient(false);
+                        setEditMode(true);
                         // setContactWarning('Contact number already exists.');
 
                         // MP-95-As a user, I should able to restore a removed client.
@@ -114,6 +116,7 @@ const ClientsData = () => {
                       }
                     } else {
                         // Contact number is new
+                        if (!editMode) {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
@@ -128,7 +131,7 @@ const ClientsData = () => {
                           setClientContactPerson("");
                           // setClientID("");
                           dispatch(setClientData({ clientID: "" }));
-                          
+                        }
                     }
                 })
                 .catch((error) => {
@@ -137,7 +140,7 @@ const ClientsData = () => {
         }
   
     
-    if (newName !== '' && clientContact === '') {
+    if (newName !== '') {
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
         .then((response) => response.json())
@@ -199,6 +202,7 @@ const ClientsData = () => {
     setClientNameSuggestions([]);
     setClientNumberSuggestions([]);
     setIsNewClient(false);
+    setEditMode(true);
     setContactWarning('');
   };
   
@@ -336,6 +340,7 @@ const ClientsData = () => {
                     if (!data.isNewUser) {
                         // Contact number already exists
                         setIsNewClient(false);
+                        setEditMode(true);
                         setContactWarning('Contact number already exists.');
 
                         // MP-95-As a user, I should able to restore a removed client.
@@ -345,6 +350,7 @@ const ClientsData = () => {
                       }
                     } else {
                         // Contact number is new
+                        if(!editMode) {
                         setIsNewClient(true);
                         setContactWarning('');
                           dispatch(setClientData({ clientEmail: "" }));
@@ -359,6 +365,7 @@ const ClientsData = () => {
                           setClientContactPerson("");
                           // setClientID("");
                           dispatch(setClientData({ clientID: "" }));
+                        }
                           
                     }
                 })
@@ -443,24 +450,25 @@ const ClientsData = () => {
                 setSuccessMessage('Client Details Are Saved!');
                 setTimeout(() => {
               setSuccessMessage('');
-            }, 3000);
+              if (isDetails) {
+                router.push('/adDetails')
+                dispatch(setQuotesData({currentPage: "checkout"}))
+              } else {
+                if (!elementsToHide.includes('QuoteSenderNavigation')) {
+                  router.push('/adDetails')
+                  dispatch(setQuotesData({currentPage: ""}))
+                }
+              }
+            }, 2000);
             // router.push('/adDetails')
             
-            if (isDetails) {
-              router.push('/adDetails')
-              dispatch(setQuotesData({currentPage: "checkout"}))
-            } else {
-              if (!elementsToHide.includes('QuoteSenderNavigation')) {
-                router.push('/adDetails')
-                dispatch(setQuotesData({currentPage: ""}))
-              }
-            }
+            
           // window.location.reload();
           // dispatch(resetQuotesData())
           
           
         // setMessage(data.message);
-      } else if (data === "Contact Number Already Exists!"){
+      } else if (data === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
           setSeverity('error');
           setToast(true);
@@ -502,7 +510,7 @@ const ClientsData = () => {
           // window.location.reload();
         
         //setMessage(data.message);
-      } else if (data === "Contact Number Already Exists!"){
+      } else if (data === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
   setSeverity('error');
   setToast(true);
@@ -886,19 +894,67 @@ const BMvalidateFields = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
+  const handleEditMode = () => {
+    // Clear the contact warning
+    setContactWarning('');
+  
+    // Reset client data fields
+    dispatch(setClientData({ clientEmail: "" }));
+    dispatch(setClientData({ clientName: "" }));
+    dispatch(setClientData({ clientID: "" }));
+    dispatch(setClientData({ clientContact: "" }));
+  
+    // Reset other client-related fields
+    setClientAge("");
+    setDOB("");
+    setAddress("");
+    setConsultantName("");
+    setConsultantNumber("");
+    setClientPAN("");
+    setClientGST("");
+    setClientContactPerson("");
+  
+    // Set edit mode and any other necessary state changes
+    setEditMode(true);
+    setIsNewClient(true);  // Assuming you want to mark the client as new when entering edit mode
+  };
+  
+
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-2">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
         <h2 className="text-2xl font-bold text-blue-500 mb-1">Client Registration</h2>
         <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
         <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+        {!isNewClient && clientID && (
+  <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
+    <button 
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+      onClick={handleEditMode}
+    >
+      Exit Edit
+    </button>
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
+      <p className="text-gray-600 font-semibold">{clientID}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{clientName}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{clientContact}</p>
+    </div>
+  </div>
+)}
+
+
+
+
         <form className="space-y-6">
           {/* Restore client dialog */}
           <Dialog open={restoreDialogOpen} onClose={() => setRestoreDialogOpen(false)}>
             <DialogTitle>Restore Client</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                This client is invalid. Do you want to restore the client?
+              This record appears to be a duplicate. Would you like to restore the existing record?
               </DialogContentText>
             </DialogContent>
             <DialogActions>
@@ -923,13 +979,13 @@ const BMvalidateFields = () => {
                 setSelectedOption(e.target.value);
                 dispatch(setClientData({clientTitle: e.target.value}));
               }}
-              className={`w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-1/3 sm:w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} overflow-visible`}
               id="1"
               name="TitleSelect"
             />
             <input
               type="text"
-              className={`w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-2/3 sm:w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
               placeholder="Name*"
               id="2"
               name="ClientNameInput"
@@ -941,16 +997,17 @@ const BMvalidateFields = () => {
                   setClientNameSuggestions([]);
                 }, 200); // Adjust the delay time according to your preference
               }}
-              onKeyPress={(e) => {
-                // Allow only alphabetic characters
-                const regex = /^[a-zA-Z\s]*$/;
-                if (!regex.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
+              onFocus={e => e.target.select()}
+              // onKeyPress={(e) => {
+              //   // Allow only alphabetic characters
+              //   const regex = /^[a-zA-Z\s]*$/;
+              //   if (!regex.test(e.key)) {
+              //     e.preventDefault();
+              //   }
+              // }}
             />
           </div>
-          {clientNameSuggestions.length > 0 && (
+          {(clientNameSuggestions.length > 0 && clientDetails.clientName !== "") && (
             <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
             {clientNameSuggestions.map((name, index) => (
               <li key={index}>
@@ -980,6 +1037,7 @@ const BMvalidateFields = () => {
                     name="ClientContactPersonInput"
                     value={clientDetails.clientContactPerson}
                     onChange={handleClientContactPersonChange}
+                    onFocus={e => e.target.select()}
                   />
                   {errors.clientContactPerson && <p className="text-red-500 text-xs">{errors.clientContactPerson}</p>}
                 </div>
@@ -995,6 +1053,7 @@ const BMvalidateFields = () => {
               id="3"
               name="ClientContactInput"
               value={clientContact}
+              onFocus={e => e.target.select()}
               onChange={(e) => {
                 if (e.target.value.length <= 10) {
                   handleClientContactChange(e.target.value);
@@ -1006,11 +1065,13 @@ const BMvalidateFields = () => {
                   setContactWarning('');
                   if (clientContact.length === 10 && !isNewClient) {
                     fetchClientDetails(clientID);
+                  } else{
+                    setClientNumberSuggestions([]);
                   }
                 }, 200);
               }}
             />
-            {clientNumberSuggestions.length > 0 && (
+            {(clientNumberSuggestions.length > 0 && clientContact !== "") && (
               <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                 {clientNumberSuggestions.map((name, index) => (
                   <li key={index}>
@@ -1038,6 +1099,7 @@ const BMvalidateFields = () => {
                   id="4"
                   name="ClientEmailInput"
                   value={clientEmail}
+                  onFocus={e => e.target.select()}
                   onChange={(e) => handleClientEmailChange(e.target.value)}
                 />
                 {emailWarning && <p className="text-red-500 text-xs">{emailWarning}</p>}
@@ -1054,6 +1116,7 @@ const BMvalidateFields = () => {
                   name="ClientAddressTextArea"
                   placeholder="Address"
                   value={address}
+                  onFocus={e => e.target.select()}
                   onChange={e => setAddress(e.target.value)}
                 />
               </div>
@@ -1240,7 +1303,7 @@ const BMvalidateFields = () => {
           </div>
           <div className="text-center">
             {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
-            {isNewClient ? (
+            {clientID === '' ? (
               <button
                 className="px-6 py-2 bg-blue-500 text-white rounded-lg"
                 onClick={submitDetails}

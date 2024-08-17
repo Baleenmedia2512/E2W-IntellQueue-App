@@ -94,9 +94,10 @@ const handleLogin = (event) => {
             })
             .then(data => {
                 if (data.status === 'Login Successfully') {
-                    setSuccessMessage('Login Successfully!');
+                    setSuccessMessage('Login Successful!');
                     setTimeout(() => {
                         setSuccessMessage('');
+                        router.push("/")
                     }, 2000);
 
                     // Dispatch actions and navigate based on conditions
@@ -106,11 +107,11 @@ const handleLogin = (event) => {
                     dispatch(resetRatesData());
                     dispatch(resetQuotesData());
                     dispatch(resetOrderData());
-                    if(elementsToHide.includes("QuoteSenderNavigation")){
-                        router.push("/")
-                    } else{
-                        router.push("/adDetails")
-                    }
+                    // if(elementsToHide.includes("QuoteSenderNavigation")){
+                        
+                    // } else{
+                    //     router.push("/adDetails")
+                    // }
                     // if (companyName === 'Grace Scans') {
                     //     router.push("/"); // Navigate to the main screen
                     // } else {
@@ -239,7 +240,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.5.3
+                        Version 1.5.4
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
