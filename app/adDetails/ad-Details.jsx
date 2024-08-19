@@ -22,6 +22,8 @@ import { addItemsToCart } from '@/redux/features/cart-slice';
 import CreatableSelect from 'react-select/creatable';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 export const formattedMargin = (number) => {
   const roundedNumber = (number / 1).toFixed(2);
@@ -29,7 +31,8 @@ export const formattedMargin = (number) => {
 };
 
 const AdDetailsPage = () => {
-  
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -271,10 +274,18 @@ const AdDetailsPage = () => {
     }
   };
 
+  const validateFields = () => {
+    let errors = {};
+    if (!margin || margin === 0) errors.marginAmount = 'Margin Amount is required';
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
  
  
   const dispatch = useDispatch();
   const handleSubmit = () => {
+    const isValid = validateFields();
+    if (isValid) {
     const isDuplicate = cartItems.some(item => item.rateId === rateId);
     if (isDuplicate) {
       // Display an error message or handle the duplicate case
@@ -304,12 +315,24 @@ const AdDetailsPage = () => {
       dispatch(updateCurrentPage("checkout"))
       //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
     }
+  } else {
+    setToastMessage('Please fill the necessary details in the form.');
+    setSeverity('error');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
   }
+  };
 
   const handleMarginChange = (event) => {
-    //const newValue = parseFloat(event.target.value);
+    const newValue = parseFloat(event.target.value);
     //setMargin(event.target.value);
     dispatch(setQuotesData({marginAmount: event.target.value}))
+
+    if (newValue > 0) {
+      setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
+    }
   };
 
   const marginLostFocus = () => {
@@ -317,10 +340,13 @@ const AdDetailsPage = () => {
   }
 
   const handleMarginPercentageChange = (event) => {
-    //const newPercentage = parseFloat(event.target.value);
+    const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
     dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)}));
     //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
+    if (newPercentage > 0) {
+      setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
+    }
   };
 
   // const marginPercentageLostFocus = () => {
@@ -650,7 +676,7 @@ const AdDetailsPage = () => {
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Margin Amount(₹)</label>
                   <input
-                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
                     //className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
                     placeholder="Ex: 4000"
@@ -659,6 +685,7 @@ const AdDetailsPage = () => {
                     onBlur={marginLostFocus}
                     onFocus={(e) => e.target.select()}
                   />
+                  {errors.marginAmount && <p className="text-red-500 text-xs ml-3">{errors.marginAmount}</p>}
                   <div className='flex items-center mt-4'>
                     <p className="font-bold ml-2">Margin Percentage :</p><br />
                     <input
@@ -726,7 +753,20 @@ const AdDetailsPage = () => {
                   <button
                     className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                    // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (validateFields()) {
+                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData());
+                      } else {
+                        setToastMessage('Please fill the necessary details in the form.');
+                        setSeverity('error');
+                        setToast(true);
+                        setTimeout(() => {
+                          setToast(false);
+                        }, 2000);
+                      }
+                  }}
                   >
                     Add to Cart
                   </button>
@@ -734,7 +774,10 @@ const AdDetailsPage = () => {
                 <div className="flex flex-col ml-2 mt-4 items-center justify-center">
                   <button
                     className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
-                    onClick={() => handleSubmit()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSubmit();
+                  }}
                   >
                     Go to Cart
                   </button>
@@ -750,13 +793,16 @@ const AdDetailsPage = () => {
               </div>
               </div>
             </div>
-            <div className="bg-surface-card p-8 rounded-2xl mb-4">
+            {/* <div className="bg-surface-card p-8 rounded-2xl mb-4">
                 <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
                   <MuiAlert severity={severity} onClose={() => setToast(false)}>
                     {toastMessage}
                   </MuiAlert>
                 </Snackbar>
-              </div>
+              </div> */}
+              {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
           </div>
       )
 }         
