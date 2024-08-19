@@ -996,9 +996,6 @@ const handleDateChange = (range) => {
 };
 
 
-const handleConsultantReportOpen = () => {
-router.push('/Report/ConsultantReport');
-};  
 
 
     return (

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
@@ -76,6 +76,7 @@ const ClientsData = () => {
   const [displayClientName, setDisplayClientName] = useState(clientName);
   const [displayClientNumber, setDisplayClientNumber] = useState('');
   const [displayClientID, setDisplayClientID] = useState(clientID);
+  const nameInputRef = useRef(null);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -927,8 +928,17 @@ const BMvalidateFields = () => {
 
     // Set edit mode and any other necessary state changes
     setEditMode(true);
-    setIsNewClient(true);  // Assuming you want to mark the client as new when entering edit mode
+    setIsNewClient(true);
+
+    // Focus on the name input field
+    setTimeout(() => {
+      if (nameInputRef.current) {
+        nameInputRef.current.focus();
+      }
+    }, 0);  
   };
+
+
   
 
     return (
@@ -1008,6 +1018,7 @@ const BMvalidateFields = () => {
                 }, 200); // Adjust the delay time according to your preference
               }}
               onFocus={e => e.target.select()}
+              ref={nameInputRef}
               // onKeyPress={(e) => {
               //   // Allow only alphabetic characters
               //   const regex = /^[a-zA-Z\s]*$/;
