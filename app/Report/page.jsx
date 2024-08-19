@@ -29,8 +29,8 @@ import { Select } from '@mui/material';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
@@ -547,7 +547,7 @@ const orderColumns = [
             >
                 Restore
             </Button>
-            <Button
+            {/* <Button
                 variant="contained"
                 color="primary"
                 size="small"
@@ -559,67 +559,10 @@ const orderColumns = [
                  }}  
             >  
                Edit
-            </Button>
+            </Button> */}
         </div>
     ),
 },
-  // {
-  //     field: 'actions',
-  //     headerName: 'Actions',
-  //     width: isMobile ? 100 : 450,
-  //     renderCell: (params) => {
-  //         const handleClick = (event) => {
-  //             setAnchorEl(event.currentTarget);
-  //         };
-          
-  //         const handleClose = () => {
-  //             setAnchorEl(null);
-  //         };
-          
-  //         const handleMenuItemClick = (action) => {
-  //             handleClose();
-  //             if (action === 'delete') handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber);
-  //             if (action === 'cancel') handleMarkInvalid(params.row.OrderNumber);
-  //             if (action === 'restore') handleRestore(params.row.OrderNumber);
-  //         };
-
-  //         // Calculate if the order is within the last 24 hours
-  //         const orderDate = new Date(params.row.OrderDate);
-  //         const now = new Date();
-  //         const isRecent = (now - orderDate) < 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-  //             <div className="space-x-3">
-  //                     <Button
-  //                         variant="contained"
-  //                         color="primary"
-  //                         size="small"
-  //                         disabled={params.row.markInvalidDisabled}
-  //                         onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-  //                         style={{ marginRight: '12px', backgroundColor: '#ff5252',
-  //                             color: 'white',
-  //                             fontWeight: 'bold', 
-  //                             opacity: params.row.markInvalidDisabled ? 0.2 : 1,
-  //                             pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
-  //                     >
-  //                         Cancel Order
-  //                     </Button>
-  //                 <Button
-  //                     variant="contained"
-  //                     color="primary"
-  //                     size="small"
-  //                     disabled={params.row.restoreDisabled}
-  //                     onClick={() => handleRestore(params.row.OrderNumber)}
-  //                     style={{ backgroundColor: '#1976d2',
-  //                         color: 'white',
-  //                         fontWeight: 'bold',
-  //                         opacity: params.row.restoreDisabled ? 0.2 : 1,
-  //                         pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
-  //                 >
-  //                     Restore
-  //                 </Button>
-  //             </div>
-  //     },
-  // },
 ];
 
 
@@ -1291,7 +1234,7 @@ const handleDateChange = (range) => {
           
           <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
           <div style={styles.dropdownContainer}>
-            <Select
+            {/* <Select
               value={selectedIncomeView}
               onChange={handleIncomeViewChange}
               style={styles.dropdown}
@@ -1303,7 +1246,7 @@ const handleDateChange = (range) => {
                   {option.label}
                 </MenuItem>
               ))}
-            </Select>
+            </Select> */}
           </div>
 
           {selectedIncomeView === 'Income Breakdown' ? (

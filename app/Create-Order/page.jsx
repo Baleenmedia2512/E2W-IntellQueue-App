@@ -35,8 +35,8 @@ const CreateOrder = () => {
     const {orderNumber: orderNumberRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
@@ -1327,7 +1327,8 @@ return (
   
   
         </div>
-        { (discountAmount !== 0) && (<div >
+        {/* ICR YTC*/}
+        {/* { (discountAmount !== 0) && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
@@ -1342,7 +1343,7 @@ return (
                     />
                      
                     </div>)
-}
+} */}
    
         
         
