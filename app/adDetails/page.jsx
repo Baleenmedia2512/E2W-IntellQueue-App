@@ -181,7 +181,7 @@ export const AdDetails = () => {
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
       const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-      await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber);
+      await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber);
       const promises = cartItems.map(item => addQuoteToDB(item));
       await Promise.all(promises);
       setTimeout(() => {
