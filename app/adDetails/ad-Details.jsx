@@ -417,15 +417,43 @@ const AdDetailsPage = () => {
   //   }
   // ];
 
+  // const items = [
+  //   {
+  //     content: [
+  //       {
+  //         label: 'Customer Price (incl. GST 18%)',
+  //         value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0) - extraDiscount)) * 1.18))}`
+  //       },
+  //       {
+  //         label: 'Customer Price (excl. GST)',
+  //         value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0)  - extraDiscount)))}`
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     content: [
+  //       {
+  //         label: 'Vendor Cost (incl. GST 18%)',
+  //         value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount) * 1.18))}`
+  //       },
+  //       {
+  //         label: 'Vendor Cost (excl. GST)',
+  //         value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount))}`
+  //       }
+  //     ]
+  //   }
+  // ];  
+
+  
   const items = [
     {
       content: [
         {
-          label: 'Customer Price (incl. GST 18%)',
+          label: '(incl. GST 18%)',
           value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0) - extraDiscount)) * 1.18))}`
         },
         {
-          label: 'Customer Price (excl. GST)',
+          label: '(excl. GST)',
           value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0)  - extraDiscount)))}`
         }
       ]
@@ -433,11 +461,11 @@ const AdDetailsPage = () => {
     {
       content: [
         {
-          label: 'Vendor Cost (incl. GST 18%)',
+          label: '(incl. GST 18%)',
           value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount) * 1.18))}`
         },
         {
-          label: 'Vendor Cost (excl. GST)',
+          label: '(excl. GST)',
           value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount))}`
         }
       ]
@@ -496,10 +524,12 @@ const AdDetailsPage = () => {
     }
   ))
 
+
+
   return (
     
     <div className="  text-black overscroll-none">    
-      <div className="fixed left-[2%] right-[2%] overscroll-none">
+      <div className="fixed p-4 left-[2%] right-[2%] overscroll-none">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -569,15 +599,56 @@ const AdDetailsPage = () => {
     <div class="notititle text-blue-500 px-5 pt-3 pb-1 pr-1 text-lg font-medium transition-transform duration-300 ease-out z-10">Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}</div>
     <div class="notibody text-blue-500 px-5 text-lg font-semibold transition-transform duration-300 ease-out z-10">Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}</div>
 </div> */}
-            <Carousel value={items}  
+            {/* <Carousel value={items}  
                 itemTemplate={itemTemplate} 
                 responsiveOptions={responsiveOptions} 
                 numVisible={2} 
                 numScroll={1}
                 circular 
-                showIndicators={false} />
+                showIndicators={false} /> */}
 
-              <div className="mb-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
+<div className="w-full flex overflow-x-auto space-x-4 p-2">
+  {/* <!-- Customer Price Box --> */}
+  <div className="flex-shrink-0 w-60 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div className="text-lg font-bold text-blue-500 mb-2">Customer Price</div>
+    {items[0].content.map((item, index) => (
+      <div key={index} className="mb-2 flex items-center">
+        <div 
+          className={`text-xl font-semibold mr-1 text-gray-800`}
+        >
+          {item.value}
+        </div>
+        <div className={`text-xs ${item.label.includes("incl. GST") ? 'text-green-600' : 'text-red-600'}`}>
+          {item.label}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* <!-- Vendor Cost Box --> */}
+  <div className="flex-shrink-0 w-60 bg-orange-50 border border-orange-200 rounded-lg p-4">
+    <div className="text-lg font-bold text-orange-500 mb-2">Vendor Cost</div>
+    {items[1].content.map((item, index) => (
+      <div key={index} className="mb-2 flex items-center">
+        <div 
+          className={`text-xl font-semibold mr-1 text-gray-800`}
+        >
+          {item.value}
+        </div>
+        <div className={`text-xs ${item.label.includes("incl. GST") ? 'text-green-600' : 'text-red-600'}`}>
+          {item.label}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+
+
+
+
+
+              <div className="mb-8 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-6" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
               {/* <div name="QuoteVendorSelect">
                 <label className="block mb-1 font-medium">Vendor</label>
                 <Dropdown
