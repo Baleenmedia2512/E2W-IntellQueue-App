@@ -160,7 +160,7 @@ const Report = () => {
                     ...order,
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
-                    TotalAmountReceived: order.TotalAmountReceived !== null ? `₹ ${order.TotalAmountReceived}` : '',
+                    TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : '',
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                 }));
@@ -995,6 +995,10 @@ const handleDateChange = (range) => {
   return number;
 };
 
+
+const handleConsultantReportOpen = () => {
+router.push('/Report/ConsultantReport');
+};  
 
 
     return (

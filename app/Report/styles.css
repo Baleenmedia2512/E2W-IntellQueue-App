@@ -16,12 +16,12 @@
     
   }
 
-  .custom-button:hover {
-    background-color: #23c483;
-    box-shadow: 0px 15px 20px rgba(46, 229, 157, 0.4);
-    color: #fff;
-    transform: translateY(-7px);
-  }
+.custom-button:hover {
+  background-color: #23c483;
+  box-shadow: 0px 15px 20px rgba(46, 229, 157, 0.4);
+  color: #fff;
+  transform: translateY(-7px);
+}
 
   .custom-button:active {
     transform: translateY(-1px);
@@ -89,13 +89,13 @@
     }
   }
 
-  .chartContainer {
-    width: 100%;
-    height: 100%;
-    max-width: 100%; /* Ensure it scales properly */
-    overflow: hidden; /* Prevent overflow */
-  }
+.chartContainer {
+  width: 100%;
+  height: 100%;
+  max-width: 100%; /* Ensure it scales properly */
+  overflow: hidden; /* Prevent overflow */
+}
 
-  .pie-chart text {
-    pointer-events: none; /* Prevent text from blocking interactions */
-  }
+.pie-chart text {
+  pointer-events: none; /* Prevent text from blocking interactions */
+}

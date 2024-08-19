@@ -543,15 +543,13 @@ useEffect(() => {
       <> */}
       <div id="4" name="RateWiseOrderNumberText">
         <label className='block mb-2 mt-5 text-gray-700 font-semibold' >
-          Rate Wise Order Number*
+          Order Number*
         </label>
         <div className="w-full flex gap-3">
           <input
             className="p-3 text-black capitalize shadow-2xl glass w-full outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
             type="text"
             placeholder="Ex. 10000"
-            id='3'
-            name="OrderNumberInput"
             value={rateWiseOrderNumber}
             pattern="\d*"
             inputMode="numeric"
@@ -583,8 +581,6 @@ useEffect(() => {
             className="p-3 text-black capitalize shadow-2xl glass w-full outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md"
             type="text"
             placeholder="Ex. 10000"
-            id='3'
-            name="OrderNumberInput"
             value={orderNumber}
             pattern="\d*"
             inputMode="numeric"

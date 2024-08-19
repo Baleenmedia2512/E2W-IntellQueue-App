@@ -384,11 +384,16 @@ export default function GroupedRowsDemo() {
             handlePriceChange(rowData.id, newPrice);
         };
 
+        const handleFocus = (e) => {
+            e.target.select(); // Select all text in the input field
+        };
+
         return (
             <input
                 type="number"
-                value={rowData.price}
+                value={rowData.price === 0 ? '' : rowData.price}
                 onChange={handleChange}
+                onFocus={handleFocus}
                 min="0"
                 className="p-inputtext p-component w-32 md:w-fit lg:w-fit h-full m-0 p-2 box-border rounded-md border border-sky-400 bg-white"
             />

@@ -1325,6 +1325,7 @@ return (
     </div>
   </div>
   
+  
         </div>
         { (discountAmount !== 0) && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
