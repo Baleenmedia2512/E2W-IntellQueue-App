@@ -16,6 +16,9 @@ const LoginCredentialPage = () => {
   const handleNextPage = () => {
     dispatch(setCurrentPage('generalDetails'));
   };
+  const handleBackPage = () => {
+    dispatch(setCurrentPage('generalDetails')); // Navigate back to General Details page
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,10 +46,25 @@ const LoginCredentialPage = () => {
         <h2 className="text-2xl font-bold text-blue-500 mb-1">Login Credentials</h2>
         <p className="text-gray-400 text-sm mb-3">Please enter your login credentials</p>
         <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+        
         <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Your Login Credential Fields */}
-          <div className="text-center">
-            <button className="px-6 py-2 bg-blue-500 text-white rounded-lg" type="submit">Submit</button>
+          
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={handleBackPage}
+              className="px-6 py-2 bg-gray-500 text-white rounded-lg"
+            >
+              Back
+            </button>
+
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg"
+            >
+              Submit
+            </button>
           </div>
         </form>
       </div>
