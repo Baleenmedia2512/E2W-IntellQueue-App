@@ -666,41 +666,83 @@ const fetchRates = async () => {
 // const [orderNumber, setOrderNumber] = useState(null);
 // const [companyName, setCompanyName] = useState('');
 
+// const fetchOrderDetailsByOrderNumber = () => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+//     .then((response) => {
+//       const data = response.data;
+//       //console.log(data); // Log the data to inspect the structure
+//       if (data) {
+//         // Assuming orderDetails is a typo and you meant data
+//         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
+//         //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
+//         const formattedDate = parseDateFromDB(data.orderDate);
+//         setClientName(data.clientName);
+//         setOrderDate(data.orderDate);
+//         setDisplayOrderDate(formattedDate);
+//         setUnitPrice(data.receivable);
+//         setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
+//         dispatch(setRateId(data.rateId));
+//         setHasOrderDetails(true);
+//         setClientID(data.clientID);
+//         setConsultantName(data.consultantName);
+//       } else {
+//         setHasOrderDetails(false); // Set to false if there are no details
+//       }
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// };
+
+
+// useEffect(() => {
+//   fetchOrderDetailsByOrderNumber();
+// }, [orderNumberRP]);
 const fetchOrderDetailsByOrderNumber = () => {
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
-    .then((response) => {
-      const data = response.data;
-      //console.log(data); // Log the data to inspect the structure
-      if (data) {
-        // Assuming orderDetails is a typo and you meant data
-        //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
-        //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
-        const formattedDate = parseDateFromDB(data.orderDate);
-        setClientName(data.clientName);
-        setOrderDate(data.orderDate);
-        setDisplayOrderDate(formattedDate);
-        setUnitPrice(data.receivable);
-        setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
-        dispatch(setRateId(data.rateId));
-        setHasOrderDetails(true);
-        setClientID(data.clientID);
-        setConsultantName(data.consultantName);
-      } else {
-        setHasOrderDetails(false); // Set to false if there are no details
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-};
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+      .then((response) => {
+        const data = response.data;
+        if (data) {
+          // Parse the date
+          const formattedDate = parseDateFromDB(data.orderDate);
 
+          // Set all the necessary states
+          setClientName(data.clientName);
+          setOrderDate(data.orderDate);
+          setDisplayOrderDate(formattedDate);
+          setUnitPrice(data.receivable);
+          setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
+          dispatch(setRateId(data.rateId));
+          setHasOrderDetails(true);
+          setClientID(data.clientID);
+          setConsultantName(data.consultantName);
 
-useEffect(() => {
-  fetchOrderDetailsByOrderNumber();
-}, [orderNumberRP]);
+          // Store the fetched data in a state to compare later
+          setPrevData({
+            clientName: data.clientName,
+            orderDate: data.orderDate,
+            receivable: data.receivable,
+            rateWiseOrderNumber: data.rateWiseOrderNumber,
+            rateId: data.rateId,
+            clientID: data.clientID,
+            consultantName: data.consultantName,
+          });
+        } else {
+          setHasOrderDetails(false); // Set to false if no details
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
 
+  useEffect(() => {
+    fetchOrderDetailsByOrderNumber();
+  }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
 
+  
       const createNewOrder = async(event) => {
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
@@ -1090,10 +1132,50 @@ const handleDiscountChange = (e) => {
 
 const [dialogOpen, setDialogOpen] = useState(false);
   const [updateReason, setUpdateReason] = useState('');
+  const [prevData, setPrevData] = useState({});
 
-  const handleOpenDialog = () => {
+
+const handleOpenDialog = () => {
+  // Ensure that both the current data and previous data are available for comparison
+  // if (!prevData || !clientName || !orderDate || !unitPrice || !rateId || !consultantName) {
+  //   console.error('Data is missing, ensure prevData and current data are set correctly.');
+  //   return;
+  // }
+
+  // Debugging: Log the full current data and previous data objects
+  // console.log('Current Data:', JSON.stringify({
+  //   clientName, orderDate, unitPrice, rateId, consultantName
+  // }));
+  // console.log('Previous Data:', JSON.stringify(prevData));
+
+  // Compare current data with previous data to check if any field has changed
+  const isDataChanged = (
+    clientName.trim() !== prevData.clientName.trim() ||
+    orderDate !== prevData.orderDate || // Ensure orderDate comparison works (check format)
+    parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
+    rateId !== prevData.rateId ||
+    consultantName.trim() !== prevData.consultantName.trim()
+  );
+
+  console.log('Is Data Changed:', isDataChanged);
+
+  // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
+  if (isDataChanged) {
     setDialogOpen(true);
-  };
+  } else {
+    setToastMessage('No changes have been made.');
+    setSeverity('warning');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+  }
+};
+
+
+  // const handleOpenDialog = () => {
+  //   setDialogOpen(true);
+  // };
 
   const handleCancelUpdate = () => {
     setClientName('');
