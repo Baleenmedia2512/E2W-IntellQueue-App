@@ -19,17 +19,21 @@ const RolesGoalsPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl">
-        <TabNavigation />
-        <h2 className="text-2xl font-bold text-blue-500 mb-1">Roles and Goals</h2>
-        <p className="text-gray-400 text-sm mb-3">Please define your roles and goals</p>
-        <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
-        <form className="space-y-6">
-          {/* Your Roles and Goals Fields */}
-           {/* Department */}
+<div className="flex flex-col min-h-screen bg-gray-100 p-4">
+  {/* Centered TabNavigation at the top */}
+  <div className="flex justify-center mb-6">
+    <TabNavigation />
+  </div>
+
+  {/* Main content */}
+  <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl mx-auto">
+    <h2 className="text-2xl font-bold text-blue-500 mb-1">Roles and Goals</h2>
+    <p className="text-gray-400 text-sm mb-3">Please define your roles and goals</p>
+    <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+    <form className="space-y-6">
+      {/* Department and Designation */}
       <div className="flex flex-wrap -mx-4 mb-4">
-        <div className="w-full px-4">
+        <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
           <label htmlFor="department" className="block text-sm font-medium text-gray-700">
             Department
           </label>
@@ -41,11 +45,7 @@ const RolesGoalsPage = () => {
             placeholder="Enter your department"
           />
         </div>
-      </div>
-
-      {/* Designation */}
-      <div className="flex flex-wrap -mx-4 mb-4">
-        <div className="w-full px-4">
+        <div className="w-full md:w-1/2 px-4">
           <label htmlFor="designation" className="block text-sm font-medium text-gray-700">
             Designation
           </label>
@@ -59,11 +59,11 @@ const RolesGoalsPage = () => {
         </div>
       </div>
 
-      {/* Monthly Target Income */}
+      {/* Monthly Target Income and Monthly Calls Target */}
       <div className="flex flex-wrap -mx-4 mb-4">
-        <div className="w-full px-4">
+        <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
           <label htmlFor="monthlyTargetIncome" className="block text-sm font-medium text-gray-700">
-            Monthly Target Income
+            Monthly Margin Target
           </label>
           <input
             type="number"
@@ -73,11 +73,7 @@ const RolesGoalsPage = () => {
             placeholder="Enter your monthly target income"
           />
         </div>
-      </div>
-
-      {/* Monthly Calls Target */}
-      <div className="flex flex-wrap -mx-4 mb-4">
-        <div className="w-full px-4">
+        <div className="w-full md:w-1/2 px-4">
           <label htmlFor="monthlyCallsTarget" className="block text-sm font-medium text-gray-700">
             Monthly Calls Target
           </label>
@@ -91,25 +87,21 @@ const RolesGoalsPage = () => {
         </div>
       </div>
 
-      {/* Previous Expenses in Month */}
+      {/* Previous Experience and Current Grade */}
       <div className="flex flex-wrap -mx-4 mb-4">
-        <div className="w-full px-4">
-          <label htmlFor="previousExpenses" className="block text-sm font-medium text-gray-700">
-            Previous Expenses in Month
+        <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+          <label htmlFor="previousExperience" className="block text-sm font-medium text-gray-700">
+            Previous Experience in Month
           </label>
           <input
             type="number"
-            id="previousExpenses"
-            name="previousExpenses"
+            id="previousExperience"
+            name="previousExperience"
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-            placeholder="Enter previous expenses in the month"
+            placeholder="Enter previous experience in the month"
           />
         </div>
-      </div>
-
-      {/* Current Grade */}
-      <div className="flex flex-wrap -mx-4 mb-4">
-        <div className="w-full px-4">
+        <div className="w-full md:w-1/2 px-4">
           <label htmlFor="currentGrade" className="block text-sm font-medium text-gray-700">
             Current Grade
           </label>
@@ -133,9 +125,10 @@ const RolesGoalsPage = () => {
           Next
         </button>
       </div>
-        </form>
-      </div>
-    </div>
+    </form>
+  </div>
+</div>
+
   );
 }
 
