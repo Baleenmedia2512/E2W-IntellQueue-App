@@ -178,7 +178,7 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
               <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
               <td className='p-1.5 border border-gray-200'>
-                ₹ {formattedRupees(Math.round(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)))))} (excl. GST)
+                ₹ {formattedRupees(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))} (excl. GST)
               </td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 

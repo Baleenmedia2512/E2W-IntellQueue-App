@@ -131,9 +131,9 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
 // const formattedValidityDate = `${day}-${month}-${yearYY}`;
 
   // Create a table
-  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Remarks"]];
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Lead Days","Remarks"]];
   let data = checkoutData.map((item, index) => ([
-    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', 'Rs.' + item.ratePerQty, 'Rs.' + item.amountExclGst, item.gst, 'Rs.' + item.amountInclGst, item.remarks ? item.remarks : 'NA'
+    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', 'Rs.' + item.ratePerQty, 'Rs.' + item.amountExclGst, item.gst, 'Rs.' + item.amountInclGst, item.leadDays,item.remarks ? item.remarks : 'NA'
   ])); 
 
   // if (!checkoutData.some(item => item.package)) {
@@ -165,7 +165,7 @@ let columnWidths = {
     'Amount (Excl. GST) (in Rs.)': 75,
     'GST': 30,
     'Amount (incl. GST) (in Rs.)': 75,
-    //'Validity Date': 60,
+    'Lead Days': 45,
     'Remarks': 60
 };
 
@@ -235,8 +235,8 @@ Object.keys(columnWidths).forEach(columnName => {
   pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, pdf.internal.pageSize.height - 120);
   pdf.text(`2.Ad. Material shall be shared by ${clientTitle} ${clientName}`, 10, pdf.internal.pageSize.height - 105)
   pdf.text("3.100% Upfront payment required for releasing the Ads", 10, pdf.internal.pageSize.height - 90)
-  pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
-  pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, pdf.internal.pageSize.height - 60)
+  //pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
+  pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, pdf.internal.pageSize.height - 75)
 
   pdf.setDrawColor("#df5f98");
   pdf.line(10, pdf.internal.pageSize.height - 45, 400, pdf.internal.pageSize.height - 45);

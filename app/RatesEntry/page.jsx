@@ -296,11 +296,11 @@ const AdDetailsPage = () => {
 // }
   
   const addQtySlab = async() => {
-
-    if (newUnitPrice > 0 && qty > 0) {
+    
     try{
       await Promise.all(combinedSlabData.map(async(item) => {
         try{
+          console.log("Function here")
           const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
           const result = await response.json();
           if(result === "Failed to Insert" || result === "Failed to Update"){
@@ -311,12 +311,14 @@ const AdDetailsPage = () => {
             setTimeout(() => {
               setToast(false);
             }, 2000);
+            
           }else{
             // showToastMessage('success', result);
           //   setSuccessMessage(result);
           //   setTimeout(() => {
           //   setSuccessMessage('');
           // }, 2000);
+            console.log(result)
             fetchQtySlab();
             setNewUnitPrice("");  
             setTempSlabData([]);
@@ -329,16 +331,13 @@ const AdDetailsPage = () => {
     }catch(error){
       console.error(error);
     }
-  }else{
-    return
-  }
   }
 
   const updateQtySlab = async() => {
    
-    if (newUnitPrice > 0 && qty > 0) {
       try {
         await Promise.all(combinedSlabData.map(async (item) => {
+          console.log(item);
           try {
             const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
             if (!response.ok) {
@@ -361,9 +360,6 @@ const AdDetailsPage = () => {
       } catch (error) {
         console.error('An error occurred while processing combined slab data:', error);
       }
-    } else {
-      return
-    }
    }
 
   const removeQtySlab = async(Qty, index) => {
@@ -904,7 +900,7 @@ var selectedRate = '';
   const updateRates = async (e) => {
     e.preventDefault()
     if(editMode){
-      {elementsToShow.length > 0  ? addQtySlab() : updateQtySlab();}
+      addQtySlab();
       if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
         setIsLeadDays(true)
       } else if(selectedUnit === ""){
