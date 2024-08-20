@@ -30,8 +30,8 @@ const CheckoutPage = () => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [datas, setDatas] = useState([]);
-  // const companyName = 'Baleen Test';
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = 'Baleen Test';
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);
@@ -154,6 +154,7 @@ const CheckoutPage = () => {
               <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
         <thead>
           <tr>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate ID</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Medium</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Type</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Category</th>
@@ -168,6 +169,7 @@ const CheckoutPage = () => {
         <tbody>
           {cartItems.map((item, index) => (
             <tr key={index}>
+              <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
@@ -176,7 +178,7 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
               <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
               <td className='p-1.5 border border-gray-200'>
-                ₹ {formattedRupees(Math.round(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * (1.18))))} (incl. GST)
+                ₹ {formattedRupees(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))} (excl. GST)
               </td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
@@ -189,7 +191,7 @@ const CheckoutPage = () => {
           ))}
         </tbody>    
       </table>
-      <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1>
+      {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
       </div>
       <div className='flex justify-center mt-4'>
         <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adMedium', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>

@@ -30,8 +30,8 @@ const titleOptions = [
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.companyName);
-  // const companyName = "Baleen Test";
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = "Baleen Test";
+  // const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
@@ -52,7 +52,7 @@ const ClientsData = () => {
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState('');
   const [displayWarning, setDisplayWarning] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("Mrs.");
+  const [selectedOption, setSelectedOption] = useState("");
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
   const [clientGST, setClientGST] = useState("");
   const [clientPAN, setClientPAN] = useState("");
@@ -97,6 +97,14 @@ const ClientsData = () => {
     }
     //MP-70-DOB doesn't set while fetching from DB
   }, [clientAge, selectedOption]); 
+
+  useEffect(() => {
+    if (elementsToHide.includes("ClientGSTInput")) {
+      setSelectedOption("Mrs.");
+    } else {
+      setSelectedOption("Ms.");
+    }
+  }, [elementsToHide]);
 
 
   const handleSearchTermChange = (event) => {
@@ -961,9 +969,6 @@ const BMvalidateFields = () => {
     </div>
   </div>
 )}
-
-
-
 
         <form className="space-y-6">
           {/* Restore client dialog */}
