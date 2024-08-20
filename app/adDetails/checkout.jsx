@@ -162,7 +162,8 @@ const CheckoutPage = () => {
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Unit Price</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price (excl. GST)</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th>
           </tr>
         </thead>
@@ -177,9 +178,9 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{item.qty} {item.unit}</td>
               <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
               <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
+              <td className='p-1.5 border border-gray-200'>₹ {formattedRupees((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin)) / item.qty)}</td>
               <td className='p-1.5 border border-gray-200'>
-                ₹ {formattedRupees(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))} (excl. GST)
-              </td>
+                ₹ {formattedRupees(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))}</td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
                   onClick={() => handleRemoveRateId(item.rateId)}
