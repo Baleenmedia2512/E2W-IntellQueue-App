@@ -29,8 +29,8 @@ import { Select } from '@mui/material';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
@@ -218,7 +218,7 @@ const Report = () => {
 
     const fetchAmounts = async () => {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmountTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -547,7 +547,7 @@ const orderColumns = [
             >
                 Restore
             </Button>
-            <Button
+            {/* <Button
                 variant="contained"
                 color="primary"
                 size="small"
@@ -559,7 +559,7 @@ const orderColumns = [
                  }}  
             >  
                Edit
-            </Button>
+            </Button> */}
         </div>
     ),
 },
@@ -1234,7 +1234,7 @@ const handleDateChange = (range) => {
           
           <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
           <div style={styles.dropdownContainer}>
-            <Select
+            {/* <Select
               value={selectedIncomeView}
               onChange={handleIncomeViewChange}
               style={styles.dropdown}
@@ -1246,7 +1246,7 @@ const handleDateChange = (range) => {
                   {option.label}
                 </MenuItem>
               ))}
-            </Select>
+            </Select> */}
           </div>
 
           {selectedIncomeView === 'Income Breakdown' ? (

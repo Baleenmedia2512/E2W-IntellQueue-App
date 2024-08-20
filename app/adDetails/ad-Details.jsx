@@ -51,8 +51,8 @@ const AdDetailsPage = () => {
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const [datas, setDatas] = useState([]);
   const marginAmountRef = useRef(null);
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test';
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);

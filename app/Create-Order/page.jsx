@@ -35,8 +35,8 @@ const CreateOrder = () => {
     const {orderNumber: orderNumberRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
@@ -91,7 +91,6 @@ const CreateOrder = () => {
     
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
-    const [displayUnitPrice, setDisplayUnitPrice] = useState(0);
     const [originalUnitPrice , setOriginalUnitPrice] = useState(unitPrice);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
     const [units, setUnits]=useState("");
@@ -149,7 +148,6 @@ useEffect(() => {
   } else {
     setUnitPrice(0);
     setOriginalUnitPrice(0);
-    setDisplayUnitPrice(0);
   }
 }, [rateId]);
 
@@ -179,7 +177,6 @@ const fetchQtySlab = async () => {
       setQty(firstSelectedSlab.StartQty);
       setUnitPrice(firstSelectedSlab.UnitPrice);
       setOriginalUnitPrice(firstSelectedSlab.UnitPrice);
-      setDisplayUnitPrice(firstSelectedSlab.UnitPrice);
     }
   }  catch (error) {
     console.error(error);
@@ -241,7 +238,7 @@ useEffect(() => {
   fetchUnits();
   // fetchAllVendor();
   fetchQtySlab();
-  // setDiscountAmount(0);
+  setDiscountAmount(0);
 },[selectedValues.adType, selectedValues.rateName])
 
 const handleRateId = async () => {
@@ -559,7 +556,6 @@ const fetchRates = async () => {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
       setOriginalUnitPrice(newUnitPrice);
-      setDisplayUnitPrice(newUnitPrice);
     }, [qty])
 
     const handleSearchTermChange = (event) => {
@@ -635,7 +631,7 @@ const fetchRates = async () => {
 
       const fetchPreviousOrderDetails = (clientNumber, clientName) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetailsTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetails.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data.length > 0) {
@@ -652,7 +648,6 @@ const fetchRates = async () => {
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
               setPreviousConsultantName(clientDetails.consultantName);
-              setDiscountAmount(clientDetails.adjustedOrderAmount);
               // handleSelectChange(clientDetails.rateName, "rateName");
               // handleSelectChange(clientDetails.adType, "adType");
               
@@ -667,92 +662,45 @@ const fetchRates = async () => {
             console.error(error);
           });
       };
-
-      
 //report oderenumber data fetch --SK--
 // const [orderNumber, setOrderNumber] = useState(null);
 // const [companyName, setCompanyName] = useState('');
 
-// const fetchOrderDetailsByOrderNumber = () => {
-//   axios
-//     .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
-//     .then((response) => {
-//       const data = response.data;
-//       //console.log(data); // Log the data to inspect the structure
-//       if (data) {
-//         // Assuming orderDetails is a typo and you meant data
-//         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
-//         //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
-//         const formattedDate = parseDateFromDB(data.orderDate);
-//         setClientName(data.clientName);
-//         setOrderDate(data.orderDate);
-//         setDisplayOrderDate(formattedDate);
-//         setUnitPrice(data.receivable);
-//         setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
-//         dispatch(setRateId(data.rateId));
-//         setHasOrderDetails(true);
-//         setClientID(data.clientID);
-//         setConsultantName(data.consultantName);
-//       } else {
-//         setHasOrderDetails(false); // Set to false if there are no details
-//       }
-//     })
-//     .catch((error) => {
-//       console.error(error);
-//     });
-// };
-
-
-// useEffect(() => {
-//   fetchOrderDetailsByOrderNumber();
-// }, [orderNumberRP]);
 const fetchOrderDetailsByOrderNumber = () => {
-    axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
-      .then((response) => {
-        const data = response.data;
-        if (data) {
-          // Parse the date
-          const formattedDate = parseDateFromDB(data.orderDate);
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      //console.log(data); // Log the data to inspect the structure
+      if (data) {
+        // Assuming orderDetails is a typo and you meant data
+        //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
+        //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
+        const formattedDate = parseDateFromDB(data.orderDate);
+        setClientName(data.clientName);
+        setOrderDate(data.orderDate);
+        setDisplayOrderDate(formattedDate);
+        setUnitPrice(data.receivable);
+        setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
+        dispatch(setRateId(data.rateId));
+        setHasOrderDetails(true);
+        setClientID(data.clientID);
+        setConsultantName(data.consultantName);
+      } else {
+        setHasOrderDetails(false); // Set to false if there are no details
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
 
-          // Set all the necessary states
-          setClientName(data.clientName);
-          setOrderDate(data.orderDate);
-          setDisplayOrderDate(formattedDate);
-          setUnitPrice(data.receivable);
-          setDisplayUnitPrice(data.receivable);
-          setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
-          dispatch(setRateId(data.rateId));
-          setHasOrderDetails(true);
-          setClientID(data.clientID);
-          setConsultantName(data.consultantName);
-          setDiscountAmount(data.adjustedOrderAmount);
 
-          // Store the fetched data in a state to compare later
-          setPrevData({
-            clientName: data.clientName,
-            orderDate: data.orderDate,
-            receivable: data.receivable,
-            rateWiseOrderNumber: data.rateWiseOrderNumber,
-            rateId: data.rateId,
-            clientID: data.clientID,
-            consultantName: data.consultantName,
-            discountAmount: data.adjustedOrderAmount
-          });
-        } else {
-          setHasOrderDetails(false); // Set to false if no details
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
+useEffect(() => {
+  fetchOrderDetailsByOrderNumber();
+}, [orderNumberRP]);
 
-  useEffect(() => {
-    fetchOrderDetailsByOrderNumber();
-  }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
 
-  
       const createNewOrder = async(event) => {
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
@@ -762,7 +710,7 @@ const fetchOrderDetailsByOrderNumber = () => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -846,8 +794,7 @@ const updateNewOrder = async (event) => {
       JsonClientAuthorizedPersons: clientEmail,
       JsonOrderDate: formattedOrderDate,
       // JsonRateWiseOrderNumber: nextRateWiseOrderNumber
-       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
-       JsonAdjustedOrderAmount: discountAmount
+       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber
     });
 
     try {
@@ -1129,65 +1076,24 @@ const handleDiscountChange = (e) => {
   if (value === '') {
     // Reset the discount amount and unit price to the original values
     setDiscountAmount(0);
-    setDisplayUnitPrice(originalUnitPrice);
+    setUnitPrice(originalUnitPrice);
     return;
   }
-  const parsedUnitPrice = parseFloat(unitPrice);
+
   const parsedValue = parseFloat(value);
   const newDiscountAmount = parsedValue;
   setDiscountAmount(newDiscountAmount);
-  console.log(parsedUnitPrice, newDiscountAmount)
-  // setDisplayUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount);
-  setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
+
+  setUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount); 
 };
 
-console.log(unitPrice)
 
 const [dialogOpen, setDialogOpen] = useState(false);
   const [updateReason, setUpdateReason] = useState('');
-  const [prevData, setPrevData] = useState({});
 
-
-const handleOpenDialog = () => {
-  // Ensure that both the current data and previous data are available for comparison
-  // if (!prevData || !clientName || !orderDate || !unitPrice || !rateId || !consultantName) {
-  //   console.error('Data is missing, ensure prevData and current data are set correctly.');
-  //   return;
-  // }
-
-  // Debugging: Log the full current data and previous data objects
-  // console.log('Current Data:', JSON.stringify({
-  //   clientName, orderDate, unitPrice, rateId, consultantName
-  // }));
-  // console.log('Previous Data:', JSON.stringify(prevData));
-
-  // Compare current data with previous data to check if any field has changed
-  const isDataChanged = (
-    clientName.trim() !== prevData.clientName.trim() ||
-    orderDate !== prevData.orderDate || // Ensure orderDate comparison works (check format)
-    parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
-    rateId !== prevData.rateId ||
-    consultantName.trim() !== prevData.consultantName.trim() ||
-    discountAmount !== prevData.discountAmount
-  );
-
-  // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
-  if (isDataChanged) {
+  const handleOpenDialog = () => {
     setDialogOpen(true);
-  } else {
-    setToastMessage('No changes have been made.');
-    setSeverity('warning');
-    setToast(true);
-    setTimeout(() => {
-      setToast(false);
-    }, 2000);
-  }
-};
-
-
-  // const handleOpenDialog = () => {
-  //   setDialogOpen(true);
-  // };
+  };
 
   const handleCancelUpdate = () => {
     setClientName('');
@@ -1197,7 +1103,6 @@ const handleOpenDialog = () => {
     dispatch(setRateId(''));
     setClientID('');
     setConsultantName('');
-    setDiscountAmount(0);
     dispatch(resetOrderData());
     //window.location.reload(); // Reload the page
   };
@@ -1404,13 +1309,13 @@ return (
     <div>
       <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
-        <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
+        <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
       </div>
     </div>
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
       <input 
-        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
         type="number"
         placeholder="Amount Adjustment"
         value={discountAmount || ''}
@@ -1423,7 +1328,7 @@ return (
   
         </div>
         {/* ICR YTC*/}
-        { (discountAmount !== 0) && (<div >
+        {/* { (discountAmount !== 0) && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
@@ -1438,7 +1343,7 @@ return (
                     />
                      
                     </div>)
-}
+} */}
    
         
         
