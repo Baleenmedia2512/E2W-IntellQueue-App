@@ -430,30 +430,24 @@ const AdDetailsPage = () => {
     {
       content: [
         {
-          label: 'Excluding GST'
-        },
-        {
           label: 'Price',
-          value: `₹${formattedRupees((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + parseInt(margin) )}`
+          value: ` ₹${formattedRupees((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + parseInt(margin) )}`
         },
         {
           label: 'Cost',
-          value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))))}`
+          value: ` ₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))))}`
         }
       ]
     },
     {
       content: [
         {
-          label: 'Including GST'
-        },
-        {
           label: 'Price',
-          value: `₹${formattedRupees((qty * unitPrice * (campaignDuration / minimumCampaignDuration)+ parseInt(margin)) * 1.18) }`
+          value: ` ₹${formattedRupees((qty * unitPrice * (campaignDuration / minimumCampaignDuration)+ parseInt(margin)) * 1.18) }`
         },
         {
           label: 'Cost',
-          value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration))) * 1.18))}`
+          value: ` ₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration))) * 1.18))}`
         }
       ]
     }
@@ -594,37 +588,39 @@ const AdDetailsPage = () => {
                 circular 
                 showIndicators={false} /> */}
 
-<div className="w-full flex sticky overflow-x-auto space-x-4 p-2 mb-3">
+<div className="w-full flex sticky overflow-x-auto sm:overflow-x-hidden space-x-4 p-2 mb-3">
   {/* <!-- Customer Price Box --> */}
-  <div className="flex-shrink-0 w-60 bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <div className="text-lg font-bold text-blue-500 mb-2">Customer Price</div>
+  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div className="text-lg font-bold text-blue-500 mb-2">Excluding GST</div>
     {items[0].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
+        <div className={`text-lg font-semibold ${item.label.includes("incl. GST") ? 'text-green-600' : 'text-blue-700'}`}>
+          {item.label}:
+        </div>
         <div 
-          className={`text-xl font-semibold mr-1 text-gray-800`}
+          className={`text-xl ml-2 font-semibold mr-1 text-gray-800`}
         >
           {item.value}
         </div>
-        <div className={`text-xs ${item.label.includes("incl. GST") ? 'text-green-600' : 'text-red-600'}`}>
-          {item.label}
-        </div>
+        
       </div>
     ))}
   </div>
 
   {/* <!-- Vendor Cost Box --> */}
-  <div className="flex-shrink-0 w-60 bg-orange-50 border border-orange-200 rounded-lg p-4">
-    <div className="text-lg font-bold text-orange-500 mb-2">Vendor Cost</div>
+  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-orange-50 border border-orange-200 rounded-lg p-4">
+    <div className="text-lg font-bold text-orange-500 mb-2">Including GST</div>
     {items[1].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
+        <div className={`text-lg font-semibold text-red-600`}>
+          {item.label}: 
+        </div>
         <div 
-          className={`text-xl font-semibold mr-1 text-gray-800`}
+          className={`text-xl ml-2 font-semibold mr-1 text-gray-800`}
         >
           {item.value}
         </div>
-        <div className={`text-xs ${item.label.includes("incl. GST") ? 'text-green-600' : 'text-red-600'}`}>
-          {item.label}
-        </div>
+        
       </div>
     ))}
   </div>
@@ -777,10 +773,14 @@ const AdDetailsPage = () => {
                     onFocus={(e) => e.target.select()}
                   />
                   {errors.marginAmount && <p className="text-red-500 text-xs ml-3">{errors.marginAmount}</p>}
-                  <div className='flex items-center mt-4'>
-                    <p className="font-bold ml-2">Margin Percentage :</p><br />
+                 
+
+                </div>
+                <div className='mb-4 flex flex-col'>
+                <label className="font-bold ml-2 mb-1">Margin Percentage :</label>
+                <span className='flex flex-row'>
                     <input
-                    className={`w-20 ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                       //className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
@@ -789,10 +789,8 @@ const AdDetailsPage = () => {
                       //onBlur={marginPercentageLostFocus}
                       onFocus={(e) => e.target.select()}
                     />
-                    <p className="mt-1 font-bold ml-2">%</p><br />
+                    <p className="mt-1 font-bold ml-2">%</p></span>
                   </div>
-
-                </div>
                 {/* <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
                   <input

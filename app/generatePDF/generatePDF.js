@@ -160,11 +160,11 @@ let columnWidths = {
     'Edition': 60,
     'Package': 60,
     'Qty': 45,
-    'Campaign Duration': 65,
-    'Rate Per Qty (in Rs.)': 60,
-    'Amount (Excl. GST) (in Rs.)': 75,
+    'Campaign Duration': 50,
+    'Rate Per Qty (in Rs.)': 50,
+    'Amount (Excl. GST) (in Rs.)': 60,
     'GST': 30,
-    'Amount (incl. GST) (in Rs.)': 75,
+    'Amount (incl. GST) (in Rs.)': 60,
     'Lead Days': 45,
     'Remarks': 60
 };
