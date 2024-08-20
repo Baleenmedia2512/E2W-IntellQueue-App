@@ -587,7 +587,8 @@ const AdDetailsPage = () => {
                 numScroll={1}
                 circular 
                 showIndicators={false} /> */}
-
+<h1 className='text-2xl font-bold text-center text-blue-500'>Quote Details</h1>
+<br/>
 <div className="w-full flex sticky overflow-x-auto sm:overflow-x-hidden space-x-4 p-2 mb-3">
   {/* <!-- Customer Price Box --> */}
   <div className="flex-shrink-0 w-60 sm:w-[47%] bg-blue-50 border border-blue-200 rounded-lg p-4">
