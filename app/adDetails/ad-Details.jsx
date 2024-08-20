@@ -26,7 +26,7 @@ import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 
 export const formattedMargin = (number) => {
-  const roundedNumber = (number / 1).toFixed(2);
+  const roundedNumber = (number / 1).toFixed(0);
   return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
 };
 
@@ -120,7 +120,13 @@ const AdDetailsPage = () => {
     
   },[])
 
-  
+  useEffect(() => {
+    if(extraDiscount > 0){
+      dispatch(setQuotesData({marginAmount: (((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)) - extraDiscount).toFixed(0)}))
+    }
+    
+  },[extraDiscount])
+
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
       right: -3,
@@ -151,7 +157,7 @@ const AdDetailsPage = () => {
         setQtySlab(firstSelectedSlab.StartQty);
         setMarginPercentage(firstSelectedSlab.AgencyCommission || 0)
         // console.log(firstSelectedSlab.AgencyCommission)
-        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: (((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration))/(100- firstSelectedSlab.AgencyCommission)) * 100).toFixed(2)  * (firstSelectedSlab.AgencyCommission/100)}))
+        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: ((((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration))/(100- firstSelectedSlab.AgencyCommission)) * 100).toFixed(2)  * (firstSelectedSlab.AgencyCommission/100)).toFixed(0)}))
 
         //setUnitPrice(firstSelectedSlab.UnitPrice);
         //setUnit(firstSelectedSlab.Unit)
@@ -264,9 +270,10 @@ const AdDetailsPage = () => {
         setDatas(filterdata);
 
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-        console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
-        console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
-        dispatch(setQuotesData({marginAmount: (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100 - filterdata[0].AgencyCommission)) * 100).toFixed(2)  * (filterdata[0].AgencyCommission/100)}))
+        // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
+        // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
+        dispatch(setQuotesData({marginAmount: ((((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100 - filterdata[0].AgencyCommission)) * 100).toFixed(2)  * (filterdata[0].AgencyCommission/100)).toFixed(0)}))
+        setMarginPercentage(filterdata[0].AgencyCommission);
         
       }
     } catch (error) {
@@ -326,7 +333,7 @@ const AdDetailsPage = () => {
   };
 
   const handleMarginChange = (event) => {
-    const newValue = parseFloat(event.target.value);
+    const newValue = parseInt(event.target.value);
     //setMargin(event.target.value);
     dispatch(setQuotesData({marginAmount: event.target.value}))
 
@@ -342,7 +349,7 @@ const AdDetailsPage = () => {
   const handleMarginPercentageChange = (event) => {
     const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
-    dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)}));
+    dispatch(setQuotesData({marginAmount: formattedMargin((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100))}));
     //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
@@ -382,7 +389,7 @@ const AdDetailsPage = () => {
   };
 
   const formattedRupees = (number) => {
-    const roundedNumber = (number / 1).toFixed(2);
+    const roundedNumber = (number / 1).toFixed(0);
     const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
     return totalAmount.toLocaleString('en-IN');
   };
@@ -417,34 +424,6 @@ const AdDetailsPage = () => {
   //   }
   // ];
 
-  // const items = [
-  //   {
-  //     content: [
-  //       {
-  //         label: 'Customer Price (incl. GST 18%)',
-  //         value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0) - extraDiscount)) * 1.18))}`
-  //       },
-  //       {
-  //         label: 'Customer Price (excl. GST)',
-  //         value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0)  - extraDiscount)))}`
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     content: [
-  //       {
-  //         label: 'Vendor Cost (incl. GST 18%)',
-  //         value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount) * 1.18))}`
-  //       },
-  //       {
-  //         label: 'Vendor Cost (excl. GST)',
-  //         value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount))}`
-  //       }
-  //     ]
-  //   }
-  // ];  
-
-  
   const items = [
     {
       content: [
@@ -520,7 +499,7 @@ const AdDetailsPage = () => {
 
   const slabOptions = sortedSlabData.map(opt => ({
       value: opt.StartQty,
-      label: `${opt.StartQty}+ ${unit} : ₹${formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
+      label: `${opt.StartQty}+ ${unit} : ₹${(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
     }
   ))
 
@@ -734,7 +713,7 @@ const AdDetailsPage = () => {
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin(((qty * unitPrice * e.target.value )/(100 - firstSelectedSlab.AgencyCommission)) * 100)  * (firstSelectedSlab.AgencyCommission/100)})); 
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin(((qty * unitPrice * e.target.value )/(100 - marginPercentage)) * 100)  * (marginPercentage/100)})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}
