@@ -153,9 +153,9 @@ if (!checkoutData.some(item => item.campaignDuration)) {
 // }
 
 let columnWidths = {
-    'S.No.': 35,
-    'Ad Medium': 60,
-    'Ad Type': 60,
+  'Quote.No.': 45,
+  'Ad Medium': 60,
+  'Ad Type': 60,
     'Ad Category': 60,
     'Edition': 60,
     'Package': 60,
