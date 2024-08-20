@@ -725,7 +725,7 @@ const AdDetailsPage = () => {
                     </div>
                     <p className="text-red-700">{campaignDuration < minimumCampaignDuration ? 'Minimum Duration should be ' + minimumCampaignDuration : ''}</p>
                   </div>)}
-                  <div className="flex space-x-2 mb-4 mr-2 md:mr-20 sm:mr-24">
+                  {/* <div className="flex space-x-2 mb-4 mr-2 md:mr-20 sm:mr-24">
   <div className="flex flex-col w-1/2">
     <label className="font-bold ml-2 mb-1 text-nowrap">Margin Amount(₹)</label>
     <input
@@ -743,19 +743,19 @@ const AdDetailsPage = () => {
   <div className="flex flex-col w-1/2">
     <label className="font-bold ml-2 mb-1">Margin %</label>
     {/* <div className="flex items-center"> */}
-      <input
+      {/* <input
         className={`w-full ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
         type="number"
         placeholder="Ex: 15"
         value={formattedRupees(marginPercentage)}
         onChange={handleMarginPercentageChange}
         onFocus={(e) => e.target.select()}
-      />
+      /> */}
     {/* </div> */}
-  </div>
-</div>
+  {/* </div>
+</div> */}
 
-                {/* <div className="mb-4 flex flex-col">
+                <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Margin Amount(₹)</label>
                   <input
                     className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
@@ -783,8 +783,8 @@ const AdDetailsPage = () => {
                     <p className="mt-1 font-bold ml-2">%</p><br />
                   </div>
 
-                </div> */}
-                <div className="mb-4 flex flex-col">
+                </div>
+                {/* <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
                   <input
                   className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
@@ -795,7 +795,7 @@ const AdDetailsPage = () => {
                     onChange={(e) => dispatch(setQuotesData({extraDiscount: e.target.value}))}
                     onFocus={(e) => e.target.select()}
                   />
-                </div>
+                </div> */}
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Remarks</label>
                   <InputTextarea
