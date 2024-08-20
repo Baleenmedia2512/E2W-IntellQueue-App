@@ -528,8 +528,8 @@ const AdDetailsPage = () => {
 
   return (
     
-    <div className="  text-black overscroll-none">    
-      <div className="fixed p-4 left-[2%] right-[2%] overscroll-none">
+    <div className="text-black overscroll-none">    
+      <div className="p-4 pt-0 left-[2%] right-[2%] overscroll-none">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -607,7 +607,7 @@ const AdDetailsPage = () => {
                 circular 
                 showIndicators={false} /> */}
 
-<div className="w-full flex overflow-x-auto space-x-4 p-2">
+<div className="w-full flex sticky overflow-x-auto space-x-4 p-2 mb-3">
   {/* <!-- Customer Price Box --> */}
   <div className="flex-shrink-0 w-60 bg-blue-50 border border-blue-200 rounded-lg p-4">
     <div className="text-lg font-bold text-blue-500 mb-2">Customer Price</div>
@@ -648,7 +648,9 @@ const AdDetailsPage = () => {
 
 
 
-              <div className="mb-8 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-6" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
+              {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
+              <div className="mb-3 overflow-y-auto h-full" > 
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
               {/* <div name="QuoteVendorSelect">
                 <label className="block mb-1 font-medium">Vendor</label>
                 <Dropdown
@@ -744,7 +746,37 @@ const AdDetailsPage = () => {
                     </div>
                     <p className="text-red-700">{campaignDuration < minimumCampaignDuration ? 'Minimum Duration should be ' + minimumCampaignDuration : ''}</p>
                   </div>)}
-                <div className="mb-4 flex flex-col">
+                  <div className="flex space-x-2 mb-4 mr-2 md:mr-20 sm:mr-24">
+  <div className="flex flex-col w-1/2">
+    <label className="font-bold ml-2 mb-1 text-nowrap">Margin Amount(₹)</label>
+    <input
+      className={`w-full ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+      type="number"
+      placeholder="Ex: 4000"
+      value={margin}
+      onChange={handleMarginChange}
+      onBlur={marginLostFocus}
+      onFocus={(e) => e.target.select()}
+    />
+    {errors.marginAmount && <p className="text-red-500 text-xs ml-3">{errors.marginAmount}</p>}
+  </div>
+
+  <div className="flex flex-col w-1/2">
+    <label className="font-bold ml-2 mb-1">Margin %</label>
+    {/* <div className="flex items-center"> */}
+      <input
+        className={`w-full ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+        type="number"
+        placeholder="Ex: 15"
+        value={formattedRupees(marginPercentage)}
+        onChange={handleMarginPercentageChange}
+        onFocus={(e) => e.target.select()}
+      />
+    {/* </div> */}
+  </div>
+</div>
+
+                {/* <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Margin Amount(₹)</label>
                   <input
                     className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
@@ -772,7 +804,7 @@ const AdDetailsPage = () => {
                     <p className="mt-1 font-bold ml-2">%</p><br />
                   </div>
 
-                </div>
+                </div> */}
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
                   <input
@@ -819,10 +851,11 @@ const AdDetailsPage = () => {
                     </ul>
                   )}
                 </div>
+                </div>
                 <span className='flex flex-row justify-center'>
-                <div className="flex flex-col mr-2 mt-4 items-center justify-center">
+                <div className="flex flex-col mr-2 items-center justify-center">
                   <button
-                    className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
+                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                     onClick={(e) => {
@@ -842,9 +875,9 @@ const AdDetailsPage = () => {
                     Add to Cart
                   </button>
                 </div>
-                <div className="flex flex-col ml-2 mt-4 items-center justify-center">
+                <div className="flex flex-col ml-2 items-center justify-center">
                   <button
-                    className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
+                    className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
                     onClick={(e) => {
                       e.preventDefault();
                       handleSubmit();
@@ -854,14 +887,24 @@ const AdDetailsPage = () => {
                   </button>
                 </div>
                 </span>
-                <div className="flex flex-col justify-center bg-gradient-to-br from-gray-100 to-white items-center mx-4 px-3 py-1 mt-2 rounded-lg shadow-md shadow-gray-400 border border-gray-400">
+                {/* <div className="flex flex-col justify-center bg-gradient-to-br from-gray-100 to-white items-center mx-4 px-3 py-1 my-4 rounded-lg shadow-md shadow-gray-400 border border-gray-400">
                 <p className="font-medium text-lg text-[#333333] mt-2">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
                   <p className="font-medium text-[#1A1A1A] text-lg mt-2  text-center">
                     Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
                   
-                </div>
+                </div> */}
+                <div className="flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white items-center mx-4 px-4 py-3 mt-4 mb-8 rounded-xl shadow-lg shadow-gray-300 border border-gray-300">
+  <p className="font-semibold text-lg text-gray-800 mt-1">
+    Quote Valid till {month ? formattedDate : "0000-00-00"}
+  </p>
+  <p className="font-medium text-gray-600 text-base mt-2 text-center">
+    Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher.
+  </p>
+</div>
+
               </div>
+              
               </div>
             </div>
             {/* <div className="bg-surface-card p-8 rounded-2xl mb-4">
