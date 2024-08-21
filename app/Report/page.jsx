@@ -672,6 +672,7 @@ const orderColumns = [
     const incomeData = sumOfFinance.length > 0 ? [
       { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
       { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
+      { name: 'Cheque', value: parseFloat(sumOfFinance[0].income_cheque || 0) },
     ] : [];
 
     
@@ -724,7 +725,8 @@ const orderColumns = [
       '#7E57C2',  // Indigo Purple
       '#FFB74D',  // Soft Orange
     ];
-    const incomeColors = ['#D2B48C', '#8BC34A'];
+    const incomeColors = ['#00BFAE', '#FF6F00', '#007BFF'];
+
     const expenseColors = [
       '#FF5722', '#FF9800', '#FFC107', '#F9A825', '#FF6F61', 
       '#4CAF50', '#2196F3', '#9C27B0', '#E91E63', '#3F51B5', 
@@ -1234,7 +1236,7 @@ const handleDateChange = (range) => {
           
           <div style={{ ...styles.title, ...styles.incomeTitle }}>Income Breakdown</div>
           <div style={styles.dropdownContainer}>
-            {/* <Select
+            <Select
               value={selectedIncomeView}
               onChange={handleIncomeViewChange}
               style={styles.dropdown}
@@ -1246,7 +1248,7 @@ const handleDateChange = (range) => {
                   {option.label}
                 </MenuItem>
               ))}
-            </Select> */}
+            </Select>
           </div>
 
           {selectedIncomeView === 'Income Breakdown' ? (
