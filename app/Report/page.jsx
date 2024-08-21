@@ -942,8 +942,9 @@ const handleDateChange = (range) => {
 
 
     return (
-
+      
         <Box sx={{ width: '100%'}}>
+          <h1 className='text-2xl font-bold mt-2 ml-2 text-start text-blue-500'>Reports</h1>
             <Tabs
                 value={value}
                 onChange={handleChange}
