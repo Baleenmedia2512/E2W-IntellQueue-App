@@ -124,7 +124,7 @@ export const AdDetails = () => {
   };
 
   const pdfGeneration = async (item) => {
-    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
     let AmountInclGST = Math.round(AmountExclGST * 1.18);
     
     return {
@@ -161,7 +161,8 @@ export const AdDetails = () => {
         alert(`The following error occurred while inserting data: ${data}`);
       }
     } catch (error) {
-      console.error('Error inserting Quote:', error);
+      alert('An unexpected error occured while inserting Quote:', error);
+      return;
     }
   }
 
@@ -170,9 +171,15 @@ export const AdDetails = () => {
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
     if (isGeneratingPdf) {
-      const promises = cartItems.map(item => addQuoteToDB(item));
-      await Promise.all(promises);
-      return; // Prevent further execution if PDF is already being generated
+      try{
+        const promises = cartItems.map(item => addQuoteToDB(item));
+        await Promise.all(promises);
+        return; // Prevent further execution if PDF is already being generated
+      } catch(error) {
+        alert('An unexpected error occured while inserting Quote:', error);
+        return;
+      }
+      
     }
 
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
@@ -180,14 +187,21 @@ export const AdDetails = () => {
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
-      const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-      await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber);
-      const promises = cartItems.map(item => addQuoteToDB(item));
-      await Promise.all(promises);
-      setTimeout(() => {
-      dispatch(resetCartItem());
-      dispatch(resetQuotesData());
+      try{
+        const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber);
+        const promises = cartItems.map(item => addQuoteToDB(item));
+        await Promise.all(promises);
+        setTimeout(() => {
+        dispatch(resetCartItem());
+        dispatch(resetQuotesData());
+        dispatch(resetClientData());
       },3000)
+      } catch(error){
+        alert('An unexpected error occured while inserting Quote:', error);
+        return;
+      }
+      
     } else{
       if(clientName === ""){
         setIsClientName(false)
