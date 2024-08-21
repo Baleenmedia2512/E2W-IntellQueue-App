@@ -300,7 +300,7 @@ const AdDetailsPage = () => {
     try{
       await Promise.all(combinedSlabData.map(async(item) => {
         try{
-          console.log("Function here")
+          //console.log("Function here")
           const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${item.StartQty}&JsonUnitPrice=${item.UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}`);
           const result = await response.json();
           if(result === "Failed to Insert" || result === "Failed to Update"){
@@ -318,7 +318,6 @@ const AdDetailsPage = () => {
           //   setTimeout(() => {
           //   setSuccessMessage('');
           // }, 2000);
-            console.log(result)
             fetchQtySlab();
             setNewUnitPrice("");  
             setTempSlabData([]);
@@ -913,7 +912,12 @@ var selectedRate = '';
       if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
         const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${unitPrice}`);
+
+        const minSlab = combinedSlabData.reduce((min, current) => {
+          return current.StartQty < min.StartQty ? current : min;
+      }, combinedSlabData[0]);
+
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}`);
     
         // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
@@ -1128,7 +1132,7 @@ var selectedRate = '';
     }));
     // Close the newRateModel modal
     setIsNewRate(true);
-    dispatch(setRateId(""));
+    // dispatch(setRateId(""));
     setNewRateName("");
     setIsQtySlab(false);
     elementsToShowList("Show")
@@ -1243,7 +1247,7 @@ var selectedRate = '';
               const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}`)
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
-                setSuccessMessage('Rate Card Added Successfully!');
+                setSuccessMessage(`Rate Card #${maxRateID} Added Successfully!`);
                 setTimeout(() => {
                 setSuccessMessage('');
               }, 2000);
@@ -1272,7 +1276,7 @@ const handleRateSearch = async(e) =>{
 }
 
 const updateSlabData = (qty, newUnitPrice) => {
-  console.log(tempSlabData.length)
+  //console.log(tempSlabData.length)
   if(tempSlabData.length > 0){
   const updatedData = tempSlabData.map((data) => {
     if (data.StartQty === qty) {
@@ -1341,9 +1345,6 @@ setEditModal(false);
     setNewUnitPrice(0);
     setTempSlabData([]);
     setMarginPercentage(0);
-    if(isNewRate){
-      return
-    }else{
       dispatch(setSelectedValues({
         rateName: "",
         adType: "",
@@ -1352,14 +1353,13 @@ setEditModal(false);
         Location: "",
         Package: ""
       }));
-    }
   }
 
-  useEffect(() => {
-    if(isNewRate){
-      handleClearRateId();
-    }
-  }, [isNewRate, rateId])
+  // useEffect(() => {
+  //   if(isNewRate){
+  //     handleClearRateId();
+  //   }
+  // }, [isNewRate, rateId])
   const handleKeyDown = (event) => {
     if (
       !/[0-9]/.test(event.key) && // Allow numbers
@@ -1468,8 +1468,8 @@ setEditModal(false);
             <div className="w-full ">
   <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Rates Entry</h2>
-        <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p>
+        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Rate Manager</h2>
+        {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
       </div>
 
@@ -1493,8 +1493,8 @@ setEditModal(false);
       )} */}
             <div className="bg-white p-4 rounded-lg shadow-lg">
       <form className="space-y-4">
-      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3>
-            
+      {/* <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3> */}
+      { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>} 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <div className='mt-4' > {/*name="RateSearchInput"*/}
                 <label className='mt-4 mb-2 text-gray-700 font-semibold' >Search Rate Card</label>
@@ -1789,12 +1789,12 @@ setEditModal(false);
                     {combinedSlabData.map((data, index) => (
                       <div key={data.StartQty || index} className='flex justify-center'>
                         {data.isTemp ? (
-                          <span onClick={() => handleItemClick(data)}>{data.StartQty} {selectedUnit.value} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit.value}</span>
+                          <span onClick={() => handleItemClick(data)}>{data.StartQty} {selectedUnit.value} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit.value}</span>
                         ) : (
                           <option key={data.StartQty} className="mt-1.5" 
                             onClick={() => handleItemClick(data)}
                           >
-                            {data.StartQty} {selectedUnit ? selectedUnit.value : ''} - ₹{formattedMargin(data.UnitPrice)} per {selectedUnit ? selectedUnit.value : ''}
+                            {data.StartQty} {selectedUnit ? selectedUnit.value : ''} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit ? selectedUnit.value : ''}
                           </option>
                         )}
                         <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
@@ -1954,7 +1954,7 @@ setEditModal(false);
                     {/* <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span> */}
                     </button> 
                   )}
-                    {(isNewRate && (rateId === 0 || rateId === ''))  ? (
+                    {(isNewRate)  ? (
                       <button 
                       className="px-6 py-2 mr-3 bg-green-500 text-white rounded-lg w-fit" 
                       onClick={insertNewRate}>Add

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import { Dropdown } from 'primereact/dropdown';
@@ -24,18 +24,22 @@ import CreatableSelect from 'react-select/creatable';
 //const minimumUnit = Cookies.get('minimumunit');
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { FetchRateSeachTerm } from '../api/FetchAPI';
 
 export const formattedMargin = (number) => {
   const roundedNumber = (number / 1).toFixed(0);
-  return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
+  return Number((roundedNumber / 1).toFixed(0)); //roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 :
 };
 
 const AdDetailsPage = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [rateSearchTerm,setRateSearchTerm] = useState("");
+  const [ratesSearchSuggestion, setRatesSearchSuggestion] = useState([]);
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [slabData, setSlabData] = useState([])
   const [qtySlab, setQtySlab] = useState()
   //const [unitPrice, setUnitPrice] = useState('')
@@ -89,6 +93,37 @@ const AdDetailsPage = () => {
   const year = inputDate.getFullYear();
 
   const formattedDate = `${day}-${month}-${year}`;
+
+  const handleRateSearch = async(e) =>{
+    setRateSearchTerm(e.target.value);
+    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    setRatesSearchSuggestion(searchSuggestions);
+  }
+
+  const fetchRate = async(rateId) => {
+    try {
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
+      if(!response.ok){
+        throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
+      }
+      const data = await response.json();
+      const firstData = data[0];
+      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true}))
+    } catch (error) {
+      console.error("Error while fetching rates: " + error)
+    }
+  }
+
+  const handleRateSelection = (e) => {
+    const selectedRate = e.target.value;
+    const selectedRateId = selectedRate.split('-')[0];
+    setRatesSearchSuggestion([]);
+    setRateSearchTerm(selectedRate);
+
+    fetchRate(selectedRateId);
+    dispatch(setQuotesData({rateId: selectedRateId}));
+    dispatch(updateCurrentPage("adDetails"));
+  }
 
   useEffect(() => {
     dispatch(setQuotesData({campaignDuration: (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1, validityDate: (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate'), leadDays: (leadDay) ? leadDay.LeadDays: ""}));
@@ -283,7 +318,7 @@ const AdDetailsPage = () => {
 
   const validateFields = () => {
     let errors = {};
-    if (!margin || margin === "0") errors.marginAmount = 'Margin Amount is required';
+    if (margin === "0") errors.marginAmount = 'Margin Amount is required';
     marginAmountRef.current.focus()
     setErrors(errors);
     return Object.keys(errors).length === 0;
@@ -510,7 +545,7 @@ const AdDetailsPage = () => {
   return (
     
     <div className="text-black overscroll-none">    
-      <div className="p-4 pt-0 left-[2%] right-[2%] overscroll-none">
+      <div className="p-2 pt-0 left-[2%] right-[2%] overscroll-none">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -575,6 +610,37 @@ const AdDetailsPage = () => {
             {/* </div> */}
             
               <div>
+                <div className='mx-[8%] relative mt-4'>
+              <input
+          className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+          // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
+          type="text"
+          id="RateSearchInput"
+          // name='RateSearchInput'
+          placeholder="Ex: RateName Type"
+          value={rateSearchTerm}
+          onChange = {handleRateSearch}
+          onFocus={(e) => {e.target.select()}}
+        />
+      {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "") && (
+              <ul className="z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+                {ratesSearchSuggestion.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleRateSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="absolute top-0 right-0 mt-2 mr-3">
+          <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
+        </div></div>
             {/* <div class="relative flex flex-col w-fit h-fit  overflow-hidden font-sans text-base isolation-isolate before:absolute before:inset-[1px] before:rounded-lg before:bg-white after:absolute after:w-1 after:inset-y-[0.65rem] after:left-[0.5rem] after:rounded after:bg-gradient-to-b from-[#2eadff] via-[#3d83ff] to-[#7e61ff] after:transition-transform after:duration-300 hover:after:translate-x-[0.15rem]">
     
     <div class="notititle text-blue-500 px-5 pt-3 pb-1 pr-1 text-lg font-medium transition-transform duration-300 ease-out z-10">Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}</div>
@@ -587,15 +653,15 @@ const AdDetailsPage = () => {
                 numScroll={1}
                 circular 
                 showIndicators={false} /> */}
-<h1 className='text-2xl font-bold text-center text-blue-500'>Quote Details</h1>
+
 <br/>
-<div className="w-full flex sticky overflow-x-auto sm:overflow-x-hidden space-x-4 p-2 mb-3">
+<div className="w-full flex sticky overflow-x-auto sm:overflow-x-hidden overflow-y-hidden h-32 space-x-4 p-2 mb-3">
   {/* <!-- Customer Price Box --> */}
-  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <div className="text-lg font-bold text-blue-500 mb-2">Excluding GST</div>
+  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-blue-50 border border-blue-200 h-[120px] rounded-lg p-2">
+    <div className="sm:text-lg text-md font-bold text-blue-500 mb-2">Excluding GST</div>
     {items[0].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
-        <div className={`text-lg font-semibold ${item.label.includes("incl. GST") ? 'text-green-600' : 'text-blue-700'}`}>
+        <div className={`sm:text-lg text-md font-semibold text-blue-700`}>
           {item.label}:
         </div>
         <div 
@@ -609,11 +675,11 @@ const AdDetailsPage = () => {
   </div>
 
   {/* <!-- Vendor Cost Box --> */}
-  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-orange-50 border border-orange-200 rounded-lg p-4">
-    <div className="text-lg font-bold text-orange-500 mb-2">Including GST</div>
+  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-green-50 border border-green-200 h-[120px] rounded-lg p-2">
+    <div className="text-lg font-bold text-green-500 mb-2">Including GST@18%</div>
     {items[1].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
-        <div className={`text-lg font-semibold text-red-600`}>
+        <div className={`text-lg font-semibold text-green-600`}>
           {item.label}: 
         </div>
         <div 
@@ -634,6 +700,47 @@ const AdDetailsPage = () => {
 
               {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
               <div className="mb-3 overflow-y-auto h-full" > 
+              <span className='flex flex-row mb-2 justify-center'>
+                <div className="flex flex-col mr-2 items-center justify-center">
+                  <button
+                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (validateFields()) {
+                        const isDuplicate = cartItems.some(item => item.rateId === rateId);
+                        if (isDuplicate) {
+                          // Display an error message or handle the duplicate case
+                          alert("This item is already in the cart.");
+                          return;
+                        }
+                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData());
+                      } else {
+                        setToastMessage('Please fill the necessary details in the form.');
+                        setSeverity('error');
+                        setToast(true);
+                        setTimeout(() => {
+                          setToast(false);
+                        }, 2000);
+                      }
+                  }}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+                <div className="flex flex-col ml-2 items-center justify-center">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSubmit();
+                  }}
+                  >
+                    Go to Cart
+                  </button>
+                </div>
+                </span>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
               {/* <div name="QuoteVendorSelect">
                 <label className="block mb-1 font-medium">Vendor</label>
@@ -647,41 +754,8 @@ const AdDetailsPage = () => {
                 />
               </div> */}
               {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
-                <div className="mb-4 flex flex-col">
-                  <label className="font-bold ml-2">Vendor</label>
-                  <Dropdown
-                  //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                  className={`w-[80%] mt-1 ml-2 border border-1 bg-gradient-to-br from-gray-100 to-white border-gray-400 rounded-lg shadow-md shadow-gray-400  text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
-                  //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={selectedVendor}
-                    onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
-                    // onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
-                    options={vendorOptions}
-                  />
-                </div>
-                <div className="mb-4 flex flex-col">
-                  <label className="font-bold mb-1 ml-2">Quantity Slab Wise Cost</label>
-                  <Dropdown
-                   className={`w-[80%] ml-2 mt-1 bg-gradient-to-br from-gray-100 to-white border border-1 border-gray-400 rounded-lg shadow-md shadow-gray-400 text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
-                    //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={qtySlab}
-                    onChange={(e) => {
-                      setQtySlab({
-                        value: e.target.value,
-                        label: e.target.value
-                      });
-                      // {changing && setQty(e.target.value);}
-                      dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}))
-                      // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
-                    }}
-                    options={slabOptions}
-                  />
-                    {/* {sortedSlabData.map((opt, index) => (
-                      <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per {campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}
-                      </option>
-                    ))} */}
-                </div>
+             
+
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Quantity</label>
                   <div className="flex w-full">
@@ -838,48 +912,43 @@ const AdDetailsPage = () => {
                     </ul>
                   )}
                 </div>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2">Vendor</label>
+                  <Dropdown
+                  //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                  className={`w-[80%] mt-1 ml-2 border border-1 bg-gradient-to-br from-gray-100 to-white border-gray-400 rounded-lg shadow-md shadow-gray-400  text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
+                  //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                    value={selectedVendor}
+                    onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
+                    // onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
+                    options={vendorOptions}
+                  />
                 </div>
-                <span className='flex flex-row justify-center'>
-                <div className="flex flex-col mr-2 items-center justify-center">
-                  <button
-                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
-                    //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (validateFields()) {
-                        const isDuplicate = cartItems.some(item => item.rateId === rateId);
-                        if (isDuplicate) {
-                          // Display an error message or handle the duplicate case
-                          alert("This item is already in the cart.");
-                          return;
-                        }
-                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData());
-                      } else {
-                        setToastMessage('Please fill the necessary details in the form.');
-                        setSeverity('error');
-                        setToast(true);
-                        setTimeout(() => {
-                          setToast(false);
-                        }, 2000);
-                      }
-                  }}
-                  >
-                    Add to Cart
-                  </button>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold mb-1 ml-2">Quantity Slab Wise Cost</label>
+                  <Dropdown
+                   className={`w-[80%] ml-2 mt-1 bg-gradient-to-br from-gray-100 to-white border border-1 border-gray-400 rounded-lg shadow-md shadow-gray-400 text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
+                    //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                    value={qtySlab}
+                    onChange={(e) => {
+                      setQtySlab({
+                        value: e.target.value,
+                        label: e.target.value
+                      });
+                      // {changing && setQty(e.target.value);}
+                      dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}))
+                      // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
+                    }}
+                    options={slabOptions}
+                  />
+                    {/* {sortedSlabData.map((opt, index) => (
+                      <option className="rounded-lg" key={index} value={opt.StartQty}>
+                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per {campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}
+                      </option>
+                    ))} */}
                 </div>
-                <div className="flex flex-col ml-2 items-center justify-center">
-                  <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSubmit();
-                  }}
-                  >
-                    Go to Cart
-                  </button>
                 </div>
-                </span>
+                
                 {/* <div className="flex flex-col justify-center bg-gradient-to-br from-gray-100 to-white items-center mx-4 px-3 py-1 my-4 rounded-lg shadow-md shadow-gray-400 border border-gray-400">
                 <p className="font-medium text-lg text-[#333333] mt-2">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
                   <p className="font-medium text-[#1A1A1A] text-lg mt-2  text-center">

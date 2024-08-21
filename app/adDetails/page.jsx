@@ -262,11 +262,11 @@ export const AdDetails = () => {
   }));
 
   return (
-    <div className='bg-gray-100 w-full max-h-full overscroll-none'>
-      <div className='text-black overscroll-none'>
+    <div className='bg-gray-100 w-full h-[100vh] overscroll-y-hidden '>
+      <div className='text-black overscroll-y-hidden bg-gray-100'>
+      <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
+        <div className="flex flex-row items-center justify-between h-10 mx-[8%] bg-gray-100 max-h-full overscroll-y-hidden">
         
-        <div className="flex flex-row justify-between mx-[8%] bg-gray-100 max-h-full overscroll-none">
-  
           {/* Back Button */}
          { (currentPage !== "adMedium" && currentPage !== "") &&  
          (<button className="mr-4 mt-8 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
@@ -304,9 +304,9 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className='h-[100vh]'>
+        <div className='h-[100vh] overscroll-y-hidden bg-gray-100 mt-2'>
         <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-full'} overflow-y-auto max-h-[100vh] overflow-x-hidden mx-2`}>
-          <br />
+
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (

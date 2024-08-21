@@ -133,7 +133,7 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
   // Create a table
   let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Lead Days","Remarks"]];
   let data = checkoutData.map((item, index) => ([
-    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', 'Rs.' + item.ratePerQty, 'Rs.' + item.amountExclGst, item.gst, 'Rs.' + item.amountInclGst, item.leadDays,item.remarks ? item.remarks : 'NA'
+    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, item.leadDays,item.remarks ? item.remarks : 'NA'
   ])); 
 
   // if (!checkoutData.some(item => item.package)) {
