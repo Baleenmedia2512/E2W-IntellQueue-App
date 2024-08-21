@@ -218,7 +218,7 @@ const Report = () => {
 
     const fetchAmounts = async () => {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmountTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -547,7 +547,7 @@ const orderColumns = [
             >
                 Restore
             </Button>
-            <Button
+            {/* <Button
                 variant="contained"
                 color="primary"
                 size="small"
@@ -559,7 +559,7 @@ const orderColumns = [
                  }}  
             >  
                Edit
-            </Button>
+            </Button> */}
         </div>
     ),
 },
@@ -944,7 +944,7 @@ const handleDateChange = (range) => {
     return (
       
         <Box sx={{ width: '100%'}}>
-          <h1 className='text-2xl font-bold mt-2 ml-2 text-start text-blue-500'>Reports</h1>
+          
             <Tabs
                 value={value}
                 onChange={handleChange}
@@ -954,8 +954,8 @@ const handleDateChange = (range) => {
                 centered
                 variant="fullWidth"
             >
-                <Tab label="Orders" />
-                {appRights.includes('Administrator') || appRights.includes('Finance') ? <Tab label="Finance" /> : null}
+                <Tab label="Order Report" />
+                {appRights.includes('Administrator') || appRights.includes('Finance') ? <Tab label="Finance Report" /> : null}
             </Tabs>
             <Dialog
                 open={orderDialogOpen}
@@ -1003,7 +1003,7 @@ const handleDateChange = (range) => {
   </DialogActions>
 </Dialog>
 
-            <Box sx={{ padding: 3 }}>
+            <Box className="px-3">
             {value === 0 && (
   <div style={{ width: '100%' }}>
     <div>
@@ -1014,7 +1014,7 @@ const handleDateChange = (range) => {
                 newRateWiseOrderNumber={newRateWiseOrderNumber}
             />
             </div>
-            
+            <h1 className='md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500'>Reports</h1>
             <div className="flex flex-nowrap overflow-x-auto ">
   {/* Combined Total Orders and Amounts box */}
   <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
@@ -1083,6 +1083,7 @@ const handleDateChange = (range) => {
       <DateRangePicker dates={dates} setDates={setDates} />
       </div> */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
+        
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
           pageSize={10}
@@ -1115,6 +1116,7 @@ const handleDateChange = (range) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
+              <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     <div className="flex flex-grow items-end ml-2 mb-4">

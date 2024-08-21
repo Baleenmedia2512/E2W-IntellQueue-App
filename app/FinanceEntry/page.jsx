@@ -197,7 +197,7 @@ const FinanceData = () => {
 
   const fetchClientDetails = (clientNumber, clientName) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
