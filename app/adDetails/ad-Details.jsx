@@ -700,20 +700,7 @@ const AdDetailsPage = () => {
 
               {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
               <div className="mb-3 overflow-y-auto h-full" > 
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
-              {/* <div name="QuoteVendorSelect">
-                <label className="block mb-1 font-medium">Vendor</label>
-                <Dropdown
-                  className={`w-full border rounded-lg `} //${errors.clientSource ? 'border-red-400' : ''}
-                  id="8"
-                  name="ClientSourceSelect"
-                  options={filteredData}
-                  value={selectedVendor}
-                  onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
-                />
-              </div> */}
-              {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
-              <span className='flex flex-row justify-center'>
+              <span className='flex flex-row mb-2 justify-center'>
                 <div className="flex flex-col mr-2 items-center justify-center">
                   <button
                     className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
@@ -754,6 +741,20 @@ const AdDetailsPage = () => {
                   </button>
                 </div>
                 </span>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
+              {/* <div name="QuoteVendorSelect">
+                <label className="block mb-1 font-medium">Vendor</label>
+                <Dropdown
+                  className={`w-full border rounded-lg `} //${errors.clientSource ? 'border-red-400' : ''}
+                  id="8"
+                  name="ClientSourceSelect"
+                  options={filteredData}
+                  value={selectedVendor}
+                  onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
+                />
+              </div> */}
+              {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
+             
 
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Quantity</label>
