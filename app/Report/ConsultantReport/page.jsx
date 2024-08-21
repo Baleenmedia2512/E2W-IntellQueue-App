@@ -21,8 +21,8 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 
 
 export default function GroupedRowsDemo() {
-    // const companyName = "Baleen Test";
-    const companyName = useAppSelector(state => state.authSlice.companyName);
+    const companyName = "Baleen Test";
+    // const companyName = useAppSelector(state => state.authSlice.companyName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
