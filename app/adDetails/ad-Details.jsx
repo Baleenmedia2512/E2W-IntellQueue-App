@@ -27,7 +27,7 @@ import SuccessToast from '../components/SuccessToast';
 
 export const formattedMargin = (number) => {
   const roundedNumber = (number / 1).toFixed(0);
-  return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
+  return Number((roundedNumber / 1).toFixed(0)); //roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 :
 };
 
 const AdDetailsPage = () => {
@@ -283,7 +283,7 @@ const AdDetailsPage = () => {
 
   const validateFields = () => {
     let errors = {};
-    if (!margin || margin === "0") errors.marginAmount = 'Margin Amount is required';
+    if (margin === "0") errors.marginAmount = 'Margin Amount is required';
     marginAmountRef.current.focus()
     setErrors(errors);
     return Object.keys(errors).length === 0;
@@ -595,7 +595,7 @@ const AdDetailsPage = () => {
     <div className="text-lg font-bold text-blue-500 mb-2">Excluding GST</div>
     {items[0].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
-        <div className={`text-lg font-semibold ${item.label.includes("incl. GST") ? 'text-green-600' : 'text-blue-700'}`}>
+        <div className={`text-lg font-semibold text-blue-700`}>
           {item.label}:
         </div>
         <div 
@@ -609,11 +609,11 @@ const AdDetailsPage = () => {
   </div>
 
   {/* <!-- Vendor Cost Box --> */}
-  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-orange-50 border border-orange-200 rounded-lg p-4">
-    <div className="text-lg font-bold text-orange-500 mb-2">Including GST</div>
+  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-green-50 border border-green-200 rounded-lg p-4">
+    <div className="text-lg font-bold text-green-500 mb-2">Including GST@18%</div>
     {items[1].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
-        <div className={`text-lg font-semibold text-red-600`}>
+        <div className={`text-lg font-semibold text-green-600`}>
           {item.label}: 
         </div>
         <div 
