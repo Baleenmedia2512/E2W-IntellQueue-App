@@ -21,7 +21,7 @@ export default function TabNavigation() {
 
   const handleTabChange = (page, href) => {
     dispatch(setCurrentPage(page));
-    router.push(href);
+    //router.push(href);
     setIsMenuOpen(false); // Close menu on tab click
   };
 
@@ -39,43 +39,45 @@ export default function TabNavigation() {
   }));
 
   return (
-    <div className="pt-14">
-      <div className="fixed top-0 left-0 right-0 z-10 bg-white shadow-lg py-2 md:py-3 border-b border-gray-200">
-        <div className="w-full max-w-6xl mx-auto px-2 md:px-4">
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center justify-between">
-            <div className="text-blue-600 font-bold text-lg">Employee Portal</div>
-            <button 
-              className="p-2 rounded-lg hover:bg-gray-200"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              Menu
-            </button>
-          </div>
-          {/* Desktop Menubar */}
-          <div className="hidden md:block">
-            <Menubar 
-              model={items} 
-              className="overflow-x-auto whitespace-nowrap scrollbar-hide"
-              start={<div className="text-blue-600 font-bold text-lg">Employee Portal</div>}
-            />
-          </div>
-          {/* Mobile Dropdown Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden bg-white shadow-lg mt-2 rounded-lg border border-gray-200">
-              {items.map((item, index) => (
-                <div 
-                  key={index} 
-                  className={`flex items-center space-x-2 p-2 cursor-pointer transition-colors duration-300 ease-in-out ${item.className}`}
-                  onClick={item.command}
-                >
-                  {item.label}
-                </div>
-              ))}
-            </div>
-          )}
+  <div className="pt-14">
+  <div className="fixed top-0 left-0 right-0 z-10 bg-white shadow-lg py-2 md:py-3 border-b border-gray-200">
+    <div className="w-full max-w-6xl mx-auto px-2 md:px-4">
+      {/* Flex container to handle alignment */}
+      <div className="flex items-center justify-between">
+        <div className="text-blue-600 font-bold text-lg">Employee Portal</div>
+        {/* Desktop Menubar */}
+        <div className="hidden md:block flex-1">
+          <Menubar 
+            model={items} 
+            className="flex justify-end overflow-x-auto whitespace-nowrap scrollbar-hide"
+          />
         </div>
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden p-2 rounded-lg hover:bg-gray-200"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          Menu
+        </button>
       </div>
+      {/* Mobile Dropdown Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-gray-200 text-black shadow-lg mt-2 rounded-lg border border-gray-300">
+
+          {items.map((item, index) => (
+            <div 
+              key={index} 
+              className={`flex items-center space-x-2 p-2 cursor-pointer transition-colors duration-300 ease-in-out ${item.className}`}
+              onClick={item.command}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
+  </div>
+</div>
+
   );
 }
