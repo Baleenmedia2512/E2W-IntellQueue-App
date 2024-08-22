@@ -547,7 +547,7 @@ const orderColumns = [
             >
                 Restore
             </Button>
-            {/* <Button
+            <Button
                 variant="contained"
                 color="primary"
                 size="small"
@@ -559,7 +559,7 @@ const orderColumns = [
                  }}  
             >  
                Edit
-            </Button> */}
+            </Button>
         </div>
     ),
 },
@@ -940,8 +940,9 @@ const handleDateChange = (range) => {
   return number;
 };
 
-
-
+const cleanAmount = (amount) => {
+  return parseFloat(amount.replace('₹ ', '').replace(/,/g, '')) || 0;
+};
 
     return (
       
@@ -1094,10 +1095,18 @@ const handleDateChange = (range) => {
               sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
             },
           }} 
-           sx={{
+          sx={{
             '& .MuiDataGrid-row:hover': {
               backgroundColor: '#e3f2fd', // Light blue on hover
             },
+            '& .highlighted-row': {
+              backgroundColor: '#fff385', // Yellow highlight for rows with mismatched amounts
+            },
+          }}
+          getRowClassName={(params) => {
+            const receivable = cleanAmount(params.row.Receivable);
+            const totalReceived = cleanAmount(params.row.TotalAmountReceived);
+            return receivable !== totalReceived ? 'highlighted-row' : '';
           }}
           />
         </div>
