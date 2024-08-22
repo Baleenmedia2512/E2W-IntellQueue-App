@@ -1102,11 +1102,22 @@ const cleanAmount = (amount) => {
             '& .highlighted-row': {
               backgroundColor: '#fff385', // Yellow highlight for rows with mismatched amounts
             },
+            '& .grey-row': {
+              backgroundColor: '#f5f5f5', // Grey highlight for negative RateWiseOrderNumber
+            },
           }}
           getRowClassName={(params) => {
             const receivable = cleanAmount(params.row.Receivable);
             const totalReceived = cleanAmount(params.row.TotalAmountReceived);
-            return receivable !== totalReceived ? 'highlighted-row' : '';
+            const rateWiseOrderNumber = params.row.RateWiseOrderNumber;
+        
+            if (rateWiseOrderNumber < 0) {
+              return 'grey-row'; // Highlight rows with negative RateWiseOrderNumber in grey
+            } else if (receivable !== totalReceived) {
+              return 'highlighted-row'; // Highlight rows with mismatched amounts in yellow
+            } else {
+              return ''; // No special styling
+            }
           }}
           />
         </div>
