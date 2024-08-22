@@ -291,7 +291,10 @@ export default function GroupedRowsDemo() {
             let middleIndex = Math.floor(totalRows / 2);
     
             let currentIndex = 0;
+            let rateCardNames = [];
+
             group.rates.forEach((rateCard, scanIndex) => {
+                rateCardNames.push(rateCard.rateCard);
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
@@ -304,27 +307,33 @@ export default function GroupedRowsDemo() {
                         isGroup: currentIndex === middleIndex,
                         isScanGroup: scanTypeIndex === 0,
                         orderNumber: group.orderNumber,
+                        originalName: group.name
                     });
                     currentIndex++;
                 });
             });
-    
+            
+            const rateCardString = rateCardNames.join('-');
+
             // Add a row for the total of each consultant
             rows.push({
-                id: `${group.name}-total`,
+                id: `${group.name}-${rateCardString}-total`,
                 name: '',
                 rateCard: 'Total',
                 count: '',
                 price: '',
                 total: `₹${Math.round(group.total)}`,
                 isGroup: true,
-                isScanGroup: false
+                isScanGroup: false,
+                originalName: group.name
             });
         });
     
         return rows;
     };
 
+   
+    
     const groupedData = renderGroupedData(consultants);
 
     const handlePriceChange = (id, newPrice) => {
@@ -357,21 +366,36 @@ export default function GroupedRowsDemo() {
                 } : row
             );
     
-            // Update the total in the "total" row
+            // // Update the total in the "total" row
+            // const totalRowIndex = updatedSelectedRows.findIndex(row => row.id.includes('-total'));
+            // if (totalRowIndex !== -1) {
+            //     const groupName = updatedSelectedRows[totalRowIndex].id.split('-')[0];
+            //     const groupRateCard = updatedSelectedRows[totalRowIndex].id.split('-')[1];
+            //     const groupTotal = updatedSelectedRows.reduce((sum, row) => 
+            //         row.id.startsWith(groupName) && row.id !== `${groupName}-${groupRateCard}-total`
+            //             ? sum + row.total 
+            //             : sum, 0);
+    
+            //     updatedSelectedRows[totalRowIndex].total = `₹${groupTotal}`;
             const totalRowIndex = updatedSelectedRows.findIndex(row => row.id.includes('-total'));
             if (totalRowIndex !== -1) {
-                const groupName = updatedSelectedRows[totalRowIndex].id.split('-')[0];
+                const totalRowIdParts = updatedSelectedRows[totalRowIndex].id.split('-');
+                const groupName = totalRowIdParts[0];
+                const rateCardString = totalRowIdParts.slice(1, -1).join('-'); // Extracts the combined rateCard part
+                const totalIdWithoutSuffix = `${groupName}-${rateCardString}`;
+                
                 const groupTotal = updatedSelectedRows.reduce((sum, row) => 
-                    row.id.startsWith(groupName) && row.id !== `${groupName}-total`
+                    row.id.startsWith(groupName) && row.id !== `${totalIdWithoutSuffix}-total`
                         ? sum + row.total 
                         : sum, 0);
-    
+
                 updatedSelectedRows[totalRowIndex].total = `₹${groupTotal}`;
             }
     
             return updatedSelectedRows;
         });
     };
+
 
     const priceBodyTemplate = (rowData) => {
 
@@ -589,6 +613,27 @@ const handleSelectionChange = (e) => {
 };
 
 
+// const filterHeaderTemplate = (column, filterField) => {
+//     return (
+//         <div>
+//             <span className="p-column-title">{column.header}</span>
+//             <input
+//                 type="text"
+//                 value={filters[filterField] ? filters[filterField].value : ''}
+//                 onChange={(e) => {
+//                     let newFilters = { ...filters };
+//                     newFilters[filterField] = { value: e.target.value, matchMode: 'contains' };
+//                     setFilters(newFilters);
+//                 }}
+//                 placeholder={`Search ${column.header}`}
+//                 className="p-inputtext-custom"
+//                 style={{ width: '100%' }}
+//             />
+//         </div>
+//     );
+// };
+
+
 const filterHeaderTemplate = (column, filterField) => {
     return (
         <div>
@@ -597,9 +642,85 @@ const filterHeaderTemplate = (column, filterField) => {
                 type="text"
                 value={filters[filterField] ? filters[filterField].value : ''}
                 onChange={(e) => {
+                    const searchTerm = e.target.value.toLowerCase();
                     let newFilters = { ...filters };
-                    newFilters[filterField] = { value: e.target.value, matchMode: 'contains' };
+                    newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
                     setFilters(newFilters);
+
+                    // Process groupedData to filter and include group totals row
+                    const updatedRows = groupedData.flatMap(group => {
+                        // Ensure group.rates is defined and is an array
+                        if (!group.rates || !Array.isArray(group.rates)) return [];
+
+                        let totalRows = group.rates.reduce((sum, rateCard) => 
+                            (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
+                            0
+                        );
+                        let middleIndex = Math.floor(totalRows / 2);
+
+                        let currentIndex = 0;
+                        let rateCardNames = [];
+
+                        const rows = group.rates.flatMap(rateCard => {
+                            rateCardNames.push(rateCard.rateCard);
+                            return (rateCard.rateTypes || []).map(rateType => {
+                                const isMiddleRow = currentIndex === middleIndex;
+                                const row = {
+                                    id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
+                                    name: isMiddleRow ? group.name : '',
+                                    rateCard: rateType.rateCard,
+                                    rateType: rateType.rateType,
+                                    count: rateType.count,
+                                    price: rateType.price,
+                                    total: rateType.count * rateType.price,
+                                    isGroup: isMiddleRow,
+                                    isScanGroup: rateType.rateCard === rateCard.rateCard,
+                                    orderNumber: group.orderNumber,
+                                    originalName: group.name // Store the original name for potential use
+                                };
+                                currentIndex++;
+                                return row;
+                            });
+                        });
+
+                        const rateCardString = rateCardNames.join('-');
+                        rows.push({
+                            id: `${group.name}-${rateCardString}-total`,
+                            name: '',
+                            rateCard: 'Total',
+                            count: '',
+                            price: '',
+                            total: `₹${Math.round(group.total)}`,
+                            isGroup: true,
+                            isScanGroup: false,
+                            originalName: group.name
+                        });
+
+                        return rows;
+                    });
+
+                    // Filter rows based on the search term
+                    const filteredRows = updatedRows.map(row => {
+                        // Check if the row matches the search term
+                        const matchesSearch = 
+                            row.name?.toLowerCase().includes(searchTerm) ||
+                            row.rateCard?.toLowerCase().includes(searchTerm) ||
+                            row.rateType?.toLowerCase().includes(searchTerm) ||
+                            row.count?.toString().includes(searchTerm) ||
+                            row.price?.toString().includes(searchTerm) ||
+                            row.total?.toString().includes(searchTerm);
+
+                        // If the row matches the search term and is not a total row, update name if empty
+                        if (matchesSearch && row.name === '' && !row.id.includes('-total')) {
+                            return { ...row, name: row.originalName }; // Display the name
+                        }
+
+                        // Always show the total row if it matches the search term
+                        return row.id.includes('-total') || matchesSearch ? row : null;
+                    }).filter(row => row !== null);
+                    console.log(filteredRows)
+                    // Update the state with filtered rows
+                    setFilteredConsultants(filteredRows);
                 }}
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
@@ -608,6 +729,9 @@ const filterHeaderTemplate = (column, filterField) => {
         </div>
     );
 };
+
+
+
 
 
 
@@ -777,9 +901,10 @@ const handleClose = () => {
                         <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'id')}></Column>
+                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
-                            ></Column>
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
