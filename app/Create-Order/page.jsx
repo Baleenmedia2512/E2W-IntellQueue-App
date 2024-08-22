@@ -652,7 +652,7 @@ const fetchRates = async () => {
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
               setPreviousConsultantName(clientDetails.consultantName);
-              // setDiscountAmount(clientDetails.adjustedOrderAmount);
+              setDiscountAmount(clientDetails.adjustedOrderAmount);
               // handleSelectChange(clientDetails.rateName, "rateName");
               // handleSelectChange(clientDetails.adType, "adType");
               
@@ -1407,7 +1407,7 @@ return (
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
     </div>
-    {/* <div>
+    <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
       <input 
         className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
@@ -1417,7 +1417,7 @@ return (
         onChange={handleDiscountChange}
         onFocus={e => e.target.select()}
       />
-    </div> */}
+    </div>
   </div>
   
   
