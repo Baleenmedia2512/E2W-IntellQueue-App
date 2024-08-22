@@ -158,9 +158,10 @@ const Report = () => {
             .then((response) => {
                 const data = response.data.map((order, index) => ({
                     ...order,
-                    id: order.ID ,
+                    id: order.ID,
                     Receivable: `₹ ${order.Receivable}`,
                     TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : '',
+                    AmountDifference: `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                 }));
@@ -476,19 +477,20 @@ const handleEditConfirm = () => {
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
-  { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80 },
+  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
   { 
     field: 'Receivable', 
-    headerName: 'Amount(₹)', 
+    headerName: 'Value(₹)', 
     width: 100,
     renderCell: (params) => (
       <div>{params.value}</div>
     )
   },
-  { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
-  { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
+  { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: 100 },
+  { field: 'AmountDifference', headerName: 'Difference(₹)', width: 100 },
+  { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
   { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: 130 },
   { field: 'Remarks', headerName: 'Order Remarks', width: 160},
   { 
@@ -573,10 +575,10 @@ const orderColumns = [
         { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
         { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
         { field: 'Amount', headerName: 'Amount(₹)', width: 100},
-        { field: 'OrderValue', headerName: 'Order Amount(₹)', width: 100},
-        { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
+        { field: 'OrderValue', headerName: 'Order Value(₹)', width: 100},
+        { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
         { field: 'OrderNumber', headerName: 'Order#', width: 100 },
-        { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
+        { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80},
         { field: 'ClientName', headerName: 'Client Name', width: 200 },
         { field: 'Remarks', headerName: 'Remarks', width: 200 },
         { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
@@ -1103,20 +1105,20 @@ const cleanAmount = (amount) => {
               backgroundColor: '#fff385', // Yellow highlight for rows with mismatched amounts
             },
             '& .grey-row': {
-              backgroundColor: '#f5f5f5', // Grey highlight for negative RateWiseOrderNumber
+              backgroundColor: '#e6e6e6', // Grey highlight for negative RateWiseOrderNumber
             },
           }}
           getRowClassName={(params) => {
-            const receivable = cleanAmount(params.row.Receivable);
-            const totalReceived = cleanAmount(params.row.TotalAmountReceived);
+            // const receivable = cleanAmount(params.row.Receivable);
+            // const totalReceived = cleanAmount(params.row.TotalAmountReceived);
             const rateWiseOrderNumber = params.row.RateWiseOrderNumber;
         
             if (rateWiseOrderNumber < 0) {
               return 'grey-row'; // Highlight rows with negative RateWiseOrderNumber in grey
-            } else if (receivable !== totalReceived) {
-              return 'highlighted-row'; // Highlight rows with mismatched amounts in yellow
-            } else {
-              return ''; // No special styling
+            // } else if (receivable !== totalReceived) {
+            //   return 'highlighted-row'; // Highlight rows with mismatched amounts in yellow
+            // } else {
+            //   return ''; // No special styling
             }
           }}
           />
@@ -1138,7 +1140,7 @@ const cleanAmount = (amount) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
+              <h1 className='md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     <div className="flex flex-grow items-end ml-2 mb-4">
