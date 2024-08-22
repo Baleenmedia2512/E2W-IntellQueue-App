@@ -949,7 +949,7 @@ const BMvalidateFields = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-2">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
-        <h2 className="text-2xl font-bold text-blue-500 mb-1">Client Registration</h2>
+        <h2 className="text-2xl font-bold text-blue-500 mb-1">Client Manager</h2>
         <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
         <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
         {!isNewClient && clientID && (

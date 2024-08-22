@@ -1132,7 +1132,7 @@ var selectedRate = '';
     }));
     // Close the newRateModel modal
     setIsNewRate(true);
-    dispatch(setRateId(""));
+    // dispatch(setRateId(""));
     setNewRateName("");
     setIsQtySlab(false);
     elementsToShowList("Show")
@@ -1345,9 +1345,6 @@ setEditModal(false);
     setNewUnitPrice(0);
     setTempSlabData([]);
     setMarginPercentage(0);
-    if(isNewRate){
-      return
-    }else{
       dispatch(setSelectedValues({
         rateName: "",
         adType: "",
@@ -1356,14 +1353,13 @@ setEditModal(false);
         Location: "",
         Package: ""
       }));
-    }
   }
 
-  useEffect(() => {
-    if(isNewRate){
-      handleClearRateId();
-    }
-  }, [isNewRate, rateId])
+  // useEffect(() => {
+  //   if(isNewRate){
+  //     handleClearRateId();
+  //   }
+  // }, [isNewRate, rateId])
   const handleKeyDown = (event) => {
     if (
       !/[0-9]/.test(event.key) && // Allow numbers
@@ -1472,8 +1468,8 @@ setEditModal(false);
             <div className="w-full ">
   <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Rates Entry</h2>
-        <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p>
+        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Rate Manager</h2>
+        {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
       </div>
 
@@ -1497,7 +1493,7 @@ setEditModal(false);
       )} */}
             <div className="bg-white p-4 rounded-lg shadow-lg">
       <form className="space-y-4">
-      <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3>
+      {/* <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3> */}
       { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>} 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <div className='mt-4' > {/*name="RateSearchInput"*/}
@@ -1958,7 +1954,7 @@ setEditModal(false);
                     {/* <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span> */}
                     </button> 
                   )}
-                    {(isNewRate && (rateId === 0 || rateId === ''))  ? (
+                    {(isNewRate)  ? (
                       <button 
                       className="px-6 py-2 mr-3 bg-green-500 text-white rounded-lg w-fit" 
                       onClick={insertNewRate}>Add

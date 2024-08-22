@@ -648,6 +648,7 @@ const fetchRates = async () => {
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
               setPreviousConsultantName(clientDetails.consultantName);
+              // setDiscountAmount(clientDetails.adjustedOrderAmount);
               // handleSelectChange(clientDetails.rateName, "rateName");
               // handleSelectChange(clientDetails.adType, "adType");
               
@@ -1182,7 +1183,7 @@ return (
       <div className="w-full max-w-6xl">
     <div className="flex items-center justify-between">
     <div>
-      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generation</h2>
+      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generator</h2>
       
       {/* Conditional text based on isOrderUpdate */}
       <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
@@ -1312,7 +1313,7 @@ return (
         <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
       </div>
     </div>
-    <div>
+    {/* <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
       <input 
         className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
@@ -1322,7 +1323,7 @@ return (
         onChange={handleDiscountChange}
         onFocus={e => e.target.select()}
       />
-    </div>
+    </div> */}
   </div>
   
   
