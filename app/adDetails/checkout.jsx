@@ -154,6 +154,7 @@ const CheckoutPage = () => {
               <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
         <thead>
           <tr>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate ID</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Medium</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Type</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Category</th>
@@ -161,13 +162,15 @@ const CheckoutPage = () => {
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Unit Price</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price (excl. GST)</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th>
           </tr>
         </thead>
         <tbody>
           {cartItems.map((item, index) => (
             <tr key={index}>
+              <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
@@ -175,9 +178,9 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{item.qty} {item.unit}</td>
               <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
               <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
+              <td className='p-1.5 border border-gray-200'>₹ {formattedRupees((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin)) / item.qty)}</td>
               <td className='p-1.5 border border-gray-200'>
-                ₹ {formattedRupees(Math.round(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * (1.18))))} (incl. GST)
-              </td>
+                ₹ {formattedRupees(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))}</td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
                   onClick={() => handleRemoveRateId(item.rateId)}
@@ -189,7 +192,7 @@ const CheckoutPage = () => {
           ))}
         </tbody>    
       </table>
-      <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1>
+      {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
       </div>
       <div className='flex justify-center mt-4'>
         <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adMedium', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>

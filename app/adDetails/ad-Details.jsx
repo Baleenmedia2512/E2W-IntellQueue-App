@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import { Dropdown } from 'primereact/dropdown';
@@ -24,18 +24,22 @@ import CreatableSelect from 'react-select/creatable';
 //const minimumUnit = Cookies.get('minimumunit');
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { FetchRateSeachTerm } from '../api/FetchAPI';
 
 export const formattedMargin = (number) => {
-  const roundedNumber = (number / 1).toFixed(2);
-  return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
+  const roundedNumber = (number / 1).toFixed(0);
+  return Number((roundedNumber / 1).toFixed(0)); //roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 :
 };
 
 const AdDetailsPage = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [rateSearchTerm,setRateSearchTerm] = useState("");
+  const [ratesSearchSuggestion, setRatesSearchSuggestion] = useState([]);
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [slabData, setSlabData] = useState([])
   const [qtySlab, setQtySlab] = useState()
   //const [unitPrice, setUnitPrice] = useState('')
@@ -50,9 +54,8 @@ const AdDetailsPage = () => {
 
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const [datas, setDatas] = useState([]);
-  const clientDetails = useAppSelector(state => state.clientSlice)
-  const {clientName, clientContact, clientEmail, clientSource} = clientDetails;
-  const companyName = 'Baleen Test'
+  const marginAmountRef = useRef(null);
+  const companyName = 'Baleen Test';
   // const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
@@ -67,7 +70,7 @@ const AdDetailsPage = () => {
   const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
   const campaignDuration = useAppSelector(state => state.quoteSlice.campaignDuration);
   const margin = useAppSelector(state => state.quoteSlice.marginAmount);
-  const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
+  // const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
   const remarks = useAppSelector(state => state.quoteSlice.remarks);
   const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
@@ -90,6 +93,37 @@ const AdDetailsPage = () => {
   const year = inputDate.getFullYear();
 
   const formattedDate = `${day}-${month}-${year}`;
+
+  const handleRateSearch = async(e) =>{
+    setRateSearchTerm(e.target.value);
+    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    setRatesSearchSuggestion(searchSuggestions);
+  }
+
+  const fetchRate = async(rateId) => {
+    try {
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
+      if(!response.ok){
+        throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
+      }
+      const data = await response.json();
+      const firstData = data[0];
+      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true}))
+    } catch (error) {
+      console.error("Error while fetching rates: " + error)
+    }
+  }
+
+  const handleRateSelection = (e) => {
+    const selectedRate = e.target.value;
+    const selectedRateId = selectedRate.split('-')[0];
+    setRatesSearchSuggestion([]);
+    setRateSearchTerm(selectedRate);
+
+    fetchRate(selectedRateId);
+    dispatch(setQuotesData({rateId: selectedRateId}));
+    dispatch(updateCurrentPage("adDetails"));
+  }
 
   useEffect(() => {
     dispatch(setQuotesData({campaignDuration: (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1, validityDate: (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate'), leadDays: (leadDay) ? leadDay.LeadDays: ""}));
@@ -120,7 +154,13 @@ const AdDetailsPage = () => {
     
   },[])
 
-  
+  // useEffect(() => {
+  //   if(extraDiscount > 0){
+  //     dispatch(setQuotesData({marginAmount: (((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)) - extraDiscount).toFixed(0)}))
+  //   }
+    
+  // },[extraDiscount])
+
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
       right: -3,
@@ -151,8 +191,8 @@ const AdDetailsPage = () => {
         setQtySlab(firstSelectedSlab.StartQty);
         setMarginPercentage(firstSelectedSlab.AgencyCommission || 0)
         // console.log(firstSelectedSlab.AgencyCommission)
-        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, marginAmount: (((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration))/(100- firstSelectedSlab.AgencyCommission)) * 100).toFixed(2)  * (firstSelectedSlab.AgencyCommission/100)}))
-
+        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}))
+        //, marginAmount: ((((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration))/(100- firstSelectedSlab.AgencyCommission)) * 100).toFixed(2)  * (firstSelectedSlab.AgencyCommission/100)).toFixed(0)
         //setUnitPrice(firstSelectedSlab.UnitPrice);
         //setUnit(firstSelectedSlab.Unit)
         //setMargin(((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2))
@@ -247,6 +287,7 @@ const AdDetailsPage = () => {
     }
   }, [qtySlab])
 
+
   const fetchRateData = async () => {
     try {
       if (!username) {
@@ -264,9 +305,10 @@ const AdDetailsPage = () => {
         setDatas(filterdata);
 
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-        console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
-        console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
-        dispatch(setQuotesData({marginAmount: (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100 - filterdata[0].AgencyCommission)) * 100).toFixed(2)  * (filterdata[0].AgencyCommission/100)}))
+        // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
+        // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
+        dispatch(setQuotesData({marginAmount: (((((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100 - filterdata[0].AgencyCommission)) * 100).toFixed(2)  * (filterdata[0].AgencyCommission/100))).toFixed(0)}))
+        setMarginPercentage(filterdata[0].AgencyCommission);
         
       }
     } catch (error) {
@@ -276,7 +318,8 @@ const AdDetailsPage = () => {
 
   const validateFields = () => {
     let errors = {};
-    if (!margin || margin === 0) errors.marginAmount = 'Margin Amount is required';
+    if (margin === "0") errors.marginAmount = 'Margin Amount is required';
+    marginAmountRef.current.focus()
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -310,7 +353,7 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
-      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility}]))
+      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility}]))
       dispatch(setQuotesData({isDetails: true}))
       dispatch(updateCurrentPage("checkout"))
       //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
@@ -326,7 +369,7 @@ const AdDetailsPage = () => {
   };
 
   const handleMarginChange = (event) => {
-    const newValue = parseFloat(event.target.value);
+    const newValue = parseInt(event.target.value);
     //setMargin(event.target.value);
     dispatch(setQuotesData({marginAmount: event.target.value}))
 
@@ -337,12 +380,13 @@ const AdDetailsPage = () => {
 
   const marginLostFocus = () => {
     setMarginPercentage((margin * 100) / (qty * unitPrice * (campaignDuration / minimumCampaignDuration)))
+    //dispatch(setQuotesData({marginAmount: event.target.value}))
   }
 
   const handleMarginPercentageChange = (event) => {
     const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
-    dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)}));
+    dispatch(setQuotesData({marginAmount: formattedMargin((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)}));
     //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
@@ -382,7 +426,7 @@ const AdDetailsPage = () => {
   };
 
   const formattedRupees = (number) => {
-    const roundedNumber = (number / 1).toFixed(2);
+    const roundedNumber = (number / 1).toFixed(0);
     const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
     return totalAmount.toLocaleString('en-IN');
   };
@@ -421,24 +465,24 @@ const AdDetailsPage = () => {
     {
       content: [
         {
-          label: 'Customer Price (incl. GST 18%)',
-          value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0) - extraDiscount)) * 1.18))}`
+          label: 'Price',
+          value: ` ₹${formattedRupees((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + parseInt(margin) )}`
         },
         {
-          label: 'Customer Price (excl. GST)',
-          value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + ((margin ||0)  - extraDiscount)))}`
+          label: 'Cost',
+          value: ` ₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))))}`
         }
       ]
     },
     {
       content: [
         {
-          label: 'Vendor Cost (incl. GST 18%)',
-          value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount) * 1.18))}`
+          label: 'Price',
+          value: ` ₹${formattedRupees((qty * unitPrice * (campaignDuration / minimumCampaignDuration)+ parseInt(margin)) * 1.18) }`
         },
         {
-          label: 'Vendor Cost (excl. GST)',
-          value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - extraDiscount))}`
+          label: 'Cost',
+          value: ` ₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration))) * 1.18))}`
         }
       ]
     }
@@ -492,14 +536,16 @@ const AdDetailsPage = () => {
 
   const slabOptions = sortedSlabData.map(opt => ({
       value: opt.StartQty,
-      label: `${opt.StartQty}+ ${unit} : ₹${formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
+      label: `${opt.StartQty}+ ${unit} : ₹${(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
     }
   ))
 
+
+
   return (
     
-    <div className="  text-black overscroll-none">    
-      <div className="fixed left-[2%] right-[2%] overscroll-none">
+    <div className="text-black overscroll-none">    
+      <div className="p-2 pt-0 left-[2%] right-[2%] overscroll-none">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -564,20 +610,138 @@ const AdDetailsPage = () => {
             {/* </div> */}
             
               <div>
+                <div className='mx-[8%] relative mt-4'>
+              <input
+          className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+          // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
+          type="text"
+          id="RateSearchInput"
+          // name='RateSearchInput'
+          placeholder="Ex: RateName Type"
+          value={rateSearchTerm}
+          onChange = {handleRateSearch}
+          onFocus={(e) => {e.target.select()}}
+        />
+      {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "") && (
+              <ul className="z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+                {ratesSearchSuggestion.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleRateSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="absolute top-0 right-0 mt-2 mr-3">
+          <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
+        </div></div>
             {/* <div class="relative flex flex-col w-fit h-fit  overflow-hidden font-sans text-base isolation-isolate before:absolute before:inset-[1px] before:rounded-lg before:bg-white after:absolute after:w-1 after:inset-y-[0.65rem] after:left-[0.5rem] after:rounded after:bg-gradient-to-b from-[#2eadff] via-[#3d83ff] to-[#7e61ff] after:transition-transform after:duration-300 hover:after:translate-x-[0.15rem]">
     
     <div class="notititle text-blue-500 px-5 pt-3 pb-1 pr-1 text-lg font-medium transition-transform duration-300 ease-out z-10">Customer Price(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18)))}</div>
     <div class="notibody text-blue-500 px-5 text-lg font-semibold transition-transform duration-300 ease-out z-10">Customer Price(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}</div>
 </div> */}
-            <Carousel value={items}  
+            {/* <Carousel value={items}  
                 itemTemplate={itemTemplate} 
                 responsiveOptions={responsiveOptions} 
                 numVisible={2} 
                 numScroll={1}
                 circular 
-                showIndicators={false} />
+                showIndicators={false} /> */}
 
-              <div className="mb-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 27rem)' }}>
+<br/>
+<div className="w-full flex sticky overflow-x-auto sm:overflow-x-hidden overflow-y-hidden h-32 space-x-4 p-2 mb-3">
+  {/* <!-- Customer Price Box --> */}
+  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-blue-50 border border-blue-200 h-[120px] rounded-lg p-2">
+    <div className="sm:text-lg text-md font-bold text-blue-500 mb-2">Excluding GST</div>
+    {items[0].content.map((item, index) => (
+      <div key={index} className="mb-2 flex items-center">
+        <div className={`sm:text-lg text-md font-semibold text-blue-700`}>
+          {item.label}:
+        </div>
+        <div 
+          className={`text-xl ml-2 font-semibold mr-1 text-gray-800`}
+        >
+          {item.value}
+        </div>
+        
+      </div>
+    ))}
+  </div>
+
+  {/* <!-- Vendor Cost Box --> */}
+  <div className="flex-shrink-0 w-60 sm:w-[47%] bg-green-50 border border-green-200 h-[120px] rounded-lg p-2">
+    <div className="text-lg font-bold text-green-500 mb-2">Including GST@18%</div>
+    {items[1].content.map((item, index) => (
+      <div key={index} className="mb-2 flex items-center">
+        <div className={`text-lg font-semibold text-green-600`}>
+          {item.label}: 
+        </div>
+        <div 
+          className={`text-xl ml-2 font-semibold mr-1 text-gray-800`}
+        >
+          {item.value}
+        </div>
+        
+      </div>
+    ))}
+  </div>
+</div>
+
+
+
+
+
+
+              {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
+              <div className="mb-3 overflow-y-auto h-full" > 
+              <span className='flex flex-row mb-2 justify-center'>
+                <div className="flex flex-col mr-2 items-center justify-center">
+                  <button
+                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (validateFields()) {
+                        const isDuplicate = cartItems.some(item => item.rateId === rateId);
+                        if (isDuplicate) {
+                          // Display an error message or handle the duplicate case
+                          alert("This item is already in the cart.");
+                          return;
+                        }
+                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData());
+                      } else {
+                        setToastMessage('Please fill the necessary details in the form.');
+                        setSeverity('error');
+                        setToast(true);
+                        setTimeout(() => {
+                          setToast(false);
+                        }, 2000);
+                      }
+                  }}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+                <div className="flex flex-col ml-2 items-center justify-center">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSubmit();
+                  }}
+                  >
+                    Go to Cart
+                  </button>
+                </div>
+                </span>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
               {/* <div name="QuoteVendorSelect">
                 <label className="block mb-1 font-medium">Vendor</label>
                 <Dropdown
@@ -590,41 +754,8 @@ const AdDetailsPage = () => {
                 />
               </div> */}
               {/* {errors.clientSource && <p className="text-red-500 text-xs">{errors.clientSource}</p>} */}
-                <div className="mb-4 flex flex-col">
-                  <label className="font-bold ml-2">Vendor</label>
-                  <Dropdown
-                  //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                  className={`w-[80%] mt-1 ml-2 border border-1 bg-gradient-to-br from-gray-100 to-white border-gray-400 rounded-lg shadow-md shadow-gray-400  text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
-                  //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={selectedVendor}
-                    onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
-                    // onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
-                    options={vendorOptions}
-                  />
-                </div>
-                <div className="mb-4 flex flex-col">
-                  <label className="font-bold mb-1 ml-2">Quantity Slab Wise Cost</label>
-                  <Dropdown
-                   className={`w-[80%] ml-2 mt-1 bg-gradient-to-br from-gray-100 to-white border border-1 border-gray-400 rounded-lg shadow-md shadow-gray-400 text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
-                    //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={qtySlab}
-                    onChange={(e) => {
-                      setQtySlab({
-                        value: e.target.value,
-                        label: e.target.value
-                      });
-                      // {changing && setQty(e.target.value);}
-                      dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - firstSelectedSlab.AgencyCommission)) * 100)  * (firstSelectedSlab.AgencyCommission/100)}))
-                      // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
-                    }}
-                    options={slabOptions}
-                  />
-                    {/* {sortedSlabData.map((opt, index) => (
-                      <option className="rounded-lg" key={index} value={opt.StartQty}>
-                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per {campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}
-                      </option>
-                    ))} */}
-                </div>
+             
+
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Quantity</label>
                   <div className="flex w-full">
@@ -637,7 +768,7 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value));
@@ -661,7 +792,7 @@ const AdDetailsPage = () => {
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin(((qty * unitPrice * e.target.value )/(100 - firstSelectedSlab.AgencyCommission)) * 100)  * (firstSelectedSlab.AgencyCommission/100)})); 
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin(((qty * unitPrice * e.target.value )/(100 - marginPercentage)) * 100)  * (marginPercentage/100)})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}
@@ -673,6 +804,36 @@ const AdDetailsPage = () => {
                     </div>
                     <p className="text-red-700">{campaignDuration < minimumCampaignDuration ? 'Minimum Duration should be ' + minimumCampaignDuration : ''}</p>
                   </div>)}
+                  {/* <div className="flex space-x-2 mb-4 mr-2 md:mr-20 sm:mr-24">
+  <div className="flex flex-col w-1/2">
+    <label className="font-bold ml-2 mb-1 text-nowrap">Margin Amount(₹)</label>
+    <input
+      className={`w-full ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+      type="number"
+      placeholder="Ex: 4000"
+      value={margin}
+      onChange={handleMarginChange}
+      onBlur={marginLostFocus}
+      onFocus={(e) => e.target.select()}
+    />
+    {errors.marginAmount && <p className="text-red-500 text-xs ml-3">{errors.marginAmount}</p>}
+  </div>
+
+  <div className="flex flex-col w-1/2">
+    <label className="font-bold ml-2 mb-1">Margin %</label>
+    {/* <div className="flex items-center"> */}
+      {/* <input
+        className={`w-full ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+        type="number"
+        placeholder="Ex: 15"
+        value={formattedRupees(marginPercentage)}
+        onChange={handleMarginPercentageChange}
+        onFocus={(e) => e.target.select()}
+      /> */}
+    {/* </div> */}
+  {/* </div>
+</div> */}
+
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Margin Amount(₹)</label>
                   <input
@@ -681,15 +842,20 @@ const AdDetailsPage = () => {
                     type="number"
                     placeholder="Ex: 4000"
                     value={margin}
+                    ref={marginAmountRef}
                     onChange={handleMarginChange}
                     onBlur={marginLostFocus}
                     onFocus={(e) => e.target.select()}
                   />
                   {errors.marginAmount && <p className="text-red-500 text-xs ml-3">{errors.marginAmount}</p>}
-                  <div className='flex items-center mt-4'>
-                    <p className="font-bold ml-2">Margin Percentage :</p><br />
+                 
+
+                </div>
+                <div className='mb-4 flex flex-col'>
+                <label className="font-bold ml-2 mb-1">Margin Percentage :</label>
+                <span className='flex flex-row'>
                     <input
-                    className={`w-20 ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                       //className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
@@ -698,11 +864,9 @@ const AdDetailsPage = () => {
                       //onBlur={marginPercentageLostFocus}
                       onFocus={(e) => e.target.select()}
                     />
-                    <p className="mt-1 font-bold ml-2">%</p><br />
+                    <p className="mt-1 font-bold ml-2">%</p></span>
                   </div>
-
-                </div>
-                <div className="mb-4 flex flex-col">
+                {/* <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
                   <input
                   className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
@@ -713,7 +877,7 @@ const AdDetailsPage = () => {
                     onChange={(e) => dispatch(setQuotesData({extraDiscount: e.target.value}))}
                     onFocus={(e) => e.target.select()}
                   />
-                </div>
+                </div> */}
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Remarks</label>
                   <InputTextarea
@@ -748,49 +912,61 @@ const AdDetailsPage = () => {
                     </ul>
                   )}
                 </div>
-                <span className='flex flex-row justify-center'>
-                <div className="flex flex-col mr-2 mt-4 items-center justify-center">
-                  <button
-                    className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
-                    //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
-                    // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (validateFields()) {
-                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData());
-                      } else {
-                        setToastMessage('Please fill the necessary details in the form.');
-                        setSeverity('error');
-                        setToast(true);
-                        setTimeout(() => {
-                          setToast(false);
-                        }, 2000);
-                      }
-                  }}
-                  >
-                    Add to Cart
-                  </button>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold ml-2">Vendor</label>
+                  <Dropdown
+                  //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                  className={`w-[80%] mt-1 ml-2 border border-1 bg-gradient-to-br from-gray-100 to-white border-gray-400 rounded-lg shadow-md shadow-gray-400  text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
+                  //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                    value={selectedVendor}
+                    onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
+                    // onChange={(e) => dispatch(setQuotesData({selectedVendor: e.target.value}))}
+                    options={vendorOptions}
+                  />
                 </div>
-                <div className="flex flex-col ml-2 mt-4 items-center justify-center">
-                  <button
-                    className="bg-blue-500 hover:bg-blue-200 text-white hover:text-black px-4 py-2 rounded-xl transition-all duration-300 ease-in-out"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSubmit();
-                  }}
-                  >
-                    Go to Cart
-                  </button>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold mb-1 ml-2">Quantity Slab Wise Cost</label>
+                  <Dropdown
+                   className={`w-[80%] ml-2 mt-1 bg-gradient-to-br from-gray-100 to-white border border-1 border-gray-400 rounded-lg shadow-md shadow-gray-400 text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
+                    //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
+                    value={qtySlab}
+                    onChange={(e) => {
+                      setQtySlab({
+                        value: e.target.value,
+                        label: e.target.value
+                      });
+                      // {changing && setQty(e.target.value);}
+                      dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}))
+                      // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
+                    }}
+                    options={slabOptions}
+                  />
+                    {/* {sortedSlabData.map((opt, index) => (
+                      <option className="rounded-lg" key={index} value={opt.StartQty}>
+                        {opt.StartQty}+ {unit} : ₹{formattedRupees(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)) * (Number(marginPercentage) + 100) / 100)} per {campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}
+                      </option>
+                    ))} */}
                 </div>
-                </span>
-                <div className="flex flex-col justify-center bg-gradient-to-br from-gray-100 to-white items-center mx-4 px-3 py-1 mt-2 rounded-lg shadow-md shadow-gray-400 border border-gray-400">
+                </div>
+                
+                {/* <div className="flex flex-col justify-center bg-gradient-to-br from-gray-100 to-white items-center mx-4 px-3 py-1 my-4 rounded-lg shadow-md shadow-gray-400 border border-gray-400">
                 <p className="font-medium text-lg text-[#333333] mt-2">Quote Valid till {month ? formattedDate : "0000-00-00"}</p>
                   <p className="font-medium text-[#1A1A1A] text-lg mt-2  text-center">
                     Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher
                   </p>
                   
-                </div>
+                </div> */}
+                <div className="flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white items-center mx-4 px-4 py-3 mt-4 mb-8 rounded-xl shadow-lg shadow-gray-300 border border-gray-300">
+  <p className="font-semibold text-lg text-gray-800 mt-1">
+    Quote Valid till {month ? formattedDate : "0000-00-00"}
+  </p>
+  <p className="font-medium text-gray-600 text-base mt-2 text-center">
+    Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher.
+  </p>
+</div>
+
               </div>
+              
               </div>
             </div>
             {/* <div className="bg-surface-card p-8 rounded-2xl mb-4">

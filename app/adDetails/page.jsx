@@ -124,7 +124,7 @@ export const AdDetails = () => {
   };
 
   const pdfGeneration = async (item) => {
-    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
     let AmountInclGST = Math.round(AmountExclGST * 1.18);
     
     return {
@@ -161,7 +161,8 @@ export const AdDetails = () => {
         alert(`The following error occurred while inserting data: ${data}`);
       }
     } catch (error) {
-      console.error('Error inserting Quote:', error);
+      alert('An unexpected error occured while inserting Quote:', error);
+      return;
     }
   }
 
@@ -170,9 +171,15 @@ export const AdDetails = () => {
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
     if (isGeneratingPdf) {
-      const promises = cartItems.map(item => addQuoteToDB(item));
-      await Promise.all(promises);
-      return; // Prevent further execution if PDF is already being generated
+      try{
+        const promises = cartItems.map(item => addQuoteToDB(item));
+        await Promise.all(promises);
+        return; // Prevent further execution if PDF is already being generated
+      } catch(error) {
+        alert('An unexpected error occured while inserting Quote:', error);
+        return;
+      }
+      
     }
 
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
@@ -180,14 +187,21 @@ export const AdDetails = () => {
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
-      const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-      await generatePdf(cart, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber);
-      const promises = cartItems.map(item => addQuoteToDB(item));
-      await Promise.all(promises);
-      setTimeout(() => {
-      dispatch(resetCartItem());
-      dispatch(resetQuotesData());
+      try{
+        const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber);
+        const promises = cartItems.map(item => addQuoteToDB(item));
+        await Promise.all(promises);
+        setTimeout(() => {
+        dispatch(resetCartItem());
+        dispatch(resetQuotesData());
+        dispatch(resetClientData());
       },3000)
+      } catch(error){
+        alert('An unexpected error occured while inserting Quote:', error);
+        return;
+      }
+      
     } else{
       if(clientName === ""){
         setIsClientName(false)
@@ -248,11 +262,11 @@ export const AdDetails = () => {
   }));
 
   return (
-    <div className='bg-gray-100 w-full max-h-full overscroll-none'>
-      <div className='text-black overscroll-none'>
+    <div className='bg-gray-100 w-full h-[100vh] overscroll-y-hidden '>
+      <div className='text-black overscroll-y-hidden bg-gray-100'>
+      <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
+        <div className="flex flex-row items-center justify-between h-10 mx-[8%] bg-gray-100 max-h-full overscroll-y-hidden">
         
-        <div className="flex flex-row justify-between mx-[8%] bg-gray-100 max-h-full overscroll-none">
-  
           {/* Back Button */}
          { (currentPage !== "adMedium" && currentPage !== "") &&  
          (<button className="mr-4 mt-8 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
@@ -290,9 +304,9 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className='h-[100vh]'>
+        <div className='h-[100vh] overscroll-y-hidden bg-gray-100 mt-2'>
         <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-full'} overflow-y-auto max-h-[100vh] overflow-x-hidden mx-2`}>
-          <br />
+
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (

@@ -161,6 +161,7 @@ const Report = () => {
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
                     TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : '',
+                    AmountDifference: order.RateWiseOrderNumber < 0 ? `₹ 0` : `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                 }));
@@ -218,7 +219,7 @@ const Report = () => {
 
     const fetchAmounts = async () => {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmountTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -476,19 +477,20 @@ const handleEditConfirm = () => {
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
-  { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80 },
+  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
   { 
     field: 'Receivable', 
-    headerName: 'Amount(₹)', 
+    headerName: 'Value(₹)', 
     width: 100,
     renderCell: (params) => (
       <div>{params.value}</div>
     )
   },
-  { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
-  { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
+  { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: 100 },
+  { field: 'AmountDifference', headerName: 'Difference(₹)', width: 100 },
+  { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
   { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: 130 },
   { field: 'Remarks', headerName: 'Order Remarks', width: 160},
   { 
@@ -569,54 +571,54 @@ const orderColumns = [
 
 
 
-    const financeColumns = [
-        { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
-        { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
-        { field: 'Amount', headerName: 'Amount(₹)', width: 100},
-        { field: 'OrderValue', headerName: 'Order Amount(₹)', width: 100},
-        { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
-        { field: 'OrderNumber', headerName: 'Order#', width: 100 },
-        { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
-        { field: 'ClientName', headerName: 'Client Name', width: 200 },
-        { field: 'Remarks', headerName: 'Remarks', width: 200 },
-        { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
-        {
-          field: 'actions',
-          headerName: 'Actions',
-          width: 100,
-          renderCell: (params) => (
-            <div>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
-              >
-                Delete
-              </Button>
-            </div>
-          ),
-        },
-      //   {
-      //     field: 'actions',
-      //     headerName: 'Actions',
-      //     width: 100,
-      //     renderCell: (params) => (
-      //         <div>
-      //             <Button
-      //                         variant="contained"
-      //                         color="primary"
-      //                         size="small"
-      //                         onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-      //                         style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
-      //                     >
-      //                         Delete
-      //                     </Button>
-      //         </div>
-      //     ),
-      // },
-    ];
+const financeColumns = [
+  { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
+  { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
+  { field: 'Amount', headerName: 'Amount(₹)', width: 100},
+  { field: 'OrderValue', headerName: 'Order Value(₹)', width: 100},
+  { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
+  { field: 'OrderNumber', headerName: 'Order#', width: 100 },
+  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80},
+  { field: 'ClientName', headerName: 'Client Name', width: 200 },
+  { field: 'Remarks', headerName: 'Remarks', width: 200 },
+  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+  {
+    field: 'actions',
+    headerName: 'Actions',
+    width: 100,
+    renderCell: (params) => (
+      <div>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+          style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+        >
+          Delete
+        </Button>
+      </div>
+    ),
+  },
+//   {
+//     field: 'actions',
+//     headerName: 'Actions',
+//     width: 100,
+//     renderCell: (params) => (
+//         <div>
+//             <Button
+//                         variant="contained"
+//                         color="primary"
+//                         size="small"
+//                         onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+//                         style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+//                     >
+//                         Delete
+//                     </Button>
+//         </div>
+//     ),
+// },
+];
 
     const handleOpenConfirmDialog = (rateWiseOrderNum, orderNum) => {
       setSelectedTransaction({ rateWiseOrderNum, orderNum });
@@ -672,6 +674,7 @@ const orderColumns = [
     const incomeData = sumOfFinance.length > 0 ? [
       { name: 'Online', value: parseFloat(sumOfFinance[0].income_online || 0) },
       { name: 'Cash', value: parseFloat(sumOfFinance[0].income_cash || 0) },
+      { name: 'Cheque', value: parseFloat(sumOfFinance[0].income_cheque || 0) },
     ] : [];
 
     
@@ -724,7 +727,8 @@ const orderColumns = [
       '#7E57C2',  // Indigo Purple
       '#FFB74D',  // Soft Orange
     ];
-    const incomeColors = ['#D2B48C', '#8BC34A'];
+    const incomeColors = ['#00BFAE', '#FF6F00', '#007BFF'];
+
     const expenseColors = [
       '#FF5722', '#FF9800', '#FFC107', '#F9A825', '#FF6F61', 
       '#4CAF50', '#2196F3', '#9C27B0', '#E91E63', '#3F51B5', 
@@ -942,8 +946,9 @@ const handleDateChange = (range) => {
 
 
     return (
-
+      
         <Box sx={{ width: '100%'}}>
+          
             <Tabs
                 value={value}
                 onChange={handleChange}
@@ -953,8 +958,8 @@ const handleDateChange = (range) => {
                 centered
                 variant="fullWidth"
             >
-                <Tab label="Orders" />
-                {appRights.includes('Administrator') || appRights.includes('Finance') ? <Tab label="Finance" /> : null}
+                <Tab label="Order Report" />
+                {appRights.includes('Administrator') || appRights.includes('Finance') ? <Tab label="Finance Report" /> : null}
             </Tabs>
             <Dialog
                 open={orderDialogOpen}
@@ -1002,7 +1007,7 @@ const handleDateChange = (range) => {
   </DialogActions>
 </Dialog>
 
-            <Box sx={{ padding: 3 }}>
+            <Box className="px-3">
             {value === 0 && (
   <div style={{ width: '100%' }}>
     <div>
@@ -1013,7 +1018,7 @@ const handleDateChange = (range) => {
                 newRateWiseOrderNumber={newRateWiseOrderNumber}
             />
             </div>
-            
+            <h1 className='md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500'>Reports</h1>
             <div className="flex flex-nowrap overflow-x-auto ">
   {/* Combined Total Orders and Amounts box */}
   <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
@@ -1082,6 +1087,7 @@ const handleDateChange = (range) => {
       <DateRangePicker dates={dates} setDates={setDates} />
       </div> */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
+        
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
           pageSize={10}
@@ -1090,10 +1096,20 @@ const handleDateChange = (range) => {
               sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
             },
           }} 
-           sx={{
+          sx={{
             '& .MuiDataGrid-row:hover': {
               backgroundColor: '#e3f2fd', // Light blue on hover
             },
+            '& .grey-row': {
+              backgroundColor: '#ededed', // Grey highlight for negative RateWiseOrderNumber
+            },
+          }}
+          getRowClassName={(params) => {
+            const rateWiseOrderNumber = params.row.RateWiseOrderNumber;
+        
+            if (rateWiseOrderNumber < 0) {
+              return 'grey-row';
+            }
           }}
           />
         </div>
@@ -1114,6 +1130,7 @@ const handleDateChange = (range) => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
+              <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     <div className="flex flex-grow items-end ml-2 mb-4">

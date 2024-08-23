@@ -2,8 +2,38 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 
-export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, grandTotalAmount, companyName, quoteNumber) => {
+export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, quoteNumber) => {
   const ImageUrl = '/images/WHITE PNG.png';
+  
+  const getMinValidityDays = () => {
+    // Define an array of month abbreviations
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Convert formatted dates to Date objects
+    const validityDaysArray = checkoutData.map(item => new Date(item.formattedDate));
+
+    // Find the minimum date
+    const minDate = new Date(Math.min(...validityDaysArray));
+
+    // Extract year, month, and day from the minimum date
+    const year = minDate.getFullYear();
+    const month = monthNames[minDate.getMonth()]; // Get month abbreviation
+    const day = String(minDate.getDate()).padStart(2, '0');
+
+    // Format the date as "DD-MMM-YYYY"
+    return `${day}-${month}-${year}`;
+};
+
+  // const ChangeDateFormat = (validityDate) => {
+  //   const [day, month, year] = validityDate.split('-');
+  //   const yearYY = year.slice(-2);
+
+  //   const formattedValidityDate = `${day}-${month}-${yearYY}`;
+  //   return formattedValidityDate
+  // }
+
+  const minimumValidityDate = getMinValidityDays();
+  // const formattedMinValidityDate = ChangeDateFormat(minimumValidityDate);
   
   // Create a new jsPDF instance
   const pdf = new jsPDF({
@@ -79,6 +109,9 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
   xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 165)
 
+  textWidth = pdf.getStringUnitWidth(`Validity Date: ${minimumValidityDate}`) * 12; // Adjust the font size multiplier as needed
+  xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
+  pdf.text(`Validity Date: ${minimumValidityDate}`, xCoordinate, 180);
   // textWidth = pdf.getStringUnitWidth(`Valid Till: ${checkoutData[14]}`) * 12; // Adjust the font size multiplier as needed
   // xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
   // pdf.text(`Valid Till: ${checkoutData[14]}`, xCoordinate, 195)
@@ -90,13 +123,7 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
   // pdf.setFont('normal');
   // pdf.setFontSize(12);
 
-  const ChangeDateFormat = (validityDate) => {
-    const [day, month, year] = validityDate.split('-');
-    const yearYY = year.slice(-2);
-
-    const formattedValidityDate = `${day}-${month}-${yearYY}`;
-    return formattedValidityDate
-  }
+  
 //   const [day, month, year] = checkoutData[14].split('-');
 //   const yearYY = year.slice(-2);
 
@@ -104,9 +131,9 @@ const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
 // const formattedValidityDate = `${day}-${month}-${yearYY}`;
 
   // Create a table
-  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Validity Date", "Remarks"]];
+  let headers = [['S.No.', 'Ad Medium', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', 'Campaign Duration', 'Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', "Amount (incl. GST) (in Rs.)", "Lead Days","Remarks"]];
   let data = checkoutData.map((item, index) => ([
-    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, ChangeDateFormat(item.formattedDate), item.remarks ? item.remarks : 'NA'
+    (index + quoteNumber).toString(), item.adMedium, item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qty + " " + item.qtyUnit, item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA', item.ratePerQty, item.amountExclGst, item.gst, item.amountInclGst, item.leadDays,item.remarks ? item.remarks : 'NA'
   ])); 
 
   // if (!checkoutData.some(item => item.package)) {
@@ -126,19 +153,19 @@ if (!checkoutData.some(item => item.campaignDuration)) {
 // }
 
 let columnWidths = {
-  'S.No.': 35,
+  'Quote.No.': 45,
   'Ad Medium': 60,
   'Ad Type': 60,
     'Ad Category': 60,
     'Edition': 60,
     'Package': 60,
     'Qty': 45,
-    'Campaign Duration': 65,
+    'Campaign Duration': 50,
     'Rate Per Qty (in Rs.)': 50,
-    'Amount (Excl. GST) (in Rs.)': 65,
+    'Amount (Excl. GST) (in Rs.)': 60,
     'GST': 30,
-    'Amount (incl. GST) (in Rs.)': 65,
-    'Validity Date': 60,
+    'Amount (incl. GST) (in Rs.)': 60,
+    'Lead Days': 45,
     'Remarks': 60
 };
 
@@ -148,12 +175,16 @@ headers[0].forEach((header, index) => {
   headerMap[header] = index;
 });
 
+const rightAlignColumns = ['Rate Per Qty (in Rs.)', 'Amount (Excl. GST) (in Rs.)', 'GST', 'Amount (incl. GST) (in Rs.)'];
 // Convert column names to indices and assign column widths
 let columnStyles = {};
 Object.keys(columnWidths).forEach(columnName => {
   let columnIndex = headerMap[columnName];
   if (columnIndex !== undefined) {
-      columnStyles[columnIndex] = { columnWidth: columnWidths[columnName] };
+      columnStyles[columnIndex] = { 
+        columnWidth: columnWidths[columnName], 
+        halign: rightAlignColumns.includes(columnName) ? 'right' : 'left' 
+      };
   }
 });
 
@@ -167,6 +198,7 @@ Object.keys(columnWidths).forEach(columnName => {
       lineColor: [0, 0, 0], // Ensure line color matches or contrasts well with the background
       lineWidth: 0.5, // Adjust line width as needed
       valign: 'middle',
+      //halign: 'right'
     },
     headStyles: {
       textColor: [255, 255, 255],
@@ -185,14 +217,14 @@ Object.keys(columnWidths).forEach(columnName => {
     return Math.min(...leadDaysArray);
   };
 
-  let grandTotalText = 'Grand Total: Rs.' + grandTotalAmount;
-  let grandTotalTextWidth = pdf.getTextWidth(grandTotalText);
+  // let grandTotalText = 'Grand Total: Rs.' + grandTotalAmount;
+  // let grandTotalTextWidth = pdf.getTextWidth(grandTotalText);
 
-  let grandTotalXPosition = pdf.internal.pageSize.width - grandTotalTextWidth - 100;
+  // let grandTotalXPosition = pdf.internal.pageSize.width - grandTotalTextWidth - 100;
 
-  pdf.setFont('helvetica', 'normal', 'bold');
-  pdf.setFontSize(16);
-  pdf.text(grandTotalText, grandTotalXPosition, pdf.lastAutoTable.finalY + 20);
+  // pdf.setFont('helvetica', 'normal', 'bold');
+  // pdf.setFontSize(16);
+  // pdf.text(grandTotalText, grandTotalXPosition, pdf.lastAutoTable.finalY + 20);
 
   pdf.setFont('helvetica', 'normal', 'bold');
   pdf.setFontSize(16);
@@ -203,8 +235,8 @@ Object.keys(columnWidths).forEach(columnName => {
   pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, pdf.internal.pageSize.height - 120);
   pdf.text(`2.Ad. Material shall be shared by ${clientTitle} ${clientName}`, 10, pdf.internal.pageSize.height - 105)
   pdf.text("3.100% Upfront payment required for releasing the Ads", 10, pdf.internal.pageSize.height - 90)
-  pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
-  pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, pdf.internal.pageSize.height - 60)
+  //pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
+  pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, pdf.internal.pageSize.height - 75)
 
   pdf.setDrawColor("#df5f98");
   pdf.line(10, pdf.internal.pageSize.height - 45, 400, pdf.internal.pageSize.height - 45);
