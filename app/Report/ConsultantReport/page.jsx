@@ -17,7 +17,14 @@ import ToastMessage from '../../components/ToastMessage';
 import SuccessToast from '../../components/SuccessToast';
 import { useAppSelector } from '@/redux/store';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Dropdown } from 'primereact/dropdown';
 
+const matchModes = [
+    { label: 'Contains', value: 'contains' },
+    { label: 'Starts with', value: 'startsWith' },
+    { label: 'Ends with', value: 'endsWith' },
+    { label: 'Equals', value: 'equals' },
+];
 
 
 export default function GroupedRowsDemo() {
@@ -54,6 +61,7 @@ export default function GroupedRowsDemo() {
     const [selectedOrderNumbers, setSelectedOrderNumbers] = useState([]);
     const [open, setOpen] = useState(false);
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
+    const [matchMode, setMatchMode] = useState('contains');
     
 
     const getConsultants = async (companyName, startDate, endDate) => {
@@ -189,6 +197,8 @@ export default function GroupedRowsDemo() {
                 setTimeout(() => {
                 setSuccessMessage('');
                 fetchConsultants();
+                setFilteredConsultants([]);
+                resetFilters();
               }, 3000);
             } catch (error) {
                 console.error('Error saving consultant:', error);
@@ -470,6 +480,35 @@ export default function GroupedRowsDemo() {
     
             return updatedSelectedRows;
         });
+
+        setFilteredConsultants(prevFilteredConsultants => {
+            if (prevFilteredConsultants.length === 0) return prevFilteredConsultants;
+    
+            const updatedFilteredConsultants = prevFilteredConsultants.map(row => 
+                row.id === id ? { 
+                    ...row, 
+                    price: newPrice, 
+                    total: newPrice * row.count  // Update total for the specific row
+                } : row
+            );
+    
+            const totalRowIndex = updatedFilteredConsultants.findIndex(row => row.id.includes('-total'));
+            if (totalRowIndex !== -1) {
+                const totalRowIdParts = updatedFilteredConsultants[totalRowIndex].id.split('-');
+                const groupName = totalRowIdParts[0];
+                const rateCardString = totalRowIdParts.slice(1, -1).join('-'); // Extracts the combined rateCard part
+                const totalIdWithoutSuffix = `${groupName}-${rateCardString}`;
+    
+                const groupTotal = updatedFilteredConsultants.reduce((sum, row) => 
+                    row.id.startsWith(groupName) && row.id !== `${totalIdWithoutSuffix}-total`
+                        ? sum + row.total 
+                        : sum, 0);
+    
+                updatedFilteredConsultants[totalRowIndex].total = `₹${groupTotal}`;
+            }
+    
+            return updatedFilteredConsultants;
+        });
     };
 
 
@@ -710,9 +749,26 @@ const handleSelectionChange = (e) => {
 // };
 
 
+const resetFilters = () => {
+    setFilters({
+        global: { value: null, matchMode: 'contains' },
+        id:{ value: null, matchMode: 'contains' },
+        name: { value: null, matchMode: 'contains' },
+        rateCard: { value: null, matchMode: 'contains' },
+        rateType: { value: null, matchMode: 'contains' },
+        count: { value: null, matchMode: 'equals' },
+        price: { value: null, matchMode: 'equals' },
+        total: { value: null, matchMode: 'equals' }
+    });
+};
+
+//Working filter
 const filterHeaderTemplate = (column, filterField) => {
     return (
         <div>
+            <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
+                <span className="font-bold text-sky-500">Contains</span>
+            </div>
             <span className="p-column-title">{column.header}</span>
             <input
                 type="text"
@@ -800,12 +856,19 @@ const filterHeaderTemplate = (column, filterField) => {
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
+                
             />
+            <button
+    onClick={resetFilters}
+    className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+>
+    Clear
+</button>
+
         </div>
     );
 };
-
-
+//Working filter
 
 
 
@@ -979,10 +1042,14 @@ const handleClose = () => {
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
+                            showFilterMatchModes={false}
                             ></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}
+                            showFilterMatchModes={false}
+                            showApplyButton={false}
+                            showClearButton={false}
                             ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
