@@ -45,6 +45,7 @@ const CheckoutPage = () => {
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const rateId = useAppSelector(state => state.quoteSlice.rateId);
+  
 
   // const qty = useAppSelector(state => state.quoteSlice.quantity);
   // const unit = useAppSelector(state => state.quoteSlice.unit);
@@ -108,16 +109,16 @@ const CheckoutPage = () => {
     return totalAmount.toLocaleString('en-IN');
   };
 
-  const calculateGrandTotal = () => {
-    let grandTotal = [];
-    cartItems.map((item, index) => {
-      const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * (1.18)
-      grandTotal.push(priceOfAd);
-  })
-  let grandTotalAmount = grandTotal.reduce((total, amount) => total + amount, 0);
-  grandTotalAmount = `₹ ${formattedRupees(Math.round(grandTotalAmount))}`
-  return grandTotalAmount;
-  }
+  // const calculateGrandTotal = () => {
+  //   let grandTotal = [];
+  //   cartItems.map((item, index) => {
+  //     const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * ((rateGST/100) + 1)
+  //     grandTotal.push(priceOfAd);
+  // })
+  // let grandTotalAmount = grandTotal.reduce((total, amount) => total + amount, 0);
+  // grandTotalAmount = `₹ ${formattedRupees(Math.round(grandTotalAmount))}`
+  // return grandTotalAmount;
+  // }
 
 
   return (
@@ -175,7 +176,7 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
               <td className='p-1.5 border border-gray-200'>{item.edition}</td>
-              <td className='p-1.5 border border-gray-200'>{item.qty} {item.unit}</td>
+              <td className='p-1.5 border border-gray-200'>{item.unit === "SCM" ? item.width + "W" + " x " + item.qty + "H" : item.qty} {item.unit}</td>
               <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
               <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
               <td className='p-1.5 border border-gray-200'>₹ {formattedRupees((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin)) / item.qty)}</td>

@@ -1748,7 +1748,56 @@ setEditModal(false);
                   </div>
 
                     {/* {isNewRate || (rateId > 0 && slabData.length < 1) ? ( */}
-                    <div className='mt-4' id="25" name='RatesQuantityText'>
+                    { selectedUnit === "SCM" ? (
+                      <div className="mb-4 flex flex-row">
+                      <div className="mb-4 flex flex-col">
+                     <label className="font-bold mb-1 ml-2">Height</label>
+                      <div className="flex w-full">
+                      <input
+                        className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                        //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                        type="number"
+                        placeholder="Ex: 15"
+                        min={qtySlab}
+                        value={qty}
+                        onChange={(e) => {
+                          //setQty(e.target.value);
+                          dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * width * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
+                          //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
+                          // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
+                          setQtySlab(findMatchingQtySlab(e.target.value));
+                          setChanging(true);
+                        }}
+                        onFocus={(e) => e.target.select()}
+                      />
+                    </div>
+                    </div>
+                    <div className="mb-4 flex flex-col">
+                    <label className="font-bold mb-1 ml-2">Width </label>
+                      <div className="flex w-full">
+                      <input
+                        className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                        //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
+                        type="number"
+                        placeholder="Ex: 15"
+                        min={width}
+                        value={width}
+                        onChange={(e) => {
+                          //setQty(e.target.value);
+                          dispatch(setQuotesData({width: e.target.value, marginAmount: formattedMargin((((e.target.value * qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
+                          //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
+                          // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
+                          setChanging(true);
+                        }}
+                        onFocus={(e) => e.target.select()}
+                      />
+                    </div>
+                    
+                    </div>
+                    {isQty && <p className='text-red-500 mt-2 font-medium'>Please select a valid Quantity</p>}
+                    {isQtySlab && <p className='text-red-500 mt-2 font-medium'>Please enter a valid Slab Rate</p>}
+                  </div>
+                    ) : (<div className='mt-4' id="25" name='RatesQuantityText'>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity Slab</label>
                     <div className='flex mb-4'>
                       <TextField 
@@ -1780,7 +1829,7 @@ setEditModal(false);
                     {isQty && <p className='text-red-500 mt-2 font-medium'>Please select a valid Quantity</p>}
                     {isQtySlab && <p className='text-red-500 mt-2 font-medium'>Please enter a valid Slab Rate</p>}
                   </div> 
-                  
+                    )}
                   <div>
                   {(isSlabAvailable) ? (
                     <div className='w-3/4 text-center justify-center mt-2'>
