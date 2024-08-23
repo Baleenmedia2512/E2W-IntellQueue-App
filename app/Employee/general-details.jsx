@@ -204,172 +204,176 @@ const GeneralDetailsPage = () => {
       
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-  <div className="flex flex-col w-full max-w-7xl bg-white p-8 rounded-lg shadow-lg space-y-4">
-    {/* User Manager Heading */}
-    <h1 className="text-3xl font-bold text-left text-blue-600 ">User Manager</h1>
-    {/* <p className="text-gray-400 text-sm ">Manage user details and roles</p> */}
-    <div className="border-2 w-10 inline-block mb-3 border-blue-500"></div>
-    <div className="flex flex-col lg:flex-row justify-center space-y-4 lg:space-y-0 lg:space-x-4">
-      
-      {/* General Details Section */}
-      <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
-        <h2 className="text-2xl font-bold text-blue-500 mb-1">General Details</h2>
-        <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
-        <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
+    <div className="w-full max-w-7xl">
+    <h1 className="text-3xl font-bold text-left text-blue-600 mb-4">User Manager</h1>
+      {/* Decorative Border */}
+    <div className="border-2 w-10 border-blue-500 mb-6"></div>
+      <div className="bg-white p-8 rounded-lg shadow-lg space-y-4">
+        <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
+          
+          {/* General Details Section */}
+          <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
+            <h2 className="text-2xl font-bold text-blue-500 mb-2 text-left">General Details</h2>
+            <p className="text-gray-400 text-sm mb-4 text-left">Please fill in the following details</p>
+            <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
-        <form className="space-y-6">
-          {/* Name, Sex, Date of Birth */}
-          <div className="flex flex-wrap -mx-4 mb-4">
-            <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-              <label htmlFor="name" className="block mb-1 text-black font-medium">Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.name ? 'border-red-500' : ''}`}
-                placeholder="Enter your name"
-                value={generalDetails.name}
-                onChange={handleInputChange}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-            </div>
-
-            <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-              <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
-              <select
-                id="sex"
-                name="sex"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.sex ? 'border-red-500' : ''}`}
-                value={generalDetails.sex}
-                onChange={handleInputChange}
-              >
-                <option value="">Select your sex</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-              {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
-            </div>
-
-            <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-              <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
-              <input
-                type="date"
-                id="dob"
-                name="dob"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.dob ? 'border-red-500' : ''}`}
-                value={generalDetails.dob}
-                onChange={handleInputChange}
-              />
-              {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
-            </div>
+  
+            <form className="space-y-6">
+              {/* Name, Sex, Date of Birth */}
+              <div className="flex flex-wrap -mx-4 mb-4">
+                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+                  <label htmlFor="name" className="block mb-1 text-black font-medium">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.name ? 'border-red-500' : ''}`}
+                    placeholder="Enter your name"
+                    value={generalDetails.name}
+                    onChange={handleInputChange}
+                  />
+                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                </div>
+  
+                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+                  <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
+                  <select
+                    id="sex"
+                    name="sex"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.sex ? 'border-red-500' : ''}`}
+                    value={generalDetails.sex}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">Select your sex</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
+                </div>
+  
+                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+                  <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
+                  <input
+                    type="date"
+                    id="dob"
+                    name="dob"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.dob ? 'border-red-500' : ''}`}
+                    value={generalDetails.dob}
+                    onChange={handleInputChange}
+                  />
+                  {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
+                </div>
+              </div>
+  
+              {/* Phone Number, Email */}
+              <div className="flex flex-wrap -mx-4 mb-4">
+                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+                  <label htmlFor="phone" className="block mb-1 text-black font-medium">Phone Number</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.phone ? 'border-red-500' : ''}`}
+                    placeholder="Enter your phone number"
+                    value={generalDetails.phone}
+                    onChange={handleInputChange}
+                    maxLength="10" // Optional: Prevents entering more than 10 digits
+                  />
+                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                </div>
+  
+                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+                  <label htmlFor="email" className="block mb-1 text-black font-medium">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.email ? 'border-red-500' : ''}`}
+                    placeholder="Enter your email"
+                    value={generalDetails.email}
+                    onChange={handleInputChange}
+                  />
+                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                </div>
+              </div>
+            </form>
           </div>
+  
+          {/* Login Credentials Section */}
+          <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
+            <h2 className="text-2xl font-bold text-blue-500 mb-2 text-left">Login Credentials</h2>
+            <p className="text-gray-400 text-sm mb-4 text-left">Please enter your login credentials</p>
+            <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
-          {/* Phone Number, Email */}
-          <div className="flex flex-wrap -mx-4 mb-4">
-            <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-              <label htmlFor="phone" className="block mb-1 text-black font-medium">Phone Number</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.phone ? 'border-red-500' : ''}`}
-                placeholder="Enter your phone number"
-                value={generalDetails.phone}
-                onChange={handleInputChange}
-                maxLength="10" // Optional: Prevents entering more than 10 digits
-              />
-              {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-            </div>
-
-            <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-              <label htmlFor="email" className="block mb-1 text-black font-medium">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.email ? 'border-red-500' : ''}`}
-                placeholder="Enter your email"
-                value={generalDetails.email}
-                onChange={handleInputChange}
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-            </div>
+  
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="flex flex-wrap -mx-4 mb-4">
+                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+                  <label htmlFor="username" className="block mb-1 text-black font-medium">Username</label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.username ? 'border-red-500' : ''}`}
+                    placeholder="Enter your username"
+                    value={generalDetails.username}
+                    onChange={handleInputChange}
+                  />
+                  {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+                </div>
+  
+                <div className="w-full md:w-1/2 px-4">
+                  <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.password ? 'border-red-500' : ''}`}
+                    placeholder="Enter your password"
+                    value={generalDetails.password}
+                    onChange={handleInputChange}
+                  />
+                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                </div>
+              </div>
+  
+              <div className="flex flex-wrap -mx-4 mb-4">
+                <div className="w-full px-4">
+                  <label htmlFor="appRights" className="block mb-1 text-black font-medium">App Rights</label>
+                  <select
+                    id="appRights"
+                    name="appRights"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.appRights ? 'border-red-500' : ''}`}
+                    value={generalDetails.appRights}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">Select app rights</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Management">Management</option>
+                    <option value="General">General</option>
+                  </select>
+                  {errors.appRights && <p className="text-red-500 text-xs mt-1">{errors.appRights}</p>}
+                </div>
+              </div>
+  
+              <div className="flex justify-end mt-6">
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
-
-      {/* Login Credentials Section */}
-      <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
-        <h2 className="text-2xl font-bold text-blue-500 mb-1">Login Credentials</h2>
-        <p className="text-gray-400 text-sm mb-3">Please enter your login credentials</p>
-        <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
-
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="flex flex-wrap -mx-4 mb-4">
-            <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
-              <label htmlFor="username" className="block mb-1 text-black font-medium">Username</label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.username ? 'border-red-500' : ''}`}
-                placeholder="Enter your username"
-                value={generalDetails.username}
-                onChange={handleInputChange}
-              />
-              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
-            </div>
-
-            <div className="w-full md:w-1/2 px-4">
-              <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.password ? 'border-red-500' : ''}`}
-                placeholder="Enter your password"
-                value={generalDetails.password}
-                onChange={handleInputChange}
-              />
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap -mx-4 mb-4">
-            <div className="w-full px-4">
-              <label htmlFor="appRights" className="block mb-1 text-black font-medium">App Rights</label>
-              <select
-                id="appRights"
-                name="appRights"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.appRights ? 'border-red-500' : ''}`}
-                value={generalDetails.appRights}
-                onChange={handleInputChange}
-              >
-                <option value="">Select app rights</option>
-                <option value="Admin">Admin</option>
-                <option value="Finance">Finance</option>
-                <option value="Management">Management</option>
-                <option value="General">General</option>
-              </select>
-              {errors.appRights && <p className="text-red-500 text-xs mt-1">{errors.appRights}</p>}
-            </div>
-          </div>
-
-          <div className="flex justify-end mt-6">
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg mb-10 md:mb-0"
-            >
-              Create
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>
-</div>
+  
 
   );
 }

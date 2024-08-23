@@ -1431,7 +1431,10 @@ return (
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
+                        className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline
+                          ${errors.remarks ? 'border-red-400' : isOrderUpdate && !elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
+                          focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                        
                         placeholder='Remarks'    
                         value={remarks}
                         onChange={e => {setRemarks(e.target.value);
