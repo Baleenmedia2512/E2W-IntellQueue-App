@@ -1203,7 +1203,7 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
-
+console.log(elementsToHide)
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1331,44 +1331,48 @@ return (
           {/* Client Name */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
-            <input 
-              type='text' 
-              className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
-              placeholder='Client Name'
-              value={clientName}
-              onChange={handleSearchTermChange}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const inputs = document.querySelectorAll('input, select, textarea');
-                  const index = Array.from(inputs).findIndex(input => input === e.target);
-                  if (index !== -1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                  }
-                }
-              }}
-            />
-            {(clientNameSuggestions.length > 0 && clientName !== '') && (
-              <ul className="list-none bg-white shadow-lg rounded-md mt-2">
-                {clientNameSuggestions.map((name, index) => (
-                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                    <button
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      onClick={handleClientNameSelection}
-                      value={name}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
-          {/* New Client */}
-        <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
-          </div>
+  <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
+  <input 
+    type='text' 
+    className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline 
+      ${errors.clientName ? 'border-red-400' : isOrderUpdate && !elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'} 
+      focus:border-blue-300 focus:ring focus:ring-blue-300`}
+    placeholder='Client Name'
+    value={clientName}
+    onChange={handleSearchTermChange}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const inputs = document.querySelectorAll('input, select, textarea');
+        const index = Array.from(inputs).findIndex(input => input === e.target);
+        if (index !== -1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      }
+    }}
+    disabled={isOrderUpdate && elementsToHide.includes("ClientAgeInput")}
+  />
+  {(clientNameSuggestions.length > 0 && clientName !== '') && (
+    <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+      {clientNameSuggestions.map((name, index) => (
+        <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+          <button
+            type="button"
+            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+            onClick={handleClientNameSelection}
+            value={name}
+          >
+            {name}
+          </button>
+        </li>
+      ))}
+    </ul>
+  )}
+  {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+  {/* New Client */}
+  <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
+</div>
+
           <div>
                     <label className="block mb-1 text-gray-700 font-medium">Order Date</label>
                     <div>
@@ -1380,7 +1384,7 @@ return (
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      className={`w-full px-4 h-12 border rounded-lg text-black focus:outline-none focus:shadow-outline ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} ${errors.orderDate ? 'border-red-400' : ''} focus:border-blue-300 focus:ring focus:ring-blue-300`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1397,7 +1401,7 @@ return (
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
       <input 
-        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} ${errors.marginAmount ? 'border-red-400' : ''} focus:border-blue-300 focus:ring focus:ring-blue-300`}
         type="number"
         placeholder="Amount Adjustment"
         value={discountAmount || ''}
@@ -1435,7 +1439,9 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.rateName ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 
+                ${errors.rateName ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' : ''}`}
+              
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1456,7 +1462,9 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Category</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.typeOfAd ? 'border-red-400' : ''}`}
+             className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 
+              ${errors.typeOfAd ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' : ''}`}
+            
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1475,7 +1483,9 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Type</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.adType ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 
+                ${errors.adType ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' : ''}`}
+              
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1486,6 +1496,7 @@ return (
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
+              disabled={isOrderUpdate} 
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
@@ -1499,7 +1510,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Location</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1517,7 +1528,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Package</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1549,7 +1560,8 @@ return (
               options={vendors}
               optionLabel="label"
               optionGroupLabel="label"
-               optionGroupChildren="options"
+              optionGroupChildren="options"
+              disabled={isOrderUpdate} 
             />
             {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
           </div>
@@ -1560,7 +1572,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
             <input 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
               type="number"
               placeholder="Margin Amount"
               value={marginAmount || ''}
@@ -1573,7 +1585,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
             <input 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : ''}`} 
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`} 
               type="number"
               placeholder="Margin %"
               value={marginPercentage || ''}
@@ -1586,7 +1598,7 @@ return (
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
                       <input 
                         // required = {elementsToHide.includes("OrderQuantityText") ? false : true}
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : ''}`}
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
                         type='number' 
                         value={qty} 
                         //onWheel={ event => event.currentTarget.blur() } 
@@ -1622,7 +1634,7 @@ return (
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1686,7 +1698,7 @@ return (
        <p className="text-black">{maxOrderNumber}</p>
        </div>
     </div>
-    <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
+    <label className={`text-gray-500 text-sm hover:cursor-pointer p-1 ${isOrderUpdate ? 'text-yellow-500' : ''}`}>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
   </div>
   {isExpanded && (
     <form className="space-y-6 p-4 md:p-8">
