@@ -161,6 +161,7 @@ const Report = () => {
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
                     TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : '',
+                    AmountDifference: order.RateWiseOrderNumber < 0 ? `₹ 0` : `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                 }));
@@ -476,19 +477,20 @@ const handleEditConfirm = () => {
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
-  { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80 },
+  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
   { 
     field: 'Receivable', 
-    headerName: 'Amount(₹)', 
+    headerName: 'Value(₹)', 
     width: 100,
     renderCell: (params) => (
       <div>{params.value}</div>
     )
   },
-  { field: 'TotalAmountReceived', headerName: 'Amount Received(₹)', width: 100 },
-  { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
+  { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: 100 },
+  { field: 'AmountDifference', headerName: 'Difference(₹)', width: 100 },
+  { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
   { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: 130 },
   { field: 'Remarks', headerName: 'Order Remarks', width: 160},
   { 
@@ -569,54 +571,54 @@ const orderColumns = [
 
 
 
-    const financeColumns = [
-        { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
-        { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
-        { field: 'Amount', headerName: 'Amount(₹)', width: 100},
-        { field: 'OrderValue', headerName: 'Order Amount(₹)', width: 100},
-        { field: 'PaymentMode', headerName: 'Mode Of Payment', width: 100},
-        { field: 'OrderNumber', headerName: 'Order#', width: 100 },
-        { field: 'RateWiseOrderNumber', headerName: 'Rate Wise Order#', width: 80},
-        { field: 'ClientName', headerName: 'Client Name', width: 200 },
-        { field: 'Remarks', headerName: 'Remarks', width: 200 },
-        { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
-        {
-          field: 'actions',
-          headerName: 'Actions',
-          width: 100,
-          renderCell: (params) => (
-            <div>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
-              >
-                Delete
-              </Button>
-            </div>
-          ),
-        },
-      //   {
-      //     field: 'actions',
-      //     headerName: 'Actions',
-      //     width: 100,
-      //     renderCell: (params) => (
-      //         <div>
-      //             <Button
-      //                         variant="contained"
-      //                         color="primary"
-      //                         size="small"
-      //                         onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-      //                         style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
-      //                     >
-      //                         Delete
-      //                     </Button>
-      //         </div>
-      //     ),
-      // },
-    ];
+const financeColumns = [
+  { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
+  { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
+  { field: 'Amount', headerName: 'Amount(₹)', width: 100},
+  { field: 'OrderValue', headerName: 'Order Value(₹)', width: 100},
+  { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
+  { field: 'OrderNumber', headerName: 'Order#', width: 100 },
+  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80},
+  { field: 'ClientName', headerName: 'Client Name', width: 200 },
+  { field: 'Remarks', headerName: 'Remarks', width: 200 },
+  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+  {
+    field: 'actions',
+    headerName: 'Actions',
+    width: 100,
+    renderCell: (params) => (
+      <div>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+          style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+        >
+          Delete
+        </Button>
+      </div>
+    ),
+  },
+//   {
+//     field: 'actions',
+//     headerName: 'Actions',
+//     width: 100,
+//     renderCell: (params) => (
+//         <div>
+//             <Button
+//                         variant="contained"
+//                         color="primary"
+//                         size="small"
+//                         onClick={() => handleTransactionDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+//                         style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+//                     >
+//                         Delete
+//                     </Button>
+//         </div>
+//     ),
+// },
+];
 
     const handleOpenConfirmDialog = (rateWiseOrderNum, orderNum) => {
       setSelectedTransaction({ rateWiseOrderNum, orderNum });
@@ -1094,10 +1096,20 @@ const handleDateChange = (range) => {
               sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
             },
           }} 
-           sx={{
+          sx={{
             '& .MuiDataGrid-row:hover': {
               backgroundColor: '#e3f2fd', // Light blue on hover
             },
+            '& .grey-row': {
+              backgroundColor: '#ededed', // Grey highlight for negative RateWiseOrderNumber
+            },
+          }}
+          getRowClassName={(params) => {
+            const rateWiseOrderNumber = params.row.RateWiseOrderNumber;
+        
+            if (rateWiseOrderNumber < 0) {
+              return 'grey-row';
+            }
           }}
           />
         </div>

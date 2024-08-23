@@ -711,7 +711,7 @@ useEffect(() => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${encodeURIComponent(selectedValues.vendorName.value)}&JsonCategory=${encodeURIComponent(selectedValues.Location.value) + " : " + encodeURIComponent(selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -773,14 +773,14 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: selectedValues.rateName.value,
-      JsonVendorName: selectedValues.vendorName.value,
-      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
-      JsonType: selectedValues.adType.value,
+      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
+      JsonVendorName: encodeURIComponent(selectedValues.vendorName.value),
+      JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
+      JsonType: encodeURIComponent(selectedValues.adType.value),
       JsonHeight: qty.toString(),
       JsonWidth: '1',
-      JsonLocation: selectedValues.Location.value,
-      JsonPackage: selectedValues.Package.value,
+      JsonLocation: encodeURIComponent(selectedValues.Location.value),
+      JsonPackage: encodeURIComponent(selectedValues.Package.value),
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -835,7 +835,7 @@ const updateNewOrder = async (event) => {
 //end update order-sk(02-08-2024)-----------------------------------
       const fetchMaxOrderNumber = async () => {
         try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
