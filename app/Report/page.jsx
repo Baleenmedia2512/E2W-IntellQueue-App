@@ -549,7 +549,7 @@ const orderColumns = [
             >
                 Restore
             </Button>
-            {/* <Button
+            <Button
                 variant="contained"
                 color="primary"
                 size="small"
@@ -561,7 +561,7 @@ const orderColumns = [
                  }}  
             >  
                Edit
-            </Button> */}
+            </Button>
         </div>
     ),
 },
