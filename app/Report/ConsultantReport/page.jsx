@@ -118,18 +118,14 @@ export default function GroupedRowsDemo() {
     // ? selectedRows.map(row => row.orderNumber) // Use selectedOrderNumbers if selectedRows has data
     // : orderNumbers; // Fall back to all orderNumbers if no selectedRows
 
-    // Determine which order numbers to use
-const orderNumbersToUse = (selectedRows && selectedRows.length > 0
-    ? selectedRows.map(row => row.orderNumber).flat() // Use selectedOrderNumbers if selectedRows has data
-    : orderNumbers // Fall back to all orderNumbers if no selectedRows
-).filter(orderNumber => !groupedData.some(group =>
-    group.rates.some(rateCard =>
-        rateCard.rateTypes.some(rateType =>
-            rateCard.orderNumbers.includes(orderNumber) &&
-            rateCard.rateCard === 'Total' // Exclude order numbers from rows with 'Total'
-        )
-    )
-));
+
+    
+
+    const orderNumbersToUse = selectedRows && selectedRows.length > 0
+    ? selectedRows
+        .filter(row => !row.rateCard.startsWith('Total')) // Exclude 'Total' rows
+        .map(row => row.orderNumber)
+    : orderNumbers
 
     
         // Check if selectedRows has data
@@ -163,30 +159,30 @@ const orderNumbersToUse = (selectedRows && selectedRows.length > 0
         if (dataToSave) {
             try {
                 for (const data of dataToSave) {
-                    // const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
-                    // const result = await response.json();
+                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
+                    const result = await response.json();
     
-                    // if (result !== "Values Inserted Successfully!") {
+                    if (result !== "Values Inserted Successfully!") {
                         
-                    //     return; // Stop the loop if there's an error
-                    // }
+                        return; // Stop the loop if there's an error
+                    }
     
                     // Add a delay between requests to avoid rate limiting
                     await delay(500); // Delay of 500ms
                 }
                 // Update incentive status
                 if (orderNumbersToUse && orderNumbersToUse.length > 0) {
-                    const orderNumbersString = orderNumbersToUse.join(',');
-                    console.log(orderNumbersString)
-                    // const updateResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateConsultantStatusOnOrderTable.php?JsonDBName=${companyName}&JsonOrderNumbers=${encodeURIComponent(orderNumbersString)}`);
-                    // const updateResult = await updateResponse.json();
+                    const orderNumbersString = orderNumbersToUse.join(',').replace(/\s*,\s*/g, ',');
+
+                    const updateResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateConsultantStatusOnOrderTable.php?JsonDBName=${companyName}&JsonOrderNumbers=${encodeURIComponent(orderNumbersString)}`);
+                    const updateResult = await updateResponse.json();
 
 
-                    // if (updateResult.error) {
-                    //     console.error('Error updating incentive status:', updateResult.error);
-                    // } else {
-                    //     console.log('Incentive status updated:', updateResult.success);
-                    // }
+                    if (updateResult.error) {
+                        console.error('Error updating incentive status:', updateResult.error);
+                    } else {
+                        console.log('Incentive status updated:', updateResult.success);
+                    }
                 }
                 setOpen(false);
                 setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
@@ -798,7 +794,6 @@ const filterHeaderTemplate = (column, filterField) => {
                         // Always show the total row if it matches the search term
                         return row.id.includes('-total') || matchesSearch ? row : null;
                     }).filter(row => row !== null);
-                    console.log(filteredRows)
                     // Update the state with filtered rows
                     setFilteredConsultants(filteredRows);
                 }}
@@ -980,11 +975,13 @@ const handleClose = () => {
                         >
                         <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
-                            filter
-                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}></Column>
+                            // filter
+                            // filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
+                            ></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
-                            filter
-                            filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}></Column>
+                            // filter
+                            // filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}
+                            ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
