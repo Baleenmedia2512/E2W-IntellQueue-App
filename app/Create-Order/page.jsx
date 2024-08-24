@@ -1158,7 +1158,10 @@ const [dialogOpen, setDialogOpen] = useState(false);
 
 const handleOpenDialog = () => {
   // Check if remarks are filled
-  if (!remarks.trim()) {
+  const isDiscountChanged = discountAmount !== prevData.discountAmount;
+
+  // If the discount amount has changed and remarks are not filled
+  if (isDiscountChanged && !remarks.trim()) {
     setToastMessage('Please provide a reason in the Remarks field.');
     setSeverity('warning');
     setToast(true);
