@@ -32,7 +32,7 @@ const CreateOrder = () => {
     const orderDetails = useAppSelector(state => state.orderSlice);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
-    const {orderNumber: orderNumberRP} = orderDetails;
+    const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
     // const companyName = "Baleen Test";
@@ -91,6 +91,7 @@ const CreateOrder = () => {
     
     const [qty, setQty] = useState(startQty);
     const [unitPrice, setUnitPrice] = useState(0);
+    const [displayUnitPrice, setDisplayUnitPrice] = useState(0);
     const [originalUnitPrice , setOriginalUnitPrice] = useState(unitPrice);
     // const receivable = (((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * (1.18));
     const [units, setUnits]=useState("");
@@ -138,17 +139,22 @@ const CreateOrder = () => {
       calculateReceivable();
     },[unitPrice, marginAmount])
 
+
     // MP-99    
 //rate cards
 
+
 useEffect(() => {
+  if(!isOrderUpdate) {
   if(rateId > 0){
     handleRateId()
     fetchQtySlab()
   } else {
     setUnitPrice(0);
     setOriginalUnitPrice(0);
+    setDisplayUnitPrice(0);
   }
+}
 }, [rateId]);
 
 
@@ -177,6 +183,7 @@ const fetchQtySlab = async () => {
       setQty(firstSelectedSlab.StartQty);
       setUnitPrice(firstSelectedSlab.UnitPrice);
       setOriginalUnitPrice(firstSelectedSlab.UnitPrice);
+      setDisplayUnitPrice(firstSelectedSlab.UnitPrice);
     }
   }  catch (error) {
     console.error(error);
@@ -234,11 +241,13 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
+  if(!isOrderUpdate) {
   fetchMaxOrderNumber();
   fetchUnits();
   // fetchAllVendor();
   fetchQtySlab();
-  setDiscountAmount(0);
+  // setDiscountAmount(0);
+  }
 },[selectedValues.adType, selectedValues.rateName])
 
 const handleRateId = async () => {
@@ -553,9 +562,12 @@ const fetchRates = async () => {
     };
 
     useEffect(() => {
+      if(!isOrderUpdate) {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
       setOriginalUnitPrice(newUnitPrice);
+      setDisplayUnitPrice(newUnitPrice);
+      }
     }, [qty])
 
     const handleSearchTermChange = (event) => {
@@ -648,7 +660,7 @@ const fetchRates = async () => {
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
               setPreviousConsultantName(clientDetails.consultantName);
-              // setDiscountAmount(clientDetails.adjustedOrderAmount);
+              setDiscountAmount(clientDetails.adjustedOrderAmount);
               // handleSelectChange(clientDetails.rateName, "rateName");
               // handleSelectChange(clientDetails.adType, "adType");
               
@@ -663,46 +675,104 @@ const fetchRates = async () => {
             console.error(error);
           });
       };
+
+      
 //report oderenumber data fetch --SK--
 // const [orderNumber, setOrderNumber] = useState(null);
 // const [companyName, setCompanyName] = useState('');
 
+// const fetchOrderDetailsByOrderNumber = () => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+//     .then((response) => {
+//       const data = response.data;
+//       //console.log(data); // Log the data to inspect the structure
+//       if (data) {
+//         // Assuming orderDetails is a typo and you meant data
+//         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
+//         //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
+//         const formattedDate = parseDateFromDB(data.orderDate);
+//         setClientName(data.clientName);
+//         setOrderDate(data.orderDate);
+//         setDisplayOrderDate(formattedDate);
+//         setUnitPrice(data.receivable);
+//         setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
+//         dispatch(setRateId(data.rateId));
+//         setHasOrderDetails(true);
+//         setClientID(data.clientID);
+//         setConsultantName(data.consultantName);
+//       } else {
+//         setHasOrderDetails(false); // Set to false if there are no details
+//       }
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// };
+
+
+// useEffect(() => {
+//   fetchOrderDetailsByOrderNumber();
+// }, [orderNumberRP]);
 const fetchOrderDetailsByOrderNumber = () => {
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
-    .then((response) => {
-      const data = response.data;
-      //console.log(data); // Log the data to inspect the structure
-      if (data) {
-        // Assuming orderDetails is a typo and you meant data
-        //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
-        //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
-        const formattedDate = parseDateFromDB(data.orderDate);
-        setClientName(data.clientName);
-        setOrderDate(data.orderDate);
-        setDisplayOrderDate(formattedDate);
-        setUnitPrice(data.receivable);
-        setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
-        dispatch(setRateId(data.rateId));
-        setHasOrderDetails(true);
-        setClientID(data.clientID);
-        setConsultantName(data.consultantName);
-      } else {
-        setHasOrderDetails(false); // Set to false if there are no details
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-};
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+      .then((response) => {
+        const data = response.data;
+        if (data) {
+          // Parse the date
+          const formattedDate = parseDateFromDB(data.orderDate);
 
+          // Set all the necessary states
+          setClientName(data.clientName);
+          setOrderDate(data.orderDate);
+          setDisplayOrderDate(formattedDate);
+          setUnitPrice(data.receivable);
+          setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
+          dispatch(setRateId(data.rateId));
+          setHasOrderDetails(true);
+          setClientID(data.clientID);
+          setConsultantName(data.consultantName);
+          setDiscountAmount(data.adjustedOrderAmount);
 
-useEffect(() => {
-  fetchOrderDetailsByOrderNumber();
-}, [orderNumberRP]);
+          // Store the fetched data in a state to compare later
+          setPrevData({
+            clientName: data.clientName,
+            orderDate: data.orderDate,
+            receivable: data.receivable,
+            rateWiseOrderNumber: data.rateWiseOrderNumber,
+            rateId: data.rateId,
+            clientID: data.clientID,
+            consultantName: data.consultantName,
+            discountAmount: data.adjustedOrderAmount
+          });
+        } else {
+          setHasOrderDetails(false); // Set to false if no details
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
 
+  useEffect(() => {
+    fetchOrderDetailsByOrderNumber();
+    setDisplayUnitPrice(receivableRP);
+  }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
 
+  
       const createNewOrder = async(event) => {
+        // If the discount amount has changed and remarks are not filled
+        if (discountAmount !== 0 && discountAmount !== '0'&& !remarks.trim()) {
+          setToastMessage('Please provide a reason in the Remarks field.');
+          setSeverity('warning');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+          return;
+        }
+        
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
@@ -711,7 +781,7 @@ useEffect(() => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${encodeURIComponent(selectedValues.vendorName.value)}&JsonCategory=${encodeURIComponent(selectedValues.Location.value) + " : " + encodeURIComponent(selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -773,14 +843,14 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
-      JsonVendorName: encodeURIComponent(selectedValues.vendorName.value),
-      JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
-      JsonType: encodeURIComponent(selectedValues.adType.value),
+      JsonRateName: selectedValues.rateName.value,
+      JsonVendorName: selectedValues.vendorName.value,
+      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
+      JsonType: selectedValues.adType.value,
       JsonHeight: qty.toString(),
       JsonWidth: '1',
-      JsonLocation: encodeURIComponent(selectedValues.Location.value),
-      JsonPackage: encodeURIComponent(selectedValues.Package.value),
+      JsonLocation: selectedValues.Location.value,
+      JsonPackage: selectedValues.Package.value,
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -795,7 +865,8 @@ const updateNewOrder = async (event) => {
       JsonClientAuthorizedPersons: clientEmail,
       JsonOrderDate: formattedOrderDate,
       // JsonRateWiseOrderNumber: nextRateWiseOrderNumber
-       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber
+       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
+       JsonAdjustedOrderAmount: discountAmount
     });
 
     try {
@@ -835,7 +906,7 @@ const updateNewOrder = async (event) => {
 //end update order-sk(02-08-2024)-----------------------------------
       const fetchMaxOrderNumber = async () => {
         try {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}`);
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php/?JsonDBName=${companyName}&JsonRateName=${selectedValues.rateName.value}`);
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
@@ -1077,24 +1148,74 @@ const handleDiscountChange = (e) => {
   if (value === '') {
     // Reset the discount amount and unit price to the original values
     setDiscountAmount(0);
-    setUnitPrice(originalUnitPrice);
+    setDisplayUnitPrice(originalUnitPrice);
+    setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined })); // Clear any existing error on Remarks
     return;
   }
 
+  const parsedUnitPrice = parseFloat(unitPrice);
   const parsedValue = parseFloat(value);
   const newDiscountAmount = parsedValue;
   setDiscountAmount(newDiscountAmount);
+  // setDisplayUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount);
+  setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
 
-  setUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount); 
+  // Check if Remarks is filled; if not, set an error
+  // if (newDiscountAmount !== 0 && newDiscountAmount !== '0' && !remarks) {
+  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
+  // } else {
+  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
+  // }
 };
 
 
 const [dialogOpen, setDialogOpen] = useState(false);
   const [updateReason, setUpdateReason] = useState('');
+  const [prevData, setPrevData] = useState({});
 
-  const handleOpenDialog = () => {
+
+const handleOpenDialog = () => {
+  // Check if remarks are filled
+  const isDiscountChanged = discountAmount !== prevData.discountAmount;
+
+  // If the discount amount has changed and remarks are not filled
+  if (isDiscountChanged && !remarks.trim()) {
+    setToastMessage('Please provide a reason in the Remarks field.');
+    setSeverity('warning');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+    return;
+  }
+  // Compare current data with previous data to check if any field has changed
+  const isDataChanged = (
+    clientName.trim() !== prevData.clientName.trim() ||
+    orderDate !== prevData.orderDate || // Ensure orderDate comparison works (check format)
+    parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
+    rateId !== prevData.rateId ||
+    consultantName.trim() !== prevData.consultantName.trim() ||
+    discountAmount !== prevData.discountAmount
+
+  );
+
+  // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
+  if (isDataChanged) {
     setDialogOpen(true);
-  };
+  } else {
+    setToastMessage('No changes have been made.');
+    setSeverity('warning');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+  }
+};
+
+
+  // const handleOpenDialog = () => {
+  //   setDialogOpen(true);
+  // };
 
   const handleCancelUpdate = () => {
     setClientName('');
@@ -1104,6 +1225,7 @@ const [dialogOpen, setDialogOpen] = useState(false);
     dispatch(setRateId(''));
     setClientID('');
     setConsultantName('');
+    setDiscountAmount(0);
     dispatch(resetOrderData());
     //window.location.reload(); // Reload the page
   };
@@ -1122,7 +1244,7 @@ const [dialogOpen, setDialogOpen] = useState(false);
     setUpdateReason(event.target.value);
   };
 
-
+  console.log(discountAmount)
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1250,44 +1372,48 @@ return (
           {/* Client Name */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
-            <input 
-              type='text' 
-              className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
-              placeholder='Client Name'
-              value={clientName}
-              onChange={handleSearchTermChange}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const inputs = document.querySelectorAll('input, select, textarea');
-                  const index = Array.from(inputs).findIndex(input => input === e.target);
-                  if (index !== -1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                  }
-                }
-              }}
-            />
-            {(clientNameSuggestions.length > 0 && clientName !== '') && (
-              <ul className="list-none bg-white shadow-lg rounded-md mt-2">
-                {clientNameSuggestions.map((name, index) => (
-                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                    <button
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      onClick={handleClientNameSelection}
-                      value={name}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
-          {/* New Client */}
-        <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
-          </div>
+  <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
+  <input 
+    type='text' 
+    className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline 
+      ${errors.clientName ? 'border-red-400' : isOrderUpdate && !elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'} 
+      focus:border-blue-300 focus:ring focus:ring-blue-300`}
+    placeholder='Client Name'
+    value={clientName}
+    onChange={handleSearchTermChange}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const inputs = document.querySelectorAll('input, select, textarea');
+        const index = Array.from(inputs).findIndex(input => input === e.target);
+        if (index !== -1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      }
+    }}
+    disabled={isOrderUpdate && elementsToHide.includes("ClientAgeInput")}
+  />
+  {(clientNameSuggestions.length > 0 && clientName !== '') && (
+    <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+      {clientNameSuggestions.map((name, index) => (
+        <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+          <button
+            type="button"
+            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+            onClick={handleClientNameSelection}
+            value={name}
+          >
+            {name}
+          </button>
+        </li>
+      ))}
+    </ul>
+  )}
+  {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+  {/* New Client */}
+  <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
+</div>
+
           <div>
                     <label className="block mb-1 text-gray-700 font-medium">Order Date</label>
                     <div>
@@ -1299,7 +1425,7 @@ return (
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      className={`w-full px-4 h-12 border rounded-lg text-black focus:outline-none focus:shadow-outline ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} ${errors.orderDate ? 'border-red-400' : ''} focus:border-blue-300 focus:ring focus:ring-blue-300`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1310,41 +1436,47 @@ return (
     <div>
       <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
-        <p className="text-gray-700">₹ {Math.floor(unitPrice)}</p>
+        <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
     </div>
-    {/* <div>
+    <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
       <input 
-        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} ${errors.marginAmount ? 'border-red-400' : ''} focus:border-blue-300 focus:ring focus:ring-blue-300`}
         type="number"
         placeholder="Amount Adjustment"
         value={discountAmount || ''}
         onChange={handleDiscountChange}
         onFocus={e => e.target.select()}
       />
-    </div> */}
+    </div>
   </div>
   
   
         </div>
         {/* ICR YTC*/}
-        {/* { (discountAmount !== 0) && (<div >
+        { (discountAmount !== '0' && discountAmount !== 0) && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
+                        className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline
+                          ${errors.remarks ? 'border-red-400' : isOrderUpdate  ? 'border-yellow-500' : 'border-gray-300'}
+                          focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                        
                         placeholder='Remarks'    
                         value={remarks}
-                        onChange={e => {setRemarks(e.target.value);
-                          if (errors.orderNumber) {
-                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                        onChange={e => {
+                          setRemarks(e.target.value);
+                          if (e.target.value === '' && discountAmount !== '0' && discountAmount !== 0) {
+                            setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
+                          } else {
+                            setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
                           }
                         }}
-                    />
-                     
+                      />
+                      {errors.remarks && <p className="text-red-500 text-sm mt-2">{errors.remarks}</p>}
                     </div>)
-} */}
+}
    
         
         
@@ -1354,7 +1486,11 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.rateName ? 'border-red-400' : ''}`}
+             className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
+              ${errors.rateName ? 'border-red-400' : isOrderUpdate && elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
+              focus:border-blue-300 focus:ring focus:ring-blue-300`}
+            
+              
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1365,7 +1501,7 @@ return (
               value={selectedValues.rateName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
               options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
-              disabled={isOrderUpdate} 
+              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.rateName && <span className="text-red-500 text-sm">{errors.rateName}</span>}
           </div>
@@ -1375,7 +1511,9 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Category</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.typeOfAd ? 'border-red-400' : ''}`}
+             className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 
+              ${errors.typeOfAd ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' : ''}`}
+            
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1394,7 +1532,11 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Type</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.adType ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
+                ${errors.adType ? 'border-red-400' : isOrderUpdate && elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
+                focus:border-blue-300 focus:ring focus:ring-blue-300`}
+              
+              
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1405,6 +1547,7 @@ return (
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
+              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
@@ -1418,7 +1561,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Location</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1436,7 +1579,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Package</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1468,7 +1611,8 @@ return (
               options={vendors}
               optionLabel="label"
               optionGroupLabel="label"
-               optionGroupChildren="options"
+              optionGroupChildren="options"
+              disabled={isOrderUpdate} 
             />
             {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
           </div>
@@ -1479,7 +1623,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
             <input 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
               type="number"
               placeholder="Margin Amount"
               value={marginAmount || ''}
@@ -1492,7 +1636,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
             <input 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : ''}`} 
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`} 
               type="number"
               placeholder="Margin %"
               value={marginPercentage || ''}
@@ -1505,7 +1649,7 @@ return (
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
                       <input 
                         // required = {elementsToHide.includes("OrderQuantityText") ? false : true}
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : ''}`}
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
                         type='number' 
                         value={qty} 
                         //onWheel={ event => event.currentTarget.blur() } 
@@ -1541,7 +1685,7 @@ return (
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1605,7 +1749,7 @@ return (
        <p className="text-black">{maxOrderNumber}</p>
        </div>
     </div>
-    <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
+    <label className={`text-gray-500 text-sm hover:cursor-pointer p-1 ${isOrderUpdate ? 'text-yellow-500' : ''}`}>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
   </div>
   {isExpanded && (
     <form className="space-y-6 p-4 md:p-8">
