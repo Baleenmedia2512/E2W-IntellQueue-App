@@ -1140,14 +1140,23 @@ const handleDiscountChange = (e) => {
     // Reset the discount amount and unit price to the original values
     setDiscountAmount(0);
     setDisplayUnitPrice(originalUnitPrice);
+    setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined })); // Clear any existing error on Remarks
     return;
   }
+
   const parsedUnitPrice = parseFloat(unitPrice);
   const parsedValue = parseFloat(value);
   const newDiscountAmount = parsedValue;
   setDiscountAmount(newDiscountAmount);
   // setDisplayUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount);
   setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
+
+  // Check if Remarks is filled; if not, set an error
+  if (newDiscountAmount !== 0 && !remarks) {
+    setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
+  } else {
+    setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
+  }
 };
 
 
@@ -1157,18 +1166,19 @@ const [dialogOpen, setDialogOpen] = useState(false);
 
 
 const handleOpenDialog = () => {
-  // Ensure that both the current data and previous data are available for comparison
-  // if (!prevData || !clientName || !orderDate || !unitPrice || !rateId || !consultantName) {
-  //   console.error('Data is missing, ensure prevData and current data are set correctly.');
-  //   return;
-  // }
+  // Check if remarks are filled
+  const isDiscountChanged = discountAmount !== prevData.discountAmount;
 
-  // Debugging: Log the full current data and previous data objects
-  // console.log('Current Data:', JSON.stringify({
-  //   clientName, orderDate, unitPrice, rateId, consultantName
-  // }));
-  // console.log('Previous Data:', JSON.stringify(prevData));
-
+  // If the discount amount has changed and remarks are not filled
+  if (isDiscountChanged && !remarks.trim()) {
+    setToastMessage('Please provide a reason in the Remarks field.');
+    setSeverity('warning');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+    return;
+  }
   // Compare current data with previous data to check if any field has changed
   const isDataChanged = (
     clientName.trim() !== prevData.clientName.trim() ||
@@ -1445,13 +1455,16 @@ return (
                         
                         placeholder='Remarks'    
                         value={remarks}
-                        onChange={e => {setRemarks(e.target.value);
-                          if (errors.orderNumber) {
-                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+                        onChange={e => {
+                          setRemarks(e.target.value);
+                          if (e.target.value === '') {
+                            setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
+                          } else {
+                            setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
                           }
                         }}
-                    />
-                     
+                      />
+                      {errors.remarks && <p className="text-red-500 text-sm mt-2">{errors.remarks}</p>}
                     </div>)
 }
    
