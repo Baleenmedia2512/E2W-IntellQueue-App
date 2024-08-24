@@ -5,17 +5,33 @@ import { useEffect } from 'react';
 import { setGeneralDetails, setCurrentPage } from '@/redux/features/emp-slice'; // Import your actions
 import TabNavigation from './components/TabNavigation';
 import React, { useState } from 'react';
+import { Calendar } from 'primereact/calendar';
+import { Dropdown } from 'primereact/dropdown';
+import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
+import 'primereact/resources/primereact.min.css';          // Core styles
+import 'primeicons/primeicons.css';   
 
 const GeneralDetailsPage = () => {
-  //not need this code SK-----end-----------------
+  const sexOptions = [
+    { label: 'Male', value: 'Male' },
+    { label: 'Female', value: 'Female' },
+    { label: 'Other', value: 'Other' },
+  ];
+  const options = [
+    { label: 'Admin', value: 'Admin' },
+    { label: 'Finance', value: 'Finance' },
+    { label: 'Management', value: 'Management' },
+    { label: 'General', value: 'General' },
+  ];
   const [generalDetails, setGeneralDetails] = useState({
     name: '',
     sex: '',
     dob: '',
     phone: '',
-    email: ''
+    email: '',
+    password: ''
   });
-
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [errors, setErrors] = useState({});
 //VALIDATION 1--------------------------------SK-----START------
   // const handleInputChange = (e) => {
@@ -85,19 +101,24 @@ const GeneralDetailsPage = () => {
   //   console.log(generalDetails.email)
   // };
   //VALIDATION 1--------------------------------SK-----END------
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
+  const onDateChange = (e) => {
+    handleInputChange({ target: { name: 'dob', value: e.value } }); // Custom event for handleInputChange
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
-    // Update the state with the new value
-    setGeneralDetails(prevDetails => ({
+  
+    // Update the state based on the input type
+    setGeneralDetails((prevDetails) => ({
       ...prevDetails,
-      [name]: value
+      [name]: value,
     }));
-    
-    // Validate the field
+  
+    // Validate the field as user types
     validateField(name, value);
   };
-  
   const validateField = (name, value) => {
     let error = '';
     
@@ -183,7 +204,7 @@ const GeneralDetailsPage = () => {
       setErrors(validationErrors);
       return;
     }
-  
+    //console.log(generalDetails.name)
     // Submit the form if no errors
     // Your form submission logic here
   };
@@ -229,7 +250,7 @@ const GeneralDetailsPage = () => {
                     id="name"
                     name="name"
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.name ? 'border-red-500' : ''}`}
-                    placeholder="Enter your name"
+                    placeholder="Eg:john"
                     value={generalDetails.name}
                     onChange={handleInputChange}
                   />
@@ -237,34 +258,34 @@ const GeneralDetailsPage = () => {
                 </div>
   
                 <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-                  <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
-                  <select
-                    id="sex"
-                    name="sex"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.sex ? 'border-red-500' : ''}`}
-                    value={generalDetails.sex}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select your sex</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
-                </div>
+                <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
+                <Dropdown
+                  id="sex"
+                  name="sex"
+                  value={generalDetails.sex}
+                  options={sexOptions}
+                  onChange={handleInputChange}
+                  placeholder="Select your sex"
+                  className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.sex ? 'border-red-500' : ''}`} 
+                />
+                {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
+              </div>
   
-                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-                  <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
-                  <input
-                    type="date"
-                    id="dob"
-                    name="dob"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.dob ? 'border-red-500' : ''}`}
-                    value={generalDetails.dob}
-                    onChange={handleInputChange}
-                  />
-                  {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
-                </div>
+              <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+              <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
+              <Calendar
+                id="dob"
+                name="dob"
+                value={generalDetails.dob}
+                onChange={onDateChange}
+                dateFormat="dd/mm/yy" // PrimeReact Calendar format
+                placeholder="dd/mm/yyyy"
+                className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 ${errors.dob ? 'p-invalid border-red-500' : ''}`} 
+                inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400" // Tailwind styling for the input box
+                showIcon // Shows a calendar icon within the input box
+              />
+              {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
+            </div>
               </div>
   
               {/* Phone Number, Email */}
@@ -276,7 +297,7 @@ const GeneralDetailsPage = () => {
                     id="phone"
                     name="phone"
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.phone ? 'border-red-500' : ''}`}
-                    placeholder="Enter your phone number"
+                    placeholder="Eg:1234567890"
                     value={generalDetails.phone}
                     onChange={handleInputChange}
                     maxLength="10" // Optional: Prevents entering more than 10 digits
@@ -291,7 +312,7 @@ const GeneralDetailsPage = () => {
                     id="email"
                     name="email"
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.email ? 'border-red-500' : ''}`}
-                    placeholder="Enter your email"
+                    placeholder="Eg:john@gmail.com"
                     value={generalDetails.email}
                     onChange={handleInputChange}
                   />
@@ -304,57 +325,76 @@ const GeneralDetailsPage = () => {
           {/* Login Credentials Section */}
           <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
             <h2 className="text-2xl font-bold text-blue-500 mb-2 text-left">Login Credentials</h2>
-            <p className="text-gray-400 text-sm mb-4 text-left">Please enter your login credentials</p>
+            {/* <p className="text-gray-400 text-sm mb-4 text-left">Please enter your login credentials</p> */}
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
   
             <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="flex flex-wrap -mx-4 mb-4">
-                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
-                  <label htmlFor="username" className="block mb-1 text-black font-medium">Username</label>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.username ? 'border-red-500' : ''}`}
-                    placeholder="Enter your username"
-                    value={generalDetails.username}
-                    onChange={handleInputChange}
-                  />
-                  {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
-                </div>
-  
-                <div className="w-full md:w-1/2 px-4">
-                  <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.password ? 'border-red-500' : ''}`}
-                    placeholder="Enter your password"
-                    value={generalDetails.password}
-                    onChange={handleInputChange}
-                  />
-                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-                </div>
-              </div>
-  
-              <div className="flex flex-wrap -mx-4 mb-4">
+            <div className="flex flex-wrap -mx-4 mb-4">
+            <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+              <label htmlFor="username" className="block mb-1 text-black font-medium">Username</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                autoComplete="off"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.username ? 'border-red-500' : ''}`}
+                placeholder="Eg:John"
+                value={generalDetails.username}
+                onChange={handleInputChange}
+                onFocus={(e) => e.target.setAttribute('autocomplete', 'new-username')} // Trick to avoid autofill
+              />
+              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+            </div>
+
+            <div className="w-full md:w-1/2 px-4">
+      <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
+      <div className="relative">
+        <input
+          type={passwordVisible ? 'text' : 'password'}
+          id="password"
+          name="password"
+          autoComplete="new-password"
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.password ? 'border-red-500' : ''}`}
+          placeholder="Eg:John123"
+          value={generalDetails.password}
+          onChange={handleInputChange}
+          onFocus={(e) => e.target.setAttribute('autocomplete', 'new-password')} // Trick to avoid autofill
+        />
+        <button
+          type="button"
+          className="absolute inset-y-0 right-0 flex items-center pr-3"
+          onClick={togglePasswordVisibility}
+          aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+        >
+          {passwordVisible ? (
+            <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5c-7 0-7 7-7 7s0 7 7 7 7-7 7-7-7-7-7-7zM12 15a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3C6.477 3 3 12 3 12s3.477 9 9 9 9-9 9-9-3.477-9-9-9zM12 15a3 3 0 100-6 3 3 0 000 6zM4.05 4.05A9.97 9.97 0 003 12c0 1.54.326 3.032.888 4.395L12 12l-3.95-3.95zM21.95 19.95A9.97 9.97 0 0021 12c0-1.54-.326-3.032-.888-4.395L12 12l3.95 3.95z" />
+            </svg>
+          )}
+        </button>
+      </div>
+      {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+    </div>
+          </div>
+
+            
+          <div className="flex flex-wrap -mx-4 mb-4">
                 <div className="w-full px-4">
                   <label htmlFor="appRights" className="block mb-1 text-black font-medium">App Rights</label>
-                  <select
+                  <Dropdown
                     id="appRights"
                     name="appRights"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.appRights ? 'border-red-500' : ''}`}
                     value={generalDetails.appRights}
+                    options={options}
                     onChange={handleInputChange}
-                  >
-                    <option value="">Select app rights</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Management">Management</option>
-                    <option value="General">General</option>
-                  </select>
+                    placeholder="Select app rights"
+                    className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.appRights ? 'border-red-500' : ''}`}
+                  />
                   {errors.appRights && <p className="text-red-500 text-xs mt-1">{errors.appRights}</p>}
                 </div>
               </div>
