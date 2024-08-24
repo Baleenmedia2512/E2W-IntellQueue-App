@@ -1169,6 +1169,7 @@ const handleOpenDialog = () => {
     rateId !== prevData.rateId ||
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount
+
   );
 
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
@@ -1432,7 +1433,7 @@ return (
                     <input 
                         type='text' 
                         className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline
-                          ${errors.remarks ? 'border-red-400' : isOrderUpdate && !elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
+                          ${errors.remarks ? 'border-red-400' : isOrderUpdate  ? 'border-yellow-500' : 'border-gray-300'}
                           focus:border-blue-300 focus:ring focus:ring-blue-300`}
                         
                         placeholder='Remarks'    
@@ -1455,8 +1456,10 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 
-                ${errors.rateName ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' : ''}`}
+             className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
+              ${errors.rateName ? 'border-red-400' : isOrderUpdate && elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
+              focus:border-blue-300 focus:ring focus:ring-blue-300`}
+            
               
               styles={{
                 control: (provided) => ({
@@ -1468,7 +1471,7 @@ return (
               value={selectedValues.rateName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
               options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
-              disabled={isOrderUpdate} 
+              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.rateName && <span className="text-red-500 text-sm">{errors.rateName}</span>}
           </div>
@@ -1499,8 +1502,10 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Type</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 
-                ${errors.adType ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' : ''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
+                ${errors.adType ? 'border-red-400' : isOrderUpdate && elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
+                focus:border-blue-300 focus:ring focus:ring-blue-300`}
+              
               
               styles={{
                 control: (provided) => ({
@@ -1512,7 +1517,7 @@ return (
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
-              disabled={isOrderUpdate} 
+              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
