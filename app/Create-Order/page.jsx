@@ -763,7 +763,7 @@ const fetchOrderDetailsByOrderNumber = () => {
   
       const createNewOrder = async(event) => {
         // If the discount amount has changed and remarks are not filled
-        if (discountAmount !== 0 && discountAmount !== '0'&& !remarks.trim()) {
+        if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
           setToastMessage('Please provide a reason in the Remarks field.');
           setSeverity('warning');
           setToast(true);
@@ -1244,7 +1244,6 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
-  console.log(discountAmount)
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1455,7 +1454,7 @@ return (
   
         </div>
         {/* ICR YTC*/}
-        { (discountAmount !== '0' && discountAmount !== 0) && (<div >
+        { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '') && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
