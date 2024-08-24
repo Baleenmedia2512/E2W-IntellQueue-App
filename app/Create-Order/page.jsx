@@ -32,7 +32,7 @@ const CreateOrder = () => {
     const orderDetails = useAppSelector(state => state.orderSlice);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
-    const {orderNumber: orderNumberRP} = orderDetails;
+    const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.companyName);
     const companyName = "Baleen Test";
@@ -139,10 +139,15 @@ const CreateOrder = () => {
       calculateReceivable();
     },[unitPrice, marginAmount])
 
+
     // MP-99    
 //rate cards
 
+console.log(displayUnitPrice, unitPrice)
+console.log(receivableRP)
+
 useEffect(() => {
+  if(!isOrderUpdate) {
   if(rateId > 0){
     handleRateId()
     fetchQtySlab()
@@ -151,6 +156,7 @@ useEffect(() => {
     setOriginalUnitPrice(0);
     setDisplayUnitPrice(0);
   }
+}
 }, [rateId]);
 
 
@@ -237,11 +243,13 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
+  if(!isOrderUpdate) {
   fetchMaxOrderNumber();
   fetchUnits();
   // fetchAllVendor();
   fetchQtySlab();
   // setDiscountAmount(0);
+  }
 },[selectedValues.adType, selectedValues.rateName])
 
 const handleRateId = async () => {
@@ -556,10 +564,12 @@ const fetchRates = async () => {
     };
 
     useEffect(() => {
+      if(!isOrderUpdate) {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
       setOriginalUnitPrice(newUnitPrice);
       setDisplayUnitPrice(newUnitPrice);
+      }
     }, [qty])
 
     const handleSearchTermChange = (event) => {
@@ -720,7 +730,6 @@ const fetchOrderDetailsByOrderNumber = () => {
           setOrderDate(data.orderDate);
           setDisplayOrderDate(formattedDate);
           setUnitPrice(data.receivable);
-          setDisplayUnitPrice(data.receivable);
           setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
           dispatch(setRateId(data.rateId));
           setHasOrderDetails(true);
@@ -750,6 +759,7 @@ const fetchOrderDetailsByOrderNumber = () => {
 
   useEffect(() => {
     fetchOrderDetailsByOrderNumber();
+    setDisplayUnitPrice(receivableRP);
   }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
 
   
@@ -1149,8 +1159,7 @@ const handleDiscountChange = (e) => {
   const parsedValue = parseFloat(value);
   const newDiscountAmount = parsedValue;
   setDiscountAmount(newDiscountAmount);
-  //console.log(parsedUnitPrice, newDiscountAmount)
-  // Update the display unit price based on the new discount amount
+  // setDisplayUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount);
   setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
 
   // Check if Remarks is filled; if not, set an error
@@ -1160,7 +1169,7 @@ const handleDiscountChange = (e) => {
     setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
   }
 };
-//console.log(unitPrice)
+
 
 const [dialogOpen, setDialogOpen] = useState(false);
   const [updateReason, setUpdateReason] = useState('');
@@ -1237,7 +1246,6 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
-console.log(elementsToHide)
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">

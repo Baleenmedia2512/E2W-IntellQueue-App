@@ -9,7 +9,19 @@
     padding: 12px;
     margin-top: 4px;
     border-radius: 6px;
+    width: fit-content;
   }
+
+  .p-column-filter-buttonbar {
+    display: none;
+}
+
+@media (max-width: 480px) {
+  .p-column-filter-overlay {
+    width: 100px;
+  }
+}
+
 
  
   
