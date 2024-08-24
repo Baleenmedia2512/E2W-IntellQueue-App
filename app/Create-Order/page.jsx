@@ -143,8 +143,6 @@ const CreateOrder = () => {
     // MP-99    
 //rate cards
 
-console.log(displayUnitPrice, unitPrice)
-console.log(receivableRP)
 
 useEffect(() => {
   if(!isOrderUpdate) {
@@ -765,7 +763,7 @@ const fetchOrderDetailsByOrderNumber = () => {
   
       const createNewOrder = async(event) => {
         // If the discount amount has changed and remarks are not filled
-        if (discountAmount !== 0 && !remarks.trim()) {
+        if (discountAmount !== 0 && discountAmount !== '0'&& !remarks.trim()) {
           setToastMessage('Please provide a reason in the Remarks field.');
           setSeverity('warning');
           setToast(true);
@@ -1163,11 +1161,11 @@ const handleDiscountChange = (e) => {
   setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
 
   // Check if Remarks is filled; if not, set an error
-  if (newDiscountAmount !== 0 && !remarks) {
-    setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
-  } else {
-    setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
-  }
+  // if (newDiscountAmount !== 0 && newDiscountAmount !== '0' && !remarks) {
+  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
+  // } else {
+  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
+  // }
 };
 
 
@@ -1246,6 +1244,7 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
+  console.log(discountAmount)
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1456,7 +1455,7 @@ return (
   
         </div>
         {/* ICR YTC*/}
-        { (discountAmount !== 0) && (<div >
+        { (discountAmount !== '0' && discountAmount !== 0) && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
@@ -1468,7 +1467,7 @@ return (
                         value={remarks}
                         onChange={e => {
                           setRemarks(e.target.value);
-                          if (e.target.value === '') {
+                          if (e.target.value === '' && discountAmount !== '0' && discountAmount !== 0) {
                             setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
                           } else {
                             setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
