@@ -26,6 +26,7 @@ import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualization/useGridVirtualScroller';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -311,6 +312,7 @@ const AdDetailsPage = () => {
           const result = await response.json();
           if(result === "Failed to Insert" || result === "Failed to Update"){
             // showToastMessage("Error", "Error while updating data")
+            console.log(result);
             setToastMessage('Error while updating data.');
             setSeverity('error');
             setToast(true);
@@ -420,23 +422,31 @@ const AdDetailsPage = () => {
 
   const fetchQtySlab = async () => {
     try {
+      // Clear the previous slabData to avoid showing old data
+      dispatch(setSlabData([]));
+
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonDBName=${companyName}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
-      dispatch(setSlabData(data));
-      if(data){
+
+      // Sort the data by StartQty (and by Width if needed)
+      const sortedData = [...data].sort((a, b) => Number(a.UnitPrice) - Number(b.UnitPrice));
+
+      // Dispatch the sorted data
+      dispatch(setSlabData(sortedData));
+
+      if (sortedData.length > 0) {
         setIsSlabAvailable(true);
-      }
-      const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-      const firstSelectedSlab = sortedData[0];
-      if(firstSelectedSlab){
-        setUnitPrice(firstSelectedSlab.UnitPrice);
-        dispatch(setSelectedUnit({label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit}));
-        dispatch(setStartQty(firstSelectedSlab.StartQty));
-        dispatch(setWidth(firstSelectedSlab.Width));
-        //setStartQty(sortedData.map((slab) => Number(slab.StartQty)));
+
+        const firstSelectedSlab = sortedData[0];
+        if (firstSelectedSlab) {
+          setUnitPrice(firstSelectedSlab.UnitPrice);
+          dispatch(setSelectedUnit({ label: firstSelectedSlab.Unit, value: firstSelectedSlab.Unit }));
+          dispatch(setStartQty(firstSelectedSlab.StartQty));
+          dispatch(setWidth(firstSelectedSlab.Width));
+        }
       }
     } catch (error) {
       console.error(error);
@@ -447,6 +457,7 @@ const AdDetailsPage = () => {
     if(rateId > 0){
       handleRateId(rateId)    
     }
+    setTempSlabData([])
     fetchQtySlab();
   }, [rateId]);
 
@@ -920,7 +931,8 @@ var selectedRate = '';
         if (existingSlab) {
             updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
         } else {
-            addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
+          combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
+            // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
         }
     } else {
         const existingSlab = combinedSlabData.find(
@@ -929,7 +941,8 @@ var selectedRate = '';
         if (existingSlab) {
             updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
         } else {
-            addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
+          combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
+            // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
         }
     }
 
@@ -1242,7 +1255,7 @@ var selectedRate = '';
       unitRef.current.focus();
     }
     if(isQty || isQtySlab){
-      if(selectedUnit.value === "SCM"){
+      if((selectedUnit && selectedUnit.value === "SCM")){
         if(width === 0){
           widthRef.current.focus();
         } else if(startQty === 0){
@@ -1332,7 +1345,10 @@ const updateSlabData = (qty, newUnitPrice, Width) => {
   setTempSlabData(updatedData);
 } else {
   const updatedData = slabData.map((data) => {
-    if (data.StartQty === qty) {
+    if (data.StartQty === qty && selectedUnit.value !== "SCM") {
+      return { ...data, UnitPrice: newUnitPrice };
+    } else if(data.StartQty === qty && data.Width === Width){
+      
       return { ...data, UnitPrice: newUnitPrice };
     }
     return data;
@@ -1497,7 +1513,7 @@ setEditModal(false);
                 onFocus={event => event.target.select()}
               />
             </div>
-            {selectedUnit.value === "SCM" && (
+            {(selectedUnit && selectedUnit.value === "SCM") && (
               <div className='mb-4'>
               <TextField 
                 id="ratePerUnit" 
@@ -1854,7 +1870,7 @@ setEditModal(false);
                     {isUnitsSelected && <p className='text-red-500 mt-2 font-medium'>Please select a valid Unit</p>}
                   </div>
                     {/* {isNewRate || (rateId > 0 && slabData.length < 1) ? ( */}
-                    { selectedUnit.value === "SCM" ? (
+                    { (selectedUnit && selectedUnit.value === "SCM") ? (
                       <div className="mb-4 mt-4 flex w-full h-fit flex-row">
                       <div className="flex w-full flex-col">
                      <label className="block mb-2 text-gray-700 font-semibold">Height</label>
@@ -1955,14 +1971,14 @@ setEditModal(false);
                     {combinedSlabData.length > 0 ? <h2 className='block mb-4 text-black font-bold'>Rate-Slab</h2> : <p className='block mb-4 text-black font-bold '>No Rate-Slab currently available</p>}
                     <ul className='mb-4 text-black'>
                     {combinedSlabData.map((data, index) => (
-                      <div key={data.StartQty || index} className='flex justify-center'>
+                      <div key={data.StartQty} className='flex justify-center'>
                         {data.isTemp ? (
-                          <span onClick={() => handleItemClick(data)}>{selectedUnit.value !== "SCM" ? data.StartQty : data.StartQty * data.Width} {selectedUnit.value} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit.value}</span>
+                          <span onClick={() => handleItemClick(data)}>{(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit.value} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit.value}</span>
                         ) : (
                           <option key={data.StartQty} className="mt-1.5" 
                             onClick={() => handleItemClick(data)}
                           >
-                            {selectedUnit.value !== "SCM" ? data.StartQty : data.StartQty * data.Width} {selectedUnit ? selectedUnit.value : ''} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit ? selectedUnit.value : ''}
+                            {(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit ? selectedUnit.value : ''} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit ? selectedUnit.value : ''}
                           </option>
                         )}
                         <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index, data.Width)}>
