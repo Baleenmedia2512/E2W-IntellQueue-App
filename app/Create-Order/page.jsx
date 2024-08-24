@@ -754,6 +754,17 @@ const fetchOrderDetailsByOrderNumber = () => {
 
   
       const createNewOrder = async(event) => {
+        // If the discount amount has changed and remarks are not filled
+        if (discountAmount !== 0 && !remarks.trim()) {
+          setToastMessage('Please provide a reason in the Remarks field.');
+          setSeverity('warning');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+          return;
+        }
+        
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
