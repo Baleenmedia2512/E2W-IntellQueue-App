@@ -762,6 +762,7 @@ const resetFilters = () => {
     });
 };
 
+
 //Working filter
 const filterHeaderTemplate = (column, filterField) => {
     return (
@@ -784,6 +785,8 @@ const filterHeaderTemplate = (column, filterField) => {
                         setFilteredConsultants([]);
                         return;
                     }
+
+                    if(filterField === 'id') {
 
                     // Process consultants to filter and include group totals row
                     const updatedRows = consultants.flatMap(consultant => {
@@ -853,13 +856,19 @@ const filterHeaderTemplate = (column, filterField) => {
                     // Update the state with filtered rows
                     setFilteredConsultants(filteredRows);
                 }}
+            }
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
                 
             />
             <button
-    onClick={resetFilters}
+    onClick={() => {
+        let newFilters = { ...filters };
+        newFilters[filterField] = { value: '', matchMode: 'contains' };
+        setFilters(newFilters);
+        setFilteredConsultants([]); // Clear filtered consultants
+    }}
     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
 >
     Clear
