@@ -160,6 +160,7 @@ const Report = () => {
                     ...order,
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
+                    AdjustedOrderAmount: `₹ ${order.AdjustedOrderAmount}`,
                     TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : '',
                     AmountDifference: order.RateWiseOrderNumber < 0 ? `₹ 0` : `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
@@ -219,7 +220,7 @@ const Report = () => {
 
     const fetchAmounts = async () => {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmountTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -457,12 +458,16 @@ const handleCloseOrderReportDialog = () => {
   setSelectedRow(null);
 };
 
+
+
 const handleEditConfirm = () => {
   if (selectedRow) {
     const OrderNumber = selectedRow.OrderNumber;
-
+    const formattedReceivable = selectedRow.Receivable.replace(/₹\s*/g, '');
+    
     // Dispatch the order data and set `isOrderUpdate` to true
     dispatch(setOrderData({ orderNumber: OrderNumber }));
+    dispatch(setOrderData({ receivable: formattedReceivable }));
     dispatch(setIsOrderUpdate(true)); // Assuming you have an action to set `isOrderUpdate`
     
     // Navigate to the Create Order page
@@ -488,6 +493,7 @@ const orderColumns = [
       <div>{params.value}</div>
     )
   },
+  { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: 100 },
   { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: 100 },
   { field: 'AmountDifference', headerName: 'Difference(₹)', width: 100 },
   { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
@@ -549,7 +555,7 @@ const orderColumns = [
             >
                 Restore
             </Button>
-            {/* <Button
+            <Button
                 variant="contained"
                 color="primary"
                 size="small"
@@ -561,7 +567,7 @@ const orderColumns = [
                  }}  
             >  
                Edit
-            </Button> */}
+            </Button>
         </div>
     ),
 },
