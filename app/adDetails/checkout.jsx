@@ -30,8 +30,7 @@ const CheckoutPage = () => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [datas, setDatas] = useState([]);
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   
   const clientDetails = useAppSelector(state => state.clientSlice)
   const cartItems = useAppSelector(state => state.cartSlice.cart);

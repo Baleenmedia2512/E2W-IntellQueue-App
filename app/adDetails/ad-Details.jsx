@@ -41,7 +41,10 @@ const AdDetailsPage = () => {
   const [severity, setSeverity] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [slabData, setSlabData] = useState([])
-  const [qtySlab, setQtySlab] = useState()
+  const [qtySlab, setQtySlab] = useState({
+    Qty: 1,
+    Width: 1
+  })
   //const [unitPrice, setUnitPrice] = useState('')
   // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
   //const [qty, setQty] = useState(qtySlab)
@@ -55,7 +58,6 @@ const AdDetailsPage = () => {
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const [datas, setDatas] = useState([]);
   const marginAmountRef = useRef(null);
-  // const companyName = 'Baleen Test';
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
@@ -204,7 +206,10 @@ const AdDetailsPage = () => {
         if (sortedData.length > 0) {
           const firstSelectedSlab = sortedData[0];
           // console.log(firstSelectedSlab)
-          setQtySlab(firstSelectedSlab.StartQty);
+          setQtySlab({
+            Qty: firstSelectedSlab.StartQty,
+            Width: firstSelectedSlab.Width
+          });
           
           setMarginPercentage(firstSelectedSlab.AgencyCommission || 0);
           dispatch(setQuotesData({
