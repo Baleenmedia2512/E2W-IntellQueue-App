@@ -949,8 +949,6 @@ const handleDateChange = (range) => {
 };
 
 
-console.log(appRights)
-
     return (
       
         <Box sx={{ width: '100%'}}>
