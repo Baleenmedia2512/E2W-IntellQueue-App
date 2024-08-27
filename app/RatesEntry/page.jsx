@@ -959,7 +959,7 @@ var selectedRate = '';
       try {
 
         const minSlab = combinedSlabData.reduce((min, current) => {
-          return current.StartQty < min.StartQty ? current : min;
+          return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
       }, combinedSlabData[0]);
 
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}`);
