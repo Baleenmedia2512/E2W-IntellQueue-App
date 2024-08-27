@@ -111,6 +111,7 @@ const AdDetailsPage = () => {
       const data = await response.json();
       const firstData = data[0];
       dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true, rateGST: firstData.rategst, width: firstData.width}))
+      // console.log("Fetch Rate: " + firstData.minimumUnit)
     } catch (error) {
       console.error("Error while fetching rates: " + error)
     }
@@ -182,26 +183,44 @@ const AdDetailsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Clear existing slab data
+        setSlabData([]);
+    
+        // Fetch new data
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
+    
         const data = await response.json();
-        setSlabData(data);
-        const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
-        const firstSelectedSlab = sortedData[0];
-        setQtySlab(firstSelectedSlab.StartQty);
-        setMarginPercentage(firstSelectedSlab.AgencyCommission || 0)
-        // console.log(firstSelectedSlab.AgencyCommission)
-        dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit, width: firstSelectedSlab.Width}))
-        //, marginAmount: ((((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration))/(100- firstSelectedSlab.AgencyCommission)) * 100).toFixed(2)  * (firstSelectedSlab.AgencyCommission/100)).toFixed(0)
-        //setUnitPrice(firstSelectedSlab.UnitPrice);
-        //setUnit(firstSelectedSlab.Unit)
-        //setMargin(((qty * firstSelectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100).toFixed(2))
+        // console.log(data)
+        // Sort the data by StartQty
+        const sortedData = [...data].sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+        // console.log(sortedData)
+        // Set sorted data in state
+        setSlabData(sortedData);
+    
+        // Handle the first selected slab if data exists
+        if (sortedData.length > 0) {
+          const firstSelectedSlab = sortedData[0];
+          // console.log(firstSelectedSlab)
+          setQtySlab(firstSelectedSlab.StartQty);
+          
+          setMarginPercentage(firstSelectedSlab.AgencyCommission || 0);
+          dispatch(setQuotesData({
+            ratePerUnit: firstSelectedSlab.UnitPrice,
+            unit: firstSelectedSlab.Unit,
+            width: firstSelectedSlab.Width,
+            quantity: firstSelectedSlab.StartQty
+          }));
+          // console.log("Fetch Slab: " + firstSelectedSlab.StartQty)
+        } else {
+          // Handle case where there's no data, set default values, etc.
+        }
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching and processing data:', error);
       }
-    };
+    };    
 
     const fetchRate = async() => {
       try {
@@ -212,7 +231,7 @@ const AdDetailsPage = () => {
         const data = await response.json();
         const firstData = data[0];
         dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true, rateGST: firstData.rategst, width: firstData.width}))
-
+        //console.log("Fetch Rate UseEffect: " + firstData.minimumUnit)
       } catch (error) {
         console.error("Error while fetching rates: " + error)
       }
@@ -254,6 +273,7 @@ const AdDetailsPage = () => {
   
     if (!changing) {
       dispatch(setQuotesData({ quantity: qtySlab}));
+      // console.log("Handle Qty Slab Change: " + qtySlab)
     } else {
       setChanging(false);
     }
@@ -538,12 +558,14 @@ const AdDetailsPage = () => {
   }));
 
   const slabOptions = sortedSlabData.map(opt => ({
-      value: opt.StartQty,
+      value: unit !== "SCM" ? {Qty: opt.StartQty} : {Qty: opt.StartQty, Width: opt.Width},
       label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
     }
   ))
 
-
+  useEffect(() => {
+    dispatch(setQuotesData({width: qtySlab.Width,quantity: qtySlab.Qty, marginAmount: formattedMargin((( (unit === "SCM" ? (qtySlab.Qty * qtySlab.Width) : qtySlab.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}));
+  },[qtySlab])
 
   return (
     
@@ -770,7 +792,7 @@ const AdDetailsPage = () => {
                       //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
-                      min={qtySlab}
+                      min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
@@ -784,7 +806,7 @@ const AdDetailsPage = () => {
                     />
                     <label className="text-center mt-2 ml-5">{unit}</label>
                   </div>
-                  <p className="text-red-700">{qty < qtySlab ? 'Minimum Quantity should be ' + qtySlab : ''}</p>
+                  <p className="text-red-700">{qty < qtySlab.Qty ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
                 </div>
                    ) : (
                     <div className="mb-4 flex flex-row">
@@ -796,7 +818,7 @@ const AdDetailsPage = () => {
                       //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
-                      min={qtySlab}
+                      min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
@@ -809,7 +831,9 @@ const AdDetailsPage = () => {
                       onFocus={(e) => e.target.select()}
                     />
                   </div>
+                  
                   </div>
+                  <p className="text-red-700">{width < qtySlab.Width ? 'Minimum Quantity should be ' + qtySlab.Width : ''}</p>
                   <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Width ({unit})</label>
                     <div className="flex w-full">
@@ -991,8 +1015,8 @@ const AdDetailsPage = () => {
                         label: e.target.value
                       });
                       // {changing && setQty(e.target.value);}
-                      dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((( (unit === "SCM" ? (e.target.value * width) : e.target.value) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}));
-                      console.log(width)
+                     
+                      // console.log(width)
                       // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
                     }}
                     options={slabOptions}
