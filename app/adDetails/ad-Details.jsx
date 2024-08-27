@@ -197,7 +197,7 @@ const AdDetailsPage = () => {
         const data = await response.json();
         // console.log(data)
         // Sort the data by StartQty
-        const sortedData = [...data].sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+        const sortedData = [...data].sort((a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width));
         // console.log(sortedData)
         // Set sorted data in state
         setSlabData(sortedData);
@@ -442,15 +442,19 @@ const AdDetailsPage = () => {
 
   const findMatchingQtySlab = (value) => {
     let matchingStartQty = sortedSlabData[0].StartQty;
+    let matchingWidth = sortedSlabData[0].Width
 
     for (const slab of sortedSlabData) {
       if (value >= slab.StartQty) {
-        matchingStartQty = slab.StartQty;      
+        matchingStartQty = slab.StartQty;   
+        matchingWidth = slab.Width;   
       } else {
         break;
       }
     }
-    return matchingStartQty;
+
+    const matchingValue = {Qty: matchingStartQty, Width: matchingWidth}
+    return matchingValue;
   };
 
   const formattedRupees = (number) => {
@@ -563,7 +567,7 @@ const AdDetailsPage = () => {
   }));
 
   const slabOptions = sortedSlabData.map(opt => ({
-      value: unit !== "SCM" ? {Qty: opt.StartQty} : {Qty: opt.StartQty, Width: opt.Width},
+      value: unit !== "SCM" ? {Qty: opt.StartQty, Width: 1} : {Qty: opt.StartQty, Width: opt.Width},
       label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
     }
   ))
@@ -836,9 +840,9 @@ const AdDetailsPage = () => {
                       onFocus={(e) => e.target.select()}
                     />
                   </div>
-                  
+                  <p className="text-red-700">{qty < qtySlab ? 'Minimum Quantity should be ' + qtySlab : ''}</p>
                   </div>
-                  <p className="text-red-700">{width < qtySlab.Width ? 'Minimum Quantity should be ' + qtySlab.Width : ''}</p>
+                  
                   <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Width ({unit})</label>
                     <div className="flex w-full">
@@ -847,7 +851,7 @@ const AdDetailsPage = () => {
                       //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
-                      min={width}
+                      min={qtySlab.Width}
                       value={width}
                       onChange={(e) => {
                         //setQty(e.target.value);
@@ -859,9 +863,10 @@ const AdDetailsPage = () => {
                       onFocus={(e) => e.target.select()}
                     />
                   </div>
-                  
-                  <p className="text-red-700">{qty < qtySlab ? 'Minimum Quantity should be ' + qtySlab : ''}</p>
+                  <p className="text-red-700">{width < qtySlab.Width ? 'Minimum Quantity should be ' + qtySlab.Width : ''}</p>
                   </div>
+                 
+                  
                 </div>
                    )}
                 {campaignDurationVisibility === 1 &&
