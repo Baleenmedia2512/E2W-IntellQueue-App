@@ -142,10 +142,8 @@ const CreateOrder = () => {
 
     // MP-99    
 //rate cards
-
-
 useEffect(() => {
-  if(!isOrderUpdate) {
+  // if(!isOrderUpdate) {
   if(rateId > 0){
     handleRateId()
     fetchQtySlab()
@@ -154,7 +152,7 @@ useEffect(() => {
     setOriginalUnitPrice(0);
     setDisplayUnitPrice(0);
   }
-}
+// }
 }, [rateId]);
 
 
@@ -241,13 +239,13 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
-  if(!isOrderUpdate) {
+  // if(!isOrderUpdate) {
   fetchMaxOrderNumber();
   fetchUnits();
   // fetchAllVendor();
   fetchQtySlab();
   // setDiscountAmount(0);
-  }
+  // }
 },[selectedValues.adType, selectedValues.rateName])
 
 const handleRateId = async () => {
@@ -562,12 +560,12 @@ const fetchRates = async () => {
     };
 
     useEffect(() => {
-      if(!isOrderUpdate) {
+      // if(!isOrderUpdate) {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
       setOriginalUnitPrice(newUnitPrice);
       setDisplayUnitPrice(newUnitPrice);
-      }
+      // }
     }, [qty])
 
     const handleSearchTermChange = (event) => {
