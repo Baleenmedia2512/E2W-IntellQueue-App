@@ -55,8 +55,8 @@ const AdDetailsPage = () => {
   const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const [datas, setDatas] = useState([]);
   const marginAmountRef = useRef(null);
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test';
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
@@ -352,10 +352,10 @@ const AdDetailsPage = () => {
   const handleSubmit = () => {
     const isValid = validateFields();
     if (isValid) {
-    const isDuplicate = cartItems.some(item => item.rateId === rateId);
+      const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
     if (isDuplicate) {
       // Display an error message or handle the duplicate case
-      alert("This item is already in the cart.");
+      dispatch(updateCurrentPage("checkout"));
       return;
     }
 
@@ -735,7 +735,7 @@ const AdDetailsPage = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       if (validateFields()) {
-                        const isDuplicate = cartItems.some(item => item.rateId === rateId);
+                        const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
                         if (isDuplicate) {
                           // Display an error message or handle the duplicate case
                           alert("This item is already in the cart.");
