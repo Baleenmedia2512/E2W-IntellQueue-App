@@ -329,10 +329,10 @@ const AdDetailsPage = () => {
   const handleSubmit = () => {
     const isValid = validateFields();
     if (isValid) {
-    const isDuplicate = cartItems.some(item => item.rateId === rateId);
+      const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
     if (isDuplicate) {
       // Display an error message or handle the duplicate case
-      alert("This item is already in the cart.");
+      dispatch(updateCurrentPage("checkout"));
       return;
     }
 
@@ -709,13 +709,13 @@ const AdDetailsPage = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       if (validateFields()) {
-                        const isDuplicate = cartItems.some(item => item.rateId === rateId);
+                        const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
                         if (isDuplicate) {
                           // Display an error message or handle the duplicate case
                           alert("This item is already in the cart.");
                           return;
                         }
-                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData());
+                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}]));
                       } else {
                         setToastMessage('Please fill the necessary details in the form.');
                         setSeverity('error');
