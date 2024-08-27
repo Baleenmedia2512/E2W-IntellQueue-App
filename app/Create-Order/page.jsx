@@ -112,7 +112,7 @@ const CreateOrder = () => {
     const [hasOrderDetails, setHasOrderDetails] = useState(false);
    // const [isUpdateMode, setIsUpdateMode] = useState(false); 
     
-// console.log(clientDetails)
+
      // Function to toggle expand/collapse
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -143,8 +143,6 @@ const CreateOrder = () => {
     // MP-99    
 //rate cards
 
-console.log(displayUnitPrice, unitPrice)
-console.log(receivableRP)
 
 useEffect(() => {
   if(!isOrderUpdate) {
@@ -688,7 +686,6 @@ const fetchRates = async () => {
 //     .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
 //     .then((response) => {
 //       const data = response.data;
-//       //console.log(data); // Log the data to inspect the structure
 //       if (data) {
 //         // Assuming orderDetails is a typo and you meant data
 //         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
@@ -762,8 +759,20 @@ const fetchOrderDetailsByOrderNumber = () => {
     setDisplayUnitPrice(receivableRP);
   }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
 
+
   
       const createNewOrder = async(event) => {
+        // If the discount amount has changed and remarks are not filled
+        if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
+          setToastMessage('Please provide a reason in the Remarks field.');
+          setSeverity('warning');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+          return;
+        }
+        
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
@@ -772,7 +781,7 @@ const fetchOrderDetailsByOrderNumber = () => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -811,7 +820,6 @@ const fetchOrderDetailsByOrderNumber = () => {
 const updateNewOrder = async (event) => {
   if (event) event.preventDefault();
   // Now you can use the updateReason for your logic
-  // console.log('Reason for update:', updateReason);
 
   const receivable = (unitPrice * qty) + marginAmount;
   const payable = unitPrice * qty;
@@ -1139,7 +1147,7 @@ const handleDiscountChange = (e) => {
   if (value === '') {
     // Reset the discount amount and unit price to the original values
     setDiscountAmount(0);
-    setDisplayUnitPrice(originalUnitPrice);
+    // setDisplayUnitPrice(originalUnitPrice);
     setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined })); // Clear any existing error on Remarks
     return;
   }
@@ -1149,14 +1157,14 @@ const handleDiscountChange = (e) => {
   const newDiscountAmount = parsedValue;
   setDiscountAmount(newDiscountAmount);
   // setDisplayUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount);
-  setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
+  // setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
 
   // Check if Remarks is filled; if not, set an error
-  if (newDiscountAmount !== 0 && !remarks) {
-    setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
-  } else {
-    setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
-  }
+  // if (newDiscountAmount !== 0 && newDiscountAmount !== '0' && !remarks) {
+  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
+  // } else {
+  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
+  // }
 };
 
 
@@ -1170,7 +1178,7 @@ const handleOpenDialog = () => {
   const isDiscountChanged = discountAmount !== prevData.discountAmount;
 
   // If the discount amount has changed and remarks are not filled
-  if (isDiscountChanged && !remarks.trim()) {
+  if (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !remarks.trim()) {
     setToastMessage('Please provide a reason in the Remarks field.');
     setSeverity('warning');
     setToast(true);
@@ -1445,7 +1453,7 @@ return (
   
         </div>
         {/* ICR YTC*/}
-        { (discountAmount !== 0) && (<div >
+        { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '') && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
@@ -1457,7 +1465,7 @@ return (
                         value={remarks}
                         onChange={e => {
                           setRemarks(e.target.value);
-                          if (e.target.value === '') {
+                          if (e.target.value === '' && discountAmount !== '0' && discountAmount !== 0) {
                             setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
                           } else {
                             setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
