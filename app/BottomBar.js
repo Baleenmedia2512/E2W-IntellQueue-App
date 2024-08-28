@@ -14,6 +14,7 @@ const BottomBar = () => {
   
 
   const elementsToHideList = () => {
+    if(dbName){
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
@@ -21,6 +22,7 @@ const BottomBar = () => {
     } catch(error){
       console.error("Error showing element names: " + error)
     }
+  }
   }
 
   useEffect(() => {

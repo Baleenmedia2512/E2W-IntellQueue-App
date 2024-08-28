@@ -306,7 +306,7 @@ const ClientsData = () => {
   };
 
   useEffect(() => {    
-        if (!loggedInUser) {
+        if (!loggedInUser || dbName === "") {
           router.push('/login');
         }
         
