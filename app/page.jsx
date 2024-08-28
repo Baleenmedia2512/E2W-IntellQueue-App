@@ -321,7 +321,9 @@ const ClientsData = () => {
         // MP-72-Fix - Source is empty on start up.
 
         dispatch(setClientData({clientSource: sources[0]}))
-        elementsToHideList()
+        if(dbName){
+          elementsToHideList()
+        }
   }, []);
 
   useEffect(() => {
