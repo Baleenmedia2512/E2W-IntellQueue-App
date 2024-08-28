@@ -10,8 +10,18 @@ import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
 import 'primereact/resources/primereact.min.css';          // Core styles
 import 'primeicons/primeicons.css';   
+import { useAppSelector } from '@/redux/store';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 const GeneralDetailsPage = () => {
+  const [severity, setSeverity] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [toast, setToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const loggedInUser = useAppSelector(state => state.authSlice.userName);
+  const companyName = "Baleen Test";
+    // const companyName = useAppSelector(state => state.authSlice.companyName);
   const sexOptions = [
     { label: 'Male', value: 'Male' },
     { label: 'Female', value: 'Female' },
@@ -26,9 +36,11 @@ const GeneralDetailsPage = () => {
   const [generalDetails, setGeneralDetails] = useState({
     name: '',
     sex: '',
+    appRights: '',
     dob: '',
     phone: '',
     email: '',
+    username: '',
     password: ''
   });
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -119,82 +131,129 @@ const GeneralDetailsPage = () => {
     // Validate the field as user types
     validateField(name, value);
   };
-  const validateField = (name, value) => {
+  const validateField = async (name, value) => {
     let error = '';
-    
+    let isAvailable = false;
+
     switch (name) {
-      case 'name':
-      if (!value) {
-        error = 'Please fill the required field';
-      } else if (value.length < 3) {
-        error = 'Name must be at least 3 characters long';
-      } else if (value.length > 50) {
-        error = 'Name cannot exceed 50 characters';
-      }
-      break;
-      
-      case 'email':
-        if (!value) {
-          error = 'Please fill the required field';
-        } else if (!/\S+@\S+\.\S+/.test(value)) {
-          error = 'Email must be a valid format (e.g., example@gmail.com)';
-        }
-        break;
-      
-      case 'phone':
-        if (!value) {
-          error = 'Please fill the required field';
-        } else if (!/^\d{10}$/.test(value)) {
-          error = 'Phone number must be exactly 10 digits';
-        }
-        break;
-      
-      case 'dob':
-        if (!value) {
-          error = 'Please select your date of birth';
-        } else if (new Date(value) > new Date()) {
-          error = 'Date of birth cannot be in the future';
-        }
-        break;
-  
-      case 'sex':
-        if (!value) {
-          error = 'Please select your sex';
-        }
-        break;
-  
-      case 'username':
-        if (!value) {
-          error = 'Please fill the required field';
-        } else if (value.length < 3) {
-          error = 'Username must be at least 3 characters long';
-        }
-        break;
-  
-      case 'password':
-        if (!value) {
-          error = 'Please fill the required field';
-        } else if (value.length < 6) {
-          error = 'Password must be at least 6 characters long';
-        }
-        break;
-  
-      case 'appRights':
-        if (!value) {
-          error = 'Please select app rights';
-        }
-        break;
-  
-      default:
-        break;
+        case 'name':
+            if (!value) {
+                error = 'Please fill the required field';
+            } else if (value.length < 3) {
+                error = 'Name must be at least 3 characters long';
+            } else if (value.length > 50) {
+                error = 'Name cannot exceed 50 characters';
+            }
+            break;
+
+        case 'email':
+            if (!value) {
+                error = 'Please fill the required field';
+            } else if (!/\S+@\S+\.\S+/.test(value)) {
+                error = 'Email must be a valid format (e.g., example@gmail.com)';
+            }
+            break;
+
+        case 'phone':
+            if (!value) {
+                error = 'Please fill the required field';
+            } else if (!/^\d{10}$/.test(value)) {
+                error = 'Phone number must be exactly 10 digits';
+            }
+            break;
+
+        case 'dob':
+            if (!value) {
+                error = 'Please select your date of birth';
+            } else if (new Date(value) > new Date()) {
+                error = 'Date of birth cannot be in the future';
+            }
+            break;
+
+        case 'sex':
+            if (!value) {
+                error = 'Please select your sex';
+            }
+            break;
+
+            case 'username':
+              if (!value) {
+                  error = 'Please fill the required field';
+                  setUsernameStatus('', ''); // Clear status if input is empty
+              } else if (value.length < 3) {
+                  error = 'Username must be at least 3 characters long';
+                  setUsernameStatus('', ''); // Clear status if input is too short
+              } else {
+                  // If basic validation passes, perform the async availability check
+                  const result = await checkUsernameAvailability(value);
+                  if (result.available) {
+                      // Display username availability message in green color
+                      setUsernameStatus('green', 'Username is available');
+                  } else {
+                      // Display username unavailability message in red color
+                      setUsernameStatus('red', 'Username is not available');
+                  }
+                  // Since we only want to show one message at a time, we skip setting error here
+                  return; // Exit early to avoid setting another error message
+              }
+              break;
+
+        case 'password':
+            if (!value) {
+                error = 'Please fill the required field';
+            } else if (value.length < 6) {
+                error = 'Password must be at least 6 characters long';
+            }
+            break;
+
+        case 'appRights':
+            if (!value) {
+                error = 'Please select app rights';
+            }
+            break;
+
+        default:
+            break;
     }
-  
+
     // Set the error message for the specific field
     setErrors(prevErrors => ({
-      ...prevErrors,
-      [name]: error
+        ...prevErrors,
+        [name]: error
     }));
-  };
+};
+
+
+// Function to update the username status UI
+const setUsernameStatus = (color, message) => {
+  const statusElement = document.getElementById('username-status');
+  if (statusElement) {
+      statusElement.style.color = color;
+      statusElement.innerText = message;
+  }
+};
+
+
+
+// Helper function to check if the username is available
+const checkUsernameAvailability = async (username) => {
+  try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUsernameExist.php?JsonDBName=${companyName}&JsonUsername=${username}`);
+      const result = await response.json();
+
+      if (result.status === "success") {
+          return { available: true, message: result.message };
+      } else {
+          return { available: false, message: result.message };
+      }
+  } catch (error) {
+      console.error("Error checking username availability", error);
+      return { available: false, message: "Error checking username availability" }; // Default to not available if an error occurs
+  }
+};
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -204,11 +263,18 @@ const GeneralDetailsPage = () => {
       setErrors(validationErrors);
       return;
     }
-    //console.log(generalDetails.name)
+    console.log(generalDetails.name)
+    console.log(generalDetails.sex)
+    console.log(generalDetails.dob)
+    console.log(generalDetails.phone)
+    console.log(generalDetails.email)
+    console.log(generalDetails.username)
+    console.log(generalDetails.password)
+    console.log(generalDetails.appRights)
     // Submit the form if no errors
     // Your form submission logic here
   };
-  const validateGeneralDetails = () => {
+  const validateFields  = () => {
     const newErrors = {};
   
     validateField('name', generalDetails.name);
@@ -222,7 +288,46 @@ const GeneralDetailsPage = () => {
   
     return newErrors;
   };
+  
+  const postGeneralDetails = async (event) => {
+    event.preventDefault();
+    const validationErrors = validateFields();
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+  
+    try {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${generalDetails.dob}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${generalDetails.password}&JsonEntryUser=${loggedInUser}`);
       
+      const data = await response.json();
+
+      if (data === "Employee Data Inserted Successfully!") {
+        setSuccessMessage('User Created Successfully!');
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 3000);
+      } else if (data === "This Username not available") {
+        setToastMessage('This Username not available');
+        setSeverity('warning');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      } else {
+        alert(`The following error occurred while inserting data: ${data}`);
+      }
+      
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('There was an unexpected error while creating the user.');
+    }
+};
+
+ 
+
+  
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
@@ -337,6 +442,7 @@ const GeneralDetailsPage = () => {
                 type="text"
                 id="username"
                 name="username"
+                onblur="validateField('username', this.value)"
                 autoComplete="off"
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.username ? 'border-red-500' : ''}`}
                 placeholder="Eg:John"
@@ -344,6 +450,7 @@ const GeneralDetailsPage = () => {
                 onChange={handleInputChange}
                 onFocus={(e) => e.target.setAttribute('autocomplete', 'new-username')} // Trick to avoid autofill
               />
+              <span id="username-status"></span>
               {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
             </div>
 
@@ -402,6 +509,7 @@ const GeneralDetailsPage = () => {
               <div className="flex justify-end mt-6">
                 <button
                   type="submit"
+                  onClick={postGeneralDetails}
                   className="px-6 py-2 bg-blue-500 text-white rounded-lg"
                 >
                   Create
@@ -412,6 +520,9 @@ const GeneralDetailsPage = () => {
         </div>
       </div>
     </div>
+      {/* ToastMessage component */}
+  {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error"/>}
   </div>
   
 
