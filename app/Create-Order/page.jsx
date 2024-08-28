@@ -1241,6 +1241,7 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
+  console.log(discountAmount)
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
