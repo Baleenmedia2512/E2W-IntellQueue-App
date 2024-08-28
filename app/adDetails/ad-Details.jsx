@@ -112,7 +112,8 @@ const AdDetailsPage = () => {
       }
       const data = await response.json();
       const firstData = data[0];
-      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Unit, quantity: firstData.minimumUnit, isDetails: true, rateGST: firstData.rategst, width: firstData.width}))
+      console.log(firstData.Units)
+      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true, rateGST: firstData.rategst, width: firstData.width}))
       // console.log("Fetch Rate: " + firstData.minimumUnit)
     } catch (error) {
       console.error("Error while fetching rates: " + error)
@@ -267,9 +268,9 @@ const AdDetailsPage = () => {
   // }, [selectedVendor]);
 
   const handleQtySlabChange = () => {
-    const qtySlabNumber = parseInt(qtySlab); // Convert the value to a number
+    // const qtySlabNumber = parseInt(qtySlab); // Convert the value to a number
     // Find the corresponding slabData for the selected QtySlab
-    const selectedSlab = sortedSlabData.find(item => item.StartQty === qtySlabNumber);
+    const selectedSlab = sortedSlabData.find(item => item.StartQty === qtySlab.Qty && item.Width === qtySlab.Width);
   
     if (!selectedSlab) {
       console.error("No matching slab data found.");
@@ -277,13 +278,13 @@ const AdDetailsPage = () => {
     }
   
     if (!changing) {
-      dispatch(setQuotesData({ quantity: qtySlab}));
+      dispatch(setQuotesData({ quantity: qtySlab.Qty, width: qtySlab.Width}));
       // console.log("Handle Qty Slab Change: " + qtySlab)
     } else {
       setChanging(false);
     }
   
-    const marginAmount = formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100);
+    const marginAmount = formattedMargin((((qty* width * selectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0);
     dispatch(setQuotesData({ marginAmount }));
   
     // Update UnitPrice based on the selected QtySlab
@@ -312,8 +313,7 @@ const AdDetailsPage = () => {
     if (qtySlab) {
       handleQtySlabChange();
     }
-  }, [qtySlab])
-
+  }, [qtySlab]);
 
   const fetchRateData = async () => {
     try {
@@ -438,24 +438,36 @@ const AdDetailsPage = () => {
   const filteredData = datas
 
   const sortedSlabData = slabData
-    .sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
+    .sort((a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width));
 
-  const findMatchingQtySlab = (value) => {
+  const findMatchingQtySlab = (value, width) => {
     let matchingStartQty = sortedSlabData[0].StartQty;
     let matchingWidth = sortedSlabData[0].Width
 
     for (const slab of sortedSlabData) {
-      if (value >= slab.StartQty) {
-        matchingStartQty = slab.StartQty;   
-        matchingWidth = slab.Width;   
-      } else {
-        break;
+      if(width === true){
+        if (value >= slab.Width) {
+          matchingWidth = slab.Width;   
+        } else {
+          break;
+        }
+      }else{
+        if (value >= slab.StartQty) {
+          matchingStartQty = slab.StartQty;   
+        } else {
+          break;
+        }
       }
+      
     }
 
     const matchingValue = {Qty: matchingStartQty, Width: matchingWidth}
     return matchingValue;
   };
+
+//   const minSlabData = sortedSlabData.reduce((min, current) => {
+//     return unit === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
+// }, sortedSlabData[0]);
 
   const formattedRupees = (number) => {
     const roundedNumber = (number / 1).toFixed(0);
@@ -567,14 +579,16 @@ const AdDetailsPage = () => {
   }));
 
   const slabOptions = sortedSlabData.map(opt => ({
-      value: unit !== "SCM" ? {Qty: opt.StartQty, Width: 1} : {Qty: opt.StartQty, Width: opt.Width},
-      label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice/ (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day': "Campaign"}`
-    }
-  ))
+    value: JSON.stringify({
+      Qty: opt.StartQty,
+      Width: unit !== "SCM" ? 1 : opt.Width
+    }),
+    label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice / (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
+  }))
 
-  useEffect(() => {
-    dispatch(setQuotesData({width: qtySlab.Width,quantity: qtySlab.Qty, marginAmount: formattedMargin((( (unit === "SCM" ? (qtySlab.Qty * qtySlab.Width) : qtySlab.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}));
-  },[qtySlab])
+  // useEffect(() => {
+    
+  // },[qtySlab])
 
   return (
     
@@ -805,10 +819,10 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * width * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage))* 100 )  * (marginPercentage/100)).toFixed(0)}))
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
-                        setQtySlab(findMatchingQtySlab(e.target.value));
+                        setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
                       onFocus={(e) => e.target.select()}
@@ -834,13 +848,13 @@ const AdDetailsPage = () => {
                         dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * width * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
-                        setQtySlab(findMatchingQtySlab(e.target.value));
-                        setChanging(true);
+                        setQtySlab(findMatchingQtySlab(e.target.value, false));
+                        // setChanging(true);
                       }}
                       onFocus={(e) => e.target.select()}
                     />
                   </div>
-                  <p className="text-red-700">{qty < qtySlab ? 'Minimum Quantity should be ' + qtySlab : ''}</p>
+                  <p className="text-red-700">{qty < qtySlab.Qty ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
                   </div>
                   
                   <div className="mb-4 flex flex-col">
@@ -858,6 +872,7 @@ const AdDetailsPage = () => {
                         dispatch(setQuotesData({width: e.target.value, marginAmount: formattedMargin((((e.target.value * qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
+                        setQtySlab(findMatchingQtySlab(e.target.value, true));
                         setChanging(true);
                       }}
                       onFocus={(e) => e.target.select()}
@@ -1016,18 +1031,14 @@ const AdDetailsPage = () => {
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Quantity Slab Wise Cost</label>
                   <Dropdown
-                   className={`w-[80%] ml-2 mt-1 bg-gradient-to-br from-gray-100 to-white border border-1 border-gray-400 rounded-lg shadow-md shadow-gray-400 text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
+                   className={`w-[80%] ml-2 mt-1  border border-gray-400 rounded-lg  text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
                     //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
-                    value={qtySlab}
+                    value={JSON.stringify(qtySlab)}
                     onChange={(e) => {
-                      setQtySlab({
-                        value: e.target.value,
-                        label: e.target.value
-                      });
-                      // {changing && setQty(e.target.value);}
-                     
-                      // console.log(width)
-                      // setMargin(formattedMargin(((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)))
+                      const selectedValue = JSON.parse(e.target.value);
+                      setQtySlab(selectedValue);
+                      // console.log(qty, selectedValue.Qty, formattedMargin((( (unit === "SCM" ? (selectedValue.Qty * selectedValue.Width) : selectedValue.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100))
+                      dispatch(setQuotesData({width: selectedValue.Width, quantity: selectedValue.Qty, marginAmount: formattedMargin((( (unit === "SCM" ? (selectedValue.Qty * selectedValue.Width) : selectedValue.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}));
                     }}
                     options={slabOptions}
                   />

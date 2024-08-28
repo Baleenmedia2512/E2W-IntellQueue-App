@@ -45,7 +45,6 @@ export const AdDetails = () => {
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
-  const rateGST = useAppSelector(state => state.quoteSlice.rateGST);
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
   //const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
 
@@ -127,8 +126,8 @@ export const AdDetails = () => {
 
   const pdfGeneration = async (item) => {
     let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
-    let AmountInclGST = Math.round(AmountExclGST * ((rateGST/100) + 1));
-    
+    let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
+    console.log(item.rateGST)
     return {
       adMedium: item.adMedium,
       adCategory: item.adCategory,
@@ -138,7 +137,7 @@ export const AdDetails = () => {
       campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
       ratePerQty: formattedRupees(AmountExclGST / item.qty),
       amountExclGst: formattedRupees(AmountExclGST),
-      gst: rateGST + "%",
+      gst: item.rateGST + "%",
       amountInclGst: formattedRupees(AmountInclGST),
       leadDays: item.leadDay,
       // durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
@@ -147,7 +146,7 @@ export const AdDetails = () => {
       adType: item.adType,
       formattedDate: item.formattedDate,
       remarks: item.remarks,
-      width: width
+      width: item.width
     };
   };
 
@@ -156,9 +155,9 @@ export const AdDetails = () => {
 
   const addQuoteToDB = async(item) => {
     let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
-    let AmountInclGST = Math.round(AmountExclGST * ((rateGST/100) + 1));
+    let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
       const data = await response.text();
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
@@ -195,13 +194,13 @@ export const AdDetails = () => {
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber);
         const promises = cartItems.map(item => addQuoteToDB(item));
         await Promise.all(promises);
-        setTimeout(() => {
-        dispatch(resetCartItem());
-        dispatch(resetQuotesData());
-        dispatch(resetClientData());
-      },3000)
+      //   setTimeout(() => {
+      //   dispatch(resetCartItem());
+      //   dispatch(resetQuotesData());
+      //   dispatch(resetClientData());
+      // },3000)
       } catch(error){
-        alert('An unexpected error occured while inserting Quote:', error);
+        alert('An unexpected error occured while inserting Quote:' + error);
         return;
       }
       
@@ -244,7 +243,7 @@ export const AdDetails = () => {
   const calculateGrandTotal = () => {
     let grandTotal = [];
     cartItems.map((item, index) => {
-      const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * ((rateGST/100) + 1)
+      const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * ((item.rateGST/100) + 1)
       grandTotal.push(priceOfAd);
   })
   let grandTotalAmount = grandTotal.reduce((total, amount) => total + amount, 0);
