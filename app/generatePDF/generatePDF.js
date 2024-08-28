@@ -168,6 +168,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     const items = groupedData[adMedium];
     const hasCampaignDuration = items.some(item => item.campaignDuration && item.campaignDuration !== 'NA');
+    const isNewspaper = items.some(item => item.adMedium === 'Newspaper')
 
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
@@ -175,17 +176,51 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     //showing the ratename of the ad
     pdf.setFont('helvetica', 'normal', 'bold');
     pdf.setFontSize(14);
-    pdf.text(`${adMedium} (GST@${gstPercentage})`, 10, 215);
+    pdf.text(`${adMedium} (GST@${gstPercentage})`, 10, 230);
 
-    const data = groupedData[adMedium].map((item, i) => [
+    const data = items.map((item, i) => [
       (i + quoteNumber).toString(), item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" : item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty, item.amountExclGst, item.amountInclGst, item.leadDays,item.remarks ? item.remarks : 'NA'
-    ])
+    ].filter(Boolean))
 
-    const headerColumns = ['S.No.', 'Ad Type', 'Ad Category', 'Edition', 'Package', 'Qty', hasCampaignDuration ? 'Campaign Duration' : null, 'Price Per Qty (in Rs.)', 'Price (Excl. GST) (in Rs.)', "Price (incl. GST) (in Rs.)", "Lead Days","Remarks"].filter(Boolean);
+    const headerColumns = [['S.No.', 'Ad Type', 'Ad Category', isNewspaper ? 'Edition' : 'Location', 'Package', isNewspaper ? 'Size (in SCM)' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Price Per ${isNewspaper ? 'SCM' : 'Qty'} (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (incl. GST) (in Rs.)", "Lead Days","Remarks"].filter(Boolean)];
+
+    let columnWidths = {
+      'Quote.No.': 45,
+      'Ad Type': 60,
+      'Ad Category': 60,
+      'Edition': 60,
+      'Package': 60,
+      'Qty': 50,
+      'Campaign Duration': hasCampaignDuration ? 60 : 0,
+      'Rate Per Qty (in Rs.)': 50,
+      'Amount (Excl. GST) (in Rs.)': 60,
+      'Amount (incl. GST) (in Rs.)': 60,
+      'Lead Days': 50,
+      'Remarks': 60
+    };
+    
+    // Map column names to their indices
+    let headerMap = {};
+    headerColumns[0].forEach((header, index) => {
+      headerMap[header] = index;
+    });
+    
+    const rightAlignColumns = ['Price Per Qty (in Rs.)', 'Price (Excl. GST) (in Rs.)', 'GST', 'Price (incl. GST) (in Rs.)', 'Price Per SCM (in Rs.)'];
+    // Convert column names to indices and assign column widths
+    let columnStyles = {};
+    Object.keys(columnWidths).forEach(columnName => {
+      let columnIndex = headerMap[columnName];
+      if (columnIndex !== undefined) {
+          columnStyles[columnIndex] = { 
+            cellWidth: columnWidths[columnName], 
+            halign: rightAlignColumns.includes(columnName) ? 'right' : 'left' 
+          };
+      }
+    });
 
     // Create a table
     autoTable(pdf, {
-      head: [headerColumns],
+      head: headerColumns,
       body: data,
       styles: {
         fillColor: [255, 255, 255],
@@ -198,21 +233,8 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
         textColor: [255, 255, 255],
         fillColor: [50, 50, 50]
       },
-      margin: {top: 230, left: 10},
-      columnStyles: {
-        0: { columnWidth: 45 },
-          1: { columnWidth: 60 },
-          2: { columnWidth: 60 },
-          3: { columnWidth: 60 },
-          4: { columnWidth: 60 },
-          5: { columnWidth: 60 },
-          6: hasCampaignDuration ? { columnWidth: 20 } : {columnWidth: 0},
-          7: {columnWidth: 30},
-          8: { columnWidth: 50, halign: 'right' },
-          9: { columnWidth: 50, halign: 'right' },
-          10: { columnWidth: 60, halign: 'right' },
-          11: { columnWidth: 50, halign: 'right' },
-      },
+      margin: {top: 245, left: 10},
+      columnStyles: columnStyles,
       tableWidth: 'auto'
     })
   
@@ -225,6 +247,15 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     addTermsAndConditions();
   }
 
+  const pageHeight = pdf.internal.pageSize.height;
+    const bottomMargin = 10; // Space you want to leave at the bottom of the page
+    const termsHeight = 10; // Estimated height of the terms and conditions section
+
+  pdf.setFont('helvetica', 'normal', '100');
+  const pageWidth = pdf.internal.pageSize.width;
+    const textWidth = pdf.getStringUnitWidth('Page 10 Of 10') * 12;
+    var xCoordinate = pageWidth - textWidth - 20;
+    pdf.text(`Page ${index + 1} of ${Object.keys(groupedData).length}`, xCoordinate, pageHeight - termsHeight - bottomMargin)
 })
   // Save the PDF
   pdf.save(`Quote${quoteNumber}_${clientName}.pdf`);

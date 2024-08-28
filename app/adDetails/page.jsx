@@ -127,7 +127,7 @@ export const AdDetails = () => {
   const pdfGeneration = async (item) => {
     let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
-    console.log(item.rateGST)
+    // console.log(item.rateGST)
     return {
       adMedium: item.adMedium,
       adCategory: item.adCategory,
