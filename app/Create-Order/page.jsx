@@ -641,7 +641,7 @@ const fetchRates = async () => {
 
       const fetchPreviousOrderDetails = (clientNumber, clientName) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetailsTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetails.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data.length > 0) {

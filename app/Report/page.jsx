@@ -220,7 +220,7 @@ const Report = () => {
 
     const fetchAmounts = async () => {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmountTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
