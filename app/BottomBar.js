@@ -7,7 +7,7 @@ import { useAppSelector } from '@/redux/store';
 const BottomBar = () => {
   const router = useRouter();
   const currentPath = usePathname();
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.dbName);
   const [value, setValue] = useState(0); // Define the value state variable
   const [elementsToHide, setElementsToHide] = useState([])
   const [username, setUsername] = useState(""); // State variable for username
@@ -15,7 +15,7 @@ const BottomBar = () => {
 
   const elementsToHideList = () => {
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
         .then((data) => setElementsToHide(data));
     } catch(error){

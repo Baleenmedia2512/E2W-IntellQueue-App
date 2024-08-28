@@ -32,11 +32,10 @@ const CreateOrder = () => {
     const orderDetails = useAppSelector(state => state.orderSlice);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
-    const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
+    const {orderNumber: orderNumberRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
-    const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    const dbName = useAppSelector(state => state.authSlice.dbName);
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
@@ -112,7 +111,7 @@ const CreateOrder = () => {
     const [hasOrderDetails, setHasOrderDetails] = useState(false);
    // const [isUpdateMode, setIsUpdateMode] = useState(false); 
     
-
+// console.log(clientDetails)
      // Function to toggle expand/collapse
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -139,11 +138,10 @@ const CreateOrder = () => {
       calculateReceivable();
     },[unitPrice, marginAmount])
 
-
     // MP-99    
 //rate cards
+
 useEffect(() => {
-  // if(!isOrderUpdate) {
   if(rateId > 0){
     handleRateId()
     fetchQtySlab()
@@ -152,7 +150,6 @@ useEffect(() => {
     setOriginalUnitPrice(0);
     setDisplayUnitPrice(0);
   }
-// }
 }, [rateId]);
 
 
@@ -239,13 +236,11 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
-  // if(!isOrderUpdate) {
   fetchMaxOrderNumber();
   fetchUnits();
   // fetchAllVendor();
   fetchQtySlab();
   // setDiscountAmount(0);
-  // }
 },[selectedValues.adType, selectedValues.rateName])
 
 const handleRateId = async () => {
@@ -560,12 +555,10 @@ const fetchRates = async () => {
     };
 
     useEffect(() => {
-      // if(!isOrderUpdate) {
       const newUnitPrice = findUnitPrice();
       setUnitPrice(newUnitPrice);
       setOriginalUnitPrice(newUnitPrice);
       setDisplayUnitPrice(newUnitPrice);
-      // }
     }, [qty])
 
     const handleSearchTermChange = (event) => {
@@ -658,7 +651,7 @@ const fetchRates = async () => {
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
               setPreviousConsultantName(clientDetails.consultantName);
-              setDiscountAmount(clientDetails.adjustedOrderAmount);
+              // setDiscountAmount(clientDetails.adjustedOrderAmount);
               // handleSelectChange(clientDetails.rateName, "rateName");
               // handleSelectChange(clientDetails.adType, "adType");
               
@@ -684,6 +677,7 @@ const fetchRates = async () => {
 //     .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
 //     .then((response) => {
 //       const data = response.data;
+//       //console.log(data); // Log the data to inspect the structure
 //       if (data) {
 //         // Assuming orderDetails is a typo and you meant data
 //         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
@@ -725,6 +719,7 @@ const fetchOrderDetailsByOrderNumber = () => {
           setOrderDate(data.orderDate);
           setDisplayOrderDate(formattedDate);
           setUnitPrice(data.receivable);
+          setDisplayUnitPrice(data.receivable);
           setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
           dispatch(setRateId(data.rateId));
           setHasOrderDetails(true);
@@ -754,23 +749,10 @@ const fetchOrderDetailsByOrderNumber = () => {
 
   useEffect(() => {
     fetchOrderDetailsByOrderNumber();
-    setDisplayUnitPrice(receivableRP);
   }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
-
 
   
       const createNewOrder = async(event) => {
-        // If the discount amount has changed and remarks are not filled
-        if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
-          setToastMessage('Please provide a reason in the Remarks field.');
-          setSeverity('warning');
-          setToast(true);
-          setTimeout(() => {
-            setToast(false);
-          }, 2000);
-          return;
-        }
-        
         event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
@@ -818,6 +800,7 @@ const fetchOrderDetailsByOrderNumber = () => {
 const updateNewOrder = async (event) => {
   if (event) event.preventDefault();
   // Now you can use the updateReason for your logic
+  // console.log('Reason for update:', updateReason);
 
   const receivable = (unitPrice * qty) + marginAmount;
   const payable = unitPrice * qty;
@@ -1145,26 +1128,19 @@ const handleDiscountChange = (e) => {
   if (value === '') {
     // Reset the discount amount and unit price to the original values
     setDiscountAmount(0);
-    // setDisplayUnitPrice(originalUnitPrice);
-    setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined })); // Clear any existing error on Remarks
+    setDisplayUnitPrice(originalUnitPrice);
     return;
   }
-
   const parsedUnitPrice = parseFloat(unitPrice);
   const parsedValue = parseFloat(value);
   const newDiscountAmount = parsedValue;
   setDiscountAmount(newDiscountAmount);
+  console.log(parsedUnitPrice, newDiscountAmount)
   // setDisplayUnitPrice(prevPrice => prevPrice - discountAmount + newDiscountAmount);
-  // setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
-
-  // Check if Remarks is filled; if not, set an error
-  // if (newDiscountAmount !== 0 && newDiscountAmount !== '0' && !remarks) {
-  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
-  // } else {
-  //   setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
-  // }
+  setDisplayUnitPrice(parsedUnitPrice + newDiscountAmount);  
 };
 
+console.log(unitPrice)
 
 const [dialogOpen, setDialogOpen] = useState(false);
   const [updateReason, setUpdateReason] = useState('');
@@ -1172,19 +1148,18 @@ const [dialogOpen, setDialogOpen] = useState(false);
 
 
 const handleOpenDialog = () => {
-  // Check if remarks are filled
-  const isDiscountChanged = discountAmount !== prevData.discountAmount;
+  // Ensure that both the current data and previous data are available for comparison
+  // if (!prevData || !clientName || !orderDate || !unitPrice || !rateId || !consultantName) {
+  //   console.error('Data is missing, ensure prevData and current data are set correctly.');
+  //   return;
+  // }
 
-  // If the discount amount has changed and remarks are not filled
-  if (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !remarks.trim()) {
-    setToastMessage('Please provide a reason in the Remarks field.');
-    setSeverity('warning');
-    setToast(true);
-    setTimeout(() => {
-      setToast(false);
-    }, 2000);
-    return;
-  }
+  // Debugging: Log the full current data and previous data objects
+  // console.log('Current Data:', JSON.stringify({
+  //   clientName, orderDate, unitPrice, rateId, consultantName
+  // }));
+  // console.log('Previous Data:', JSON.stringify(prevData));
+
   // Compare current data with previous data to check if any field has changed
   const isDataChanged = (
     clientName.trim() !== prevData.clientName.trim() ||
@@ -1193,7 +1168,6 @@ const handleOpenDialog = () => {
     rateId !== prevData.rateId ||
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount
-
   );
 
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
@@ -1241,7 +1215,7 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
-  console.log(discountAmount)
+
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1369,48 +1343,44 @@ return (
           {/* Client Name */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <div>
-  <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
-  <input 
-    type='text' 
-    className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline 
-      ${errors.clientName ? 'border-red-400' : isOrderUpdate && !elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'} 
-      focus:border-blue-300 focus:ring focus:ring-blue-300`}
-    placeholder='Client Name'
-    value={clientName}
-    onChange={handleSearchTermChange}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const inputs = document.querySelectorAll('input, select, textarea');
-        const index = Array.from(inputs).findIndex(input => input === e.target);
-        if (index !== -1 && index < inputs.length - 1) {
-          inputs[index + 1].focus();
-        }
-      }
-    }}
-    disabled={isOrderUpdate && elementsToHide.includes("ClientAgeInput")}
-  />
-  {(clientNameSuggestions.length > 0 && clientName !== '') && (
-    <ul className="list-none bg-white shadow-lg rounded-md mt-2">
-      {clientNameSuggestions.map((name, index) => (
-        <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-          <button
-            type="button"
-            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-            onClick={handleClientNameSelection}
-            value={name}
-          >
-            {name}
-          </button>
-        </li>
-      ))}
-    </ul>
-  )}
-  {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
-  {/* New Client */}
-  <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
-</div>
-
+            <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
+            <input 
+              type='text' 
+              className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              placeholder='Client Name'
+              value={clientName}
+              onChange={handleSearchTermChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const inputs = document.querySelectorAll('input, select, textarea');
+                  const index = Array.from(inputs).findIndex(input => input === e.target);
+                  if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                  }
+                }
+              }}
+            />
+            {(clientNameSuggestions.length > 0 && clientName !== '') && (
+              <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+                {clientNameSuggestions.map((name, index) => (
+                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleClientNameSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+          {/* New Client */}
+        <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
+          </div>
           <div>
                     <label className="block mb-1 text-gray-700 font-medium">Order Date</label>
                     <div>
@@ -1422,7 +1392,7 @@ return (
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border rounded-lg text-black focus:outline-none focus:shadow-outline ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} ${errors.orderDate ? 'border-red-400' : ''} focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1436,42 +1406,36 @@ return (
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
     </div>
-    <div>
+    {/* <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
       <input 
-        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} ${errors.marginAmount ? 'border-red-400' : ''} focus:border-blue-300 focus:ring focus:ring-blue-300`}
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
         type="number"
         placeholder="Amount Adjustment"
         value={discountAmount || ''}
         onChange={handleDiscountChange}
         onFocus={e => e.target.select()}
       />
-    </div>
+    </div> */}
   </div>
   
   
         </div>
         {/* ICR YTC*/}
-        { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '') && (<div >
+        { (discountAmount !== 0) && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
-                        className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline
-                          ${errors.remarks ? 'border-red-400' : isOrderUpdate  ? 'border-yellow-500' : 'border-gray-300'}
-                          focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                        
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.remarks ? 'border-red-400' : ''}`}
                         placeholder='Remarks'    
                         value={remarks}
-                        onChange={e => {
-                          setRemarks(e.target.value);
-                          if (e.target.value === '' && discountAmount !== '0' && discountAmount !== 0) {
-                            setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
-                          } else {
-                            setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
+                        onChange={e => {setRemarks(e.target.value);
+                          if (errors.orderNumber) {
+                            setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
                           }
                         }}
-                      />
-                      {errors.remarks && <p className="text-red-500 text-sm mt-2">{errors.remarks}</p>}
+                    />
+                     
                     </div>)
 }
    
@@ -1483,11 +1447,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Rate Card Name</label>
             <Dropdown
-             className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
-              ${errors.rateName ? 'border-red-400' : isOrderUpdate && elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
-              focus:border-blue-300 focus:ring focus:ring-blue-300`}
-            
-              
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.rateName ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1498,7 +1458,7 @@ return (
               value={selectedValues.rateName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
               options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
-              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
+              disabled={isOrderUpdate} 
             />
             {errors.rateName && <span className="text-red-500 text-sm">{errors.rateName}</span>}
           </div>
@@ -1508,9 +1468,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Category</label>
             <Dropdown
-             className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 
-              ${errors.typeOfAd ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' : ''}`}
-            
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.typeOfAd ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1529,11 +1487,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Type</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
-                ${errors.adType ? 'border-red-400' : isOrderUpdate && elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
-                focus:border-blue-300 focus:ring focus:ring-blue-300`}
-              
-              
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.adType ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1544,7 +1498,6 @@ return (
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
-              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
@@ -1558,7 +1511,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Location</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1576,7 +1529,7 @@ return (
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Package</label>
             <Dropdown
-              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
+              className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : ''}`}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -1608,8 +1561,7 @@ return (
               options={vendors}
               optionLabel="label"
               optionGroupLabel="label"
-              optionGroupChildren="options"
-              disabled={isOrderUpdate} 
+               optionGroupChildren="options"
             />
             {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
           </div>
@@ -1620,7 +1572,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
             <input 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
               type="number"
               placeholder="Margin Amount"
               value={marginAmount || ''}
@@ -1633,7 +1585,7 @@ return (
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin %</label>
             <input 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`} 
+              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginPercentage ? 'border-red-400' : ''}`} 
               type="number"
               placeholder="Margin %"
               value={marginPercentage || ''}
@@ -1646,7 +1598,7 @@ return (
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
                       <input 
                         // required = {elementsToHide.includes("OrderQuantityText") ? false : true}
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
+                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.qty ? 'border-red-400' : ''}`}
                         type='number' 
                         value={qty} 
                         //onWheel={ event => event.currentTarget.blur() } 
@@ -1682,7 +1634,7 @@ return (
                       placeholder="dd-M-yyyy"
                       showIcon
                       dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
+                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : ''}`}
                       inputClassName="p-inputtext-lg"
                     />
                   </div>
@@ -1746,7 +1698,7 @@ return (
        <p className="text-black">{maxOrderNumber}</p>
        </div>
     </div>
-    <label className={`text-gray-500 text-sm hover:cursor-pointer p-1 ${isOrderUpdate ? 'text-yellow-500' : ''}`}>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
+    <label className='text-gray-500 text-sm hover:cursor-pointer p-1'>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
   </div>
   {isExpanded && (
     <form className="space-y-6 p-4 md:p-8">
