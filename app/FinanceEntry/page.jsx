@@ -74,6 +74,7 @@ const FinanceData = () => {
   // const [orderAmount, setOrderAmount] = useState(null);
   // const [remarks, setRemarks] = useState(null);
   const [clientName, setClientName] = useState(orderClientName || '');
+  const [clientNumber, setClientNumber] = useState(orderClientNumber || '');
   const [orderNumber, setOrderNumber] = useState(orderOrderNumber || '');
   const [rateWiseOrderNumber, setRateWiseOrderNumber] = useState(nextRateWiseOrderNumber || '');
   const [orderAmount, setOrderAmount] = useState('');
@@ -110,6 +111,7 @@ const FinanceData = () => {
   useEffect(() => {
     // Use the orderData values to initialize the state
     setClientName(orderClientName || '');
+    setClientNumber(orderClientNumber || '');
     setOrderNumber(orderOrderNumber || '');
     // setRemarks(orderRemarks || '')
     setRateWiseOrderNumber(nextRateWiseOrderNumber || '')
@@ -191,6 +193,7 @@ const FinanceData = () => {
 
     setClientNameSuggestions([]);
     setClientName(name);
+    setClientNumber(number);
     fetchClientDetails(number, name);
 
   };
@@ -214,6 +217,57 @@ const FinanceData = () => {
       .catch((error) => {
         console.error(error);
       });
+  }; 
+
+
+
+  const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
+
+    // Ensure clientNumber is valid
+    if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
+        console.log('Client number is 0 or invalid. Exiting function.');
+        setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        return; // Prevent the function from continuing if clientNumber is invalid
+    }
+
+    const sendableNumber = `91${clientNumber}`;
+    const sender = 'BALEEN';
+    const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
+    const encodedMessage = encodeURIComponent(message);
+
+
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/SendSms.php?JsonPhoneNumber=${sendableNumber}&JsonSender=${sender}&JsonMessage=${encodedMessage}`)
+      .then((response) => {
+
+        const responseData = JSON.parse(response.data);
+
+        if (responseData.status === 'success') {
+            console.log('SMS Sent!');
+            setSuccessMessage('SMS Sent!');
+              setTimeout(() => {
+            setSuccessMessage('');
+          }, 1500);
+        } else {
+            console.log('SMS Not Sent! Status:', responseData.message);
+            setToastMessage('SMS Not Sent! Reason', responseData.message);
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        }
+    })
+
+      .catch((error) => {
+        console.error(error);
+      });
+    
   }; 
 
   const handleOrderNumberChange = (event) => {
@@ -283,6 +337,8 @@ const FinanceData = () => {
     }
   },[transactionType])
 
+
+
   const insertNewFinance = async (e) => {
     e.preventDefault()
     if (!isOrderExist && !expenseCategory) {
@@ -310,6 +366,15 @@ const FinanceData = () => {
 
 
           const data = await response.json();
+          if (data === 'Inserted Successfully!') {
+            setSuccessMessage('Finance Entry Added');
+              setTimeout(() => {
+            setSuccessMessage('');
+            
+            SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+          }, 1000);
+        }
+        
           // showToastMessage('success', data);
           setChequeNumber('');;
           setClientName('');
@@ -326,10 +391,7 @@ const FinanceData = () => {
           dispatch(resetOrderData());
           dispatch(resetClientData());
           // window.location.reload();
-          setSuccessMessage('Finance Entry Added');
-        setTimeout(() => {
-      setSuccessMessage('');
-    }, 3000);
+          
     
       } catch (error) {
           console.error(error);
@@ -942,6 +1004,7 @@ useEffect(() => {
   {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
+  {toast && <ToastMessage message={toastMessage} type="warning"/>}
   </div>
     );
 }
