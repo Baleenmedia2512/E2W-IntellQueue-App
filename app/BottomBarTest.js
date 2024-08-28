@@ -1,13 +1,73 @@
 'use client';
-import { UserIcon, DocumentTextIcon, CurrencyDollarIcon, ClipboardDocumentCheckIcon, Cog6ToothIcon, ChevronDownIcon, WrenchIcon, Bars3Icon, ChartPieIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import {
+  UserIcon,
+  DocumentTextIcon,
+  CurrencyDollarIcon,
+  ClipboardDocumentCheckIcon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
-
 const BottomBarTest = () => {
-  const Menus = []
-}
+  const Menus = [
+    { name: 'Client Registration', icon: UserIcon },
+    { name: 'Quote Sender', icon: DocumentTextIcon },
+    { name: 'Order Generation', icon: ClipboardDocumentCheckIcon },
+    { name: 'Finance Entry', icon: CurrencyDollarIcon },
+    { name: 'Rates Entry', icon: Cog6ToothIcon },
+  ];
+
+  const [active, setActive] = useState(0);
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
+      <div className="bg-white max-w-md w-full h-[4.4rem] px-4 rounded-t-xl shadow-lg">
+        <ul className="flex justify-around relative">
+          <span
+            className={`bg-rose-600 duration-500 border-4 border-white h-16 w-16 absolute -top-5 rounded-full transform`}
+            style={{ transform: `translateX(${active * 60}%)` }}
+          >
+            <span className="w-3.5 h-3.5 bg-transparent absolute top-4 -left-[18px] rounded-tr-[11px] shadow-myShadow1"></span>
+            <span className="w-3.5 h-3.5 bg-transparent absolute top-4 -right-[18px] rounded-tl-[11px] shadow-myShadow2"></span>
+          </span>
+          {Menus.map((menu, i) => (
+            <li key={i} className="w-16">
+              <a
+                className="flex flex-col items-center pt-6 cursor-pointer"
+                onClick={() => setActive(i)}
+              >
+                <span
+                  className={`text-xl duration-500 ${
+                    i === active && '-mt-6 text-rose-600'
+                  }`}
+                >
+                  <menu.icon className="h-6 w-6" />
+                </span>
+                <span
+                  className={`text-xs ${
+                    active === i
+                      ? 'translate-y-4 duration-700 opacity-100'
+                      : 'opacity-0 translate-y-10'
+                  }`}
+                >
+                  {menu.name}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
 
 export default BottomBarTest;
+
+
+
+
+
+
 // export default function BottomBarTest() {
 //   const [selected, setSelected] = useState('clientRegistration');
 //   const [showMoreOptions, setShowMoreOptions] = useState(false);
