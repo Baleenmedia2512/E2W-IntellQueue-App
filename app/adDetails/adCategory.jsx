@@ -16,7 +16,6 @@ const AdCategoryPage = () => {
   const dispatch = useDispatch();
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
-  const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage);
   // const companyName = useAppSelector(state => state.authSlice.companyName);
