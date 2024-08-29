@@ -13,6 +13,7 @@ import 'primeicons/primeicons.css';
 import { useAppSelector } from '@/redux/store';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { format } from 'date-fns';
 
 const GeneralDetailsPage = () => {
   const [severity, setSeverity] = useState('');
@@ -113,6 +114,48 @@ const GeneralDetailsPage = () => {
   //   console.log(generalDetails.email)
   // };
   //VALIDATION 1--------------------------------SK-----END------
+  const handlePhoneChange = (event) => {
+    const { name, value } = event.target;
+
+    // Filter out non-numeric characters
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    // Set the phone number in state
+    setGeneralDetails(prevDetails => ({
+        ...prevDetails,
+        [name]: numericValue
+    }));
+
+    // Validate the phone number
+    let error = '';
+    if (numericValue.length === 0) {
+        error = 'Please fill the required field';
+    } else if (numericValue.length !== 10) {
+        error = 'Phone number must be exactly 10 digits';
+    }
+
+    // Update errors state
+    setErrors(prevErrors => ({
+        ...prevErrors,
+        phone: error
+    }));
+};
+
+  const handleResetGeneralDetails = () => {
+    setGeneralDetails({
+        name: '',
+        sex: '',
+        appRights: '',
+        dob: '',
+        phone: '',
+        email: '',
+        username: '',
+        password: ''
+    });
+
+    // Clear the username status
+    //setUsernameStatus('', '');
+};
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
@@ -131,96 +174,97 @@ const GeneralDetailsPage = () => {
     // Validate the field as user types
     validateField(name, value);
   };
-  const validateField = async (name, value) => {
-    let error = '';
-    let isAvailable = false;
+  // Function to validate a specific field
+const validateField = async (name, value) => {
+  let error = '';
 
-    switch (name) {
-        case 'name':
-            if (!value) {
-                error = 'Please fill the required field';
-            } else if (value.length < 3) {
-                error = 'Name must be at least 3 characters long';
-            } else if (value.length > 50) {
-                error = 'Name cannot exceed 50 characters';
-            }
-            break;
+  switch (name) {
+      case 'name':
+          if (!value) {
+              error = 'Please fill the required field';
+          } else if (value.length < 3) {
+              error = 'Name must be at least 3 characters long';
+          } else if (value.length > 50) {
+              error = 'Name cannot exceed 50 characters';
+          }
+          break;
 
-        case 'email':
-            if (!value) {
-                error = 'Please fill the required field';
-            } else if (!/\S+@\S+\.\S+/.test(value)) {
-                error = 'Email must be a valid format (e.g., example@gmail.com)';
-            }
-            break;
+      case 'email':
+          if (!value) {
+              error = 'Please fill the required field';
+          } else if (!/\S+@\S+\.\S+/.test(value)) {
+              error = 'Email must be a valid format (e.g., example@gmail.com)';
+          }
+          break;
 
-        case 'phone':
-            if (!value) {
-                error = 'Please fill the required field';
-            } else if (!/^\d{10}$/.test(value)) {
-                error = 'Phone number must be exactly 10 digits';
-            }
-            break;
+      case 'phone':
+          if (!value) {
+              error = 'Please fill the required field';
+          } else if (!/^\d{10}$/.test(value)) {
+              error = 'Phone number must be exactly 10 digits';
+          }
+          break;
 
-        case 'dob':
-            if (!value) {
-                error = 'Please select your date of birth';
-            } else if (new Date(value) > new Date()) {
-                error = 'Date of birth cannot be in the future';
-            }
-            break;
+      case 'dob':
+          if (!value) {
+              error = 'Please select your date of birth';
+          } else if (new Date(value) > new Date()) {
+              error = 'Date of birth cannot be in the future';
+          }
+          break;
 
-        case 'sex':
-            if (!value) {
-                error = 'Please select your sex';
-            }
-            break;
+      case 'sex':
+          if (!value) {
+              error = 'Please select your sex';
+          }
+          break;
 
-            case 'username':
-              if (!value) {
-                  error = 'Please fill the required field';
-                  setUsernameStatus('', ''); // Clear status if input is empty
-              } else if (value.length < 3) {
-                  error = 'Username must be at least 3 characters long';
-                  setUsernameStatus('', ''); // Clear status if input is too short
-              } else {
-                  // If basic validation passes, perform the async availability check
+      case 'username':
+          if (!value) {
+              error = 'Please fill the required field';
+              setUsernameStatus('', ''); // Clear status if input is empty
+          } else if (value.length < 3) {
+              error = 'Username must be at least 3 characters long';
+              setUsernameStatus('', ''); // Clear status if input is too short
+          } else {
+              // Perform the async availability check only if the field is not empty and long enough
+              try {
                   const result = await checkUsernameAvailability(value);
                   if (result.available) {
-                      // Display username availability message in green color
                       setUsernameStatus('green', 'Username is available');
                   } else {
-                      // Display username unavailability message in red color
                       setUsernameStatus('red', 'Username is not available');
                   }
-                  // Since we only want to show one message at a time, we skip setting error here
-                  return; // Exit early to avoid setting another error message
+              } catch (e) {
+                  error = 'Error checking username availability';
+                  setUsernameStatus('', ''); // Clear status if there's an error
               }
-              break;
+          }
+          break;
 
-        case 'password':
-            if (!value) {
-                error = 'Please fill the required field';
-            } else if (value.length < 6) {
-                error = 'Password must be at least 6 characters long';
-            }
-            break;
+      case 'password':
+          if (!value) {
+              error = 'Please fill the required field';
+          } else if (value.length < 6) {
+              error = 'Password must be at least 6 characters long';
+          }
+          break;
 
-        case 'appRights':
-            if (!value) {
-                error = 'Please select app rights';
-            }
-            break;
+      case 'appRights':
+          if (!value) {
+              error = 'Please select app rights';
+          }
+          break;
 
-        default:
-            break;
-    }
+      default:
+          break;
+  }
 
-    // Set the error message for the specific field
-    setErrors(prevErrors => ({
-        ...prevErrors,
-        [name]: error
-    }));
+  // Set the error message for the specific field
+  setErrors(prevErrors => ({
+      ...prevErrors,
+      [name]: error
+  }));
 };
 
 
@@ -258,7 +302,7 @@ const checkUsernameAvailability = async (username) => {
     e.preventDefault();
     
     // Perform a full validation
-    const validationErrors = validateGeneralDetails();
+    const validationErrors = validateField();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -294,36 +338,44 @@ const checkUsernameAvailability = async (username) => {
     const validationErrors = validateFields();
     
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+        setErrors(validationErrors);
+        return;
     }
-  
+    
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${generalDetails.dob}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${generalDetails.password}&JsonEntryUser=${loggedInUser}`);
-      
-      const data = await response.json();
+        // Format the dob to Y-m-d before sending it
+        const formattedDOB = format(new Date(generalDetails.dob), 'yyyy-MM-dd');
 
-      if (data === "Employee Data Inserted Successfully!") {
-        setSuccessMessage('User Created Successfully!');
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 3000);
-      } else if (data === "This Username not available") {
-        setToastMessage('This Username not available');
-        setSeverity('warning');
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
-      } else {
-        alert(`The following error occurred while inserting data: ${data}`);
-      }
-      
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${formattedDOB}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${generalDetails.password}&JsonEntryUser=${loggedInUser}`);
+        
+        const data = await response.json();
+
+        if (data === "Employee Data Inserted Successfully!") {
+            setSuccessMessage('User Created Successfully!');
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+
+            // Reset the form fields and clear username status
+            handleResetGeneralDetails();
+
+        } else if (data === "This Username not available") {
+            setToastMessage('This Username not available');
+            setSeverity('warning');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        } else {
+            alert(`The following error occurred while inserting data: ${data}`);
+        }
+        
     } catch (error) {
-      console.error('Error creating user:', error);
-      alert('There was an unexpected error while creating the user.');
+        console.error('Error creating user:', error);
+        // alert('There was an unexpected error while creating the user.');
     }
 };
+
 
  
 
@@ -404,7 +456,7 @@ const checkUsernameAvailability = async (username) => {
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.phone ? 'border-red-500' : ''}`}
                     placeholder="Eg:1234567890"
                     value={generalDetails.phone}
-                    onChange={handleInputChange}
+                    onChange={handlePhoneChange}
                     maxLength="10" // Optional: Prevents entering more than 10 digits
                   />
                   {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
@@ -454,39 +506,26 @@ const checkUsernameAvailability = async (username) => {
               {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
             </div>
 
-            <div className="w-full md:w-1/2 px-4">
-      <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
-      <div className="relative">
-        <input
-          type={passwordVisible ? 'text' : 'password'}
-          id="password"
-          name="password"
-          autoComplete="new-password"
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.password ? 'border-red-500' : ''}`}
-          placeholder="Eg:John123"
-          value={generalDetails.password}
-          onChange={handleInputChange}
-          onFocus={(e) => e.target.setAttribute('autocomplete', 'new-password')} // Trick to avoid autofill
-        />
-        <button
-          type="button"
-          className="absolute inset-y-0 right-0 flex items-center pr-3"
-          onClick={togglePasswordVisibility}
-          aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-        >
-          {passwordVisible ? (
-            <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5c-7 0-7 7-7 7s0 7 7 7 7-7 7-7-7-7-7-7zM12 15a3 3 0 100-6 3 3 0 000 6z" />
-            </svg>
-          ) : (
-            <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3C6.477 3 3 12 3 12s3.477 9 9 9 9-9 9-9-3.477-9-9-9zM12 15a3 3 0 100-6 3 3 0 000 6zM4.05 4.05A9.97 9.97 0 003 12c0 1.54.326 3.032.888 4.395L12 12l-3.95-3.95zM21.95 19.95A9.97 9.97 0 0021 12c0-1.54-.326-3.032-.888-4.395L12 12l3.95 3.95z" />
-            </svg>
-          )}
-        </button>
-      </div>
-      {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-    </div>
+            <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+            <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
+            <input
+              type="text" // Set the type to text
+              id="password"
+              name="password"
+              onBlur={() => validateField('password', generalDetails.password)}
+              autoComplete="new-password"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${
+                errors.password ? 'border-red-500' : ''
+              }`}
+              placeholder="Eg: John123"
+              value={generalDetails.password}
+              onChange={handleInputChange}
+              onFocus={(e) => e.target.setAttribute('autocomplete', 'new-password')} // Trick to avoid autofill
+            />
+            <span id="password-status"></span>
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          </div>
+
           </div>
 
             
