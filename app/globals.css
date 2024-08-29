@@ -21,6 +21,43 @@ body {
 }
 
 
+.nav-item {
+  transform: translateX(calc(var(--translate-value)));
+}
+
+@media (max-width: 320px) {
+  .nav-item {
+    --translate-value: calc(
+      ${activeIndex === 0 ? '-10px' : activeIndex === 1 ? '30px' : activeIndex === 2 ? '10px' : activeIndex === 3 ? '94px' : '300px'}
+    );
+  }
+}
+
+@media (min-width: 321px) and (max-width: 425px) {
+  .nav-item {
+    --translate-value: calc(
+      ${activeIndex === 0 ? '-10px' : activeIndex === 1 ? '-10px' : activeIndex === 2 ? '20px' : activeIndex === 3 ? '80px' : '0px'}
+    );
+  }
+}
+
+@media (min-width: 426px) and (max-width: 768px) {
+  .nav-item {
+    --translate-value: calc(
+      ${activeIndex === 0 ? '-170px' : activeIndex === 1 ? '-90px' : activeIndex === 2 ? '10px' : activeIndex === 3 ? '110px' : '300px'}
+    );
+  }
+}
+
+@media (min-width: 769px) {
+  .nav-item {
+    --translate-value: calc(
+      ${activeIndex === 0 ? '-202px' : activeIndex === 1 ? '-95px' : activeIndex === 2 ? '15px' : activeIndex === 3 ? '128px' : '300px'}
+    );
+  }
+}
+
+
 
 /* Include this in your CSS file */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
