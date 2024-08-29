@@ -407,7 +407,9 @@ const AdDetailsPage = () => {
   };
 
   const marginLostFocus = () => {
-    setMarginPercentage((margin * 100) / ( (unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)))
+    const cost = parseInt((unit === "SCM" ? (qty * width) : (qty)) * unitPrice * (campaignDuration / minimumCampaignDuration))
+    const price = cost + parseInt(margin)
+    setMarginPercentage(((margin/price)*100).toFixed(1))
     //dispatch(setQuotesData({marginAmount: event.target.value}))
   }
 
@@ -807,11 +809,11 @@ const AdDetailsPage = () => {
 
                 
                  { unit !== 'SCM' ? (
-                  <div className="mb-4 flex flex-col">
+                  <div className="mb-4 flex flex-col ">
                    <label className="font-bold mb-1 ml-2">Quantity</label>
-                    <div className="flex w-full">
+                    <div className="flex w-[80%] border ml-2 border-gray-400 rounded-lg">
                     <input
-                      className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                      className={`w-[70%] px-4 py-2 border-y-0 border-l-0 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                       //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
@@ -827,7 +829,7 @@ const AdDetailsPage = () => {
                       }}
                       onFocus={(e) => e.target.select()}
                     />
-                    <label className="text-center mt-2 ml-5">{unit}</label>
+                    <label className="text-center mt-2 ml-2 ">{unit}</label>
                   </div>
                   <p className="text-red-700">{qty < qtySlab.Qty ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
                 </div>
@@ -837,7 +839,7 @@ const AdDetailsPage = () => {
                    <label className="font-bold mb-1 ml-2">Height ({unit})</label>
                     <div className="flex w-full">
                     <input
-                      className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                      className={`w-[80%] ml-2 px-4 py-2 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                       //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
@@ -861,7 +863,7 @@ const AdDetailsPage = () => {
                   <label className="font-bold mb-1 ml-2">Width ({unit})</label>
                     <div className="flex w-full">
                     <input
-                      className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                      className={`w-[80%] ml-2 px-4 py-2 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                       //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
@@ -887,9 +889,9 @@ const AdDetailsPage = () => {
                 {campaignDurationVisibility === 1 &&
                   (<div className="mb-4">
                     <label className="font-bold">Campaign Duration</label>
-                    <div className="flex w-full">
+                    <div className="flex w-[80%] border ml-2 border-gray-400 rounded-lg mt-2">
                       <input
-                        className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                        className={`w-[70%] px-4 py-2 border border-y-0 border-l-0 border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                         //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                         type="number"
                         placeholder="Ex: 1000"
@@ -937,11 +939,11 @@ const AdDetailsPage = () => {
     {/* </div> */}
   {/* </div>
 </div> */}
-
-                <div className="mb-4 flex flex-col">
-                  <label className="font-bold ml-2 mb-1">Margin Amount(₹)</label>
+              <div className='flex flex-row mb-4'>
+                <div className="flex flex-col">
+                  <label className="font-bold ml-2 mb-1">Margin(₹)</label>
                   <input
-                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
+                    className={`w-[80%] ml-2 px-4 py-2 border  border-gray-400  text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.marginAmount ? 'border-red-400' : ''}`}
                     //className="w-full border border-gray-300 mb-4 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     type="number"
                     placeholder="Ex: 4000"
@@ -955,20 +957,21 @@ const AdDetailsPage = () => {
                  
 
                 </div>
-                <div className='mb-4 flex flex-col'>
-                <label className="font-bold ml-2 mb-1">Margin Percentage :</label>
+                <div className='flex flex-col'>
+                <label className="font-bold ml-2 mb-1">Margin %</label>
                 <span className='flex flex-row'>
                     <input
-                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    className={`w-[80%] ml-2 px-4 py-2 border  border-gray-400  text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                       //className="w-20 border border-gray-300 bg-blue-300 text-black p-2 h-8 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
-                      value={formattedRupees(marginPercentage)}
+                      value={marginPercentage}
                       onChange={handleMarginPercentageChange}
                       //onBlur={marginPercentageLostFocus}
                       onFocus={(e) => e.target.select()}
                     />
                     <p className="mt-1 font-bold ml-2">%</p></span>
+                  </div>
                   </div>
                 {/* <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
@@ -986,7 +989,7 @@ const AdDetailsPage = () => {
                   <label className="font-bold ml-2 mb-1">Remarks</label>
                   <InputTextarea
                     autoResize
-                    className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    className={`w-[80%] ml-2 px-4 py-2 border border-gray-400  text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
                     //className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                     placeholder="Remarks"
                     value={remarks}
@@ -1017,10 +1020,10 @@ const AdDetailsPage = () => {
                   )}
                 </div>
                 <div className="mb-4 flex flex-col">
-                  <label className="font-bold ml-2">Vendor</label>
+                  <label className="font-bold mb-1 ml-2">Vendor</label>
                   <Dropdown
                   //className={`w-full px-4 py-2 border mb-2 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                  className={`w-[80%] mt-1 ml-2 border border-1 bg-gradient-to-br from-gray-100 to-white border-gray-400 rounded-lg shadow-md shadow-gray-400  text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
+                  className={`w-[80%] mt-1 ml-2 border border-gray-400 rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
                   //className="border w-full border-gray-300 bg-blue-300 text-black rounded-lg p-2"
                     value={selectedVendor}
                     onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
