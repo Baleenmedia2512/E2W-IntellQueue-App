@@ -29,7 +29,7 @@ const RemarksPage = () => {
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const [searchInput, setSearchInput] = useState('');
 

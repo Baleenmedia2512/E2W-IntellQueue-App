@@ -108,10 +108,10 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     return 'Varies'; // If there are multiple GST percentages
   };
 
-  const addTermsAndConditions = () => {
-    const pageHeight = pdf.internal.pageSize.height;
-    const bottomMargin = 50; // Space you want to leave at the bottom of the page
-    const termsHeight = 130; // Estimated height of the terms and conditions section
+  const addTermsAndConditions = (index) => {
+    var pageHeight = pdf.internal.pageSize.height;
+    var bottomMargin = 50; // Space you want to leave at the bottom of the page
+    var termsHeight = 130; // Estimated height of the terms and conditions section
 
     // Determine yPosition for terms and conditions
     let yPosition = pageHeight - termsHeight - bottomMargin;
@@ -122,11 +122,11 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
-    pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, yPosition + 25);
-    pdf.text(`2.Ad. Material shall be shared by ${clientTitle} ${clientName}`, 10, yPosition + 40)
-    pdf.text("3.100% Upfront payment required for releasing the Ads", 10, yPosition + 55)
+    pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, yPosition + 40);
+    pdf.text(`2.Ad. Material shall be shared by ${clientTitle} ${clientName}`, 10, yPosition + 55)
+    pdf.text("3.100% Upfront payment required for releasing the Ads", 10, yPosition + 70)
     //pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
-    pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, yPosition + 70)
+    pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, yPosition + 85)
 
     pdf.setDrawColor("#df5f98");
     pdf.line(10, yPosition + 100, 400, yPosition + 100);
@@ -143,10 +143,18 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     
 
-    const pageWidth = pdf.internal.pageSize.width;
-    const textWidth = pdf.getStringUnitWidth('www.baleenmedia.com') * 12;
+    var pageWidth = pdf.internal.pageSize.width;
+    var textWidth = pdf.getStringUnitWidth('www.baleenmedia.com') * 12;
     var xCoordinate = pageWidth - textWidth - 20;
-    pdf.text('www.baleenmedia.com', xCoordinate, yPosition + 130)
+    pdf.text('www.baleenmedia.com', xCoordinate, yPosition + 130);
+    pageWidth = pdf.internal.pageSize.width;
+    textWidth = pdf.getStringUnitWidth('Page 10 Of 10') * 12;
+    xCoordinate = pageWidth - textWidth - 20;
+    pdf.setFont('helvetica', 'normal', '100');
+    pageHeight = pdf.internal.pageSize.height;
+    bottomMargin = 10; // Space you want to leave at the bottom of the page
+    termsHeight = 10; // Estimated height of the terms and conditions section
+    pdf.text(`Page ${index} of ${pdf.internal.pages.length - 1}`, xCoordinate, pageHeight - bottomMargin - termsHeight)
   };
 
   //Group the adMedium and create seperate tables for each adMedium
@@ -168,7 +176,10 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     const items = groupedData[adMedium];
     const hasCampaignDuration = items.some(item => item.campaignDuration && item.campaignDuration !== 'NA');
-    const isNewspaper = items.some(item => item.adMedium === 'Newspaper')
+    const hasAdType = items.some(item => item.adType && item.adType !== "");
+    const hasAdCategory = items.some(item => item.adCategory && item.adCategory !== "");
+    const hasPosition = items.some(item => item.edition && item.edition !== "");
+    const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
 
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
@@ -179,10 +190,10 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.text(`${adMedium} (GST@${gstPercentage})`, 10, 230);
 
     const data = items.map((item, i) => [
-      (i + quoteNumber).toString(), item.adType, item.adCategory, item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" : item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty, item.amountExclGst, item.amountInclGst, item.leadDays,item.remarks ? item.remarks : 'NA'
+      (i + quoteNumber).toString(), item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" : item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2,item.remarks ? item.remarks : 'NA'
     ].filter(Boolean))
 
-    const headerColumns = [['S.No.', 'Ad Type', 'Ad Category', isNewspaper ? 'Edition' : 'Location', 'Package', isNewspaper ? 'Size (in SCM)' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Price Per ${isNewspaper ? 'SCM' : 'Qty'} (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (incl. GST) (in Rs.)", "Lead Days","Remarks"].filter(Boolean)];
+    const headerColumns = [['S.No.', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size (in SCM)' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Price Per ${isNewspaper ? 'SCM' : 'Qty'} (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (incl. GST) (in Rs.)", "Lead Days","Remarks"].filter(Boolean)];
 
     let columnWidths = {
       'Quote.No.': 45,
@@ -240,13 +251,6 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   
   const yPosition = pdf.lastAutoTable.finalY + 20;
 
-  if(index === Object.keys(groupedData).length - 1 && yPosition + 135 <= pdf.internal.pageSize.height){
-    addTermsAndConditions()
-  } else if(index === Object.keys(groupedData).length - 1){
-    pdf.addPage();
-    addTermsAndConditions();
-  }
-
   const pageHeight = pdf.internal.pageSize.height;
     const bottomMargin = 10; // Space you want to leave at the bottom of the page
     const termsHeight = 10; // Estimated height of the terms and conditions section
@@ -255,7 +259,15 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   const pageWidth = pdf.internal.pageSize.width;
     const textWidth = pdf.getStringUnitWidth('Page 10 Of 10') * 12;
     var xCoordinate = pageWidth - textWidth - 20;
-    pdf.text(`Page ${index + 1} of ${Object.keys(groupedData).length}`, xCoordinate, pageHeight - termsHeight - bottomMargin)
+    pdf.text(`Page ${index + 1} of ${pdf.internal.pages.length - 1}`, xCoordinate, pageHeight - termsHeight - bottomMargin)
+  if(index === Object.keys(groupedData).length - 1 && yPosition + 150 <= pdf.internal.pageSize.height){
+    addTermsAndConditions(index + 2)
+    
+  } else if(index === Object.keys(groupedData).length - 1){
+    pdf.addPage();
+    addTermsAndConditions(index + 2);
+    
+  }
 })
   // Save the PDF
   pdf.save(`Quote${quoteNumber}_${clientName}.pdf`);

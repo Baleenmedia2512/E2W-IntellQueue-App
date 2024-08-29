@@ -303,7 +303,7 @@ const AdDetailsPage = () => {
 // }
   
   const addQtySlab = async(StartQty, Width, UnitPrice) => {
-    
+
     try{
         try{
           //console.log("Function here")
@@ -933,6 +933,7 @@ var selectedRate = '';
           combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
             // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
         }
+        console.log("Console in SCM")
     } else {
         const existingSlab = combinedSlabData.find(
             slab => slab.StartQty === slabData.StartQty
@@ -943,6 +944,7 @@ var selectedRate = '';
           combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
             // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
         }
+        console.log("Console not in SCM")
     }
 
       if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
@@ -962,7 +964,7 @@ var selectedRate = '';
           return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
       }, combinedSlabData[0]);
 
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}&JsonWidth=${minSlab.Width}`);
         
         // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
@@ -1296,9 +1298,13 @@ var selectedRate = '';
           } else if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
             setIsLeadDays(true)
         }else { 
-          const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
+          const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0;
+          const minSlab = combinedSlabData.reduce((min, current) => {
+            return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
+        }, combinedSlabData[0]);
+
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${width}`)
+              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}`)
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage(`Rate Card #${maxRateID} Added Successfully!`);
@@ -1886,7 +1892,7 @@ setEditModal(false);
                         value={startQty}
                         onChange={(e) => {
                           //setQty(e.target.value);
-                          dispatch((e) => {setStartQty(e.target.value); setIsQty(false); setIsQtySlab(false)});
+                          dispatch(setStartQty(e.target.value)); setIsQty(false); setIsQtySlab(false);
                           //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                           // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                           // setQtySlab(findMatchingQtySlab(e.target.value));
@@ -1909,7 +1915,7 @@ setEditModal(false);
                         // min={width}
                         value={width}
                         onChange={(e) => {
-                          setWidth(e.target.value);
+                          setWidth(e.target.value); setIsQty(false); setIsQtySlab(false);
                         }}
                         onFocus={(e) => e.target.select()}
                       />
@@ -1971,11 +1977,11 @@ setEditModal(false);
                     {combinedSlabData.length > 0 ? <h2 className='block mb-4 text-black font-bold'>Rate-Slab</h2> : <p className='block mb-4 text-black font-bold '>No Rate-Slab currently available</p>}
                     <ul className='mb-4 text-black'>
                     {combinedSlabData.map((data, index) => (
-                      <div key={data.StartQty} className='flex justify-center'>
+                      <div key={selectedUnit === "SCM" ? data.StartQty : data.StartQty * data.Width} className='flex justify-center'>
                         {data.isTemp ? (
                           <span onClick={() => handleItemClick(data)}>{(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit.value} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit.value}</span>
                         ) : (
-                          <option key={data.StartQty} className="mt-1.5" 
+                          <option key={selectedUnit === "SCM" ? data.StartQty : data.StartQty * data.Width} className="mt-1.5" 
                             onClick={() => handleItemClick(data)}
                           >
                             {(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit ? selectedUnit.value : ''} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit ? selectedUnit.value : ''}

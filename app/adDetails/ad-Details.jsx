@@ -112,7 +112,6 @@ const AdDetailsPage = () => {
       }
       const data = await response.json();
       const firstData = data[0];
-      console.log(firstData.Units)
       dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true, rateGST: firstData.rategst, width: firstData.width}))
       // console.log("Fetch Rate: " + firstData.minimumUnit)
     } catch (error) {
@@ -270,10 +269,16 @@ const AdDetailsPage = () => {
   const handleQtySlabChange = () => {
     // const qtySlabNumber = parseInt(qtySlab); // Convert the value to a number
     // Find the corresponding slabData for the selected QtySlab
-    const selectedSlab = sortedSlabData.find(item => item.StartQty === qtySlab.Qty && item.Width === qtySlab.Width);
+    const selectedSlab = sortedSlabData.find(item => item.StartQty === qtySlab.Qty);
+    const widthSelectedSlab = sortedSlabData.find(item => item.Width === qtySlab.Width);
   
     if (!selectedSlab) {
       console.error("No matching slab data found.");
+      return;
+    }
+
+    if(selectedSlab.Unit === "SCM" && !widthSelectedSlab){
+      console.error("No Matching Width and Height slab data found");
       return;
     }
   
@@ -766,7 +771,8 @@ const AdDetailsPage = () => {
                           alert("This item is already in the cart.");
                           return;
                         }
-                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}])); dispatch(resetQuotesData());
+                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}]));
+                        setSuccessMessage("Item added to Cart");
                       } else {
                         setToastMessage('Please fill the necessary details in the form.');
                         setSeverity('error');
@@ -851,7 +857,7 @@ const AdDetailsPage = () => {
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
-                        // setChanging(true);
+                        setChanging(true);
                       }}
                       onFocus={(e) => e.target.select()}
                     />

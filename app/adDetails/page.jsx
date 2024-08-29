@@ -264,10 +264,12 @@ export const AdDetails = () => {
   }));
 
   return (
-    <div className='bg-gray-100 w-full h-[100vh]  '>
-      <div className='text-black  bg-gray-100'>
+    <div className='bg-gray-100 w-full h-[100vh] overflow-hidden'>
+      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 ${currentPage === 'checkout' ? 'h-[100vh]' : ''} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
-        <div className="flex flex-row items-center fixed top-0 left-0 right-0  justify-between py-2 h-fit px-4 bg-gray-100 max-h-full overflow-hidden">
+        <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100 ">
+        
+       
         
           {/* Back Button */}
          { (currentPage !== "adMedium" && currentPage !== "") &&  
@@ -306,7 +308,7 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className='h-[100vh] bg-gray-100'>
+        <div className={`h-[100vh] bg-gray-100`}>
         <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'}  max-h-[100vh] overflow-x-hidden mx-2`}>
 
           {showCurrentPage()}

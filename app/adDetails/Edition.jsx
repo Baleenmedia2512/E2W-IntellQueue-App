@@ -26,7 +26,7 @@ const EditionPage = () => {
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const [searchInput, setSearchInput] = useState('');
 

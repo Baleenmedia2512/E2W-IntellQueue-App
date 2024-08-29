@@ -18,7 +18,7 @@ const AdCategoryPage = () => {
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage);
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   // const [selectedAdType, setSelectedAdType] = useState(null);
   const [datas, setDatas] = useState([]);
   const [rateSearchTerm,setRateSearchTerm] = useState("");
