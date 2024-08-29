@@ -9,6 +9,7 @@ const initialState = {
   selectedVendor: {label: "", value: ""},
   selectedSlab: "",
   quantity: 1,
+  width: 1,
   ratePerUnit: 0,
   unit: "",
   rateId: 0,
@@ -23,7 +24,8 @@ const initialState = {
   validRates: [],
   isDetails: false,
   previousPage: '',
-  history: []
+  history: [],
+  rateGST: ""
 };
 
 export const quoteSlice = createSlice({

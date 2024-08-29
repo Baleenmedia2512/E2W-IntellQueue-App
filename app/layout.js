@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
+// import BottomBar from "./BottomBar";
 import BottomBar from "./BottomBar";
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {

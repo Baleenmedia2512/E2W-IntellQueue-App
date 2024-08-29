@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { login, logout, setCompanyName, setAppRights } from '@/redux/features/auth-slice';
+import { login, logout, setCompanyName, setAppRights, setDBName } from '@/redux/features/auth-slice';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import { resetRatesData } from '@/redux/features/rate-slice';
@@ -23,25 +23,28 @@ const Login = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
-  const [elementsToHide, setElementsToHide] = useState([]);
 
   useEffect(() => {
     dispatch(logout());
     
   },[])
 
-  useEffect(()=>{
-    elementsToHideList();
-  },[companyName])
-  const elementsToHideList = () => {
-    try{
-      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
-        .then((response) => response.json())
-        .then((data) => setElementsToHide(data));
-    } catch(error){
-      console.error("Error showing element names: " + error)
-    }
-  }
+//   useEffect(()=>{
+//     elementsToHideList();
+//   },[companyName])
+
+//   const elementsToHideList = async() => {
+//     try{
+//       const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+//         if(!response.ok){
+//             return
+//         }
+//        const data = await response.json();
+//        setElementsToHide(data);
+//     } catch(error){
+//       console.error("Error showing element names: " + error)
+//     }
+//   }
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -95,13 +98,19 @@ const handleLogin = (event) => {
             .then(data => {
                 if (data.status === 'Login Successfully') {
                     setSuccessMessage('Login Successful!');
+                    // dispatch(setDBName(companyName));
+                    // dispatch(setCompanyName('Baleen Test'))
+                    // dispatch(login(userName));
                     setTimeout(() => {
                         setSuccessMessage('');
                         router.push("/")
                     }, 2000);
 
                     // Dispatch actions and navigate based on conditions
+                    dispatch(setDBName(companyName));
+                    dispatch(setCompanyName('Baleen Test'))
                     dispatch(login(userName));
+                    
                     dispatch(setAppRights(data.appRights));
                     dispatch(resetClientData());
                     dispatch(resetRatesData());
@@ -240,7 +249,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.5.13
+                        Version 1.5.15
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}

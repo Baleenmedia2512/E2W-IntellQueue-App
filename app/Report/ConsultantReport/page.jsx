@@ -28,8 +28,7 @@ const matchModes = [
 
 
 export default function GroupedRowsDemo() {
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -1047,20 +1046,18 @@ const handleClose = () => {
                             globalFilterFields={['name', 'rateCard', 'rateType', 'count', 'price', 'total']}
             
                         >
-                        <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2" className="bg-white p-2 w-fit text-nowrap"
+                        <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100 border-r-2" body={selectionBodyTemplate}></Column>
+                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2 border-r-2" className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
                             showFilterMatchModes={false}
                             ></Column>
-                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}
                             showFilterMatchModes={false}
                             showApplyButton={false}
                             showClearButton={false}
-                            ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
                             ></Column>

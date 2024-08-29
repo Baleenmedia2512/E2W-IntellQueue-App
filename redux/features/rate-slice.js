@@ -25,7 +25,8 @@ const initialState = {
   currentPage: "",
   validRates: [],
   isDetails: false,
-  rateGST: { label: "0%" , value: 0 }
+  rateGST: { label: "0%" , value: 0 },
+  startWidth: 1
 };
 
 export const rateSlice = createSlice({
@@ -55,6 +56,9 @@ export const rateSlice = createSlice({
     },
     setStartQty: (state, action) => {
       state.startQty = action.payload;
+    },
+    setStartWidth: (state, action) => {
+      state.startWidth = action.payload;
     }
   }
 });

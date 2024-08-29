@@ -29,9 +29,8 @@ const titleOptions = [
     
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
-  const dbName = useAppSelector(state => state.authSlice.companyName);
-  const companyName = "Baleen Test";
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.dbName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
@@ -307,7 +306,7 @@ const ClientsData = () => {
   };
 
   useEffect(() => {    
-        if (!loggedInUser) {
+        if (!loggedInUser || dbName === "") {
           router.push('/login');
         }
         
@@ -322,7 +321,9 @@ const ClientsData = () => {
         // MP-72-Fix - Source is empty on start up.
 
         dispatch(setClientData({clientSource: sources[0]}))
-        elementsToHideList()
+        if(dbName){
+          elementsToHideList()
+        }
   }, []);
 
   useEffect(() => {

@@ -35,6 +35,7 @@ export const AdDetails = () => {
   const [isClientName, setIsClientName] = useState(true)
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
+  const width = useAppSelector(state => state.quoteSlice.width);
   const username = useAppSelector(state => state.authSlice.userName);
   const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
@@ -125,8 +126,8 @@ export const AdDetails = () => {
 
   const pdfGeneration = async (item) => {
     let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
-    let AmountInclGST = Math.round(AmountExclGST * 1.18);
-    
+    let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
+    // console.log(item.rateGST)
     return {
       adMedium: item.adMedium,
       adCategory: item.adCategory,
@@ -136,7 +137,7 @@ export const AdDetails = () => {
       campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
       ratePerQty: formattedRupees(AmountExclGST / item.qty),
       amountExclGst: formattedRupees(AmountExclGST),
-      gst: '18%',
+      gst: item.rateGST + "%",
       amountInclGst: formattedRupees(AmountInclGST),
       leadDays: item.leadDay,
       // durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
@@ -145,6 +146,7 @@ export const AdDetails = () => {
       adType: item.adType,
       formattedDate: item.formattedDate,
       remarks: item.remarks,
+      width: item.width
     };
   };
 
@@ -153,9 +155,9 @@ export const AdDetails = () => {
 
   const addQuoteToDB = async(item) => {
     let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
-    let AmountInclGST = Math.round(AmountExclGST * 1.18);
+    let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${'18%'}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
       const data = await response.text();
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
@@ -192,13 +194,13 @@ export const AdDetails = () => {
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber);
         const promises = cartItems.map(item => addQuoteToDB(item));
         await Promise.all(promises);
-        setTimeout(() => {
-        dispatch(resetCartItem());
-        dispatch(resetQuotesData());
-        dispatch(resetClientData());
-      },3000)
+      //   setTimeout(() => {
+      //   dispatch(resetCartItem());
+      //   dispatch(resetQuotesData());
+      //   dispatch(resetClientData());
+      // },3000)
       } catch(error){
-        alert('An unexpected error occured while inserting Quote:', error);
+        alert('An unexpected error occured while inserting Quote:' + error);
         return;
       }
       
@@ -241,7 +243,7 @@ export const AdDetails = () => {
   const calculateGrandTotal = () => {
     let grandTotal = [];
     cartItems.map((item, index) => {
-      const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * (1.18)
+      const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * ((item.rateGST/100) + 1)
       grandTotal.push(priceOfAd);
   })
   let grandTotalAmount = grandTotal.reduce((total, amount) => total + amount, 0);
@@ -262,14 +264,14 @@ export const AdDetails = () => {
   }));
 
   return (
-    <div className='bg-gray-100 w-full h-[100vh] overscroll-y-hidden '>
-      <div className='text-black overscroll-y-hidden bg-gray-100'>
+    <div className='bg-gray-100 w-full h-[100vh]  '>
+      <div className='text-black  bg-gray-100'>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
-        <div className="flex flex-row items-center justify-between h-10 mx-[8%] bg-gray-100 max-h-full overscroll-y-hidden">
+        <div className="flex flex-row items-center fixed top-0 left-0 right-0  justify-between py-2 h-fit px-4 bg-gray-100 max-h-full overflow-hidden">
         
           {/* Back Button */}
          { (currentPage !== "adMedium" && currentPage !== "") &&  
-         (<button className="mr-4 mt-8 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
+         (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
               dispatch(goBack());
           }}>
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
@@ -278,7 +280,7 @@ export const AdDetails = () => {
           {currentPage === "checkout" ?( 
             <></>
           ): (
-          <div className='mt-8 overscroll-none'>
+          <div className='mt-2'>
             <div className='flex flex-row items-center'>
               <h2 className='font-semibold mb-1 text-gray-800 text-[15px] mx-2'>{adMedium}
               {adType !== "" && greater} {adType}
@@ -289,10 +291,10 @@ export const AdDetails = () => {
           )}
           {/* Shopping Cart Button */}
           {currentPage === "checkout" ?(
-            <button className='border px-2 py-1 h-fit mt-6 max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            <button className='border  px-2 py-1 h-fit mt-6 max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
           ):(
             <button aria-label="cart" 
-            className="relative text-center shadow-sm max-h-10  bg-white mt-8 border border-blue-500 shadow-blue-500 rounded-full p-2"
+            className="relative text-center shadow-sm max-h-10  bg-white mt-2 border border-blue-500 shadow-blue-500 rounded-full p-2"
             onClick={() => dispatch(updateCurrentPage("checkout"))}>
               <StyledBadge badgeContent={cartItems.length} color="primary">
                 <ShoppingCartIcon className='text-black' />
@@ -304,13 +306,13 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className='h-[100vh] overscroll-y-hidden bg-gray-100 mt-2'>
-        <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-full'} overflow-y-auto max-h-[100vh] overflow-x-hidden mx-2`}>
+        <div className='h-[100vh] bg-gray-100'>
+        <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'}  max-h-[100vh] overflow-x-hidden mx-2`}>
 
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
-          <form className='bg-white rounded-t-3xl shadow-2xl pb-16 mt-4 h-fit overflow-y-auto justify-center mx-2'>
+          <form className='bg-white rounded-t-3xl shadow-2xl pb-16 mt-4 h-fit  justify-center mx-2'>
           <h1 className='mb-4 font-semibold text-center text-blue-500 text-lg mt-4'>Client Details</h1>
 
           <table className='mb-6 ml-4'>
