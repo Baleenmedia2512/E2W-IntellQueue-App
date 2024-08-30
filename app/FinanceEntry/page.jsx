@@ -501,7 +501,7 @@ useEffect(() => {
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
     <div className="grid gap-6 " id="form">
-    <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Transaction Manager</h1>
+    <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1>
         <div>
             <label className='block mb-2 text-gray-700 font-semibold'>Transaction Type*</label>
             <div className='flex w-full'>

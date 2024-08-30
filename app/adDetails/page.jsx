@@ -10,7 +10,7 @@ import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
@@ -216,20 +216,10 @@ export const AdDetails = () => {
 
   function showCurrentPage(){
     let showPage = '' 
-    if(currentPage === "adType"){
-      showPage = <AdTypePage />
-    } else if(currentPage === "adCategory" ){
-      showPage = <AdCategoryPage />
-    } else if(currentPage === "edition"){
-      showPage = <EditionPage />
-    } else if(currentPage === "remarks"){
-      showPage = <RemarksPage />
-    } else if(currentPage === "adDetails"){
-      showPage = <AdDetailsPage />
-    } else if(currentPage === "checkout"){
+    if(currentPage === "checkout"){
       showPage = <CheckoutPage />
     } else{
-      showPage = <AdMediumPage />
+      showPage = <AdDetailsPage />
     }
     return showPage;
   }
@@ -264,19 +254,26 @@ export const AdDetails = () => {
   }));
 
   return (
-    <div className='bg-gray-100 w-full h-[100vh]  '>
-      <div className='text-black  bg-gray-100'>
+    <div className='bg-gray-100 w-full h-[100vh] overflow-hidden'>
+      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 ${currentPage === 'checkout' ? 'h-[100vh]' : ''} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
-        <div className="flex flex-row items-center fixed top-0 left-0 right-0  justify-between py-2 h-fit px-4 bg-gray-100 max-h-full overflow-hidden">
+        <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100 ">
+        
+       
         
           {/* Back Button */}
-         { (currentPage !== "adMedium" && currentPage !== "") &&  
-         (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
+         { (currentPage !== "adDetails" && currentPage !== "") ?
+         (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
               dispatch(goBack());
           }}>
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
-         )}
+         ) : 
+         <button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 border px-2 py-1 rounded-lg bg-white" disabled = {rateId} onClick={() => {
+          dispatch(resetQuotesData());
+          }}>
+        <FontAwesomeIcon icon={faClose} className=' text-md' /> Clear
+      </button>}
           {currentPage === "checkout" ?( 
             <></>
           ): (
@@ -291,7 +288,15 @@ export const AdDetails = () => {
           )}
           {/* Shopping Cart Button */}
           {currentPage === "checkout" ?(
-            <button className='border  px-2 py-1 h-fit mt-6 max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            <div className='flex flex-row justify-center items-center'>
+            <button
+              className="bg-green-500 text-white p-1.5 rounded-lg transition-all duration-300 ease-in-out hover:bg-blue-200 hover:text-black"
+              onClick={handlePdfGeneration}
+            >
+              Download Quote
+            </button>
+            <button className='border ml-2 p-1.5 h-fit max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            </div>
           ):(
             <button aria-label="cart" 
             className="relative text-center shadow-sm max-h-10  bg-white mt-2 border border-blue-500 shadow-blue-500 rounded-full p-2"
@@ -306,9 +311,8 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className='h-[100vh] bg-gray-100'>
+        <div className={`h-[100vh] bg-gray-100`}>
         <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'}  max-h-[100vh] overflow-x-hidden mx-2`}>
-
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
@@ -355,16 +359,6 @@ export const AdDetails = () => {
               ))}</select></td>
             </tr>
           </table>
-          <div className='flex flex-col justify-center items-center'>
-
-            <button
-              className="bg-blue-500 text-white px-4 py-1 mb-4 rounded-xl transition-all duration-300 ease-in-out hover:bg-blue-200 hover:text-black"
-              onClick={handlePdfGeneration}
-            >
-              Download Quote
-            </button>
-            
-          </div>
           </form>
           
         )}
