@@ -108,7 +108,7 @@ const handleLogin = (event) => {
 
                     // Dispatch actions and navigate based on conditions
                     dispatch(setDBName(companyName));
-                    dispatch(setCompanyName('Baleen Test'))
+                    // dispatch(setCompanyName('Baleen Test'))
                     dispatch(login(userName));
                     
                     dispatch(setAppRights(data.appRights));
@@ -252,7 +252,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.6.18
+                        Version 1.6.0
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
