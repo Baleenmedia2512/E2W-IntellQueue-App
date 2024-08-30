@@ -1302,13 +1302,13 @@ return (
     <div className="flex items-center justify-between">
     <div>
       <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Manager</h2>
-      
+      <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
       {/* Conditional text based on isOrderUpdate */}
       <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
       {isOrderUpdate ? (
           <>Updating order number: <strong>{orderNumberRP}</strong></>
         ) : (
-          'Place your orders here'
+          <div></div>
         )}
       </p>
     </div>
@@ -1362,7 +1362,7 @@ return (
 
 
     {/* Order Selection */}
-    <div className="bg-white p-4 rounded-lg shadow-lg">
+    <div className="bg-white p-4 mt-2 rounded-lg shadow-lg">
       <form className="space-y-4">
       <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Select Your Order</h3>
           {/* Client Name */}
