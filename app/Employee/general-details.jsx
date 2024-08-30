@@ -25,7 +25,7 @@ const GeneralDetailsPage = () => {
     { label: 'Other', value: 'Other' },
   ];
   const options = [
-    { label: 'Admin', value: 'Admin' },
+    { label: 'Administrate', value: 'Admin' },
     { label: 'Finance', value: 'Finance' },
     { label: 'Management', value: 'Management' },
     { label: 'General', value: 'General' },
@@ -342,70 +342,85 @@ const handleSubmit = async (event) => {
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
-    <div className="w-full max-w-7xl">
-    <h1 className="text-3xl font-bold text-left text-blue-600 mb-4">User Manager</h1>
+     <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl"> {/* Reduced max-width on larger screens */}
+      
+       <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-3xl font-bold text-left text-blue-600">User Manager</h2>
+          <p className="text-gray-400 text-sm text-left">Please fill in the following details</p>
+        </div>
+        {/* Button container */}
+        <div>
+          <button
+            type="submit"
+            onClick={postGeneralDetails}
+            className="px-6 py-3 text-xs uppercase tracking-wider font-medium text-white bg-[#23c483] rounded-full shadow-md transition-transform duration-300 ease-in-out hover:bg-[#2376c4] hover:shadow-lg hover:translate-y-[-7px] active:translate-y-[-1px] focus:outline-none"
+          >
+            Create
+          </button>
+        </div>
+      </div>
       {/* Decorative Border */}
-    <div className="border-2 w-10 border-blue-500 mb-6"></div>
-      <div className="bg-white p-8 rounded-lg shadow-lg space-y-4">
+      <div className="border-2 w-10 border-blue-500 mb-6"></div>
+      <div className="bg-white p-8 md:p-12 rounded-lg shadow-lg space-y-4">
         <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
           
           {/* General Details Section */}
           <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
-            <h2 className="text-2xl font-bold text-blue-500 mb-2 text-left">General Details</h2>
-            {/* <p className="text-gray-400 text-sm mb-4 text-left">Please fill in the following details</p> */}
+            <h3 className="text-2xl font-bold text-blue-500 mb-2 text-left">General Details</h3>
+            
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
-
   
             <form className="space-y-6">
-              {/* Name, Sex, Date of Birth */}
+              {/* Name, Sex */}
               <div className="flex flex-wrap -mx-4 mb-4">
-                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
                   <label htmlFor="name" className="block mb-1 text-black font-medium">Name</label>
                   <input
                     type="text"
                     id="name"
                     name="name"
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.name ? 'border-red-500' : ''}`}
-                    placeholder="Eg:john"
+                    placeholder="Eg: John"
                     value={generalDetails.name}
                     onChange={handleInputChange}
                   />
                   {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                 </div>
   
-                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-                <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
-                <Dropdown
-                  id="sex"
-                  name="sex"
-                  value={generalDetails.sex}
-                  options={sexOptions}
-                  onChange={handleInputChange}
-                  placeholder="Select your sex"
-                  className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.sex ? 'border-red-500' : ''}`} 
-                />
-                {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
+                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+                  <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
+                  <Dropdown
+                    id="sex"
+                    name="sex"
+                    value={generalDetails.sex}
+                    options={sexOptions}
+                    onChange={handleInputChange}
+                    placeholder="Select your sex"
+                    className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.sex ? 'border-red-500' : ''}`} 
+                  />
+                  {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
+                </div>
               </div>
   
-              <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
-              <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
-              <Calendar
-                id="dob"
-                name="dob"
-                value={generalDetails.dob}
-                onChange={onDateChange}
-                dateFormat="dd/mm/yy" // PrimeReact Calendar format
-                placeholder="dd/mm/yyyy"
-                className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 ${errors.dob ? 'p-invalid border-red-500' : ''}`} 
-                inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400" // Tailwind styling for the input box
-                showIcon // Shows a calendar icon within the input box
-              />
-              {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
-            </div>
-              </div>
-  
-              {/* Phone Number, Email */}
+              {/* Date of Birth, Phone Number, Email */}
               <div className="flex flex-wrap -mx-4 mb-4">
+                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+                  <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
+                  <Calendar
+                    id="dob"
+                    name="dob"
+                    value={generalDetails.dob}
+                    onChange={onDateChange}
+                    dateFormat="dd/mm/yy"
+                    placeholder="dd/mm/yyyy"
+                    className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 ${errors.dob ? 'p-invalid border-red-500' : ''}`} 
+                    inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400" 
+                    showIcon 
+                  />
+                  {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
+                </div>
+  
                 <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
                   <label htmlFor="phone" className="block mb-1 text-black font-medium">Phone Number</label>
                   <input
@@ -413,10 +428,10 @@ const handleSubmit = async (event) => {
                     id="phone"
                     name="phone"
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.phone ? 'border-red-500' : ''}`}
-                    placeholder="Eg:1234567890"
+                    placeholder="Eg: 1234567890"
                     value={generalDetails.phone}
                     onChange={handlePhoneChange}
-                    maxLength="10" // Optional: Prevents entering more than 10 digits
+                    maxLength="10"
                   />
                   {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                 </div>
@@ -428,7 +443,7 @@ const handleSubmit = async (event) => {
                     id="email"
                     name="email"
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.email ? 'border-red-500' : ''}`}
-                    placeholder="Eg:john@gmail.com"
+                    placeholder="Eg: john@gmail.com"
                     value={generalDetails.email}
                     onChange={handleInputChange}
                   />
@@ -440,7 +455,7 @@ const handleSubmit = async (event) => {
   
           {/* Login Credentials Section */}
           <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
-            <h2 className="text-2xl font-bold text-blue-500 mb-2 text-left">Login Credentials</h2>
+            <h3 className="text-2xl font-bold text-blue-500 mb-2 text-left">Login Credentials</h3>
             {/* <p className="text-gray-400 text-sm mb-4 text-left">Please enter your login credentials</p> */}
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
@@ -504,15 +519,16 @@ const handleSubmit = async (event) => {
                 </div>
               </div>
   
-              <div className="flex justify-end mt-6">
-                <button
-                  type="submit"
-                  onClick={postGeneralDetails}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg"
-                >
-                  Create
-                </button>
-              </div>
+              {/* <div className="flex justify-end mt-6">
+              <button
+                type="submit"
+                onClick={postGeneralDetails}
+                className="px-6 py-3 text-xs uppercase tracking-wider font-medium text-white bg-[#23c483] rounded-full shadow-md transition-transform duration-300 ease-in-out hover:bg-[#2376c4] hover:shadow-lg hover:translate-y-[-7px] active:translate-y-[-1px] focus:outline-none"
+              >
+                Create
+              </button>
+            </div> */}
+
             </form>
           </div>
         </div>
