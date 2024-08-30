@@ -10,7 +10,7 @@ import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
@@ -268,7 +268,12 @@ export const AdDetails = () => {
           }}>
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
-         ) : <div></div>}
+         ) : 
+         <button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 border px-2 py-1 rounded-lg bg-white" disabled = {rateId} onClick={() => {
+          dispatch(resetQuotesData());
+          }}>
+        <FontAwesomeIcon icon={faClose} className=' text-md' /> Clear
+      </button>}
           {currentPage === "checkout" ?( 
             <></>
           ): (

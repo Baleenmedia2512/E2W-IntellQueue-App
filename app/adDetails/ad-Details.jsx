@@ -855,7 +855,7 @@ const AdDetailsPage = () => {
                       }}
                       onFocus={(e) => e.target.select()}
                     />
-                    <label className="text-center mt-2 ml-2 ">{unit}</label>
+                    <label className="justify-center mt-2 ml-2 ">{unit ? unit : 'Unit'}</label>
                   </div>
                   <p className="text-red-700">{qty < qtySlab.Qty ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
                 </div>
@@ -930,7 +930,7 @@ const AdDetailsPage = () => {
                         onFocus={(e) => e.target.select()}
                       />
                       {/* <div className="relative"> */}
-                      <label className="text-center mt-2 ml-5">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
+                      <label className="text-center mt-2 ml-2">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
 
                       {/* </div> */}
                     </div>
