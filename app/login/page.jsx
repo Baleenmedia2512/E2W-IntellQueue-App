@@ -177,6 +177,7 @@ const handleLogin = (event) => {
                                 type="text"
                                 placeholder="Enter your username"
                                 value={userName}
+                                onFocus={e => e.target.select()}
                                 onChange={(e) => setUserName(e.target.value)}
                             />
                             {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
@@ -192,6 +193,7 @@ const handleLogin = (event) => {
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Enter your password"
                                     value={password}
+                                    onFocus={e => e.target.select()}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                                 <button
@@ -218,6 +220,7 @@ const handleLogin = (event) => {
                                 type="text"
                                 placeholder="Enter your company name"
                                 value={companyName}
+                                onFocus={e => e.target.select()}
                                 onChange={handleSearchTermChange}
                             />
                             {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}

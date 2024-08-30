@@ -25,7 +25,11 @@ const initialState = {
   isDetails: false,
   previousPage: '',
   history: [],
-  rateGST: ""
+  rateGST: "",
+  qtySlab: {
+    Qty: 1,
+    Width: 1
+  }
 };
 
 export const quoteSlice = createSlice({
@@ -40,6 +44,10 @@ export const quoteSlice = createSlice({
     },
     addValidRates: (state, action) => {
       state.validRates.push(action.payload);
+    },
+    setQtySlab: (state, action) => {
+      state.qtySlab.Qty = action.payload.Qty;
+      state.qtySlab.Width = action.payload.Width;
     },
     removeValidRates: (state, action) => {
       state.validRates = []
@@ -64,5 +72,5 @@ export const quoteSlice = createSlice({
 }
 });
 
-export const { setQuotesData, resetQuotesData, addValidRates, removeValidRates, goBack, updateCurrentPage } = quoteSlice.actions;
+export const { setQuotesData, resetQuotesData, addValidRates, removeValidRates, goBack, updateCurrentPage, setQtySlab } = quoteSlice.actions;
 export const quoteReducer = quoteSlice.reducer;
