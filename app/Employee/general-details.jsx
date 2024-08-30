@@ -1,9 +1,5 @@
 // pages/Employee/general-details.jsx
 'use client';
-import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
-import { setGeneralDetails, setCurrentPage } from '@/redux/features/emp-slice'; // Import your actions
-import TabNavigation from './components/TabNavigation';
 import React, { useState } from 'react';
 import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
@@ -46,74 +42,6 @@ const GeneralDetailsPage = () => {
   });
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errors, setErrors] = useState({});
-//VALIDATION 1--------------------------------SK-----START------
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-  
-  //   // Allow only numeric input for the phone number
-  //   if (name === 'phone') {
-  //     const numericValue = value.replace(/\D/g, ''); // Remove non-numeric characters
-  //     setGeneralDetails((prevDetails) => ({ ...prevDetails, [name]: numericValue }));
-  //   } else {
-  //     setGeneralDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
-  //   }
-  // };
-  // const validateGeneralDetails = () => {
-  //   const newErrors = {};
-  
-  //   // Validate Name
-  //   if (!generalDetails.name) newErrors.name = 'Please fill the required field';
-  //   if (generalDetails.name.length > 50) newErrors.name = 'Name cannot exceed 50 characters';
-  
-  //   // Validate Email
-  //   if (!generalDetails.email) newErrors.email = 'Please fill the required field';
-  //   if (!/\S+@\S+\.\S+/.test(generalDetails.email)) newErrors.email = 'Email must be a valid format (e.g., example@gmail.com)';
-  
-  //  // Validate Phone Number
-  //   if (!generalDetails.phone) {
-  //     newErrors.phone = 'Please fill the required field';
-  //   } else if (!/^\d{10}$/.test(generalDetails.phone)) {
-  //     newErrors.phone = 'Phone number must be exactly 10 digits';
-  //   }
-
-  //   // Validate Date of Birth
-  //   if (!generalDetails.dob) newErrors.dob = 'Please select your date of birth';
-  //   else if (new Date(generalDetails.dob) > new Date()) newErrors.dob = 'Date of birth cannot be in the future';
-  
-  //   // Validate Sex
-  //   if (!generalDetails.sex) newErrors.sex = 'Please select your sex';
-  
-  //   // Validate Username
-  //   if (!generalDetails.username) newErrors.username = 'Please fill the required field';
-  //   if (generalDetails.username.length < 3) newErrors.username = 'Username must be at least 3 characters long';
-  
-  //   // Validate Password
-  //   if (!generalDetails.password) newErrors.password = 'Please fill the required field';
-  //   if (generalDetails.password.length < 6) newErrors.password = 'Password must be at least 6 characters long';
-  
-  //   // Validate App Rights
-  //   if (!generalDetails.appRights) newErrors.appRights = 'Please select app rights';
-  
-  //   return newErrors;
-  // };
-  
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  
-  //   // Validate the form
-  //   const validationErrors = validateGeneralDetails();
-  //   if (Object.keys(validationErrors).length > 0) {
-  //     setErrors(validationErrors);
-  //     return;
-  //   }
-  //   console.log(generalDetails.name)
-  //   console.log(generalDetails.sex)
-  //   console.log(generalDetails.dob)
-  //   console.log(generalDetails.phone)
-  //   console.log(generalDetails.email)
-  // };
-  //VALIDATION 1--------------------------------SK-----END------
   const handlePhoneChange = (event) => {
     const { name, value } = event.target;
 
@@ -154,7 +82,7 @@ const GeneralDetailsPage = () => {
     });
 
     // Clear the username status
-    //setUsernameStatus('', '');
+    setUsernameStatus('', '');
 };
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -189,13 +117,14 @@ const validateField = async (name, value) => {
           }
           break;
 
-      case 'email':
-          if (!value) {
-              error = 'Please fill the required field';
-          } else if (!/\S+@\S+\.\S+/.test(value)) {
-              error = 'Email must be a valid format (e.g., example@gmail.com)';
-          }
-          break;
+          case 'email':
+            if (!value) {
+                error = 'Please fill the required field';
+            } else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{3,}$/.test(value)) {
+                error = 'Email must be a valid format (e.g., example@gmail.com)';
+            }
+            break;
+        
 
       case 'phone':
           if (!value) {
@@ -265,8 +194,8 @@ const validateField = async (name, value) => {
       ...prevErrors,
       [name]: error
   }));
+  return error; // Return the error for this specific field
 };
-
 
 // Function to update the username status UI
 const setUsernameStatus = (color, message) => {
@@ -276,9 +205,6 @@ const setUsernameStatus = (color, message) => {
       statusElement.innerText = message;
   }
 };
-
-
-
 // Helper function to check if the username is available
 const checkUsernameAvailability = async (username) => {
   try {
@@ -295,43 +221,76 @@ const checkUsernameAvailability = async (username) => {
       return { available: false, message: "Error checking username availability" }; // Default to not available if an error occurs
   }
 };
+const validateFields = () => {
+  const errors = {};
 
+  // Check if each field is empty or has specific validation errors
+  if (!generalDetails.name) {
+      errors.name = 'Name is required';
+  } else if (generalDetails.name.length < 3) {
+      errors.name = 'Name must be at least 3 characters long';
+  } else if (generalDetails.name.length > 50) {
+      errors.name = 'Name cannot exceed 50 characters';
+  }
 
+  if (!generalDetails.sex) {
+      errors.sex = 'Sex is required';
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Perform a full validation
-    const validationErrors = validateField();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    console.log(generalDetails.name)
-    console.log(generalDetails.sex)
-    console.log(generalDetails.dob)
-    console.log(generalDetails.phone)
-    console.log(generalDetails.email)
-    console.log(generalDetails.username)
-    console.log(generalDetails.password)
-    console.log(generalDetails.appRights)
-    // Submit the form if no errors
-    // Your form submission logic here
-  };
-  const validateFields  = () => {
-    const newErrors = {};
-  
-    validateField('name', generalDetails.name);
-    validateField('email', generalDetails.email);
-    validateField('phone', generalDetails.phone);
-    validateField('dob', generalDetails.dob);
-    validateField('sex', generalDetails.sex);
-    validateField('username', generalDetails.username);
-    validateField('password', generalDetails.password);
-    validateField('appRights', generalDetails.appRights);
-  
-    return newErrors;
-  };
+  if (!generalDetails.dob) {
+      errors.dob = 'Date of Birth is required';
+  } else if (new Date(generalDetails.dob) > new Date()) {
+      errors.dob = 'Date of birth cannot be in the future';
+  }
+
+  if (!generalDetails.phone) {
+      errors.phone = 'Phone number is required';
+  } else if (!/^\d{10}$/.test(generalDetails.phone)) {
+      errors.phone = 'Phone number must be exactly 10 digits';
+  }
+
+  if (!generalDetails.email) {
+    errors.email = 'Email is required';
+} else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{3,}$/.test(generalDetails.email)) {
+    errors.email = 'Email must be a valid format (e.g., example@gmail.com)';
+}
+
+  if (!generalDetails.username) {
+      errors.username = 'Username is required';
+  } else if (generalDetails.username.length < 3) {
+      errors.username = 'Username must be at least 3 characters long';
+  }
+
+  if (!generalDetails.password) {
+      errors.password = 'Password is required';
+  } else if (generalDetails.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters long';
+  }
+
+  if (!generalDetails.appRights) {
+      errors.appRights = 'App Rights selection is required';
+  }
+
+  return errors;
+};
+// This function will be called on form submission
+const handleSubmit = async (event) => {
+  event.preventDefault(); // Prevent default form submission
+
+  // Validate fields
+  const fieldErrors = validateFields();
+  setErrors(fieldErrors); // Set general errors
+
+  // Check if there are any errors
+  if (Object.keys(fieldErrors).length > 0) {
+      // Display the errors if any
+      setErrors(fieldErrors);
+  } else {
+      // Proceed with form submission
+      //console.log('Form is valid, submitting:', generalDetails);
+      // Perform the submission logic here, e.g., API call
+  }
+};
   
   const postGeneralDetails = async (event) => {
     event.preventDefault();
@@ -393,7 +352,7 @@ const checkUsernameAvailability = async (username) => {
           {/* General Details Section */}
           <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
             <h2 className="text-2xl font-bold text-blue-500 mb-2 text-left">General Details</h2>
-            <p className="text-gray-400 text-sm mb-4 text-left">Please fill in the following details</p>
+            {/* <p className="text-gray-400 text-sm mb-4 text-left">Please fill in the following details</p> */}
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
   
