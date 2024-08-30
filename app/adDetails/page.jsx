@@ -27,8 +27,9 @@ export const AdDetails = () => {
   const dispatch = useDispatch();
   const clientNameRef = useRef(null);
   const clientContactRef = useRef(null);
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test';
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
   const [isClientContact, setIsClientContact] = useState(true);
@@ -50,7 +51,7 @@ export const AdDetails = () => {
 
   useEffect(() => {
     if (!username || dbName === "") {
-      router.push('/login');
+      routers.push('/login');
     }
       
   }, []);
