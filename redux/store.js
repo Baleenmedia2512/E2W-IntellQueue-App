@@ -32,7 +32,7 @@ const storage =
 const authPersistConfig = {
   key: "auth",
   storage: storage,
-  whitelist: ["userName", "companyName", "appRights"], // Update to correct slice name
+  whitelist: ["userName", "companyName", "appRights", "dbName"], // Update to correct slice name
 };
 
 const clientPersistConfig = {
@@ -44,7 +44,7 @@ const clientPersistConfig = {
 const quotePersistConfig = {
   key: "quote",
   storage: storage,
-  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId", "previousPage", "history"]
+  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId", "previousPage", "history", "width", "qtySlab"]
 }
 
 const cartPersistConfig = {

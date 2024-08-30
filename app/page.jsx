@@ -29,8 +29,7 @@ const titleOptions = [
     
 const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
-  const dbName = useAppSelector(state => state.authSlice.companyName);
-  // const companyName = "Baleen Test";
+  const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
@@ -307,7 +306,7 @@ const ClientsData = () => {
   };
 
   useEffect(() => {    
-        if (!loggedInUser) {
+        if (!loggedInUser || dbName === "") {
           router.push('/login');
         }
         
@@ -322,7 +321,9 @@ const ClientsData = () => {
         // MP-72-Fix - Source is empty on start up.
 
         dispatch(setClientData({clientSource: sources[0]}))
-        elementsToHideList()
+        if(dbName){
+          elementsToHideList()
+        }
   }, []);
 
   useEffect(() => {
@@ -947,11 +948,13 @@ const BMvalidateFields = () => {
   };
 
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-2">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
-        <h2 className="text-2xl font-bold text-blue-500 mb-1">Client Manager</h2>
-        <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
+      <div className="items-center justify-center min-h-screen bg-gray-100 mb-14 p-2">
+        <h2 className="text-2xl mt-2 font-bold text-blue-500 mb-1">Client Manager</h2>
         <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
+        
+        {/* <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p> */}
+        
         {!isNewClient && clientID && (
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 

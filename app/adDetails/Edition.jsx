@@ -24,7 +24,6 @@ const EditionPage = () => {
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
-  // const companyName = 'Baleen Test'
   const cartItems = useAppSelector(state => state.cartSlice.cart);
 
   const companyName = useAppSelector(state => state.authSlice.companyName);

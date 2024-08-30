@@ -122,6 +122,12 @@ const Report = () => {
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
+
+    useEffect(()=>{
+      if (!username || dbName === "") {
+        router.push('/login');
+      }
+    },[])
     
     useEffect(() => {
         fetchMarginAmount();

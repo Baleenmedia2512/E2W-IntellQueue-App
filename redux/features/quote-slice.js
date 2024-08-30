@@ -9,6 +9,7 @@ const initialState = {
   selectedVendor: {label: "", value: ""},
   selectedSlab: "",
   quantity: 1,
+  width: 1,
   ratePerUnit: 0,
   unit: "",
   rateId: 0,
@@ -19,11 +20,16 @@ const initialState = {
   marginAmount: 0,
   extraDiscount: 0,
   remarks: "",
-  currentPage: "adMedium",
+  currentPage: "adDetails",
   validRates: [],
   isDetails: false,
   previousPage: '',
-  history: []
+  history: [],
+  rateGST: "",
+  qtySlab: {
+    Qty: 1,
+    Width: 1
+  }
 };
 
 export const quoteSlice = createSlice({
@@ -38,6 +44,10 @@ export const quoteSlice = createSlice({
     },
     addValidRates: (state, action) => {
       state.validRates.push(action.payload);
+    },
+    setQtySlab: (state, action) => {
+      state.qtySlab.Qty = action.payload.Qty;
+      state.qtySlab.Width = action.payload.Width;
     },
     removeValidRates: (state, action) => {
       state.validRates = []
@@ -62,5 +72,5 @@ export const quoteSlice = createSlice({
 }
 });
 
-export const { setQuotesData, resetQuotesData, addValidRates, removeValidRates, goBack, updateCurrentPage } = quoteSlice.actions;
+export const { setQuotesData, resetQuotesData, addValidRates, removeValidRates, goBack, updateCurrentPage, setQtySlab } = quoteSlice.actions;
 export const quoteReducer = quoteSlice.reducer;

@@ -28,7 +28,6 @@ const matchModes = [
 
 
 export default function GroupedRowsDemo() {
-    // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
@@ -66,7 +65,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
             const constData = response.data;
             // Extract all order numbers
             const allOrderNumbers = constData.map(item => item.OrderNumbers);
@@ -1060,11 +1059,9 @@ const handleClose = () => {
                             showApplyButton={false}
                             showClearButton={false}
                             ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 text-nowrap border-r-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
                             ></Column>
-                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
-                            ></Column>
-                            <Column field="price" header="Unit Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
+                            <Column field="price" header="Unit Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
                             ></Column>
                             <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
