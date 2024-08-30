@@ -193,7 +193,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
       (i + quoteNumber).toString(), item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" : item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2,item.remarks ? item.remarks : 'NA'
     ].filter(Boolean))
 
-    const headerColumns = [['S.No.', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size (in SCM)' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Price Per ${isNewspaper ? 'SCM' : 'Qty'} (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (incl. GST) (in Rs.)", "Lead Days","Remarks"].filter(Boolean)];
+    const headerColumns = [['Quote Number', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size (in SCM)' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Price Per ${isNewspaper ? 'SCM' : 'Qty'} (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (incl. GST) (in Rs.)", "Lead Days","Remarks"].filter(Boolean)];
 
     let columnWidths = {
       'Quote.No.': 45,

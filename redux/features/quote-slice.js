@@ -20,7 +20,7 @@ const initialState = {
   marginAmount: 0,
   extraDiscount: 0,
   remarks: "",
-  currentPage: "adMedium",
+  currentPage: "adDetails",
   validRates: [],
   isDetails: false,
   previousPage: '',

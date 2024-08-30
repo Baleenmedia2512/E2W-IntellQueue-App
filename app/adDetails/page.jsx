@@ -216,20 +216,10 @@ export const AdDetails = () => {
 
   function showCurrentPage(){
     let showPage = '' 
-    if(currentPage === "adType"){
-      showPage = <AdTypePage />
-    } else if(currentPage === "adCategory" ){
-      showPage = <AdCategoryPage />
-    } else if(currentPage === "edition"){
-      showPage = <EditionPage />
-    } else if(currentPage === "remarks"){
-      showPage = <RemarksPage />
-    } else if(currentPage === "adDetails"){
-      showPage = <AdDetailsPage />
-    } else if(currentPage === "checkout"){
+    if(currentPage === "checkout"){
       showPage = <CheckoutPage />
     } else{
-      showPage = <AdMediumPage />
+      showPage = <AdDetailsPage />
     }
     return showPage;
   }
@@ -272,13 +262,13 @@ export const AdDetails = () => {
        
         
           {/* Back Button */}
-         { (currentPage !== "adMedium" && currentPage !== "") &&  
-         (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
+         { (currentPage !== "adDetails" && currentPage !== "") ?
+         (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
               dispatch(goBack());
           }}>
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
-         )}
+         ) : <div></div>}
           {currentPage === "checkout" ?( 
             <></>
           ): (
@@ -293,7 +283,15 @@ export const AdDetails = () => {
           )}
           {/* Shopping Cart Button */}
           {currentPage === "checkout" ?(
-            <button className='border  px-2 py-1 h-fit mt-6 max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            <div className='flex flex-row justify-center items-center'>
+            <button
+              className="bg-green-500 text-white p-1.5 rounded-lg transition-all duration-300 ease-in-out hover:bg-blue-200 hover:text-black"
+              onClick={handlePdfGeneration}
+            >
+              Download Quote
+            </button>
+            <button className='border ml-2 p-1.5 h-fit max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            </div>
           ):(
             <button aria-label="cart" 
             className="relative text-center shadow-sm max-h-10  bg-white mt-2 border border-blue-500 shadow-blue-500 rounded-full p-2"
@@ -310,7 +308,6 @@ export const AdDetails = () => {
         {/* Form and Current Page Content */}
         <div className={`h-[100vh] bg-gray-100`}>
         <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'}  max-h-[100vh] overflow-x-hidden mx-2`}>
-
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
@@ -357,16 +354,6 @@ export const AdDetails = () => {
               ))}</select></td>
             </tr>
           </table>
-          <div className='flex flex-col justify-center items-center'>
-
-            <button
-              className="bg-blue-500 text-white px-4 py-1 mb-4 rounded-xl transition-all duration-300 ease-in-out hover:bg-blue-200 hover:text-black"
-              onClick={handlePdfGeneration}
-            >
-              Download Quote
-            </button>
-            
-          </div>
           </form>
           
         )}

@@ -144,12 +144,12 @@ const CheckoutPage = () => {
               <button className='border px-2 py-1 h-fit bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
               </>
           </div> */}
-          <h1 className="text-lg font-medium text-blue-500 mb-4">Verify before sending Quote</h1>
+          {/* <h1 className="text-lg font-medium text-blue-500 mb-4">Verify before sending Quote</h1> */}
           <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
             
             <div>
               
-              <h1 className='mb-4 font-bold text-center'>AD Details</h1>
+              {/* <h1 className='mb-4 font-bold text-center'>AD Details</h1> */}
                 <div className='overflow-x-auto'>
               <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
         <thead>
