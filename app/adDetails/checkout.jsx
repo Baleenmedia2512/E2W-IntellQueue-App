@@ -71,8 +71,8 @@ const CheckoutPage = () => {
 
   const routers = useRouter();
 
-  const   handleRemoveRateId = (rateId) => {
-    dispatch(removeItem(rateId));
+  const   handleRemoveRateId = (index) => {
+    dispatch(removeItem(index));
   };
 
   useEffect(() => {
@@ -159,6 +159,7 @@ const CheckoutPage = () => {
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Type</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Category</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Edition</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Package</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>
@@ -175,6 +176,7 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
               <td className='p-1.5 border border-gray-200'>{item.edition}</td>
+              <td className='p-1.5 border border-gray-200'>{item.position}</td>
               <td className='p-1.5 border border-gray-200'>{item.unit === "SCM" ? item.width + "W" + " x " + item.qty + "H" : item.qty} {item.unit}</td>
               <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
               <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
@@ -183,7 +185,7 @@ const CheckoutPage = () => {
                 ₹ {formattedRupees(((item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))}</td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
-                  onClick={() => handleRemoveRateId(item.rateId)}
+                  onClick={() => handleRemoveRateId(index)}
                 >
                   <RemoveCircleOutline color='primary' fontSize='small'/>
                 </IconButton>
@@ -195,7 +197,7 @@ const CheckoutPage = () => {
       {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
       </div>
       <div className='flex justify-center mt-4'>
-        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adMedium', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
+        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adDetails', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
       </div>
               
             </div>
@@ -227,7 +229,7 @@ const CheckoutPage = () => {
             <label className='font-800 text-xl'> Oops! No Items in Cart</label>
             <span className='flex flex-row justify-center mt-4'>
             <label className='ml-2 text-xl'>
-              <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adMedium", previousPage: "checkout"}))}>Add Items </button>
+              <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adDetails", previousPage: "checkout"}))}>Add Items </button>
               &nbsp; in cart to generate quote</label>
             </span>
           </div>

@@ -364,9 +364,13 @@ const AdDetailsPage = () => {
     if (isValid) {
       const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
     if (isDuplicate) {
+      
+      let result = window.confirm("The item is already in the cart! Do you still want to Proceed?");
       // Display an error message or handle the duplicate case
-      dispatch(updateCurrentPage("checkout"));
-      return;
+      //dispatch(updateCurrentPage("checkout"));
+      if(!result){
+        return;
+      }
     }
 
     if (qty === '' || campaignDuration === '' || margin === '') {
@@ -386,7 +390,9 @@ const AdDetailsPage = () => {
     }
     else {
       Cookies.set('isAdDetails', true);
-      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility, rateGST, width}]))
+      const index = cartItems.length
+      console.log(index)
+      dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility, rateGST, width}]))
       dispatch(setQuotesData({isDetails: true}))
       dispatch(updateCurrentPage("checkout"))
       //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
@@ -768,11 +774,25 @@ const AdDetailsPage = () => {
                         const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
                         if (isDuplicate) {
                           // Display an error message or handle the duplicate case
-                          alert("This item is already in the cart.");
+                          let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
+                          if(result){
+                            const index = cartItems.length
+                            console.log(index)
+                            dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}]));
+                            setSuccessMessage("Item added to Cart");
+                            setTimeout(() => {
+                              setSuccessMessage('');
+                            }, 2000);
+                            // dispatch(updateCurrentPage("checkout"))
+                          }
                           return;
                         }
-                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}]));
+                        const index = cartItems.length
+                        dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}]));
                         setSuccessMessage("Item added to Cart");
+                        setTimeout(() => {
+                          setSuccessMessage('');
+                        }, 2000);
                       } else {
                         setToastMessage('Please fill the necessary details in the form.');
                         setSeverity('error');
