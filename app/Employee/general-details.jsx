@@ -1,9 +1,5 @@
 // pages/Employee/general-details.jsx
 'use client';
-import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
-import { setGeneralDetails, setCurrentPage } from '@/redux/features/emp-slice'; // Import your actions
-import TabNavigation from './components/TabNavigation';
 import React, { useState } from 'react';
 import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
@@ -13,6 +9,7 @@ import 'primeicons/primeicons.css';
 import { useAppSelector } from '@/redux/store';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { format } from 'date-fns';
 
 const GeneralDetailsPage = () => {
   const [severity, setSeverity] = useState('');
@@ -45,74 +42,48 @@ const GeneralDetailsPage = () => {
   });
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errors, setErrors] = useState({});
-//VALIDATION 1--------------------------------SK-----START------
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-  
-  //   // Allow only numeric input for the phone number
-  //   if (name === 'phone') {
-  //     const numericValue = value.replace(/\D/g, ''); // Remove non-numeric characters
-  //     setGeneralDetails((prevDetails) => ({ ...prevDetails, [name]: numericValue }));
-  //   } else {
-  //     setGeneralDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
-  //   }
-  // };
-  // const validateGeneralDetails = () => {
-  //   const newErrors = {};
-  
-  //   // Validate Name
-  //   if (!generalDetails.name) newErrors.name = 'Please fill the required field';
-  //   if (generalDetails.name.length > 50) newErrors.name = 'Name cannot exceed 50 characters';
-  
-  //   // Validate Email
-  //   if (!generalDetails.email) newErrors.email = 'Please fill the required field';
-  //   if (!/\S+@\S+\.\S+/.test(generalDetails.email)) newErrors.email = 'Email must be a valid format (e.g., example@gmail.com)';
-  
-  //  // Validate Phone Number
-  //   if (!generalDetails.phone) {
-  //     newErrors.phone = 'Please fill the required field';
-  //   } else if (!/^\d{10}$/.test(generalDetails.phone)) {
-  //     newErrors.phone = 'Phone number must be exactly 10 digits';
-  //   }
+  const handlePhoneChange = (event) => {
+    const { name, value } = event.target;
 
-  //   // Validate Date of Birth
-  //   if (!generalDetails.dob) newErrors.dob = 'Please select your date of birth';
-  //   else if (new Date(generalDetails.dob) > new Date()) newErrors.dob = 'Date of birth cannot be in the future';
-  
-  //   // Validate Sex
-  //   if (!generalDetails.sex) newErrors.sex = 'Please select your sex';
-  
-  //   // Validate Username
-  //   if (!generalDetails.username) newErrors.username = 'Please fill the required field';
-  //   if (generalDetails.username.length < 3) newErrors.username = 'Username must be at least 3 characters long';
-  
-  //   // Validate Password
-  //   if (!generalDetails.password) newErrors.password = 'Please fill the required field';
-  //   if (generalDetails.password.length < 6) newErrors.password = 'Password must be at least 6 characters long';
-  
-  //   // Validate App Rights
-  //   if (!generalDetails.appRights) newErrors.appRights = 'Please select app rights';
-  
-  //   return newErrors;
-  // };
-  
+    // Filter out non-numeric characters
+    const numericValue = value.replace(/[^0-9]/g, '');
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  
-  //   // Validate the form
-  //   const validationErrors = validateGeneralDetails();
-  //   if (Object.keys(validationErrors).length > 0) {
-  //     setErrors(validationErrors);
-  //     return;
-  //   }
-  //   console.log(generalDetails.name)
-  //   console.log(generalDetails.sex)
-  //   console.log(generalDetails.dob)
-  //   console.log(generalDetails.phone)
-  //   console.log(generalDetails.email)
-  // };
-  //VALIDATION 1--------------------------------SK-----END------
+    // Set the phone number in state
+    setGeneralDetails(prevDetails => ({
+        ...prevDetails,
+        [name]: numericValue
+    }));
+
+    // Validate the phone number
+    let error = '';
+    if (numericValue.length === 0) {
+        error = 'Please fill the required field';
+    } else if (numericValue.length !== 10) {
+        error = 'Phone number must be exactly 10 digits';
+    }
+
+    // Update errors state
+    setErrors(prevErrors => ({
+        ...prevErrors,
+        phone: error
+    }));
+};
+
+  const handleResetGeneralDetails = () => {
+    setGeneralDetails({
+        name: '',
+        sex: '',
+        appRights: '',
+        dob: '',
+        phone: '',
+        email: '',
+        username: '',
+        password: ''
+    });
+
+    // Clear the username status
+    setUsernameStatus('', '');
+};
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
@@ -131,98 +102,100 @@ const GeneralDetailsPage = () => {
     // Validate the field as user types
     validateField(name, value);
   };
-  const validateField = async (name, value) => {
-    let error = '';
-    let isAvailable = false;
+  // Function to validate a specific field
+const validateField = async (name, value) => {
+  let error = '';
 
-    switch (name) {
-        case 'name':
+  switch (name) {
+      case 'name':
+          if (!value) {
+              error = 'Please fill the required field';
+          } else if (value.length < 3) {
+              error = 'Name must be at least 3 characters long';
+          } else if (value.length > 50) {
+              error = 'Name cannot exceed 50 characters';
+          }
+          break;
+
+          case 'email':
             if (!value) {
                 error = 'Please fill the required field';
-            } else if (value.length < 3) {
-                error = 'Name must be at least 3 characters long';
-            } else if (value.length > 50) {
-                error = 'Name cannot exceed 50 characters';
-            }
-            break;
-
-        case 'email':
-            if (!value) {
-                error = 'Please fill the required field';
-            } else if (!/\S+@\S+\.\S+/.test(value)) {
+            } else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{3,}$/.test(value)) {
                 error = 'Email must be a valid format (e.g., example@gmail.com)';
             }
             break;
+        
 
-        case 'phone':
-            if (!value) {
-                error = 'Please fill the required field';
-            } else if (!/^\d{10}$/.test(value)) {
-                error = 'Phone number must be exactly 10 digits';
-            }
-            break;
+      case 'phone':
+          if (!value) {
+              error = 'Please fill the required field';
+          } else if (!/^\d{10}$/.test(value)) {
+              error = 'Phone number must be exactly 10 digits';
+          }
+          break;
 
-        case 'dob':
-            if (!value) {
-                error = 'Please select your date of birth';
-            } else if (new Date(value) > new Date()) {
-                error = 'Date of birth cannot be in the future';
-            }
-            break;
+      case 'dob':
+          if (!value) {
+              error = 'Please select your date of birth';
+          } else if (new Date(value) > new Date()) {
+              error = 'Date of birth cannot be in the future';
+          }
+          break;
 
-        case 'sex':
-            if (!value) {
-                error = 'Please select your sex';
-            }
-            break;
+      case 'sex':
+          if (!value) {
+              error = 'Please select your sex';
+          }
+          break;
 
-            case 'username':
-              if (!value) {
-                  error = 'Please fill the required field';
-                  setUsernameStatus('', ''); // Clear status if input is empty
-              } else if (value.length < 3) {
-                  error = 'Username must be at least 3 characters long';
-                  setUsernameStatus('', ''); // Clear status if input is too short
-              } else {
-                  // If basic validation passes, perform the async availability check
+      case 'username':
+          if (!value) {
+              error = 'Please fill the required field';
+              setUsernameStatus('', ''); // Clear status if input is empty
+          } else if (value.length < 3) {
+              error = 'Username must be at least 3 characters long';
+              setUsernameStatus('', ''); // Clear status if input is too short
+          } else {
+              // Perform the async availability check only if the field is not empty and long enough
+              try {
                   const result = await checkUsernameAvailability(value);
                   if (result.available) {
-                      // Display username availability message in green color
                       setUsernameStatus('green', 'Username is available');
                   } else {
-                      // Display username unavailability message in red color
                       setUsernameStatus('red', 'Username is not available');
                   }
-                  // Since we only want to show one message at a time, we skip setting error here
-                  return; // Exit early to avoid setting another error message
+              } catch (e) {
+                  error = 'Error checking username availability';
+                  setUsernameStatus('', ''); // Clear status if there's an error
               }
-              break;
+          }
+          break;
 
-        case 'password':
-            if (!value) {
-                error = 'Please fill the required field';
-            } else if (value.length < 6) {
-                error = 'Password must be at least 6 characters long';
-            }
-            break;
+      case 'password':
+          if (!value) {
+              error = 'Please fill the required field';
+          } else if (value.length < 6) {
+              error = 'Password must be at least 6 characters long';
+          }
+          break;
 
-        case 'appRights':
-            if (!value) {
-                error = 'Please select app rights';
-            }
-            break;
+      case 'appRights':
+          if (!value) {
+              error = 'Please select app rights';
+          }
+          break;
 
-        default:
-            break;
-    }
+      default:
+          break;
+  }
 
-    // Set the error message for the specific field
-    setErrors(prevErrors => ({
-        ...prevErrors,
-        [name]: error
-    }));
+  // Set the error message for the specific field
+  setErrors(prevErrors => ({
+      ...prevErrors,
+      [name]: error
+  }));
+  return error; // Return the error for this specific field
 };
-
 
 // Function to update the username status UI
 const setUsernameStatus = (color, message) => {
@@ -232,9 +205,6 @@ const setUsernameStatus = (color, message) => {
       statusElement.innerText = message;
   }
 };
-
-
-
 // Helper function to check if the username is available
 const checkUsernameAvailability = async (username) => {
   try {
@@ -251,79 +221,120 @@ const checkUsernameAvailability = async (username) => {
       return { available: false, message: "Error checking username availability" }; // Default to not available if an error occurs
   }
 };
+const validateFields = () => {
+  const errors = {};
 
+  // Check if each field is empty or has specific validation errors
+  if (!generalDetails.name) {
+      errors.name = 'Name is required';
+  } else if (generalDetails.name.length < 3) {
+      errors.name = 'Name must be at least 3 characters long';
+  } else if (generalDetails.name.length > 50) {
+      errors.name = 'Name cannot exceed 50 characters';
+  }
 
+  if (!generalDetails.sex) {
+      errors.sex = 'Sex is required';
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Perform a full validation
-    const validationErrors = validateGeneralDetails();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    console.log(generalDetails.name)
-    console.log(generalDetails.sex)
-    console.log(generalDetails.dob)
-    console.log(generalDetails.phone)
-    console.log(generalDetails.email)
-    console.log(generalDetails.username)
-    console.log(generalDetails.password)
-    console.log(generalDetails.appRights)
-    // Submit the form if no errors
-    // Your form submission logic here
-  };
-  const validateFields  = () => {
-    const newErrors = {};
-  
-    validateField('name', generalDetails.name);
-    validateField('email', generalDetails.email);
-    validateField('phone', generalDetails.phone);
-    validateField('dob', generalDetails.dob);
-    validateField('sex', generalDetails.sex);
-    validateField('username', generalDetails.username);
-    validateField('password', generalDetails.password);
-    validateField('appRights', generalDetails.appRights);
-  
-    return newErrors;
-  };
+  if (!generalDetails.dob) {
+      errors.dob = 'Date of Birth is required';
+  } else if (new Date(generalDetails.dob) > new Date()) {
+      errors.dob = 'Date of birth cannot be in the future';
+  }
+
+  if (!generalDetails.phone) {
+      errors.phone = 'Phone number is required';
+  } else if (!/^\d{10}$/.test(generalDetails.phone)) {
+      errors.phone = 'Phone number must be exactly 10 digits';
+  }
+
+  if (!generalDetails.email) {
+    errors.email = 'Email is required';
+} else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{3,}$/.test(generalDetails.email)) {
+    errors.email = 'Email must be a valid format (e.g., example@gmail.com)';
+}
+
+  if (!generalDetails.username) {
+      errors.username = 'Username is required';
+  } else if (generalDetails.username.length < 3) {
+      errors.username = 'Username must be at least 3 characters long';
+  }
+
+  if (!generalDetails.password) {
+      errors.password = 'Password is required';
+  } else if (generalDetails.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters long';
+  }
+
+  if (!generalDetails.appRights) {
+      errors.appRights = 'App Rights selection is required';
+  }
+
+  return errors;
+};
+// This function will be called on form submission
+const handleSubmit = async (event) => {
+  event.preventDefault(); // Prevent default form submission
+
+  // Validate fields
+  const fieldErrors = validateFields();
+  setErrors(fieldErrors); // Set general errors
+
+  // Check if there are any errors
+  if (Object.keys(fieldErrors).length > 0) {
+      // Display the errors if any
+      setErrors(fieldErrors);
+  } else {
+      // Proceed with form submission
+      //console.log('Form is valid, submitting:', generalDetails);
+      // Perform the submission logic here, e.g., API call
+  }
+};
   
   const postGeneralDetails = async (event) => {
     event.preventDefault();
     const validationErrors = validateFields();
     
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+        setErrors(validationErrors);
+        return;
     }
-  
+    
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${generalDetails.dob}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${generalDetails.password}&JsonEntryUser=${loggedInUser}`);
-      
-      const data = await response.json();
+        // Format the dob to Y-m-d before sending it
+        const formattedDOB = format(new Date(generalDetails.dob), 'yyyy-MM-dd');
 
-      if (data === "Employee Data Inserted Successfully!") {
-        setSuccessMessage('User Created Successfully!');
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 3000);
-      } else if (data === "This Username not available") {
-        setToastMessage('This Username not available');
-        setSeverity('warning');
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
-      } else {
-        alert(`The following error occurred while inserting data: ${data}`);
-      }
-      
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${formattedDOB}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${generalDetails.password}&JsonEntryUser=${loggedInUser}`);
+        
+        const data = await response.json();
+
+        if (data === "Employee Data Inserted Successfully!") {
+            setSuccessMessage('User Created Successfully!');
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+
+            // Reset the form fields and clear username status
+            handleResetGeneralDetails();
+
+        } else if (data === "This Username not available") {
+            setToastMessage('This Username not available');
+            setSeverity('warning');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        } else {
+            alert(`The following error occurred while inserting data: ${data}`);
+        }
+        
     } catch (error) {
-      console.error('Error creating user:', error);
-      alert('There was an unexpected error while creating the user.');
+        console.error('Error creating user:', error);
+        // alert('There was an unexpected error while creating the user.');
     }
 };
+
 
  
 
@@ -341,7 +352,7 @@ const checkUsernameAvailability = async (username) => {
           {/* General Details Section */}
           <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
             <h2 className="text-2xl font-bold text-blue-500 mb-2 text-left">General Details</h2>
-            <p className="text-gray-400 text-sm mb-4 text-left">Please fill in the following details</p>
+            {/* <p className="text-gray-400 text-sm mb-4 text-left">Please fill in the following details</p> */}
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
   
@@ -404,7 +415,7 @@ const checkUsernameAvailability = async (username) => {
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.phone ? 'border-red-500' : ''}`}
                     placeholder="Eg:1234567890"
                     value={generalDetails.phone}
-                    onChange={handleInputChange}
+                    onChange={handlePhoneChange}
                     maxLength="10" // Optional: Prevents entering more than 10 digits
                   />
                   {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
@@ -454,39 +465,26 @@ const checkUsernameAvailability = async (username) => {
               {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
             </div>
 
-            <div className="w-full md:w-1/2 px-4">
-      <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
-      <div className="relative">
-        <input
-          type={passwordVisible ? 'text' : 'password'}
-          id="password"
-          name="password"
-          autoComplete="new-password"
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.password ? 'border-red-500' : ''}`}
-          placeholder="Eg:John123"
-          value={generalDetails.password}
-          onChange={handleInputChange}
-          onFocus={(e) => e.target.setAttribute('autocomplete', 'new-password')} // Trick to avoid autofill
-        />
-        <button
-          type="button"
-          className="absolute inset-y-0 right-0 flex items-center pr-3"
-          onClick={togglePasswordVisibility}
-          aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-        >
-          {passwordVisible ? (
-            <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5c-7 0-7 7-7 7s0 7 7 7 7-7 7-7-7-7-7-7zM12 15a3 3 0 100-6 3 3 0 000 6z" />
-            </svg>
-          ) : (
-            <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3C6.477 3 3 12 3 12s3.477 9 9 9 9-9 9-9-3.477-9-9-9zM12 15a3 3 0 100-6 3 3 0 000 6zM4.05 4.05A9.97 9.97 0 003 12c0 1.54.326 3.032.888 4.395L12 12l-3.95-3.95zM21.95 19.95A9.97 9.97 0 0021 12c0-1.54-.326-3.032-.888-4.395L12 12l3.95 3.95z" />
-            </svg>
-          )}
-        </button>
-      </div>
-      {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-    </div>
+            <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+            <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
+            <input
+              type="text" // Set the type to text
+              id="password"
+              name="password"
+              onBlur={() => validateField('password', generalDetails.password)}
+              autoComplete="new-password"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${
+                errors.password ? 'border-red-500' : ''
+              }`}
+              placeholder="Eg: John123"
+              value={generalDetails.password}
+              onChange={handleInputChange}
+              onFocus={(e) => e.target.setAttribute('autocomplete', 'new-password')} // Trick to avoid autofill
+            />
+            <span id="password-status"></span>
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          </div>
+
           </div>
 
             
