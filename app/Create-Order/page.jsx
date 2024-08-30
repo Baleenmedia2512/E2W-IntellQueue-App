@@ -1301,7 +1301,7 @@ return (
       <div className="w-full max-w-6xl">
     <div className="flex items-center justify-between">
     <div>
-      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generator</h2>
+      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Manager</h2>
       
       {/* Conditional text based on isOrderUpdate */}
       <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
