@@ -297,7 +297,7 @@ export const AdDetails = () => {
             // onClick={() => dispatch(updateCurrentPage("checkout"))}>
               
             // </button>
-            <></>
+            <div></div>
           )
           }
         </div>
