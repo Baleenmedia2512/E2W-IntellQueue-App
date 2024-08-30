@@ -49,9 +49,9 @@ export const AdDetails = () => {
   //const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
 
   useEffect(() => {
-      if (!username) {
-        routers.push('/login');
-      }
+    if (!username || dbName === "") {
+      router.push('/login');
+    }
       
   }, []);
 

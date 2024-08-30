@@ -106,7 +106,11 @@ const FinanceData = () => {
     elementsToHideList();
   },[companyName])
 
-
+  useEffect(() => {
+    if (!username || dbName === "") {
+      router.push('/login');
+    }
+  },[])
   useEffect(() => {
     // Use the orderData values to initialize the state
     setClientName(orderClientName || '');

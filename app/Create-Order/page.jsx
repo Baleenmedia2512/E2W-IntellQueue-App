@@ -119,6 +119,9 @@ const CreateOrder = () => {
   };
     
     useEffect(() => {
+      if (!loggedInUser || dbName === "") {
+        router.push('/login');
+      }
       fetchMaxOrderNumber();
       elementsToHideList();
       fetchRates();
