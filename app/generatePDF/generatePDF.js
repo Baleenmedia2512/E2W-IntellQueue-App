@@ -188,7 +188,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     //showing the ratename of the ad
     pdf.setFont('helvetica', 'normal', 'bold');
     pdf.setFontSize(14);
-    pdf.text(`${adMedium} (GST@${gstPercentage})`, 10, 230);
+    pdf.text(`${adMedium} Campaign (GST@${gstPercentage})`, 10, 230);
 
     const data = items.map((item, i) => [
       (i + quoteNumber).toString(), item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? item.remarks ? item.remarks : 'NA' : null
