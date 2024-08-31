@@ -119,6 +119,9 @@ const CheckoutPage = () => {
   // return grandTotalAmount;
   // }
 
+  const hasRemarks = cartItems.some(item => item.remarks);
+  const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
+
   return (
     <div className=" mt-2 text-black w-screen">
 
@@ -160,8 +163,8 @@ const CheckoutPage = () => {
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Edition</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Package</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>
+            {hasCampaignDuration && <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>}
+            {hasRemarks && <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>}
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Unit Price</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price (excl. GST)</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th>
@@ -177,10 +180,10 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{item.edition}</td>
               <td className='p-1.5 border border-gray-200'>{item.position}</td>
               <td className='p-1.5 border border-gray-200'>{item.unit === "SCM" ? item.width + "W" + " x " + item.qty + "H" : item.qty} {item.unit}</td>
-              <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>
-              <td className='p-1.5 border border-gray-200'>{item.remarks}</td>
-              <td className='p-1.5 border border-gray-200'>₹ {formattedRupees(((item.unit === "SCM" ? item.qty * item.width : item.qty)* item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin)) / item.qty)}</td>
-              <td className='p-1.5 border border-gray-200'>
+              {hasCampaignDuration && <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>}
+              {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap'>{item.remarks}</td>}
+              <td className='p-1.5 border border-gray-200 w-fit text-nowrap'>₹ {formattedRupees(((item.unit === "SCM" ? item.qty * item.width : item.qty)* item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin)) / item.qty)} per {item.unit}</td>
+              <td className='p-1.5 border border-gray-200 text-nowrap'>
                 ₹ {formattedRupees((((item.unit === "SCM" ? item.qty * item.width : item.qty)* item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))}</td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
