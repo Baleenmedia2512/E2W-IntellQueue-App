@@ -379,15 +379,10 @@ export default function BottomBarTest() {
   >
     More
   </span>
-</div>
-
-        </div>
-      </div>
-
-      {/* Sub Navigation Sidebar */}
-      <div
-        className={`fixed bottom-[92px] w-fit right-2 pt-2 lg:right-[480px] border-1 bg-white border-blue-300 shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
-          showMoreOptions ? 'translate-y-3' : 'translate-y-52'
+  {/* Sub Navigation Sidebar */}
+  <div
+        className={`fixed bottom-[96px] mr-4 w-fit pt-2 border-1 bg-white border-blue-300 shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
+          showMoreOptions ? 'translate-y-3' : 'translate-y-96'
         }`}
       >
         <div className="flex flex-col items-start">
@@ -421,6 +416,13 @@ export default function BottomBarTest() {
           />
         </div>
       </div>
+</div>
+
+        </div>
+      </div>
+
+      {/* Sub Navigation Sidebar old */}
+      
     </div>
   );
 }
