@@ -27,8 +27,9 @@ export const AdDetails = () => {
   const dispatch = useDispatch();
   const clientNameRef = useRef(null);
   const clientContactRef = useRef(null);
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test';
+  const dbName = useAppSelector(state => state.authSlice.dbName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
   const [isClientContact, setIsClientContact] = useState(true);
@@ -49,9 +50,9 @@ export const AdDetails = () => {
   //const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
 
   useEffect(() => {
-      if (!username) {
-        routers.push('/login');
-      }
+    if (!username || dbName === "") {
+      router.push('/login');
+    }
       
   }, []);
 
@@ -128,6 +129,7 @@ export const AdDetails = () => {
     let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     // console.log(item.rateGST)
+    const unitPrice = (AmountExclGST/item.qty).toFixed(2)
     return {
       adMedium: item.adMedium,
       adCategory: item.adCategory,
@@ -135,7 +137,7 @@ export const AdDetails = () => {
       position: item.position,
       qty: item.qty,
       campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
-      ratePerQty: formattedRupees(AmountExclGST / item.qty),
+      ratePerQty: formattedRupees(unitPrice),
       amountExclGst: formattedRupees(AmountExclGST),
       gst: item.rateGST + "%",
       amountInclGst: formattedRupees(AmountInclGST),
@@ -263,7 +265,7 @@ export const AdDetails = () => {
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
          ) : 
-         <button className="mr-4 mt-2 text-blue-500 text-nowrap max-h-10 font-semibold border-blue-500 border px-2 py-1 rounded-lg bg-white" disabled = {!rateId} onClick={() => {
+         <button className={`mr-4 mt-2 ${rateId > 0 ? 'text-blue-500' : 'text-gray-500'} text-nowrap max-h-10 font-semibold ${rateId > 0 ?' border-blue-500' : 'border-gray-500'} border px-2 py-1 rounded-lg bg-white`} disabled = {!rateId} onClick={() => {
           dispatch(resetQuotesData());
           }}>
         <FontAwesomeIcon icon={faClose} className=' text-md' /> Clear
@@ -284,12 +286,13 @@ export const AdDetails = () => {
           {currentPage === "checkout" ?(
             <div className='flex flex-row justify-center items-center'>
             <button
-              className="bg-green-500 text-white p-1.5 rounded-lg transition-all duration-300 ease-in-out hover:bg-green-300 hover:text-black"
+              className={`${cartItems.length > 0 ? 'bg-green-500' : 'bg-gray-500'} text-white p-1.5 rounded-lg transition-all duration-300 ease-in-out ${cartItems.length > 0 ? 'hover:bg-green-700' : 'hover:bg-gray-500'} `}
+              disabled = {cartItems.length > 0 ? false : true}
               onClick={handlePdfGeneration}
             >
               Download Quote
             </button>
-            <button className='border ml-2 p-1.5 h-fit max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            <button className={`border ml-2 p-1.5 h-fit max-h-10 ${cartItems.length > 0 ? 'bg-blue-500' : 'bg-gray-500'} text-white rounded-lg ${cartItems.length > 0 ? 'hover:bg-blue-700' : 'hover:bg-gray-500'}`} disabled = {cartItems.length > 0 ? false : true} onClick={() => dispatch(resetCartItem())}>Clear All</button>
             </div>
           ):(
             // <button aria-label="cart" 
