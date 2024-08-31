@@ -25,7 +25,7 @@ const GeneralDetailsPage = () => {
     { label: 'Other', value: 'Other' },
   ];
   const options = [
-    { label: 'Administrate', value: 'Admin' },
+    { label: 'Administrator', value: 'Admin' },
     { label: 'Finance', value: 'Finance' },
     { label: 'Management', value: 'Management' },
     { label: 'General', value: 'General' },
@@ -373,8 +373,8 @@ const handleSubmit = async (event) => {
   
             <form className="space-y-6">
               {/* Name, Sex */}
-              <div className="flex flex-wrap -mx-4 mb-4">
-                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+              <div className="flex flex-wrap -mx-4 mb-4 sm:mb-0">
+                <div className="w-full md:w-1/2 px-4 mb-4 sm:mb-0">
                   <label htmlFor="name" className="block mb-1 text-black font-medium">Name</label>
                   <input
                     type="text"
@@ -388,7 +388,7 @@ const handleSubmit = async (event) => {
                   {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                 </div>
   
-                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+                <div className="w-full md:w-1/2 px-4 mb-0">
                   <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
                   <Dropdown
                     id="sex"
@@ -404,7 +404,7 @@ const handleSubmit = async (event) => {
               </div>
   
               {/* Date of Birth, Phone Number, Email */}
-              <div className="flex flex-wrap -mx-4 mb-4">
+              <div className="flex flex-wrap -mx-4 mb-4 lg:mb-0">
                 <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
                   <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
                   <Calendar
@@ -461,7 +461,7 @@ const handleSubmit = async (event) => {
 
   
             <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="flex flex-wrap -mx-4 mb-4">
+            <div className="flex flex-wrap -mx-4 mb-4 lg:mb-0">
             <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
               <label htmlFor="username" className="block mb-1 text-black font-medium">Username</label>
               <input
@@ -480,7 +480,7 @@ const handleSubmit = async (event) => {
               {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
             </div>
 
-            <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
+             <div className="w-full lg:w-1/2 px-4 mb-0 lg:mb-0">
             <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
             <input
               type="text" // Set the type to text
