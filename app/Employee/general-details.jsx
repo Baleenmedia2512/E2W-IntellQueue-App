@@ -25,8 +25,9 @@ const GeneralDetailsPage = () => {
     { label: 'Other', value: 'Other' },
   ];
   const options = [
-    { label: 'Admin', value: 'Admin' },
+    { label: 'Administrator', value: 'Admin' },
     { label: 'Finance', value: 'Finance' },
+    { label: 'Management', value: 'Management' },
     { label: 'General', value: 'General' },
   ];
   const [generalDetails, setGeneralDetails] = useState({
