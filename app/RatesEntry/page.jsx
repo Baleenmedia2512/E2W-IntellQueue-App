@@ -394,9 +394,10 @@ const AdDetailsPage = () => {
             } else if (tempSlabData.length > 0) {
                 setTempSlabData(prevData => prevData.filter((_, i) => i !== index));
             }
-
+            setEditMode(true)
         } else {
             fetchQtySlab();
+            setEditMode(true)
         }
     }
 

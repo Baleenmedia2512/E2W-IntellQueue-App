@@ -25,20 +25,23 @@ export default function BottomBarTest() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const router = useRouter();
   const currentPath = usePathname();
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const username = useAppSelector(state => state.authSlice.username)
+  const dbName = useAppSelector(state => state.authSlice.dbName);
   const [value, setValue] = useState(0); // Define the value state variable
   const [elementsToHide, setElementsToHide] = useState([])
-  const [username, setUsername] = useState(""); // State variable for username
+  //const [username, setUsername] = useState(""); // State variable for username
   const [activeIndex, setActiveIndex] = useState(1);
 
   const elementsToHideList = () => {
+    if(dbName){
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
         .then((data) => setElementsToHide(data));
     } catch(error){
       console.error("Error showing element names: " + error)
     }
+  }
   }
 
   // useEffect(() => {
@@ -56,7 +59,7 @@ export default function BottomBarTest() {
   useEffect(() => {
     elementsToHide.forEach((tagName) => {
       const elements = document.querySelectorAll(`[data-tag="${tagName}"]`);
-      console.log(document)
+      //console.log(document)
       elements.forEach((element) => {
         element.style.display = 'none'; // Hide the element
       });
@@ -66,13 +69,13 @@ export default function BottomBarTest() {
 
 
   useEffect(() => {
-    const fetchUsername = async () => {
-      const fetchedUsername = "GraceScans";
-      setUsername(fetchedUsername);
-    };
-    fetchUsername();
-    elementsToHideList()
-  }, []);
+    // const fetchUsername = async () => {
+    //   const fetchedUsername = "GraceScans";
+    //   setUsername(fetchedUsername);
+    // };
+    // fetchUsername();
+    elementsToHideList();
+  }, [currentPath]);
 
 
   useEffect(()=>{
