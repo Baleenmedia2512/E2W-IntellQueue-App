@@ -292,7 +292,7 @@ const handleSubmit = async (event) => {
   }
 };
   
-  const postGeneralDetails = async (event) => {
+ const postGeneralDetails = async (event) => {
     event.preventDefault();
     const validationErrors = validateFields();
     
@@ -305,7 +305,10 @@ const handleSubmit = async (event) => {
         // Format the dob to Y-m-d before sending it
         const formattedDOB = format(new Date(generalDetails.dob), 'yyyy-MM-dd');
 
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${formattedDOB}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${generalDetails.password}&JsonEntryUser=${loggedInUser}`);
+        // Encode the password
+        const encodedPassw = encodeURIComponent(generalDetails.password);
+        console.log(generalDetails.password)
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${formattedDOB}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${encodedPassw}&JsonEntryUser=${loggedInUser}`);
         
         const data = await response.json();
 
@@ -362,33 +365,34 @@ const handleSubmit = async (event) => {
       </div>
       {/* Decorative Border */}
       <div className="border-2 w-10 border-blue-500 mb-6"></div>
-      <div className="bg-white p-8 md:p-12 rounded-lg shadow-lg space-y-4">
-        <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
+     <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
+
           
           {/* General Details Section */}
-          <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
+          <div className="flex flex-col w-full lg:w-1/2 bg-white p-8 md:p-12 rounded-lg shadow-lg space-y-4">
             <h3 className="text-2xl font-bold text-blue-500 mb-2 text-left">General Details</h3>
-            
+
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
-  
+
             <form className="space-y-6">
-              {/* Name, Sex */}
-              <div className="flex flex-wrap -mx-4 mb-4 sm:mb-0">
-                <div className="w-full md:w-1/2 px-4 mb-4 sm:mb-0">
-                  <label htmlFor="name" className="block mb-1 text-black font-medium">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.name ? 'border-red-500' : ''}`}
-                    placeholder="Eg: John"
-                    value={generalDetails.name}
-                    onChange={handleInputChange}
-                  />
-                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-                </div>
-  
-                <div className="w-full md:w-1/2 px-4 mb-0">
+              {/* Name (First Row) */}
+              <div className="w-full ">
+                <label htmlFor="name" className="block mb-1 text-black font-medium">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.name ? 'border-red-500' : ''}`}
+                  placeholder="Eg: John"
+                  value={generalDetails.name}
+                  onChange={handleInputChange}
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+
+              {/* Sex and Date of Birth (Second Row) */}
+              <div className="flex flex-wrap -mx-4 mb-4 lg:mb-0">
+                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
                   <label htmlFor="sex" className="block mb-1 text-black font-medium">Sex</label>
                   <Dropdown
                     id="sex"
@@ -401,11 +405,8 @@ const handleSubmit = async (event) => {
                   />
                   {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
                 </div>
-              </div>
-  
-              {/* Date of Birth, Phone Number, Email */}
-              <div className="flex flex-wrap -mx-4 mb-4 lg:mb-0">
-                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+
+                <div className="w-full md:w-1/2 px-4">
                   <label htmlFor="dob" className="block mb-1 text-black font-medium">Date of Birth</label>
                   <Calendar
                     id="dob"
@@ -420,8 +421,11 @@ const handleSubmit = async (event) => {
                   />
                   {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
                 </div>
-  
-                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+              </div>
+
+              {/* Phone Number and Email (Third Row) */}
+              <div className="flex flex-wrap -mx-4 mb-4 lg:mb-0">
+                <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
                   <label htmlFor="phone" className="block mb-1 text-black font-medium">Phone Number</label>
                   <input
                     type="tel"
@@ -435,8 +439,8 @@ const handleSubmit = async (event) => {
                   />
                   {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                 </div>
-  
-                <div className="w-full md:w-1/3 px-4 mb-4 md:mb-0">
+
+                <div className="w-full md:w-1/2 px-4">
                   <label htmlFor="email" className="block mb-1 text-black font-medium">Email</label>
                   <input
                     type="email"
@@ -452,94 +456,79 @@ const handleSubmit = async (event) => {
               </div>
             </form>
           </div>
+
   
           {/* Login Credentials Section */}
-          <div className="flex flex-col w-full lg:w-1/2 rounded-lg">
+          <div className="flex flex-col w-full lg:w-1/2 bg-white p-8 md:p-12 rounded-lg shadow-lg space-y-4">
             <h3 className="text-2xl font-bold text-blue-500 mb-2 text-left">Login Credentials</h3>
-            {/* <p className="text-gray-400 text-sm mb-4 text-left">Please enter your login credentials</p> */}
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
-  
             <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="flex flex-wrap -mx-4 mb-4 lg:mb-0">
-            <div className="w-full md:w-1/2 px-4 mb-4 md:mb-0">
-              <label htmlFor="username" className="block mb-1 text-black font-medium">Username</label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                onblur="validateField('username', this.value)"
-                autoComplete="off"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.username ? 'border-red-500' : ''}`}
-                placeholder="Eg:John"
-                value={generalDetails.username}
-                onChange={handleInputChange}
-                onFocus={(e) => e.target.setAttribute('autocomplete', 'new-username')} // Trick to avoid autofill
-              />
-              <span id="username-status"></span>
-              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
-            </div>
-
-             <div className="w-full lg:w-1/2 px-4 mb-0 lg:mb-0">
-            <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
-            <input
-              type="text" // Set the type to text
-              id="password"
-              name="password"
-              onBlur={() => validateField('password', generalDetails.password)}
-              autoComplete="new-password"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${
-                errors.password ? 'border-red-500' : ''
-              }`}
-              placeholder="Eg: John123"
-              value={generalDetails.password}
-              onChange={handleInputChange}
-              onFocus={(e) => e.target.setAttribute('autocomplete', 'new-password')} // Trick to avoid autofill
-            />
-            <span id="password-status"></span>
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-          </div>
-
-          </div>
-
-            
-          <div className="flex flex-wrap -mx-4 mb-4">
-                <div className="w-full px-4">
-                  <label htmlFor="appRights" className="block mb-1 text-black font-medium">App Rights</label>
-                  <Dropdown
-                    id="appRights"
-                    name="appRights"
-                    value={generalDetails.appRights}
-                    options={options}
-                    onChange={handleInputChange}
-                    placeholder="Select app rights"
-                    className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.appRights ? 'border-red-500' : ''}`}
-                  />
-                  {errors.appRights && <p className="text-red-500 text-xs mt-1">{errors.appRights}</p>}
-                </div>
+              
+              {/* Username */}
+              <div className="w-full mb-4">
+                <label htmlFor="username" className="block mb-1 text-black font-medium">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  onBlur={() => validateField('username', generalDetails.username)}
+                  autoComplete="off"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.username ? 'border-red-500' : ''}`}
+                  placeholder="Eg: John"
+                  value={generalDetails.username}
+                  onChange={handleInputChange}
+                  onFocus={(e) => e.target.setAttribute('autocomplete', 'new-username')} // Trick to avoid autofill
+                />
+                <span id="username-status"></span>
+                {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
               </div>
-  
-              {/* <div className="flex justify-end mt-6">
-              <button
-                type="submit"
-                onClick={postGeneralDetails}
-                className="px-6 py-3 text-xs uppercase tracking-wider font-medium text-white bg-[#23c483] rounded-full shadow-md transition-transform duration-300 ease-in-out hover:bg-[#2376c4] hover:shadow-lg hover:translate-y-[-7px] active:translate-y-[-1px] focus:outline-none"
-              >
-                Create
-              </button>
-            </div> */}
+
+              {/* Password */}
+              <div className="w-full mb-4">
+                <label htmlFor="password" className="block mb-1 text-black font-medium">Password</label>
+                <input
+                  type="text"
+                  id="password"
+                  name="password"
+                  onBlur={() => validateField('password', generalDetails.password)}
+                  autoComplete="new-password"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.password ? 'border-red-500' : ''}`}
+                  placeholder="Eg: John123"
+                  value={generalDetails.password}
+                  onChange={handleInputChange}
+                  onFocus={(e) => e.target.setAttribute('autocomplete', 'new-password')} // Trick to avoid autofill
+                />
+                <span id="password-status"></span>
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+              </div>
+
+              {/* App Rights */}
+              <div className="w-full mb-4">
+                <label htmlFor="appRights" className="block mb-1 text-black font-medium">App Rights</label>
+                <Dropdown
+                  id="appRights"
+                  name="appRights"
+                  value={generalDetails.appRights}
+                  options={options}
+                  onChange={handleInputChange}
+                  placeholder="Select app rights"
+                  className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300 ${errors.appRights ? 'border-red-500' : ''}`}
+                />
+                {errors.appRights && <p className="text-red-500 text-xs mt-1">{errors.appRights}</p>}
+              </div>
 
             </form>
           </div>
+
         </div>
       </div>
-    </div>
-      {/* ToastMessage component */}
+       {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
-  </div>
-  
-
+    </div>
+     
+ 
   );
 }
 
