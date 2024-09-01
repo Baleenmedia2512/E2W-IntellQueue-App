@@ -369,7 +369,7 @@ const handleSubmit = async (event) => {
           
           {/* General Details Section */}
           <div className="flex flex-col w-full lg:w-1/2 bg-white p-8 md:p-12 rounded-lg shadow-lg space-y-4">
-            <h3 className="text-2xl font-bold text-blue-500 mb-2 text-left">General Details</h3>
+            <h3 className="text-2xl font-bold text-blue-500 text-left">General Details</h3>
 
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
@@ -459,7 +459,7 @@ const handleSubmit = async (event) => {
   
           {/* Login Credentials Section */}
           <div className="flex flex-col w-full lg:w-1/2 bg-white p-8 md:p-12 rounded-lg shadow-lg space-y-4">
-            <h3 className="text-2xl font-bold text-blue-500 mb-2 text-left">Login Credentials</h3>
+            <h3 className="text-2xl font-bold text-blue-500 text-left">Login Credentials</h3>
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
