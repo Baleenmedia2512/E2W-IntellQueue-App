@@ -788,8 +788,9 @@ const AdDetailsPage = () => {
               <span className='flex flex-row mb-2 justify-center'>
                 <div className="flex flex-col mr-2 items-center justify-center">
                   <button
-                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    className={`${rateId > 0 ? 'bg-green-500' : 'bg-gray-500'} ${rateId > 0 ? 'hover:bg-green-700' : 'bg-gray-500'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    disabled = {rateId > 0 ? false : true}
                     // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                     onClick={(e) => {
                       e.preventDefault();
@@ -800,8 +801,8 @@ const AdDetailsPage = () => {
                           let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
                           if(result){
                             const index = cartItems.length
-                            console.log(index)
-                            dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}]));
+                            // console.log(index)
+                            dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility}]));
                             setSuccessMessage("Item added to Cart");
                             setTimeout(() => {
                               setSuccessMessage('');
@@ -811,7 +812,7 @@ const AdDetailsPage = () => {
                           return;
                         }
                         const index = cartItems.length
-                        dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}]));
+                        dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility}]));
                         setSuccessMessage("Item added to Cart");
                         setTimeout(() => {
                           setSuccessMessage('');
@@ -890,7 +891,7 @@ const AdDetailsPage = () => {
                    ) : (
                     <div className="mb-4 flex flex-row">
                     <div className="mb-4 flex flex-col">
-                   <label className="font-bold mb-1 ml-2">Height ({unit})</label>
+                   <label className="font-bold mb-1 ml-2">Height (CM)</label>
                     <div className="flex w-full">
                     <input
                       className={`w-[80%] ml-2 px-4 py-2 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
@@ -914,7 +915,7 @@ const AdDetailsPage = () => {
                   </div>
                   
                   <div className="mb-4 flex flex-col">
-                  <label className="font-bold mb-1 ml-2">Width ({unit})</label>
+                  <label className="font-bold mb-1 ml-2">Width (CM)</label>
                     <div className="flex w-full">
                     <input
                       className={`w-[80%] ml-2 px-4 py-2 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
