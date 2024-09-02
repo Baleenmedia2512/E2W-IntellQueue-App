@@ -68,6 +68,7 @@ const GeneralDetailsPage = () => {
     }));
 };
 
+
   const handleResetGeneralDetails = () => {
     setGeneralDetails({
         name: '',
@@ -273,23 +274,23 @@ const validateFields = () => {
   return errors;
 };
 // This function will be called on form submission
-const handleSubmit = async (event) => {
-  event.preventDefault(); // Prevent default form submission
+// const handleSubmit = async (event) => {
+//   event.preventDefault(); // Prevent default form submission
 
-  // Validate fields
-  const fieldErrors = validateFields();
-  setErrors(fieldErrors); // Set general errors
+//   // Validate fields
+//   const fieldErrors = validateFields();
+//   setErrors(fieldErrors); // Set general errors
 
-  // Check if there are any errors
-  if (Object.keys(fieldErrors).length > 0) {
-      // Display the errors if any
-      setErrors(fieldErrors);
-  } else {
-      // Proceed with form submission
-      //console.log('Form is valid, submitting:', generalDetails);
-      // Perform the submission logic here, e.g., API call
-  }
-};
+//   // Check if there are any errors
+//   if (Object.keys(fieldErrors).length > 0) {
+//       // Display the errors if any
+//       setErrors(fieldErrors);
+//   } else {
+//       // Proceed with form submission
+//       //console.log('Form is valid, submitting:', generalDetails);
+//       // Perform the submission logic here, e.g., API call
+//   }
+// };
   
  const postGeneralDetails = async (event) => {
     event.preventDefault();
@@ -306,7 +307,6 @@ const handleSubmit = async (event) => {
 
         // Encode the password
         const encodedPassw = encodeURIComponent(generalDetails.password);
-        console.log(generalDetails.password)
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/EmployeeUserManager.php?JsonDBName=${companyName}&JsonName=${generalDetails.name}&JsonSex=${generalDetails.sex}&JsonAppRights=${generalDetails.appRights}&JsonDOB=${formattedDOB}&JsonPhone=${generalDetails.phone}&JsonEmail=${generalDetails.email}&JsonUsername=${generalDetails.username}&JsonPassword=${encodedPassw}&JsonEntryUser=${loggedInUser}`);
         
         const data = await response.json();
@@ -337,11 +337,7 @@ const handleSubmit = async (event) => {
     }
 };
 
-
  
-
-  
-  
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl"> {/* Reduced max-width on larger screens */}
@@ -362,6 +358,8 @@ const handleSubmit = async (event) => {
           </button>
         </div>
       </div>
+
+
       {/* Decorative Border */}
       <div className="border-2 w-10 border-blue-500 mb-6"></div>
      <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-4 lg:space-y-0">
@@ -462,7 +460,7 @@ const handleSubmit = async (event) => {
             <h3 className="text-2xl font-bold text-blue-500 text-left">Login Credentials</h3>
             <div className="border-2 w-10 border-blue-500 mb-6"></div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6">
               
               {/* Username */}
               <div className="w-full mb-4">
