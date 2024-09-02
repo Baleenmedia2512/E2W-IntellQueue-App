@@ -934,7 +934,6 @@ var selectedRate = '';
           combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
             // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
         }
-        console.log("Console in SCM")
     } else {
         const existingSlab = combinedSlabData.find(
             slab => slab.StartQty === slabData.StartQty
@@ -945,7 +944,6 @@ var selectedRate = '';
           combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
             // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
         }
-        console.log("Console not in SCM")
     }
 
       if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){

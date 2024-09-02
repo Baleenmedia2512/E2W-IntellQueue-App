@@ -25,7 +25,7 @@ export default function BottomBarTest() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const router = useRouter();
   const currentPath = usePathname();
-  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.dbName);
   const [value, setValue] = useState(0); // Define the value state variable
   const [elementsToHide, setElementsToHide] = useState([])
   const [username, setUsername] = useState(""); // State variable for username
@@ -33,7 +33,7 @@ export default function BottomBarTest() {
 
   const elementsToHideList = () => {
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
         .then((data) => setElementsToHide(data));
     } catch(error){
@@ -54,27 +54,30 @@ export default function BottomBarTest() {
   // }, [elementsToHide])
 
   useEffect(() => {
+    if(dbName){
     elementsToHide.forEach((tagName) => {
       const elements = document.querySelectorAll(`[data-tag="${tagName}"]`);
       elements.forEach((element) => {
         element.style.display = 'none'; // Hide the element
       });
     });
+  }
   }, [elementsToHide]);
 
 
 
-  useEffect(() => {
-    const fetchUsername = async () => {
-      const fetchedUsername = "GraceScans";
-      setUsername(fetchedUsername);
-    };
-    fetchUsername();
-    elementsToHideList()
-  }, []);
+  // useEffect(() => {
+  //   const fetchUsername = async () => {
+  //     const fetchedUsername = "GraceScans";
+  //     setUsername(fetchedUsername);
+  //   };
+  //   fetchUsername();
+  //   elementsToHideList()
+  // }, [currentPath]);
 
 
   useEffect(()=>{
+    elementsToHideList();
       switch (currentPath) {
         case '/rate-validation':
           setValue(0);

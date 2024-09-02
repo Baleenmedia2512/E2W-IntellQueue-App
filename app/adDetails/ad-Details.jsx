@@ -801,7 +801,7 @@ const AdDetailsPage = () => {
                           let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
                           if(result){
                             const index = cartItems.length
-                            console.log(index)
+                            // console.log(index)
                             dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility}]));
                             setSuccessMessage("Item added to Cart");
                             setTimeout(() => {
