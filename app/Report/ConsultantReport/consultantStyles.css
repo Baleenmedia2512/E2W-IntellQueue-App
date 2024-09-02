@@ -16,6 +16,11 @@
     display: none;
 }
 
+
+.hide-checkbox .p-checkbox {
+        display: none;
+    }
+
 @media (max-width: 480px) {
   .p-column-filter-overlay {
     width: 100px;

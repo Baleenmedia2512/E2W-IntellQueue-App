@@ -56,7 +56,6 @@ export default function BottomBarTest() {
   useEffect(() => {
     elementsToHide.forEach((tagName) => {
       const elements = document.querySelectorAll(`[data-tag="${tagName}"]`);
-      console.log(document)
       elements.forEach((element) => {
         element.style.display = 'none'; // Hide the element
       });
