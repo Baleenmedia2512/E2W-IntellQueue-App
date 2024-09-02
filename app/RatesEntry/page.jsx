@@ -157,9 +157,9 @@ const AdDetailsPage = () => {
   useEffect(() => {
      
      // If no username is found, redirect to the login page
-     if (!username) {
-       router.push('/login');
-     } else{
+     if (!username || dbName === "") {
+      router.push('/login');
+      } else{
       fetchRates();
       fetchCampaignUnits();
       fetchMaxRateID();
@@ -394,9 +394,10 @@ const AdDetailsPage = () => {
             } else if (tempSlabData.length > 0) {
                 setTempSlabData(prevData => prevData.filter((_, i) => i !== index));
             }
-
+            setEditMode(true)
         } else {
             fetchQtySlab();
+            setEditMode(true)
         }
     }
 

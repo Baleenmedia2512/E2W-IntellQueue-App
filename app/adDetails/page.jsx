@@ -10,7 +10,7 @@ import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
@@ -27,8 +27,9 @@ export const AdDetails = () => {
   const dispatch = useDispatch();
   const clientNameRef = useRef(null);
   const clientContactRef = useRef(null);
-  const companyName = 'Baleen Test';
-  // const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const companyName = 'Baleen Test';
+  const dbName = useAppSelector(state => state.authSlice.dbName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
   const [isClientContact, setIsClientContact] = useState(true);
@@ -49,9 +50,9 @@ export const AdDetails = () => {
   //const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
 
   useEffect(() => {
-      if (!username) {
-        routers.push('/login');
-      }
+    if (!username || dbName === "") {
+      router.push('/login');
+    }
       
   }, []);
 
@@ -125,9 +126,10 @@ export const AdDetails = () => {
   };
 
   const pdfGeneration = async (item) => {
-    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
+    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     // console.log(item.rateGST)
+    const unitPrice = (AmountExclGST/item.qty).toFixed(2)
     return {
       adMedium: item.adMedium,
       adCategory: item.adCategory,
@@ -135,7 +137,7 @@ export const AdDetails = () => {
       position: item.position,
       qty: item.qty,
       campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
-      ratePerQty: formattedRupees(AmountExclGST / item.qty),
+      ratePerQty: formattedRupees(unitPrice),
       amountExclGst: formattedRupees(AmountExclGST),
       gst: item.rateGST + "%",
       amountInclGst: formattedRupees(AmountInclGST),
@@ -154,7 +156,7 @@ export const AdDetails = () => {
   let isGeneratingPdf = false;
 
   const addQuoteToDB = async(item) => {
-    let AmountExclGST = Math.round((((item.qty * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
@@ -216,20 +218,10 @@ export const AdDetails = () => {
 
   function showCurrentPage(){
     let showPage = '' 
-    if(currentPage === "adType"){
-      showPage = <AdTypePage />
-    } else if(currentPage === "adCategory" ){
-      showPage = <AdCategoryPage />
-    } else if(currentPage === "edition"){
-      showPage = <EditionPage />
-    } else if(currentPage === "remarks"){
-      showPage = <RemarksPage />
-    } else if(currentPage === "adDetails"){
-      showPage = <AdDetailsPage />
-    } else if(currentPage === "checkout"){
+    if(currentPage === "checkout"){
       showPage = <CheckoutPage />
     } else{
-      showPage = <AdMediumPage />
+      showPage = <AdDetailsPage />
     }
     return showPage;
   }
@@ -254,31 +246,30 @@ export const AdDetails = () => {
 
   const greater = ">>";
 
-  const StyledBadge = styled(Badge)(({ theme }) => ({
-    '& .MuiBadge-badge': {
-      right: -3,
-      top: 13,
-      border: `2px solid ${theme.palette.background.paper}`,
-      padding: '0 4px',
-    },
-  }));
+  
 
   return (
     <div className='bg-gray-100 w-full h-[100vh] overflow-hidden'>
-      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 ${currentPage === 'checkout' ? 'h-[100vh]' : ''} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
+      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 sm:overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : ''} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
+      <div className="border-2 ml-3 w-10 inline-block mb-6 border-blue-500"></div>
         <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100 ">
         
        
         
           {/* Back Button */}
-         { (currentPage !== "adMedium" && currentPage !== "") &&  
-         (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 shadow-sm shadow-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
+         { (currentPage !== "adDetails" && currentPage !== "") ?
+         (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
               dispatch(goBack());
           }}>
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
-         )}
+         ) : 
+         <button className={`mr-4 mt-2 ${rateId > 0 ? 'text-blue-500' : 'text-gray-500'} text-nowrap max-h-10 font-semibold ${rateId > 0 ?' border-blue-500' : 'border-gray-500'} border px-2 py-1 rounded-lg bg-white`} disabled = {!rateId} onClick={() => {
+          dispatch(resetQuotesData());
+          }}>
+        <FontAwesomeIcon icon={faClose} className=' text-md' /> Clear
+      </button>}
           {currentPage === "checkout" ?( 
             <></>
           ): (
@@ -293,15 +284,23 @@ export const AdDetails = () => {
           )}
           {/* Shopping Cart Button */}
           {currentPage === "checkout" ?(
-            <button className='border  px-2 py-1 h-fit mt-6 max-h-10 bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
-          ):(
-            <button aria-label="cart" 
-            className="relative text-center shadow-sm max-h-10  bg-white mt-2 border border-blue-500 shadow-blue-500 rounded-full p-2"
-            onClick={() => dispatch(updateCurrentPage("checkout"))}>
-              <StyledBadge badgeContent={cartItems.length} color="primary">
-                <ShoppingCartIcon className='text-black' />
-              </StyledBadge>
+            <div className='flex flex-row justify-center items-center'>
+            <button
+              className={`${cartItems.length > 0 ? 'bg-green-500' : 'bg-gray-500'} text-white p-1.5 rounded-lg transition-all duration-300 ease-in-out ${cartItems.length > 0 ? 'hover:bg-green-700' : 'hover:bg-gray-500'} `}
+              disabled = {cartItems.length > 0 ? false : true}
+              onClick={handlePdfGeneration}
+            >
+              Download Quote
             </button>
+            <button className={`border ml-2 p-1.5 h-fit max-h-10 ${cartItems.length > 0 ? 'bg-blue-500' : 'bg-gray-500'} text-white rounded-lg ${cartItems.length > 0 ? 'hover:bg-blue-700' : 'hover:bg-gray-500'}`} disabled = {cartItems.length > 0 ? false : true} onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            </div>
+          ):(
+            // <button aria-label="cart" 
+            // className="relative text-center shadow-sm max-h-10  bg-white mt-2 border border-blue-500 shadow-blue-500 rounded-full p-2"
+            // onClick={() => dispatch(updateCurrentPage("checkout"))}>
+              
+            // </button>
+            <div></div>
           )
           }
         </div>
@@ -310,7 +309,6 @@ export const AdDetails = () => {
         {/* Form and Current Page Content */}
         <div className={`h-[100vh] bg-gray-100`}>
         <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'}  max-h-[100vh] overflow-x-hidden mx-2`}>
-
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
@@ -357,16 +355,6 @@ export const AdDetails = () => {
               ))}</select></td>
             </tr>
           </table>
-          <div className='flex flex-col justify-center items-center'>
-
-            <button
-              className="bg-blue-500 text-white px-4 py-1 mb-4 rounded-xl transition-all duration-300 ease-in-out hover:bg-blue-200 hover:text-black"
-              onClick={handlePdfGeneration}
-            >
-              Download Quote
-            </button>
-            
-          </div>
           </form>
           
         )}

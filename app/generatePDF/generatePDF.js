@@ -147,14 +147,14 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     var textWidth = pdf.getStringUnitWidth('www.baleenmedia.com') * 12;
     var xCoordinate = pageWidth - textWidth - 20;
     pdf.text('www.baleenmedia.com', xCoordinate, yPosition + 130);
-    pageWidth = pdf.internal.pageSize.width;
-    textWidth = pdf.getStringUnitWidth('Page 10 Of 10') * 12;
-    xCoordinate = pageWidth - textWidth - 20;
-    pdf.setFont('helvetica', 'normal', '100');
-    pageHeight = pdf.internal.pageSize.height;
-    bottomMargin = 10; // Space you want to leave at the bottom of the page
-    termsHeight = 10; // Estimated height of the terms and conditions section
-    pdf.text(`Page ${index} of ${pdf.internal.pages.length - 1}`, xCoordinate, pageHeight - bottomMargin - termsHeight)
+    // pageWidth = pdf.internal.pageSize.width;
+    // textWidth = pdf.getStringUnitWidth('Page 10 Of 10') * 12;
+    // xCoordinate = pageWidth - textWidth - 20;
+    // pdf.setFont('helvetica', 'normal', '100');
+    // pageHeight = pdf.internal.pageSize.height;
+    // bottomMargin = 10; // Space you want to leave at the bottom of the page
+    // termsHeight = 10; // Estimated height of the terms and conditions section
+    // pdf.internal.pages.length > 2 && pdf.text(`Page ${index} of ${pdf.internal.pages.length - 1}`, xCoordinate, pageHeight - bottomMargin - termsHeight)
   };
 
   //Group the adMedium and create seperate tables for each adMedium
@@ -175,11 +175,12 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     addHeader();
 
     const items = groupedData[adMedium];
-    const hasCampaignDuration = items.some(item => item.campaignDuration && item.campaignDuration !== 'NA');
+    const hasCampaignDuration = items.some(item => item.campaignDuration);
     const hasAdType = items.some(item => item.adType && item.adType !== "");
     const hasAdCategory = items.some(item => item.adCategory && item.adCategory !== "");
     const hasPosition = items.some(item => item.edition && item.edition !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
+    const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA")
 
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
@@ -187,27 +188,27 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     //showing the ratename of the ad
     pdf.setFont('helvetica', 'normal', 'bold');
     pdf.setFontSize(14);
-    pdf.text(`${adMedium} (GST@${gstPercentage})`, 10, 230);
+    pdf.text(`${adMedium} Campaign (GST@${gstPercentage})`, 10, 230);
 
     const data = items.map((item, i) => [
-      (i + quoteNumber).toString(), item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" : item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2,item.remarks ? item.remarks : 'NA'
+      (i + quoteNumber).toString(), item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? item.remarks ? item.remarks : 'NA' : null
     ].filter(Boolean))
 
-    const headerColumns = [['S.No.', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size (in SCM)' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Price Per ${isNewspaper ? 'SCM' : 'Qty'} (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (incl. GST) (in Rs.)", "Lead Days","Remarks"].filter(Boolean)];
+    const headerColumns = [['Quote No.', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
 
     let columnWidths = {
-      'Quote.No.': 45,
-      'Ad Type': 60,
-      'Ad Category': 60,
-      'Edition': 60,
-      'Package': 60,
-      'Qty': 50,
-      'Campaign Duration': hasCampaignDuration ? 60 : 0,
-      'Rate Per Qty (in Rs.)': 50,
-      'Amount (Excl. GST) (in Rs.)': 60,
-      'Amount (incl. GST) (in Rs.)': 60,
-      'Lead Days': 50,
-      'Remarks': 60
+      'Quote No.': 45,
+      // 'Ad Type': 60,
+      'Ad Category': 80,
+      // 'Edition': 60,
+      // 'Package': 60,
+      'Size': 60,
+      // 'Campaign Duration': hasCampaignDuration ? 80 : 0,
+      'Unit Price (in Rs.)': 80,
+      'Price (Excl. GST) (in Rs.)': 80,
+      'Price (Incl. GST) (in Rs.)': 80,
+      // 'Lead Days': 50,
+      // 'Remarks': 60
     };
     
     // Map column names to their indices
@@ -215,16 +216,16 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     headerColumns[0].forEach((header, index) => {
       headerMap[header] = index;
     });
-    
-    const rightAlignColumns = ['Price Per Qty (in Rs.)', 'Price (Excl. GST) (in Rs.)', 'GST', 'Price (incl. GST) (in Rs.)', 'Price Per SCM (in Rs.)'];
-    // Convert column names to indices and assign column widths
+
+    const rightAlignColumns = ['Unit Price (in Rs.)', 'Price (Excl. GST) (in Rs.)', 'Price (Incl. GST) (in Rs.)'];
+   // Convert column names to indices and assign column widths
     let columnStyles = {};
     Object.keys(columnWidths).forEach(columnName => {
       let columnIndex = headerMap[columnName];
       if (columnIndex !== undefined) {
           columnStyles[columnIndex] = { 
             cellWidth: columnWidths[columnName], 
-            halign: rightAlignColumns.includes(columnName) ? 'right' : 'left' 
+            halign: rightAlignColumns.includes(columnName) ? 'right' : columnName === 'Lead Days' ? 'center' : 'left'
           };
       }
     });

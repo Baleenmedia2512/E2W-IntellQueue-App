@@ -16,6 +16,7 @@ import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { AddShoppingCart, AddShoppingCartOutlined, ShoppingCartCheckout } from '@mui/icons-material';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { addItemsToCart } from '@/redux/features/cart-slice';
@@ -112,7 +113,15 @@ const AdDetailsPage = () => {
       }
       const data = await response.json();
       const firstData = data[0];
-      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true, rateGST: firstData.rategst, width: firstData.width}))
+      dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, isDetails: true, rateGST: firstData.rategst}))
+
+      if(width === 1){
+        dispatch(setQuotesData({width: firstData.width}))
+      }
+
+      if(qty === 1){
+        dispatch(setQuotesData({quantity: firstData.minimumUnit}))
+      }
       // console.log("Fetch Rate: " + firstData.minimumUnit)
     } catch (error) {
       console.error("Error while fetching rates: " + error)
@@ -168,9 +177,10 @@ const AdDetailsPage = () => {
 
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
-      right: -3,
-      top: 13,
-      border: `2px solid ${theme.palette.background.paper}`,
+      right: 35,
+      top: 5,
+      border: `2px solid`,
+      background: '#000000',
       padding: '0 4px',
     },
   }));
@@ -211,12 +221,18 @@ const AdDetailsPage = () => {
             Width: firstSelectedSlab.Width
           });
           
+          if(width === 1){
+            dispatch(setQuotesData({width: firstSelectedSlab.Width}))
+          }
+
+          if(qty === 1){
+            dispatch(setQuotesData({quantity: firstSelectedSlab.StartQty}))
+          }
+
           setMarginPercentage(firstSelectedSlab.AgencyCommission || 0);
           dispatch(setQuotesData({
             ratePerUnit: firstSelectedSlab.UnitPrice,
-            unit: firstSelectedSlab.Unit,
-            width: firstSelectedSlab.Width,
-            quantity: firstSelectedSlab.StartQty
+            unit: firstSelectedSlab.Unit            
           }));
           // console.log("Fetch Slab: " + firstSelectedSlab.StartQty)
         } else {
@@ -235,7 +251,13 @@ const AdDetailsPage = () => {
         }
         const data = await response.json();
         const firstData = data[0];
-        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, quantity: firstData.minimumUnit, isDetails: true, rateGST: firstData.rategst, width: firstData.width}))
+        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, isDetails: true, rateGST: firstData.rategst}))
+        if(width === 1){
+          dispatch(setQuotesData({width: firstData.width}))
+        }
+        if(qty === 1){
+          dispatch(setQuotesData({quantity: firstData.minimumUnit }))
+        }
         //console.log("Fetch Rate UseEffect: " + firstData.minimumUnit)
       } catch (error) {
         console.error("Error while fetching rates: " + error)
@@ -360,45 +382,52 @@ const AdDetailsPage = () => {
  
   const dispatch = useDispatch();
   const handleSubmit = () => {
-    const isValid = validateFields();
-    if (isValid) {
-      const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
-    if (isDuplicate) {
-      // Display an error message or handle the duplicate case
-      dispatch(updateCurrentPage("checkout"));
-      return;
-    }
+    dispatch(updateCurrentPage("checkout"))
+  //   const isValid = validateFields();
+  //   if (isValid) {
+  //     const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
+  //   if (isDuplicate) {
+      
+  //     let result = window.confirm("The item is already in the cart! Do you still want to Proceed?");
+  //     // Display an error message or handle the duplicate case
+  //     //dispatch(updateCurrentPage("checkout"));
+  //     if(!result){
+  //       return;
+  //     }
+  //   }
 
-    if (qty === '' || campaignDuration === '' || margin === '') {
-      setSeverity('warning');
-      setToastMessage('Please fill all the Client Details!');
-      setToast(true);
-    }
-    else if (qty < qtySlab) {
-      setSeverity('warning');
-      setToastMessage('Minimum Quantity should be ' + qtySlab);
-      setToast(true);
-    }
-    else if(minimumCampaignDuration > campaignDuration){
-      setSeverity('warning');
-      setToastMessage('Minimum Duration should be ' + minimumCampaignDuration);
-      setToast(true);
-    }
-    else {
-      Cookies.set('isAdDetails', true);
-      dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility, rateGST, width}]))
-      dispatch(setQuotesData({isDetails: true}))
-      dispatch(updateCurrentPage("checkout"))
-      //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
-    }
-  } else {
-    setToastMessage('Please fill the necessary details in the form.');
-    setSeverity('error');
-    setToast(true);
-    setTimeout(() => {
-      setToast(false);
-    }, 2000);
-  }
+  //   if (qty === '' || campaignDuration === '' || margin === '') {
+  //     setSeverity('warning');
+  //     setToastMessage('Please fill all the Client Details!');
+  //     setToast(true);
+  //   }
+  //   else if (qty < qtySlab) {
+  //     setSeverity('warning');
+  //     setToastMessage('Minimum Quantity should be ' + qtySlab);
+  //     setToast(true);
+  //   }
+  //   else if(minimumCampaignDuration > campaignDuration){
+  //     setSeverity('warning');
+  //     setToastMessage('Minimum Duration should be ' + minimumCampaignDuration);
+  //     setToast(true);
+  //   }
+  //   else {
+  //     Cookies.set('isAdDetails', true);
+  //     const index = cartItems.length
+  //     console.log(index)
+  //     dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility, rateGST, width}]))
+  //     dispatch(setQuotesData({isDetails: true}))
+  //     dispatch(updateCurrentPage("checkout"))
+  //     //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
+  //   }
+  // } else {
+  //   setToastMessage('Please fill the necessary details in the form.');
+  //   setSeverity('error');
+  //   setToast(true);
+  //   setTimeout(() => {
+  //     setToast(false);
+  //   }, 2000);
+  // }
   };
 
   const handleMarginChange = (event) => {
@@ -596,7 +625,7 @@ const AdDetailsPage = () => {
   // useEffect(() => {
     
   // },[qtySlab])
-
+  
   return (
     
     <div className="text-black ">    
@@ -732,7 +761,7 @@ const AdDetailsPage = () => {
 
   {/* <!-- Vendor Cost Box --> */}
   <div className="flex-shrink-0 w-[50%] bg-green-50 border border-green-200 h-fit rounded-lg p-2">
-    <div className="sm:text-lg text-md font-bold text-green-500 mb-2">Including GST@{rateGST}%</div>
+    <div className="sm:text-lg text-md font-bold text-green-500 mb-2">Including GST{rateGST && '@' + rateGST + '%'}</div>
     {items[1].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
         <div className={`sm:text-lg text-[16px] break-words font-semibold sm:font-bold text-green-600`}>
@@ -759,8 +788,9 @@ const AdDetailsPage = () => {
               <span className='flex flex-row mb-2 justify-center'>
                 <div className="flex flex-col mr-2 items-center justify-center">
                   <button
-                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    className={`${rateId > 0 ? 'bg-green-500' : 'bg-gray-500'} ${rateId > 0 ? 'hover:bg-green-700' : 'bg-gray-500'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
+                    disabled = {rateId > 0 ? false : true}
                     // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
                     onClick={(e) => {
                       e.preventDefault();
@@ -768,11 +798,25 @@ const AdDetailsPage = () => {
                         const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
                         if (isDuplicate) {
                           // Display an error message or handle the duplicate case
-                          alert("This item is already in the cart.");
+                          let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
+                          if(result){
+                            const index = cartItems.length
+                            console.log(index)
+                            dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility}]));
+                            setSuccessMessage("Item added to Cart");
+                            setTimeout(() => {
+                              setSuccessMessage('');
+                            }, 2000);
+                            // dispatch(updateCurrentPage("checkout"))
+                          }
                           return;
                         }
-                        dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width}]));
+                        const index = cartItems.length
+                        dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility}]));
                         setSuccessMessage("Item added to Cart");
+                        setTimeout(() => {
+                          setSuccessMessage('');
+                        }, 2000);
                       } else {
                         setToastMessage('Please fill the necessary details in the form.');
                         setSeverity('error');
@@ -783,6 +827,7 @@ const AdDetailsPage = () => {
                       }
                   }}
                   >
+                    <ShoppingCartIcon className='text-white mr-2'/>
                     Add to Cart
                   </button>
                 </div>
@@ -794,7 +839,11 @@ const AdDetailsPage = () => {
                       handleSubmit();
                   }}
                   >
-                    Go to Cart
+                    <StyledBadge badgeContent={cartItems.length} color="primary">
+                      <ShoppingCartCheckout className='text-white mr-2' />
+                      </StyledBadge>
+                        Go to Cart
+                    
                   </button>
                 </div>
                 </span>
@@ -835,14 +884,14 @@ const AdDetailsPage = () => {
                       }}
                       onFocus={(e) => e.target.select()}
                     />
-                    <label className="text-center mt-2 ml-2 ">{unit}</label>
+                    <label className="justify-center mt-2 ml-2 ">{unit ? unit : 'Unit'}</label>
                   </div>
                   <p className="text-red-700">{qty < qtySlab.Qty ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
                 </div>
                    ) : (
                     <div className="mb-4 flex flex-row">
                     <div className="mb-4 flex flex-col">
-                   <label className="font-bold mb-1 ml-2">Height ({unit})</label>
+                   <label className="font-bold mb-1 ml-2">Height (CM)</label>
                     <div className="flex w-full">
                     <input
                       className={`w-[80%] ml-2 px-4 py-2 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
@@ -866,7 +915,7 @@ const AdDetailsPage = () => {
                   </div>
                   
                   <div className="mb-4 flex flex-col">
-                  <label className="font-bold mb-1 ml-2">Width ({unit})</label>
+                  <label className="font-bold mb-1 ml-2">Width (CM)</label>
                     <div className="flex w-full">
                     <input
                       className={`w-[80%] ml-2 px-4 py-2 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
@@ -910,7 +959,7 @@ const AdDetailsPage = () => {
                         onFocus={(e) => e.target.select()}
                       />
                       {/* <div className="relative"> */}
-                      <label className="text-center mt-2 ml-5">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
+                      <label className="text-center mt-2 ml-2">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
 
                       {/* </div> */}
                     </div>

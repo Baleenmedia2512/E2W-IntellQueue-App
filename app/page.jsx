@@ -948,11 +948,19 @@ const BMvalidateFields = () => {
   };
 
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-2">
+      <div className='min-h-screen bg-gray-100 mb-14 p-2'>
+        <div className="flex items-center justify-center">
+          <div className="w-full max-w-6xl">
+      <div className="text-start">
+        <h2 className="text-2xl mt-2 font-bold text-blue-500 mb-1">Client Manager</h2>
+        <div className="border-2 w-10 mb-6 border-blue-500"></div>
+      </div>
+      </div></div>
+        <div className="flex items-center justify-center ">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
-        <h2 className="text-2xl font-bold text-blue-500 mb-1">Client Manager</h2>
-        <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p>
-        <div className="border-2 w-10 inline-block mb-6 border-blue-500"></div>
+        
+        {/* <p className="text-gray-400 text-sm mb-3">Please fill in the following details</p> */}
+        
         {!isNewClient && clientID && (
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
@@ -1352,6 +1360,7 @@ const BMvalidateFields = () => {
             )}
           </div>
         </form>
+      </div>
       </div>
       {successMessage && <SuccessToast message={successMessage} />}
       {toast && <ToastMessage message={toastMessage} type="error"/>}

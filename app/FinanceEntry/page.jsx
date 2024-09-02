@@ -1,6 +1,7 @@
 'use client';
 import './page.css';
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
 import { TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
@@ -99,6 +100,7 @@ const FinanceData = () => {
   const [balanceAmount, setBalanceAmount] = useState('');
   // const [isOrderExist, setIsOrderExist] = useState(false);
   const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
+  const router = useRouter();
   const dispatch = useDispatch();
   const [elementsToHide, setElementsToHide] = useState([]);
 
@@ -106,7 +108,11 @@ const FinanceData = () => {
     elementsToHideList();
   },[companyName])
 
-
+  useEffect(() => {
+    if (!username || dbName === "") {
+      router.push('/login');
+    }
+  },[])
   useEffect(() => {
     // Use the orderData values to initialize the state
     setClientName(orderClientName || '');
@@ -501,7 +507,7 @@ useEffect(() => {
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
     <div className="grid gap-6 " id="form">
-    <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Transaction Manager</h1>
+    <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1>
         <div>
             <label className='block mb-2 text-gray-700 font-semibold'>Transaction Type*</label>
             <div className='flex w-full'>
