@@ -34,9 +34,9 @@ const CreateOrder = () => {
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
-    const dbName = useAppSelector(state => state.authSlice.companyName);
-    const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    const dbName = useAppSelector(state => state.authSlice.dbName);
+    // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
@@ -119,6 +119,9 @@ const CreateOrder = () => {
   };
     
     useEffect(() => {
+      if (!loggedInUser || dbName === "") {
+        router.push('/login');
+      }
       fetchMaxOrderNumber();
       elementsToHideList();
       fetchRates();
@@ -1241,7 +1244,6 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
-  console.log(discountAmount)
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1302,14 +1304,14 @@ return (
       <div className="w-full max-w-6xl">
     <div className="flex items-center justify-between">
     <div>
-      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Order Generator</h2>
-      
+      <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-0">Order Manager</h2>
+      <div className="border-2 w-10 inline-block mb-0 border-blue-500"></div>
       {/* Conditional text based on isOrderUpdate */}
       <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
       {isOrderUpdate ? (
           <>Updating order number: <strong>{orderNumberRP}</strong></>
         ) : (
-          'Place your orders here'
+          <div></div>
         )}
       </p>
     </div>
@@ -1363,7 +1365,7 @@ return (
 
 
     {/* Order Selection */}
-    <div className="bg-white p-4 rounded-lg shadow-lg">
+    <div className="bg-white p-4 mt-2 rounded-lg shadow-lg">
       <form className="space-y-4">
       <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Select Your Order</h3>
           {/* Client Name */}

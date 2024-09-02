@@ -138,13 +138,15 @@ export default function BottomBarTest() {
       case 5:
         router.push('/FinanceEntry');
         break;
-        case 6:
+      case 6:
         router.push('/Report');
         break;  
       case 7:
         router.push('/login');
         break; 
-        
+      case 8:
+        router.push('/Employee');
+        break;   
       default:
         break;
     }
@@ -239,6 +241,24 @@ export default function BottomBarTest() {
         d="M6 6h.008v.008H6V6Z"
       />
     </svg>
+  );
+
+  const UserManagerIcon = () => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      strokeWidth={1.5} 
+      stroke="currentColor" 
+      className="h-5 w-5"
+      >
+    <path 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" 
+      />
+    </svg>
+
   );
   
   const OrderManagerIcon = () => (
@@ -408,6 +428,13 @@ export default function BottomBarTest() {
             dataTag=""
           />
           <SubNavItem
+            icon={<UserManagerIcon className="h-5 w-5 text-gray-600" />}
+            label="User Manager"
+            onClick={() => { setSelected('report'); setShowMoreOptions(false); {handleChange(null, 8)}; }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag=""
+          />
+          <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
             label={<span className="text-red-600">Log Out</span>}
             onClick={() => { setSelected('logout'); setShowMoreOptions(false); {handleChange(null, 7)}; }}
@@ -420,9 +447,6 @@ export default function BottomBarTest() {
 
         </div>
       </div>
-
-      {/* Sub Navigation Sidebar old */}
-      
     </div>
   );
 }
@@ -474,142 +498,4 @@ function SubNavItem({ icon, label, onClick, additionalClasses, dataTag }) {
   );
 }
 
-//   return (
-//     <div className="relative">
-//       {/* Main Navigation Bar */}
-//       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-lg">
-//         <div className="flex justify-around py-3 max-w-lg mx-auto relative">
-      
-// {isCircleVisible && (
-//             <span
-//               className="bg-blue-500 duration-500 h-16 w-16 absolute -top-2 rounded-full transform transition-all"
-//               style={{
-//                 transform: `translateX(${getTranslateValue()})`,
-//               }}
-//             ></span>
-//           )}
-
-//           {Menus.map((menu, i) => (
-//             <div key={i} data-tag={menu.tag}>
-//             <NavItem
-//               key={i}
-//               icon={menu.icon}
-//               label={menu.name}
-//               // onClick={() => setSelected(menu.name)}
-//               onClick={() => handleMenuChange(menu)}
-//               index={i} // Pass the index of the current item
-//               activeIndex={activeIndex} // Pass the active index
-//               isSelected={selected === menu.name}
-//             />
-//             </div>
-//           ))}
-
-// <div
-//   className={`relative flex flex-col items-center justify-center transition duration-200 ${
-//     showMoreOptions ? 'text-blue-500' : 'text-gray-600'
-//   }`}
-//   onClick={() => setShowMoreOptions(!showMoreOptions)}
-// >
-//   <div className={`p-3 rounded-full transition-all duration-300 ${showMoreOptions ? 'bg-blue-100' : 'bg-transparent'}`}>
-//     <ChevronDownIcon
-//       className={`h-6 w-6 transform transition-transform duration-300 ${
-//         showMoreOptions ? 'rotate-180' : 'rotate-0'
-//       }`}
-//     />
-//   </div>
-//   <span
-//     className={`mt-1 text-xs transition duration-200 ${
-//       showMoreOptions ? 'text-blue-500' : 'text-gray-600'
-//     }`}
-//   >
-//     More
-//   </span>
-// </div>
-
-//         </div>
-//       </div>
-
-//       {/* Sub Navigation Sidebar */}
-//       <div
-//         className={`fixed bottom-[92px] w-fit right-2 lg:right-[480px] border-1 bg-white border-blue-300 shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
-//           showMoreOptions ? 'translate-y-0' : 'translate-y-full'
-//         }`}
-//       >
-//         <div className="flex flex-col items-start space-y-2">
-//           <SubNavItem
-//             icon={<RatesManagerIcon className="text-gray-600" />}
-//             label="Rates Manager"
-//             onClick={() => { setSelected('ratesEntry'); setShowMoreOptions(false); {handleChange(null, 4)}; }}
-//           />
-//           <SubNavItem
-//             icon={<RateValidationIcon className="text-gray-600" />}
-//             label="Rate Validation"
-//             onClick={() => { setSelected('rateValidation'); setShowMoreOptions(false); {handleChange(null, 0)}; }}
-//           />
-//           <SubNavItem
-//             icon={<ChartPieIcon className="h-5 w-5 text-gray-600" />}
-//             label="Reports"
-//             onClick={() => { setSelected('report'); setShowMoreOptions(false); {handleChange(null, 6)}; }}
-//           />
-//           <SubNavItem
-//             icon={<LogoutIcon className="text-gray-600" />}
-//             label="Log Out"
-//             onClick={() => { setSelected('logout'); setShowMoreOptions(false); {handleChange(null, 7)}; }}
-//           />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// function getTranslateXValue(activeIndex) {
-//   switch (activeIndex) {
-//     case 0:
-//       return '-193px'; // Adjust as necessary
-//     case 1:
-//       return '-100px'; // Adjust as necessary
-//     case 2:
-//       return '0px'; // Adjust as necessary
-//     case 3:
-//       return '50px'; // Adjust as necessary
-//     default:
-//       return '300px'; // Adjust as necessary
-//   }
-// }
-
-// function NavItem({ icon, label, onClick, index, activeIndex, isSelected }) {
-//   return (
-//     <div
-//       className={`flex flex-col items-center justify-center relative transition duration-200 ${
-//         isSelected ? 'text-white' : 'text-gray-600'
-//       }`}
-//       onClick={onClick}
-//     >
-//       <div className={`p-3 rounded-full transition-all duration-300 bg-transparent ${index === activeIndex ? '-translate-y-3 duration-700 opacity-100' : 'opacity-100 translate-y-0'} ${
-//           isSelected ? 'text-white' : 'text-gray-600'
-//         } `}>
-//         {icon}
-//       </div>
-//       <span
-//         className={`mt-1 text-xs text-center transition duration-200 mx-1  ${
-//           isSelected ? 'text-blue-500' : 'text-gray-600'
-//         }`}
-//       >
-//         {label}
-//       </span>
-//     </div>
-//   );
-// }
-
-// function SubNavItem({ icon, label, onClick }) {
-//   return (
-//     <div
-//       className="flex items-center py-2 px-4 hover:bg-blue-100 cursor-pointer text-gray-700 transition duration-200 w-full"
-//       onClick={onClick}
-//     >
-//       <div className="mr-3">{icon}</div>
-//       {label}
-//     </div>
-//   );
-// }
 

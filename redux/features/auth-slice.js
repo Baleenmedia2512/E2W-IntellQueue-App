@@ -3,7 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   userName: "",
   companyName: "",
-  appRights: ""
+  appRights: "",
+  dbName: ""
 };
 
 export const authSlice = createSlice({
@@ -22,9 +23,13 @@ export const authSlice = createSlice({
     logout: (state) => {
       state.userName = ""; // Reset userName to an empty string
       state.appRights = "";
+      state.dbName = ""
+    },
+    setDBName: (state, action) => {
+      state.dbName = action.payload;
     }
   }
 });
 
-export const { login, logout, setCompanyName, setAppRights  } = authSlice.actions;
+export const { login, logout, setCompanyName, setAppRights, setDBName  } = authSlice.actions;
 export const authReducer = authSlice.reducer;
