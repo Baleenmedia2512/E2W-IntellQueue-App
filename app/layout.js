@@ -2,7 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
 // import BottomBar from "./BottomBar";
-import BottomBar from "./BottomBar";
+import BottomBarTest from "./BottomBarTest";
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
   ssr: false
@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <ReduxProvider>
            {children}
-           <div ><BottomBar /></div>
+           <div ><BottomBarTest /></div>
            </ReduxProvider>
       </body>
     </html>
