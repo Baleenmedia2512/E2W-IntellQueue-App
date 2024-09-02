@@ -952,7 +952,7 @@ const BMvalidateFields = () => {
         <div className="flex items-center justify-center">
           <div className="w-full max-w-6xl">
       <div className="text-start">
-        <h2 className="text-2xl mt-2 font-bold text-blue-500 mb-1">Client Manager</h2>
+        <h2 className="text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">Client Manager</h2>
         <div className="border-2 w-10 mb-6 border-blue-500"></div>
       </div>
       </div></div>
