@@ -375,7 +375,7 @@ const AdDetailsPage = () => {
             dispatch(setSlabData([]));
         }
     } else {
-        const response = await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}&JsonWidth=${Width}`);
+        const response = await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}&JsonWidth=${Width ? Width : 1}`);
         const data = await response.json();
 
         if (data === 'No rows updated') {
