@@ -534,8 +534,28 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
 const filteredAmountRows = rowsToCalculate.filter(row => !row.rateCard.startsWith('Total'));
 
+
+const extractNameFromId = (id) => {
+    // Split the id by '-' and return the first part (the name)
+    return id.split('-')[0];
+};
+
 // Filter out rows with null or empty values for name and rateCard
-const filteredNameRows = rowsToCalculate.filter(row => row.name);
+// const filteredNameRows = rowsToCalculate.filter(row => row.name);
+const filteredNameRows = rowsToCalculate.map(row => {
+    if (row.name) {
+        console.log('rowName')
+        return row;
+    } else if (selectedRows.length > 0 && row.id) {
+        // If name is null and selectedRows is greater than 0, extract the name from row.id
+        console.log('rowID')
+        return { ...row, name: extractNameFromId(row.id) };
+    }
+    return row;
+});
+
+
+const filteredSelectionNameRows = selectedRows.filter(row => extractNameFromId(row.id));
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
 // Calculate total amount
 // const totalAmount = filteredRows.reduce((sum, row) => {
@@ -548,12 +568,15 @@ const totalAmount = filteredAmountRows.reduce((sum, row) => {
 const formattedtotalAmount = formatIndianNumber(totalAmount);
 
 // Calculate number of unique consultants
-const numberOfConsultants = new Set(filteredNameRows.map(row => row.name)).size;
+// const numberOfConsultants = new Set(filteredNameRows.map(row => row.name)).size;
+const numberOfConsultants = new Set(filteredNameRows
+    .map(row => row.name)
+    .filter(name => name) // This filters out null and empty string values
+).size;
+console.log(filteredNameRows
+    .map(row => row.name)
+    .filter(name => name))
 
-const extractNameFromId = (id) => {
-    // Split the id by '-' and return the first part (the name)
-    return id.split('-')[0];
-};
 
 const extractRateCardFromId = (id) => {
     // Split the id by '-' and return the first part (the name)
