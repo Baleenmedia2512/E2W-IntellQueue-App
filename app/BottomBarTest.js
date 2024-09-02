@@ -109,6 +109,9 @@ export default function BottomBarTest() {
           // setValue(5);
           // setActiveIndex(3);
           setSelected('report');
+          break;
+        case '/Employee':
+          setSelected('Employee');
           break;  
         default:
           break;
