@@ -56,7 +56,6 @@ export default function BottomBarTest() {
   useEffect(() => {
     elementsToHide.forEach((tagName) => {
       const elements = document.querySelectorAll(`[data-tag="${tagName}"]`);
-      console.log(document)
       elements.forEach((element) => {
         element.style.display = 'none'; // Hide the element
       });
@@ -109,6 +108,9 @@ export default function BottomBarTest() {
           // setValue(5);
           // setActiveIndex(3);
           setSelected('report');
+          break;
+        case '/Employee':
+          setSelected('Employee');
           break;  
         default:
           break;

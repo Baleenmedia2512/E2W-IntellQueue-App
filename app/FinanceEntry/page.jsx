@@ -230,7 +230,6 @@ const FinanceData = () => {
 
     // Ensure clientNumber is valid
     if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
-        console.log('Client number is 0 or invalid. Exiting function.');
         setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
               setSeverity('warning');
               setToast(true);
@@ -253,13 +252,11 @@ const FinanceData = () => {
         const responseData = JSON.parse(response.data);
 
         if (responseData.status === 'success') {
-            console.log('SMS Sent!');
             setSuccessMessage('SMS Sent!');
               setTimeout(() => {
             setSuccessMessage('');
           }, 1500);
         } else {
-            console.log('SMS Not Sent! Status:', responseData.message);
             setToastMessage('SMS Not Sent! Reason', responseData.message);
               setSeverity('warning');
               setToast(true);
