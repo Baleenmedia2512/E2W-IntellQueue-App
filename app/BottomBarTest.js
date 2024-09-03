@@ -390,24 +390,24 @@ export default function BottomBarTest() {
   }`}
   onClick={() => setShowMoreOptions(!showMoreOptions)}
 >
-  <div className={`p-3 mt-2 rounded-full transition-all duration-300 cursor-pointer hover:bg-blue-100 ${showMoreOptions ? 'bg-blue-100' : 'bg-transparent'}`}>
+  <div className={`p-3 mt-[10px] rounded-full transition-all duration-300 cursor-pointer hover:bg-blue-100 ${showMoreOptions ? 'bg-blue-100' : 'bg-transparent'}`}>
     <ChevronDownIcon
-      className={`h-6 w-6 transform transition-transform duration-300 ${
+      className={`h-5 w-5 transform transition-transform duration-300 ${
         showMoreOptions ? 'rotate-180' : 'rotate-0'
       }`}
     />
   </div>
   <span
-    className={`mt-[1px] text-xs font-medium transition duration-200 ${
+    className={`mt-[3px] text-xs font-medium transition duration-200 ease-in-out ${
       showMoreOptions ? 'text-blue-500' : 'text-gray-600'
     }`}
   >
-    More
+    {showMoreOptions ? 'Less' : 'More'}
   </span>
   {/* Sub Navigation Sidebar */}
   <div
         className={`fixed bottom-[96px] mr-14 sm:mr-0 w-fit pt-2 border-1 bg-white border-blue-300 shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
-          showMoreOptions ? 'translate-y-3' : 'translate-y-96'
+          showMoreOptions ? 'translate-y-3' : 'translate-y-[500px]'
         }`}
       >
         <div className="flex flex-col items-start">
@@ -477,7 +477,7 @@ function NavItem({ icon, label, onClick, index, activeIndex, isSelected }) {
       <span
         className={`text-xs text-center font-medium transition duration-200 mx-1
           ${
-          index === activeIndex ? 'translate-y-1 duration-700 opacity-100' : 'opacity-100 translate-y-2'
+          index === activeIndex ? 'translate-y-2 duration-700 opacity-100' : 'opacity-100 translate-y-2'
         }
           ${
           isSelected ? 'text-blue-500' : 'text-gray-600'
