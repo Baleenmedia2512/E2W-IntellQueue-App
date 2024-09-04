@@ -23,6 +23,7 @@ import { resetOrderData } from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
 import { setIsOrderExist } from '@/redux/features/order-slice';
 import { resetClientData } from '@/redux/features/client-slice';
+import { useRouter } from 'next/navigation';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -150,6 +151,8 @@ const FinanceData = () => {
   };
 
   const openDate = Boolean(anchorElDate);
+
+  const router = useRouter();
 
 
   const handleChange = (selectedOption, name) => {
@@ -425,13 +428,14 @@ const elementsToHideList = () => {
 
 useEffect(() => {
   //searching elements to Hide from database
-
+  if(dbName){
   elementsToHide.forEach((name) => {
     const elements = document.getElementsByName(name);
     elements.forEach((element) => {
       element.style.display = 'none'; // Hide the element
     });
   });
+}
 }, [elementsToHide])
 
   // const getOptions = (filterKey, selectedValues) => {
