@@ -20,7 +20,7 @@ const GeneralDetailsPage = () => {
   const dbName = useAppSelector(state => state.authSlice.dbName);
   // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
-    console.log(dbName, companyName)
+
   const sexOptions = [
     { label: 'Male', value: 'Male' },
     { label: 'Female', value: 'Female' },
