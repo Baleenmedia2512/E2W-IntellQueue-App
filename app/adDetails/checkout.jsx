@@ -187,7 +187,7 @@ const CheckoutPage = () => {
                 ₹ {formattedRupees((((item.unit === "SCM" ? item.qty * item.width : item.qty)* item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))}</td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
-                  onClick={() => handleRemoveRateId(index)}
+                  onClick={() => handleRemoveRateId(item.index)}
                 >
                   <RemoveCircleOutline color='primary' fontSize='small'/>
                 </IconButton>
