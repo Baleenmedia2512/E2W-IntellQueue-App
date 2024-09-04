@@ -20,6 +20,7 @@ import './globals.css';
 
 
 export default function BottomBarTest() {
+    const appRights = useAppSelector(state => state.authSlice.appRights);
   const [selected, setSelected] = useState('Client Manager');
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -432,6 +433,7 @@ export default function BottomBarTest() {
             additionalClasses="hover:bg-blue-50"
             dataTag=""
           />
+          {appRights.includes('Administrator') || appRights.includes('Admin') || appRights.includes('Leadership') ?
           <SubNavItem
             icon={<UserManagerIcon className="h-5 w-5 text-gray-600" />}
             label="User Manager"
@@ -439,6 +441,7 @@ export default function BottomBarTest() {
             additionalClasses="hover:bg-blue-50"
             dataTag=""
           />
+          : null}
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
             label={<span className="text-red-600">Log Out</span>}

@@ -969,7 +969,7 @@ const handleDateChange = (range) => {
                 variant="fullWidth"
             >
                 <Tab label="Order Report" />
-                {appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') ? <Tab label="Finance Report" /> : null}
+                {appRights.includes('Administrator') || appRights.includes('Admin') || appRights.includes('Finance') || appRights.includes('Leadership') ? <Tab label="Finance Report" /> : null}
             </Tabs>
             <Dialog
                 open={orderDialogOpen}
@@ -984,7 +984,7 @@ const handleDateChange = (range) => {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                {appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership')? (
+                {appRights.includes('Administrator') || appRights.includes('Admin') || appRights.includes('Finance') || appRights.includes('Leadership')? (
             <Button onClick={handleGoToFinance} color="primary">
                 Go to Finance Report
             </Button>
@@ -1148,7 +1148,7 @@ const handleDateChange = (range) => {
         <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
           Show Balance
         </button>
-        {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership')) && (
+        {(appRights.includes('Administrator') || appRights.includes('Admin') || appRights.includes('Finance') || appRights.includes('Leadership')) && (
         <button className="consultant-button" onClick={handleConsultantReportOpen}>
           Consultant Report
         </button>
