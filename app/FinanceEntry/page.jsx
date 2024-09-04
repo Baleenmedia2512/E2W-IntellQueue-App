@@ -15,15 +15,13 @@ import Popover from '@mui/material/Popover';
 import {MdOutlineSave} from "react-icons/md";
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import { useAppSelector } from '@/redux/store';
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
 import { setIsOrderExist } from '@/redux/features/order-slice';
-import { resetClientData } from '@/redux/features/client-slice';
+import FormData from 'form-data';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -69,6 +67,7 @@ const FinanceData = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
+  const [bill, setBill] = useState(null)
   // const [orderNumber, setOrderNumber] = useState(null);
   // const [clientName, setClientName] = useState(null);
   // const [orderAmount, setOrderAmount] = useState(null);
@@ -343,75 +342,92 @@ const FinanceData = () => {
   },[transactionType])
 
 
+  const handleUploadBills = async () => {
+    const formData = new FormData();
+    formData.append('JsonFile', bill); // 'bill' is the file object
+  
+    try {
+      const response = await axios.post("/api/upload", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      alert("File Uploaded Successfully!");
+    } catch (error) {
+      alert("Error while uploading file: " + error);
+    }
+  };
+  
 
   const insertNewFinance = async (e) => {
     e.preventDefault()
-    if (!isOrderExist && !expenseCategory) {
-      setToastMessage('Order Number does not exist!');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 3000);
-      return;
-    }
-    if (balanceAmount === 0) {
-      setToastMessage('Full payment has already been received!');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 3000);
-      return;
-    } else {
+    handleUploadBills()
+  //   if (!isOrderExist && !expenseCategory) {
+  //     setToastMessage('Order Number does not exist!');
+  //     setSeverity('error');
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 3000);
+  //     return;
+  //   }
+  //   if (balanceAmount === 0) {
+  //     setToastMessage('Full payment has already been received!');
+  //     setSeverity('error');
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 3000);
+  //     return;
+  //   } else {
 
-    if (validateFields()) {
-      try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}`);
+  //   if (validateFields()) {
+  //     try {
+  //       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}`);
 
 
-          const data = await response.json();
-          if (data === 'Inserted Successfully!') {
-            setSuccessMessage('Finance Entry Added');
-              setTimeout(() => {
-            setSuccessMessage('');
+  //         const data = await response.json();
+  //         if (data === 'Inserted Successfully!') {
+  //           setSuccessMessage('Finance Entry Added');
+  //             setTimeout(() => {
+  //           setSuccessMessage('');
             
-            SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
-          }, 1000);
-        }
+  //           SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+  //         }, 1000);
+  //       }
         
-          // showToastMessage('success', data);
-          setChequeNumber('');;
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setRateWiseOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          dispatch(resetClientData());
-          // window.location.reload();
+  //         // showToastMessage('success', data);
+  //         setChequeNumber('');;
+  //         setClientName('');
+  //         setExpenseCategory('');
+  //         setGSTAmount('');
+  //         setGSTPercentage('');
+  //         setOrderAmount('');
+  //         setOrderNumber('');
+  //         setRateWiseOrderNumber('');
+  //         setPaymentMode(paymentModeOptions[0]);
+  //         setRemarks('');
+  //         setTaxType(taxTypeOptions[2]);
+  //         setTransactionType(transactionOptions[0]);
+  //         dispatch(resetOrderData());
+  //         dispatch(resetClientData());
+  //         // window.location.reload();
           
     
-      } catch (error) {
-          console.error(error);
-      }
+  //     } catch (error) {
+  //         console.error(error);
+  //     }
       
-    } else {
-      setToastMessage('Please fill the necessary details in the form.');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
+  //   } else {
+  //     setToastMessage('Please fill the necessary details in the form.');
+  //     setSeverity('error');
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
             
-  }
+  // }
 }
 
 const elementsToHideList = () => {
@@ -503,10 +519,15 @@ useEffect(() => {
           dispatch(resetOrderData());
   };
 
+  const handleFileChange = (e) => {
+    setBill(e.target.files[0]);
+  };
+
     return (
         <div className="flex flex-col justify-center mt-8 mx-[8%]">
       <form className="px-7 h-screen grid justify-center items-center ">
     <div className="grid gap-6 " id="form">
+      <input type = "file" onChange={handleFileChange}/>
     <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1>
         <div>
             <label className='block mb-2 text-gray-700 font-semibold'>Transaction Type*</label>
