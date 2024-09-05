@@ -74,6 +74,7 @@ const Report = () => {
   const [totalOrderAmount, setTotalOrderAmount] = useState('');
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
   const [selectedChart, setSelectedChart] = useState('income'); // Dropdown state
+  const [consultantDiagnosticsReportData, setConsultantDiagnosticsReportData] = useState([]);
 
   const handleDropdownChange = (event) => {
     setSelectedChart(event.target.value);
@@ -84,9 +85,7 @@ const Report = () => {
     router.push('/Report/ConsultantReport');
 };
 
-const handleConsultantSMS = () => {
 
-};
 
     const router = useRouter();
     const dispatch = useDispatch();
@@ -130,6 +129,7 @@ const handleConsultantSMS = () => {
       if (!username || dbName === "") {
         router.push('/login');
       }
+      fetchCurrentDateConsultants();
     },[])
     
     useEffect(() => {
@@ -147,6 +147,58 @@ const handleConsultantSMS = () => {
     useEffect(() => {
       FetchCurrentBalanceAmount();
   }, [marginResult]);
+
+  const fetchCurrentDateConsultants = () => {
+    axios
+        .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
+        .then((response) => {
+          const data = response.data.data;
+
+          // Group the results by consultant name
+          const consultantData = data.reduce((acc, item) => {
+              const { consultantName, Card, card_count } = item;
+
+              if (!acc[consultantName]) {
+                  acc[consultantName] = {
+                      consultantName: consultantName,
+                      totalCount: 0,
+                      cards: {}
+                  };
+              }
+
+              // Update total count and individual card counts
+              acc[consultantName].totalCount += parseInt(card_count);
+              acc[consultantName].cards[Card] = (acc[consultantName].cards[Card] || 0) + parseInt(card_count);
+
+              return acc;
+          }, {});
+          
+          setConsultantDiagnosticsReportData(consultantData);
+      })
+      .catch((error) => {
+          console.error(error);
+      });
+};
+
+const handleConsultantSMS = () => {
+// Generate SMS messages for each consultant and send SMS
+          Object.values(consultantDiagnosticsReportData).forEach((consultant) => {
+              const { consultantName, totalCount, cards } = consultant;
+
+              const usgCount = cards['USG Scan'] || 0;
+              const ctCount = cards['CT Scan'] || 0;
+              const xrayCount = cards['X-Ray'] || 0;
+
+              // Create the message for the consultant
+              const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
+
+              console.log(message)
+              // Call the function to send SMS
+              // sendSMS(consultantName, message);
+          });
+};
+
+console.log(consultantDiagnosticsReportData)
 
     const fetchSumOfOrders = () => {
       axios
@@ -1147,6 +1199,25 @@ const handleDateChange = (range) => {
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     <div className="flex flex-grow items-end ml-2 mb-4">
+  <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
+    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+      Show Balance
+    </button>
+    {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
+      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+        Cons. Report
+      </button>
+    )}
+    <button className="consultant-sms-button" onClick={handleConsultantSMS}>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+      </svg>
+      Send CDR
+    </button>
+  </div>
+</div>
+
+    {/* <div className="flex flex-grow items-end ml-2 mb-4">
       <div className="flex flex-col sm:flex-row">
         <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
           Show Balance
@@ -1165,7 +1236,7 @@ const handleDateChange = (range) => {
 
 
       </div>
-    </div>
+    </div> */}
   </div>
            
            

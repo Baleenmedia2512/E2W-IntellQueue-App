@@ -843,11 +843,79 @@ const filterHeaderTemplate = (column, filterField) => {
                 
             />
             <button
+    // onClick={() => {
+    //     let newFilters = { ...filters };
+    //     newFilters[filterField] = { value: '', matchMode: 'contains' };
+    //     setFilters(newFilters);
+    //     setFilteredConsultants([]); // Clear filtered consultants
+    // }}
     onClick={() => {
         let newFilters = { ...filters };
         newFilters[filterField] = { value: '', matchMode: 'contains' };
+    
         setFilters(newFilters);
-        setFilteredConsultants([]); // Clear filtered consultants
+    
+        // Process consultants to filter and include group totals row when filter is cleared
+        const updatedRows = consultants.flatMap(consultant => {
+            if (!Array.isArray(consultant.rates)) return [];
+    
+            // Calculate the total number of rows for the consultant
+            let totalRows = consultant.rates.reduce((sum, rateCard) => 
+                (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
+                0
+            );
+            let middleIndex = Math.floor(totalRows / 2); // Calculate middle row index
+    
+            let currentIndex = 0;
+    
+            const rows = consultant.rates.flatMap(rateCard => {
+                return (rateCard.rateTypes || []).map(rateType => {
+                    const isMiddleRow = currentIndex === middleIndex && totalRows > 1; // Ensure it's not a single row
+                    const row = {
+                        id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
+                        name: isMiddleRow ? consultant.name : '', // Assign name only to the middle row
+                        rateCard: rateCard.rateCard,
+                        rateType: rateType.rateType,
+                        count: rateType.count,
+                        price: rateType.price,
+                        total: rateType.count * rateType.price,
+                        isGroup: isMiddleRow, // Set group flag for middle row
+                        isScanGroup: rateType.rateCard === rateCard.rateCard,
+                        orderNumber: consultant.orderNumbers,
+                        originalName: consultant.name // Store the original name for future use
+                    };
+                    currentIndex++; // Increment index for each rateType
+                    return row;
+                });
+            });
+    
+            // Add the Total row, ensuring name is empty for this row
+            rows.push({
+                id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
+                name: '', // Ensure name is empty for Total row
+                rateCard: 'Total',
+                count: '',
+                price: '',
+                total: `₹${Math.round(consultant.total)}`,
+                isGroup: true,
+                isScanGroup: false,
+                originalName: consultant.name
+            });
+    
+            return rows;
+        });
+    
+        // Update filtered consultants based on the cleared filter (without modifying the total rows)
+        const filteredRows = updatedRows.map(row => {
+            // Add name only for middle rows that are NOT 'Total' rows
+            return {
+                ...row,
+                name: row.rateCard !== 'Total' && row.isGroup ? row.originalName : row.name // Ensure name is empty for 'Total' rows
+            };
+        });
+    
+        // Update state with the filtered data
+        setFilteredConsultants(filteredRows);
     }}
     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
 >
