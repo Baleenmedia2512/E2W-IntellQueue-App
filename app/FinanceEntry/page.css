@@ -1,12 +1,140 @@
-.custom-date-picker {
-    position: relative;
-    z-index: 0;
-    width: 0px;
+ 
+  .custom-button {
+    padding: 1.3em 3em;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #23c483;
+    border: none;
+    border-radius: 25px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease 0s;
+    cursor: pointer;
+    outline: none;
+    display: inline-block;
+    
   }
   
-  .custom-time-picker {
-    position: relative;
-    z-index: 0;
-    height: 40px;
+  .custom-button:hover {
+    background-color: #2376c4;
+    box-shadow: 0px 15px 20px rgba(17, 111, 165, 0.4);
+    color: #fff;
+    transform: translateY(-7px);
+  }
+  
+  .custom-button:active {
+    transform: translateY(-1px);
+  }
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .custom-button {
+      padding: 1.2em 3.5em; /* Increase the padding for more width */
+      font-size: 11px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .custom-button {
+      padding: 1.1em 2.5em; /* Increase the padding for more width */
+      font-size: 10px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .custom-button {
+      padding: 1em 2.5em; /* Increase the padding for more width */
+      font-size: 9px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  
+  .update-button,
+  .cancel-button {
+      padding: 1.3em 3em;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      font-weight: 500;
+      color: #ffffff;
+      border: none;
+      border-radius: 25px;
+      box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease 0s;
+      cursor: pointer;
+      outline: none;
+      display: inline-block;
+  }
+  
+  .update-button {
+      /* background-color: #23c483; */
+      margin-right: 10px;
+  }
+  
+  .update-button:hover {
+      background-color: #23c483;
+      box-shadow: 0px 15px 20px rgba(23, 219, 111, 0.4);
+      transform: translateY(-7px);
+  }
+  
+  .update-button:active {
+      transform: translateY(-1px);
+  }
+  
+  .cancel-button {
+      background-color: #d98880;
+  }
+  
+  .cancel-button:hover {
+      background-color: #d98880;
+      box-shadow: 0px 15px 20px rgba(194, 109, 109, 0.4);
+      transform: translateY(-7px);
+  }
+  
+  .cancel-button:active {
+      transform: translateY(-1px);
+  }
+  
+  /* Responsive styles for phone view */
+  @media (max-width: 480px) {
+      .update-button, .cancel-button {
+        padding: 1.1em 2.5em; /* Further decrease padding for phones */
+          font-size: 10px;
+          letter-spacing: 0.5px;
+      }
+      .button-container{
+        width: 38%;
+      }
+      .update-button {
+        right: 5px; /* Position cancel button below update button */
+        margin-bottom: 10px;   
+        position: relative;
+        width:100%;
+        height:40px;
+        
+    }
+    .cancel-button {
+      right: 5px; /* Position cancel button below update button */
+        /* margin-bottom: 10px;    */
+        position: relative;
+        width:100%;
+        height:40px;
+  }
+  }
+  
+  /* Responsive styles for very small phones */
+  @media (max-width: 320px) {
+      .update-button, .cancel-button {
+          padding: 1em 2.5em; /* Decrease padding further */
+          font-size: 9px;
+      }
+  
+      .cancel-button {
+          margin-top: 45px; /* Adjust spacing between buttons */
+      }
   }
   

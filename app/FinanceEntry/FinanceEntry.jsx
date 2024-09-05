@@ -362,10 +362,11 @@ const FinanceData = () => {
         }
       });
 
-      alert(response.data.message || "File uploaded successfully!");
+      // alert(response.data.message || "File uploaded successfully!");
+      return response.data
     } catch (error) {
       console.error(error);
-      alert("Error uploading file: " + (error.response?.data?.error || error.message));
+      // alert("Error uploading file: " + (error.response?.data?.error || error.message));
     }
   };
   
@@ -540,29 +541,40 @@ useEffect(() => {
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
         <div className="w-full ">
   <div className="flex items-center justify-between">
+    
       <div>
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-2">Finance Manager</h2>
+        <h2 className="text-lg md:text-2xl ml-4 lg:text-3xl font-bold text-blue-500">Finance Manager</h2>
+        <div className="border-2 w-10 ml-4 inline-block border-blue-500 mb-2"></div>
+        
         {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
-      </div>
-        {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
-      <div className="bg-white p-4 rounded-lg shadow-lg">
-      <form className="space-y-4">
-      <div className="flex items-center mt-2 justify-center">
-               <button className = "bg-red-400 text-white p-2 rounded-lg ml-4 w-24 justify-center" onClick={clearFinance}>
-                      <span className='flex flex-row justify-center'><MdClear className='mt-1 mr-1'/> Clear</span>
+      <div className="flex items-center mt-2 justify-center mb-2">
+               <button className = "cancel-button" onClick={clearFinance}>
+                       Clear
                       </button>
 
-                      <button className = "bg-green-400 text-white p-2 rounded-lg ml-4 w-24 justify-center " onClick={insertNewFinance}>
-                      <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span>
+                      <button className = "custom-button ml-2" onClick={insertNewFinance}>
+                      Add
                       </button>
-                      {transactionType.value === 'Operational Expense' && <div className=' bg-white rounded-lg ml-4 cursor-pointer'>
-              <button className='text-center w-32 rounded-lg p-2 h-auto  bg-blue-500 text-white relative justify-center align-middle '>
-              <span className='flex flex-row justify-center cursor-pointer'><MdUploadFile className='mt-1 mr-1'/> Upload Bill</span>
-            <input type = "file" onChange={handleFileChange} className='block  h-full w-full absolute top-0 bottom-0 left-0 right-0 opacity-0 cursor-pointer'/>
-            </button>
-            </div>}
   </div>
+      </div>
+        {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
+      <div className="bg-white p-4 mx-4 rounded-lg shadow-lg">
+      <form className="space-y-4 ">
+      
+      {transactionType.value === 'Operational Expense' && 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                      <div className=' bg-white rounded-lg ml-4'>
+                        <div className='relative'>
+                      <button className='update-button bg-blue-500 cursor-pointer'>
+                      Upload Bill
+                    <input type = "file" accept="application/pdf, image/jpg, image/jpeg" onChange={handleFileChange} className={`absolute inset-0 opacity-0`}/>
+                    </button></div>
+            <div className="mt-2 text-sm text-gray-700 break-words">
+            {bill && bill.name}
+            </div>
+            </div></div>}
+            
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
       
     
