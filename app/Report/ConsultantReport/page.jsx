@@ -544,11 +544,11 @@ const extractNameFromId = (id) => {
 // const filteredNameRows = rowsToCalculate.filter(row => row.name);
 const filteredNameRows = rowsToCalculate.map(row => {
     if (row.name) {
-        console.log('rowName')
+        
         return row;
     } else if (selectedRows.length > 0 && row.id) {
         // If name is null and selectedRows is greater than 0, extract the name from row.id
-        console.log('rowID')
+        
         return { ...row, name: extractNameFromId(row.id) };
     }
     return row;
@@ -573,9 +573,7 @@ const numberOfConsultants = new Set(filteredNameRows
     .map(row => row.name)
     .filter(name => name) // This filters out null and empty string values
 ).size;
-console.log(filteredNameRows
-    .map(row => row.name)
-    .filter(name => name))
+
 
 
 const extractRateCardFromId = (id) => {
@@ -626,6 +624,8 @@ const handleExport = () => {
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
     saveAs(blob, 'Consultant_Report.xlsx');
 };
+
+console.log(filteredConsultants)
 
 // const handleSelectionChange = (e) => {
 //     const selectedRows = e.value; // Get the array of selected rows
