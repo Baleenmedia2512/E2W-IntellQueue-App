@@ -540,7 +540,7 @@ useEffect(() => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
         <div className="w-full ">
-  <div className="flex items-center justify-between">
+  <div className="flex items-center justify-between top-0 z-10 sticky bg-gray-100">
     
       <div>
         <h2 className="text-lg md:text-2xl ml-4 lg:text-3xl font-bold text-blue-500">Finance Manager</h2>
@@ -559,7 +559,7 @@ useEffect(() => {
   </div>
       </div>
         {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
-      <div className="bg-white p-4 mx-4 rounded-lg shadow-lg">
+      <div className="bg-white p-4 mx-4 rounded-lg shadow-lg overflow-y-auto">
       <form className="space-y-4 ">
       
       {transactionType.value === 'Operational Expense' && 
@@ -661,14 +661,14 @@ useEffect(() => {
                 
             </div>
             {(clientNameSuggestions.length > 0 && clientName !== '') && (
-                <ul className="list-none">
+                <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg h-40 overflow-y-scroll">
                 {clientNameSuggestions.map((name, index) => (
                     <li key={index}>
                     <button
                         type="button"
                         // className="text-black text-left pl-3 border w-full bg-gradient-to-r from-green-100 via-green-200 to-green-300 hover:cursor-pointer transition
                         //     duration-300"
-                        className="text-black text-left pl-3 pt-1 pb-1 border w-full bg-[#9ae5c2] hover:cursor-pointer transition duration-300 rounded-md"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-non"e
                         onClick={handleClientNameSelection}
                         value={name}
                     >
