@@ -204,8 +204,7 @@ const handleConsultantSMS = () => {
               const ctCount = cards['CT Scan'] || 0;
               const xrayCount = cards['X-Ray'] || 0;
 
-              // Create the message for the consultant
-              // const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
+              //Don't make unnessary changes to the message (even a space)
               const message = `Hello ${consultantName}, 
 ${totalCount} of your Patients utilized our Diagnostic Services Today. 
 USG - ${usgCount} 
@@ -241,16 +240,16 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
     .then((response) => {
 
       const result = response.data;
-      console.log(result);
       if (result.includes('Done')) {
         // Success Case
+        handleCloseCDR();
         setSuccessMessage('SMS Sent!');
         setTimeout(() => {
           setSuccessMessage('');
         }, 1500);
       } else {
         // Error Case
-        setToastMessage(`SMS Not Sent! Reason: ${result.ErrorMessage}`);
+        setToastMessage(`SMS Not Sent! Reason: ${result}`);
         setSeverity('warning');
         setToast(true);
         setTimeout(() => {
@@ -1141,17 +1140,19 @@ const handleDateChange = (range) => {
 
 {/* CDR confirmation */}
 <Dialog open={openCDR} onClose={handleCloseCDR}>
-        <DialogTitle>Confirmation</DialogTitle>
+        <DialogTitle>SMS Confirmation</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {/* Show the names of all consultants */}
-            The SMS will be sent to the following consultants:
-            <ul>
-              {consultants.map((consultant, index) => (
+            <>
+            <strong>The SMS will be sent to the following consultant(s):</strong>
+            <ul className="mt-2 ml-4 list-disc ">
+              {consultantNameCDR.map((consultant, index) => (
                 <li key={index}>{consultant}</li>
               ))}
             </ul>
-            Do you want to continue?
+            <strong>Do you want to continue?</strong>
+            </>
           </DialogContentText>
         </DialogContent>
         <DialogActions>

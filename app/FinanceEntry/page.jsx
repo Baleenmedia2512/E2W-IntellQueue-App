@@ -238,6 +238,7 @@ const FinanceData = () => {
     }
 
     const sendableNumber = `91${clientNumber}`;
+    //Don't make unnessary changes to the message (even a space)
     const message = `Hello ${clientName}, 
 Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
 Thanks for choosing Grace Scans. Have a Nice Day!`;
@@ -249,8 +250,7 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
       .then((response) => {
 
         const result = response.data;
-        console.log(result.ErrorCode);
-        if (result.ErrorCode === '000') {
+        if (result.includes('Done')) {
           // Success Case
           setSuccessMessage('SMS Sent!');
           setTimeout(() => {
@@ -258,7 +258,7 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
           }, 1500);
         } else {
           // Error Case
-          setToastMessage(`SMS Not Sent! Reason: ${result.ErrorMessage}`);
+          setToastMessage(`SMS Not Sent! Reason: ${result}`);
           setSeverity('warning');
           setToast(true);
           setTimeout(() => {
@@ -289,6 +289,7 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
 
     const sendableNumber = `91${clientNumber}`;
     const sender = 'BALEEN';
+    //Don't make unnessary changes to the message (even a space)
     const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
     const encodedMessage = encodeURIComponent(message);
     
@@ -387,8 +388,6 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
     }
   },[transactionType])
 
-
-
   const insertNewFinance = async (e) => {
     e.preventDefault()
     if (!isOrderExist && !expenseCategory) {
@@ -421,8 +420,21 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
               setTimeout(() => {
             setSuccessMessage('');
             
-            // SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
-            SendSMSViaNetty(clientNumber, clientName, orderAmount);
+            if (elementsToHide.includes("RateWiseOrderNumberText")) {
+              //BM
+                SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+            } else if (elementsToHide.includes("OrderNumberText")) {
+              SendSMSViaNetty(clientNumber, clientName, orderAmount);
+            } else {
+              setToastMessage('SMS Not Sent! Reason: No Database Found.');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+            }
+            
+            
           }, 1000);
         }
         
