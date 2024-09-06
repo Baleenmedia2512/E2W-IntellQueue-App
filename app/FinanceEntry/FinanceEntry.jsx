@@ -232,54 +232,54 @@ const FinanceData = () => {
 
 
 
-  const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
+  // const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
 
-    // Ensure clientNumber is valid
-    if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
-        console.log('Client number is 0 or invalid. Exiting function.');
-        setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
-              setSeverity('warning');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-        return; // Prevent the function from continuing if clientNumber is invalid
-    }
+  //   // Ensure clientNumber is valid
+  //   if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
+  //       console.log('Client number is 0 or invalid. Exiting function.');
+  //       setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+  //             setSeverity('warning');
+  //             setToast(true);
+  //             setTimeout(() => {
+  //               setToast(false);
+  //             }, 2000);
+  //       return; // Prevent the function from continuing if clientNumber is invalid
+  //   }
 
-    const sendableNumber = `91${clientNumber}`;
-    const sender = 'BALEEN';
-    const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
-    const encodedMessage = encodeURIComponent(message);
+  //   const sendableNumber = `91${clientNumber}`;
+  //   const sender = 'BALEEN';
+  //   const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
+  //   const encodedMessage = encodeURIComponent(message);
 
 
-    axios
-      .get(`https://orders.baleenmedia.com/API/Media/SendSms.php?JsonPhoneNumber=${sendableNumber}&JsonSender=${sender}&JsonMessage=${encodedMessage}`)
-      .then((response) => {
+  //   axios
+  //     .get(`https://orders.baleenmedia.com/API/Media/SendSms.php?JsonPhoneNumber=${sendableNumber}&JsonSender=${sender}&JsonMessage=${encodedMessage}`)
+  //     .then((response) => {
 
-        const responseData = JSON.parse(response.data);
+  //       const responseData = JSON.parse(response.data);
 
-        if (responseData.status === 'success') {
-            console.log('SMS Sent!');
-            setSuccessMessage('SMS Sent!');
-              setTimeout(() => {
-            setSuccessMessage('');
-          }, 1500);
-        } else {
-            console.log('SMS Not Sent! Status:', responseData.message);
-            setToastMessage('SMS Not Sent! Reason', responseData.message);
-              setSeverity('warning');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-        }
-    })
+  //       if (responseData.status === 'success') {
+  //           console.log('SMS Sent!');
+  //           setSuccessMessage('SMS Sent!');
+  //             setTimeout(() => {
+  //           setSuccessMessage('');
+  //         }, 1500);
+  //       } else {
+  //           console.log('SMS Not Sent! Status:', responseData.message);
+  //           setToastMessage('SMS Not Sent! Reason', responseData.message);
+  //             setSeverity('warning');
+  //             setToast(true);
+  //             setTimeout(() => {
+  //               setToast(false);
+  //             }, 2000);
+  //       }
+  //   })
 
-      .catch((error) => {
-        console.error(error);
-      });
+  //     .catch((error) => {
+  //       console.error(error);
+  //     });
     
-  }; 
+  // }; 
 
   const handleOrderNumberChange = (event) => {
     
@@ -390,7 +390,13 @@ const FinanceData = () => {
         setToast(false);
       }, 3000);
       return;
-    } else {
+    } else if(orderNumber === "" || isNaN(orderNumber)){
+      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter an valid Order Number!" }));
+      return;
+    }else if(isNaN(parseInt(orderAmount)) || orderAmount === "0"){
+      setErrors((prevErrors) => ({...prevErrors, orderAmount: "Please enter an valid Order Amount!"}));
+      return;
+    }else {
 
     if (validateFields()) {
       try {
@@ -403,7 +409,7 @@ const FinanceData = () => {
               setTimeout(() => {
             setSuccessMessage('');
             
-            SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+            // SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
           }, 1000);
         }
           handleUploadBills()
@@ -485,7 +491,7 @@ useEffect(() => {
     if (transactionType?.value !== 'Operational Expense' && !clientName) {
       errors.clientName = 'Client Name is required';
     }
-    if (!orderNumber && !expenseCategory) errors.orderNumber = 'Order Number is required';
+    if ((!orderNumber || isNaN(orderNumber) ) && !expenseCategory ) errors.orderNumber = 'Order Number is required';
     // if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
     if (!taxType) errors.taxType = 'Tax Type is required';
     if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
@@ -534,15 +540,26 @@ useEffect(() => {
   };
 
   const handleFileChange = (e) => {
-    setBill(e.target.files[0]);
+
+    const file = e.target.files[0]
+    if (file) {
+      const fileSizeMB = file.size / (1024 * 1024); // Convert file size to MB
+
+      if (fileSizeMB > 10) {
+        alert('File size should not be more than 10 MB. File not Uploaded!');
+        return;
+      }else{
+        setBill(file);
+      }
+    }
   };
 
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
-        <div className="w-full ">
+        <div className="max-w-6xl w-full align-middle">
   <div className="flex items-center justify-between top-0 z-10 sticky bg-gray-100">
     
-      <div>
+      <div >
         <h2 className="text-lg md:text-2xl ml-4 lg:text-3xl font-bold text-blue-500">Finance Manager</h2>
         <div className="border-2 w-10 ml-4 inline-block border-blue-500 mb-2"></div>
         
@@ -559,7 +576,7 @@ useEffect(() => {
   </div>
       </div>
         {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
-      <div className="bg-white p-4 mx-4 rounded-lg shadow-lg overflow-y-auto">
+      <div className="bg-white p-6 py-10 rounded-lg shadow-lg overflow-y-auto">
       <form className="space-y-4 ">
       
       {transactionType.value === 'Operational Expense' && 
@@ -579,9 +596,9 @@ useEffect(() => {
       
     
       <div className='mt-4' >
-            <label className='mt-4 mb-2 text-gray-700 font-semibold' >Transaction Type*</label>
+            <label className='mt-4 mb-2 text-gray-700 font-semibold' >Transaction Type</label>
             <Dropdown
-              className={`w-full mt-2 text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} overflow-visible`}
+              className={`w-full mt-2 text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.transactionType ? 'border-red-400' : ''} overflow-visible`}
               id="1"
               name="TransactionTypeSelect"
               
@@ -604,9 +621,9 @@ useEffect(() => {
                <div className='mt-4' >
                {transactionType && transactionType.value === 'Operational Expense' && (
               <>
-            <label className='mt-4 mb-2 text-gray-700 font-semibold'>Expense Category*</label>
+            <label className='mt-4 mb-2 text-gray-700 font-semibold'>Expense Category</label>
             <Dropdown
-              className={`w-full mt-2 text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} overflow-visible`}
+              className={`w-full mt-2 text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.expenseCategory ? 'border-red-400' : ''} overflow-visible`}
               id="1"
               name="ExpenseCategorySelect"
               placeholder="Select Expense Category"
@@ -628,13 +645,13 @@ useEffect(() => {
             )}
             </div>
 
-            <div className='mt-4' >
+            <div className='mt-2' >
             {transactionType && transactionType.value !== 'Operational Expense' && (
               <>
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Client Name*</label>
+            <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name*</label>
             <div className="w-full flex gap-3">
             <input 
-            className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+            className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
                 type="text"
                 placeholder="Client Name" 
                 id='2'
@@ -642,6 +659,7 @@ useEffect(() => {
                 // required={!isEmpty} 
                 value={clientName}
                 onChange = {handleClientNameTermChange}
+                onFocus={e => e.target.select()}
                 onBlur={() => {
             setTimeout(() => {
               setClientNameSuggestions([]);
@@ -681,13 +699,14 @@ useEffect(() => {
 {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}</>)}
 </div></div>
     {/* {!elementsToHide.includes("RateWiseOrderNumber") ? ( */}
-    {transactionType && transactionType.value !== 'Operational Expense' && (<div id="4" name="RateWiseOrderNumberText">
-        <label className='block mb-2 mt-5 text-gray-700 font-semibold' >
+    {transactionType && transactionType.value !== 'Operational Expense' && (
+    <div id="4" name="RateWiseOrderNumberText">
+        <label className='block mb-2 mt-4 text-gray-700 font-semibold' >
           Order Number*
         </label>
         <div className="w-full flex gap-3">
           <input
-           className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+           className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''}`}
             type="text"
             placeholder="Ex. 10000"
             value={rateWiseOrderNumber}
@@ -710,20 +729,22 @@ useEffect(() => {
         {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
         </div>)}
       {/* ):( */}
-      {transactionType && transactionType.value !== 'Operational Expense' && (<div name="OrderNumberText" >
-        <label className='block mb-2 mt-5 text-gray-700 font-semibold'>
+      {transactionType && transactionType.value !== 'Operational Expense' && (
+      <div name="OrderNumberText" >
+        <label className='block mb-2 mt-4 text-gray-700 font-semibold'>
           Order Number*
         </label>
         <div className="w-full flex gap-3">
           <input
-            className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+            className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''}`}
             type="text"
             placeholder="Ex. 10000"
-            value={parseInt(orderNumber)}
+            value={orderNumber}
             pattern="\d*"
             inputMode="numeric"
             onChange={handleOrderNumberChange}
             onFocus={(e) => { e.target.select(); }}
+            required
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -742,10 +763,10 @@ useEffect(() => {
       {/* </>
     )}</div>
   </> */}
-  <div className='mt-4' >
+  <div className='mt-3' >
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount*</label>
             <div className="w-full flex gap-3">
-            <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+            <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderAmount ? 'border-red-400' : ''}`}
                 type="text"
                 placeholder="Amount (₹)" 
                 id='4'
@@ -754,6 +775,7 @@ useEffect(() => {
                 value={orderAmount}
                 pattern="\d*"
                 inputMode="numeric"
+                onFocus={e => e.target.select()}
                 onChange={(e) => {
                   const input = e.target.value.replace(/\D/g, '');
                   setOrderAmount(input);
@@ -813,11 +835,11 @@ useEffect(() => {
               }}
               />
           </div> */}
-<div className='mt-4'>
-            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Tax Type*</label>
+<div className='mt-3'>
+            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Tax Type</label>
 
             <Dropdown
-              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} overflow-visible`}
+              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible`}
               id="5"
               name="TaxTypeSelect"
               placeholder="Select Tax Type"
@@ -833,13 +855,13 @@ useEffect(() => {
               onChange={(option) => handleChange(option, 'TaxTypeSelect')}
             //   required
               />
-               {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>}
+               {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
                {taxType && taxType.value === 'GST' && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
           <div className="w-full flex gap-3">
-          <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+          <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' : ''}`}
               type="text"
               placeholder="GST%" 
               id='4'
@@ -866,7 +888,7 @@ useEffect(() => {
           
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
             <div className="w-full flex gap-3">
-            <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+            <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' : ''}`}
                 type="text"
                 placeholder="GST Amount" 
                 id='7'
@@ -895,23 +917,22 @@ useEffect(() => {
             </div>
             )}
             
-            <div className='mt-2
-            '> 
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Remarks</label>
+            <div className='mt-3'> 
+            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Remarks</label>
             <div className="w-full flex gap-3">
             <TextareaAutosize
-              className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+              className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
               id="7"
               name="RemarksTextArea"
               placeholder="Remarks"
               value={remarks}
               onChange={e => setRemarks(e.target.value)}
-              
+              onFocus={e => e.target.select()}
             ></TextareaAutosize>
             </div>
             </div>
-            <div className='mt-4'>
-                  <label className="block mt-1 mb-4 text-gray-700 font-semibold">Transaction Date*</label>
+            <div className='mt-3'>
+                  <label className="block mt-1 mb-2 text-gray-700 font-semibold">Transaction Date</label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >
@@ -969,11 +990,11 @@ useEffect(() => {
                 {errors.transactionDate && <span className="text-red-500 text-sm">{errors.transactionDate}</span>}
                 {errors.transactionTime && <span className="text-red-500 text-sm">{errors.transactionTime}</span>}
                 </div>
-                <div className='mt-4'>
-                <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Payment Mode*</label>
-            <div className='flex w-full'>
+                <div className='mt-3'>
+                <label className="block mt-1 mb-2 text-gray-700 font-semibold">Payment Mode</label>
+            {/* <div className='flex w-full'> */}
             <Dropdown
-              className={`w-full mt-2 text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} overflow-visible`}
+              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible`}
               id="5"
               name="PaymentModeSelect"
               placeholder="Select Payment Mode"
@@ -989,14 +1010,14 @@ useEffect(() => {
               options={paymentModeOptions}
             //   required
               />
-               </div>
-               {errors.paymentMode && <span className="text-red-500 text-sm">{errors.paymentMode}</span>}
+               {/* </div>
+               {errors.paymentMode && <span className="text-red-500 text-sm">{errors.paymentMode}</span>} */}
                </div>
                {paymentMode && paymentMode.value === 'Cheque' && (
-              <>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>Cheque Number*</label>
-            <div className="w-full flex gap-3">
-            <input className="p-3 capitalize text-black shadow-2xl  glass w-full  outline-none focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md" 
+              <div className='mt-3'>
+               <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number*</label>
+            <input 
+                className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.chequeNumber ? 'border-red-400' : ''}`}
                 type="text"
                 placeholder="Ex. 10000" 
                 id='3'
@@ -1018,9 +1039,12 @@ useEffect(() => {
                 }
                 }}
                 />
-            </div>
             {errors.chequeNumber && <span className="text-red-500 text-sm">{errors.chequeNumber}</span>}
-            <label className="block mt-5 mb-4 text-gray-700 font-semibold">Cheque Date*</label>
+            </div>
+               )}
+               {paymentMode && paymentMode.value === 'Cheque' && (
+            <div>
+            <label className="block mt-2 mb-2 text-gray-700 font-semibold">Cheque Date*</label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >
@@ -1064,13 +1088,18 @@ useEffect(() => {
             renderInput={(params) => <TextField {...params} fullWidth />}
             ampm
             views={['hours', 'minutes']}
+            sx={{
+              '& .MuiInputBase-root': {
+                height: 40,
+              },
+            }}
           />
         </Box>
       </LocalizationProvider>
                 </div>
                 {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
                 {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
-                </>
+                </div>
             )}
             
                

@@ -1,20 +1,38 @@
 'use client';
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from '@/redux/store';
+import {
+  UserIcon,
+  DocumentTextIcon,
+  CurrencyDollarIcon,
+  ClipboardDocumentCheckIcon,
+  ChevronDownIcon,
+  Cog6ToothIcon,
+  WrenchIcon,
+  ChartPieIcon,
+  ChevronUpIcon,
+} from '@heroicons/react/24/outline';
 
-const BottomBar = () => {
+import './globals.css';
+
+
+
+export default function BottomBarTest() {
+    const appRights = useAppSelector(state => state.authSlice.appRights);
+  const [selected, setSelected] = useState('Client Manager');
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const router = useRouter();
   const currentPath = usePathname();
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const [value, setValue] = useState(0); // Define the value state variable
   const [elementsToHide, setElementsToHide] = useState([])
   const [username, setUsername] = useState(""); // State variable for username
-  
+  const [activeIndex, setActiveIndex] = useState(1);
 
   const elementsToHideList = () => {
-    if(dbName){
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
@@ -23,42 +41,81 @@ const BottomBar = () => {
       console.error("Error showing element names: " + error)
     }
   }
-  }
+
+  // useEffect(() => {
+  //   //searching elements to Hide from database
+
+  //   elementsToHide.forEach((name) => {
+  //     const elements = document.getElementsByName(name);
+  //     console.log(elements)
+  //     elements.forEach((element) => {
+  //       element.style.display = 'none'; // Hide the element
+  //     });
+  //   });
+  // }, [elementsToHide])
 
   useEffect(() => {
-    //searching elements to Hide from database
-
-    elementsToHide.forEach((name) => {
-      const elements = document.getElementsByName(name);
+    if(dbName){
+    elementsToHide.forEach((tagName) => {
+      const elements = document.querySelectorAll(`[data-tag="${tagName}"]`);
       elements.forEach((element) => {
         element.style.display = 'none'; // Hide the element
       });
     });
-  }, [elementsToHide])
+  }
+  }, [elementsToHide]);
 
-  useEffect(() => {
-    const fetchUsername = async () => {
-      const fetchedUsername = "GraceScans";
-      setUsername(fetchedUsername);
-    };
-    fetchUsername();
-    elementsToHideList()
-  }, []);
+
+
+  // useEffect(() => {
+  //   const fetchUsername = async () => {
+  //     const fetchedUsername = "GraceScans";
+  //     setUsername(fetchedUsername);
+  //   };
+  //   fetchUsername();
+  //   elementsToHideList()
+  // }, [currentPath]);
+
 
   useEffect(()=>{
+    elementsToHideList();
       switch (currentPath) {
         case '/rate-validation':
           setValue(0);
+          setSelected('rateValidation');
           break;
         case '/':
           setValue(1);
+          setActiveIndex(0);
+          setSelected('Client');
           break;
         case '/adDetails':
           setValue(2);
+          setActiveIndex(1);
+          setSelected('Quote');
           break;
         case '/RatesEntry':
-          setValue(3);
+          setValue(4);
+          setSelected('ratesEntry');
           break;
+        case '/Create-Order':
+          setValue(3);
+          setActiveIndex(2);
+          setSelected('Order');
+          break;
+        case '/FinanceEntry':
+          setValue(5);
+          setActiveIndex(3);
+          setSelected('Finance');
+          break;
+        case '/Report':
+          // setValue(5);
+          // setActiveIndex(3);
+          setSelected('report');
+          break;
+        case '/Employee':
+          setSelected('Employee');
+          break;  
         default:
           break;
       }
@@ -87,167 +144,366 @@ const BottomBar = () => {
       case 5:
         router.push('/FinanceEntry');
         break;
-        case 6:
+      case 6:
         router.push('/Report');
         break;  
       case 7:
         router.push('/login');
         break; 
-        
+      case 8:
+        router.push('/Employee');
+        break;   
       default:
         break;
     }
   };
 
+
+  const UserAddIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-6 w-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
+      />
+    </svg>
+  );
+
+  const LogoutIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="red"
+      className="h-5 w-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
+      />
+    </svg>
+  );
+
+  const RateValidationIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-5 w-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+      />
+    </svg>
+  );
+  
+  const FinanceManagerIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-6 w-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15 8.25H9m6 3H9m3 6-3-3h1.5a3 3 0 1 0 0-6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+      />
+    </svg>
+  );
+  
+  const RatesManagerIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-5 w-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 6h.008v.008H6V6Z"
+      />
+    </svg>
+  );
+
+  const UserManagerIcon = () => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      strokeWidth={1.5} 
+      stroke="currentColor" 
+      className="h-5 w-5"
+      >
+    <path 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" 
+      />
+    </svg>
+
+  );
+  
+  const OrderManagerIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-6 w-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+      />
+    </svg>
+  );
+  
+
+  const Menus = [
+    { name: 'Client', icon: <UserAddIcon/> },
+    { name: 'Quote', icon: <DocumentTextIcon className="h-6 w-6" />, tag: 'QuoteSenderNavigation' },
+    { name: 'Order', icon: <OrderManagerIcon/> },
+    { name: 'Finance', icon: <FinanceManagerIcon/> },
+  ];
+
+
+
+  useEffect(() => {
+    const activeInd = Menus.findIndex(menu => menu.name === selected);
+    setActiveIndex(activeInd);
+  }, [selected]);
+  
+
+
+  const handleMenuChange = (menu) => {
+    setSelected(menu.name);
+    let newValue;
+    switch (menu.name) {
+      case 'Client':
+        newValue = 1;
+        break;
+      case 'Quote':
+        newValue = 2;
+        break;
+      case 'Order':
+        newValue = 3;
+        break;
+      case 'Finance':
+        newValue = 5;
+        break;
+      default:
+        newValue = null;
+    }
+  
+    if (newValue !== null) {
+      handleChange(null, newValue);
+      setShowMoreOptions(false);
+    }
+  };
+  
+
+    // Determine if the circle should be visible
+  // const isCircleVisible = [0, 1, 2, 3].includes(activeIndex);
+
+  // useEffect(() => {
+  //   const handleResize = () => setWindowWidth(window.innerWidth);
+  //   window.addEventListener('resize', handleResize);
+  //   return () => window.removeEventListener('resize', handleResize);
+  // }, []);
+
+  // // Define translate values based on screen width and active index
+  // const getTranslateValue = () => {
+  //   if (windowWidth <= 320) {
+  //     return activeIndex === 0 ? '-125px' : activeIndex === 1 ? '-62px' : activeIndex === 2 ? '6px' : activeIndex === 3 ? '76px' : '300px';
+  //   } else if (windowWidth >= 370 && windowWidth <= 450) {
+  //     return activeIndex === 0 ? '-152px' : activeIndex === 1 ? '-70px' : activeIndex === 2 ? '10px' : activeIndex === 3 ? '76px' : '1300px';
+  //   } else if (windowWidth >= 460  && windowWidth <= 700) {
+  //     return activeIndex === 0 ? '-167px' : activeIndex === 1 ? '-77px' : activeIndex === 2 ? '13px' : activeIndex === 3 ? '100px' : '1300px';
+  //   } else {
+  //     return activeIndex === 0 ? '-207px' : activeIndex === 1 ? '-104px' : activeIndex === 2 ? '-3px' : activeIndex === 3 ? '102px' : '1300px';
+  //   }
+  // };
+
+  
   if (currentPath === '/login') {
     return null; // Conditionally return null
   }
-  const ReportIcon = () => (
-    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-    <path fill-rule="evenodd" d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Zm2 8v-2h7v2H4Zm0 2v2h7v-2H4Zm9 2h7v-2h-7v2Zm7-4v-2h-7v2h7Z" clip-rule="evenodd"/>
-  </svg>
-  
-  
-  );
-  
+
   return (
-    <div className="fixed z-50 w-full h-16 -translate-x-1/2 bg-white border border-gray-200 rounded-full bottom-4 left-1/2 dark:bg-gray-700 dark:border-gray-600 overflow-x-auto max-w-full sm:max-w-[50%]">
-  <div className="flex justify-evenly h-full max-w-lg mx-auto">
-    {/* rate validation button */}
-    <button data-tooltip-target="tooltip-home"
-    type="button"
-    name = "RatesValidationNavigation"
-    className="inline-flex flex-col items-center justify-center px-5 rounded-s-full hover:bg-gray-50 dark:hover:bg-gray-800 group"
-    onClick={(e) => handleChange(e, 0)}
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-patch-check-fill" viewBox="0 0 16 16">
-  <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.638-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
-</svg>
-
-      <span className="sr-only">Rates Validation</span>
-    </button>
-    <div id="tooltip-home" name = "RatesValidationNavigation" role="tooltip" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-      Rates Validation
-      <div className="tooltip-arrow" data-popper-arrow></div>
-    </div>
-    {/* rate validation button */}
-    
-{/* Enquiry button */}
-    <button data-tooltip-target="tooltip-wallet" name = "EnquiryNavigation" onClick={(e) => handleChange(e, 1)} type="button" className="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
-      <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M9 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H7Zm8-1a1 1 0 0 1 1-1h1v-1a1 1 0 1 1 2 0v1h1a1 1 0 1 1 0 2h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 0 1-1-1Z" />
-      </svg>
-
-      <span className="sr-only">Enquiry</span>
-    </button>
-    <div id="tooltip-wallet" name = "EnquiryNavigation" role="tooltip" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-      Enquiry
-      <div className="tooltip-arrow" data-popper-arrow></div>
-    </div>
-  {/* Enquiry button */}
-
-  {/* Quote Sender button */}
-    <button data-tooltip-target="tooltip-settings" name = "QuoteSenderNavigation" onClick={(e) => handleChange(e, 2)}type="button" className="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-send-fill" viewBox="0 0 16 16">
-  <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z"/>
-</svg>
-
-      <span className="sr-only">Quote Sender</span>
-    </button>
-    <div id="tooltip-settings" name = "QuoteSenderNavigation" role="tooltip" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-    Quote Sender
-      <div className="tooltip-arrow" data-popper-arrow></div>
-    </div>
-    {/* Quote Sender button */}
-    
-    {/* MP-97 */}
-    {/* Order button */}
-    <button data-tooltip-target="tooltip-profile" name = "RatesEntryNavigation" type="button" onClick={(e) => handleChange(e, 3)} className="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
-    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-  <path d="M12.268 6A2 2 0 0 0 14 9h1v1a2 2 0 0 0 3.04 1.708l-.311 1.496a1 1 0 0 1-.979.796H8.605l.208 1H16a3 3 0 1 1-2.83 2h-2.34a3 3 0 1 1-4.009-1.76L4.686 5H4a1 1 0 0 1 0-2h1.5a1 1 0 0 1 .979.796L6.939 6h5.329Z"/>
-  <path d="M18 4a1 1 0 1 0-2 0v2h-2a1 1 0 1 0 0 2h2v2a1 1 0 1 0 2 0V8h2a1 1 0 1 0 0-2h-2V4Z"/>
-</svg>
-
-
-      <span className="sr-only">Work Order</span>
-    </button>
-    <div id="tooltip-profile" name = "RatesEntryNavigation" role="tooltip" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-    Work Order
-      <div className="tooltip-arrow" data-popper-arrow></div>
-      </div>
-      {/* Order button */}
-      {/* MP-97 */}
-
-    {/* Rates Entry button */}
-    <button data-tooltip-target="tooltip-profile" name = "RatesEntryNavigation" type="button" onClick={(e) => handleChange(e, 4)} className="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-currency-rupee" viewBox="0 0 16 16">
-  <path d="M4 3.06h2.726c1.22 0 2.12.575 2.325 1.724H4v1.051h5.051C8.855 7.001 8 7.558 6.788 7.558H4v1.317L8.437 14h2.11L6.095 8.884h.855c2.316-.018 3.465-1.476 3.688-3.049H12V4.784h-1.345c-.08-.778-.357-1.335-.793-1.732H12V2H4z"/>
-</svg>
-
-      <span className="sr-only">Rates Entry</span>
-    </button>
-    <div id="tooltip-profile" name = "RatesEntryNavigation" role="tooltip" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-    Rates Entry
-      <div className="tooltip-arrow" data-popper-arrow></div>
-      </div>
-      {/* Rates Entry button */}
-
-{/* Finance Entry button */}
-<button data-tooltip-target="tooltip-finance" type="button" onClick={(e) => handleChange(e, 5)} name = "FinanceEntryNavigation" className="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
-<svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-  <path fill-rule="evenodd" d="M12 14a3 3 0 0 1 3-3h4a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-4a3 3 0 0 1-3-3Zm3-1a1 1 0 1 0 0 2h4v-2h-4Z" clip-rule="evenodd"/>
-  <path fill-rule="evenodd" d="M12.293 3.293a1 1 0 0 1 1.414 0L16.414 6h-2.828l-1.293-1.293a1 1 0 0 1 0-1.414ZM12.414 6 9.707 3.293a1 1 0 0 0-1.414 0L5.586 6h6.828ZM4.586 7l-.056.055A2 2 0 0 0 3 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2h-4a5 5 0 0 1 0-10h4a2 2 0 0 0-1.53-1.945L17.414 7H4.586Z" clip-rule="evenodd"/>
-</svg>
-
-  <span className="sr-only">Finance Entry</span>
-</button>
-<div id="tooltip-finance" role="tooltip" name = "FinanceEntryNavigation" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-  Finance Entry
-  <div className="tooltip-arrow" data-popper-arrow></div>
-</div>
-
-
-{/* Finance Entry button */}
-{/*Report button */}
-<button
-  data-tooltip-target="tooltip-report"
-  type="button"
-  onClick={(e) => handleChange(e, 6)}
-  className="inline-flex flex-col items-center justify-center px-5 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 group"
->
-  <ReportIcon />
-  <span className="sr-only">Report</span>
-</button>
-<div
-  id="tooltip-report"
-  role="tooltip"
-  className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
->
-  Report
-  <div className="tooltip-arrow" data-popper-arrow></div>
-</div>
-
-    {/*Report button */}
-
-
-      {/*Logout button */}
-      <button data-tooltip-target="tooltip-logout" type="button" onClick={(e) => handleChange(e, 7)} className="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
-      <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-  <path stroke="currentColor" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
-</svg>
-      <span className="sr-only">Logout</span>
-    </button>
-    <div id="tooltip-logout" role="tooltip" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-    Logout
-      <div className="tooltip-arrow" data-popper-arrow></div>
+    <div className="relative mt-24">
+      {/* Main Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 h-20 z-50 bg-white  shadow-2xl" style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)' }}>
+        <div className="flex justify-around  max-w-lg mx-auto relative ">
       
-    </div>
-    {/*Logout button */}
+{/* {isCircleVisible && (
+            <span
+              className="bg-blue-500 duration-500 h-16 w-16 absolute -top-2 rounded-full transform transition-all"
+              style={{
+                transform: `translateX(${getTranslateValue()})`,
+              }}
+            ></span>
+          )} */}
+
+          {Menus.map((menu, i) => (
+            <div key={i} data-tag={menu.tag}>
+            <NavItem
+              key={i}
+              icon={menu.icon}
+              label={menu.name}
+              // onClick={() => setSelected(menu.name)}
+              onClick={() => handleMenuChange(menu)}
+              index={i} // Pass the index of the current item
+              activeIndex={activeIndex} // Pass the active index
+              isSelected={selected === menu.name}
+            />
+            </div>
+          ))}
+
+<div
+  className={`relative flex flex-col items-center justify-center transition duration-200 ${
+    showMoreOptions ? 'text-blue-500' : 'text-gray-600'
+  }`}
+  onClick={() => setShowMoreOptions(!showMoreOptions)}
+>
+  <div className={`p-3 mt-[10px] rounded-full transition-all duration-300 cursor-pointer hover:bg-blue-100 ${showMoreOptions ? 'bg-blue-100' : 'bg-transparent'}`}>
+    <ChevronDownIcon
+      className={`h-5 w-5 transform transition-transform duration-300 ${
+        showMoreOptions ? 'rotate-180' : 'rotate-0'
+      }`}
+    />
   </div>
+  <span
+    className={`mt-[3px] text-xs font-medium transition duration-200 ease-in-out ${
+      showMoreOptions ? 'text-blue-500' : 'text-gray-600'
+    }`}
+  >
+    {showMoreOptions ? 'Less' : 'More'}
+  </span>
+  {/* Sub Navigation Sidebar */}
+  <div
+        className={`fixed bottom-[96px] mr-14 sm:mr-0 w-fit pt-2 border-1 bg-white border-blue-300 shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
+          showMoreOptions ? 'translate-y-3' : 'translate-y-[500px]'
+        }`}
+      >
+        <div className="flex flex-col items-start">
+          <SubNavItem
+            icon={<RatesManagerIcon className="text-gray-600" />}
+            label="Rates Manager"
+            onClick={() => { setSelected('ratesEntry'); setShowMoreOptions(false); {handleChange(null, 4)}; }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag=""
+          />
+          <SubNavItem 
+            icon={<RateValidationIcon className="text-gray-600"  />}
+            label="Rate Validation"
+            onClick={() => { setSelected('rateValidation'); setShowMoreOptions(false); {handleChange(null, 0)}; }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag="RatesValidationNavigation"
+          />
+          <SubNavItem
+            icon={<ChartPieIcon className="h-5 w-5 text-gray-600" />}
+            label="Reports"
+            onClick={() => { setSelected('report'); setShowMoreOptions(false); {handleChange(null, 6)}; }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag=""
+          />
+          {appRights.includes('Administrator') || appRights.includes('Admin') || appRights.includes('Leadership') ?
+          <SubNavItem
+            icon={<UserManagerIcon className="h-5 w-5 text-gray-600" />}
+            label="User Manager"
+            onClick={() => { setSelected('report'); setShowMoreOptions(false); {handleChange(null, 8)}; }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag=""
+          />
+          : null}
+          <SubNavItem
+            icon={<LogoutIcon className="text-gray-600" />}
+            label={<span className="text-red-600">Log Out</span>}
+            onClick={() => { setSelected('logout'); setShowMoreOptions(false); {handleChange(null, 7)}; }}
+            additionalClasses="hover:bg-red-100"
+            dataTag=""
+          />
+        </div>
+      </div>
 </div>
 
+        </div>
+      </div>
+    </div>
   );
 }
 
 
-export default BottomBar;
+function NavItem({ icon, label, onClick, index, activeIndex, isSelected }) {
+  return (
+    <div
+      className={`flex flex-col items-center justify-center relative transition duration-200 ${
+        isSelected ? 'text-white' : 'text-gray-600'
+      }`}
+      onClick={onClick}
+    >
+      <div
+        className={`p-3 rounded-full transition-all duration-100 cursor-pointer ${
+          index === activeIndex ? '-translate-y-0 duration-700 opacity-100' : 'opacity-100 translate-y-2'
+        } ${
+          isSelected ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-blue-200'
+        }`}
+      >
+        {icon}
+      </div>
+      <span
+        className={`text-xs text-center font-medium transition duration-200 mx-1
+          ${
+          index === activeIndex ? 'translate-y-2 duration-700 opacity-100' : 'opacity-100 translate-y-2'
+        }
+          ${
+          isSelected ? 'text-blue-500' : 'text-gray-600'
+        }`}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+
+function SubNavItem({ icon, label, onClick, additionalClasses, dataTag }) {
+  return (
+    <div
+      className={`flex items-center py-3 px-4 cursor-pointer text-gray-700 transition duration-200 w-full ${additionalClasses}`}
+      onClick={onClick}
+      data-tag={dataTag}
+    >
+      <div className="mr-3">{icon}</div>
+      {label}
+    </div>
+  );
+}
+
+
