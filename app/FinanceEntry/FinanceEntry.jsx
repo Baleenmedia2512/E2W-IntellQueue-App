@@ -630,8 +630,7 @@ useEffect(() => {
     return Object.keys(errors).length === 0;
   };
 
- 
-  console.log(elementsToHide)
+
 
   const clearFinance = (e) => {
     e.preventDefault();

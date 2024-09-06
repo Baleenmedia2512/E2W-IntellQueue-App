@@ -74,6 +74,7 @@ const Report = () => {
   const [totalOrderAmount, setTotalOrderAmount] = useState('');
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
   const [selectedChart, setSelectedChart] = useState('income'); // Dropdown state
+  const [consultantDiagnosticsReportData, setConsultantDiagnosticsReportData] = useState([]);
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
 
@@ -1614,6 +1615,7 @@ const handleDateChange = (range) => {
       </Box>
       {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
+  {toast && <ToastMessage message={toastMessage} type="warning"/>}
     </Box>
     
     );
