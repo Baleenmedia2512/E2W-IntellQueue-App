@@ -224,6 +224,54 @@ const FinanceData = () => {
       });
   }; 
 
+  const SendSMSViaNetty = (clientNumber, clientName, orderAmount) => {
+
+    // Ensure clientNumber is valid
+    if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
+        setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        return; // Prevent the function from continuing if clientNumber is invalid
+    }
+
+    const sendableNumber = `91${clientNumber}`;
+    const message = `Hello ${clientName}, 
+Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
+Thanks for choosing Grace Scans. Have a Nice Day!`;
+    const encodedMessage = encodeURIComponent(message);
+    
+
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+      .then((response) => {
+
+        const result = response.data;
+        console.log(result.ErrorCode);
+        if (result.ErrorCode === '000') {
+          // Success Case
+          setSuccessMessage('SMS Sent!');
+          setTimeout(() => {
+            setSuccessMessage('');
+          }, 1500);
+        } else {
+          // Error Case
+          setToastMessage(`SMS Not Sent! Reason: ${result.ErrorMessage}`);
+          setSeverity('warning');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+        }
+    })
+
+      .catch((error) => {
+        console.error(error);
+      });
+    
+  };
 
 
   const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
@@ -243,7 +291,7 @@ const FinanceData = () => {
     const sender = 'BALEEN';
     const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
     const encodedMessage = encodeURIComponent(message);
-
+    
 
     axios
       .get(`https://orders.baleenmedia.com/API/Media/SendSms.php?JsonPhoneNumber=${sendableNumber}&JsonSender=${sender}&JsonMessage=${encodedMessage}`)
@@ -373,7 +421,8 @@ const FinanceData = () => {
               setTimeout(() => {
             setSuccessMessage('');
             
-            SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+            // SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+            SendSMSViaNetty(clientNumber, clientName, orderAmount);
           }, 1000);
         }
         

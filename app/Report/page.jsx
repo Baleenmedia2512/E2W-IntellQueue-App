@@ -75,6 +75,8 @@ const Report = () => {
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
   const [selectedChart, setSelectedChart] = useState('income'); // Dropdown state
   const [consultantDiagnosticsReportData, setConsultantDiagnosticsReportData] = useState([]);
+  const [openCDR, setOpenCDR] = useState(false);
+  const [consultantNameCDR, setConsultantNameCDR] = useState([]); 
 
   const handleDropdownChange = (event) => {
     setSelectedChart(event.target.value);
@@ -148,19 +150,31 @@ const Report = () => {
       FetchCurrentBalanceAmount();
   }, [marginResult]);
 
+  const handleOpenCDR = () => {
+    setOpenCDR(true);
+  };
+  
+  const handleCloseCDR = () => {
+    setOpenCDR(false);
+  };
+
   const fetchCurrentDateConsultants = () => {
     axios
         .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
         .then((response) => {
           const data = response.data.data;
+          const consultantNames = data.map(item => item.consultantName); 
+          setConsultantNameCDR(consultantNames); 
 
           // Group the results by consultant name
           const consultantData = data.reduce((acc, item) => {
-              const { consultantName, Card, card_count } = item;
+              const { consultantName, consultantNumber, Card, card_count } = item;
 
               if (!acc[consultantName]) {
+                
                   acc[consultantName] = {
                       consultantName: consultantName,
+                      consultantNumber: consultantNumber,
                       totalCount: 0,
                       cards: {}
                   };
@@ -169,6 +183,7 @@ const Report = () => {
               // Update total count and individual card counts
               acc[consultantName].totalCount += parseInt(card_count);
               acc[consultantName].cards[Card] = (acc[consultantName].cards[Card] || 0) + parseInt(card_count);
+              
 
               return acc;
           }, {});
@@ -183,22 +198,74 @@ const Report = () => {
 const handleConsultantSMS = () => {
 // Generate SMS messages for each consultant and send SMS
           Object.values(consultantDiagnosticsReportData).forEach((consultant) => {
-              const { consultantName, totalCount, cards } = consultant;
+              const { consultantName, consultantNumber, totalCount, cards } = consultant;
 
               const usgCount = cards['USG Scan'] || 0;
               const ctCount = cards['CT Scan'] || 0;
               const xrayCount = cards['X-Ray'] || 0;
 
               // Create the message for the consultant
-              const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
-
-              console.log(message)
+              // const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
+              const message = `Hello ${consultantName}, 
+${totalCount} of your Patients utilized our Diagnostic Services Today. 
+USG - ${usgCount} 
+CT - ${ctCount} 
+X-Ray - ${xrayCount} 
+It was our pleasure to serve your Patients. 
+- Grace Scans`;
+              
               // Call the function to send SMS
-              // sendSMS(consultantName, message);
+              SendSMSViaNetty(consultantName, consultantNumber, message);
           });
 };
 
-console.log(consultantDiagnosticsReportData)
+const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
+
+  // Ensure consultantNumber is valid
+  if (!consultantName || consultantName === '' || consultantNumber === '0' || consultantNumber === '' || !/^\d+$/.test(consultantNumber)) {
+      setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+            setSeverity('warning');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+      return; // Prevent the function from continuing if consultantNumber is invalid
+  }
+
+  const sendableNumber = `91${consultantNumber}`;
+  const encodedMessage = encodeURIComponent(message);
+  
+
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+    .then((response) => {
+
+      const result = response.data;
+      console.log(result);
+      if (result.includes('Done')) {
+        // Success Case
+        setSuccessMessage('SMS Sent!');
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 1500);
+      } else {
+        // Error Case
+        setToastMessage(`SMS Not Sent! Reason: ${result.ErrorMessage}`);
+        setSeverity('warning');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      }
+  })
+
+    .catch((error) => {
+      console.error(error);
+    });
+  
+};
+
+
 
     const fetchSumOfOrders = () => {
       axios
@@ -1072,6 +1139,31 @@ const handleDateChange = (range) => {
   </DialogActions>
 </Dialog>
 
+{/* CDR confirmation */}
+<Dialog open={openCDR} onClose={handleCloseCDR}>
+        <DialogTitle>Confirmation</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {/* Show the names of all consultants */}
+            The SMS will be sent to the following consultants:
+            <ul>
+              {consultants.map((consultant, index) => (
+                <li key={index}>{consultant}</li>
+              ))}
+            </ul>
+            Do you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCDR} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConsultantSMS} color="primary" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
             <Box className="px-3">
             {value === 0 && (
   <div style={{ width: '100%' }}>
@@ -1208,7 +1300,7 @@ const handleDateChange = (range) => {
         Cons. Report
       </button>
     )}
-    <button className="consultant-sms-button" onClick={handleConsultantSMS}>
+    <button className="consultant-sms-button" onClick={handleOpenCDR}>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
       </svg>
