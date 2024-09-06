@@ -28,7 +28,9 @@ const matchModes = [
 
 
 export default function GroupedRowsDemo() {
+    const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -62,6 +64,12 @@ export default function GroupedRowsDemo() {
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     const [matchMode, setMatchMode] = useState('contains');
     
+    useEffect(() => {
+        if (!username || dbName === "") {
+          router.push('/login');
+        }
+      },[])
+
 
     const getConsultants = async (companyName, startDate, endDate) => {
         try {
@@ -544,11 +552,10 @@ const extractNameFromId = (id) => {
 // const filteredNameRows = rowsToCalculate.filter(row => row.name);
 const filteredNameRows = rowsToCalculate.map(row => {
     if (row.name) {
-        console.log('rowName')
         return row;
     } else if (selectedRows.length > 0 && row.id) {
         // If name is null and selectedRows is greater than 0, extract the name from row.id
-        console.log('rowID')
+        
         return { ...row, name: extractNameFromId(row.id) };
     }
     return row;
