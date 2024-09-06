@@ -109,7 +109,7 @@ const handleLogin = (event) => {
 
                     // Dispatch actions and navigate based on conditions
                     
-                    dispatch(setCompanyName('Baleen Test'))
+                    // dispatch(setCompanyName('Baleen Test'))
                     dispatch(login(userName));
                     
                     dispatch(setAppRights(data.appRights));
