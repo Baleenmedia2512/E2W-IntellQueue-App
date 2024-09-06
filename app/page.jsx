@@ -452,7 +452,12 @@ const ClientsData = () => {
 
   const submitDetails = async(event) => {
     event.preventDefault()
-    
+    if(clientContact === '' || clientContact === 0 ){
+      const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
+     if (!result){
+      return
+     }
+    }
     if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
       if (isEmpty === true){
       router.push('/adDetails')
@@ -1001,7 +1006,7 @@ const BMvalidateFields = () => {
             {/* Left section */}
             <div className="space-y-4">
           <div className="relative">
-          <label className="block mb-1 text-black font-medium">Name</label>
+          <label className="block mb-1 text-black font-medium">Name<span className="text-red-500">*</span></label>
           <div className="flex space-x-2" name="ClientNameInput">
             <Dropdown
               value={selectedOption}
@@ -1017,7 +1022,7 @@ const BMvalidateFields = () => {
             <input
               type="text"
               className={`w-2/3 sm:w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
-              placeholder="Name*"
+              placeholder="Name"
               id="2"
               name="ClientNameInput"
               maxLength={64}
@@ -1060,11 +1065,11 @@ const BMvalidateFields = () => {
 
               {selectedOption === 'Ms.' ? (
                 <div name="ClientContactPersonInput">
-                  <label className="block mb-1 text-black font-medium">Contact Person Name</label>
+                  <label className="block mb-1 text-black font-medium">Contact Person Name<span className="text-red-500">*</span></label>
                   <input
                     className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContactPerson ? 'border-red-400' : ''}`}
                     type="text"
-                    placeholder="Contact Person Name*"
+                    placeholder="Contact Person Name"
                     id="30"
                     name="ClientContactPersonInput"
                     value={clientDetails.clientContactPerson}
