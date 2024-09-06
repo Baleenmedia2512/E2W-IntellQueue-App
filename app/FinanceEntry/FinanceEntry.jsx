@@ -178,6 +178,7 @@ const FinanceData = () => {
         break;
     }
     setErrors(prev => ({ ...prev, [name]: '' }));
+    elementsToHideList()
   };
 
   const handleClientNameTermChange = (event) => {
