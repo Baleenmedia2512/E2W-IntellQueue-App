@@ -63,7 +63,7 @@ const Login = () => {
 
     setCompanyNameSuggestions([]);
     dispatch(setCompanyName(input));
-    dispatch(setDBName(input));
+    
   };
 
   // Validate form fields
@@ -102,6 +102,7 @@ const handleLogin = (event) => {
                     // dispatch(setDBName(companyName));
                     // dispatch(setCompanyName('Baleen Test'))
                     // dispatch(login(userName));
+                    dispatch(setDBName(companyName));
                     setTimeout(() => {
                         setSuccessMessage('');
                         router.push("/")
