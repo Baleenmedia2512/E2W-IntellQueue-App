@@ -160,6 +160,7 @@ const FinanceData = () => {
   const openDate = Boolean(anchorElDate);
 
 
+
   const handleChange = (selectedOption, name) => {
     switch(name) {
       case 'TransactionTypeSelect':
@@ -178,6 +179,7 @@ const FinanceData = () => {
         break;
     }
     setErrors(prev => ({ ...prev, [name]: '' }));
+    elementsToHideList()
   };
 
   const handleClientNameTermChange = (event) => {
@@ -228,6 +230,102 @@ const FinanceData = () => {
       .catch((error) => {
         console.error(error);
       });
+  }; 
+
+  const SendSMSViaNetty = (clientNumber, clientName, orderAmount) => {
+
+    // Ensure clientNumber is valid
+    if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
+        setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        return; // Prevent the function from continuing if clientNumber is invalid
+    }
+
+    const sendableNumber = `91${clientNumber}`;
+    const message = `Hello ${clientName}, 
+Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
+Thanks for choosing Grace Scans. Have a Nice Day!`;
+    const encodedMessage = encodeURIComponent(message);
+    
+
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+      .then((response) => {
+
+        const result = response.data;
+        console.log(result);
+        if (result.includes('Done')) {
+          // Success Case
+          setSuccessMessage('SMS Sent!');
+          setTimeout(() => {
+            setSuccessMessage('');
+          }, 1500);
+        } else {
+          // Error Case
+          setToastMessage(`SMS Not Sent! Reason: ${result}`);
+          setSeverity('warning');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+        }
+    })
+
+      .catch((error) => {
+        console.error(error);
+      });
+    
+  };
+
+
+  const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
+
+    // Ensure clientNumber is valid
+    if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
+        setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        return; // Prevent the function from continuing if clientNumber is invalid
+    }
+
+    const sendableNumber = `91${clientNumber}`;
+    const sender = 'BALEEN';
+    const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
+    const encodedMessage = encodeURIComponent(message);
+    
+
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/SendSms.php?JsonPhoneNumber=${sendableNumber}&JsonSender=${sender}&JsonMessage=${encodedMessage}`)
+      .then((response) => {
+
+        const responseData = JSON.parse(response.data);
+
+        if (responseData.status === 'success') {
+            setSuccessMessage('SMS Sent!');
+              setTimeout(() => {
+            setSuccessMessage('');
+          }, 1500);
+        } else {
+            setToastMessage('SMS Not Sent! Reason', responseData.message);
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        }
+    })
+
+      .catch((error) => {
+        console.error(error);
+      });
+    
   }; 
 
 
@@ -409,10 +507,27 @@ const FinanceData = () => {
               setTimeout(() => {
             setSuccessMessage('');
             
-            // SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+            if (elementsToHide.includes("RateWiseOrderNumberText")) {
+              //BM
+                SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+            } else if (elementsToHide.includes("OrderNumberText")) {
+              SendSMSViaNetty(clientNumber, clientName, orderAmount);
+            } else {
+              setToastMessage('SMS Not Sent! Reason: No Database Found.');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+            }
+
           }, 1000);
         }
-          handleUploadBills()
+        if(transactionType && transactionType.value === "Operational Expense"){
+          handleUploadBills();
+          setBill(null);
+        }
+          
           // showToastMessage('success', data);
           setChequeNumber('');;
           setClientName('');
@@ -443,7 +558,7 @@ const FinanceData = () => {
         setToast(false);
       }, 2000);
     }
-            
+         
   }
 }
 
@@ -520,8 +635,7 @@ useEffect(() => {
     return Object.keys(errors).length === 0;
   };
 
- 
-  console.log(elementsToHide)
+
 
   const clearFinance = (e) => {
     e.preventDefault();

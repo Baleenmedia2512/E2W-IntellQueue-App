@@ -78,7 +78,9 @@ export default function BottomBarTest() {
 
 
   useEffect(()=>{
-    elementsToHideList();
+    if(dbName){
+      elementsToHideList();
+    }
       switch (currentPath) {
         case '/rate-validation':
           setValue(0);

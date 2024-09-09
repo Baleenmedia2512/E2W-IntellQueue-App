@@ -63,7 +63,7 @@ const Login = () => {
 
     setCompanyNameSuggestions([]);
     dispatch(setCompanyName(input));
-    dispatch(setDBName(input));
+    
   };
 
   // Validate form fields
@@ -102,6 +102,7 @@ const handleLogin = (event) => {
                     // dispatch(setDBName(companyName));
                     // dispatch(setCompanyName('Baleen Test'))
                     // dispatch(login(userName));
+                    dispatch(setDBName(companyName));
                     setTimeout(() => {
                         setSuccessMessage('');
                         router.push("/")
@@ -253,7 +254,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.7.1
+                        Version 1.7.2
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}

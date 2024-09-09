@@ -74,6 +74,9 @@ const Report = () => {
   const [totalOrderAmount, setTotalOrderAmount] = useState('');
   const [totalFinanceAmount, setTotalFinanceAmount] = useState('');
   const [selectedChart, setSelectedChart] = useState('income'); // Dropdown state
+  const [consultantDiagnosticsReportData, setConsultantDiagnosticsReportData] = useState([]);
+  const [openCDR, setOpenCDR] = useState(false);
+  const [consultantNameCDR, setConsultantNameCDR] = useState([]);
 
   const handleDropdownChange = (event) => {
     setSelectedChart(event.target.value);
@@ -127,6 +130,7 @@ const Report = () => {
       if (!username || dbName === "") {
         router.push('/login');
       }
+      fetchCurrentDateConsultants();
     },[])
     
     useEffect(() => {
@@ -144,6 +148,122 @@ const Report = () => {
     useEffect(() => {
       FetchCurrentBalanceAmount();
   }, [marginResult]);
+
+  const handleOpenCDR = () => {
+    setOpenCDR(true);
+  };
+  
+  const handleCloseCDR = () => {
+    setOpenCDR(false);
+  };
+
+  const fetchCurrentDateConsultants = () => {
+    axios
+        .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
+        .then((response) => {
+          const data = response.data.data;
+          const consultantNames = data.map(item => item.consultantName); 
+          setConsultantNameCDR(consultantNames); 
+
+          // Group the results by consultant name
+          const consultantData = data.reduce((acc, item) => {
+              const { consultantName, consultantNumber, Card, card_count } = item;
+
+              if (!acc[consultantName]) {
+                
+                  acc[consultantName] = {
+                      consultantName: consultantName,
+                      consultantNumber: consultantNumber,
+                      totalCount: 0,
+                      cards: {}
+                  };
+              }
+
+              // Update total count and individual card counts
+              acc[consultantName].totalCount += parseInt(card_count);
+              acc[consultantName].cards[Card] = (acc[consultantName].cards[Card] || 0) + parseInt(card_count);
+              
+
+              return acc;
+          }, {});
+          
+          setConsultantDiagnosticsReportData(consultantData);
+      })
+      .catch((error) => {
+          console.error(error);
+      });
+};
+
+const handleConsultantSMS = () => {
+// Generate SMS messages for each consultant and send SMS
+          Object.values(consultantDiagnosticsReportData).forEach((consultant) => {
+              const { consultantName, consultantNumber, totalCount, cards } = consultant;
+
+              const usgCount = cards['USG Scan'] || 0;
+              const ctCount = cards['CT Scan'] || 0;
+              const xrayCount = cards['X-Ray'] || 0;
+
+              // Create the message for the consultant
+              // const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
+              const message = `Hello ${consultantName}, 
+${totalCount} of your Patients utilized our Diagnostic Services Today. 
+USG - ${usgCount} 
+CT - ${ctCount} 
+X-Ray - ${xrayCount} 
+It was our pleasure to serve your Patients. 
+- Grace Scans`;
+              
+              // Call the function to send SMS
+              SendSMSViaNetty(consultantName, consultantNumber, message);
+          });
+};
+
+const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
+
+  // Ensure consultantNumber is valid
+  if (!consultantName || consultantName === '' || consultantNumber === '0' || consultantNumber === '' || !/^\d+$/.test(consultantNumber)) {
+      setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+            setSeverity('warning');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+      return; // Prevent the function from continuing if consultantNumber is invalid
+  }
+
+  const sendableNumber = `91${consultantNumber}`;
+  const encodedMessage = encodeURIComponent(message);
+  
+
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+    .then((response) => {
+
+      const result = response.data;
+      if (result.includes('Done')) {
+        // Success Case
+        handleCloseCDR();
+        setSuccessMessage('SMS Sent!');
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 1500);
+      } else {
+        // Error Case
+        setToastMessage(`SMS Not Sent! Reason: ${result}`);
+        setSeverity('warning');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      }
+  })
+
+    .catch((error) => {
+      console.error(error);
+    });
+  
+};
+
 
     const fetchSumOfOrders = () => {
       axios
@@ -1018,6 +1138,34 @@ const handleDateChange = (range) => {
   </DialogActions>
 </Dialog>
 
+{/* CDR confirmation */}
+<Dialog open={openCDR} onClose={handleCloseCDR}>
+        <DialogTitle>SMS Confirmation</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {/* Show the names of all consultants */}
+            <>
+            <strong>The SMS will be sent to the following consultant(s):</strong>
+            <ul className="mt-2 ml-4 list-disc ">
+              {consultantNameCDR.map((consultant, index) => (
+                <li key={index}>{consultant}</li>
+              ))}
+            </ul>
+            <strong>Do you want to continue?</strong>
+            </>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCDR} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConsultantSMS} color="primary" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
             <Box className="px-3">
             {value === 0 && (
   <div style={{ width: '100%' }}>
@@ -1145,6 +1293,25 @@ const handleDateChange = (range) => {
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     <div className="flex flex-grow items-end ml-2 mb-4">
+  <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
+    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+      Show Balance
+    </button>
+    {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
+      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+        Cons. Report
+      </button>
+    )}
+    <button className="consultant-sms-button" onClick={handleOpenCDR}>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+      </svg>
+      Send CDR
+    </button>
+  </div>
+</div>
+
+    {/* <div className="flex flex-grow items-end ml-2 mb-4">
       <div className="flex flex-col sm:flex-row">
         <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
           Show Balance
@@ -1156,8 +1323,8 @@ const handleDateChange = (range) => {
       )}
 
 
-      </div>
-    </div>
+      </div> */}
+    {/* </div> */}
   </div>
            
            
@@ -1449,6 +1616,7 @@ const handleDateChange = (range) => {
       </Box>
       {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
+  {toast && <ToastMessage message={toastMessage} type="warning"/>}
     </Box>
     
     );
