@@ -491,6 +491,7 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
+  { field: 'Margin', headerName:'Margin', width: 100},
   { 
     field: 'Receivable', 
     headerName: 'Value(₹)', 

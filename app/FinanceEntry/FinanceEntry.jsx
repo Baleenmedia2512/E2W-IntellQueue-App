@@ -732,7 +732,7 @@ useEffect(() => {
       {transactionType && transactionType.value !== 'Operational Expense' && (
       <div name="OrderNumberText" >
         <label className='block mb-2 mt-4 text-gray-700 font-semibold'>
-          Order Number*
+          Order Number<span className="text-red-500">*</span>
         </label>
         <div className="w-full flex gap-3">
           <input
@@ -859,7 +859,7 @@ useEffect(() => {
                </div>
                {taxType && taxType.value === 'GST' && (
               <div>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
           <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' : ''}`}
               type="text"
@@ -886,7 +886,7 @@ useEffect(() => {
           </div>
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
           
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' : ''}`}
                 type="text"
@@ -1015,7 +1015,7 @@ useEffect(() => {
                </div>
                {paymentMode && paymentMode.value === 'Cheque' && (
               <div className='mt-3'>
-               <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number*</label>
+               <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number<span className="text-red-500">*</span></label>
             <input 
                 className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.chequeNumber ? 'border-red-400' : ''}`}
                 type="text"
@@ -1044,7 +1044,7 @@ useEffect(() => {
                )}
                {paymentMode && paymentMode.value === 'Cheque' && (
             <div>
-            <label className="block mt-2 mb-2 text-gray-700 font-semibold">Cheque Date*</label>
+            <label className="block mt-2 mb-2 text-gray-700 font-semibold">Cheque Date<span className="text-red-500">*</span></label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >

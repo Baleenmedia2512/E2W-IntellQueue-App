@@ -1160,13 +1160,13 @@ const BMvalidateFields = () => {
               {selectedOption !== 'B/o.' && selectedOption !== 'Baby.' ? (
                 <div className="flex space-x-2 mt-3" name="ClientAgeInput">
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Age</label>
+                    <label className="block mb-1 text-black font-medium">Age<span className="text-red-500">*</span></label>
                     <input
                       className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       id="5"
                       name="ClientAgeInput"
-                      placeholder="Age*"
+                      placeholder="Age"
                       value={clientAge}
                       onChange={handleInputAgeChange}
                     />
@@ -1273,11 +1273,11 @@ const BMvalidateFields = () => {
               {(clientSource === '5.Consultant' || clientSource === 'Consultant') && (
                 <>
                   <div className="relative" name="ConsultantNameInput">
-                  <label className="block mb-1 text-black font-medium">Consultant Name</label>
+                  <label className="block mb-1 text-black font-medium">Consultant Name<span className="text-red-500">*</span></label>
                   <input
                     className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
                     type="text"
-                    placeholder="Consultant Name*"
+                    placeholder="Consultant Name"
                     id="9"
                     name="ConsultantNameInput"
                     onChange={handleConsultantNameChange}
