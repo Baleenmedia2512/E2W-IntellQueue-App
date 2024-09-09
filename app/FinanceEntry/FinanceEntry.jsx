@@ -27,6 +27,9 @@ import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FetchFinanceSeachTerm } from '../api/FetchAPI';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -107,6 +110,8 @@ const FinanceData = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [elementsToHide, setElementsToHide] = useState([]);
+  const [financeSearchSuggestion, setFinanceSearchSuggestion] = useState([]);
+  const [financeSearchTerm,setFinanceSearchTerm] = useState("");
 
   useEffect(() => {
     if(dbName){
@@ -668,6 +673,22 @@ useEffect(() => {
     }
   };
 
+  const handleFinanceSearch = async(e) =>{
+    setFinanceSearchTerm(e.target.value);
+    const searchSuggestions = await FetchFinanceSeachTerm(companyName, e.target.value);
+    setFinanceSearchSuggestion(searchSuggestions);
+  }
+  
+  const handleFinanceSelection = (e) => {
+    const selectedFinance = e.target.value;
+    const selectedRateId = selectedFinance.split('-')[0];
+    setFinanceSearchSuggestion([]);
+    setFinanceSearchTerm(e.target.value);
+    // handleRateId(selectedRateId)
+    // setRateId(selectedRateId)
+  };
+
+
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
         <div className="max-w-6xl w-full align-middle">
@@ -689,6 +710,47 @@ useEffect(() => {
                       </button>
   </div>
       </div>
+
+      <div className="flex justify-center mx-auto mb-4 pt-7 mt-4">
+  <div className="w-full sm:w-1/2">
+    <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+      <input
+        className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
+        type="text"
+        id="RateSearchInput"
+        placeholder="Ex: RateName Type"
+        value={financeSearchTerm}
+        onChange = {handleFinanceSearch}
+        onFocus={(e) => { e.target.select() }}
+      />
+      <div className="px-3">
+        <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
+      </div>
+    </div>
+    <div className="relative"> {/* Make parent container relatively positioned */}
+  {(financeSearchSuggestion.length > 0 && financeSearchTerm !== "") && (
+    <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+      {financeSearchSuggestion.map((name, index) => (
+        <li key={index}>
+          <button
+            type="button"
+            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+            onClick={handleFinanceSelection}
+            value={name}
+          >
+            {name}
+          </button>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
+  </div>
+</div>
+
+
+
         {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
       <div className="bg-white p-6 py-10 rounded-lg shadow-lg overflow-y-auto">
       <form className="space-y-4 ">
