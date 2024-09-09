@@ -413,7 +413,10 @@ const FinanceData = () => {
             // SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
           }, 1000);
         }
-          handleUploadBills()
+        if(transactionType && transactionType.value === "Operational Expense"){
+          handleUploadBills();
+          setBill(null);
+        }
           // showToastMessage('success', data);
           setChequeNumber('');;
           setClientName('');
