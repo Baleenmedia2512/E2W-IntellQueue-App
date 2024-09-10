@@ -112,6 +112,10 @@ const FinanceData = () => {
   const [elementsToHide, setElementsToHide] = useState([]);
   const [financeSearchSuggestion, setFinanceSearchSuggestion] = useState([]);
   const [financeSearchTerm,setFinanceSearchTerm] = useState("");
+  const [financeId, setFinanceId] = useState(null);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [entryUser, setEntryUser] = useState('');
+  const [amount, setAmount] = useState('');
 
   useEffect(() => {
     if(dbName){
@@ -658,6 +662,23 @@ useEffect(() => {
           dispatch(resetOrderData());
   };
 
+  const cancelFinance = (e) => {
+    e.preventDefault();
+          setChequeNumber('');
+          setClientName('');
+          setExpenseCategory('');
+          setGSTAmount('');
+          setGSTPercentage('');
+          setOrderAmount('');
+          setOrderNumber('');
+          setPaymentMode(paymentModeOptions[0]);
+          setRemarks('');
+          setTaxType(taxTypeOptions[2]);
+          setTransactionType(transactionOptions[0]);
+          dispatch(resetOrderData());
+
+          setIsUpdateMode(false);
+  };
   const handleFileChange = (e) => {
 
     const file = e.target.files[0]
@@ -679,15 +700,128 @@ useEffect(() => {
     setFinanceSearchSuggestion(searchSuggestions);
   }
   
+  const handleFinanceId = async (financeId, companyName) => {
+    try {
+      // API call to fetch finance details
+      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategory.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
+      
+      // Log the response data to check the API response
+      const data = response.data;
+      console.log("API Response:", data);
+  
+      // Handle different response cases
+      if (data === "Finance ID is rejected") {
+        console.error("Finance ID is rejected");
+        // Optionally show a message to the user
+      } else if (data === "No finance details found for the provided ID") {
+        console.error("No finance details found for the provided ID");
+        // Optionally show a message to the user
+      } else {
+        const transactionDate = data.TransactionDate ? dayjs(data.TransactionDate) : dayjs();
+        const paymentMode = paymentModeOptions.find(option => option.value === data.PaymentMode) || paymentModeOptions[0];
+        const transactionType = transactionOptions.find(option => option.value === data.TransactionType) || transactionOptions[0];
+        const expenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory) || expenseCategoryOptions[0];
+        // Populate state fields with the response data
+        setClientName(data.EntryUser);
+        console.log(data.EntryUser)
+        setOrderNumber(data.OrderNumber);
+        console.log(data.OrderNumber)
+        setOrderAmount(data.Amount);
+        console.log(data.Amount)
+        setRemarks(data.Remarks);
+        console.log(data.Remarks)
+        setTaxType(data.TaxType);
+        console.log(data.TaxType)
+        setTransactionDate(transactionDate);
+        console.log(data.TransactionDate)
+        setPaymentMode(paymentMode);
+        console.log(data.PaymentMode)
+        setTransactionType(transactionType);
+        console.log(data.TransactionType)
+        setExpenseCategory(expenseCategory);
+        console.log(data.ExpensesCategory)
+      }
+    } catch (error) {
+      console.error("Error fetching finance details:", error);
+    }
+  };
+  
+  
   const handleFinanceSelection = (e) => {
     const selectedFinance = e.target.value;
-    const selectedRateId = selectedFinance.split('-')[0];
+  
+    // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
+    const selectedFinanceId = selectedFinance.split('-')[0];
+  
+    // Clear finance suggestions and set the search term
     setFinanceSearchSuggestion([]);
-    setFinanceSearchTerm(e.target.value);
-    // handleRateId(selectedRateId)
-    // setRateId(selectedRateId)
-  };
+    setFinanceSearchTerm(selectedFinance);
+  
+    // Call the handleFinanceId function with the selected ID
+    handleFinanceId(selectedFinanceId, companyName);
+  
+    // Set the finance ID state
+    setFinanceId(selectedFinanceId);
 
+    // Set the mode to "Update"
+    setIsUpdateMode(true);
+
+    // Optional: Log the selected finance ID to check the value
+    console.log("Selected Finance ID:", selectedFinanceId);
+
+  };
+  
+  const updateFinance = async () => {
+    const params = new URLSearchParams({
+      JsonUserName: entryUser,
+      JsonOrderNumber: orderNumber,
+      JsonAmount: amount,
+      JsonRemarks: remarks,
+      JsonTaxType: taxType,
+      JsonTransactionDate: transactionDate,
+      JsonPaymentMode: paymentMode,
+      JsonTransactionType: transactionType,
+      JsonExpenseCategory: expenseCategory,
+      JsonDBName: companyName,
+      // Include any other required fields
+    });
+  
+    try {
+      const response = await fetch('https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php', {
+        method: 'POST', // Changed to POST
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded' // Changed to x-www-form-urlencoded
+        },
+        body: params.toString() // Send parameters in the request body
+      });
+  
+      // Check if response is okay
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      if (data === "Values Updated Successfully!") {
+        setSuccessMessage('Finance record updated successfully!');
+  
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 3000); // 3000 milliseconds = 3 seconds
+  
+        // Clear form fields and switch to normal mode if needed
+        clearFinance();
+      } else {
+        alert(`Error updating finance data: ${data}`);
+      }
+    } catch (error) {
+      console.error('Error updating finance:', error);
+      alert('An error occurred while updating the finance record.');
+    }
+  };
+  
+  
+  
 
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -701,14 +835,19 @@ useEffect(() => {
         {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
       <div className="flex items-center mt-2 justify-center mb-2">
-               <button className = "cancel-button" onClick={clearFinance}>
-                       Clear
-                      </button>
+  <button className="cancel-button" 
+  onClick={isUpdateMode ? cancelFinance : clearFinance}>
+    {isUpdateMode ? 'Cancel' : 'Clear'}
+  </button>
 
-                      <button className = "custom-button ml-2" onClick={insertNewFinance}>
-                      Add
-                      </button>
-  </div>
+  <button
+    className="custom-button ml-2"
+    onClick={isUpdateMode ? updateFinance : insertNewFinance}
+  >
+    {isUpdateMode ? 'Update' : 'Add'}
+  </button>
+</div>
+
       </div>
 
       <div className="flex justify-center mx-auto mb-4 pt-7 mt-4">
@@ -1136,6 +1275,7 @@ useEffect(() => {
               value={transactionDate}
               onChange={(newValue) => {
                 setTransactionDate(newValue);
+                console.log(newValue)
                 handleDateClose();
               }}
               
