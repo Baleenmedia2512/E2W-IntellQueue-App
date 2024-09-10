@@ -680,11 +680,11 @@ useEffect(() => {
         {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
       <div className="flex items-center mt-2 justify-center mb-2">
-               <button className = "cancel-button" onClick={clearFinance}>
+               <button className = "px-6 py-2  bg-red-400 text-white rounded-lg focus:bg-red-500" onClick={clearFinance}>
                        Clear
                       </button>
 
-                      <button className = "custom-button ml-2" onClick={insertNewFinance}>
+                      <button className = "px-6 py-2 bg-green-400 text-white rounded-lg ml-2 focus:bg-green-500" onClick={insertNewFinance}>
                       Add
                       </button>
   </div>
@@ -695,9 +695,9 @@ useEffect(() => {
       
       {transactionType.value === 'Operational Expense' && 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                      <div className=' bg-white rounded-lg ml-4'>
-                        <div className='relative'>
-                      <button className='update-button bg-blue-500 cursor-pointer'>
+                      <div className=' bg-white rounded-lg ml-4 '>
+                        <div className='relative '>
+                      <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 ">
                       Upload Bill
                     <input type = "file" accept="application/pdf, image/jpg, image/jpeg" onChange={handleFileChange} className={`absolute inset-0 opacity-0`}/>
                     </button></div>
