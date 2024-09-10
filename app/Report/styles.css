@@ -90,6 +90,22 @@ transform: translateY(-7px);
   transform: translateY(-1px);
 }
 
+/* Disabled styles */
+.consultant-sms-button:disabled {
+  background-color: #cccccc; /* Grey background */
+  color: #666666; /* Dark grey text */
+  box-shadow: none; /* Remove shadow */
+  cursor: not-allowed; /* Show not-allowed cursor */
+  transform: none; /* Remove transform effect */
+}
+
+/* Remove hover effect when disabled */
+.consultant-sms-button:disabled:hover {
+  background-color: #cccccc; /* Same grey background */
+  box-shadow: none; /* No shadow */
+  transform: none; /* No transform */
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .custom-button {

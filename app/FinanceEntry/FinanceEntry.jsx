@@ -257,7 +257,6 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
       .then((response) => {
 
         const result = response.data;
-        console.log(result);
         if (result.includes('Done')) {
           // Success Case
           setSuccessMessage('SMS Sent!');
@@ -506,20 +505,22 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
             setSuccessMessage('Finance Entry Added');
               setTimeout(() => {
             setSuccessMessage('');
-            
-            if (elementsToHide.includes("RateWiseOrderNumberText")) {
-              //BM
-                SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
-            } else if (elementsToHide.includes("OrderNumberText")) {
-              SendSMSViaNetty(clientNumber, clientName, orderAmount);
-            } else {
-              setToastMessage('SMS Not Sent! Reason: No Database Found.');
-              setSeverity('warning');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-            }
+
+            if (transactionType && transactionType.value === "Income") {
+              if (elementsToHide.includes("RateWiseOrderNumberText")) {
+                //BM
+                  SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+              } else if (elementsToHide.includes("OrderNumberText")) {
+                SendSMSViaNetty(clientNumber, clientName, orderAmount);
+              } else {
+                setToastMessage('SMS Not Sent! Reason: No Database Found.');
+                setSeverity('warning');
+                setToast(true);
+                setTimeout(() => {
+                  setToast(false);
+                }, 2000);
+              }
+          }
 
           }, 1000);
         }

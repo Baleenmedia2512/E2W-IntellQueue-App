@@ -77,6 +77,30 @@ const Report = () => {
   const [consultantDiagnosticsReportData, setConsultantDiagnosticsReportData] = useState([]);
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+const checkIfSMSSentToday = () => {
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/CheckCDRSmsCount.php?JsonDBName=${companyName}`)
+    .then((response) => {
+      const { count } = response.data;
+      
+      if (count > 0) {
+        setIsButtonDisabled(true);
+      } else {
+        setIsButtonDisabled(false);
+      }
+    })
+    .catch((error) => {
+      console.error('Error checking SMS count:', error);
+    });
+};
+
+
+// Call this function when the component is loaded
+useEffect(() => {
+  checkIfSMSSentToday();
+}, []);
 
   const handleDropdownChange = (event) => {
     setSelectedChart(event.target.value);
@@ -218,6 +242,7 @@ It was our pleasure to serve your Patients.
           });
 };
 
+
 const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
   // Ensure consultantNumber is valid
@@ -236,13 +261,15 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
   
 
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+    .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=${consultantName}&JsonConsultantNumber=${consultantNumber}&JsonDBName=${companyName}`)
     .then((response) => {
 
       const result = response.data;
-      if (result.includes('Done')) {
+      // if (result.includes('Done')) {
+      if (result === 'SMS Sent and Database Updated Successfully') {
         // Success Case
         handleCloseCDR();
+        checkIfSMSSentToday();
         setSuccessMessage('SMS Sent!');
         setTimeout(() => {
           setSuccessMessage('');
@@ -1302,8 +1329,8 @@ const handleDateChange = (range) => {
         Cons. Report
       </button>
     )}
-    <button className="consultant-sms-button" onClick={handleOpenCDR}>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
       </svg>
       Send CDR
