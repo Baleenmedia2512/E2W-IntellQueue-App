@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import { setOrderData , setIsOrderUpdate} from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
 import { Select } from '@mui/material';
+import { Margin } from '@mui/icons-material';
 
 
 
@@ -28,7 +29,7 @@ import { Select } from '@mui/material';
 
 
 const Report = () => {
-    const dbName = useAppSelector(state => state.authSlice.companyName);
+    const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
@@ -38,6 +39,7 @@ const Report = () => {
     const [financeDetails, setFinanceDetails] = useState([]);
     const [sumOfFinance, setSumOfFinance] = useState([]);
     const [rateBaseIncome, setRateBaseIncome] = useState([]);
+    const [elementsToHide, setElementsToHide] = useState([])
     const [filter, setFilter] = useState('All');
     // const [orderFilterModel, setOrderFilterModel] = useState({ items: [] });
     // const [financeFilterModel, setFinanceFilterModel] = useState({ items: [] });
@@ -131,6 +133,9 @@ const Report = () => {
         router.push('/login');
       }
       fetchCurrentDateConsultants();
+      if(dbName){
+        elementsToHideList()
+      }
     },[])
     
     useEffect(() => {
@@ -148,6 +153,28 @@ const Report = () => {
     useEffect(() => {
       FetchCurrentBalanceAmount();
   }, [marginResult]);
+
+  useEffect(() => {
+    //searching elements to Hide from database
+
+    elementsToHide.forEach((name) => {
+      const elements = document.getElementsByName(name);
+      elements.forEach((element) => {
+        element.style.display = 'none'; // Hide the element
+      });
+    });
+  }, [elementsToHide])
+
+  const elementsToHideList = () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
+        .then((response) => response.json())
+        .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
+
 
   const handleOpenCDR = () => {
     setOpenCDR(true);
@@ -611,7 +638,7 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
-  { field: 'Margin', headerName:'Margin', width: 100},
+  {field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
   { 
     field: 'Receivable', 
     headerName: 'Value(₹)', 
@@ -1249,6 +1276,7 @@ const handleDateChange = (range) => {
         
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
+          columnVisibilityModel={{Margin: !elementsToHide.includes('QuoteSenderNavigation')}}
           pageSize={10}
           initialState={{
             sorting: {
