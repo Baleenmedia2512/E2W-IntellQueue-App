@@ -160,6 +160,7 @@ const FinanceData = () => {
   const openDate = Boolean(anchorElDate);
 
 
+
   const handleChange = (selectedOption, name) => {
     switch(name) {
       case 'TransactionTypeSelect':
@@ -229,6 +230,101 @@ const FinanceData = () => {
       .catch((error) => {
         console.error(error);
       });
+  }; 
+
+  const SendSMSViaNetty = (clientNumber, clientName, orderAmount) => {
+
+    // Ensure clientNumber is valid
+    if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
+        setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        return; // Prevent the function from continuing if clientNumber is invalid
+    }
+
+    const sendableNumber = `91${clientNumber}`;
+    const message = `Hello ${clientName}, 
+Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
+Thanks for choosing Grace Scans. Have a Nice Day!`;
+    const encodedMessage = encodeURIComponent(message);
+    
+
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+      .then((response) => {
+
+        const result = response.data;
+        if (result.includes('Done')) {
+          // Success Case
+          setSuccessMessage('SMS Sent!');
+          setTimeout(() => {
+            setSuccessMessage('');
+          }, 1500);
+        } else {
+          // Error Case
+          setToastMessage(`SMS Not Sent! Reason: ${result}`);
+          setSeverity('warning');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+        }
+    })
+
+      .catch((error) => {
+        console.error(error);
+      });
+    
+  };
+
+
+  const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
+
+    // Ensure clientNumber is valid
+    if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
+        setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        return; // Prevent the function from continuing if clientNumber is invalid
+    }
+
+    const sendableNumber = `91${clientNumber}`;
+    const sender = 'BALEEN';
+    const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
+    const encodedMessage = encodeURIComponent(message);
+    
+
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/SendSms.php?JsonPhoneNumber=${sendableNumber}&JsonSender=${sender}&JsonMessage=${encodedMessage}`)
+      .then((response) => {
+
+        const responseData = JSON.parse(response.data);
+
+        if (responseData.status === 'success') {
+            setSuccessMessage('SMS Sent!');
+              setTimeout(() => {
+            setSuccessMessage('');
+          }, 1500);
+        } else {
+            setToastMessage('SMS Not Sent! Reason', responseData.message);
+              setSeverity('warning');
+              setToast(true);
+              setTimeout(() => {
+                setToast(false);
+              }, 2000);
+        }
+    })
+
+      .catch((error) => {
+        console.error(error);
+      });
+    
   }; 
 
 
@@ -409,14 +505,30 @@ const FinanceData = () => {
             setSuccessMessage('Finance Entry Added');
               setTimeout(() => {
             setSuccessMessage('');
-            
-            // SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+
+            if (transactionType && transactionType.value === "Income") {
+              if (elementsToHide.includes("RateWiseOrderNumberText")) {
+                //BM
+                  SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+              } else if (elementsToHide.includes("OrderNumberText")) {
+                SendSMSViaNetty(clientNumber, clientName, orderAmount);
+              } else {
+                setToastMessage('SMS Not Sent! Reason: No Database Found.');
+                setSeverity('warning');
+                setToast(true);
+                setTimeout(() => {
+                  setToast(false);
+                }, 2000);
+              }
+          }
+
           }, 1000);
         }
         if(transactionType && transactionType.value === "Operational Expense"){
           handleUploadBills();
           setBill(null);
         }
+          
           // showToastMessage('success', data);
           setChequeNumber('');;
           setClientName('');
@@ -447,7 +559,7 @@ const FinanceData = () => {
         setToast(false);
       }, 2000);
     }
-            
+         
   }
 }
 
@@ -524,8 +636,7 @@ useEffect(() => {
     return Object.keys(errors).length === 0;
   };
 
- 
-  console.log(elementsToHide)
+
 
   const clearFinance = (e) => {
     e.preventDefault();
@@ -652,7 +763,7 @@ useEffect(() => {
             <div className='mt-2' >
             {transactionType && transactionType.value !== 'Operational Expense' && (
               <>
-            <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name*</label>
+            <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input 
             className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
@@ -706,7 +817,7 @@ useEffect(() => {
     {transactionType && transactionType.value !== 'Operational Expense' && (
     <div id="4" name="RateWiseOrderNumberText">
         <label className='block mb-2 mt-4 text-gray-700 font-semibold' >
-          Order Number*
+          Order Number<span className="text-red-500">*</span>
         </label>
         <div className="w-full flex gap-3">
           <input
@@ -736,7 +847,7 @@ useEffect(() => {
       {transactionType && transactionType.value !== 'Operational Expense' && (
       <div name="OrderNumberText" >
         <label className='block mb-2 mt-4 text-gray-700 font-semibold'>
-          Order Number*
+          Order Number<span className="text-red-500">*</span>
         </label>
         <div className="w-full flex gap-3">
           <input
@@ -768,7 +879,7 @@ useEffect(() => {
     )}</div>
   </> */}
   <div className='mt-3' >
-            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount*</label>
+            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderAmount ? 'border-red-400' : ''}`}
                 type="text"
@@ -863,7 +974,7 @@ useEffect(() => {
                </div>
                {taxType && taxType.value === 'GST' && (
               <div>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
           <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' : ''}`}
               type="text"
@@ -890,7 +1001,7 @@ useEffect(() => {
           </div>
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
           
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' : ''}`}
                 type="text"
@@ -1019,7 +1130,7 @@ useEffect(() => {
                </div>
                {paymentMode && paymentMode.value === 'Cheque' && (
               <div className='mt-3'>
-               <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number*</label>
+               <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number<span className="text-red-500">*</span></label>
             <input 
                 className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.chequeNumber ? 'border-red-400' : ''}`}
                 type="text"
@@ -1048,7 +1159,7 @@ useEffect(() => {
                )}
                {paymentMode && paymentMode.value === 'Cheque' && (
             <div>
-            <label className="block mt-2 mb-2 text-gray-700 font-semibold">Cheque Date*</label>
+            <label className="block mt-2 mb-2 text-gray-700 font-semibold">Cheque Date<span className="text-red-500">*</span></label>
                   <div className='flex w-full gap-1'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box mb={2} >
