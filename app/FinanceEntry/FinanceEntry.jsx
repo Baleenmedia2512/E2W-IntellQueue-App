@@ -68,6 +68,8 @@ const FinanceData = () => {
   // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const dbName = "Baleen Test";
+  // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
@@ -253,11 +255,11 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
     
 
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+      .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=&JsonConsultantNumber=&JsonDBName=${companyName}`)
       .then((response) => {
 
         const result = response.data;
-        if (result.includes('Done')) {
+        if (result === "SMS Sent but Consultant details are missing.") {
           // Success Case
           setSuccessMessage('SMS Sent!');
           setTimeout(() => {
