@@ -63,7 +63,7 @@ const Login = () => {
 
     setCompanyNameSuggestions([]);
     dispatch(setCompanyName(input));
-    dispatch(setDBName(input));
+    
   };
 
   // Validate form fields
@@ -89,7 +89,7 @@ const handleLogin = (event) => {
         const encodedPassw = encodeURIComponent(password);
 
         // Assuming companyName, userName, and encodedPassw are defined and used correctly
-        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${'Baleen Test'}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(response.statusText);
@@ -102,6 +102,7 @@ const handleLogin = (event) => {
                     // dispatch(setDBName(companyName));
                     // dispatch(setCompanyName('Baleen Test'))
                     // dispatch(login(userName));
+                    dispatch(setDBName(companyName));
                     setTimeout(() => {
                         setSuccessMessage('');
                         router.push("/")
@@ -109,7 +110,7 @@ const handleLogin = (event) => {
 
                     // Dispatch actions and navigate based on conditions
                     
-                    dispatch(setCompanyName('Baleen Test'))
+                    // dispatch(setCompanyName('Baleen Test'))
                     dispatch(login(userName));
                     
                     dispatch(setAppRights(data.appRights));
@@ -253,7 +254,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.7.2
+                        Version 1.7.6
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}

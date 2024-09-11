@@ -17,8 +17,10 @@ const GeneralDetailsPage = () => {
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
-  const companyName = "Baleen Test";
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
+  const dbName = useAppSelector(state => state.authSlice.dbName);
+  // const companyName = "Baleen Test";
+    const companyName = useAppSelector(state => state.authSlice.companyName);
+
   const sexOptions = [
     { label: 'Male', value: 'Male' },
     { label: 'Female', value: 'Female' },

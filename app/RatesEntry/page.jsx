@@ -1597,6 +1597,7 @@ setEditModal(false);
   <div className="flex items-center justify-between">
       <div>
         <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Rate Manager</h2>
+        <div className="border-2 w-10 inline-block mb-0 border-blue-500"></div>
         {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
       </div>

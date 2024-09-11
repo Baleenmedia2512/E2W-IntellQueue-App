@@ -465,17 +465,17 @@ const ClientsData = () => {
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
                 setTimeout(() => {
-              setSuccessMessage('');
-              if (isDetails) {
-                router.push('/adDetails')
-                dispatch(setQuotesData({currentPage: "checkout"}))
-              } else {
-                if (!elementsToHide.includes('QuoteSenderNavigation')) {
+                setSuccessMessage('');
+                if (isDetails) {
                   router.push('/adDetails')
-                  dispatch(setQuotesData({currentPage: ""}))
+                  dispatch(setQuotesData({currentPage: "checkout"}))
+                } else {
+                  if (!elementsToHide.includes('QuoteSenderNavigation')) {
+                    router.push('/adDetails')
+                    dispatch(setQuotesData({currentPage: ""}))
+                  }
                 }
-              }
-            }, 2000);
+              }, 2000);
             // router.push('/adDetails')
             
             
@@ -528,19 +528,34 @@ const ClientsData = () => {
         //setMessage(data.message);
       } else if (data === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
-  setSeverity('error');
-  setToast(true);
-  setTimeout(() => {
-    setToast(false);
-  }, 2000);
-      } else {
-        alert(`The following error occurred while inserting data: ${data}`);
-      }
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+
+      // } else if (data === "Consultant Number Already Exists!"){
+      //   setToastMessage('Consultant Number Already Exists!');
+      //   setSeverity('error');
+      //   setToast(true);
+      //   setTimeout(() => {
+      //     setToast(false);
+      //   }, 2000);
+
+    } else {
+      setToastMessage(data);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
+
   }catch (error) {
-    console.error('Error while data GS: ', error);
+        console.error('Error while data GS: ', error);
   } 
-  // setSeverity('success');
-  // setToast(true);
+// setSeverity('success');
+// setToast(true);
 } else {
   setToastMessage('Please fill the necessary details in the form.');
   setSeverity('error');
@@ -951,10 +966,10 @@ const BMvalidateFields = () => {
       <div className='min-h-screen bg-gray-100 mb-14 p-2'>
         <div className="flex items-center justify-center">
           <div className="w-full max-w-6xl">
-      <div className="text-start">
-        <h2 className="text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">Client Manager</h2>
-        <div className="border-2 w-10 mb-6 border-blue-500"></div>
-      </div>
+            <div className="text-start">
+              <h2 className="text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">Client Manager</h2>
+              <div className="border-2 w-10 mb-6 border-blue-500"></div>
+            </div>
       </div></div>
         <div className="flex items-center justify-center ">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
