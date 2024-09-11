@@ -539,20 +539,26 @@ const ClientsData = () => {
           setToast(false);
         }, 2000);
 
-      } else if (data === "Consultant Number Already Exists!"){
-        setToastMessage('Consultant Number Already Exists!');
+      // } else if (data === "Consultant Number Already Exists!"){
+      //   setToastMessage('Consultant Number Already Exists!');
+      //   setSeverity('error');
+      //   setToast(true);
+      //   setTimeout(() => {
+      //     setToast(false);
+      //   }, 2000);
+
+      } else {
+        setToastMessage(data);
         setSeverity('error');
         setToast(true);
         setTimeout(() => {
           setToast(false);
         }, 2000);
+      }
 
-            } else {
-              alert(`The following error occurred while inserting data: ${data}`);
-            }
-        }catch (error) {
+    }catch (error) {
           console.error('Error while data GS: ', error);
-        } 
+    } 
   // setSeverity('success');
   // setToast(true);
 } else {
