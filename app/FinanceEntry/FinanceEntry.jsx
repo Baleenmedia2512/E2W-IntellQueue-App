@@ -114,7 +114,6 @@ const FinanceData = () => {
   const [financeSearchTerm,setFinanceSearchTerm] = useState("");
   const [financeId, setFinanceId] = useState(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
-  const [entryUser, setEntryUser] = useState('');
   const [amount, setAmount] = useState('');
 
   useEffect(() => {
@@ -647,7 +646,7 @@ useEffect(() => {
 
 
   const clearFinance = (e) => {
-    e.preventDefault();
+    //e.preventDefault();
           setChequeNumber('');
           setClientName('');
           setExpenseCategory('');
@@ -702,7 +701,7 @@ useEffect(() => {
   
   const handleFinanceId = async (financeId, companyName) => {
     try {
-      // API call to fetch finance details
+      // First API call to fetch finance details
       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategory.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
       
       // Log the response data to check the API response
@@ -721,30 +720,38 @@ useEffect(() => {
         const paymentMode = paymentModeOptions.find(option => option.value === data.PaymentMode) || paymentModeOptions[0];
         const transactionType = transactionOptions.find(option => option.value === data.TransactionType) || transactionOptions[0];
         const expenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory) || expenseCategoryOptions[0];
+        const taxType = taxTypeOptions.find(option => option.value === data.TaxType) || taxTypeOptions[0];
+        setTaxType(taxType);
+
+        
         // Populate state fields with the response data
-        setClientName(data.EntryUser);
-        console.log(data.EntryUser)
         setOrderNumber(data.OrderNumber);
-        console.log(data.OrderNumber)
         setOrderAmount(data.Amount);
-        console.log(data.Amount)
         setRemarks(data.Remarks);
-        console.log(data.Remarks)
-        setTaxType(data.TaxType);
-        console.log(data.TaxType)
+        setTaxType(taxType);
         setTransactionDate(transactionDate);
-        console.log(data.TransactionDate)
         setPaymentMode(paymentMode);
-        console.log(data.PaymentMode)
         setTransactionType(transactionType);
-        console.log(data.TransactionType)
         setExpenseCategory(expenseCategory);
-        console.log(data.ExpensesCategory)
       }
+
+      // Second API call to fetch client details using the order number
+      try {
+        const clientResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${data.OrderNumber}&JsonDBName=${companyName}`);
+        const clientData = clientResponse.data;
+        console.log(clientData)
+        // Set the ClientName using the fetched client details
+        setClientName(clientData[0].clientName);
+        console.log("Client Name:", clientData.clientName);
+      } catch (clientError) {
+        console.error("Error fetching client details:", clientError);
+      }
+
     } catch (error) {
       console.error("Error fetching finance details:", error);
     }
   };
+
   
   
   const handleFinanceSelection = (e) => {
@@ -772,39 +779,22 @@ useEffect(() => {
   };
   
   const updateFinance = async () => {
-    const params = new URLSearchParams({
-      JsonUserName: entryUser,
-      JsonOrderNumber: orderNumber,
-      JsonAmount: amount,
-      JsonRemarks: remarks,
-      JsonTaxType: taxType,
-      JsonTransactionDate: transactionDate,
-      JsonPaymentMode: paymentMode,
-      JsonTransactionType: transactionType,
-      JsonExpenseCategory: expenseCategory,
-      JsonDBName: companyName,
-      // Include any other required fields
-    });
-  
     try {
-      const response = await fetch('https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php', {
-        method: 'POST', // Changed to POST
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded' // Changed to x-www-form-urlencoded
-        },
-        body: params.toString() // Send parameters in the request body
-      });
-  
-      // Check if response is okay
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-  
-      const data = await response.json();
+      // Send the GET request with query parameters using axios
+      const response = await axios.get(`https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php?JsonFinanceId=${financeId}&JsonUserName=${username}&JsonAmount=${orderAmount}&JsonRemarks=${remarks}&JsonTaxType=${taxType.value}&JsonTransactionDate=${transactionDate}&JsonPaymentMode=${paymentMode.value}&JsonTransactionType=${transactionType.value}&JsonExpenseCategory=${expenseCategory.value}&JsonDBName=${companyName}`);
+      console.log(financeId)
+      console.log(username)
+      console.log(orderAmount)
+      console.log(transactionType)
+      console.log(taxType)
+      console.log(expenseCategory)
+      console.log(paymentMode)
+      // Check if the response is successful
+      const data = response.data;
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Finance record updated successfully!');
   
-        // Clear success message after 3 seconds
+        // Clear the success message after 3 seconds
         setTimeout(() => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
@@ -816,7 +806,7 @@ useEffect(() => {
       }
     } catch (error) {
       console.error('Error updating finance:', error);
-      alert('An error occurred while updating the finance record.');
+      //alert('An error occurred while updating the finance record.');
     }
   };
   
