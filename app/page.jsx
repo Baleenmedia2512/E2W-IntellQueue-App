@@ -533,14 +533,29 @@ const ClientsData = () => {
         setTimeout(() => {
           setToast(false);
         }, 2000);
-            } else {
-              alert(`The following error occurred while inserting data: ${data}`);
-            }
-        }catch (error) {
-          console.error('Error while data GS: ', error);
-        } 
-  // setSeverity('success');
-  // setToast(true);
+
+      // } else if (data === "Consultant Number Already Exists!"){
+      //   setToastMessage('Consultant Number Already Exists!');
+      //   setSeverity('error');
+      //   setToast(true);
+      //   setTimeout(() => {
+      //     setToast(false);
+      //   }, 2000);
+
+    } else {
+      setToastMessage(data);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
+
+  }catch (error) {
+        console.error('Error while data GS: ', error);
+  } 
+// setSeverity('success');
+// setToast(true);
 } else {
   setToastMessage('Please fill the necessary details in the form.');
   setSeverity('error');
