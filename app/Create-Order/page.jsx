@@ -1319,11 +1319,11 @@ return (
     {/* Conditional rendering based on isOrderUpdate */}
     {isOrderUpdate ? (
   <div className="button-container">
-    <button className="px-3 py-2 bg-green-400 text-white rounded-lg focus:bg-green-500" onClick={handleOpenDialog}>Update Order</button>
-    <button className="px-2 py-2  bg-red-400 text-white rounded-lg focus:bg-red-500 mt-2 " onClick={handleCancelUpdate}>Cancel Update</button>
+    <button className="update-button" onClick={handleOpenDialog}>Update Order</button>
+    <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button>
   </div>
 ) : (
-  <button className="px-4 py-2 bg-green-400 text-white rounded-lg focus:bg-green-500" onClick={createNewOrder}>Place Order</button>
+  <button className="custom-button" onClick={createNewOrder}>Place Order</button>
 )}
     
     <Dialog

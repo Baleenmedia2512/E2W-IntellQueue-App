@@ -680,13 +680,17 @@ useEffect(() => {
         {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
       <div className="flex items-center mt-2 justify-center mb-2">
-               <button className = "px-6 py-2  bg-red-400 text-white rounded-lg focus:bg-red-500" onClick={clearFinance}>
+               <button className = "cancel-button" onClick={clearFinance}>
                        Clear
                       </button>
 
-                      <button className = "px-6 py-2 bg-green-400 text-white rounded-lg ml-2 focus:bg-green-500" onClick={insertNewFinance}>
-                      Add
-                      </button>
+                      <button
+  className="custom-button"
+  onClick={insertNewFinance}
+>
+  Add
+</button>
+
   </div>
       </div>
         {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
