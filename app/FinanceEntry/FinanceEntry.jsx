@@ -75,6 +75,7 @@ const FinanceData = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
+  const [anchorElChequeDate, setAnchorElChequeDate] = React.useState(null);
   const [bill, setBill] = useState(null)
   // const [orderNumber, setOrderNumber] = useState(null);
   // const [clientName, setClientName] = useState(null);
@@ -139,7 +140,7 @@ const FinanceData = () => {
 
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
-  const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
+  //const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
 
   const year = transactionDate.$y;
   const month = transactionDate.$M + 1; // Months are zero-based, so we add 1 to get the correct month
@@ -148,6 +149,21 @@ const FinanceData = () => {
   const minutes = transactionTime.$m;
   const seconds = transactionTime.$s;
   
+  // Assuming chequeTime is a dayjs object like transactionTime
+const chequeHours = chequeTime.$H;
+const chequeMinutes = chequeTime.$m;
+const chequeSeconds = chequeTime.$s;
+
+const formattedChequeTime = `${chequeHours < 10 ? '0' : ''}${chequeHours}:${chequeMinutes < 10 ? '0' : ''}${chequeMinutes}:${chequeSeconds < 10 ? '0' : ''}${chequeSeconds}`;
+
+// Extract year, month, and day from chequeDate
+const chequeYear = chequeDate.$y;
+const chequeMonth = chequeDate.$M + 1; // Months are zero-based, so add 1
+const chequeDay = chequeDate.$D;
+
+// Format the date as YYYY-MM-DD
+const formattedChequeDate = `${chequeYear}-${chequeMonth < 10 ? '0' : ''}${chequeMonth}-${chequeDay < 10 ? '0' : ''}${chequeDay}`;
+
   const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
   const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
@@ -157,15 +173,27 @@ const FinanceData = () => {
     setToast(true)
   }
 
-  const handleDateClick = (event) => {
-    setAnchorElDate(event.currentTarget);
-  };
-  
-  const handleDateClose = () => {
-    setAnchorElDate(null);
-  };
+  // Handle Transaction Date popover
+const handleDateClick = (event) => {
+  setAnchorElDate(event.currentTarget);
+};
 
-  const openDate = Boolean(anchorElDate);
+const handleDateClose = () => {
+  setAnchorElDate(null);
+};
+
+// Handle Cheque Date popover
+const handleChequeDateClick = (event) => {
+  setAnchorElChequeDate(event.currentTarget);
+};
+
+const handleChequeDateClose = () => {
+  setAnchorElChequeDate(null);
+};
+
+// Open state for both popovers
+const openDate = Boolean(anchorElDate);
+const openChequeDate = Boolean(anchorElChequeDate);
 
 
 
@@ -506,7 +534,7 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
 
     if (validateFields()) {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}`);
 
 
           const data = await response.json();
@@ -629,6 +657,7 @@ useEffect(() => {
       errors.transactionDate = 'Transaction Date cannot be in the future';
     }
     if (!transactionTime) errors.transactionTime = 'Transaction Time is required';
+    if (!chequeTime) errors.chequeTime = 'Transaction Time is required';
     if (!paymentMode) errors.paymentMode = 'Payment Mode is required';
     if (paymentMode?.value === 'Cheque' && !chequeNumber) {
       errors.chequeNumber = 'Cheque Number is required';
@@ -675,7 +704,7 @@ useEffect(() => {
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
           dispatch(resetOrderData());
-
+          setFinanceSearchTerm('');
           setIsUpdateMode(false);
   };
   const handleFileChange = (e) => {
@@ -717,6 +746,7 @@ useEffect(() => {
         // Optionally show a message to the user
       } else {
         const transactionDate = data.TransactionDate ? dayjs(data.TransactionDate) : dayjs();
+        const chequeDate = data.ChequeDate ? dayjs(data.ChequeDate) : null;
         const paymentMode = paymentModeOptions.find(option => option.value === data.PaymentMode) || paymentModeOptions[0];
         const transactionType = transactionOptions.find(option => option.value === data.TransactionType) || transactionOptions[0];
         const expenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory) || expenseCategoryOptions[0];
@@ -726,6 +756,7 @@ useEffect(() => {
         
         // Populate state fields with the response data
         setOrderNumber(data.OrderNumber);
+        console.log(data.OrderNumber)
         setOrderAmount(data.Amount);
         setRemarks(data.Remarks);
         setTaxType(taxType);
@@ -733,6 +764,7 @@ useEffect(() => {
         setPaymentMode(paymentMode);
         setTransactionType(transactionType);
         setExpenseCategory(expenseCategory);
+        setChequeDate(chequeDate);
       }
 
       // Second API call to fetch client details using the order number
@@ -742,7 +774,7 @@ useEffect(() => {
         console.log(clientData)
         // Set the ClientName using the fetched client details
         setClientName(clientData[0].clientName);
-        console.log("Client Name:", clientData.clientName);
+        console.log("Client Name:", clientData[0].clientName);
       } catch (clientError) {
         console.error("Error fetching client details:", clientError);
       }
@@ -781,34 +813,54 @@ useEffect(() => {
   const updateFinance = async () => {
     try {
       // Send the GET request with query parameters using axios
-      const response = await axios.get(`https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php?JsonFinanceId=${financeId}&JsonUserName=${username}&JsonAmount=${orderAmount}&JsonRemarks=${remarks}&JsonTaxType=${taxType.value}&JsonTransactionDate=${transactionDate}&JsonPaymentMode=${paymentMode.value}&JsonTransactionType=${transactionType.value}&JsonExpenseCategory=${expenseCategory.value}&JsonDBName=${companyName}`);
-      console.log(financeId)
-      console.log(username)
-      console.log(orderAmount)
-      console.log(transactionType)
-      console.log(taxType)
-      console.log(expenseCategory)
-      console.log(paymentMode)
+      const response = await axios.get(`https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php`, {
+        params: {
+          JsonFinanceId: financeId,
+          JsonUserName: username,
+          JsonAmount: orderAmount,
+          JsonRemarks: remarks,
+          JsonTaxType: taxType.value,
+          JsonTransactionDate: formattedDate + ' ' + formattedTime,
+          JsonPaymentMode: paymentMode.value,
+          JsonTransactionType: transactionType.value,
+          JsonExpenseCategory: expenseCategory.value,
+          JsonChequeDate: formattedDate + ' ' + formattedChequeTime,
+          JsonDBName: companyName
+        }
+      });
+      
+      console.log(financeId);
+      console.log(username);
+      console.log(orderAmount);
+      console.log(transactionType);
+      console.log(taxType);
+      console.log(expenseCategory);
+      console.log(paymentMode);
+
       // Check if the response is successful
       const data = response.data;
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Finance record updated successfully!');
-  
+
         // Clear the success message after 3 seconds
         setTimeout(() => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
-  
+
         // Clear form fields and switch to normal mode if needed
+        setFinanceSearchTerm('');
+        setIsUpdateMode(false);
         clearFinance();
       } else {
         alert(`Error updating finance data: ${data}`);
       }
     } catch (error) {
       console.error('Error updating finance:', error);
-      //alert('An error occurred while updating the finance record.');
+      // Alert the user in case of error
+      alert('An error occurred while updating the finance record.');
     }
   };
+
   
   
   
@@ -1246,7 +1298,6 @@ useEffect(() => {
             fullWidth
             label="Select Date"
             value={formattedTransactionDate}
-
             onClick={handleDateClick}
             InputProps={{
               style: { borderColor: '#88cc6b', maxHeight: 40 } 
@@ -1349,63 +1400,63 @@ useEffect(() => {
             </div>
                )}
                {paymentMode && paymentMode.value === 'Cheque' && (
-            <div>
-            <label className="block mt-2 mb-2 text-gray-700 font-semibold">Cheque Date*</label>
-                  <div className='flex w-full gap-1'>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Box mb={2} >
-          <TextField
-            className="custom-date-picker"
-            fullWidth
-            label="Select Date"
-            value={formattedChequeDate}
-            onClick={handleDateClick}
-            InputProps={{
-              style: { borderColor: '#88cc6b', maxHeight: 40 } 
-            }}
-          />
-          <Popover
-            open={openDate}
-            anchorEl={anchorElDate}
-            onClose={handleDateClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-          >
-            <DateCalendar
-              value={chequeDate}
-              onChange={(newValue) => {
-                setChequeDate(newValue);
-                handleDateClose();
-              }}
-              sx={{ borderColor: '#88cc6b', maxHeight: 40}}
-            />
-          </Popover>
-        </Box>
-        <Box>
-        <TimePicker
-            className="custom-time-picker"
-            label="Select Time"
-            value={chequeTime}
-            onChange={(newValue) => {
-              setChequeDate(newValue);
-            }}
-            renderInput={(params) => <TextField {...params} fullWidth />}
-            ampm
-            views={['hours', 'minutes']}
-            sx={{
-              '& .MuiInputBase-root': {
-                height: 40,
-              },
-            }}
-          />
-        </Box>
-      </LocalizationProvider>
-                </div>
-                {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
-                {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
-                </div>
+           <div className='mt-3'>
+           <label className="block mt-1 mb-2 text-gray-700 font-semibold">Cheque Date</label>
+           <div className='flex w-full gap-1'>
+             <LocalizationProvider dateAdapter={AdapterDayjs}>
+               <Box mb={2}>
+                 <TextField
+                   className="custom-date-picker"
+                   fullWidth
+                   label="Select Date"
+                   value={formattedChequeDate}
+                   onClick={handleChequeDateClick}
+                   InputProps={{
+                     style: { borderColor: '#88cc6b', maxHeight: 40 }  // Matching transaction date styling
+                   }}
+                 />
+                 <Popover
+                   open={openChequeDate}
+                   anchorEl={anchorElChequeDate}
+                   onClose={handleChequeDateClose}
+                   anchorOrigin={{
+                     vertical: 'bottom',
+                     horizontal: 'left',
+                   }}
+                 >
+                   <DateCalendar
+                     value={chequeDate}
+                     onChange={(newValue) => {
+                       setChequeDate(newValue);
+                       handleChequeDateClose();
+                     }}
+                   />
+                 </Popover>
+               </Box>
+               <Box>
+                 <TimePicker
+                   className="custom-time-picker"
+                   label="Select Time"
+                   value={chequeTime}
+                   onChange={(newValue) => {
+                    setChequeTime(newValue);
+                   }}
+                   renderInput={(params) => <TextField {...params} fullWidth />}
+                   ampm
+                   views={['hours', 'minutes']}
+                   sx={{
+                     '& .MuiInputBase-root': {
+                       height: 40,  // Consistent time picker height
+                     },
+                   }}
+                 />
+               </Box>
+             </LocalizationProvider>
+           </div>
+           {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
+           {errors.chequeTime && <span className="text-red-500 text-sm">{errors.chequeTime}</span>}
+         </div>
+         
             )}
             
                
