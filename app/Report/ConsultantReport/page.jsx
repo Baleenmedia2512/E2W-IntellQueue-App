@@ -28,7 +28,9 @@ const matchModes = [
 
 
 export default function GroupedRowsDemo() {
+    const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -62,6 +64,12 @@ export default function GroupedRowsDemo() {
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     const [matchMode, setMatchMode] = useState('contains');
     
+    useEffect(() => {
+        if (!username || dbName === "") {
+          router.push('/login');
+        }
+      },[])
+
 
     const getConsultants = async (companyName, startDate, endDate) => {
         try {
@@ -120,13 +128,6 @@ export default function GroupedRowsDemo() {
             return { name, rateCard, rateType };
         };
 
-          // Determine which order numbers to use
-    // const orderNumbersToUse = selectedRows && selectedRows.length > 0
-    // ? selectedRows.map(row => row.orderNumber) // Use selectedOrderNumbers if selectedRows has data
-    // : orderNumbers; // Fall back to all orderNumbers if no selectedRows
-
-
-    
 
     const orderNumbersToUse = selectedRows && selectedRows.length > 0
     ? selectedRows
@@ -228,37 +229,6 @@ export default function GroupedRowsDemo() {
         }
       };
 
-    // const groupConsultants = (data) => {
-    //     const groupedData = [];
-
-    //     data.forEach((consultant) => {
-    //         let existingName = groupedData.find(group => group.name === consultant.name);
-
-    //         if (!existingName) {
-    //             existingName = { name: consultant.name, rates: [], total: 0 }; // Initialize total
-    //             groupedData.push(existingName);
-    //         }
-
-    //         let existingScan = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
-
-    //         if (!existingScan) {
-    //             existingScan = { rateCard: consultant.rateCard, rateTypes: [] };
-    //             existingName.rates.push(existingScan);
-    //         }
-
-    //         let existingScanType = existingScan.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
-
-    //         if (!existingScanType) {
-    //             existingScanType = { rateType: consultant.rateType, count: 0, price: consultant.price };
-    //             existingScan.rateTypes.push(existingScanType);
-    //         }
-
-    //         existingScanType.count += consultant.count;
-    //         existingName.total += consultant.count * consultant.price; // Update total for the consultant
-    //     });
-
-    //     return groupedData;
-    // };
 
 
     const groupConsultants = (data) => {
@@ -319,51 +289,6 @@ export default function GroupedRowsDemo() {
         return groupedData;
     };
     
-    
-
-
-
-    // const groupConsultants = (data) => {
-    //     const groupedData = [];
-    
-    //     data.forEach((consultant) => {
-    //         let existingName = groupedData.find(group => group.name === consultant.name);
-    
-    //         if (!existingName) {
-    //             existingName = { 
-    //                 name: consultant.name, 
-    //                 rates: [], 
-    //                 total: 0,
-    //                 orderNumber: [] // Add orderNumbers array
-    //             };
-    //             groupedData.push(existingName);
-    //         }
-    
-    //         let existingScan = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
-    
-    //         if (!existingScan) {
-    //             existingScan = { rateCard: consultant.rateCard, rateTypes: [] };
-    //             existingName.rates.push(existingScan);
-    //         }
-    
-    //         let existingScanType = existingScan.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
-    
-    //         if (!existingScanType) {
-    //             existingScanType = { rateType: consultant.rateType, count: 0, price: consultant.price };
-    //             existingScan.rateTypes.push(existingScanType);
-    //         }
-    
-    //         existingScanType.count += consultant.count;
-    //         existingName.total += consultant.count * consultant.price; // Update total for the consultant
-    
-    //         // Add orderNumber if not already included
-    //         // if (!existingName.orderNumber.includes(consultant.OrderNumber)) {
-    //         //     existingName.orderNumber.push(consultant.OrderNumber);
-    //         // }
-    //     });
-    
-    //     return groupedData;
-    // };
     
 
     const renderGroupedData = (groupedData) => {
@@ -451,17 +376,6 @@ export default function GroupedRowsDemo() {
                 } : row
             );
     
-            // // Update the total in the "total" row
-            // const totalRowIndex = updatedSelectedRows.findIndex(row => row.id.includes('-total'));
-            // if (totalRowIndex !== -1) {
-            //     const groupName = updatedSelectedRows[totalRowIndex].id.split('-')[0];
-            //     const groupRateCard = updatedSelectedRows[totalRowIndex].id.split('-')[1];
-            //     const groupTotal = updatedSelectedRows.reduce((sum, row) => 
-            //         row.id.startsWith(groupName) && row.id !== `${groupName}-${groupRateCard}-total`
-            //             ? sum + row.total 
-            //             : sum, 0);
-    
-            //     updatedSelectedRows[totalRowIndex].total = `₹${groupTotal}`;
             const totalRowIndex = updatedSelectedRows.findIndex(row => row.id.includes('-total'));
             if (totalRowIndex !== -1) {
                 const totalRowIdParts = updatedSelectedRows[totalRowIndex].id.split('-');
@@ -572,13 +486,27 @@ export default function GroupedRowsDemo() {
         return rowData.count;
     };
 
-    const customRowClassName = (rowData) => {
-        if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
-            const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
-            return `${baseClass} border-b-2 border-gray-300`; // Add bottom border class here
-        }   
+    // const customRowClassName = (rowData) => {
+    //     if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
+    //         const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
+    //         return `${baseClass} border-b-2 border-gray-300`; // Add bottom border class here
+    //     }   
         
+    // };
+    const customRowClassName = (rowData) => {
+        // Check if the row is a "Total" row
+        const isTotalRow = typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total');
+    
+        // Base class logic
+        const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
+    
+        // Add the border and conditional class for hiding the checkbox
+        const additionalClass = isTotalRow ? 'hide-checkbox border-b-2 border-gray-300' : '';
+    
+        // Return the combined class string
+        return `${baseClass} ${additionalClass}`;
     };
+    
 
     const selectionBodyTemplate = (rowData) => {
         // Check if the rowData contains a consultant name
@@ -612,12 +540,18 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 // Filter rows where total starts with "Total:"
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
+const filteredAmountRows = rowsToCalculate.filter(row => !row.rateCard.startsWith('Total'));
+
+
+const extractNameFromId = (id) => {
+    // Split the id by '-' and return the first part (the name)
+    return id.split('-')[0];
+};
 
 // Filter out rows with null or empty values for name and rateCard
 // const filteredNameRows = rowsToCalculate.filter(row => row.name);
 const filteredNameRows = rowsToCalculate.map(row => {
     if (row.name) {
-        
         return row;
     } else if (selectedRows.length > 0 && row.id) {
         // If name is null and selectedRows is greater than 0, extract the name from row.id
@@ -631,8 +565,11 @@ const filteredNameRows = rowsToCalculate.map(row => {
 const filteredSelectionNameRows = selectedRows.filter(row => extractNameFromId(row.id));
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
 // Calculate total amount
-const totalAmount = filteredRows.reduce((sum, row) => {
-    return sum + parseFloat(row.total.split('₹')[1]);
+// const totalAmount = filteredRows.reduce((sum, row) => {
+//     return sum + parseFloat(row.total.split('₹')[1]);
+// }, 0);
+const totalAmount = filteredAmountRows.reduce((sum, row) => {
+    return sum + parseFloat(row.total);
 }, 0);
 
 const formattedtotalAmount = formatIndianNumber(totalAmount);
@@ -643,7 +580,9 @@ const numberOfConsultants = new Set(filteredNameRows
     .map(row => row.name)
     .filter(name => name) // This filters out null and empty string values
 ).size;
-
+console.log(filteredNameRows
+    .map(row => row.name)
+    .filter(name => name))
 
 
 const extractRateCardFromId = (id) => {
@@ -695,42 +634,62 @@ const handleExport = () => {
     saveAs(blob, 'Consultant_Report.xlsx');
 };
 
-console.log(filteredConsultants)
-
 // const handleSelectionChange = (e) => {
 //     const selectedRows = e.value; // Get the array of selected rows
-//     const selectedNames = new Set(selectedRows.map(row => row.name)); // Collect unique names from selected rows
-
-//     const newSelection = [];
-//     groupedData.forEach(row => {
-//         if (row.id.startsWith(`${Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`))}-`)) {
-//             newSelection.push(row);
+//     const selectedNames = new Set(selectedRows.map(row => row.rateCard)); // Collect unique names from selected rows
+    
+//     const newSelection = groupedData.reduce((acc, row) => {
+        
+//         const matchingName = Array.from(selectedNames).find(rateCard => row.id.includes(`-${rateCard}-`) && !row.rateCard.startsWith('Total'));
+        
+//         if (matchingName) {
+//             const existingSelection = selectedRows.find(selectedRow => selectedRow.rateCard === row.rateCard);
+//             console.log(matchingName)
+//             console.log(existingSelection)
+//             acc.push({
+//                 ...row,
+//                 price: existingSelection ? existingSelection.price : row.price, // Preserve the price or use the existing price if available
+//                 orderNumber: existingSelection ? existingSelection.orderNumber : row.orderNumber, 
+//             });
 //         }
-//     });
+//         return acc;
+//     }, []);
+
+//     if (selectedRows.length === 0) {
+//         // If no rows are selected, reset to all orderNumbers
+//         setSelectedOrderNumbers(orderNumbers); // Ensure `allOrderNumbers` is available in the scope
+//     } else {
+//         // Extract the unique orderNumbers from the selected rows
+//         const selectedOrderNumbs = selectedRows.map(row => row.orderNumber);
+        
+//         // Set the selectedOrderNumbers in state
+//         setSelectedOrderNumbers(selectedOrderNumbs);
+//     }
 
 //     setSelectedRows(newSelection);
 // };
 
-const handleSelectionChange = (e) => {
-    const selectedRows = e.value; // Get the array of selected rows
-    const selectedNames = new Set(selectedRows.map(row => row.name)); // Collect unique names from selected rows
 
-    const newSelection = groupedData.reduce((acc, row) => {
-        const matchingName = Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`));
-        if (matchingName) {
-            const existingSelection = selectedRows.find(selectedRow => selectedRow.id === row.id);
-            acc.push({
-                ...row,
-                price: existingSelection ? existingSelection.price : row.price, // Preserve the price or use the existing price if available
-                orderNumber: existingSelection ? existingSelection.orderNumber : row.orderNumber, 
-            });
+const handleSelectionChange = (e) => {
+    const selectedRows = e.value; 
+
+    const rowsToCheck = filteredConsultants.length > 0 ? filteredConsultants : groupedData;
+
+    // Reduce the grouped data to the new selection based on selected rows
+    const newSelection = rowsToCheck.reduce((acc, row) => {
+        // Check if the current row's rateCard exists in the selected rows
+        const isSelected = selectedRows.some(selectedRow => selectedRow.rateCard === row.rateCard && selectedRow.orderNumber === row.orderNumber);
+
+        if (isSelected) {
+            acc.push(row); // Add the row to the new selection if it's selected
         }
+
         return acc;
     }, []);
 
     if (selectedRows.length === 0) {
         // If no rows are selected, reset to all orderNumbers
-        setSelectedOrderNumbers(orderNumbers); // Ensure `allOrderNumbers` is available in the scope
+        setSelectedOrderNumbers(orderNumbers); // Ensure `orderNumbers` is available in the scope
     } else {
         // Extract the unique orderNumbers from the selected rows
         const selectedOrderNumbs = selectedRows.map(row => row.orderNumber);
@@ -739,29 +698,42 @@ const handleSelectionChange = (e) => {
         setSelectedOrderNumbers(selectedOrderNumbs);
     }
 
-    setSelectedRows(newSelection);
+    setSelectedRows(newSelection); // Update the selected rows state with the new selection
 };
 
+    
 
-// const filterHeaderTemplate = (column, filterField) => {
-//     return (
-//         <div>
-//             <span className="p-column-title">{column.header}</span>
-//             <input
-//                 type="text"
-//                 value={filters[filterField] ? filters[filterField].value : ''}
-//                 onChange={(e) => {
-//                     let newFilters = { ...filters };
-//                     newFilters[filterField] = { value: e.target.value, matchMode: 'contains' };
-//                     setFilters(newFilters);
-//                 }}
-//                 placeholder={`Search ${column.header}`}
-//                 className="p-inputtext-custom"
-//                 style={{ width: '100%' }}
-//             />
-//         </div>
-//     );
+// const handleSelectionChange = (e) => {
+//     const selectedRows = e.value; // Get the array of selected rows
+//     const selectedNames = new Set(selectedRows.map(row => row.name)); // Collect unique names from selected rows
+// console.log(selectedRows);
+//     const newSelection = groupedData.reduce((acc, row) => {
+//         const matchingName = Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`));
+//         if (matchingName) {
+//             const existingSelection = selectedRows.find(selectedRow => selectedRow.id === row.id);
+//             acc.push({
+//                 ...row,
+//                 price: existingSelection ? existingSelection.price : row.price, // Preserve the price or use the existing price if available
+//                 orderNumber: existingSelection ? existingSelection.orderNumber : row.orderNumber, 
+//             });
+//         }
+//         return acc;
+//     }, []);
+
+//     if (selectedRows.length === 0) {
+//         // If no rows are selected, reset to all orderNumbers
+//         setSelectedOrderNumbers(orderNumbers); // Ensure `allOrderNumbers` is available in the scope
+//     } else {
+//         // Extract the unique orderNumbers from the selected rows
+//         const selectedOrderNumbs = selectedRows.map(row => row.orderNumber);
+        
+//         // Set the selectedOrderNumbers in state
+//         setSelectedOrderNumbers(selectedOrderNumbs);
+//     }
+
+//     setSelectedRows(newSelection);
 // };
+
 
 
 const resetFilters = () => {
@@ -878,79 +850,11 @@ const filterHeaderTemplate = (column, filterField) => {
                 
             />
             <button
-    // onClick={() => {
-    //     let newFilters = { ...filters };
-    //     newFilters[filterField] = { value: '', matchMode: 'contains' };
-    //     setFilters(newFilters);
-    //     setFilteredConsultants([]); // Clear filtered consultants
-    // }}
     onClick={() => {
         let newFilters = { ...filters };
         newFilters[filterField] = { value: '', matchMode: 'contains' };
-    
         setFilters(newFilters);
-    
-        // Process consultants to filter and include group totals row when filter is cleared
-        const updatedRows = consultants.flatMap(consultant => {
-            if (!Array.isArray(consultant.rates)) return [];
-    
-            // Calculate the total number of rows for the consultant
-            let totalRows = consultant.rates.reduce((sum, rateCard) => 
-                (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
-                0
-            );
-            let middleIndex = Math.floor(totalRows / 2); // Calculate middle row index
-    
-            let currentIndex = 0;
-    
-            const rows = consultant.rates.flatMap(rateCard => {
-                return (rateCard.rateTypes || []).map(rateType => {
-                    const isMiddleRow = currentIndex === middleIndex && totalRows > 1; // Ensure it's not a single row
-                    const row = {
-                        id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: isMiddleRow ? consultant.name : '', // Assign name only to the middle row
-                        rateCard: rateCard.rateCard,
-                        rateType: rateType.rateType,
-                        count: rateType.count,
-                        price: rateType.price,
-                        total: rateType.count * rateType.price,
-                        isGroup: isMiddleRow, // Set group flag for middle row
-                        isScanGroup: rateType.rateCard === rateCard.rateCard,
-                        orderNumber: consultant.orderNumbers,
-                        originalName: consultant.name // Store the original name for future use
-                    };
-                    currentIndex++; // Increment index for each rateType
-                    return row;
-                });
-            });
-    
-            // Add the Total row, ensuring name is empty for this row
-            rows.push({
-                id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
-                name: '', // Ensure name is empty for Total row
-                rateCard: 'Total',
-                count: '',
-                price: '',
-                total: `₹${Math.round(consultant.total)}`,
-                isGroup: true,
-                isScanGroup: false,
-                originalName: consultant.name
-            });
-    
-            return rows;
-        });
-    
-        // Update filtered consultants based on the cleared filter (without modifying the total rows)
-        const filteredRows = updatedRows.map(row => {
-            // Add name only for middle rows that are NOT 'Total' rows
-            return {
-                ...row,
-                name: row.rateCard !== 'Total' && row.isGroup ? row.originalName : row.name // Ensure name is empty for 'Total' rows
-            };
-        });
-    
-        // Update state with the filtered data
-        setFilteredConsultants(filteredRows);
+        setFilteredConsultants([]); // Clear filtered consultants
     }}
     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
 >
@@ -961,11 +865,6 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 //Working filter
-
-
-
-
-
 
 useEffect(() => {
     if (selectedRows.length > 0) {
@@ -992,12 +891,6 @@ const handleClickOpen = () => {
 const handleClose = () => {
     setOpen(false);
 };
-
-// const handleConfirm = () => {
-//     // Add your incentive processing logic here
-//     setOpen(false);
-// };
-
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -1130,12 +1023,13 @@ const handleClose = () => {
                             globalFilterFields={['name', 'rateCard', 'rateType', 'count', 'price', 'total']}
             
                         >
-                        <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100 border-r-2" body={selectionBodyTemplate}></Column>
+                        
                             <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2 border-r-2" className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
                             showFilterMatchModes={false}
                             ></Column>
+                            <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}
@@ -1143,9 +1037,11 @@ const handleClose = () => {
                             showApplyButton={false}
                             showClearButton={false}
                             ></Column>
-                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-fit p-2"
+                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             ></Column>
-                            <Column field="price" header="Unit Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
+                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
+                            ></Column>
+                            <Column field="price" header="Unit Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
                             ></Column>
                             <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
