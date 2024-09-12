@@ -685,7 +685,7 @@ useEffect(() => {
                       </button>
 
                       <button
-  className="custom-button"
+  className="Add-button"
   onClick={insertNewFinance}
 >
   Add
@@ -701,7 +701,7 @@ useEffect(() => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div className=' bg-white rounded-lg ml-4 '>
                         <div className='relative '>
-                      <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 ">
+                      <button className="Upload-button">
                       Upload Bill
                     <input type = "file" accept="application/pdf, image/jpg, image/jpeg" onChange={handleFileChange} className={`absolute inset-0 opacity-0`}/>
                     </button></div>
