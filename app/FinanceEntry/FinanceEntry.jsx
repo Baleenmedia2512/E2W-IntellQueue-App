@@ -68,7 +68,7 @@ const FinanceData = () => {
   // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  // const dbName = "Baleen Test";
+  // const dbName = "Grace Scans";
   // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
@@ -248,9 +248,10 @@ const FinanceData = () => {
     }
 
     const sendableNumber = `91${clientNumber}`;
-    const message = `Hello ${clientName}, 
-Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
-Thanks for choosing Grace Scans. Have a Nice Day!`;
+//     const message = `Hello ${clientName}, 
+// Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
+// Thanks for choosing Grace Scans. Have a Nice Day!`;
+    const message = `Hi, Your payment of Rs.${orderAmount ? orderAmount : 0} received by Grace Scans. Thank You.`;
     const encodedMessage = encodeURIComponent(message);
     
 
