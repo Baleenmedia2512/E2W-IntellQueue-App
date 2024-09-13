@@ -547,20 +547,20 @@ const ClientsData = () => {
       //     setToast(false);
       //   }, 2000);
 
-      } else {
-        setToastMessage(data);
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
-      }
+    } else {
+      setToastMessage(data);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
 
-    }catch (error) {
-          console.error('Error while data GS: ', error);
-    } 
-  // setSeverity('success');
-  // setToast(true);
+  }catch (error) {
+        console.error('Error while data GS: ', error);
+  } 
+// setSeverity('success');
+// setToast(true);
 } else {
   setToastMessage('Please fill the necessary details in the form.');
   setSeverity('error');
