@@ -681,24 +681,20 @@ const orderColumns = [
     width: 270,
     renderCell: (params) => (
         <div>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
+            <button
+               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                style={{ marginRight: '12px', backgroundColor: '#d98880',
                     color: 'white',
                     fontWeight: 'bold', 
                     opacity: params.row.markInvalidDisabled ? 0.2 : 1,
                     pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
             >
                 Cancel 
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
+            </button>
+            <button
+                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
                 style={{ backgroundColor: '#1976d2',
@@ -708,20 +704,14 @@ const orderColumns = [
                   pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
             >
                 Restore
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => handleEditIconClick(params.row)}
-                style={{ marginLeft: '12px',
-                  backgroundColor: '#499b25',
-                  color: 'white',
-                  fontWeight: 'bold',
-                 }}  
-            >  
-               Edit
-            </Button>
+            </button>
+            <button
+    className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs ml-2"
+    onClick={() => handleEditIconClick(params.row)}
+>
+    Edit
+</button>
+
         </div>
     ),
 },
