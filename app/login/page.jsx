@@ -90,7 +90,7 @@ const handleLogin = (event) => {
         const encodedPassw = encodeURIComponent(password);
 
         // Assuming companyName, userName, and encodedPassw are defined and used correctly
-        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${'Baleen Test'}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(response.statusText);

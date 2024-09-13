@@ -19,6 +19,7 @@ import axios from 'axios';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { resetOrderData } from '@/redux/features/order-slice';
+import { resetClientData } from '@/redux/features/client-slice';
 import { useDispatch } from 'react-redux';
 import { setIsOrderExist } from '@/redux/features/order-slice';
 import FormData from 'form-data';
@@ -329,7 +330,6 @@ const FinanceData = () => {
       });
     
   }; 
-
 
 
   // const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
