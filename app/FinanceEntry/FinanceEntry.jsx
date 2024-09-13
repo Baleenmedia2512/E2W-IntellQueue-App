@@ -534,7 +534,7 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
 
     if (validateFields()) {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntryTest.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClentName=${clientName}`);
 
 
           const data = await response.json();
@@ -757,6 +757,7 @@ useEffect(() => {
         // Populate state fields with the response data
         setOrderNumber(data.OrderNumber);
         console.log(data.OrderNumber)
+        setRateWiseOrderNumber(data.RateWiseOrderNumber);
         setOrderAmount(data.Amount);
         setRemarks(data.Remarks);
         setTaxType(taxType);
@@ -824,8 +825,10 @@ useEffect(() => {
           JsonPaymentMode: paymentMode.value,
           JsonTransactionType: transactionType.value,
           JsonExpenseCategory: expenseCategory.value,
-          JsonChequeDate: formattedDate + ' ' + formattedChequeTime,
+          JsonChequeDate: formattedChequeDate + ' ' + formattedChequeTime,
+          JsonClentName : clientName,
           JsonDBName: companyName
+          
         }
       });
       
@@ -849,6 +852,7 @@ useEffect(() => {
 
         // Clear form fields and switch to normal mode if needed
         setFinanceSearchTerm('');
+        setRateWiseOrderNumber('');
         setIsUpdateMode(false);
         clearFinance();
       } else {
