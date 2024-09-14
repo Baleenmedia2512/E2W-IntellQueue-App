@@ -81,11 +81,11 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
-  useEffect(() => {
-    if (!clientSource && sources.length > 0) {
-      dispatch(setClientData({ clientSource: sources[0] }));
-    }
-  }, [clientSource, dispatch]);
+  // useEffect(() => {
+  //   if (!clientSource && sources.length > 0) {
+  //     dispatch(setClientData({ clientSource: sources[0] }));
+  //   }
+  // }, [clientSource, dispatch]);
 
   useEffect(() => {
     // Check if age input violates constraints for selected option
@@ -321,7 +321,7 @@ const ClientsData = () => {
         // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
-        dispatch(setClientData({clientSource: sources[0]}))
+        // dispatch(setClientData({clientSource: sources[0]}))
         if(dbName){
           elementsToHideList()
         }
@@ -453,18 +453,19 @@ const ClientsData = () => {
 
   const submitDetails = async(event) => {
     event.preventDefault()
-    if(clientContact === '' || clientContact === 0 ){
-      const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
-     if (!result){
-      return
-     }
-    }
+    
     if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
       if (isEmpty === true){
       router.push('/adDetails')
     }
     const isValid = BMvalidateFields();
     if (isValid) {
+      if(clientContact === '' || clientContact === 0 ){
+        const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
+       if (!result){
+        return
+       }
+      }
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
@@ -783,7 +784,7 @@ const handleRemoveClient = () => {
           dispatch(setClientData({ clientEmail: "" }));
           dispatch(setClientData({ clientName: "" }));
           dispatch(setClientData({ clientContact: "" }));
-          dispatch(setClientData({clientSource: sources[0]}));
+          dispatch(setClientData({clientSource: ""}));
           setClientAge("");
           setDOB("");
           setAddress("");
@@ -1282,6 +1283,8 @@ const BMvalidateFields = () => {
                   name="ClientSourceSelect"
                   options={sources}
                   value={clientSource}
+                  defaultValue=""
+                  placeholder='Select Source'
                   onChange={handleClientSourceChange}
                 />
               </div>
