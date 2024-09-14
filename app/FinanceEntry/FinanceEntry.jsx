@@ -766,7 +766,6 @@ useEffect(() => {
       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategory.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
       
       const data = response.data;
-      console.log("API Response:", data);
   
       if (data === "Finance ID is rejected") {
         console.error("Finance ID is rejected");
@@ -809,7 +808,6 @@ useEffect(() => {
         setFinanceClientID(data.ID);
         setFinanceAmount(data.Amount);
         setGSTAmount(data.TaxAmount);
-        console.log(data.TaxAmount)
       }
 
       try {
@@ -847,8 +845,6 @@ useEffect(() => {
     // Set the mode to "Update"
     setIsUpdateMode(true);
 
-    // Optional: Log the selected finance ID to check the value
-    console.log("Selected Finance ID:", selectedFinanceId);
 
   };
   
@@ -908,18 +904,13 @@ useEffect(() => {
           JsonChequeDate: formattedChequeDate + ' ' + formattedChequeTime,
           JsonClentName : clientName,
           JsonTaxAmount : gstAmount,
-          JsonDBName: companyName
+          JsonDBName: companyName,
+          JsonOrderNumber: orderNumber,
+          JsonRateWiseOrderNumber: rateWiseOrderNumber
           
         }
       });
       
-      console.log(financeId);
-      console.log(username);
-      console.log(orderAmount);
-      console.log(transactionType);
-      console.log(taxType);
-      console.log(expenseCategory);
-      console.log(paymentMode);
 
       // Check if the response is successful
       const data = response.data;
@@ -1037,7 +1028,7 @@ useEffect(() => {
       <p className="text-gray-600 font-semibold mx-1">-</p>
       <p className="text-gray-600 font-semibold">{displayClientName}</p>
       <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">{financeAmount}</p>
+      <p className="text-gray-600 font-semibold">₹{financeAmount}</p>
     </div>
   </div>
 ) : ''}
@@ -1430,7 +1421,6 @@ useEffect(() => {
               value={transactionDate}
               onChange={(newValue) => {
                 setTransactionDate(newValue);
-                console.log(newValue)
                 handleDateClose();
               }}
               
