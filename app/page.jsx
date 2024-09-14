@@ -25,6 +25,7 @@ const titleOptions = [
   { label: 'B/o.', value: 'B/o.' },
   { label: 'Baby.', value: 'Baby.' },
   { label: 'Master.', value: 'Master.' },
+  { label: 'Dr.', value: 'Dr.' },
 ];
     
 const ClientsData = () => {
