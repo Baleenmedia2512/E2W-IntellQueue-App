@@ -1320,10 +1320,10 @@ return (
     {isOrderUpdate ? (
   <div className="button-container">
     <button className="update-button" onClick={handleOpenDialog}>Update Order</button>
-    <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button>
+    <button className="cancelupdate-button" onClick={handleCancelUpdate}>Cancel Update</button>
   </div>
 ) : (
-  <button className="custom-button" onClick={createNewOrder}>Place Order</button>
+  <button className="placeorder-button" onClick={createNewOrder}>Place Order</button>
 )}
     
     <Dialog

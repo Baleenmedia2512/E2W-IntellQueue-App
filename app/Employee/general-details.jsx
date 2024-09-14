@@ -354,7 +354,7 @@ const validateFields = () => {
           <button
             type="submit"
             onClick={postGeneralDetails}
-            className="px-6 py-3 text-xs uppercase tracking-wider font-medium text-white bg-[#23c483] rounded-full shadow-md transition-transform duration-300 ease-in-out hover:bg-[#2376c4] hover:shadow-lg hover:translate-y-[-7px] active:translate-y-[-1px] focus:outline-none"
+            className="px-6 py-2 bg-green-400 text-white rounded-lg hover:bg-green-500"
           >
             Create
           </button>

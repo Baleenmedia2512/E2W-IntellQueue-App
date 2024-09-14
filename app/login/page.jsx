@@ -11,7 +11,7 @@ import { resetOrderData } from '@/redux/features/order-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { resetDateRange } from "@/redux/features/report-slice";
+import './page.css';
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -247,16 +247,19 @@ const handleLogin = (event) => {
                             )}
                         </div>
                         
+                        <div className="button-container">
                         <button
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+                            className="login-button"
                             type="button"
                             onClick={handleLogin}
-                        >
-                            Sign In
+                            >
+                             Sign In
                         </button>
+</div>
+
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.7.8
+                        Version 1.7.4
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
