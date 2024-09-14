@@ -12,7 +12,7 @@ import Button from '@mui/material/Button';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import DateRangePicker from './CustomDateRangePicker';
-import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { startOfMonth, endOfMonth, format, parseISO  } from 'date-fns';
 import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from '@mui/material';
 import './styles.css';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -21,6 +21,8 @@ import { useRouter } from 'next/navigation';
 import { setOrderData , setIsOrderUpdate} from '@/redux/features/order-slice';
 import { useDispatch } from 'react-redux';
 import { Select } from '@mui/material';
+import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
+import { Margin } from '@mui/icons-material';
 
 
 
@@ -28,7 +30,7 @@ import { Select } from '@mui/material';
 
 
 const Report = () => {
-    const dbName = useAppSelector(state => state.authSlice.companyName);
+    const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
@@ -38,6 +40,7 @@ const Report = () => {
     const [financeDetails, setFinanceDetails] = useState([]);
     const [sumOfFinance, setSumOfFinance] = useState([]);
     const [rateBaseIncome, setRateBaseIncome] = useState([]);
+    const [elementsToHide, setElementsToHide] = useState([])
     const [filter, setFilter] = useState('All');
     // const [orderFilterModel, setOrderFilterModel] = useState({ items: [] });
     // const [financeFilterModel, setFinanceFilterModel] = useState({ items: [] });
@@ -47,14 +50,23 @@ const Report = () => {
      const [successMessage, setSuccessMessage] = useState('');
      const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
-  const currentStartDate = startOfMonth(new Date());
-  const currentEndDate = endOfMonth(new Date());
-  const [selectedRange, setSelectedRange] = useState({
-    startDate: currentStartDate,
-    endDate: currentEndDate,
+
+  // const currentStartDate = startOfMonth(new Date());
+  // const currentEndDate = endOfMonth(new Date());
+  // const [selectedRange, setSelectedRange] = useState({
+  //   startDate: currentStartDate,
+  //   endDate: currentEndDate,
+  // });
+  // const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
+  // const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
+  const { dateRange } = useAppSelector(state => state.reportSlice);
+   const startDateForDisplay = new Date(dateRange.startDate);
+   const endDateForDisplay = new Date(dateRange.endDate);
+   const [selectedRange, setSelectedRange] = useState({
+    startDate: startDateForDisplay,
+    endDate: endDateForDisplay,  
   });
-  const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
+
   const [open, setOpen] = useState(false);
     const [password, setPassword] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -95,6 +107,7 @@ const checkIfSMSSentToday = () => {
       console.error('Error checking SMS count:', error);
     });
 };
+
 
 
 // Call this function when the component is loaded
@@ -155,6 +168,9 @@ useEffect(() => {
         router.push('/login');
       }
       fetchCurrentDateConsultants();
+      if(dbName){
+        elementsToHideList()
+      }
     },[])
     
     useEffect(() => {
@@ -166,12 +182,34 @@ useEffect(() => {
         fetchSumOfOrders();
         FetchCurrentBalanceAmount();
         fetchAmounts();
-    }, [startDate, endDate]);
+    }, [dateRange.startDate, dateRange.endDate]);
 
 
     useEffect(() => {
       FetchCurrentBalanceAmount();
   }, [marginResult]);
+
+  useEffect(() => {
+    //searching elements to Hide from database
+
+    elementsToHide.forEach((name) => {
+      const elements = document.getElementsByName(name);
+      elements.forEach((element) => {
+        element.style.display = 'none'; // Hide the element
+      });
+    });
+  }, [elementsToHide])
+
+  const elementsToHideList = () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
+        .then((response) => response.json())
+        .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
+
 
   const handleOpenCDR = () => {
     setOpenCDR(true);
@@ -294,7 +332,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
     const fetchSumOfOrders = () => {
       axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfOrders.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
           .then((response) => {
               const totalOrders = response.data;
               setSumOfOrders(totalOrders);
@@ -307,7 +345,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
     const fetchOrderDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
             .then((response) => {
                 const data = response.data.map((order, index) => ({
                     ...order,
@@ -327,7 +365,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
     };
     const fetchFinanceDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+            .get(`https://orders.baleenmedia.com/API/Media/FinanceList.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
             .then((response) => {
                 const financeDetails = response.data.map((transaction, index) => ({
                     ...transaction,
@@ -345,7 +383,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
     const fetchSumOfFinance = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfFinance.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+            .get(`https://orders.baleenmedia.com/API/Media/FetchSumOfFinance.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
             .then((response) => {
                 const data = response.data
                 setSumOfFinance(data);
@@ -359,7 +397,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
     const fetchRateBaseIncome = () => {
       axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchRateBaseIncome.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchRateBaseIncome.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
           .then((response) => {
               const data = response.data
               setRateBaseIncome(data);
@@ -373,7 +411,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
     const fetchAmounts = async () => {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchTotalOrderAndFinanceAmount.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -567,7 +605,7 @@ const handleConfirm = async () => {
 
   const fetchMarginAmount = () => {
     axios
-        .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`)
+        .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
         .then((response) => {
             const data = response.data[0]
             const income = parseFloat(data.total_income);
@@ -638,7 +676,7 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
-  // { field: 'Margin', headerName:'Margin', width: 100},
+  // {field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
   { 
     field: 'Receivable', 
     headerName: 'Value(₹)', 
@@ -1088,10 +1126,14 @@ const handleDateChange = (range) => {
     startDate: range.startDate,
     endDate: range.endDate,
   });
-  const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
-  const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
-  setStartDate(formattedStartDate);
-  setEndDate(formattedEndDate); //
+  dispatch(setDateRange({
+    startDate: range.startDate,
+    endDate: range.endDate,
+  }));
+  // const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
+  // const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
+  // setStartDate(formattedStartDate);
+  // setEndDate(formattedEndDate);
 };
 
  // Utility function to format number as Indian currency (₹)
@@ -1238,6 +1280,11 @@ const handleDateChange = (range) => {
       endDate={selectedRange.endDate} 
       onDateChange={handleDateChange} 
     />
+    {/* <DateRangePicker 
+      startDate={startDate} 
+      endDate={endDate} 
+      onDateChange={handleDateChange} 
+    /> */}
   </div>
 </div>
 
@@ -1276,6 +1323,7 @@ const handleDateChange = (range) => {
         
         <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
           <DataGrid rows={orderDetails} columns={orderColumns}
+          columnVisibilityModel={{Margin: !elementsToHide.includes('QuoteSenderNavigation')}}
           pageSize={10}
           initialState={{
             sorting: {
@@ -1319,6 +1367,11 @@ const handleDateChange = (range) => {
               <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
+    {/* <DateRangePicker 
+      startDate={startDate} 
+      endDate={endDate} 
+      onDateChange={handleDateChange} 
+    /> */}
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
     <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
@@ -1419,7 +1472,7 @@ const handleDateChange = (range) => {
                 <DialogContent>
                     <div className="flex items-center space-x-1 sm:space-x-1">
                     <p className="text-lg font-bold whitespace-nowrap">Margin Amount</p>
-                    <p className="text-xs  mt-1">({format(startDate, 'dd-MMM-yy')} - {format(endDate, 'dd-MMM-yy')})</p>
+                    <p className="text-xs  mt-1">({format(dateRange.startDate, 'dd-MMM-yy')} - {format(dateRange.endDate, 'dd-MMM-yy')})</p>
                   </div>
 
 
