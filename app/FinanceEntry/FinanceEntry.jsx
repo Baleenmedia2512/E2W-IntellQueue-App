@@ -119,6 +119,10 @@ const FinanceData = () => {
   const [financeId, setFinanceId] = useState(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [amount, setAmount] = useState('');
+  const [displayClientName, setDisplayClientName] = useState(clientName);
+  const [financeClientID, setFinanceClientID] = useState('');
+  const [financeAmount, setFinanceAmount] = useState('');
+
 
   useEffect(() => {
     if(dbName){
@@ -800,13 +804,15 @@ useEffect(() => {
         setExpenseCategory(expenseCategory);
         setChequeDate(chequeDate);
         setChequeNumber(data.ChequeNumber);
-        console.log(data.ChequeNumber)
+        setFinanceClientID(data.ID);
+        setFinanceAmount(data.Amount);
       }
 
       try {
         const clientResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${data.OrderNumber}&JsonDBName=${companyName}`);
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
+        setDisplayClientName(clientData[0].clientName);
       } catch (clientError) {
         console.error("Error fetching client details:", clientError);
       }
@@ -938,11 +944,13 @@ useEffect(() => {
         
         {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
       </div>
+      
       <div className="flex items-center mt-2 justify-center mb-2">
-  <button className="cancel-button" 
-  onClick={isUpdateMode ? cancelFinance : clearFinance}>
-    {isUpdateMode ? 'Cancel' : 'Clear'}
-  </button>
+      {!isUpdateMode && (
+    <button className="cancel-button" onClick={clearFinance}>
+      Clear
+    </button>
+  )}
 
   <button
     className="custom-button ml-2"
@@ -954,7 +962,26 @@ useEffect(() => {
 
       </div>
 
-      <div className="flex justify-center mx-auto mb-4 pt-7 mt-4">
+      <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-7 mt-4">
+  {/* Exit Edit Button Section */}
+  {isUpdateMode ? (
+  <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
+    <button
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+       onClick={cancelFinance}
+    >
+      Exit Edit
+    </button>
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
+      <p className="text-gray-600 font-semibold">{financeClientID}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{displayClientName}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{financeAmount}</p>
+    </div>
+  </div>
+) : ''}
+  {/* Search Input Section */}
   <div className="w-full sm:w-1/2">
     <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
       <input
@@ -963,35 +990,35 @@ useEffect(() => {
         id="RateSearchInput"
         placeholder="Search Transaction for Update.."
         value={financeSearchTerm}
-        onChange = {handleFinanceSearch}
+        onChange={handleFinanceSearch}
         onFocus={(e) => { e.target.select() }}
       />
       <div className="px-3">
         <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
       </div>
     </div>
-    <div className="relative"> {/* Make parent container relatively positioned */}
-  {(financeSearchSuggestion.length > 0 && financeSearchTerm !== "") && (
-    <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
-      {financeSearchSuggestion.map((name, index) => (
-        <li key={index}>
-          <button
-            type="button"
-            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-            onClick={handleFinanceSelection}
-            value={name}
-          >
-            {name}
-          </button>
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
 
+    {/* Search Suggestions */}
+    <div className="relative">
+      {financeSearchSuggestion.length > 0 && financeSearchTerm !== "" && (
+        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+          {financeSearchSuggestion.map((name, index) => (
+            <li key={index}>
+              <button
+                type="button"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                onClick={handleFinanceSelection}
+                value={name}
+              >
+                {name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   </div>
 </div>
-
 
 
         {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
