@@ -122,6 +122,7 @@ const FinanceData = () => {
   const [displayClientName, setDisplayClientName] = useState(clientName);
   const [financeClientID, setFinanceClientID] = useState('');
   const [financeAmount, setFinanceAmount] = useState('');
+  const [prevData, setPrevData] = useState(null);
 
 
   useEffect(() => {
@@ -759,7 +760,7 @@ useEffect(() => {
   const searchSuggestions = await FetchFinanceSeachTerm(companyName, searchTerm);
   setFinanceSearchSuggestion(searchSuggestions);
 };
-  const [prevData, setPrevData] = useState(null);
+
   const handleFinanceId = async (financeId, companyName) => {
     try {
       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategory.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
@@ -789,7 +790,8 @@ useEffect(() => {
           paymentMode,
           transactionType,
           expenseCategory,
-          chequeDate
+          chequeDate,
+          chequeNumber: data.ChequeNumber
         });
 
         // Populate state fields with the response data
@@ -806,6 +808,8 @@ useEffect(() => {
         setChequeNumber(data.ChequeNumber);
         setFinanceClientID(data.ID);
         setFinanceAmount(data.Amount);
+        setGSTAmount(data.TaxAmount);
+        console.log(data.TaxAmount)
       }
 
       try {
@@ -849,6 +853,7 @@ useEffect(() => {
   };
   
   const updateFinance = async () => {
+    const hasRemarksChanged = remarks.trim() !== prevData.remarks.trim();
 
 
     const hasChanges = (
@@ -860,8 +865,12 @@ useEffect(() => {
       paymentMode.value !== prevData.paymentMode.value ||
       transactionType.value !== prevData.transactionType.value ||
       expenseCategory.value !== prevData.expenseCategory.value ||
-      formattedChequeDate !== dayjs(prevData.chequeDate).format('YYYY-MM-DD')
+      formattedChequeDate !== dayjs(prevData.chequeDate).format('YYYY-MM-DD') ||
+      chequeNumber !== prevData.chequeNumber 
     );
+
+
+    // Check if remarks haven't been changed and show popup
 
     if (!hasChanges) {
       setToastMessage('No changes have been made.');
@@ -874,8 +883,15 @@ useEffect(() => {
       return; // Exit the function early if no changes are detected
     }
 
-
-
+    if (!hasRemarksChanged) {
+      setToastMessage('Remarks need to be change.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+      return; // Exit the function early if remarks have not been changed
+    }
     try {
       // Send the GET request with query parameters using axios
       const response = await axios.get(`https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php`, {
@@ -891,6 +907,7 @@ useEffect(() => {
           JsonExpenseCategory: expenseCategory.value,
           JsonChequeDate: formattedChequeDate + ' ' + formattedChequeTime,
           JsonClentName : clientName,
+          JsonTaxAmount : gstAmount,
           JsonDBName: companyName
           
         }
@@ -964,23 +981,7 @@ useEffect(() => {
 
       <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-7 mt-4">
   {/* Exit Edit Button Section */}
-  {isUpdateMode ? (
-  <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
-    <button
-      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-       onClick={cancelFinance}
-    >
-      Exit Edit
-    </button>
-    <div className="flex flex-row text-left text-sm md:text-base pr-2">
-      <p className="text-gray-600 font-semibold">{financeClientID}</p>
-      <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">{displayClientName}</p>
-      <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">{financeAmount}</p>
-    </div>
-  </div>
-) : ''}
+  
   {/* Search Input Section */}
   <div className="w-full sm:w-1/2">
     <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
@@ -1023,6 +1024,23 @@ useEffect(() => {
 
         {/* <h1 className="font-bold text-3xl text-black text-center mb-4 ">Finance Manager</h1> */}
       <div className="bg-white p-6 py-10 rounded-lg shadow-lg overflow-y-auto">
+      {isUpdateMode ? (
+  <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
+    <button
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+       onClick={cancelFinance}
+    >
+      Exit Edit
+    </button>
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
+      <p className="text-gray-600 font-semibold">{financeClientID}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{displayClientName}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{financeAmount}</p>
+    </div>
+  </div>
+) : ''}
       <form className="space-y-4 ">
       
       {transactionType.value === 'Operational Expense' && 
@@ -1213,7 +1231,7 @@ useEffect(() => {
     )}</div>
   </> */}
   <div className='mt-3' >
-            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount<span className="text-red-500">*</span></label>
+            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount(₹)<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderAmount ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
                 type="text"
