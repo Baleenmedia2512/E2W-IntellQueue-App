@@ -28,8 +28,10 @@ const matchModes = [
 
 
 export default function GroupedRowsDemo() {
-    const dbName = useAppSelector(state => state.authSlice.dbName);
-    const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const dbName = useAppSelector(state => state.authSlice.dbName);
+    // const companyName = useAppSelector(state => state.authSlice.companyName);
+    const dbName = 'Grace Scans';
+    const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
@@ -540,7 +542,11 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 // Filter rows where total starts with "Total:"
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
-const filteredAmountRows = rowsToCalculate.filter(row => !row.rateCard.startsWith('Total'));
+const filteredAmountRows = rowsToCalculate.filter(row => row.total && !row.rateCard.startsWith('Total'));
+
+// const filteredAmountRows = rowsToCalculate.filter(row => row.total);
+
+
 
 
 const extractNameFromId = (id) => {
@@ -565,9 +571,31 @@ const filteredNameRows = rowsToCalculate.map(row => {
 const filteredSelectionNameRows = selectedRows.filter(row => extractNameFromId(row.id));
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
 // Calculate total amount
-// const totalAmount = filteredRows.reduce((sum, row) => {
+// const totalAmount = filteredAmountRows.reduce((sum, row) => {
 //     return sum + parseFloat(row.total.split('₹')[1]);
 // }, 0);
+// const totalAmount = filteredAmountRows.reduce((sum, row) => {
+//     const total = row.total.includes('₹') ? parseFloat(row.total.split('₹')[1]) : parseFloat(row.total);
+//     return sum + total;
+// }, 0);
+
+// const totalAmount = filteredAmountRows.reduce((sum, row) => {
+//     let total;
+//     if (typeof row.total === 'string' && row.total.includes('₹')) {
+//         total = parseFloat(row.total.split('₹')[1]);
+//     } else {
+//         total = parseFloat(row.total);
+//     }
+
+//     // If total is NaN, set it to 0
+//     total = isNaN(total) ? 0 : total;
+
+//     console.log(sum, total); // Debugging log
+//     return total;
+// }, 0);
+
+
+
 const totalAmount = filteredAmountRows.reduce((sum, row) => {
     return sum + parseFloat(row.total);
 }, 0);
@@ -580,9 +608,9 @@ const numberOfConsultants = new Set(filteredNameRows
     .map(row => row.name)
     .filter(name => name) // This filters out null and empty string values
 ).size;
-console.log(filteredNameRows
-    .map(row => row.name)
-    .filter(name => name))
+// console.log(filteredNameRows
+//     .map(row => row.name)
+//     .filter(name => name))
 
 
 const extractRateCardFromId = (id) => {
