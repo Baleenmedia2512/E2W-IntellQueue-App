@@ -25,6 +25,7 @@ const titleOptions = [
   { label: 'B/o.', value: 'B/o.' },
   { label: 'Baby.', value: 'Baby.' },
   { label: 'Master.', value: 'Master.' },
+  { label: 'Dr.', value: 'Dr.' },
 ];
     
 const ClientsData = () => {
@@ -465,7 +466,7 @@ const ClientsData = () => {
     const isValid = BMvalidateFields();
     if (isValid) {
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
@@ -518,7 +519,7 @@ const ClientsData = () => {
     if (isValid) {
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -538,14 +539,29 @@ const ClientsData = () => {
         setTimeout(() => {
           setToast(false);
         }, 2000);
-            } else {
-              alert(`The following error occurred while inserting data: ${data}`);
-            }
-        }catch (error) {
-          console.error('Error while data GS: ', error);
-        } 
-  // setSeverity('success');
-  // setToast(true);
+
+      // } else if (data === "Consultant Number Already Exists!"){
+      //   setToastMessage('Consultant Number Already Exists!');
+      //   setSeverity('error');
+      //   setToast(true);
+      //   setTimeout(() => {
+      //     setToast(false);
+      //   }, 2000);
+
+    } else {
+      setToastMessage(data);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
+
+  }catch (error) {
+        console.error('Error while data GS: ', error);
+  } 
+// setSeverity('success');
+// setToast(true);
 } else {
   setToastMessage('Please fill the necessary details in the form.');
   setSeverity('error');
@@ -1160,13 +1176,13 @@ const BMvalidateFields = () => {
               {selectedOption !== 'B/o.' && selectedOption !== 'Baby.' ? (
                 <div className="flex space-x-2 mt-3" name="ClientAgeInput">
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Age</label>
+                    <label className="block mb-1 text-black font-medium">Age<span className="text-red-500">*</span></label>
                     <input
                       className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       id="5"
                       name="ClientAgeInput"
-                      placeholder="Age*"
+                      placeholder="Age"
                       value={clientAge}
                       onChange={handleInputAgeChange}
                     />
@@ -1273,11 +1289,11 @@ const BMvalidateFields = () => {
               {(clientSource === '5.Consultant' || clientSource === 'Consultant') && (
                 <>
                   <div className="relative" name="ConsultantNameInput">
-                  <label className="block mb-1 text-black font-medium">Consultant Name</label>
+                  <label className="block mb-1 text-black font-medium">Consultant Name<span className="text-red-500">*</span></label>
                   <input
                     className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
                     type="text"
-                    placeholder="Consultant Name*"
+                    placeholder="Consultant Name"
                     id="9"
                     name="ConsultantNameInput"
                     onChange={handleConsultantNameChange}

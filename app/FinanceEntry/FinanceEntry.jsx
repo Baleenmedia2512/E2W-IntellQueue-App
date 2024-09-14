@@ -19,6 +19,7 @@ import axios from 'axios';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { resetOrderData } from '@/redux/features/order-slice';
+import { resetClientData } from '@/redux/features/client-slice';
 import { useDispatch } from 'react-redux';
 import { setIsOrderExist } from '@/redux/features/order-slice';
 import FormData from 'form-data';
@@ -71,6 +72,8 @@ const FinanceData = () => {
   // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const dbName = "Grace Scans";
+  // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
@@ -282,19 +285,19 @@ const openChequeDate = Boolean(anchorElChequeDate);
     }
 
     const sendableNumber = `91${clientNumber}`;
-    const message = `Hello ${clientName}, 
-Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
-Thanks for choosing Grace Scans. Have a Nice Day!`;
+//     const message = `Hello ${clientName}, 
+// Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
+// Thanks for choosing Grace Scans. Have a Nice Day!`;
+    const message = `Hi, Your payment of Rs.${orderAmount ? orderAmount : 0} received by Grace Scans. Thank You.`;
     const encodedMessage = encodeURIComponent(message);
     
 
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}`)
+      .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=&JsonConsultantNumber=&JsonDBName=${companyName}`)
       .then((response) => {
 
         const result = response.data;
-        console.log(result);
-        if (result.includes('Done')) {
+        if (result === "SMS Sent but Consultant details are missing.") {
           // Success Case
           setSuccessMessage('SMS Sent!');
           setTimeout(() => {
@@ -363,7 +366,6 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
       });
     
   }; 
-
 
 
   // const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
@@ -542,20 +544,22 @@ Thanks for choosing Grace Scans. Have a Nice Day!`;
             setSuccessMessage('Finance Entry Added');
               setTimeout(() => {
             setSuccessMessage('');
-            
-            if (elementsToHide.includes("RateWiseOrderNumberText")) {
-              //BM
-                SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
-            } else if (elementsToHide.includes("OrderNumberText")) {
-              SendSMSViaNetty(clientNumber, clientName, orderAmount);
-            } else {
-              setToastMessage('SMS Not Sent! Reason: No Database Found.');
-              setSeverity('warning');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-            }
+
+            if (transactionType && transactionType.value === "Income") {
+              if (elementsToHide.includes("RateWiseOrderNumberText")) {
+                //BM
+                  SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+              } else if (elementsToHide.includes("OrderNumberText")) {
+                SendSMSViaNetty(clientNumber, clientName, orderAmount);
+              } else {
+                setToastMessage('SMS Not Sent! Reason: No Database Found.');
+                setSeverity('warning');
+                setToast(true);
+                setTimeout(() => {
+                  setToast(false);
+                }, 2000);
+              }
+          }
 
           }, 1000);
         }
@@ -1150,7 +1154,7 @@ useEffect(() => {
       {transactionType && transactionType.value !== 'Operational Expense' && (
       <div name="OrderNumberText" >
         <label className='block mb-2 mt-4 text-gray-700 font-semibold'>
-          Order Number*
+          Order Number<span className="text-red-500">*</span>
         </label>
         <div className="w-full flex gap-3">
           <input
@@ -1277,7 +1281,7 @@ useEffect(() => {
                </div>
                {taxType && taxType.value === 'GST' && (
               <div>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
           <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               type="text"
@@ -1304,7 +1308,7 @@ useEffect(() => {
           </div>
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
           
-            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
                 type="text"
@@ -1440,7 +1444,7 @@ useEffect(() => {
                </div>
                {paymentMode && paymentMode.value === 'Cheque' && (
               <div className='mt-3'>
-               <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number*</label>
+               <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number<span className="text-red-500">*</span></label>
             <input 
                 className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.chequeNumber ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
                 type="text"

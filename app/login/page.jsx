@@ -11,6 +11,7 @@ import { resetOrderData } from '@/redux/features/order-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { resetDateRange } from "@/redux/features/report-slice";
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -118,6 +119,7 @@ const handleLogin = (event) => {
                     dispatch(resetRatesData());
                     dispatch(resetQuotesData());
                     dispatch(resetOrderData());
+                    dispatch(resetDateRange());
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{
@@ -254,7 +256,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.7.2
+                        Version 1.7.7
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
