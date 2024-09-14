@@ -1324,7 +1324,7 @@ useEffect(() => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {taxType && taxType.value === 'GST' && (
+               {/* {taxType && taxType.value === 'GST' && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
@@ -1382,7 +1382,7 @@ useEffect(() => {
             </div>
             {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
             </div>
-            )}
+            )} */}
             
             <div className='mt-3'> 
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Remarks</label>
