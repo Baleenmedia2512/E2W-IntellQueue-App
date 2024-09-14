@@ -699,6 +699,7 @@ useEffect(() => {
           setGSTPercentage('');
           setOrderAmount('');
           setOrderNumber('');
+          setRateWiseOrderNumber('');
           setPaymentMode(paymentModeOptions[0]);
           setRemarks('');
           setTaxType(taxTypeOptions[2]);
@@ -722,28 +723,46 @@ useEffect(() => {
     }
   };
 
-  const handleFinanceSearch = async(e) =>{
-    setFinanceSearchTerm(e.target.value);
-    const searchSuggestions = await FetchFinanceSeachTerm(companyName, e.target.value);
-    setFinanceSearchSuggestion(searchSuggestions);
+ const handleFinanceSearch = async (e) => {
+  const searchTerm = e.target.value;
+  setFinanceSearchTerm(searchTerm);
+
+  // If search term is cleared, reset the update mode
+  if (searchTerm.trim() === "") {
+    setIsUpdateMode(false); // Reset update mode
+      setChequeNumber('');
+          setClientName('');
+          setExpenseCategory('');
+          setGSTAmount('');
+          setGSTPercentage('');
+          setOrderAmount('');
+          setOrderNumber('');
+          setRateWiseOrderNumber('');
+          setPaymentMode(paymentModeOptions[0]);
+          setRemarks('');
+          setTaxType(taxTypeOptions[2]);
+          setTransactionType(transactionOptions[0]);
+          dispatch(resetOrderData());
+          setFinanceSearchTerm('');
+    setFinanceSearchSuggestion([]); // Clear suggestions
+    return; // Exit early
   }
-  
+
+  const searchSuggestions = await FetchFinanceSeachTerm(companyName, searchTerm);
+  setFinanceSearchSuggestion(searchSuggestions);
+};
+  const [prevData, setPrevData] = useState(null);
   const handleFinanceId = async (financeId, companyName) => {
     try {
-      // First API call to fetch finance details
       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategory.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
       
-      // Log the response data to check the API response
       const data = response.data;
       console.log("API Response:", data);
   
-      // Handle different response cases
       if (data === "Finance ID is rejected") {
         console.error("Finance ID is rejected");
-        // Optionally show a message to the user
       } else if (data === "No finance details found for the provided ID") {
         console.error("No finance details found for the provided ID");
-        // Optionally show a message to the user
       } else {
         const transactionDate = data.TransactionDate ? dayjs(data.TransactionDate) : dayjs();
         const chequeDate = data.ChequeDate ? dayjs(data.ChequeDate) : null;
@@ -751,12 +770,22 @@ useEffect(() => {
         const transactionType = transactionOptions.find(option => option.value === data.TransactionType) || transactionOptions[0];
         const expenseCategory = expenseCategoryOptions.find(option => option.value === data.ExpensesCategory) || expenseCategoryOptions[0];
         const taxType = taxTypeOptions.find(option => option.value === data.TaxType) || taxTypeOptions[0];
-        setTaxType(taxType);
 
-        
+        // Set the previous data for comparison in the update function
+        setPrevData({
+          clientName: data.ClientName,
+          orderAmount: data.Amount,
+          remarks: data.Remarks,
+          taxType,
+          transactionDate,
+          paymentMode,
+          transactionType,
+          expenseCategory,
+          chequeDate
+        });
+
         // Populate state fields with the response data
         setOrderNumber(data.OrderNumber);
-        console.log(data.OrderNumber)
         setRateWiseOrderNumber(data.RateWiseOrderNumber);
         setOrderAmount(data.Amount);
         setRemarks(data.Remarks);
@@ -766,16 +795,14 @@ useEffect(() => {
         setTransactionType(transactionType);
         setExpenseCategory(expenseCategory);
         setChequeDate(chequeDate);
+        setChequeNumber(data.ChequeNumber);
+        console.log(data.ChequeNumber)
       }
 
-      // Second API call to fetch client details using the order number
       try {
         const clientResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${data.OrderNumber}&JsonDBName=${companyName}`);
         const clientData = clientResponse.data;
-        console.log(clientData)
-        // Set the ClientName using the fetched client details
         setClientName(clientData[0].clientName);
-        console.log("Client Name:", clientData[0].clientName);
       } catch (clientError) {
         console.error("Error fetching client details:", clientError);
       }
@@ -783,7 +810,7 @@ useEffect(() => {
     } catch (error) {
       console.error("Error fetching finance details:", error);
     }
-  };
+};
 
   
   
@@ -812,6 +839,33 @@ useEffect(() => {
   };
   
   const updateFinance = async () => {
+
+
+    const hasChanges = (
+      //clientName.trim() !== prevData.clientName.trim() ||
+      orderAmount !== prevData.orderAmount ||
+      remarks.trim() !== prevData.remarks.trim() ||
+      taxType.value !== prevData.taxType.value ||
+      transactionDate.format('YYYY-MM-DD') !== dayjs(prevData.transactionDate).format('YYYY-MM-DD') ||
+      paymentMode.value !== prevData.paymentMode.value ||
+      transactionType.value !== prevData.transactionType.value ||
+      expenseCategory.value !== prevData.expenseCategory.value ||
+      formattedChequeDate !== dayjs(prevData.chequeDate).format('YYYY-MM-DD')
+    );
+
+    if (!hasChanges) {
+      setToastMessage('No changes have been made.');
+    setSeverity('warning');
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+      //alert('No changes have been made');
+      return; // Exit the function early if no changes are detected
+    }
+
+
+
     try {
       // Send the GET request with query parameters using axios
       const response = await axios.get(`https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php`, {
@@ -903,7 +957,7 @@ useEffect(() => {
         className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
         type="text"
         id="RateSearchInput"
-        placeholder="Ex: RateName Type"
+        placeholder="Search Transaction for Update.."
         value={financeSearchTerm}
         onChange = {handleFinanceSearch}
         onFocus={(e) => { e.target.select() }}
@@ -975,6 +1029,7 @@ useEffect(() => {
               value={transactionType.value}
               onChange={(option) => handleChange(option, 'TransactionTypeSelect')}
               options={transactionOptions}
+              disabled={isUpdateMode}
             //   required
               /> 
                {errors.transactionType && <span className="text-red-500 text-sm">{errors.transactionType}</span>}
@@ -1020,6 +1075,7 @@ useEffect(() => {
                 // required={!isEmpty} 
                 value={clientName}
                 onChange = {handleClientNameTermChange}
+                disabled={isUpdateMode}
                 onFocus={e => e.target.select()}
                 onBlur={() => {
             setTimeout(() => {
@@ -1074,6 +1130,7 @@ useEffect(() => {
             pattern="\d*"
             inputMode="numeric"
             onChange={handleRateWiseOrderNumberChange}
+            disabled={isUpdateMode}
             onFocus={(e) => { e.target.select(); }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -1127,7 +1184,7 @@ useEffect(() => {
   <div className='mt-3' >
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
-            <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderAmount ? 'border-red-400' : ''}`}
+            <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderAmount ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
                 type="text"
                 placeholder="Amount (₹)" 
                 id='4'
@@ -1200,7 +1257,7 @@ useEffect(() => {
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Tax Type</label>
 
             <Dropdown
-              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible`}
+              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible ${isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               id="5"
               name="TaxTypeSelect"
               placeholder="Select Tax Type"
@@ -1222,7 +1279,7 @@ useEffect(() => {
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %*</label>
           <div className="w-full flex gap-3">
-          <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' : ''}`}
+          <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               type="text"
               placeholder="GST%" 
               id='4'
@@ -1249,7 +1306,7 @@ useEffect(() => {
           
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount*</label>
             <div className="w-full flex gap-3">
-            <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' : ''}`}
+            <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
                 type="text"
                 placeholder="GST Amount" 
                 id='7'
@@ -1282,7 +1339,7 @@ useEffect(() => {
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Remarks</label>
             <div className="w-full flex gap-3">
             <TextareaAutosize
-              className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+              className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               id="7"
               name="RemarksTextArea"
               placeholder="Remarks"
@@ -1304,7 +1361,11 @@ useEffect(() => {
             value={formattedTransactionDate}
             onClick={handleDateClick}
             InputProps={{
-              style: { borderColor: '#88cc6b', maxHeight: 40 } 
+              style: {
+                borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode, default otherwise
+                borderWidth: isUpdateMode ? 1 : 1, // Thicker border when in update mode
+                maxHeight: 40,
+              },
             }}
           />
           <Popover
@@ -1340,7 +1401,10 @@ useEffect(() => {
             views={['hours', 'minutes']}
             sx={{
               '& .MuiInputBase-root': {
-                height: 40,
+                height: 40,  // Consistent time picker height
+                borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode
+                borderWidth: isUpdateMode ? '1px' : '1px',  // Thicker border in update mode
+                borderStyle: 'solid', // Ensure the border is visible
               },
             }}
           
@@ -1355,7 +1419,7 @@ useEffect(() => {
                 <label className="block mt-1 mb-2 text-gray-700 font-semibold">Payment Mode</label>
             {/* <div className='flex w-full'> */}
             <Dropdown
-              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible`}
+              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible ${isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               id="5"
               name="PaymentModeSelect"
               placeholder="Select Payment Mode"
@@ -1378,11 +1442,12 @@ useEffect(() => {
               <div className='mt-3'>
                <label className='block mb-2 mt-2 text-gray-700 font-semibold'>Cheque Number*</label>
             <input 
-                className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.chequeNumber ? 'border-red-400' : ''}`}
+                className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.chequeNumber ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
                 type="text"
                 placeholder="Ex. 10000" 
                 id='3'
-                name="ChequeNumberInput" 
+                name="ChequeNumberInput"
+                value={chequeNumber} 
                 onChange = {(e) => {setChequeNumber(e.target.value)
                   if (errors.chequeNumber) {
                     setErrors((prevErrors) => ({ ...prevErrors, chequeNumber: undefined }));
@@ -1416,8 +1481,12 @@ useEffect(() => {
                    value={formattedChequeDate}
                    onClick={handleChequeDateClick}
                    InputProps={{
-                     style: { borderColor: '#88cc6b', maxHeight: 40 }  // Matching transaction date styling
-                   }}
+                    style: {
+                      borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode, default otherwise
+                      borderWidth: isUpdateMode ? 1 : 1, // Thicker border when in update mode
+                      maxHeight: 40,
+                    },
+                  }}
                  />
                  <Popover
                    open={openChequeDate}
@@ -1449,10 +1518,13 @@ useEffect(() => {
                    ampm
                    views={['hours', 'minutes']}
                    sx={{
-                     '& .MuiInputBase-root': {
-                       height: 40,  // Consistent time picker height
-                     },
-                   }}
+                    '& .MuiInputBase-root': {
+                      height: 40,  // Consistent time picker height
+                      borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode
+                      borderWidth: isUpdateMode ? '1px' : '1px',  // Thicker border in update mode
+                      borderStyle: 'solid', // Ensure the border is visible
+                    },
+                  }}
                  />
                </Box>
              </LocalizationProvider>
