@@ -171,11 +171,11 @@ pointer-events: none; /* Prevent text from blocking interactions */
   /* background-color: #2376c4; */
   box-shadow: 0px 15px 20px rgba(17, 165, 135, 0.4);
   color: #fff;
-  transform: translateY(-7px);
+  /* transform: translateY(-7px); */
 }
 
 .edit-button:active {
-  transform: translateY(-1px);
+  transform: translateY(-3px);
 }
 /* Responsive styles */
 @media (max-width: 768px) {
@@ -224,11 +224,11 @@ pointer-events: none; /* Prevent text from blocking interactions */
   /* background-color: #2376c4; */
   box-shadow: 0px 15px 20px rgba(216, 231, 228, 0.4);
   color: #fff;
-  transform: translateY(-7px);
+  /* transform: translateY(-7px); */
 }
 
 .Restore-button:active {
-  transform: translateY(-1px);
+  transform: translateY(-3px);
 }
 /* Responsive styles */
 @media (max-width: 768px) {
@@ -253,4 +253,34 @@ pointer-events: none; /* Prevent text from blocking interactions */
     font-size: 9px; /* Adjust font size for better readability */
     height: 40px;
   }
+}
+
+.delete-button {
+  padding: 0.8em 0.8em;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #23c483;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+  display: inline-block;
+  margin-left: 4%;
+
+  
+}
+
+.delete-button:hover {
+background-color: #f27258;
+box-shadow: 0px 15px 20px rgba(246, 164, 151, 0.4);
+color: #fff;
+/* transform: translateY(-7px); */
+}
+
+.delete-button:active {
+  transform: translateY(-3px);
 }

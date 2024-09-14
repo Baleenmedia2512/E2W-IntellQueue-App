@@ -682,7 +682,7 @@ const orderColumns = [
     renderCell: (params) => (
         <div>
             <button
-               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs"
+               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-4"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
                 style={{ marginRight: '12px', backgroundColor: '#d98880',
@@ -694,7 +694,7 @@ const orderColumns = [
                 Cancel 
             </button>
             <button
-                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs"
+                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
                 style={{ backgroundColor: '#1976d2',
@@ -706,7 +706,7 @@ const orderColumns = [
                 Restore
             </button>
             <button
-    className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs ml-2"
+    className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
     onClick={() => handleEditIconClick(params.row)}
 >
     Edit
@@ -738,15 +738,13 @@ const financeColumns = [
     width: 100,
     renderCell: (params) => (
       <div>
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
+        <button
+          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs'
           onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-          style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+          style={{ backgroundColor: '#d98880', color: 'white', fontWeight: 'bold' }}
         >
           Delete
-        </Button>
+        </button>
       </div>
     ),
   },
