@@ -28,10 +28,10 @@ const matchModes = [
 
 
 export default function GroupedRowsDemo() {
-    // const dbName = useAppSelector(state => state.authSlice.dbName);
-    // const companyName = useAppSelector(state => state.authSlice.companyName);
-    const dbName = 'Grace Scans';
-    const companyName = 'Grace Scans';
+    const dbName = useAppSelector(state => state.authSlice.dbName);
+    const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const dbName = 'Grace Scans';
+    // const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
@@ -309,7 +309,8 @@ export default function GroupedRowsDemo() {
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
                         name: currentIndex === middleIndex ? group.name : null,
-                        rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+                        // rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+                        rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
                         price: rateType.price,
@@ -570,31 +571,6 @@ const filteredNameRows = rowsToCalculate.map(row => {
 
 const filteredSelectionNameRows = selectedRows.filter(row => extractNameFromId(row.id));
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
-// Calculate total amount
-// const totalAmount = filteredAmountRows.reduce((sum, row) => {
-//     return sum + parseFloat(row.total.split('₹')[1]);
-// }, 0);
-// const totalAmount = filteredAmountRows.reduce((sum, row) => {
-//     const total = row.total.includes('₹') ? parseFloat(row.total.split('₹')[1]) : parseFloat(row.total);
-//     return sum + total;
-// }, 0);
-
-// const totalAmount = filteredAmountRows.reduce((sum, row) => {
-//     let total;
-//     if (typeof row.total === 'string' && row.total.includes('₹')) {
-//         total = parseFloat(row.total.split('₹')[1]);
-//     } else {
-//         total = parseFloat(row.total);
-//     }
-
-//     // If total is NaN, set it to 0
-//     total = isNaN(total) ? 0 : total;
-
-//     console.log(sum, total); // Debugging log
-//     return total;
-// }, 0);
-
-
 
 const totalAmount = filteredAmountRows.reduce((sum, row) => {
     return sum + parseFloat(row.total);
@@ -801,7 +777,7 @@ const filterHeaderTemplate = (column, filterField) => {
                         return;
                     }
 
-                    if(filterField === 'id') {
+                    // if(filterField === 'id') {
 
                     // Process consultants to filter and include group totals row
                     const updatedRows = consultants.flatMap(consultant => {
@@ -851,8 +827,11 @@ const filterHeaderTemplate = (column, filterField) => {
                         return rows;
                     });
 
+                    
+
                     // Filter rows based on the search term
                     const filteredRows = updatedRows.map(row => {
+                        
                         const matchesSearch = 
                             row.name?.toLowerCase().includes(searchTerm) ||
                             row.rateCard?.toLowerCase().includes(searchTerm) ||
@@ -870,7 +849,8 @@ const filterHeaderTemplate = (column, filterField) => {
 
                     // Update the state with filtered rows
                     setFilteredConsultants(filteredRows);
-                }}
+                // }
+            }
             }
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
@@ -882,7 +862,20 @@ const filterHeaderTemplate = (column, filterField) => {
         let newFilters = { ...filters };
         newFilters[filterField] = { value: '', matchMode: 'contains' };
         setFilters(newFilters);
-        setFilteredConsultants([]); // Clear filtered consultants
+        const filteredRows = consultants.map(row => {
+                        
+            
+
+            if (row.name === '' && !row.id.includes('-total')) {
+                return { ...row, name: row.originalName }; // Display the name
+            }
+
+            return row;
+        }).filter(row => row !== null);
+
+        // Update the state with filtered rows
+        setFilteredConsultants(filteredRows);
+        // setFilteredConsultants([]); 
     }}
     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
 >
