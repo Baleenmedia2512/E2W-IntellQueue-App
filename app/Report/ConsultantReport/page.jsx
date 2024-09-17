@@ -293,23 +293,76 @@ export default function GroupedRowsDemo() {
     
     
 
-    const renderGroupedData = (groupedData) => {
-        const rows = [];
+    // const renderGroupedData = (groupedData) => {
+    //     const rows = [];
     
+    //     groupedData.forEach(group => {
+    //         let totalRows = group.rates.reduce((sum, rateCard) => sum + rateCard.rateTypes.length, 0);
+    //         let middleIndex = Math.floor(totalRows / 2);
+    
+    //         let currentIndex = 0;
+    //         let rateCardNames = [];
+
+    //         group.rates.forEach((rateCard, scanIndex) => {
+    //             rateCardNames.push(rateCard.rateCard);
+    //             rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
+    //                 rows.push({
+    //                     id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
+    //                     name: currentIndex === middleIndex ? group.name : null,
+    //                     // rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+    //                     rateCard: rateCard.rateCard,
+    //                     rateType: rateType.rateType,
+    //                     count: rateType.count,
+    //                     price: rateType.price,
+    //                     total: rateType.count * rateType.price,
+    //                     isGroup: currentIndex === middleIndex,
+    //                     isScanGroup: scanTypeIndex === 0,
+    //                     orderNumber: rateCard.orderNumbers,
+    //                     originalName: group.name
+    //                 });
+    //                 currentIndex++;
+    //             });
+    //         });
+            
+    //         const rateCardString = rateCardNames.join('-');
+            
+    //         // Add a row for the total of each consultant
+    //         rows.push({
+    //             id: `${group.name}-${rateCardString}-total`,
+    //             name: '',
+    //             rateCard: 'Total',
+    //             count: '',
+    //             price: '',
+    //             total: `₹${Math.round(group.total)}`,
+    //             isGroup: true,
+    //             isScanGroup: false,
+    //             originalName: group.name,
+    //             orderNumber: group.orderNumbers 
+    //         });
+    //     });
+    
+    //     return rows;
+    // };
+
+    const renderGroupedData = (groupedData, activeFilters = {}) => {
+        const rows = [];
+        
         groupedData.forEach(group => {
             let totalRows = group.rates.reduce((sum, rateCard) => sum + rateCard.rateTypes.length, 0);
             let middleIndex = Math.floor(totalRows / 2);
-    
+            
             let currentIndex = 0;
             let rateCardNames = [];
-
+    
             group.rates.forEach((rateCard, scanIndex) => {
                 rateCardNames.push(rateCard.rateCard);
+                
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
+                    const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
+                    
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: currentIndex === middleIndex ? group.name : null,
-                        // rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+                        name: currentIndex === middleIndex || isFilteredByRateCard ? group.name : null,  // Add name if filter applies
                         rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
@@ -337,17 +390,22 @@ export default function GroupedRowsDemo() {
                 isGroup: true,
                 isScanGroup: false,
                 originalName: group.name,
-                orderNumber: group.orderNumbers 
+                orderNumber: group.orderNumbers
             });
         });
     
         return rows;
     };
-
-   
     
-    const groupedData = renderGroupedData(consultants);
+    
+    const activeFilters = {
+        rateCard: filters.id ? filters.id.value : ''
+    };
 
+    console.log(activeFilters)
+    
+    const groupedData = renderGroupedData(consultants, activeFilters);
+    console.log(groupedData)
 
     const handlePriceChange = (id, newPrice) => {
         setConsultants(prevConsultants => {
@@ -754,6 +812,8 @@ const resetFilters = () => {
 };
 
 
+
+
 //Working filter
 const filterHeaderTemplate = (column, filterField) => {
     return (
@@ -771,87 +831,87 @@ const filterHeaderTemplate = (column, filterField) => {
                     newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
                     setFilters(newFilters);
 
-                    if (searchTerm === '') {
-                        // Reset filtered consultants to empty when search text is empty
-                        setFilteredConsultants([]);
-                        return;
-                    }
-                    console.log(searchTerm)
-                    // if(filterField === 'id') {
+            //         if (searchTerm === '') {
+            //             // Reset filtered consultants to empty when search text is empty
+            //             setFilteredConsultants([]);
+            //             return;
+            //         }
+            //         console.log(searchTerm)
+            //         // if(filterField === 'id') {
 
-                    // Process consultants to filter and include group totals row
-                    const updatedRows = consultants.flatMap(consultant => {
-                        if (!Array.isArray(consultant.rates)) return [];
+            //         // Process consultants to filter and include group totals row
+            //         const updatedRows = consultants.flatMap(consultant => {
+            //             if (!Array.isArray(consultant.rates)) return [];
 
-                        let totalRows = consultant.rates.reduce((sum, rateCard) => 
-                            (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
-                            0
-                        );
-                        let middleIndex = Math.floor(totalRows / 2);
+            //             let totalRows = consultant.rates.reduce((sum, rateCard) => 
+            //                 (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
+            //                 0
+            //             );
+            //             let middleIndex = Math.floor(totalRows / 2);
 
-                        let currentIndex = 0;
+            //             let currentIndex = 0;
 
-                        const rows = consultant.rates.flatMap(rateCard => {
-                            return (rateCard.rateTypes || []).map(rateType => {
-                                const isMiddleRow = currentIndex === middleIndex;
-                                const row = {
-                                    id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                                    name: isMiddleRow ? consultant.name : '',
-                                    rateCard: rateCard.rateCard,
-                                    rateType: rateType.rateType,
-                                    count: rateType.count,
-                                    price: rateType.price,
-                                    total: rateType.count * rateType.price,
-                                    isGroup: isMiddleRow,
-                                    isScanGroup: rateType.rateCard === rateCard.rateCard,
-                                    orderNumber: consultant.orderNumbers,
-                                    originalName: consultant.name // Store the original name for potential use
-                                };
-                                currentIndex++;
-                                return row;
-                            });
-                        });
+            //             const rows = consultant.rates.flatMap(rateCard => {
+            //                 return (rateCard.rateTypes || []).map(rateType => {
+            //                     const isMiddleRow = currentIndex === middleIndex;
+            //                     const row = {
+            //                         id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
+            //                         name: isMiddleRow ? consultant.name : '',
+            //                         rateCard: rateCard.rateCard,
+            //                         rateType: rateType.rateType,
+            //                         count: rateType.count,
+            //                         price: rateType.price,
+            //                         total: rateType.count * rateType.price,
+            //                         isGroup: isMiddleRow,
+            //                         isScanGroup: rateType.rateCard === rateCard.rateCard,
+            //                         orderNumber: consultant.orderNumbers,
+            //                         originalName: consultant.name // Store the original name for potential use
+            //                     };
+            //                     currentIndex++;
+            //                     return row;
+            //                 });
+            //             });
 
-                        rows.push({
-                            id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
-                            name: '',
-                            rateCard: 'Total',
-                            count: '',
-                            price: '',
-                            total: `₹${Math.round(consultant.total)}`,
-                            isGroup: true,
-                            isScanGroup: false,
-                            originalName: consultant.name
-                        });
+            //             rows.push({
+            //                 id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
+            //                 name: '',
+            //                 rateCard: 'Total',
+            //                 count: '',
+            //                 price: '',
+            //                 total: `₹${Math.round(consultant.total)}`,
+            //                 isGroup: true,
+            //                 isScanGroup: false,
+            //                 originalName: consultant.name
+            //             });
 
-                        return rows;
-                    });
+            //             return rows;
+            //         });
 
                     
 
-                    // Filter rows based on the search term
-                    const filteredRows = updatedRows.map(row => {
+            //         // Filter rows based on the search term
+            //         const filteredRows = updatedRows.map(row => {
                         
-                        const matchesSearch = 
-                            row.name?.toLowerCase().includes(searchTerm) ||
-                            row.rateCard?.toLowerCase().includes(searchTerm) ||
-                            row.rateType?.toLowerCase().includes(searchTerm) ||
-                            row.count?.toString().includes(searchTerm) ||
-                            row.price?.toString().includes(searchTerm) ||
-                            row.total?.toString().includes(searchTerm);
+            //             const matchesSearch = 
+            //                 row.name?.toLowerCase().includes(searchTerm) ||
+            //                 row.rateCard?.toLowerCase().includes(searchTerm) ||
+            //                 row.rateType?.toLowerCase().includes(searchTerm) ||
+            //                 row.count?.toString().includes(searchTerm) ||
+            //                 row.price?.toString().includes(searchTerm) ||
+            //                 row.total?.toString().includes(searchTerm);
 
-                        if (matchesSearch && row.name === '' && !row.id.includes('-total')) {
-                            return { ...row, name: row.originalName }; // Display the name
-                        }
+            //             if (matchesSearch && row.name === '' && !row.id.includes('-total')) {
+            //                 return { ...row, name: row.originalName }; // Display the name
+            //             }
 
-                        return row.id.includes('-total') || matchesSearch ? row : null;
-                    }).filter(row => row !== null);
+            //             return row.id.includes('-total') || matchesSearch ? row : null;
+            //         }).filter(row => row !== null);
 
-                    // // Update the state with filtered rows
-                    setFilteredConsultants(filteredRows);
-                // }
-            }
-            }
+            //         // // Update the state with filtered rows
+            //         setFilteredConsultants(filteredRows);
+            //     // }
+             }
+             }
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
