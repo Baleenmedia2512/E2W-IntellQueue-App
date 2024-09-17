@@ -961,7 +961,7 @@ useEffect(() => {
   )}
 
   <button
-    className="custom-button ml-2"
+    className="Add-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
   >
     {isUpdateMode ? 'Update' : 'Add'}
