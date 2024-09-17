@@ -81,11 +81,11 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
-  useEffect(() => {
-    if (!clientSource && sources.length > 0) {
-      dispatch(setClientData({ clientSource: sources[0] }));
-    }
-  }, [clientSource, dispatch]);
+  // useEffect(() => {
+  //   if (!clientSource && sources.length > 0) {
+  //     dispatch(setClientData({ clientSource: sources[0] }));
+  //   }
+  // }, [clientSource, dispatch]);
 
   useEffect(() => {
     // Check if age input violates constraints for selected option
@@ -321,7 +321,7 @@ const ClientsData = () => {
         // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
-        dispatch(setClientData({clientSource: sources[0]}))
+        // dispatch(setClientData({clientSource: sources[0]}))
         if(dbName){
           elementsToHideList()
         }
@@ -778,7 +778,7 @@ const handleRemoveClient = () => {
           dispatch(setClientData({ clientEmail: "" }));
           dispatch(setClientData({ clientName: "" }));
           dispatch(setClientData({ clientContact: "" }));
-          dispatch(setClientData({clientSource: sources[0]}));
+          dispatch(setClientData({clientSource: ""}));
           setClientAge("");
           setDOB("");
           setAddress("");
@@ -1017,7 +1017,7 @@ const BMvalidateFields = () => {
             {/* Left section */}
             <div className="space-y-4">
           <div className="relative">
-          <label className="block mb-1 text-black font-medium">Name</label>
+          <label className="block mb-1 text-black font-medium">Name<span className="text-red-500">*</span></label>
           <div className="flex space-x-2" name="ClientNameInput">
             <Dropdown
               value={selectedOption}
@@ -1033,7 +1033,7 @@ const BMvalidateFields = () => {
             <input
               type="text"
               className={`w-2/3 sm:w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
-              placeholder="Name*"
+              placeholder="Name"
               id="2"
               name="ClientNameInput"
               maxLength={64}
@@ -1076,11 +1076,11 @@ const BMvalidateFields = () => {
 
               {selectedOption === 'Ms.' ? (
                 <div name="ClientContactPersonInput">
-                  <label className="block mb-1 text-black font-medium">Contact Person Name</label>
+                  <label className="block mb-1 text-black font-medium">Contact Person Name<span className="text-red-500">*</span></label>
                   <input
                     className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContactPerson ? 'border-red-400' : ''}`}
                     type="text"
-                    placeholder="Contact Person Name*"
+                    placeholder="Contact Person Name"
                     id="30"
                     name="ClientContactPersonInput"
                     value={clientDetails.clientContactPerson}
@@ -1171,19 +1171,19 @@ const BMvalidateFields = () => {
               {selectedOption !== 'B/o.' && selectedOption !== 'Baby.' ? (
                 <div className="flex space-x-2 mt-3" name="ClientAgeInput">
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Age</label>
+                    <label className="block mb-1 text-black font-medium">Age<span className="text-red-500">*</span></label>
                     <input
                       className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       id="5"
                       name="ClientAgeInput"
-                      placeholder="Age*"
+                      placeholder="Age"
                       value={clientAge}
                       onChange={handleInputAgeChange}
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate<span className="text-red-500">*</span></label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1205,18 +1205,18 @@ const BMvalidateFields = () => {
               ) : (
                 <div className="flex space-x-2 mt-3">
                   <div className="w-1/2" name="MonthsInput">
-                    <label className="block mb-1 text-black font-medium">Months</label>
+                    <label className="block mb-1 text-black font-medium">Months<span className="text-red-500">*</span></label>
                     <input
                       className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       name="MonthsInput"
-                      placeholder="Months*"
+                      placeholder="Months"
                       value={months}
                       onChange={handleMonthsChange}
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate<span className="text-red-500">*</span></label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1270,13 +1270,15 @@ const BMvalidateFields = () => {
             {/* Right section */}
             <div className="space-y-4">
               <div name="ClientSourceSelect">
-                <label className="block mb-1 text-black font-medium">Source</label>
+                <label className="block mb-1 text-black font-medium">Source<span className="text-red-500">*</span></label>
                 <Dropdown
                   className={`w-full text-black border rounded-lg ${errors.clientSource ? 'border-red-400' : ''}`}
                   id="8"
                   name="ClientSourceSelect"
                   options={sources}
                   value={clientSource}
+                  defaultValue=""
+                  placeholder='Select a Source'
                   onChange={handleClientSourceChange}
                 />
               </div>
@@ -1284,11 +1286,11 @@ const BMvalidateFields = () => {
               {(clientSource === '5.Consultant' || clientSource === 'Consultant') && (
                 <>
                   <div className="relative" name="ConsultantNameInput">
-                  <label className="block mb-1 text-black font-medium">Consultant Name</label>
+                  <label className="block mb-1 text-black font-medium">Consultant Name<span className="text-red-500">*</span></label>
                   <input
                     className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.consultantName ? 'border-red-400' : ''}`}
                     type="text"
-                    placeholder="Consultant Name*"
+                    placeholder="Consultant Name"
                     id="9"
                     name="ConsultantNameInput"
                     onChange={handleConsultantNameChange}
