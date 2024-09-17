@@ -116,7 +116,7 @@
     cursor: pointer;
     outline: none;
     display: inline-block;
-    margin-right: 2;
+    margin-right: 2%;
   }
   
   .Addtocartafter-button:hover {
@@ -174,7 +174,7 @@
   
   .Clearall-button:hover {
     /* background-color: #2376c4; */
-    box-shadow: 0px 15px 20px rgba(77, 172, 239, 0.4);
+    box-shadow: 0px 15px 20px rgba(212, 232, 246, 0.4);
     color: #fff;
     transform: translateY(-7px);
   }
@@ -208,7 +208,7 @@
   }
 
   .Clearallafter-button {
-    padding: 0.7em 1.6em;
+    padding: 0.7em 4em;
     font-size: 14px;
     text-transform: uppercase;
     font-weight: 500;
@@ -226,7 +226,7 @@
   
   .Clearallafter-button:hover {
     /* background-color: #2376c4; */
-    box-shadow: 0px 15px 20px rgba(77, 172, 239, 0.4);
+    box-shadow: 0px 15px 20px rgba(226, 239, 248, 0.4);
     color: #fff;
     transform: translateY(-7px);
   }
