@@ -30,6 +30,8 @@ const matchModes = [
 export default function GroupedRowsDemo() {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const dbName = 'Grace Scans';
+    // const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
     const [filteredConsultants, setFilteredConsultants] = useState([]);
@@ -307,7 +309,8 @@ export default function GroupedRowsDemo() {
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
                         name: currentIndex === middleIndex ? group.name : null,
-                        rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+                        // rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+                        rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
                         price: rateType.price,
@@ -540,7 +543,11 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 // Filter rows where total starts with "Total:"
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
-const filteredAmountRows = rowsToCalculate.filter(row => !row.rateCard.startsWith('Total'));
+const filteredAmountRows = rowsToCalculate.filter(row => row.total && !row.rateCard.startsWith('Total'));
+
+// const filteredAmountRows = rowsToCalculate.filter(row => row.total);
+
+
 
 
 const extractNameFromId = (id) => {
@@ -564,10 +571,7 @@ const filteredNameRows = rowsToCalculate.map(row => {
 
 const filteredSelectionNameRows = selectedRows.filter(row => extractNameFromId(row.id));
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
-// Calculate total amount
-// const totalAmount = filteredRows.reduce((sum, row) => {
-//     return sum + parseFloat(row.total.split('₹')[1]);
-// }, 0);
+
 const totalAmount = filteredAmountRows.reduce((sum, row) => {
     return sum + parseFloat(row.total);
 }, 0);
@@ -580,9 +584,9 @@ const numberOfConsultants = new Set(filteredNameRows
     .map(row => row.name)
     .filter(name => name) // This filters out null and empty string values
 ).size;
-console.log(filteredNameRows
-    .map(row => row.name)
-    .filter(name => name))
+// console.log(filteredNameRows
+//     .map(row => row.name)
+//     .filter(name => name))
 
 
 const extractRateCardFromId = (id) => {
@@ -772,8 +776,8 @@ const filterHeaderTemplate = (column, filterField) => {
                         setFilteredConsultants([]);
                         return;
                     }
-
-                    if(filterField === 'id') {
+                    console.log(searchTerm)
+                    // if(filterField === 'id') {
 
                     // Process consultants to filter and include group totals row
                     const updatedRows = consultants.flatMap(consultant => {
@@ -823,8 +827,11 @@ const filterHeaderTemplate = (column, filterField) => {
                         return rows;
                     });
 
+                    
+
                     // Filter rows based on the search term
                     const filteredRows = updatedRows.map(row => {
+                        
                         const matchesSearch = 
                             row.name?.toLowerCase().includes(searchTerm) ||
                             row.rateCard?.toLowerCase().includes(searchTerm) ||
@@ -840,9 +847,10 @@ const filterHeaderTemplate = (column, filterField) => {
                         return row.id.includes('-total') || matchesSearch ? row : null;
                     }).filter(row => row !== null);
 
-                    // Update the state with filtered rows
+                    // // Update the state with filtered rows
                     setFilteredConsultants(filteredRows);
-                }}
+                // }
+            }
             }
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
@@ -854,7 +862,7 @@ const filterHeaderTemplate = (column, filterField) => {
         let newFilters = { ...filters };
         newFilters[filterField] = { value: '', matchMode: 'contains' };
         setFilters(newFilters);
-        setFilteredConsultants([]); // Clear filtered consultants
+        setFilteredConsultants([]); 
     }}
     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
 >
@@ -865,6 +873,8 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 //Working filter
+
+// console.log(filteredConsultants)
 
 useEffect(() => {
     if (selectedRows.length > 0) {
@@ -1036,8 +1046,6 @@ const handleClose = () => {
                             showFilterMatchModes={false}
                             showApplyButton={false}
                             showClearButton={false}
-                            ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             ></Column>

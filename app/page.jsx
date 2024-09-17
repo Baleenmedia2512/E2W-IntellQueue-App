@@ -25,6 +25,7 @@ const titleOptions = [
   { label: 'B/o.', value: 'B/o.' },
   { label: 'Baby.', value: 'Baby.' },
   { label: 'Master.', value: 'Master.' },
+  { label: 'Dr.', value: 'Dr.' },
 ];
     
 const ClientsData = () => {
@@ -80,11 +81,11 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
-  useEffect(() => {
-    if (!clientSource && sources.length > 0) {
-      dispatch(setClientData({ clientSource: sources[0] }));
-    }
-  }, [clientSource, dispatch]);
+  // useEffect(() => {
+  //   if (!clientSource && sources.length > 0) {
+  //     dispatch(setClientData({ clientSource: sources[0] }));
+  //   }
+  // }, [clientSource, dispatch]);
 
   useEffect(() => {
     // Check if age input violates constraints for selected option
@@ -320,7 +321,7 @@ const ClientsData = () => {
         // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
-        dispatch(setClientData({clientSource: sources[0]}))
+        // dispatch(setClientData({clientSource: sources[0]}))
         if(dbName){
           elementsToHideList()
         }
@@ -452,20 +453,21 @@ const ClientsData = () => {
 
   const submitDetails = async(event) => {
     event.preventDefault()
-    if(clientContact === '' || clientContact === 0 ){
-      const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
-     if (!result){
-      return
-     }
-    }
+    
     if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
       if (isEmpty === true){
       router.push('/adDetails')
     }
     const isValid = BMvalidateFields();
     if (isValid) {
+      if(clientContact === '' || clientContact === 0 ){
+        const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
+       if (!result){
+        return
+       }
+      }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
@@ -518,7 +520,7 @@ const ClientsData = () => {
     if (isValid) {
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -538,14 +540,29 @@ const ClientsData = () => {
         setTimeout(() => {
           setToast(false);
         }, 2000);
-            } else {
-              alert(`The following error occurred while inserting data: ${data}`);
-            }
-        }catch (error) {
-          console.error('Error while data GS: ', error);
-        } 
-  // setSeverity('success');
-  // setToast(true);
+
+      // } else if (data === "Consultant Number Already Exists!"){
+      //   setToastMessage('Consultant Number Already Exists!');
+      //   setSeverity('error');
+      //   setToast(true);
+      //   setTimeout(() => {
+      //     setToast(false);
+      //   }, 2000);
+
+    } else {
+      setToastMessage(data);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
+
+  }catch (error) {
+        console.error('Error while data GS: ', error);
+  } 
+// setSeverity('success');
+// setToast(true);
 } else {
   setToastMessage('Please fill the necessary details in the form.');
   setSeverity('error');
@@ -767,7 +784,7 @@ const handleRemoveClient = () => {
           dispatch(setClientData({ clientEmail: "" }));
           dispatch(setClientData({ clientName: "" }));
           dispatch(setClientData({ clientContact: "" }));
-          dispatch(setClientData({clientSource: sources[0]}));
+          dispatch(setClientData({clientSource: ""}));
           setClientAge("");
           setDOB("");
           setAddress("");
@@ -1266,6 +1283,8 @@ const BMvalidateFields = () => {
                   name="ClientSourceSelect"
                   options={sources}
                   value={clientSource}
+                  defaultValue=""
+                  placeholder='Select Source'
                   onChange={handleClientSourceChange}
                 />
               </div>
