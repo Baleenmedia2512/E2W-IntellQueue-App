@@ -729,7 +729,7 @@ useEffect(() => {
       }else{
         setBill(file);
       }
-    }
+    } 
   };
 
  const handleFinanceSearch = async (e) => {
@@ -971,7 +971,6 @@ useEffect(() => {
       </div>
 
       <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-7 mt-4">
-  {/* Exit Edit Button Section */}
   
   {/* Search Input Section */}
   <div className="w-full sm:w-1/2">

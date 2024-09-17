@@ -23,8 +23,9 @@ import { Calendar } from 'primereact/calendar';
 import { format } from 'date-fns';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import { TextField } from '@mui/material';
-
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FetchOrderSeachTerm } from '../api/FetchAPI';
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -33,6 +34,7 @@ const CreateOrder = () => {
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
+    //console.log(orderNumberRP)
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
@@ -110,7 +112,12 @@ const CreateOrder = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
     const [hasOrderDetails, setHasOrderDetails] = useState(false);
-   // const [isUpdateMode, setIsUpdateMode] = useState(false); 
+    const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
+    const [orderSearchTerm,setOrderSearchTerm] = useState("");
+    const [ordereId, setOrderId] = useState(null);
+    const [displayClientName, setDisplayClientName] = useState(clientName);
+    const [orderNumberID, setOrderNumbertID] = useState('');
+    const [orderAmount, setorderAmount] = useState('');
     
 
      // Function to toggle expand/collapse
@@ -679,42 +686,8 @@ const fetchRates = async () => {
 
       
 //report oderenumber data fetch --SK--
-// const [orderNumber, setOrderNumber] = useState(null);
-// const [companyName, setCompanyName] = useState('');
 
-// const fetchOrderDetailsByOrderNumber = () => {
-//   axios
-//     .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
-//     .then((response) => {
-//       const data = response.data;
-//       if (data) {
-//         // Assuming orderDetails is a typo and you meant data
-//         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
-//         //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
-//         const formattedDate = parseDateFromDB(data.orderDate);
-//         setClientName(data.clientName);
-//         setOrderDate(data.orderDate);
-//         setDisplayOrderDate(formattedDate);
-//         setUnitPrice(data.receivable);
-//         setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
-//         dispatch(setRateId(data.rateId));
-//         setHasOrderDetails(true);
-//         setClientID(data.clientID);
-//         setConsultantName(data.consultantName);
-//       } else {
-//         setHasOrderDetails(false); // Set to false if there are no details
-//       }
-//     })
-//     .catch((error) => {
-//       console.error(error);
-//     });
-// };
-
-
-// useEffect(() => {
-//   fetchOrderDetailsByOrderNumber();
-// }, [orderNumberRP]);
-const fetchOrderDetailsByOrderNumber = () => {
+const fetchOrderDetailsByOrderNumber = (orderNumberRP) => {
     axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
       .then((response) => {
@@ -734,6 +707,9 @@ const fetchOrderDetailsByOrderNumber = () => {
           setClientID(data.clientID);
           setConsultantName(data.consultantName);
           setDiscountAmount(data.adjustedOrderAmount);
+          setDisplayClientName(data.clientName);
+          setOrderNumbertID(data.OrderNumber);
+          setorderAmount(data.receivable);
 
           // Store the fetched data in a state to compare later
           setPrevData({
@@ -756,7 +732,7 @@ const fetchOrderDetailsByOrderNumber = () => {
   };
 
   useEffect(() => {
-    fetchOrderDetailsByOrderNumber();
+    fetchOrderDetailsByOrderNumber(orderNumberRP);
     setDisplayUnitPrice(receivableRP);
   }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
 
@@ -1227,6 +1203,8 @@ const handleOpenDialog = () => {
     setConsultantName('');
     setDiscountAmount(0);
     dispatch(resetOrderData());
+    setOrderSearchTerm('');
+    dispatch(setIsOrderUpdate(false));
     //window.location.reload(); // Reload the page
   };
 
@@ -1243,6 +1221,54 @@ const handleOpenDialog = () => {
   const handleReasonChange = (event) => {
     setUpdateReason(event.target.value);
   };
+
+//search bar to update orders
+const handleOrderSearch = async (e) => {
+  const searchTerm = e.target.value;
+  setOrderSearchTerm(searchTerm);
+
+  // If search term is cleared, reset the update mode
+  if (searchTerm.trim() === "") {
+    dispatch(setIsOrderUpdate(false));
+          setClientName('');
+          setOrderDate(new Date());
+          setDisplayOrderDate(new Date())
+          setUpdateRateWiseOrderNumber('');
+          dispatch(setRateId(''));
+          setClientID('');
+          setConsultantName('');
+          setDiscountAmount(0);
+          dispatch(resetOrderData());
+          setOrderSearchTerm('');
+    setOrderSearchSuggestion([]); // Clear suggestions
+    return; // Exit early
+  }
+
+  const searchSuggestions = await FetchOrderSeachTerm(companyName, searchTerm);
+  setOrderSearchSuggestion(searchSuggestions);
+};
+
+const handleOrderSelection = (e) => {
+  const selectedOrder = e.target.value;
+
+  // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
+  const selectedOrderId = selectedOrder.split('-')[0];
+
+  // Clear finance suggestions and set the search term
+  setOrderSearchSuggestion([]);
+  setOrderSearchTerm(selectedOrder);
+
+  // Call the handleFinanceId function with the selected ID
+  fetchOrderDetailsByOrderNumber(selectedOrderId);
+
+  // Set the finance ID state
+  setOrderId(selectedOrderId);
+  dispatch(setIsOrderUpdate(true));
+  // Set the mode to "Update"
+  //setIsUpdateMode(true);
+
+};
+
 
 
 return (
@@ -1360,16 +1386,75 @@ return (
     </Dialog>
   </div>
 
+  <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-7 mt-4">
+  
+  {/* Search Input Section */}
+  <div className="w-full sm:w-1/2">
+    <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+      <input
+        className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
+        type="text"
+        id="RateSearchInput"
+        placeholder="Search Order for Update.."
+        value={orderSearchTerm}
+        onChange={handleOrderSearch}
+        onFocus={(e) => { e.target.select() }}
+      />
+      <div className="px-3">
+        <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
+      </div>
+    </div>
 
+    {/* Search Suggestions */}
+    <div className="relative">
+      {orderSearchSuggestion.length > 0 && orderSearchTerm !== "" && (
+        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+          {orderSearchSuggestion.map((name, index) => (
+            <li key={index}>
+              <button
+                type="button"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                onClick={handleOrderSelection}
+                value={name}
+              >
+                {name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</div>
 
 
 
     {/* Order Selection */}
     <div className="bg-white p-4 mt-2 rounded-lg shadow-lg">
+
+    {isOrderUpdate ? (
+  <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
+    <button
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+       onClick={handleCancelUpdate}
+    >
+      Exit Edit
+    </button>
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
+      <p className="text-gray-600 font-semibold">{orderNumberID}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{displayClientName}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">₹{orderAmount}</p>
+    </div>
+  </div>
+) : ''}
+
       <form className="space-y-4">
       <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Select Your Order</h3>
           {/* Client Name */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+
           <div>
   <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
   <input 
