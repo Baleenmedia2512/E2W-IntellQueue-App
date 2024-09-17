@@ -776,7 +776,7 @@ const filterHeaderTemplate = (column, filterField) => {
                         setFilteredConsultants([]);
                         return;
                     }
-
+                    console.log(searchTerm)
                     // if(filterField === 'id') {
 
                     // Process consultants to filter and include group totals row
@@ -847,7 +847,7 @@ const filterHeaderTemplate = (column, filterField) => {
                         return row.id.includes('-total') || matchesSearch ? row : null;
                     }).filter(row => row !== null);
 
-                    // Update the state with filtered rows
+                    // // Update the state with filtered rows
                     setFilteredConsultants(filteredRows);
                 // }
             }
@@ -862,20 +862,7 @@ const filterHeaderTemplate = (column, filterField) => {
         let newFilters = { ...filters };
         newFilters[filterField] = { value: '', matchMode: 'contains' };
         setFilters(newFilters);
-        const filteredRows = consultants.map(row => {
-                        
-            
-
-            if (row.name === '' && !row.id.includes('-total')) {
-                return { ...row, name: row.originalName }; // Display the name
-            }
-
-            return row;
-        }).filter(row => row !== null);
-
-        // Update the state with filtered rows
-        setFilteredConsultants(filteredRows);
-        // setFilteredConsultants([]); 
+        setFilteredConsultants([]); 
     }}
     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
 >
@@ -886,6 +873,8 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 //Working filter
+
+// console.log(filteredConsultants)
 
 useEffect(() => {
     if (selectedRows.length > 0) {
