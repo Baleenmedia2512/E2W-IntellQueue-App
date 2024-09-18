@@ -30,9 +30,11 @@ const matchModes = [
 export default function GroupedRowsDemo() {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    // const dbName = 'Grace Scans';
+    // const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
-    const [filteredConsultants, setFilteredConsultants] = useState([]);
+    // const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
   const currentEndDate = endOfMonth(new Date());
@@ -197,7 +199,7 @@ export default function GroupedRowsDemo() {
                 setTimeout(() => {
                 setSuccessMessage('');
                 fetchConsultants();
-                setFilteredConsultants([]);
+                // setFilteredConsultants([]);
                 resetFilters();
               }, 3000);
             } catch (error) {
@@ -291,23 +293,77 @@ export default function GroupedRowsDemo() {
     
     
 
-    const renderGroupedData = (groupedData) => {
-        const rows = [];
+    // const renderGroupedData = (groupedData) => {
+    //     const rows = [];
     
+    //     groupedData.forEach(group => {
+    //         let totalRows = group.rates.reduce((sum, rateCard) => sum + rateCard.rateTypes.length, 0);
+    //         let middleIndex = Math.floor(totalRows / 2);
+    
+    //         let currentIndex = 0;
+    //         let rateCardNames = [];
+
+    //         group.rates.forEach((rateCard, scanIndex) => {
+    //             rateCardNames.push(rateCard.rateCard);
+    //             rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
+    //                 rows.push({
+    //                     id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
+    //                     name: currentIndex === middleIndex ? group.name : null,
+    //                     // rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+    //                     rateCard: rateCard.rateCard,
+    //                     rateType: rateType.rateType,
+    //                     count: rateType.count,
+    //                     price: rateType.price,
+    //                     total: rateType.count * rateType.price,
+    //                     isGroup: currentIndex === middleIndex,
+    //                     isScanGroup: scanTypeIndex === 0,
+    //                     orderNumber: rateCard.orderNumbers,
+    //                     originalName: group.name
+    //                 });
+    //                 currentIndex++;
+    //             });
+    //         });
+            
+    //         const rateCardString = rateCardNames.join('-');
+            
+    //         // Add a row for the total of each consultant
+    //         rows.push({
+    //             id: `${group.name}-${rateCardString}-total`,
+    //             name: '',
+    //             rateCard: 'Total',
+    //             count: '',
+    //             price: '',
+    //             total: `₹${Math.round(group.total)}`,
+    //             isGroup: true,
+    //             isScanGroup: false,
+    //             originalName: group.name,
+    //             orderNumber: group.orderNumbers 
+    //         });
+    //     });
+    
+    //     return rows;
+    // };
+
+    const renderGroupedData = (groupedData, activeFilters = {}) => {
+        const rows = [];
+        
         groupedData.forEach(group => {
             let totalRows = group.rates.reduce((sum, rateCard) => sum + rateCard.rateTypes.length, 0);
             let middleIndex = Math.floor(totalRows / 2);
-    
+            
             let currentIndex = 0;
             let rateCardNames = [];
-
+    
             group.rates.forEach((rateCard, scanIndex) => {
                 rateCardNames.push(rateCard.rateCard);
+                
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
+                    const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
+                    
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: currentIndex === middleIndex ? group.name : null,
-                        rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
+                        name: currentIndex === middleIndex || isFilteredByRateCard ? group.name : null,  // Add name if filter applies
+                        rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
                         price: rateType.price,
@@ -334,16 +390,20 @@ export default function GroupedRowsDemo() {
                 isGroup: true,
                 isScanGroup: false,
                 originalName: group.name,
-                orderNumber: group.orderNumbers 
+                orderNumber: group.orderNumbers
             });
         });
     
         return rows;
     };
-
-   
     
-    const groupedData = renderGroupedData(consultants);
+    
+    const activeFilters = {
+        rateCard: filters.id ? filters.id.value : ''
+    };
+
+    
+    const groupedData = renderGroupedData(consultants, activeFilters);
 
 
     const handlePriceChange = (id, newPrice) => {
@@ -394,34 +454,34 @@ export default function GroupedRowsDemo() {
             return updatedSelectedRows;
         });
 
-        setFilteredConsultants(prevFilteredConsultants => {
-            if (prevFilteredConsultants.length === 0) return prevFilteredConsultants;
+        // setFilteredConsultants(prevFilteredConsultants => {
+        //     if (prevFilteredConsultants.length === 0) return prevFilteredConsultants;
     
-            const updatedFilteredConsultants = prevFilteredConsultants.map(row => 
-                row.id === id ? { 
-                    ...row, 
-                    price: newPrice, 
-                    total: newPrice * row.count  // Update total for the specific row
-                } : row
-            );
+        //     const updatedFilteredConsultants = prevFilteredConsultants.map(row => 
+        //         row.id === id ? { 
+        //             ...row, 
+        //             price: newPrice, 
+        //             total: newPrice * row.count  // Update total for the specific row
+        //         } : row
+        //     );
     
-            const totalRowIndex = updatedFilteredConsultants.findIndex(row => row.id.includes('-total'));
-            if (totalRowIndex !== -1) {
-                const totalRowIdParts = updatedFilteredConsultants[totalRowIndex].id.split('-');
-                const groupName = totalRowIdParts[0];
-                const rateCardString = totalRowIdParts.slice(1, -1).join('-'); // Extracts the combined rateCard part
-                const totalIdWithoutSuffix = `${groupName}-${rateCardString}`;
+        //     const totalRowIndex = updatedFilteredConsultants.findIndex(row => row.id.includes('-total'));
+        //     if (totalRowIndex !== -1) {
+        //         const totalRowIdParts = updatedFilteredConsultants[totalRowIndex].id.split('-');
+        //         const groupName = totalRowIdParts[0];
+        //         const rateCardString = totalRowIdParts.slice(1, -1).join('-'); // Extracts the combined rateCard part
+        //         const totalIdWithoutSuffix = `${groupName}-${rateCardString}`;
     
-                const groupTotal = updatedFilteredConsultants.reduce((sum, row) => 
-                    row.id.startsWith(groupName) && row.id !== `${totalIdWithoutSuffix}-total`
-                        ? sum + row.total 
-                        : sum, 0);
+        //         const groupTotal = updatedFilteredConsultants.reduce((sum, row) => 
+        //             row.id.startsWith(groupName) && row.id !== `${totalIdWithoutSuffix}-total`
+        //                 ? sum + row.total 
+        //                 : sum, 0);
     
-                updatedFilteredConsultants[totalRowIndex].total = `₹${groupTotal}`;
-            }
+        //         updatedFilteredConsultants[totalRowIndex].total = `₹${groupTotal}`;
+        //     }
     
-            return updatedFilteredConsultants;
-        });
+        //     return updatedFilteredConsultants;
+        // });
     };
 
 
@@ -540,7 +600,11 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 // Filter rows where total starts with "Total:"
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
-const filteredAmountRows = rowsToCalculate.filter(row => !row.rateCard.startsWith('Total'));
+const filteredAmountRows = rowsToCalculate.filter(row => row.total && !row.rateCard.startsWith('Total'));
+
+// const filteredAmountRows = rowsToCalculate.filter(row => row.total);
+
+
 
 
 const extractNameFromId = (id) => {
@@ -564,10 +628,7 @@ const filteredNameRows = rowsToCalculate.map(row => {
 
 const filteredSelectionNameRows = selectedRows.filter(row => extractNameFromId(row.id));
 const filteredCountRows = rowsToCalculate.filter(row => row.count);
-// Calculate total amount
-// const totalAmount = filteredRows.reduce((sum, row) => {
-//     return sum + parseFloat(row.total.split('₹')[1]);
-// }, 0);
+
 const totalAmount = filteredAmountRows.reduce((sum, row) => {
     return sum + parseFloat(row.total);
 }, 0);
@@ -580,9 +641,6 @@ const numberOfConsultants = new Set(filteredNameRows
     .map(row => row.name)
     .filter(name => name) // This filters out null and empty string values
 ).size;
-console.log(filteredNameRows
-    .map(row => row.name)
-    .filter(name => name))
 
 
 const extractRateCardFromId = (id) => {
@@ -634,51 +692,19 @@ const handleExport = () => {
     saveAs(blob, 'Consultant_Report.xlsx');
 };
 
-// const handleSelectionChange = (e) => {
-//     const selectedRows = e.value; // Get the array of selected rows
-//     const selectedNames = new Set(selectedRows.map(row => row.rateCard)); // Collect unique names from selected rows
-    
-//     const newSelection = groupedData.reduce((acc, row) => {
-        
-//         const matchingName = Array.from(selectedNames).find(rateCard => row.id.includes(`-${rateCard}-`) && !row.rateCard.startsWith('Total'));
-        
-//         if (matchingName) {
-//             const existingSelection = selectedRows.find(selectedRow => selectedRow.rateCard === row.rateCard);
-//             console.log(matchingName)
-//             console.log(existingSelection)
-//             acc.push({
-//                 ...row,
-//                 price: existingSelection ? existingSelection.price : row.price, // Preserve the price or use the existing price if available
-//                 orderNumber: existingSelection ? existingSelection.orderNumber : row.orderNumber, 
-//             });
-//         }
-//         return acc;
-//     }, []);
-
-//     if (selectedRows.length === 0) {
-//         // If no rows are selected, reset to all orderNumbers
-//         setSelectedOrderNumbers(orderNumbers); // Ensure `allOrderNumbers` is available in the scope
-//     } else {
-//         // Extract the unique orderNumbers from the selected rows
-//         const selectedOrderNumbs = selectedRows.map(row => row.orderNumber);
-        
-//         // Set the selectedOrderNumbers in state
-//         setSelectedOrderNumbers(selectedOrderNumbs);
-//     }
-
-//     setSelectedRows(newSelection);
-// };
-
-
 const handleSelectionChange = (e) => {
     const selectedRows = e.value; 
 
-    const rowsToCheck = filteredConsultants.length > 0 ? filteredConsultants : groupedData;
+    const rowsToCheck = groupedData;
 
     // Reduce the grouped data to the new selection based on selected rows
     const newSelection = rowsToCheck.reduce((acc, row) => {
-        // Check if the current row's rateCard exists in the selected rows
-        const isSelected = selectedRows.some(selectedRow => selectedRow.rateCard === row.rateCard && selectedRow.orderNumber === row.orderNumber);
+        // Check if the current row's rateCard AND orderNumber exists in the selected rows
+        const isSelected = selectedRows.some(selectedRow => 
+            selectedRow.rateCard === row.rateCard && 
+            selectedRow.orderNumber === row.orderNumber && 
+            selectedRow.id === row.id // Add an `id` or another unique property to ensure uniqueness
+        );
 
         if (isSelected) {
             acc.push(row); // Add the row to the new selection if it's selected
@@ -701,38 +727,8 @@ const handleSelectionChange = (e) => {
     setSelectedRows(newSelection); // Update the selected rows state with the new selection
 };
 
-    
 
-// const handleSelectionChange = (e) => {
-//     const selectedRows = e.value; // Get the array of selected rows
-//     const selectedNames = new Set(selectedRows.map(row => row.name)); // Collect unique names from selected rows
-// console.log(selectedRows);
-//     const newSelection = groupedData.reduce((acc, row) => {
-//         const matchingName = Array.from(selectedNames).find(name => row.id.startsWith(`${name}-`));
-//         if (matchingName) {
-//             const existingSelection = selectedRows.find(selectedRow => selectedRow.id === row.id);
-//             acc.push({
-//                 ...row,
-//                 price: existingSelection ? existingSelection.price : row.price, // Preserve the price or use the existing price if available
-//                 orderNumber: existingSelection ? existingSelection.orderNumber : row.orderNumber, 
-//             });
-//         }
-//         return acc;
-//     }, []);
 
-//     if (selectedRows.length === 0) {
-//         // If no rows are selected, reset to all orderNumbers
-//         setSelectedOrderNumbers(orderNumbers); // Ensure `allOrderNumbers` is available in the scope
-//     } else {
-//         // Extract the unique orderNumbers from the selected rows
-//         const selectedOrderNumbs = selectedRows.map(row => row.orderNumber);
-        
-//         // Set the selectedOrderNumbers in state
-//         setSelectedOrderNumbers(selectedOrderNumbs);
-//     }
-
-//     setSelectedRows(newSelection);
-// };
 
 
 
@@ -748,6 +744,8 @@ const resetFilters = () => {
         total: { value: null, matchMode: 'equals' }
     });
 };
+
+
 
 
 //Working filter
@@ -767,83 +765,87 @@ const filterHeaderTemplate = (column, filterField) => {
                     newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
                     setFilters(newFilters);
 
-                    if (searchTerm === '') {
-                        // Reset filtered consultants to empty when search text is empty
-                        setFilteredConsultants([]);
-                        return;
-                    }
+            //         if (searchTerm === '') {
+            //             // Reset filtered consultants to empty when search text is empty
+            //             setFilteredConsultants([]);
+            //             return;
+            //         }
+            //         console.log(searchTerm)
+            //         // if(filterField === 'id') {
 
-                    if(filterField === 'id') {
+            //         // Process consultants to filter and include group totals row
+            //         const updatedRows = consultants.flatMap(consultant => {
+            //             if (!Array.isArray(consultant.rates)) return [];
 
-                    // Process consultants to filter and include group totals row
-                    const updatedRows = consultants.flatMap(consultant => {
-                        if (!Array.isArray(consultant.rates)) return [];
+            //             let totalRows = consultant.rates.reduce((sum, rateCard) => 
+            //                 (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
+            //                 0
+            //             );
+            //             let middleIndex = Math.floor(totalRows / 2);
 
-                        let totalRows = consultant.rates.reduce((sum, rateCard) => 
-                            (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
-                            0
-                        );
-                        let middleIndex = Math.floor(totalRows / 2);
+            //             let currentIndex = 0;
 
-                        let currentIndex = 0;
+            //             const rows = consultant.rates.flatMap(rateCard => {
+            //                 return (rateCard.rateTypes || []).map(rateType => {
+            //                     const isMiddleRow = currentIndex === middleIndex;
+            //                     const row = {
+            //                         id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
+            //                         name: isMiddleRow ? consultant.name : '',
+            //                         rateCard: rateCard.rateCard,
+            //                         rateType: rateType.rateType,
+            //                         count: rateType.count,
+            //                         price: rateType.price,
+            //                         total: rateType.count * rateType.price,
+            //                         isGroup: isMiddleRow,
+            //                         isScanGroup: rateType.rateCard === rateCard.rateCard,
+            //                         orderNumber: consultant.orderNumbers,
+            //                         originalName: consultant.name // Store the original name for potential use
+            //                     };
+            //                     currentIndex++;
+            //                     return row;
+            //                 });
+            //             });
 
-                        const rows = consultant.rates.flatMap(rateCard => {
-                            return (rateCard.rateTypes || []).map(rateType => {
-                                const isMiddleRow = currentIndex === middleIndex;
-                                const row = {
-                                    id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                                    name: isMiddleRow ? consultant.name : '',
-                                    rateCard: rateCard.rateCard,
-                                    rateType: rateType.rateType,
-                                    count: rateType.count,
-                                    price: rateType.price,
-                                    total: rateType.count * rateType.price,
-                                    isGroup: isMiddleRow,
-                                    isScanGroup: rateType.rateCard === rateCard.rateCard,
-                                    orderNumber: consultant.orderNumbers,
-                                    originalName: consultant.name // Store the original name for potential use
-                                };
-                                currentIndex++;
-                                return row;
-                            });
-                        });
+            //             rows.push({
+            //                 id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
+            //                 name: '',
+            //                 rateCard: 'Total',
+            //                 count: '',
+            //                 price: '',
+            //                 total: `₹${Math.round(consultant.total)}`,
+            //                 isGroup: true,
+            //                 isScanGroup: false,
+            //                 originalName: consultant.name
+            //             });
 
-                        rows.push({
-                            id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
-                            name: '',
-                            rateCard: 'Total',
-                            count: '',
-                            price: '',
-                            total: `₹${Math.round(consultant.total)}`,
-                            isGroup: true,
-                            isScanGroup: false,
-                            originalName: consultant.name
-                        });
+            //             return rows;
+            //         });
 
-                        return rows;
-                    });
+                    
 
-                    // Filter rows based on the search term
-                    const filteredRows = updatedRows.map(row => {
-                        const matchesSearch = 
-                            row.name?.toLowerCase().includes(searchTerm) ||
-                            row.rateCard?.toLowerCase().includes(searchTerm) ||
-                            row.rateType?.toLowerCase().includes(searchTerm) ||
-                            row.count?.toString().includes(searchTerm) ||
-                            row.price?.toString().includes(searchTerm) ||
-                            row.total?.toString().includes(searchTerm);
+            //         // Filter rows based on the search term
+            //         const filteredRows = updatedRows.map(row => {
+                        
+            //             const matchesSearch = 
+            //                 row.name?.toLowerCase().includes(searchTerm) ||
+            //                 row.rateCard?.toLowerCase().includes(searchTerm) ||
+            //                 row.rateType?.toLowerCase().includes(searchTerm) ||
+            //                 row.count?.toString().includes(searchTerm) ||
+            //                 row.price?.toString().includes(searchTerm) ||
+            //                 row.total?.toString().includes(searchTerm);
 
-                        if (matchesSearch && row.name === '' && !row.id.includes('-total')) {
-                            return { ...row, name: row.originalName }; // Display the name
-                        }
+            //             if (matchesSearch && row.name === '' && !row.id.includes('-total')) {
+            //                 return { ...row, name: row.originalName }; // Display the name
+            //             }
 
-                        return row.id.includes('-total') || matchesSearch ? row : null;
-                    }).filter(row => row !== null);
+            //             return row.id.includes('-total') || matchesSearch ? row : null;
+            //         }).filter(row => row !== null);
 
-                    // Update the state with filtered rows
-                    setFilteredConsultants(filteredRows);
-                }}
-            }
+            //         // // Update the state with filtered rows
+            //         setFilteredConsultants(filteredRows);
+            //     // }
+             }
+             }
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
@@ -854,7 +856,7 @@ const filterHeaderTemplate = (column, filterField) => {
         let newFilters = { ...filters };
         newFilters[filterField] = { value: '', matchMode: 'contains' };
         setFilters(newFilters);
-        setFilteredConsultants([]); // Clear filtered consultants
+        // setFilteredConsultants([]); 
     }}
     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
 >
@@ -865,6 +867,8 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 //Working filter
+
+// console.log(filteredConsultants)
 
 useEffect(() => {
     if (selectedRows.length > 0) {
@@ -1008,8 +1012,7 @@ const handleClose = () => {
 
     <div className="overflow-x-auto border rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                         <DataTable
-                            // value={groupedData}
-                            value={filteredConsultants && filteredConsultants.length > 0 ? filteredConsultants : groupedData}
+                            value={groupedData}
                             rowClassName={customRowClassName}
                             selection={selectedRows}
                             onSelectionChange={handleSelectionChange}
