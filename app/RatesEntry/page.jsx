@@ -2162,7 +2162,7 @@ setEditModal(false);
                 :<></>}
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
                  <button 
-                  className="outline-none text-[#008000] shadow-2xl p-2 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] ring-[#008000] border-gray-300 hover:border-solid hover:border-[1px] w-44 hover:text-[#008000] font-semibold rounded-2xl justify-center"
+                  className="outline-none text-[#ffffff] shadow-2xl p-2 flex flex-row bg-[#2196F3] hover:border-[#ffffff] border-[1px] ring-[#080808] border-gray-300 hover:border-solid hover:border-[1px] w-44 hover:text-[#ffffff] font-semibold rounded-xl justify-center"
                   onClick={(e) => {
                     e.preventDefault();
                     if(rateId){
