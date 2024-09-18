@@ -286,13 +286,13 @@ export const AdDetails = () => {
           {currentPage === "checkout" ?(
             <div className='flex flex-row justify-center items-center'>
             <button
-              className={`${cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white p-1.5 rounded-lg transition-all duration-300 ease-in-out`}
+              className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
               disabled = {cartItems.length > 0 ? false : true}
               onClick={handlePdfGeneration}
             >
               Download Quote
             </button>
-            <button className={`border ml-2 p-1.5 h-fit max-h-10 ${cartItems.length > 0 ? 'Clearall-button':'Clearallafter-button'}`} disabled = {cartItems.length > 0 ? false : true} onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            <button className={`ml-2  ${cartItems.length > 0 ? 'Clearall-button':'Clearallafter-button'}`} disabled = {cartItems.length > 0 ? false : true} onClick={() => dispatch(resetCartItem())}>Clear All</button>
             </div>
           ):(
             // <button aria-label="cart" 

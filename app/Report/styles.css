@@ -286,8 +286,6 @@ pointer-events: none; /* Prevent text from blocking interactions */
   outline: none;
   display: inline-block;
   margin-left: 4%;
-
-  
 }
 
 .delete-button:hover {

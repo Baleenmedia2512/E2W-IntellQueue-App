@@ -12,7 +12,6 @@
     cursor: pointer;
     outline: none;
     display: inline-block;
-    margin-right: 2;
   }
   
   .Gotocart-button:hover {
@@ -64,7 +63,6 @@
     cursor: pointer;
     outline: none;
     display: inline-block;
-    margin-right: 2;
   }
   
   .Addtocart-button:hover {
@@ -116,7 +114,6 @@
     cursor: pointer;
     outline: none;
     display: inline-block;
-    margin-right: 2%;
   }
   
   .Addtocartafter-button:hover {
@@ -156,7 +153,7 @@
 
 
   .Clearall-button {
-    padding: 0.7em 1.6em;
+    padding: 0.7em 3.5em;
     font-size: 14px;
     text-transform: uppercase;
     font-weight: 500;
@@ -169,7 +166,6 @@
     cursor: pointer;
     outline: none;
     display: inline-block;
-    margin-right: 2;
   }
   
   .Clearall-button:hover {
@@ -185,7 +181,7 @@
   /* Responsive styles */
   @media (max-width: 768px) {
     .Clearall-button {
-      padding: 1.2em 3.5em; /* Increase the padding for more width */
+      padding: 1.2em 4em; /* Increase the padding for more width */
       font-size: 11px; /* Adjust font size for better readability */
       height: 40px;
     }
@@ -208,7 +204,7 @@
   }
 
   .Clearallafter-button {
-    padding: 0.7em 4em;
+    padding: 0.7em 3.5em;
     font-size: 14px;
     text-transform: uppercase;
     font-weight: 500;
@@ -221,7 +217,6 @@
     cursor: pointer;
     outline: none;
     display: inline-block;
-    margin-right: 2;
   }
   
   .Clearallafter-button:hover {
@@ -237,7 +232,7 @@
   /* Responsive styles */
   @media (max-width: 768px) {
     .Clearallafter-button {
-      padding: 1.2em 3.5em; /* Increase the padding for more width */
+      padding: 1.2em 4em; /* Increase the padding for more width */
       font-size: 11px; /* Adjust font size for better readability */
       height: 40px;
     }
