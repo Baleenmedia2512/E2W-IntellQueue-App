@@ -116,7 +116,7 @@ const CreateOrder = () => {
     const [orderSearchTerm,setOrderSearchTerm] = useState("");
     const [ordereId, setOrderId] = useState(null);
     const [displayClientName, setDisplayClientName] = useState(clientName);
-    const [orderNumberID, setOrderNumbertID] = useState('');
+    const [orderNumber, setOrderNumber] = useState('');
     const [orderAmount, setorderAmount] = useState('');
     
 
@@ -708,7 +708,6 @@ const fetchOrderDetailsByOrderNumber = (orderNumberRP) => {
           setConsultantName(data.consultantName);
           setDiscountAmount(data.adjustedOrderAmount);
           setDisplayClientName(data.clientName);
-          setOrderNumbertID(data.OrderNumber);
           setorderAmount(data.receivable);
 
           // Store the fetched data in a state to compare later
@@ -844,7 +843,7 @@ const updateNewOrder = async (event) => {
        JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
        JsonAdjustedOrderAmount: discountAmount
     });
-
+    console.log(formattedOrderDate)
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
@@ -1262,7 +1261,7 @@ const handleOrderSelection = (e) => {
   fetchOrderDetailsByOrderNumber(selectedOrderId);
 
   // Set the finance ID state
-  setOrderId(selectedOrderId);
+  setOrderNumber(selectedOrderId);
   dispatch(setIsOrderUpdate(true));
   // Set the mode to "Update"
   //setIsUpdateMode(true);
@@ -1346,7 +1345,7 @@ return (
     {isOrderUpdate ? (
   <div className="button-container">
     <button className="update-button" onClick={handleOpenDialog}>Update Order</button>
-    <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button>
+    {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
   </div>
 ) : (
   <button className="custom-button" onClick={createNewOrder}>Place Order</button>
@@ -1441,7 +1440,7 @@ return (
       Exit Edit
     </button>
     <div className="flex flex-row text-left text-sm md:text-base pr-2">
-      <p className="text-gray-600 font-semibold">{orderNumberID}</p>
+      <p className="text-gray-600 font-semibold">{orderNumber}</p>
       <p className="text-gray-600 font-semibold mx-1">-</p>
       <p className="text-gray-600 font-semibold">{displayClientName}</p>
       <p className="text-gray-600 font-semibold mx-1">-</p>

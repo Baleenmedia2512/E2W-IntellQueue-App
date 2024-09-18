@@ -356,6 +356,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     AmountDifference: order.RateWiseOrderNumber < 0 ? `₹ 0` : `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
+                    editDisabled: order.RateWiseOrderNumber < 0,
                 }));
                 setOrderDetails(data);
             })
@@ -751,12 +752,14 @@ const orderColumns = [
                 variant="contained"
                 color="primary"
                 size="small"
+                disabled={params.row.editDisabled}
                 onClick={() => handleEditIconClick(params.row)}
                 style={{ marginLeft: '12px',
                   backgroundColor: '#499b25',
                   color: 'white',
                   fontWeight: 'bold',
-                 }}  
+                  opacity: params.row.editDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.editDisabled ? 'none' : 'auto' }}
             >  
                Edit
             </Button>
