@@ -41,6 +41,7 @@ const ConsultantManager = () => {
   const [icRequired, setIcRequired] = useState(false);
   const [smsRequired, setSmsRequired] = useState(false);
   const nameInputRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState([]);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -115,11 +116,7 @@ const validateFields = () => {
     
     setConsultantNameSuggestions([]);
     setConsultantID(id);
-    setConsultantName(name);
-    setConsultantNumber(number);
     setDisplayConsultantID(id);
-    setDisplayConsultantName(name);
-    setDisplayConsultantNumber(number);
     fetchConsultantDetails(id);
   };
 
@@ -127,21 +124,38 @@ const validateFields = () => {
     fetch(`https://orders.baleenmedia.com/API/Media/FetchConsultantDetails.php?JsonConsultantID=${Id}&JsonDBName=${companyName}`)
     .then((response) => response.json())
     .then((data) => {
-        
+        setConsultantName(data.ConsultantName);
+        setConsultantNumber(data.ConsultantNumber);
+        setDisplayConsultantName(data.ConsultantName);
+        setDisplayConsultantNumber(data.ConsultantNumber);
+        setSmsRequired(data.IsSMSRequired === 1);
+        setIcRequired(data.IsIncentiveRequired === 1);
+
     })
     .catch((error) => {
 
     });
   }
 
+  console.log(smsRequired)
+  console.log(icRequired)
+
   const handleConsultantSearchTermChange = async (event) => {
     const input = event.target.value
+    setSearchTerm(input);
     const searchSuggestions = await FetchConsultantSearchTerm(companyName, input);
     setSearchSuggestions(searchSuggestions);
   };
 
   const handleConsultantSearchTermSelection = async (event) => {
-    
+    const input = event.target.value
+    const id = input.split('-')[0].trim();
+
+    setSearchTerm(input);
+    setSearchSuggestions([]);
+    fetchConsultantDetails(id);
+    setConsultantID(id);
+    setDisplayConsultantID(id);
   };
   
     return (
@@ -182,8 +196,8 @@ const validateFields = () => {
           <input
             className="w-full px-4 py-2 text-black focus:outline-none"
             type="text"
-            id="RateSearchInput"
             placeholder="Search Transaction for Update.."
+            value={searchTerm}
             onFocus={(e) => { e.target.select(); }}
             onChange={handleConsultantSearchTermChange}
           />
@@ -307,6 +321,7 @@ const validateFields = () => {
                     name="smsRequirement"
                     value="yes"
                     className="form-radio h-5 w-5"
+                    checked={smsRequired === true}
                     onChange={() => setSmsRequired(true)}
                   />
                   <span className="ml-2">Yes</span>
@@ -317,6 +332,7 @@ const validateFields = () => {
                     name="smsRequirement"
                     value="no"
                     className="form-radio h-5 w-5"
+                    checked={smsRequired === false}
                     defaultChecked
                     onChange={() => setSmsRequired(false)}
                   />
@@ -334,6 +350,7 @@ const validateFields = () => {
                     type="radio"
                     name="icRequirement"
                     value="yes"
+                    checked={icRequired === true}
                     className="form-radio h-5 w-5 text-blue-600"
                     onChange={() => setIcRequired(true)}
                   />
@@ -345,6 +362,7 @@ const validateFields = () => {
                     name="icRequirement"
                     value="no"
                     className="form-radio h-5 w-5 text-red-600"
+                    checked={icRequired === false}
                     defaultChecked
                     onChange={() => setIcRequired(false)}
                   />
