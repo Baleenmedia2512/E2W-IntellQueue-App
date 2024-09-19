@@ -721,7 +721,7 @@ const orderColumns = [
     width: 270,
     renderCell: (params) => (
         <div>
-            <button
+            <Button
                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-4"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
@@ -732,8 +732,8 @@ const orderColumns = [
                     pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
             >
                 Cancel 
-            </button>
-            <button
+            </Button>
+            <Button
                 className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
