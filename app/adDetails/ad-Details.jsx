@@ -628,8 +628,8 @@ const AdDetailsPage = () => {
   
   return (
     
-    <div className="text-black ">    
-      <div className="p-2 pt-0 left-[2%] right-[2%]">
+    <div className="text-black mb-56 ">    
+      <div className="p-2 pt-0 left-[2%] right-[2%] ">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
