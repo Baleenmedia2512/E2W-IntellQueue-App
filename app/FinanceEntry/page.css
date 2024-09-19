@@ -75,7 +75,7 @@
   }
   
   .update-button:hover {
-      background-color: #23c483;
+      background-color: #dbf5eb;
       box-shadow: 0px 15px 20px rgba(23, 219, 111, 0.4);
       transform: translateY(-7px);
   }
@@ -85,11 +85,11 @@
   }
   
   .cancel-button {
-      background-color: #d98880;
+      background-color: #fa594d;
   }
   
   .cancel-button:hover {
-      background-color: #d98880;
+      background-color: #fa594d;
       box-shadow: 0px 15px 20px rgba(194, 109, 109, 0.4);
       transform: translateY(-7px);
   }

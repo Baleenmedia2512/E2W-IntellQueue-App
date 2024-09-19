@@ -1369,13 +1369,13 @@ const BMvalidateFields = () => {
             ) : (
               <div className="relative">
                 <button
-                  className="px-6 py-2 mr-3 bg-blue-500 text-white rounded-lg w-fit"
+                  className="Update-button mr-2"
                   onClick={submitDetails}
                 >
                   Update
                 </button>
                 <button
-                  className="px-6 py-2 bg-red-500 text-white rounded-lg w-fit"
+                  className="remove-button"
                   onClick={handleRemoveClient}
                 >
                   Remove

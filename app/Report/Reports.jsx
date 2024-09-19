@@ -724,7 +724,7 @@ const orderColumns = [
                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-4"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ marginRight: '12px', backgroundColor: '#d98880',
+                style={{ marginRight: '12px', backgroundColor: '#fa594d',
                     color: 'white',
                     fontWeight: 'bold', 
                     opacity: params.row.markInvalidDisabled ? 0.2 : 1,
@@ -780,7 +780,7 @@ const financeColumns = [
         <button
           className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs'
           onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-          style={{ backgroundColor: '#d98880', color: 'white', fontWeight: 'bold' }}
+          style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold' }}
         >
           Delete
         </button>
