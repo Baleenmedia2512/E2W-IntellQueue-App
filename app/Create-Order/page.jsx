@@ -34,7 +34,6 @@ const CreateOrder = () => {
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
-    //console.log(orderNumberRP)
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
@@ -116,7 +115,7 @@ const CreateOrder = () => {
     const [orderSearchTerm,setOrderSearchTerm] = useState("");
     const [ordereId, setOrderId] = useState(null);
     const [displayClientName, setDisplayClientName] = useState(clientName);
-    const [orderNumber, setOrderNumber] = useState('');
+    const [orderNumber, setOrderNumber] = useState(orderNumberRP);
     const [orderAmount, setorderAmount] = useState('');
     
 
@@ -687,9 +686,9 @@ const fetchRates = async () => {
       
 //report oderenumber data fetch --SK--
 
-const fetchOrderDetailsByOrderNumber = (orderNumberRP) => {
+const fetchOrderDetailsByOrderNumber = () => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data) {
@@ -731,9 +730,9 @@ const fetchOrderDetailsByOrderNumber = (orderNumberRP) => {
   };
 
   useEffect(() => {
-    fetchOrderDetailsByOrderNumber(orderNumberRP);
+    fetchOrderDetailsByOrderNumber();
     setDisplayUnitPrice(receivableRP);
-  }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
+  }, [orderNumber]); // Re-fetch when orderNumber changes
 
 
   
@@ -806,7 +805,7 @@ const updateNewOrder = async (event) => {
 
     const params = new URLSearchParams({
       JsonUserName: loggedInUser,
-      JsonOrderNumber: orderNumberRP, // Assuming orderNumberRP is the order number to update
+      JsonOrderNumber: orderNumber, // Assuming orderNumber is the order number to update
       JsonRateId: rateId,
       JsonClientName: clientName,
       JsonClientContact: clientNumber,
@@ -858,9 +857,21 @@ const updateNewOrder = async (event) => {
         dispatch(setIsOrderExist(true));
         dispatch(setIsOrderUpdate(false));
         dispatch(resetOrderData());
+        setClientName('');
+        setOrderDate(new Date());
+        setDisplayOrderDate(new Date())
+        setUpdateRateWiseOrderNumber('');
+        dispatch(setRateId(''));
+        setClientID('');
+        setConsultantName('');
+        setDiscountAmount(0);
+        setOrderSearchTerm('');
         setTimeout(() => {
           setSuccessMessage('');
-          router.push('/Report');
+          // Only navigate if orderNumberRP satisfies the condition
+          if (orderNumberRP) { // Replace this condition with your actual logic
+            router.push('/Report');
+          }
         }, 3000);
       } else {
         alert(`The following error occurred while updating data: ${data}`);
@@ -1262,6 +1273,7 @@ const handleOrderSelection = (e) => {
 
   // Set the finance ID state
   setOrderNumber(selectedOrderId);
+  
   dispatch(setIsOrderUpdate(true));
   // Set the mode to "Update"
   //setIsUpdateMode(true);
@@ -1334,7 +1346,7 @@ return (
       {/* Conditional text based on isOrderUpdate */}
       <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
       {isOrderUpdate ? (
-          <>Updating order number: <strong>{orderNumberRP}</strong></>
+          <>Updating order number: <strong>{orderNumber}</strong></>
         ) : (
           <div></div>
         )}
