@@ -1360,7 +1360,7 @@ return (
     {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
   </div>
 ) : (
-  <button className="custom-button" onClick={createNewOrder}>Place Order</button>
+  <button className="placeorder-button" onClick={createNewOrder}>Place Order</button>
 )}
     
     <Dialog

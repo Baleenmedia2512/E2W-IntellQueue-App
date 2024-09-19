@@ -1361,7 +1361,7 @@ const BMvalidateFields = () => {
             {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
             {clientID === '' ? (
               <button
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg"
+                className="add-button"
                 onClick={submitDetails}
               >
                 Add

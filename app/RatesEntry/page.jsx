@@ -2134,25 +2134,25 @@ setEditModal(false);
                 {!(selectedValues.rateName === "" || selectedValues.adType === "" || selectedValues.vendorName === "") ? 
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
                   <button 
-                   className="px-6 py-2 mr-3 bg-blue-500 text-white rounded-lg w-fit" 
+                   className="Clear-button ml-4" 
                   onClick={() => {dispatch(resetRatesData()); }}>Clear
                           {/* <span className='flex flex-row justify-center'><MdOutlineClearAll className='mt-1 mr-1'/> Clear</span> */}
                         </button> 
                   {!isNewRate && (<button 
-                   className="px-6 py-2 mr-3 bg-red-500 text-white rounded-lg w-fit" 
+                   className="Delete-button ml-4" 
                   onClick={rejectRates}>Delete
                     {/* <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span> */}
                     </button> 
                   )}
                     {(isNewRate)  ? (
                       <button 
-                      className="px-6 py-2 mr-3 bg-green-500 text-white rounded-lg w-fit" 
+                      className="Add-button" 
                       onClick={insertNewRate}>Add
                       {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span> */}
                       </button>
                     ) : ( 
                         <button 
-                        className="px-6 py-2 mr-3 bg-green-500 text-white rounded-lg w-fit" 
+                        className="Update-button ml-4" 
                         onClick={(e) => {updateRates(e); }} disabled={!isFormChanged}> Update
                           {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span> */}
                         </button> 

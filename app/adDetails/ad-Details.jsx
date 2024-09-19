@@ -26,6 +26,7 @@ import CreatableSelect from 'react-select/creatable';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { FetchRateSeachTerm } from '../api/FetchAPI';
+import './page.css';
 
 export const formattedMargin = (number) => {
   const roundedNumber = (number / 1).toFixed(0);
@@ -788,7 +789,7 @@ const AdDetailsPage = () => {
               <span className='flex flex-row mb-2 justify-center'>
                 <div className="flex flex-col mr-2 items-center justify-center">
                   <button
-                    className={`${rateId > 0 ? 'bg-green-500' : 'bg-gray-500'} ${rateId > 0 ? 'hover:bg-green-700' : 'bg-gray-500'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
+                    className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     disabled = {rateId > 0 ? false : true}
                     // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
@@ -833,7 +834,7 @@ const AdDetailsPage = () => {
                 </div>
                 <div className="flex flex-col ml-2 items-center justify-center">
                   <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    className="Gotocart-button"
                     onClick={(e) => {
                       e.preventDefault();
                       handleSubmit();

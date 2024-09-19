@@ -1,18 +1,19 @@
 .custom-button {
-  padding: 1.3em 3em;
-  font-size: 12px;
+  padding: 0.5em 0.8em;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 2.5px;
   font-weight: 500;
   color: #ffffff;
   background-color: #23c483;
   border: none;
-  border-radius: 45px;
+  border-radius: 12px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease 0s;
   cursor: pointer;
   outline: none;
   display: inline-block;
+  margin-left: 2%;
+
   
 }
 
@@ -28,20 +29,20 @@ transform: translateY(-7px);
 }
 
 .consultant-button {
-  padding: 1.3em 3em;
-  font-size: 12px;
+  padding: 0.5em 0.8em;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 2.5px;
   font-weight: 500;
   color: #ffffff;
   background-color: #34a5e7;
   border: none;
-  border-radius: 45px;
+  border-radius: 12px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease 0s;
   cursor: pointer;
   outline: none;
   display: inline-block;
+  margin-left: 4%;
   
 }
 
@@ -60,23 +61,23 @@ transform: translateY(-7px);
   display: flex;
   align-items: center;
   justify-content: center; /* Center the icon and label within the button */
-  padding: 1.3em 3em;
-  font-size: 12px;
+  padding: 0.5em 0.8em;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 2.5px;
   font-weight: 500;
   color: #ffffff;
   background-color: #ebac00;
   border: none;
-  border-radius: 45px;
+  border-radius: 12px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease 0s;
   cursor: pointer;
   outline: none;
+  margin-left: 4%;
 }
 
 .consultant-sms-button svg {
-  margin-right: 8px; /* Add some space between the icon and the label */
+  margin-right: 1px; /* Add some space between the icon and the label */
 }
 
 .consultant-sms-button:hover {
@@ -124,16 +125,18 @@ transform: translateY(-7px);
 
 @media (max-width: 480px) {
   .custom-button {
-    padding: 0.8em 2em;
+    padding: 0.3em 0.9em;
     font-size: 12px;
+    margin-bottom: 5%;
   }
   .consultant-button {
-    padding: 0.8em 2em;
+    padding: 0.8em 1em;
     font-size: 12px;
   }
   .consultant-sms-button {
-    padding: 0.8em 2em;
+    padding: 0.8em 1em;
     font-size: 12px;
+    margin-top: 5%;
   }
 }
 
@@ -161,4 +164,137 @@ overflow: hidden; /* Prevent overflow */
 
 .pie-chart text {
 pointer-events: none; /* Prevent text from blocking interactions */
+}
+
+.edit-button {
+  padding: 0.7em 1.4em;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #23c483;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+  display: inline-block;
+  margin-right: 2;
+}
+
+.edit-button:hover {
+  /* background-color: #2376c4; */
+  box-shadow: 0px 15px 20px rgba(17, 165, 135, 0.4);
+  color: #fff;
+  /* transform: translateY(-7px); */
+}
+
+.edit-button:active {
+  transform: translateY(-3px);
+}
+/* Responsive styles */
+@media (max-width: 768px) {
+  .edit-button {
+    padding: 1.2em 3.5em; /* Increase the padding for more width */
+    font-size: 11px; /* Adjust font size for better readability */
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .edit-button {
+    padding: 1.1em 2.5em; /* Increase the padding for more width */
+    font-size: 10px; /* Adjust font size for better readability */
+    height: 40px;
+  }
+}
+
+@media (max-width: 320px) {
+  .edit-button {
+    padding: 1em 2.5em; /* Increase the padding for more width */
+    font-size: 9px; /* Adjust font size for better readability */
+    height: 40px;
+  }
+}
+
+
+.Restore-button {
+  padding: 0.7em 0.7em;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #23c483;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+  display: inline-block;
+  margin-right: 2;
+}
+
+.Restore-button:hover {
+  /* background-color: #2376c4; */
+  box-shadow: 0px 15px 20px rgba(216, 231, 228, 0.4);
+  color: #fff;
+  /* transform: translateY(-7px); */
+}
+
+.Restore-button:active {
+  transform: translateY(-3px);
+}
+/* Responsive styles */
+@media (max-width: 768px) {
+  .Restore-button {
+    padding: 1.2em 3.5em; /* Increase the padding for more width */
+    font-size: 11px; /* Adjust font size for better readability */
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .Restore-button {
+    padding: 1.1em 2em; /* Increase the padding for more width */
+    font-size: 10px; /* Adjust font size for better readability */
+    height: 40px;
+  }
+}
+
+@media (max-width: 320px) {
+  .Restore-button {
+    padding: 1em 2.5em; /* Increase the padding for more width */
+    font-size: 9px; /* Adjust font size for better readability */
+    height: 40px;
+  }
+}
+
+.delete-button {
+  padding: 0.8em 0.8em;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #23c483;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+  display: inline-block;
+  margin-left: 4%;
+}
+
+.delete-button:hover {
+background-color: #f27258;
+box-shadow: 0px 15px 20px rgba(246, 164, 151, 0.4);
+color: #fff;
+/* transform: translateY(-7px); */
+}
+
+.delete-button:active {
+  transform: translateY(-3px);
 }

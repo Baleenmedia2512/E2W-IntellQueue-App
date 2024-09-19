@@ -356,6 +356,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     AmountDifference: order.RateWiseOrderNumber < 0 ? `₹ 0` : `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
+                    Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
                 }));
                 setOrderDetails(data);
@@ -677,7 +678,7 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
-  {field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
+  { field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
   { 
     field: 'Receivable', 
     headerName: 'Value(₹)', 
@@ -720,24 +721,20 @@ const orderColumns = [
     width: 270,
     renderCell: (params) => (
         <div>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
+            <button
+               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-4"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                style={{ marginRight: '12px', backgroundColor: '#d98880',
                     color: 'white',
                     fontWeight: 'bold', 
                     opacity: params.row.markInvalidDisabled ? 0.2 : 1,
                     pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
             >
                 Cancel 
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
+            </button>
+            <button
+                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
                 style={{ backgroundColor: '#1976d2',
@@ -789,15 +786,13 @@ const financeColumns = [
     width: 100,
     renderCell: (params) => (
       <div>
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
+        <button
+          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs'
           onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-          style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+          style={{ backgroundColor: '#d98880', color: 'white', fontWeight: 'bold' }}
         >
           Delete
-        </Button>
+        </button>
       </div>
     ),
   },
@@ -1377,11 +1372,11 @@ const handleDateChange = (range) => {
     /> */}
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+    <button className="custom-button" onClick={handleClickOpen}>
       Show Balance
     </button>
     {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+      <button className="consultant-button" onClick={handleConsultantReportOpen}>
         Cons. Report
       </button>
     )}

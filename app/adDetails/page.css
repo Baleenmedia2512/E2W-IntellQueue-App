@@ -1,0 +1,255 @@
+.Gotocart-button {
+    padding: 0.7em 1.6em;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #5a5cdf;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease 0s;
+    cursor: pointer;
+    outline: none;
+    display: inline-block;
+  }
+  
+  .Gotocart-button:hover {
+    /* background-color: #2376c4; */
+    box-shadow: 0px 15px 20px rgba(77, 172, 239, 0.4);
+    color: #fff;
+    transform: translateY(-7px);
+  }
+  
+  .Gotocart-button:active {
+    transform: translateY(-1px);
+  }
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .Gotocart-button {
+      padding: 1.2em 3.5em; /* Increase the padding for more width */
+      font-size: 11px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .Gotocart-button {
+      padding: 1.1em 2.5em; /* Increase the padding for more width */
+      font-size: 10px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .Gotocart-button {
+      padding: 1em 2.5em; /* Increase the padding for more width */
+      font-size: 9px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+
+  .Addtocart-button {
+    padding: 0.7em 1.6em;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #bbbbbd;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease 0s;
+    cursor: pointer;
+    outline: none;
+    display: inline-block;
+  }
+  
+  .Addtocart-button:hover {
+    /* background-color: #2376c4; */
+    box-shadow: 0px 15px 20px rgba(135, 141, 145, 0.4);
+    color: #fff;
+    transform: translateY(-7px);
+  }
+  
+  .Addtocart-button:active {
+    transform: translateY(-1px);
+  }
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .Addtocart-button {
+      padding: 1.2em 3.5em; /* Increase the padding for more width */
+      font-size: 11px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .Addtocart-button {
+      padding: 1.1em 2.5em; /* Increase the padding for more width */
+      font-size: 10px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .Addtocart-button {
+      padding: 1em 2.5em; /* Increase the padding for more width */
+      font-size: 9px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+
+  .Addtocartafter-button {
+    padding: 0.7em 1.6em;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #23c483;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease 0s;
+    cursor: pointer;
+    outline: none;
+    display: inline-block;
+  }
+  
+  .Addtocartafter-button:hover {
+    /* background-color: #2376c4; */
+    box-shadow: 0px 15px 20px rgba(77, 172, 239, 0.4);
+    color: #fff;
+    transform: translateY(-7px);
+  }
+  
+  .Addtocartafter-button:active {
+    transform: translateY(-1px);
+  }
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .Addtocartafter-button {
+      padding: 1.2em 3.5em; /* Increase the padding for more width */
+      font-size: 11px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .Addtocartafter-button {
+      padding: 1.1em 2.5em; /* Increase the padding for more width */
+      font-size: 10px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .Addtocartafter-button {
+      padding: 1em 2.5em; /* Increase the padding for more width */
+      font-size: 9px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+
+
+  .Clearall-button {
+    padding: 0.7em 3.5em;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #d98880;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease 0s;
+    cursor: pointer;
+    outline: none;
+    display: inline-block;
+  }
+  
+  .Clearall-button:hover {
+    /* background-color: #2376c4; */
+    box-shadow: 0px 15px 20px rgba(212, 232, 246, 0.4);
+    color: #fff;
+    transform: translateY(-7px);
+  }
+  
+  .Clearall-button:active {
+    transform: translateY(-1px);
+  }
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .Clearall-button {
+      padding: 1.2em 4em; /* Increase the padding for more width */
+      font-size: 11px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .Clearall-button {
+      padding: 1.1em 2.5em; /* Increase the padding for more width */
+      font-size: 10px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .Clearall-button {
+      padding: 1em 2.5em; /* Increase the padding for more width */
+      font-size: 9px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+
+  .Clearallafter-button {
+    padding: 0.7em 3.5em;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #bbbbbd;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease 0s;
+    cursor: pointer;
+    outline: none;
+    display: inline-block;
+  }
+  
+  .Clearallafter-button:hover {
+    /* background-color: #2376c4; */
+    box-shadow: 0px 15px 20px rgba(226, 239, 248, 0.4);
+    color: #fff;
+    transform: translateY(-7px);
+  }
+  
+  .Clearallafter-button:active {
+    transform: translateY(-1px);
+  }
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .Clearallafter-button {
+      padding: 1.2em 4em; /* Increase the padding for more width */
+      font-size: 11px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .Clearallafter-button {
+      padding: 1.1em 2.5em; /* Increase the padding for more width */
+      font-size: 10px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .Clearallafter-button {
+      padding: 1em 2.5em; /* Increase the padding for more width */
+      font-size: 9px; /* Adjust font size for better readability */
+      height: 40px;
+    }
+  }
