@@ -2135,7 +2135,7 @@ setEditModal(false);
                 {!(selectedValues.rateName === "" || selectedValues.adType === "" || selectedValues.vendorName === "") ? 
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
                   <button 
-                   className="Clear-button ml-4" 
+                   className="Clear-button mr-2" 
                   onClick={() => {dispatch(resetRatesData()); }}>Clear
                           {/* <span className='flex flex-row justify-center'><MdOutlineClearAll className='mt-1 mr-1'/> Clear</span> */}
                         </button> 
@@ -2147,7 +2147,7 @@ setEditModal(false);
                   )}
                     {(isNewRate)  ? (
                       <button 
-                      className="Add-button" 
+                      className="Add-button " 
                       onClick={insertNewRate}>Add
                       {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span> */}
                       </button>
