@@ -358,9 +358,9 @@
 
 .Createorder-button:hover {
   /* background-color: #2376c4; */
-  box-shadow: 0px 15px 20px rgba(143, 225, 246, 0.4);
+  box-shadow: 0px 15px 20px rgba(66, 154, 255, 0.388);
   color: #fff;
-  transform: translateY(-7px);
+  transform: translateY(-4px);
 }
 
 .Createorder-button:active {
@@ -377,9 +377,10 @@
 
 @media (max-width: 480px) {
   .Createorder-button {
-    padding: 1.1em 3em; /* Increase the padding for more width */
+    padding: 0.8em 2em; /* Increase the padding for more width */
     font-size: 12px; /* Adjust font size for better readability */
     height: 40px;
+    margin-bottom: 10px;
   }
 }
 
