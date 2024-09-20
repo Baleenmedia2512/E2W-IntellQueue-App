@@ -114,7 +114,7 @@ const validateFields = () => {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddOrUpdateConsultant.php/?JsonUserName=${loggedInUser}&JsonConsultantId=${consultantID}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantContact}&JsonSmsRequired=${smsRequired ? 1 : 0}&JsonIcRequired=${icRequired ? 1 : 0}&JsonDBName=${companyName}`)
         const data = await response.json();
-        console.log(data)
+        
 
         if (data.message === "Inserted Successfully!") {
                   handleEditMode();
