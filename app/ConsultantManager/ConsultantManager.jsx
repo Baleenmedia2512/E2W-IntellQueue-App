@@ -26,6 +26,7 @@ const ConsultantManager = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [severity, setSeverity] = useState('');
   const [consultantID, setConsultantID] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState('');
@@ -69,6 +70,14 @@ const validateFields = () => {
     setDisplayConsultantName("");
     setDisplayConsultantName("");
 
+    setSearchSuggestions([]);
+    setSearchTerm("");
+
+    setIcRequired(false);
+    setSmsRequired(false);
+
+    setErrors({});
+
     // Set edit mode and any other necessary state changes
     setEditMode(true);
 
@@ -91,17 +100,105 @@ const validateFields = () => {
       }
   }
 
+
   const handleConsultantNumberChange = (e) => {
     const number = e.target.value;
     setConsultantNumber(number);
   }
 
-  const insertConsultant = () => {
+  const insertConsultant = async(event) => {
+    event.preventDefault();
+    const isValid = validateFields();
+    if (isValid) {
+      const consultantContact = consultantNumber ? consultantNumber : '';
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddOrUpdateConsultant.php/?JsonUserName=${loggedInUser}&JsonConsultantId=${consultantID}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantContact}&JsonSmsRequired=${smsRequired ? 1 : 0}&JsonIcRequired=${icRequired ? 1 : 0}&JsonDBName=${companyName}`)
+        const data = await response.json();
+        console.log(data)
 
+        if (data.message === "Inserted Successfully!") {
+                  handleEditMode();
+                  setSuccessMessage('Consultant Details Are Added!');
+                  setTimeout(() => {
+                  setSuccessMessage('');
+                }, 2000);
+        } else if (data.error === "Consultant name already exists!"){
+          setToastMessage(data.error);
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+
+        } else if (data.error === "Consultant number already exists!"){
+          setToastMessage(data.error);
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);     
+        } else {
+          setToastMessage(`The following error occurred while adding consulant: ${data}`);
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+          
+        }
+  
+      } catch (error) {
+        console.error('Error while data BM:', error);
+    }
+
+    } else {
+      setToastMessage('Please fill the necessary details in the form.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+      }
   }
 
-  const updateConsultant = () => {
+  const updateConsultant = async(event) => {
+    event.preventDefault();
+    const isValid = validateFields();
+    if (isValid) {
+      const consultantContact = consultantNumber ? consultantNumber : '';
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddOrUpdateConsultant.php/?JsonUserName=${loggedInUser}&JsonConsultantId=${consultantID}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantContact}&JsonSmsRequired=${smsRequired ? 1 : 0}&JsonIcRequired=${icRequired ? 1 : 0}&JsonDBName=${companyName}`)
+        const data = await response.json();
+        console.log(data)
+        if (data.message === "Updated Successfully!") {
+                  handleEditMode();
+                  setSuccessMessage('Consultant Details Are Updated!');
+                  setTimeout(() => {
+                  setSuccessMessage('');
+                }, 2000);
+                
+        } else {
+          setToastMessage(`The following error occurred while updating data: ${data}`);
+          setSeverity('error');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+          
+        }
+  
+      } catch (error) {
+        console.error('Error while data BM:', error);
+    }
 
+    } else {
+      setToastMessage('Please fill the necessary details in the form.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+      }
   }
 
   const handleRemoveConsultant = () => {
@@ -137,7 +234,6 @@ const validateFields = () => {
     });
   }
 
-  //yes
 
   const handleConsultantSearchTermChange = async (event) => {
     const input = event.target.value
@@ -172,20 +268,31 @@ const validateFields = () => {
         </div>
         {/* Buttons on the far right */}
         <div className="flex space-x-2 sm:mt-20">
-          {consultantID === '' ? (
-            <button className="px-8 py-2 bg-blue-500 text-white rounded-lg" onClick={insertConsultant}>
-              Add
-            </button>
-          ) : (
-            <>
-              <button className="px-4 py-2 bg-blue-500 text-white rounded-lg" onClick={updateConsultant}>
-                Update
-              </button>
-              <button className="px-4 py-2 bg-red-500 text-white rounded-lg" onClick={handleRemoveConsultant}>
-                Remove
-              </button>
-            </>
-          )}
+        {consultantID === '' ? (
+  <button 
+    className="px-8 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:shadow-[0_4px_10px_0_rgba(34,197,94,0.5)] hover:-translate-y-1 transform transition duration-300"
+    onClick={insertConsultant}
+  >
+    Add
+  </button>
+) : (
+  <>
+    <button 
+      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:shadow-[0_4px_10px_0_rgba(34,197,94,0.5)] hover:-translate-y-1 transform transition duration-300"
+      onClick={updateConsultant}
+    >
+      Update
+    </button>
+    <button 
+      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 hover:shadow-[0_4px_10px_0_rgba(239,68,68,0.5)] hover:-translate-y-1 transform transition duration-300"
+      onClick={handleRemoveConsultant}
+    >
+      Remove
+    </button>
+  </>
+)}
+
+
         </div>
       </div>
 
@@ -206,7 +313,7 @@ const validateFields = () => {
         </div>
         {/* Search Suggestions */}
     <div className="relative">
-      {searchSuggestions.length > 0 && (
+      {searchSuggestions.length > 0  && searchTerm !== '' && (
         <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
           {searchSuggestions.map((name, index) => (
             <li key={index}>
