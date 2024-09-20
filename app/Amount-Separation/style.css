@@ -1,0 +1,93 @@
+.stages-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Center the container vertically */
+    background-color: #f0f0f0;
+  }
+  
+  .stages-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 800px;
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .input-container {
+    margin-bottom: 15px;
+  }
+  
+  .label {
+    margin-bottom: 5px;
+    display: block;
+    font-weight: bold;
+  }
+  
+  .number-field {
+    width: 100px;
+    padding: 5px;
+    margin-right: 10px;
+  }
+  
+  .create-button {
+    padding: 5px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  .create-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .field-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .field-group .input-container {
+    flex: 1;
+    min-width: 250px;
+    margin-right: 10px;
+  }
+  
+  .input-field {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  textarea.input-field {
+    height: 60px;
+  }
+  
+  .submit-button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  .submit-button:hover {
+    background-color: #218838;
+  }
+  

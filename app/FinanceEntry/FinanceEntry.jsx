@@ -1201,6 +1201,7 @@ useEffect(() => {
             pattern="\d*"
             inputMode="numeric"
             onChange={handleOrderNumberChange}
+            disabled={isUpdateMode}
             onFocus={(e) => { e.target.select(); }}
             required
             onKeyDown={(e) => {
