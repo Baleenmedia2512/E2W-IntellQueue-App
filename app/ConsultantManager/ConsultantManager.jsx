@@ -137,8 +137,7 @@ const validateFields = () => {
     });
   }
 
-  console.log(smsRequired)
-  console.log(icRequired)
+  
 
   const handleConsultantSearchTermChange = async (event) => {
     const input = event.target.value
