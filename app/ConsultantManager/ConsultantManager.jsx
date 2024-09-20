@@ -41,7 +41,8 @@ const ConsultantManager = () => {
   const [displayConsultantID, setDisplayConsultantID] = useState(consultantID);
   const [icRequired, setIcRequired] = useState(false);
   const [smsRequired, setSmsRequired] = useState(false);
-  const nameInputRef = useRef(null);
+  const consultantNameRef = useRef(null);
+  const consultantNumberRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState([]);
   
   const dispatch = useDispatch();
@@ -126,6 +127,7 @@ const validateFields = () => {
           setToastMessage(data.error);
           setSeverity('error');
           setToast(true);
+          consultantNameRef.current.focus();
           setTimeout(() => {
             setToast(false);
           }, 2000);
@@ -134,6 +136,7 @@ const validateFields = () => {
           setToastMessage(data.error);
           setSeverity('error');
           setToast(true);
+          consultantNumberRef.current.focus();
           setTimeout(() => {
             setToast(false);
           }, 2000);     
