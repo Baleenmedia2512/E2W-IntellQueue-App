@@ -357,6 +357,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
+                    editDisabled: order.RateWiseOrderNumber < 0,
                 }));
                 setOrderDetails(data);
             })
@@ -720,7 +721,7 @@ const orderColumns = [
     width: 270,
     renderCell: (params) => (
         <div>
-            <button
+            <Button
                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-4"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
@@ -731,8 +732,8 @@ const orderColumns = [
                     pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
             >
                 Cancel 
-            </button>
-            <button
+            </Button>
+            <Button
                 className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
@@ -743,14 +744,22 @@ const orderColumns = [
                   pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
             >
                 Restore
-            </button>
-            <button
-    className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
-    onClick={() => handleEditIconClick(params.row)}
->
-    Edit
-</button>
-
+            </Button>
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                disabled={params.row.editDisabled}
+                onClick={() => handleEditIconClick(params.row)}
+                style={{ marginLeft: '12px',
+                  backgroundColor: '#499b25',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: params.row.editDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.editDisabled ? 'none' : 'auto' }}
+            >  
+               Edit
+            </Button>
         </div>
     ),
 },
