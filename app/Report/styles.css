@@ -189,7 +189,6 @@ pointer-events: none; /* Prevent text from blocking interactions */
   cursor: pointer;
   outline: none;
   display: inline-block;
-  margin-right: 2;
 }
 
 .edit-button:hover {
@@ -242,7 +241,6 @@ pointer-events: none; /* Prevent text from blocking interactions */
   cursor: pointer;
   outline: none;
   display: inline-block;
-  margin-right: 2;
 }
 
 .Restore-button:hover {
