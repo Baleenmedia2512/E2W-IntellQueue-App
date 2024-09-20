@@ -137,7 +137,7 @@ const validateFields = () => {
     });
   }
 
-  
+  //yes
 
   const handleConsultantSearchTermChange = async (event) => {
     const input = event.target.value
