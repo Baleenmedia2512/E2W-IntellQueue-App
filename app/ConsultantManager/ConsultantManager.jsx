@@ -21,6 +21,7 @@ import { FetchConsultantSearchTerm } from '../api/FetchAPI';
 
     
 const ConsultantManager = () => {
+  const nameInputRef = useRef(null)
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -87,7 +88,7 @@ const validateFields = () => {
       if (nameInputRef.current) {
         nameInputRef.current.focus();
       }
-    }, 0);  
+    }, 150);  
   };
 
   const handleConsultantNameChange = (e) => {
@@ -301,7 +302,7 @@ const validateFields = () => {
 
       {/* Search bar positioned on top of heading and buttons section */}
       <div className="absolute top-0 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
-        <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
+        {/* <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
           <input
             className="w-full px-4 py-2 text-black focus:outline-none"
             type="text"
@@ -313,7 +314,7 @@ const validateFields = () => {
           <div className="px-3">
             <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
           </div>
-        </div>
+        </div> */}
         {/* Search Suggestions */}
     <div className="relative">
       {searchSuggestions.length > 0  && searchTerm !== '' && (
@@ -373,6 +374,7 @@ const validateFields = () => {
                 placeholder="Consultant Name"
                 onChange={handleConsultantNameChange}
                 value={consultantName}
+                ref={nameInputRef}
                 onBlur={() => {
                   setTimeout(() => {
                     setConsultantNameSuggestions([]);
