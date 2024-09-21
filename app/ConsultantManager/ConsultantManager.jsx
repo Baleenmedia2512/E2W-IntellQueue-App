@@ -302,11 +302,11 @@ const validateFields = () => {
 
       {/* Search bar positioned on top of heading and buttons section */}
       <div className="absolute top-0 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
-        {/* <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
+        <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
           <input
             className="w-full px-4 py-2 text-black focus:outline-none"
             type="text"
-            placeholder="Search Transaction for Update.."
+            placeholder="Search Consultant for Update.."
             value={searchTerm}
             onFocus={(e) => { e.target.select(); }}
             onChange={handleConsultantSearchTermChange}
@@ -314,7 +314,7 @@ const validateFields = () => {
           <div className="px-3">
             <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
           </div>
-        </div> */}
+        </div>
         {/* Search Suggestions */}
     <div className="relative">
       {searchSuggestions.length > 0  && searchTerm !== '' && (
