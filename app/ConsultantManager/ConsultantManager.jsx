@@ -19,16 +19,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchConsultantSearchTerm } from '../api/FetchAPI';
 
-const initialConsultantData = {
-  consultantName: '',
-  consultantContact: '',
-  smsRequired: false,
-  icRequired: false,
-  validity: true,
-};
     
 const ConsultantManager = () => {
-  const nameInputRef = useRef(null)
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -54,7 +46,14 @@ const ConsultantManager = () => {
   const [searchTerm, setSearchTerm] = useState([]);
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const [consultantValidity, setConsultantValidity] = useState(true);
-  const [originalconsultantData, setOriginalConsultantData] = useState(initialConsultantData);
+  const [originalConsultantData, setOriginalConsultantData] = useState({
+    consultantName: '',
+    consultantContact: '',
+    smsRequired: false,
+    icRequired: false,
+    validity: true,
+  });
+  
 
   const dispatch = useDispatch();
   const router = useRouter()
@@ -69,9 +68,15 @@ const validateFields = () => {
     errors.consultantName = 'Consultant Name is required';
   }
 
+  if (consultantNumber && consultantNumber.length < 10) {
+    errors.consultantNumber = 'Consultant Number should be 10 digits';
+}
+
   setErrors(errors);
   return Object.keys(errors).length === 0;
 };
+
+console.log(consultantNumber)
 
   const handleEditMode = () => {
 
@@ -96,8 +101,8 @@ const validateFields = () => {
 
     // Focus on the name input field
     setTimeout(() => {
-      if (nameInputRef.current) {
-        nameInputRef.current.focus();
+      if (consultantNameRef.current) {
+        consultantNameRef.current.focus();
       }
     }, 150);  
   };
@@ -178,13 +183,30 @@ const validateFields = () => {
 
   const updateConsultant = async(event) => {
     event.preventDefault();
+
+    const dataChanged = (
+      consultantName !== originalConsultantData.consultantName ||
+      consultantNumber !== originalConsultantData.consultantContact ||
+      smsRequired !== originalConsultantData.smsRequired ||
+      icRequired !== originalConsultantData.icRequired
+    );
+
+    if (!dataChanged) {
+      setToastMessage('No Changes Detected!');
+      setSeverity('warning');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+      return; 
+    }
+
     const isValid = validateFields();
     if (isValid) {
       const consultantContact = consultantNumber ? consultantNumber : '';
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddOrUpdateConsultant.php/?JsonUserName=${loggedInUser}&JsonConsultantId=${consultantID}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantContact}&JsonSmsRequired=${smsRequired ? 1 : 0}&JsonIcRequired=${icRequired ? 1 : 0}&JsonDBName=${companyName}`)
         const data = await response.json();
-        console.log(data)
         if (data.message === "Updated Successfully!") {
                   handleEditMode();
                   setSuccessMessage('Consultant Details Are Updated!');
@@ -300,7 +322,7 @@ const validateFields = () => {
     .then((response) => response.json())
     .then((data) => {
         setConsultantName(data.ConsultantName);
-        setConsultantNumber(data.ConsultantNumber);
+        setConsultantNumber( data.ConsultantNumber ? data.ConsultantNumber : '');
         setDisplayConsultantName(data.ConsultantName);
         setDisplayConsultantNumber(data.ConsultantNumber);
         setSmsRequired(data.IsSMSRequired === 1);
@@ -309,7 +331,7 @@ const validateFields = () => {
 
         setOriginalConsultantData({
           consultantName: data.ConsultantName,
-          consultantContact: data.ConsultantNumber,
+          consultantContact: data.ConsultantNumber ? data.ConsultantNumber : '',
           smsRequired: data.IsSMSRequired === 1,
           icRequired: data.IsIncentiveRequired === 1,
           validity: data.Validity === 1,
@@ -348,14 +370,13 @@ const validateFields = () => {
       <div className="flex justify-between items-center relative z-10 px-2">
         {/* Heading on the far left */}
         <div>
-        <h2 className="text-xl sm:text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">
+        <h2 className="text-lg text-nowrap sm:text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">
           Consultant Manager
         </h2>
         <div className="border-2 w-10 mt-1 pl-2 border-blue-500"></div>
         </div>
         {/* Buttons on the far right */}
         <div className="flex space-x-2 sm:mt-20">
-        const [consultantValidity, setConsultantValidity] = useState(true); 
 
 {consultantID === '' ? (
   <button 
@@ -384,7 +405,7 @@ const validateFields = () => {
   ) : (
     // If consultantValidity is false, show only the Restore button
     <button 
-      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 hover:shadow-[0_4px_10px_0_rgba(59,130,246,0.5)] hover:-translate-y-1 transform transition duration-300"
+      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:shadow-[0_4px_10px_0_rgba(34,197,94,0.5)] hover:-translate-y-1 transform transition duration-300"
       onClick={handleRestoreConsultant}
     >
       Restore
@@ -487,7 +508,7 @@ const validateFields = () => {
                 placeholder="Consultant Name"
                 onChange={handleConsultantNameChange}
                 value={consultantName}
-                ref={nameInputRef}
+                ref={consultantNameRef}
                 onBlur={() => {
                   setTimeout(() => {
                     setConsultantNameSuggestions([]);
@@ -524,6 +545,7 @@ const validateFields = () => {
                 type="number"
                 placeholder="Consultant Number"
                 value={consultantNumber}
+                ref={consultantNumberRef}
                 onChange={(e) => {
                   if (e.target.value.length <= 10) handleConsultantNumberChange(e.target.value);
                 }}
