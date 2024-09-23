@@ -117,7 +117,7 @@ const CreateOrder = () => {
     const [displayClientName, setDisplayClientName] = useState(clientName);
     const [orderNumber, setOrderNumber] = useState(orderNumberRP);
     const [orderAmount, setorderAmount] = useState('');
-    const [amountSeparationDialogOpen, setAmountSeparationDialogOpen] = useState(false);
+   
 
      // Function to toggle expand/collapse
   const toggleExpand = () => {
@@ -1232,13 +1232,7 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
-  const handleSeparateAmount = () => {
-    setAmountSeparationDialogOpen(true);
-    router.push('/Amount-Separation'); // Redirect to another page
-  };
-  const handleAmountSeparationCloseDialog = () => {
-    setAmountSeparationDialogOpen(false);
-  };
+ 
 
 //search bar to update orders
 const handleOrderSearch = async (e) => {
@@ -1404,25 +1398,7 @@ return (
       </DialogActions>
     </Dialog>
 
-    <Dialog
-  open={amountSeparationDialogOpen}
-  onClose={handleAmountSeparationCloseDialog}
-  aria-labelledby="alert-dialog-title"
-  aria-describedby="alert-dialog-description"
->
-  <DialogTitle id="alert-dialog-title">{"Do you want to separate the amount?"}</DialogTitle>
-  <DialogContent>
-    <p>If yes, you will be redirected to the separate amount page.</p>
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={handleSeparateAmount} color="primary">
-      Yes
-    </Button>
-    <Button onClick={handleAmountSeparationCloseDialog} color="primary">
-      No
-    </Button>
-  </DialogActions>
-</Dialog>
+  
 
 
   </div>
