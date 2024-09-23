@@ -678,6 +678,7 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
+  {field: 'ClientContact', headerName: 'Client Contact', width: 100 },
   { field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
   { 
     field: 'Receivable', 
@@ -721,19 +722,19 @@ const orderColumns = [
     width: 270,
     renderCell: (params) => (
         <div>
-            <Button
-               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-4"
+            <button
+               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ marginRight: '12px', backgroundColor: '#d98880',
+                style={{  backgroundColor: '#fa594d',
                     color: 'white',
                     fontWeight: 'bold', 
                     opacity: params.row.markInvalidDisabled ? 0.2 : 1,
                     pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
             >
                 Cancel 
-            </Button>
-            <Button
+            </button>
+            <button
                 className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
@@ -744,26 +745,21 @@ const orderColumns = [
                   pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
             >
                 Restore
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                disabled={params.row.editDisabled}
-                onClick={() => handleEditIconClick(params.row)}
-                style={{ marginLeft: '12px',
-                  backgroundColor: '#499b25',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  opacity: params.row.editDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.editDisabled ? 'none' : 'auto' }}
-            >  
-               Edit
-            </Button>
-        </div>
-    ),
-},
-];
+            </button>
+            <button
+            className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
+            disabled={params.row.editDisabled}
+            onClick={() => handleEditIconClick(params.row)}
+            style={{  
+              opacity: params.row.editDisabled ? 0.5 : 1,
+              pointerEvents: params.row.editDisabled ? 'none' : 'auto' }}
+        >
+            Edit
+        </button>
+                </div>
+            ),
+        },
+        ];
 
 
 
@@ -789,7 +785,7 @@ const financeColumns = [
         <button
           className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs'
           onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-          style={{ backgroundColor: '#d98880', color: 'white', fontWeight: 'bold' }}
+          style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold' }}
         >
           Delete
         </button>

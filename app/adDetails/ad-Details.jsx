@@ -623,9 +623,7 @@ const AdDetailsPage = () => {
     label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice / (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
   }))
 
-  // useEffect(() => {
-    
-  // },[qtySlab])
+
   
   return (
     

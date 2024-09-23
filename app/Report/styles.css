@@ -1,5 +1,5 @@
 .custom-button {
-  padding: 0.5em 0.8em;
+  padding: 1.1em 2em;
   font-size: 14px;
   text-transform: uppercase;
   font-weight: 500;
@@ -13,6 +13,7 @@
   outline: none;
   display: inline-block;
   margin-left: 2%;
+  text-wrap: nowrap;
 
   
 }
@@ -29,7 +30,7 @@ transform: translateY(-7px);
 }
 
 .consultant-button {
-  padding: 0.5em 0.8em;
+  padding: 1.1em 2em;
   font-size: 14px;
   text-transform: uppercase;
   font-weight: 500;
@@ -43,6 +44,7 @@ transform: translateY(-7px);
   outline: none;
   display: inline-block;
   margin-left: 4%;
+  text-wrap: nowrap;
   
 }
 
@@ -61,7 +63,7 @@ transform: translateY(-7px);
   display: flex;
   align-items: center;
   justify-content: center; /* Center the icon and label within the button */
-  padding: 0.5em 0.8em;
+  padding: 1.1em 2.2em;
   font-size: 14px;
   text-transform: uppercase;
   font-weight: 500;
@@ -74,6 +76,7 @@ transform: translateY(-7px);
   cursor: pointer;
   outline: none;
   margin-left: 4%;
+  text-wrap: nowrap;
 }
 
 .consultant-sms-button svg {
@@ -125,18 +128,24 @@ transform: translateY(-7px);
 
 @media (max-width: 480px) {
   .custom-button {
-    padding: 0.3em 0.9em;
+    padding: 1em 1.8em;
     font-size: 12px;
-    margin-bottom: 5%;
+    margin-left: 20px;
+    
+    
   }
   .consultant-button {
-    padding: 0.8em 1em;
+    padding: 1em 1.8em;
     font-size: 12px;
+    margin-left: 20px;
+    margin-top: 5%;
   }
   .consultant-sms-button {
-    padding: 0.8em 1em;
+    padding: 1em 1.8em;
     font-size: 12px;
+    margin-left: 20px;
     margin-top: 5%;
+    
   }
 }
 
@@ -180,7 +189,6 @@ pointer-events: none; /* Prevent text from blocking interactions */
   cursor: pointer;
   outline: none;
   display: inline-block;
-  margin-right: 2;
 }
 
 .edit-button:hover {
@@ -233,7 +241,6 @@ pointer-events: none; /* Prevent text from blocking interactions */
   cursor: pointer;
   outline: none;
   display: inline-block;
-  margin-right: 2;
 }
 
 .Restore-button:hover {
@@ -277,7 +284,7 @@ pointer-events: none; /* Prevent text from blocking interactions */
   text-transform: uppercase;
   font-weight: 500;
   color: #ffffff;
-  background-color: #23c483;
+  background-color: #fa594d;
   border: none;
   border-radius: 12px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
@@ -289,7 +296,7 @@ pointer-events: none; /* Prevent text from blocking interactions */
 }
 
 .delete-button:hover {
-background-color: #f27258;
+background-color: #fa594d;
 box-shadow: 0px 15px 20px rgba(246, 164, 151, 0.4);
 color: #fff;
 /* transform: translateY(-7px); */

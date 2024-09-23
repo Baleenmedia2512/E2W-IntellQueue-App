@@ -26,6 +26,7 @@ import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import ControlPointRoundedIcon from '@mui/icons-material/ControlPointRounded';
 import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualization/useGridVirtualScroller';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
@@ -2134,7 +2135,7 @@ setEditModal(false);
                 {!(selectedValues.rateName === "" || selectedValues.adType === "" || selectedValues.vendorName === "") ? 
                 <div className="flex items-center justify-center mb-8 mt-11 mr-14">
                   <button 
-                   className="Clear-button ml-4" 
+                   className="Clear-button mr-2" 
                   onClick={() => {dispatch(resetRatesData()); }}>Clear
                           {/* <span className='flex flex-row justify-center'><MdOutlineClearAll className='mt-1 mr-1'/> Clear</span> */}
                         </button> 
@@ -2146,7 +2147,7 @@ setEditModal(false);
                   )}
                     {(isNewRate)  ? (
                       <button 
-                      className="Add-button" 
+                      className="Add-button " 
                       onClick={insertNewRate}>Add
                       {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span> */}
                       </button>
@@ -2160,9 +2161,9 @@ setEditModal(false);
                     
                 </div>
                 :<></>}
-                <div className="flex items-center justify-center mb-8 mt-11 mr-14">
+               <div className="flex items-center justify-center mb-8 mt-11 sm:mt-5 sm:mr-0">
                  <button 
-                  className="outline-none text-[#008000] shadow-2xl p-2 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] ring-[#008000] border-gray-300 hover:border-solid hover:border-[1px] w-44 hover:text-[#008000] font-semibold rounded-2xl justify-center"
+                  className="Createorder-button flex items-center justify-center space-x-2 sm:flex-col sm:space-x-0 sm:space-y-2"
                   onClick={(e) => {
                     e.preventDefault();
                     if(rateId){
@@ -2193,7 +2194,7 @@ setEditModal(false);
                     }
                     
                   }}>
-                 <img src='/images/add.png' className='w-7 h-7 mr-2'/>Create Order</button>
+                 <ControlPointRoundedIcon className="mr-2" />Create Order</button>
                  </div> 
                 </form>
               </div>

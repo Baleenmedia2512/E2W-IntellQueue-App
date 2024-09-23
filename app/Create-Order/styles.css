@@ -148,7 +148,7 @@
 }
 
 .update-button:hover {
-  /* background-color: #2376c4; */
+  background-color: #23c483; 
   box-shadow: 0px 15px 20px rgba(17, 165, 135, 0.4);
   color: #fff;
   transform: translateY(-7px);
@@ -190,7 +190,7 @@
   text-transform: uppercase;
   font-weight: 500;
   color: #ffffff;
-  background-color: #d98880;
+  background-color: #fa594d;
   border: none;
   border-radius: 10px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
@@ -203,9 +203,9 @@
 
 .cancelupdate-button:hover {
   /* background-color: #2376c4; */
-  box-shadow: 0px 15px 20px rgba(223, 45, 14, 0.4);
-  color: #fff;
-  transform: translateY(-7px);
+  background-color: #fa594d;
+      box-shadow: 0px 15px 20px rgba(194, 109, 109, 0.4);
+      transform: translateY(-7px);
 }
 
 .cancelupdate-button:active {

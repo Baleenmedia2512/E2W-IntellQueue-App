@@ -518,6 +518,12 @@ const ClientsData = () => {
   else{
     const isValid = GSvalidateFields();
     if (isValid) {
+      if(clientContact === '' || clientContact === 0 ){
+        const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
+       if (!result){
+        return
+       }
+      }
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
@@ -1369,13 +1375,13 @@ const BMvalidateFields = () => {
             ) : (
               <div className="relative">
                 <button
-                  className="px-6 py-2 mr-3 bg-blue-500 text-white rounded-lg w-fit"
+                  className="Update-button mr-2"
                   onClick={submitDetails}
                 >
                   Update
                 </button>
                 <button
-                  className="px-6 py-2 bg-red-500 text-white rounded-lg w-fit"
+                  className="remove-button"
                   onClick={handleRemoveClient}
                 >
                   Remove

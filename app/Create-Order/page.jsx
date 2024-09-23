@@ -1648,7 +1648,7 @@ return (
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
-              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
+              // disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
