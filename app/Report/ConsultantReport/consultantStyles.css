@@ -1,32 +1,32 @@
 
 .p-checkbox .p-checkbox-box {
-    border: 2px solid #80bdff;
-  }
+  border: 2px solid #80bdff;
+}
 
-  .p-inputtext-custom {
-    height: 40px;
-    border: 2px solid #86befa;
-    padding: 12px;
-    margin-top: 4px;
-    border-radius: 6px;
-    width: fit-content;
-  }
+.p-inputtext-custom {
+  height: 40px;
+  border: 2px solid #86befa;
+  padding: 12px;
+  margin-top: 4px;
+  border-radius: 6px;
+  width: fit-content;
+}
 
-  .p-column-filter-buttonbar {
-    display: none;
+.p-column-filter-buttonbar {
+  display: none;
 }
 
 
 .hide-checkbox .p-checkbox {
-        display: none;
-    }
+      display: none;
+  }
 
 @media (max-width: 480px) {
-  .p-column-filter-overlay {
-    width: 100px;
-  }
+.p-column-filter-overlay {
+  width: 100px;
+}
 }
 
 
- 
-  
+
+
