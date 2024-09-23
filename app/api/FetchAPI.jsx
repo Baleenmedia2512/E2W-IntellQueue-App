@@ -37,15 +37,20 @@ export const FetchFinanceSeachTerm = async(DBName, SearchTerm) => {
 
 export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
-    const response = await api.get("SearchOrder.php/get",{
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8'
-        },
-        params:{
-            JsonDBName: DBName,
-            JsonSearchTerm: SearchTerm
-        }
-    });
-    SearchTerms = response.data;
+    try{
+        const response = await api.get("SearchOrder.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                JsonSearchTerm: SearchTerm
+            }
+        });
+        SearchTerms = response.data;
+    }catch(error){
+        console.error(error)
+    }
+    
     return SearchTerms;
 }
