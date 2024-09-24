@@ -1539,6 +1539,8 @@ return (
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
+      <label className='text-gray-500 text-xs hover:cursor-pointer'>Separate Amount?<span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/Amount-Separation')}>Click Here</span></label>
+
     </div>
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
