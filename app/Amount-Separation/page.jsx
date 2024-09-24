@@ -11,6 +11,7 @@ import 'primereact/resources/primereact.min.css';          // Core styles
 
 
 const Stages = () => {
+  const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const [inputCount, setInputCount] = useState(1); // For user input
   const [fields, setFields] = useState([{ title: "", description: "", dueDate: "" }]);
   const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -100,6 +101,33 @@ const Stages = () => {
   };
 
 
+  const CreateStages = async (event) => {
+    event.preventDefault();
+
+    // Your logic for creating and validating the order
+    if (validateFields()) {
+        const formattedOrderDate = formatDateToSave(orderDate);
+
+        try {
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${orderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonStage=${stage}&JsonStageAmount=${stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${description}&JsonDueDate=${dueDate}&JsonDBName=${companyName}`);
+            const data = await response.json();
+            
+            if (data === "Stage Created Successfully!") {
+                setSuccessMessage('Order Created Successfully!');
+                setTimeout(() => {
+                    setSuccessMessage('');
+                    // Redirect or perform additional actions after success
+                }, 3000);
+            } else {
+                alert(`Error: ${data}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    } else {
+        setToastMessage('Please fill all necessary fields.');
+    }
+};
 
 
 

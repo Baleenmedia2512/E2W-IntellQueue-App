@@ -125,7 +125,7 @@ const CreateOrder = () => {
   };
     
     useEffect(() => {
-      if (!loggedInUser || dbName === "" || companyName === "" ) {
+      if (!loggedInUser || dbName === "" ) {
         router.push('/login');
       }
       fetchMaxOrderNumber();
