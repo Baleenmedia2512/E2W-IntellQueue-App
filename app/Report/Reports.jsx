@@ -90,6 +90,7 @@ const Report = () => {
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
 
 const checkIfSMSSentToday = () => {
   axios
@@ -359,7 +360,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
                 }));
+                const displayData = response.data
                 setOrderDetails(data);
+                setDisplayOrderDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -1138,6 +1141,28 @@ const handleDateChange = (range) => {
   return number;
 };
 
+console.log(displayOrderDetails)
+
+const calculateAmountByRate = () => {
+  const rateTotals = {};
+
+  displayOrderDetails.forEach(order => {
+    const rateName = order.Card;
+    const amount = Number(order.Receivable) || 0; // Handle undefined or null amounts
+    console.log(amount)
+
+    if (rateTotals[rateName]) {
+      rateTotals[rateName] += amount;
+    } else {
+      rateTotals[rateName] = amount;
+    }
+  });
+
+  return rateTotals;
+};
+
+const rateTotals = calculateAmountByRate();
+
 
     return (
       
@@ -1280,6 +1305,20 @@ const handleDateChange = (range) => {
       onDateChange={handleDateChange} 
     /> */}
   </div>
+  {/* New Rate-wise Total Amounts box */}
+  {Object.keys(rateTotals).map((rateName) => (
+        <div
+          key={rateName}
+          className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
+        >
+          <div className="text-xl sm:text-2xl lg:text-3xl text-black font-bold">
+            ₹{rateTotals[rateName].toFixed(2)}
+          </div>
+          <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
+            {rateName} Total Value
+          </div>
+        </div>
+      ))}
 </div>
 
 
