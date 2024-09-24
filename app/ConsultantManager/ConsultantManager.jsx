@@ -370,7 +370,7 @@ console.log(consultantNumber)
       <div className="flex justify-between items-center relative z-10 px-2">
         {/* Heading on the far left */}
         <div>
-        <h2 className="text-lg text-nowrap sm:text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">
+        <h2 className="text-xl w-24 sm:w-full sm:text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">
           Consultant Manager
         </h2>
         <div className="border-2 w-10 mt-1 pl-2 border-blue-500"></div>
@@ -435,7 +435,7 @@ console.log(consultantNumber)
       </div>
 
       {/* Search bar positioned on top of heading and buttons section */}
-      <div className="absolute top-0 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
+      <div className="absolute top-6 sm:top-0 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
         <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
           <input
             className="w-full px-4 py-2 text-black focus:outline-none"
