@@ -34,7 +34,9 @@ const CreateOrder = () => {
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
+    console.log(orderNumberRP)
     const [clientName, setClientName] = useState(clientNameCR || "");
+    console.log(clientNameCR)
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -694,7 +696,7 @@ const fetchOrderDetailsByOrderNumber = () => {
         if (data) {
           // Parse the date
           const formattedDate = parseDateFromDB(data.orderDate);
-
+          console.log(data)
           // Set all the necessary states
           setClientName(data.clientName);
           setOrderDate(data.orderDate);
@@ -1539,6 +1541,7 @@ return (
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
+      <label className='text-gray-500 text-xs hover:cursor-pointer'>Separate Amount?<span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/Amount-Separation')}>Click Here</span></label>
     </div>
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>

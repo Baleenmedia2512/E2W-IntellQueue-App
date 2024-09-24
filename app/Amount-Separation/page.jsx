@@ -13,13 +13,14 @@ import 'primereact/resources/primereact.min.css';          // Core styles
 const Stages = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  const clientDetails = useAppSelector(state => state.clientSlice);
   const orderDetails = useAppSelector(state => state.orderSlice);
-  const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
-  const {clientName: clientNameCR, clientContact: clientNumberCR} = clientDetails;
+  const {orderNumber: orderNumberRP, nextRateWiseOrderNumber : orderNumberRW ,receivable: receivableRP, clientName: clientNameCR, clientNumber: clientNumberCR} = orderDetails;
+  console.log(orderDetails)
+  console.log(receivableRP)
+  
   const [clientName, setClientName] = useState(clientNameCR || "");
   const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
-  const [orderNumber, setOrderNumber] = useState(orderNumberRP);
+  const [orderNumber, setOrderNumber] = useState(orderNumberRW);
   const [orderAmount, setOrderAmount] = useState(receivableRP);
   const [inputCount, setInputCount] = useState(1); // For user input
   const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -31,7 +32,11 @@ const Stages = () => {
   const [stageAmount, setStageAmount] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
+
   
+  useEffect(() => {
+    setOrderAmount(receivableRP);
+  },[])
   // Helper function to get the current date in YYYY-MM-DD format
   const getCurrentDate = () => {
     const today = new Date();
@@ -46,15 +51,22 @@ const Stages = () => {
 
   const handleInputCountChange = (event) => {
     const value = event.target.value;
-
+  
     // Check if the value is empty; if so, set inputCount to an empty string
     if (value === '') {
       setInputCount('');
     } else {
       const newCount = parseInt(value, 10) || 1; // Default to 1 if not a valid number
-      setInputCount(newCount);
+  
+      // Enforce the limit so that the count does not exceed 5
+      if (newCount > 5) {
+        setInputCount(5); // Set to 5 if the input exceeds the limit
+      } else {
+        setInputCount(newCount);
+      }
     }
   };
+  
 
   const validateAllFields = () => {
     const newErrors = [];
@@ -206,17 +218,17 @@ const Stages = () => {
 
   const CreateStages = async (event) => {
     event.preventDefault();
-
+    
     // Your logic for creating and validating the order
-    if (validateField()) {
-        const formattedOrderDate = formatDateToSave(orderDate);
+    if (validateAllFields()) {
+        //const formattedOrderDate = formatDateToSave(orderDate);
 
         try {
             const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${orderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonStage=${stage}&JsonStageAmount=${stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${description}&JsonDueDate=${dueDate}&JsonDBName=${companyName}`);
             const data = await response.json();
             
             if (data === "Stage Created Successfully!") {
-                setSuccessMessage('Order Created Successfully!');
+                setSuccessMessage('Stages Created Successfully!');
                 setTimeout(() => {
                     setSuccessMessage('');
                     // Redirect or perform additional actions after success
@@ -274,7 +286,7 @@ const Stages = () => {
           type="text"
           id={`title-${index}`}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black"
-          value={field.title}
+          value={orderAmount}
           onChange={(event) => handleFieldChange(index, event, 'title')}
           placeholder={`Amount ${index + 1}`}
         />
@@ -317,7 +329,7 @@ const Stages = () => {
 
 
       <button className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600"
-       onClick={postStages}>
+       onClick={CreateStages}>
         Submit
       </button>
     </div>
