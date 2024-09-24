@@ -762,7 +762,6 @@ const filterHeaderTemplate = (column, filterField) => {
                 return fieldValue.toLowerCase().includes(tempFilterValue.toLowerCase());
             }
     
-            // If fieldValue is null or empty string, return false (not matching the filter)
             return false;
         });
     
