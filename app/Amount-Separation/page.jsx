@@ -4,11 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '@/redux/store';
 import SuccessToast from '../components/SuccessToast';
 import ToastMessage from '../components/ToastMessage';
-import { Calendar } from 'primereact/calendar';
-import { format } from 'date-fns';
-import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
-import 'primereact/resources/primereact.min.css';          // Core styles
-
 
 const Stages = () => {
   const [inputCount, setInputCount] = useState(1); // For user input
@@ -69,14 +64,14 @@ const Stages = () => {
         error.dueDate = 'Due date is required';
         hasError = true;
       } else {
-        const selectedDate = new Date(field.dueDate);
+        // const selectedDate = new Date(field.dueDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Set time to 00:00:00 for accurate comparison
   
-        if (selectedDate < today) {
-          error.dueDate = 'Due date cannot be in the past';
-          hasError = true;
-        }
+        // if (selectedDate < today) {
+        //   error.dueDate = 'Due date cannot be in the past';
+        //   hasError = true;
+        // }
       }
   
       newErrors[index] = error;
@@ -129,8 +124,8 @@ const Stages = () => {
   };
 
   const validateField = (index, fieldName, value) => {
-    const error = { ...errors[index] }; // Copy the errors for the specific field
-
+    const error = { ...errors[index] };
+  
     switch (fieldName) {
       case 'title':
         if (!value) {
@@ -143,7 +138,7 @@ const Stages = () => {
           error.title = ''; // Clear error if valid
         }
         break;
-
+  
       case 'description':
         if (!value) {
           error.description = 'Description is required';
@@ -151,25 +146,25 @@ const Stages = () => {
           error.description = ''; // Clear error if valid
         }
         break;
-
+  
       case 'dueDate':
         if (!value) {
           error.dueDate = 'Due date is required';
-        } else if (new Date(value) < new Date()) {
-          error.dueDate = 'Due date cannot be in the past'; // Error if past date is selected
         } else {
           error.dueDate = ''; // Clear error if valid
         }
         break;
-
+  
       default:
         break;
     }
-
+  
     const newErrors = [...errors];
     newErrors[index] = error; // Update the error for the specific field
     setErrors(newErrors);
   };
+  
+  
 
   useEffect(() => {
     console.log('Stages component rendered');
@@ -177,82 +172,71 @@ const Stages = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10">
-  <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-8 rounded-lg shadow-md">
-    <h3 className="text-2xl font-bold text-blue-500 text-left">Create Your Stages</h3>
-    <div className="border-2 w-10 border-blue-500 mb-6"></div>
-    <div className="space-y-6">
-      {/* Number of Fields */}
-      <div className="w-full">
-        <label htmlFor="count" className="block mb-1 text-black font-medium">Number of Stages</label>
-        <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-          <input
-            type="number"
-            id="count"
-            className="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black" // Set text color to black
-            value={inputCount}
-            onChange={handleInputCountChange}
-            min="1"
-          />
-          <button className="w-full md:w-auto bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600" onClick={createFields}>
-            Create Stages
-          </button>
-        </div>
-      </div>
+      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-8 rounded-lg shadow-md">
+        <h3 className="text-2xl font-bold text-blue-500 text-left">Create Your Stages</h3>
+        <div className="border-2 w-10 border-blue-500 mb-6"></div>
+        <div className="space-y-6">
+          {/* Number of Fields */}
+          <div className="w-full">
+            <label htmlFor="count" className="block mb-1 text-black font-medium">Number of Fields:</label>
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+              <input
+                type="number"
+                id="count"
+                className="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black" // Set text color to black
+                value={inputCount}
+                onChange={handleInputCountChange}
+                min="1"
+              />
+              <button className="w-full md:w-auto bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600" onClick={createFields}>
+                Create Stages
+              </button>
+            </div>
+          </div>
 
-      {fields.map((field, index) => (
-  <div key={index} className="mb-4">
-    {/* Subheading for the stage */}
-    <h3 className="text-lg font-semibold mb-2 text-gray-500">Stage {index + 1}</h3>
-    
-    {/* Fields container */}
-    <div className="flex flex-col md:flex-row md:space-x-4 md:space-y-0">
-      {/* Field Amount */}
-      <div className="w-full md:w-1/3 px-4">
-        <label htmlFor={`title-${index}`} className="block mb-1 text-black font-medium">Amount</label>
-        <input
-          type="text"
-          id={`title-${index}`}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black"
-          value={field.title}
-          onChange={(event) => handleFieldChange(index, event, 'title')}
-          placeholder={`Amount ${index + 1}`}
-        />
-        {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
-      </div>
+          {fields.map((field, index) => (
+            <div key={index} className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0">
+              {/* Field Title */}
+              <div className="w-full md:w-1/3">
+                <label htmlFor={`title-${index}`} className="block mb-1 text-black font-medium">Field {index + 1} :</label>
+                <input
+                  type="text"
+                  id={`title-${index}`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black" // Set text color to black
+                  value={field.title}
+                  onChange={(event) => handleFieldChange(index, event, 'title')}
+                  placeholder={`Enter title for field ${index + 1}`}
+                />
+                {errors[index]?.title && <p className="text-red-500 text-sm">{errors[index].title}</p>}
+              </div>
 
-      {/* Field Description */}
-      <div className="w-full md:w-1/3 px-4">
-        <label htmlFor={`description-${index}`} className="block mb-1 text-black font-medium">Description</label>
-        <textarea
-          id={`description-${index}`}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 resize-none h-10 text-black"
-          value={field.description}
-          onChange={(event) => handleFieldChange(index, event, 'description')}
-          placeholder={`Enter description for field ${index + 1}`}
-        />
-        {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
-      </div>
+              {/* Field Description */}
+              <div className="w-full md:w-1/3">
+                <label htmlFor={`description-${index}`} className="block mb-1 text-black font-medium">Description:</label>
+                <textarea
+                  id={`description-${index}`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 resize-none h-10 text-black" // Set text color to black
+                  value={field.description}
+                  onChange={(event) => handleFieldChange(index, event, 'description')}
+                  placeholder={`Enter description for field ${index + 1}`}
+                />
+                {errors[index]?.description && <p className="text-red-500 text-sm">{errors[index].description}</p>}
+              </div>
 
-      {/* Due Date */}
-      <div className="w-full md:w-1/3 px-4">
-        <label htmlFor={`dueDate-${index}`} className="block mb-1 text-black font-medium">Due Date</label>
-        <Calendar
-          id={`dueDate-${index}`}
-          name={`dueDate-${index}`}
-          value={field.dueDate}
-          onChange={(event) => handleFieldChange(index, event, 'dueDate')}
-          dateFormat="dd/mm/yy"
-          placeholder="dd/mm/yyyy"
-          className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 ${errors.dueDate ? 'p-invalid border-red-500' : ''}`}
-          inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400"
-          showIcon
-        />
-        {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
-      </div>
-    </div>
-  </div>
-))}
-
+              {/* Due Date */}
+              <div className="w-full md:w-1/3">
+                <label htmlFor={`dueDate-${index}`} className="block mb-1 text-black font-medium">Due Date:</label>
+                <input
+                  type="date"
+                  id={`dueDate-${index}`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black" // Set text color to black
+                  value={field.dueDate}
+                  onChange={(event) => handleFieldChange(index, event, 'dueDate')}
+                />
+                {errors[index]?.dueDate && <p className="text-red-500 text-sm">{errors[index].dueDate}</p>}
+              </div>
+            </div>
+          ))}
 
           <button className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600" onClick={postStages}>
             Submit
