@@ -745,11 +745,30 @@ const resetFilters = () => {
     });
 };
 
-
-
-
-//Working filter
 const filterHeaderTemplate = (column, filterField) => {
+    const [tempFilterValue, setTempFilterValue] = useState(filters[filterField] ? filters[filterField].value : '');
+
+    const handleApplyFilter = () => {
+        let newFilters = { ...filters };
+        newFilters[filterField] = { value: tempFilterValue, matchMode: 'contains' };
+        setFilters(newFilters);
+    
+        // Apply filter to groupedData and auto-select rows that match the filter
+        const filteredRows = groupedData.filter(row => {
+            const fieldValue = row.rateCard; // Use `column.field` instead of `column.header`
+    
+            // Check if the fieldValue exists and is a string, then apply filter
+            if (typeof fieldValue === 'string') {
+                return fieldValue.toLowerCase().includes(tempFilterValue.toLowerCase());
+            }
+    
+            // If fieldValue is null or empty string, return false (not matching the filter)
+            return false;
+        });
+    
+        setSelectedRows(filteredRows); // Automatically select the filtered rows
+    };
+    
     return (
         <div>
             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
@@ -758,114 +777,81 @@ const filterHeaderTemplate = (column, filterField) => {
             <span className="p-column-title">{column.header}</span>
             <input
                 type="text"
-                value={filters[filterField] ? filters[filterField].value : ''}
-                onChange={(e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    let newFilters = { ...filters };
-                    newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
-                    setFilters(newFilters);
-
-            //         if (searchTerm === '') {
-            //             // Reset filtered consultants to empty when search text is empty
-            //             setFilteredConsultants([]);
-            //             return;
-            //         }
-            //         console.log(searchTerm)
-            //         // if(filterField === 'id') {
-
-            //         // Process consultants to filter and include group totals row
-            //         const updatedRows = consultants.flatMap(consultant => {
-            //             if (!Array.isArray(consultant.rates)) return [];
-
-            //             let totalRows = consultant.rates.reduce((sum, rateCard) => 
-            //                 (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
-            //                 0
-            //             );
-            //             let middleIndex = Math.floor(totalRows / 2);
-
-            //             let currentIndex = 0;
-
-            //             const rows = consultant.rates.flatMap(rateCard => {
-            //                 return (rateCard.rateTypes || []).map(rateType => {
-            //                     const isMiddleRow = currentIndex === middleIndex;
-            //                     const row = {
-            //                         id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
-            //                         name: isMiddleRow ? consultant.name : '',
-            //                         rateCard: rateCard.rateCard,
-            //                         rateType: rateType.rateType,
-            //                         count: rateType.count,
-            //                         price: rateType.price,
-            //                         total: rateType.count * rateType.price,
-            //                         isGroup: isMiddleRow,
-            //                         isScanGroup: rateType.rateCard === rateCard.rateCard,
-            //                         orderNumber: consultant.orderNumbers,
-            //                         originalName: consultant.name // Store the original name for potential use
-            //                     };
-            //                     currentIndex++;
-            //                     return row;
-            //                 });
-            //             });
-
-            //             rows.push({
-            //                 id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
-            //                 name: '',
-            //                 rateCard: 'Total',
-            //                 count: '',
-            //                 price: '',
-            //                 total: `₹${Math.round(consultant.total)}`,
-            //                 isGroup: true,
-            //                 isScanGroup: false,
-            //                 originalName: consultant.name
-            //             });
-
-            //             return rows;
-            //         });
-
-                    
-
-            //         // Filter rows based on the search term
-            //         const filteredRows = updatedRows.map(row => {
-                        
-            //             const matchesSearch = 
-            //                 row.name?.toLowerCase().includes(searchTerm) ||
-            //                 row.rateCard?.toLowerCase().includes(searchTerm) ||
-            //                 row.rateType?.toLowerCase().includes(searchTerm) ||
-            //                 row.count?.toString().includes(searchTerm) ||
-            //                 row.price?.toString().includes(searchTerm) ||
-            //                 row.total?.toString().includes(searchTerm);
-
-            //             if (matchesSearch && row.name === '' && !row.id.includes('-total')) {
-            //                 return { ...row, name: row.originalName }; // Display the name
-            //             }
-
-            //             return row.id.includes('-total') || matchesSearch ? row : null;
-            //         }).filter(row => row !== null);
-
-            //         // // Update the state with filtered rows
-            //         setFilteredConsultants(filteredRows);
-            //     // }
-             }
-             }
+                value={tempFilterValue}
+                onChange={(e) => setTempFilterValue(e.target.value)}
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
-                
             />
+            
+            {/* Apply Button */}
             <button
-    onClick={() => {
-        let newFilters = { ...filters };
-        newFilters[filterField] = { value: '', matchMode: 'contains' };
-        setFilters(newFilters);
-        // setFilteredConsultants([]); 
-    }}
-    className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
->
-    Clear
-</button>
+                onClick={handleApplyFilter}
+                className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-green-200 font-semibold rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+            >
+                Apply
+            </button>
 
+            {/* Clear Button */}
+            <button
+                onClick={() => {
+                    let newFilters = { ...filters };
+                    newFilters[filterField] = { value: '', matchMode: 'contains' };
+                    setFilters(newFilters);
+
+                    setTempFilterValue(''); // Clear temporary filter value
+                    setSelectedRows([]); // Clear selected rows
+                }}
+                className="mt-2 px-4 py-2 ml-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+            >
+                Clear
+            </button>
         </div>
     );
 };
+
+
+
+//Working filter
+// const filterHeaderTemplate = (column, filterField) => {
+//     return (
+//         <div>
+//             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
+//                 <span className="font-bold text-sky-500">Contains</span>
+//             </div>
+//             <span className="p-column-title">{column.header}</span>
+//             <input
+//                 type="text"
+//                 value={filters[filterField] ? filters[filterField].value : ''}
+//                 onChange={(e) => {
+//                     const searchTerm = e.target.value.toLowerCase();
+//                     let newFilters = { ...filters };
+//                     newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
+//                     setFilters(newFilters);
+//                     setSelectedRows([]);
+//              }
+//              }
+//                 placeholder={`Search ${column.header}`}
+//                 className="p-inputtext-custom"
+//                 style={{ width: '100%' }}
+                
+//             />
+//             <button
+//     onClick={() => {
+//         let newFilters = { ...filters };
+//         newFilters[filterField] = { value: '', matchMode: 'contains' };
+//         setFilters(newFilters);
+//         // setFilteredConsultants([]); 
+//         setSelectedRows([]);
+//     }}
+//     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+// >
+//     Clear
+// </button>
+
+//         </div>
+//     );
+// };
 //Working filter
 
 // console.log(filteredConsultants)
