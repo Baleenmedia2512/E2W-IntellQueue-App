@@ -1127,10 +1127,6 @@ const handleDateChange = (range) => {
     startDate: range.startDate,
     endDate: range.endDate,
   }));
-  // const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
-  // const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
-  // setStartDate(formattedStartDate);
-  // setEndDate(formattedEndDate);
 };
 
  // Utility function to format number as Indian currency (₹)
