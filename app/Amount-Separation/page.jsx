@@ -1,6 +1,8 @@
 "use client";  // Mark as client-side component
 
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addStage, setSuccessMessage, setErrorMessage, resetStages } from '@/redux/features/stage-slice'; 
 import { useAppSelector } from '@/redux/store';
 import SuccessToast from '../components/SuccessToast';
 import ToastMessage from '../components/ToastMessage';
@@ -11,6 +13,7 @@ import 'primereact/resources/primereact.min.css';          // Core styles
 
 
 const Stages = () => {
+  const dispatch = useDispatch();
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const orderDetails = useAppSelector(state => state.orderSlice);
@@ -47,26 +50,25 @@ const Stages = () => {
   };
 
   // Initialize fields with a single field and current due date
-  const [fields, setFields] = useState([{ title: "", description: "", dueDate: getCurrentDate() }]);
+  const [fields, setFields] = useState([{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" }]);
 
-  const handleInputCountChange = (event) => {
+const handleInputCountChange = (event) => {
     const value = event.target.value;
-  
+
     // Check if the value is empty; if so, set inputCount to an empty string
     if (value === '') {
-      setInputCount('');
+        setInputCount('');
     } else {
-      const newCount = parseInt(value, 10) || 1; // Default to 1 if not a valid number
-  
-      // Enforce the limit so that the count does not exceed 5
-      if (newCount > 5) {
-        setInputCount(5); // Set to 5 if the input exceeds the limit
-      } else {
-        setInputCount(newCount);
-      }
+        const newCount = parseInt(value, 10) || 1; // Default to 1 if not a valid number
+
+        // Enforce the limit so that the count does not exceed 5
+        if (newCount > 5) {
+            setInputCount(5); // Set to 5 if the input exceeds the limit
+        } else {
+            setInputCount(newCount);
+        }
     }
-  };
-  
+};
 
   const validateAllFields = () => {
     const newErrors = [];
@@ -158,7 +160,8 @@ const Stages = () => {
       newFields.push({
         title: "",
         description: "",
-        dueDate: getCurrentDate(), // Set dueDate to today's date for each field
+        dueDate: getCurrentDate(),
+        stageAmount: ""  
       });
     }
 
@@ -216,33 +219,47 @@ const Stages = () => {
   };
 
 
+  
   const CreateStages = async (event) => {
-    event.preventDefault();
-    
-    // Your logic for creating and validating the order
-    if (validateAllFields()) {
-        //const formattedOrderDate = formatDateToSave(orderDate);
-
-        try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonUserName=${loggedInUser}&JsonOrderNumber=${orderNumber}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonStage=${stage}&JsonStageAmount=${stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${description}&JsonDueDate=${dueDate}&JsonDBName=${companyName}`);
-            const data = await response.json();
-            
-            if (data === "Stage Created Successfully!") {
-                setSuccessMessage('Stages Created Successfully!');
-                setTimeout(() => {
-                    setSuccessMessage('');
-                    // Redirect or perform additional actions after success
-                }, 3000);
-            } else {
-                alert(`Error: ${data}`);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    } else {
-        setToastMessage('Please fill all necessary fields.');
-    }
-};
+      event.preventDefault();
+  
+      if (validateAllFields()) {
+          try {
+              const apiPromises = fields.map(async (field) => {
+                  const formattedDueDate = format(new Date(field.dueDate), 'yyyy-MM-dd');
+  
+                  const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${orderNumber}&JsonClientName=${clientNameCR}&JsonClientNumber=${clientNumberCR}&JsonStage=${field.title}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`);
+                  
+                  return await response.json();
+              });
+  
+              const results = await Promise.all(apiPromises);
+  
+             results.forEach((data, index) => {
+                  if (data === "Stage Created Successfully!") {
+                      // Dispatch action to add stage if necessary
+                      dispatch(addStage(fields[index])); // Add the created stage to the Redux store
+                      console.log(fields)
+                      dispatch(resetStages()); // Reset fields after success
+                      //setOrderAmount('');
+                      setSuccessMessage('Stages Created Successfully!');
+                    setTimeout(() => {
+                        setSuccessMessage('');
+                        // Redirect or perform additional actions after success
+                    }, 3000);
+                  } else {
+                      dispatch(setErrorMessage(`Error: ${data}`));
+                  }
+              });
+          } catch (error) {
+              console.error('Error:', error);
+              dispatch(setErrorMessage('An error occurred while creating stages.'));
+          }
+      } else {
+          setToastMessage('Please fill all necessary fields.');
+      }
+  };
+  
 
   // useEffect(() => {
   //   console.log('Stages component rendered');
@@ -310,16 +327,16 @@ const Stages = () => {
       <div className="w-full md:w-1/3 px-4">
         <label htmlFor={`dueDate-${index}`} className="block mb-1 text-black font-medium">Due Date</label>
         <Calendar
-  id={`dueDate-${index}`}
-  name={`dueDate-${index}`}
-  value={field.dueDate ? new Date(field.dueDate) : null}  // Ensure it's a Date object
-  onChange={(event) => handleFieldChange(index, event, 'dueDate')}
-  dateFormat="dd/mm/yy"
-  placeholder="dd/mm/yyyy"
-  className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 ${errors[index]?.dueDate ? 'p-invalid border-red-500' : ''}`}
-  inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400"
-  showIcon
-/>
+            id={`dueDate-${index}`}
+            name={`dueDate-${index}`}
+            value={field.dueDate ? new Date(field.dueDate) : null}  // Ensure it's a Date object
+            onChange={(event) => handleFieldChange(index, event, 'dueDate')}
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/yyyy"
+            className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 ${errors[index]?.dueDate ? 'p-invalid border-red-500' : ''}`}
+            inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400"
+            showIcon
+          />
 
         {errors.dueDate && <p className="text-red-500 text-xs mt-1">{errors.dueDate}</p>}
       </div>

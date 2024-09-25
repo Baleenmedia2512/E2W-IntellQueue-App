@@ -34,9 +34,7 @@ const CreateOrder = () => {
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
-    console.log(orderNumberRP)
     const [clientName, setClientName] = useState(clientNameCR || "");
-    console.log(clientNameCR)
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
