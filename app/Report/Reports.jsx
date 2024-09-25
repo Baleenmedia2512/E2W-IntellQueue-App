@@ -1143,25 +1143,31 @@ const handleDateChange = (range) => {
 
 console.log(displayOrderDetails)
 
-const calculateAmountByRate = () => {
-  const rateTotals = {};
+const calculateRateStats = () => {
+  const rateStats = {};
 
   displayOrderDetails.forEach(order => {
     const rateName = order.Card;
-    const amount = Number(order.Receivable) || 0; // Handle undefined or null amounts
-    console.log(amount)
+    const orderValue = Number(order.Receivable) || 0;  // Ensure Receivable (Order Value) is a number
+    const income = Number(order.TotalAmountReceived) || 0;  // Ensure TotalAmountReceived (Income) is a number
 
-    if (rateTotals[rateName]) {
-      rateTotals[rateName] += amount;
+    if (rateStats[rateName]) {
+      rateStats[rateName].orderCount += 1;
+      rateStats[rateName].totalOrderValue += orderValue;
+      rateStats[rateName].totalIncome += income;
     } else {
-      rateTotals[rateName] = amount;
+      rateStats[rateName] = {
+        orderCount: 1,
+        totalOrderValue: orderValue,
+        totalIncome: income,
+      };
     }
   });
 
-  return rateTotals;
+  return rateStats;
 };
 
-const rateTotals = calculateAmountByRate();
+const rateStats = calculateRateStats();
 
 
     return (
@@ -1256,143 +1262,120 @@ const rateTotals = calculateAmountByRate();
 
             <Box className="px-3">
             {value === 0 && (
-  <div style={{ width: '100%' }}>
-    <div>
+              <div style={{ width: '100%' }}>
+  <div>
     <RestoreOrderDialog
-                open={restoredialogOpen}
-                onClose={handleRestoreClose}
-                onConfirm={handleConfirm}
-                newRateWiseOrderNumber={newRateWiseOrderNumber}
-            />
-            </div>
-            <h1 className='md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500'>Reports</h1>
-            <div className="flex flex-nowrap overflow-x-auto ">
-  {/* Combined Total Orders and Amounts box */}
-  <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
-    {/* Sum of Orders */}
-    <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
-      {sumOfOrders}
-    </div>
-    <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
-      Total Orders
-    </div>
-    
-    {/* Amounts Section */}
-    <div className="flex mt-4 w-fit">
-      {/* Order Amount */}
-      <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-        ₹{totalOrderAmount}
-        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">Order Value</div>
-      </div>
-      {/* Finance Amount */}
-      <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold ">
-        ₹{totalFinanceAmount}
-        <div className="text-xs sm:text-sm lg:text-base text-sky-500  text-opacity-80 font-normal text-nowrap">Income</div>
-      </div>
-    </div>
-  </div>
-
-  {/* Spacer to center the DateRangePicker */}
-  <div className="flex flex-grow text-black ml-2 mb-4 flex-shrink-0">
-    <DateRangePicker 
-      startDate={selectedRange.startDate} 
-      endDate={selectedRange.endDate} 
-      onDateChange={handleDateChange} 
+      open={restoredialogOpen}
+      onClose={handleRestoreClose}
+      onConfirm={handleConfirm}
+      newRateWiseOrderNumber={newRateWiseOrderNumber}
     />
-    {/* <DateRangePicker 
-      startDate={startDate} 
-      endDate={endDate} 
-      onDateChange={handleDateChange} 
-    /> */}
   </div>
-  {/* New Rate-wise Total Amounts box */}
-  {Object.keys(rateTotals).map((rateName) => (
-        <div
-          key={rateName}
-          className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
-        >
-          <div className="text-xl sm:text-2xl lg:text-3xl text-black font-bold">
-            ₹{rateTotals[rateName].toFixed(2)}
-          </div>
-          <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
-            {rateName} Total Value
+  <h1 className="md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500">
+    Reports
+  </h1>
+
+{/* Sticky Container */}
+<div className="sticky top-0 z-10 bg-white p-2 shadow-md">
+  <div className="flex flex-nowrap overflow-x-auto">
+    {/* DateRangePicker and Spacer */}
+    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
+      <DateRangePicker
+        startDate={selectedRange.startDate}
+        endDate={selectedRange.endDate}
+        onDateChange={handleDateChange}
+      />
+    </div>
+
+    {/* Combined Total Orders and Amounts box */}
+    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
+      <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
+        {sumOfOrders}
+      </div>
+      <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
+        Total Orders
+      </div>
+
+      <div className="flex mt-4 w-fit">
+        <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
+          ₹{totalOrderAmount}
+          <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
+            Order Value
           </div>
         </div>
-      ))}
+        <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
+          ₹{totalFinanceAmount}
+          <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
+            Income
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* New Rate-wise Stats Box */}
+    {Object.keys(rateStats).map((rateName) => (
+      <div
+        key={rateName}
+        className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
+      >
+        <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
+          {rateStats[rateName].orderCount}
+        </div>
+        <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
+          {rateName} Orders
+        </div>
+
+        <div className="flex mt-4 w-fit">
+          <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
+            ₹{Number(rateStats[rateName].totalOrderValue).toFixed(2)}
+            <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
+              Order Value
+            </div>
+          </div>
+          <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
+            ₹{Number(rateStats[rateName].totalIncome).toFixed(2)}
+            <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
+              Income
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
 </div>
 
 
-
-
-
-   {/* <div>
-      <div style={{
-        width: '200px',
-        height: '110px',
-        borderRadius: '10px',
-        boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)',
-        padding: '12px',
-        paddingLeft: '18px',
-        marginBottom: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start:',
-        justifyContent: 'flex-start:'
-      }}>
-        <div style={{
-          fontSize: '36px',
-          fontWeight: 'bold',
-          marginBottom: '5px'
-        }}>
-          {sumOfOrders}
-        </div>
-        <div style={{ fontSize: '18px', color: 'dimgray' }}>
-          Total Orders
-        </div>
-      </div>
-      <DateRangePicker dates={dates} setDates={setDates} />
-      </div> */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
-        
-        <div style={{ flex: 1, width: '100%',  boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
-          <DataGrid rows={orderDetails} columns={orderColumns}
-          columnVisibilityModel={{Margin: !elementsToHide.includes('QuoteSenderNavigation')}}
-          pageSize={10}
-          initialState={{
-            sorting: {
-              sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
-            },
-          }} 
-          sx={{
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: '#e3f2fd', // Light blue on hover
-            },
-            '& .grey-row': {
-              backgroundColor: '#ededed', // Grey highlight for negative RateWiseOrderNumber
-            },
-          }}
-          getRowClassName={(params) => {
-            const rateWiseOrderNumber = params.row.RateWiseOrderNumber;
-        
-            if (rateWiseOrderNumber < 0) {
-              return 'grey-row';
-            }
-          }}
-          />
-        </div>
-    </div>
-    {/* <div style={{ height: '500px', width: '100%' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
+    <div style={{ flex: 1, width: '100%', boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
       <DataGrid
         rows={orderDetails}
         columns={orderColumns}
-        // filterModel={orderFilterModel}
-        // onFilterModelChange={handleOrderFilterChange}
-        // components={{
-        //   Toolbar: GridToolbar,
-        // }}
+        columnVisibilityModel={{ Margin: !elementsToHide.includes('QuoteSenderNavigation') }}
+        pageSize={10}
+        initialState={{
+          sorting: {
+            sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
+          },
+        }}
+        sx={{
+          '& .MuiDataGrid-row:hover': {
+            backgroundColor: '#e3f2fd', // Light blue on hover
+          },
+          '& .grey-row': {
+            backgroundColor: '#ededed', // Grey highlight for negative RateWiseOrderNumber
+          },
+        }}
+        getRowClassName={(params) => {
+          const rateWiseOrderNumber = params.row.RateWiseOrderNumber;
+          if (rateWiseOrderNumber < 0) {
+            return 'grey-row';
+          }
+        }}
       />
-    </div> */}
+    </div>
   </div>
+</div>
+
 )}
 
         {value === 1 && (
