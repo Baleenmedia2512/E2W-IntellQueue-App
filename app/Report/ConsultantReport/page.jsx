@@ -814,14 +814,14 @@ const filterHeaderTemplate = (column, filterField) => {
             </button>
             </Tippy>
             {/* Close Button (without erasing input) */}
-            <Tippy content="Close Filter" placement="bottom">
+            {/* <Tippy content="Close Filter" placement="bottom">
             <button
                     // onClick={closeFilterPopup}
                     className="mt-2 px-4 py-2 ml-2 text-gray-700 bg-blue-600 font-base text-white border border-gray-300 font-semibold rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition duration-150 ease-in-out"
                 >
                     <FaWindowClose />
                 </button>
-                </Tippy>
+                </Tippy> */}
         </div>
     );
 };
