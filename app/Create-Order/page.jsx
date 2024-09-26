@@ -31,9 +31,17 @@ const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
+    //const stageDetails = useAppSelector(state => state.stageSlice);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
+    //const { } = stageDetails;
+    const stageDetails = useAppSelector((state) => state.stages) || {}; // Add fallback to an empty object
+const { stages = [], errorMessage = '' } = stageDetails;
+
+console.log(stages); // This will log the stages array
+
+    console.log()
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
@@ -1403,7 +1411,7 @@ return (
 
   </div>
 
-  <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-7 mt-4">
+  <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
   
   {/* Search Input Section */}
   <div className="w-full sm:w-1/2">
@@ -1473,47 +1481,47 @@ return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
 
           <div>
-  <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
-  <input 
-    type='text' 
-    className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline 
-      ${errors.clientName ? 'border-red-400' : isOrderUpdate && !elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'} 
-      focus:border-blue-300 focus:ring focus:ring-blue-300`}
-    placeholder='Client Name'
-    value={clientName}
-    onChange={handleSearchTermChange}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const inputs = document.querySelectorAll('input, select, textarea');
-        const index = Array.from(inputs).findIndex(input => input === e.target);
-        if (index !== -1 && index < inputs.length - 1) {
-          inputs[index + 1].focus();
-        }
-      }
-    }}
-    disabled={isOrderUpdate && elementsToHide.includes("ClientAgeInput")}
-  />
-  {(clientNameSuggestions.length > 0 && clientName !== '') && (
-    <ul className="list-none bg-white shadow-lg rounded-md mt-2">
-      {clientNameSuggestions.map((name, index) => (
-        <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-          <button
-            type="button"
-            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-            onClick={handleClientNameSelection}
-            value={name}
-          >
-            {name}
-          </button>
-        </li>
-      ))}
-    </ul>
-  )}
-  {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
-  {/* New Client */}
-  <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
-</div>
+            <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
+            <input 
+              type='text' 
+              className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline 
+                ${errors.clientName ? 'border-red-400' : 'border-gray-300'} 
+                focus:border-blue-300 focus:ring focus:ring-blue-300 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+              placeholder='Client Name'
+              value={clientName}
+              onChange={handleSearchTermChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const inputs = document.querySelectorAll('input, select, textarea');
+                  const index = Array.from(inputs).findIndex(input => input === e.target);
+                  if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                  }
+                }
+              }}
+              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
+            />
+            {(clientNameSuggestions.length > 0 && clientName !== '') && (
+              <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+                {clientNameSuggestions.map((name, index) => (
+                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      onClick={handleClientNameSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+            {/* New Client */}
+            <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
+          </div>
 
           <div>
                     <label className="block mb-1 text-gray-700 font-medium">Order Date</label>
@@ -1649,7 +1657,7 @@ return (
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
-              // disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
+              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
