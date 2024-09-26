@@ -39,8 +39,8 @@ const ConsultantManager = () => {
   const [displayConsultantName, setDisplayConsultantName] = useState(consultantName);
   const [displayConsultantNumber, setDisplayConsultantNumber] = useState(consultantNumber);
   const [displayConsultantID, setDisplayConsultantID] = useState(consultantID);
-  const [icRequired, setIcRequired] = useState(false);
-  const [smsRequired, setSmsRequired] = useState(false);
+  const [icRequired, setIcRequired] = useState(true);
+  const [smsRequired, setSmsRequired] = useState(true);
   const consultantNameRef = useRef(null);
   const consultantNumberRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState([]);
@@ -76,7 +76,6 @@ const validateFields = () => {
   return Object.keys(errors).length === 0;
 };
 
-console.log(consultantNumber)
 
   const handleEditMode = () => {
 
@@ -87,6 +86,8 @@ console.log(consultantNumber)
     setDisplayConsultantID("");
     setDisplayConsultantName("");
     setDisplayConsultantName("");
+
+    setConsultantValidity(true);
 
     setSearchSuggestions([]);
     setSearchTerm("");
@@ -107,6 +108,7 @@ console.log(consultantNumber)
     }, 150);  
   };
 
+
   const handleConsultantNameChange = (e) => {
     const newName = e.target.value;
     setConsultantName(newName)
@@ -120,7 +122,6 @@ console.log(consultantNumber)
 
 
   const handleConsultantNumberChange = (e) => {
-    console.log(e)
     const number = e;
     setConsultantNumber(number);
   }
@@ -247,7 +248,6 @@ console.log(consultantNumber)
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/RemoveOrRestoreConsultant.php/?JsonConsultantId=${consultantID}&JsonDBName=${companyName}&JsonActivity=Restore`)
         const data = await response.json();
-        console.log(data)
         if (data.message === "Consultant restored successfully!") {
                   fetchConsultantDetails(consultantID);
                   setSuccessMessage('Consultant restored successfully!');
@@ -276,7 +276,6 @@ console.log(consultantNumber)
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/RemoveOrRestoreConsultant.php/?JsonConsultantId=${consultantID}&JsonDBName=${companyName}&JsonActivity=Remove`)
         const data = await response.json();
-        console.log(data)
         if (data.message === "Consultant removed successfully!") {
                   fetchConsultantDetails(consultantID);
                   setSuccessMessage('Consultant removed successfully!');
@@ -308,6 +307,7 @@ console.log(consultantNumber)
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
     const id = input.split('-')[0].trim();
+    const valid = input.split('-')[2].trim();
     const name = input.substring(input.indexOf('-') + 1, input.indexOf('(')).trim();
     const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
     
@@ -315,6 +315,7 @@ console.log(consultantNumber)
     setConsultantID(id);
     setDisplayConsultantID(id);
     fetchConsultantDetails(id);
+    // setIsConsultantValid(valid === 'Valid')
   };
 
   const fetchConsultantDetails = (Id) => {
@@ -509,6 +510,7 @@ console.log(consultantNumber)
                 onChange={handleConsultantNameChange}
                 value={consultantName}
                 ref={consultantNameRef}
+                disabled={!consultantValidity}
                 onBlur={() => {
                   setTimeout(() => {
                     setConsultantNameSuggestions([]);
@@ -546,6 +548,7 @@ console.log(consultantNumber)
                 placeholder="Consultant Number"
                 value={consultantNumber}
                 ref={consultantNumberRef}
+                disabled={!consultantValidity}
                 onChange={(e) => {
                   if (e.target.value.length <= 10) handleConsultantNumberChange(e.target.value);
                 }}
@@ -569,6 +572,7 @@ console.log(consultantNumber)
                     className="form-radio h-5 w-5"
                     checked={smsRequired === true}
                     onChange={() => setSmsRequired(true)}
+                    disabled={!consultantValidity}
                   />
                   <span className="ml-2">Yes</span>
                 </label>
@@ -581,6 +585,7 @@ console.log(consultantNumber)
                     checked={smsRequired === false}
                     defaultChecked
                     onChange={() => setSmsRequired(false)}
+                    disabled={!consultantValidity}
                   />
                   <span className="ml-2">No</span>
                 </label>
@@ -599,6 +604,7 @@ console.log(consultantNumber)
                     checked={icRequired === true}
                     className="form-radio h-5 w-5 text-blue-600"
                     onChange={() => setIcRequired(true)}
+                    disabled={!consultantValidity}
                   />
                   <span className="ml-2">Yes</span>
                 </label>
@@ -611,6 +617,7 @@ console.log(consultantNumber)
                     checked={icRequired === false}
                     defaultChecked
                     onChange={() => setIcRequired(false)}
+                    disabled={!consultantValidity}
                   />
                   <span className="ml-2">No</span>
                 </label>
