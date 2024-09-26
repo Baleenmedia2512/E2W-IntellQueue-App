@@ -307,6 +307,9 @@ const validateFields = () => {
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
     const id = input.split('-')[0].trim();
+    const valid = input.split('-')[2].trim();
+    const name = input.substring(input.indexOf('-') + 1, input.indexOf('(')).trim();
+    const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
     
     setConsultantNameSuggestions([]);
     setConsultantID(id);

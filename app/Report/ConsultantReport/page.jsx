@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import 'primereact/resources/themes/saga-blue/theme.css';
@@ -18,6 +18,9 @@ import SuccessToast from '../../components/SuccessToast';
 import { useAppSelector } from '@/redux/store';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { Dropdown } from 'primereact/dropdown';
+import { FaCheck, FaTimes, FaWindowClose } from 'react-icons/fa';
+import Tippy from '@tippyjs/react'; // Tooltip library
+import 'tippy.js/dist/tippy.css'; // Import Tippy's default CSS
 
 const matchModes = [
     { label: 'Contains', value: 'contains' },
@@ -65,7 +68,8 @@ export default function GroupedRowsDemo() {
     const [open, setOpen] = useState(false);
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     const [matchMode, setMatchMode] = useState('contains');
-    
+    const [isFilterPopupVisible, setIsFilterPopupVisible] = useState(false);
+
     useEffect(() => {
         if (!username || dbName === "") {
           router.push('/login');
@@ -745,11 +749,35 @@ const resetFilters = () => {
     });
 };
 
+const [tempFilterValue, setTempFilterValue] = useState('');
 
-
-
-//Working filter
 const filterHeaderTemplate = (column, filterField) => {
+    // const [tempFilterValue, setTempFilterValue] = useState(filters[filterField] ? filters[filterField].value : '');
+
+    
+
+    const handleApplyFilter = () => {
+        if (tempFilterValue != '') {
+        let newFilters = { ...filters };
+        newFilters[filterField] = { value: tempFilterValue, matchMode: 'contains' };
+        setFilters(newFilters);
+    
+        // Apply filter to groupedData and auto-select rows that match the filter
+        const filteredRows = groupedData.filter(row => {
+            const fieldValue = row.rateCard; // Use `column.field` instead of `column.header`
+    
+            // Check if the fieldValue exists and is a string, then apply filter
+            if (typeof fieldValue === 'string') {
+                return fieldValue.toLowerCase().includes(tempFilterValue.toLowerCase());
+            }
+    
+            return false;
+        });
+    
+        setSelectedRows(filteredRows); // Automatically select the filtered rows
+    }
+    };
+    
     return (
         <div>
             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
@@ -758,36 +786,95 @@ const filterHeaderTemplate = (column, filterField) => {
             <span className="p-column-title">{column.header}</span>
             <input
                 type="text"
-                value={filters[filterField] ? filters[filterField].value : ''}
-                onChange={(e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    let newFilters = { ...filters };
-                    newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
-                    setFilters(newFilters);
-
-            
-             }
-             }
+                value={tempFilterValue}
+                onChange={(e) => setTempFilterValue(e.target.value)}
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
-                
             />
+            
+            {/* Apply Button */}
+            <Tippy content="Apply Filter" placement="bottom">
             <button
-    onClick={() => {
-        let newFilters = { ...filters };
-        newFilters[filterField] = { value: '', matchMode: 'contains' };
-        setFilters(newFilters);
-        // setFilteredConsultants([]); 
-    }}
-    className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
->
-    Clear
-</button>
+                onClick={handleApplyFilter}
+                className="mt-2 px-4 py-2 text-gray-700 font-base bg-green-600 text-white border border-green-200 font-semibold rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+            >
+                <FaCheck />
+            </button>
+            </Tippy>
 
+            {/* Clear Button */}
+            <Tippy content="Clear Filter" placement="bottom">
+            <button
+                onClick={() => {
+                    let newFilters = { ...filters };
+                    newFilters[filterField] = { value: '', matchMode: 'contains' };
+                    setFilters(newFilters);
+
+                    setTempFilterValue(''); // Clear temporary filter value
+                    setSelectedRows([]); // Clear selected rows
+                }}
+                className="mt-2 px-4 py-2 ml-2 text-gray-700 font-base bg-red-600 text-white border border-red-200 font-semibold rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+            >
+                 <FaTimes />
+            </button>
+            </Tippy>
+            {/* Close Button (without erasing input) */}
+            {/* <Tippy content="Close Filter" placement="bottom">
+            <button
+                    // onClick={closeFilterPopup}
+                    className="mt-2 px-4 py-2 ml-2 text-gray-700 bg-blue-600 font-base text-white border border-gray-300 font-semibold rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                >
+                    <FaWindowClose />
+                </button>
+                </Tippy> */}
         </div>
     );
+
 };
+
+console.log(tempFilterValue)
+
+//Working filter
+// const filterHeaderTemplate = (column, filterField) => {
+//     return (
+//         <div>
+//             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
+//                 <span className="font-bold text-sky-500">Contains</span>
+//             </div>
+//             <span className="p-column-title">{column.header}</span>
+//             <input
+//                 type="text"
+//                 value={filters[filterField] ? filters[filterField].value : ''}
+//                 onChange={(e) => {
+//                     const searchTerm = e.target.value.toLowerCase();
+//                     let newFilters = { ...filters };
+//                     newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
+//                     setFilters(newFilters);
+//                     setSelectedRows([]);
+//              }
+//              }
+//                 placeholder={`Search ${column.header}`}
+//                 className="p-inputtext-custom"
+//                 style={{ width: '100%' }}
+                
+//             />
+//             <button
+//     onClick={() => {
+//         let newFilters = { ...filters };
+//         newFilters[filterField] = { value: '', matchMode: 'contains' };
+//         setFilters(newFilters);
+//         // setFilteredConsultants([]); 
+//         setSelectedRows([]);
+//     }}
+//     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+// >
+//     Clear
+// </button>
+
+//         </div>
+//     );
+// };
 //Working filter
 
 // console.log(filteredConsultants)
