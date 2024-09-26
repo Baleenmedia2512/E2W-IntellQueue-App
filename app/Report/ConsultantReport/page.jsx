@@ -749,10 +749,15 @@ const resetFilters = () => {
     });
 };
 
+const [tempFilterValue, setTempFilterValue] = useState('');
+
 const filterHeaderTemplate = (column, filterField) => {
-    const [tempFilterValue, setTempFilterValue] = useState(filters[filterField] ? filters[filterField].value : '');
+    // const [tempFilterValue, setTempFilterValue] = useState(filters[filterField] ? filters[filterField].value : '');
+
+    
 
     const handleApplyFilter = () => {
+        if (tempFilterValue != '') {
         let newFilters = { ...filters };
         newFilters[filterField] = { value: tempFilterValue, matchMode: 'contains' };
         setFilters(newFilters);
@@ -770,6 +775,7 @@ const filterHeaderTemplate = (column, filterField) => {
         });
     
         setSelectedRows(filteredRows); // Automatically select the filtered rows
+    }
     };
     
     return (
@@ -824,9 +830,10 @@ const filterHeaderTemplate = (column, filterField) => {
                 </Tippy> */}
         </div>
     );
+
 };
 
-
+console.log(tempFilterValue)
 
 //Working filter
 // const filterHeaderTemplate = (column, filterField) => {
