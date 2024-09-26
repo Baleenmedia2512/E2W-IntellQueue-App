@@ -117,7 +117,7 @@ const CreateOrder = () => {
     const [displayClientName, setDisplayClientName] = useState(clientName);
     const [orderNumber, setOrderNumber] = useState(orderNumberRP);
     const [orderAmount, setorderAmount] = useState('');
-    
+   
 
      // Function to toggle expand/collapse
   const toggleExpand = () => {
@@ -125,7 +125,7 @@ const CreateOrder = () => {
   };
     
     useEffect(() => {
-      if (!loggedInUser || dbName === "") {
+      if (!loggedInUser || dbName === "" || companyName === "" ) {
         router.push('/login');
       }
       fetchMaxOrderNumber();
@@ -1232,6 +1232,8 @@ const handleOpenDialog = () => {
     setUpdateReason(event.target.value);
   };
 
+ 
+
 //search bar to update orders
 const handleOrderSearch = async (e) => {
   const searchTerm = e.target.value;
@@ -1395,6 +1397,10 @@ return (
         </Button>
       </DialogActions>
     </Dialog>
+
+  
+
+
   </div>
 
   <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-7 mt-4">
