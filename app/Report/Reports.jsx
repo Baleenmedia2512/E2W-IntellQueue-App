@@ -1126,7 +1126,6 @@ const handleDateChange = (range) => {
   }));
 };
 
- // Utility function to format number as Indian currency (₹)
  const formatIndianCurrency = (number) => {
   if (typeof number === 'number') {
     return number.toLocaleString('en-IN');
