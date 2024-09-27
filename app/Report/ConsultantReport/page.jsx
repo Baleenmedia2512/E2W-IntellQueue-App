@@ -361,12 +361,27 @@ export default function GroupedRowsDemo() {
             group.rates.forEach((rateCard, scanIndex) => {
                 rateCardNames.push(rateCard.rateCard);
                 
+                // rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
+                //     const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
+
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                    const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
+                    // Filter conditions for name, rateCard, and rateType
+                    const isFilteredByRateCard = activeFilters.rateCard
+                        ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase())
+                        : false;
+                    const isFilteredByRateType = activeFilters.rateType
+                        ? rateType.rateType.toLowerCase().includes(activeFilters.rateType.toLowerCase())
+                        : false;
+                    const isFilteredByName = activeFilters.name
+                        ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
+                        : false;
+    
+                    // Add name if any of the filters apply
+                    const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
                     
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: currentIndex === middleIndex || isFilteredByRateCard ? group.name : null,  // Add name if filter applies
+                        name: shouldAddName ? group.name : null,  // Add name if filter applies
                         rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
@@ -403,7 +418,9 @@ export default function GroupedRowsDemo() {
     
     
     const activeFilters = {
-        rateCard: filters.id ? filters.id.value : ''
+        rateCard: filters.id ? filters.id.value : '',
+        name: filters.originalName ? filters.originalName.value : '',
+        rateType: filters.rateType ? filters.rateType.value : ''
     };
 
     
@@ -819,8 +836,6 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 
-
-console.log(tempFilterValues)
 
 //Working filter
 // const filterHeaderTemplate = (column, filterField) => {
