@@ -983,7 +983,7 @@ const BMvalidateFields = () => {
   <div className="flex justify-between items-center">
     {/* Client Manager Heading */}
     <div className='items-center justify-center'>
-      <h2 className="text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">Client Manager</h2>
+      <h2 className="text-2xl mt-3 sm:mt-10 font-bold text-blue-500 mb-1">Client Manager</h2>
       <div className="border-2 w-10 border-blue-500 mb-5"></div>   
     </div>
 
