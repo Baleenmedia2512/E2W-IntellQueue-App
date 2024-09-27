@@ -749,35 +749,31 @@ const resetFilters = () => {
     });
 };
 
-const [tempFilterValue, setTempFilterValue] = useState('');
+const [tempFilterValues, setTempFilterValues] = useState({
+    originalName: '',
+    rateCard: ''
+});
+
 
 const filterHeaderTemplate = (column, filterField) => {
-    // const [tempFilterValue, setTempFilterValue] = useState(filters[filterField] ? filters[filterField].value : '');
-
-    
-
     const handleApplyFilter = () => {
-        if (tempFilterValue != '') {
-        let newFilters = { ...filters };
-        newFilters[filterField] = { value: tempFilterValue, matchMode: 'contains' };
-        setFilters(newFilters);
+        if (tempFilterValues[filterField] !== '') {
+            let newFilters = { ...filters };
+            newFilters[filterField] = { value: tempFilterValues[filterField], matchMode: 'contains' };
+            setFilters(newFilters);
+            
+            const filteredRows = groupedData.filter(row => {
+                const fieldValue = row[filterField]; // Dynamically access the field based on filterField
+                if (typeof fieldValue === 'string') {
+                    return fieldValue.toLowerCase().includes(tempFilterValues[filterField].toLowerCase());
+                }
+                return false;
+            });
     
-        // Apply filter to groupedData and auto-select rows that match the filter
-        const filteredRows = groupedData.filter(row => {
-            const fieldValue = row.rateCard; // Use `column.field` instead of `column.header`
-    
-            // Check if the fieldValue exists and is a string, then apply filter
-            if (typeof fieldValue === 'string') {
-                return fieldValue.toLowerCase().includes(tempFilterValue.toLowerCase());
-            }
-    
-            return false;
-        });
-    
-        setSelectedRows(filteredRows); // Automatically select the filtered rows
-    }
+            setSelectedRows(filteredRows); // Automatically select the filtered rows
+        }
     };
-    
+
     return (
         <div>
             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
@@ -786,8 +782,8 @@ const filterHeaderTemplate = (column, filterField) => {
             <span className="p-column-title">{column.header}</span>
             <input
                 type="text"
-                value={tempFilterValue}
-                onChange={(e) => setTempFilterValue(e.target.value)}
+                value={tempFilterValues[filterField]}
+                onChange={(e) => setTempFilterValues({ ...tempFilterValues, [filterField]: e.target.value })}
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
@@ -795,45 +791,36 @@ const filterHeaderTemplate = (column, filterField) => {
             
             {/* Apply Button */}
             <Tippy content="Apply Filter" placement="bottom">
-            <button
-                onClick={handleApplyFilter}
-                className="mt-2 px-4 py-2 text-gray-700 font-base bg-green-600 text-white border border-green-200 font-semibold rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
-            >
-                <FaCheck />
-            </button>
+                <button
+                    onClick={handleApplyFilter}
+                    className="mt-2 px-4 py-2 text-gray-700 font-base bg-green-600 text-white border border-green-200 font-semibold rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                >
+                    <FaCheck />
+                </button>
             </Tippy>
 
             {/* Clear Button */}
             <Tippy content="Clear Filter" placement="bottom">
-            <button
-                onClick={() => {
-                    let newFilters = { ...filters };
-                    newFilters[filterField] = { value: '', matchMode: 'contains' };
-                    setFilters(newFilters);
+                <button
+                    onClick={() => {
+                        let newFilters = { ...filters };
+                        newFilters[filterField] = { value: '', matchMode: 'contains' };
+                        setFilters(newFilters);
 
-                    setTempFilterValue(''); // Clear temporary filter value
-                    setSelectedRows([]); // Clear selected rows
-                }}
-                className="mt-2 px-4 py-2 ml-2 text-gray-700 font-base bg-red-600 text-white border border-red-200 font-semibold rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
-            >
-                 <FaTimes />
-            </button>
-            </Tippy>
-            {/* Close Button (without erasing input) */}
-            {/* <Tippy content="Close Filter" placement="bottom">
-            <button
-                    // onClick={closeFilterPopup}
-                    className="mt-2 px-4 py-2 ml-2 text-gray-700 bg-blue-600 font-base text-white border border-gray-300 font-semibold rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                        setTempFilterValues({ ...tempFilterValues, [filterField]: '' }); // Clear temporary filter value for specific filter
+                        setSelectedRows([]); // Clear selected rows
+                    }}
+                    className="mt-2 px-4 py-2 ml-2 text-gray-700 font-base bg-red-600 text-white border border-red-200 font-semibold rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
                 >
-                    <FaWindowClose />
+                    <FaTimes />
                 </button>
-                </Tippy> */}
+            </Tippy>
         </div>
     );
-
 };
 
-console.log(tempFilterValue)
+
+console.log(tempFilterValues)
 
 //Working filter
 // const filterHeaderTemplate = (column, filterField) => {
@@ -1044,12 +1031,17 @@ const handleClose = () => {
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white p-2 w-50 text-nowrap"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}
+                            filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'rateCard')}
                             showFilterMatchModes={false}
                             showApplyButton={false}
                             showClearButton={false}
                             ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}
+                            showFilterMatchModes={false}
+                            showApplyButton={false}
+                            showClearButton={false}
                             ></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             ></Column>

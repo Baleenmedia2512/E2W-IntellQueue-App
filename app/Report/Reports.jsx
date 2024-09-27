@@ -1319,13 +1319,13 @@ const rateStats = calculateRateStats();
 
         <div className="flex mt-4 w-fit">
           <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-            ₹{Number(rateStats[rateName].totalOrderValue).toFixed(2)}
+            ₹{Number(rateStats[rateName].totalOrderValue)}
             <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
               Order Value
             </div>
           </div>
           <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
-            ₹{Number(rateStats[rateName].totalIncome).toFixed(2)}
+            ₹{Number(rateStats[rateName].totalIncome)}
             <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
               Income
             </div>
