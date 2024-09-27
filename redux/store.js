@@ -10,6 +10,7 @@ import { orderReducer } from "./features/order-slice";
 import { employeeReducer } from "./features/emp-slice"; 
 import { cartReducer } from "./features/cart-slice";
 import { reportReducer } from "./features/report-slice";
+import { stageReducer } from "./features/stage-slice";
 
 const createNoopStorage = () => {
   return {
@@ -54,6 +55,12 @@ const cartPersistConfig = {
   whitelist: ["cart"]
 }
 
+const stagePersistConfig = {
+  key: "stage",
+  storage: storage,
+  whitelist: ["stage"]
+}
+
 const ratePersistConfig = {
   key: "rate",
   storage: storage,
@@ -86,6 +93,7 @@ const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer);
 const persistedOrderReducer = persistReducer(orderPersistConfig, orderReducer);
 const persistedEmployeeReducer = persistReducer(employeePersistConfig, employeeReducer);
 const persistedReportReducer = persistReducer(reportPersistConfig, reportReducer);
+const persistedStageReducer = persistReducer(stagePersistConfig, stageReducer);
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
@@ -96,6 +104,7 @@ const rootReducer = combineReducers({
   orderSlice: persistedOrderReducer,
   employeeSlice: persistedEmployeeReducer,
   reportSlice: persistedReportReducer,
+  stageSlice: persistedStageReducer,
 });
 
 export const store = configureStore({

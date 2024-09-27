@@ -10,13 +10,14 @@ import { Calendar } from 'primereact/calendar';
 import { format } from 'date-fns';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
 import 'primereact/resources/primereact.min.css';          // Core styles
-
+import { addItemsToStage } from '@/redux/features/cart-slice';
 
 const Stages = () => {
   const dispatch = useDispatch();
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const orderDetails = useAppSelector(state => state.orderSlice);
+  const stageDetails = useAppSelector(state => state.stageSlice.stages);
   const {orderNumber: orderNumberRP, nextRateWiseOrderNumber : orderNumberRW ,receivable: receivableRP, clientName: clientNameCR, clientNumber: clientNumberCR} = orderDetails;
   console.log(orderDetails)
   console.log(receivableRP)
@@ -221,44 +222,50 @@ const handleInputCountChange = (event) => {
 
   
   const CreateStages = async (event) => {
-      event.preventDefault();
+    event.preventDefault();
   
-      if (validateAllFields()) {
-          try {
-              const apiPromises = fields.map(async (field) => {
-                  const formattedDueDate = format(new Date(field.dueDate), 'yyyy-MM-dd');
+    // Check if all required fields are filled
+    if (validateAllFields()) {
+      try {
+        // Create API promises for each field, dynamically passing the stage count
+        const apiPromises = fields.map(async (field, index) => {
+          const formattedDueDate = format(new Date(field.dueDate), 'yyyy-MM-dd');
   
-                  const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${orderNumber}&JsonClientName=${clientNameCR}&JsonClientNumber=${clientNumberCR}&JsonStage=${field.title}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`);
-                  
-                  return await response.json();
-              });
+          // Dynamically set the stage count for each stage
+          // const stageCount = `Stage ${index + 1}`;
   
-              const results = await Promise.all(apiPromises);
+          // Send API request with the dynamic stage count
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${orderNumber}&JsonClientName=${clientNameCR}&JsonClientNumber=${clientNumberCR}&JsonStage=${index + 1}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`);
   
-             results.forEach((data, index) => {
-                  if (data === "Stage Created Successfully!") {
-                      // Dispatch action to add stage if necessary
-                      dispatch(addStage(fields[index])); // Add the created stage to the Redux store
-                      console.log(fields)
-                      //setOrderAmount('');
-                      setSuccessMessage('Stages Created Successfully!');
-                    setTimeout(() => {
-                        setSuccessMessage('');
-                        // Redirect or perform additional actions after success
-                    }, 3000);
-                  } else {
-                      dispatch(setErrorMessage(`Error: ${data}`));
-                  }
-              });
-          } catch (error) {
-              console.error('Error:', error);
-              dispatch(setErrorMessage('An error occurred while creating stages.'));
+          return await response.json();
+        });
+  
+        // Wait for all API promises to resolve
+        const results = await Promise.all(apiPromises);
+  
+        // Handle results of API calls
+        results.forEach((data, index) => {
+          if (data === "Stage Created Successfully!") {
+            // Dispatch action to add created stages
+            //dispatch(addItemsToStage( fields ));
+  
+            // Show success message
+            setSuccessMessage('Stages Created Successfully!');
+            setTimeout(() => {
+              setSuccessMessage('');
+            }, 3000);
+          } else {
+            console.error('Error creating stage:', data);
           }
-      } else {
-          setToastMessage('Please fill all necessary fields.');
+        });
+      } catch (error) {
+        console.error('Error creating stages:', error);
       }
+    } else {
+      // Show error message if fields are not valid
+      setToastMessage('Please fill all necessary fields.');
+    }
   };
-  
 
   // useEffect(() => {
   //   console.log('Stages component rendered');
