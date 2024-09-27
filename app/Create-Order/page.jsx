@@ -39,7 +39,7 @@ const CreateOrder = () => {
     const stageDetails = useAppSelector((state) => state.stages) || {}; // Add fallback to an empty object
 const { stages = [], errorMessage = '' } = stageDetails;
 
-console.log(stages); // This will log the stages array
+//console.log(stages); // This will log the stages array
 
     console.log()
     const [clientName, setClientName] = useState(clientNameCR || "");
@@ -1500,7 +1500,8 @@ return (
                   }
                 }
               }}
-              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
+              disabled={isOrderUpdate}
+              //&& !elementsToHide.includes("ClientAgeInput")
             />
             {(clientNameSuggestions.length > 0 && clientName !== '') && (
               <ul className="list-none bg-white shadow-lg rounded-md mt-2">
@@ -1644,7 +1645,7 @@ return (
             <Dropdown
               className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
                 ${errors.adType ? 'border-red-400' : isOrderUpdate && elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'}
-                focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                focus:border-blue-300 focus:ring focus:ring-blue-300 ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'}`}
               
               
               styles={{
@@ -1657,7 +1658,7 @@ return (
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
               options={getOptions('adType', 'typeOfAd')}
-              disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
+              //disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
           </div>
