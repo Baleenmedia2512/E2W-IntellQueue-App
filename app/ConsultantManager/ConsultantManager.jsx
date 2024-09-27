@@ -241,6 +241,7 @@ const validateFields = () => {
 
   const handleRemoveConsultant = () => {
     setIsRemoveDialogOpen(true);
+    handleEditMode();
   };
 
   const handleRestoreConsultant = async(event) => {

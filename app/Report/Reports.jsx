@@ -685,7 +685,7 @@ const orderColumns = [
   { field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
   { 
     field: 'Receivable', 
-    headerName: 'Value(₹)', 
+    headerName: 'Order Value(₹)', 
     width: 100,
     renderCell: (params) => (
       <div>{params.value}</div>
