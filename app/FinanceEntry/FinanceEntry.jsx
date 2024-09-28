@@ -124,7 +124,6 @@ const FinanceData = () => {
   const [financeAmount, setFinanceAmount] = useState('');
   const [prevData, setPrevData] = useState(null);
 
-
   useEffect(() => {
     if(dbName){
     elementsToHideList();
@@ -849,6 +848,18 @@ useEffect(() => {
   };
   
   const updateFinance = async () => {
+
+    // Check if remarks are empty
+    if (remarks.trim() === '') {
+      setToastMessage('Remarks cannot be empty.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+      return; // Exit the function early if remarks are empty
+    }
+    
     const hasRemarksChanged = remarks.trim() !== prevData.remarks.trim();
 
 
@@ -906,7 +917,8 @@ useEffect(() => {
           JsonTaxAmount : gstAmount,
           JsonDBName: companyName,
           JsonOrderNumber: orderNumber,
-          JsonRateWiseOrderNumber: rateWiseOrderNumber
+          JsonRateWiseOrderNumber: rateWiseOrderNumber,
+          JsonChequeNumber: chequeNumber
           
         }
       });
@@ -1546,7 +1558,7 @@ useEffect(() => {
                    />
                  </Popover>
                </Box>
-               <Box>
+               {/* <Box>
                  <TimePicker
                    className="custom-time-picker"
                    label="Select Time"
@@ -1566,11 +1578,11 @@ useEffect(() => {
                     },
                   }}
                  />
-               </Box>
+               </Box> */}
              </LocalizationProvider>
            </div>
            {errors.chequeDate && <span className="text-red-500 text-sm">{errors.chequeDate}</span>}
-           {errors.chequeTime && <span className="text-red-500 text-sm">{errors.chequeTime}</span>}
+           {/* {errors.chequeTime && <span className="text-red-500 text-sm">{errors.chequeTime}</span>} */}
          </div>
          
             )}
