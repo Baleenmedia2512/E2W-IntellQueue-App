@@ -17,12 +17,9 @@ const Stages = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
-  const companyName = useAppSelector(state => state.authSlice.companyName);
   const orderDetails = useAppSelector(state => state.orderSlice);
   const stages = useAppSelector(state => state.stageSlice.stages);
   const {orderNumber: orderNumberRP, nextRateWiseOrderNumber : orderNumberRW ,receivable: receivableRP, clientName: clientNameCR, clientNumber: clientNumberCR} = orderDetails;
-  console.log(orderDetails)
-  console.log(receivableRP)
   
   const [clientName, setClientName] = useState(clientNameCR || "");
   const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
@@ -73,6 +70,11 @@ const handleInputCountChange = (event) => {
     }
 };
 
+  useEffect(() => {
+    if(!loggedInUser){
+      router.push("/login");  
+    }
+  },[])
 // const postStages = () => {
     
 //   const hasError = validateAllFields(); // Validate all fields before submission
@@ -407,13 +409,7 @@ const handleInputCountChange = (event) => {
         </div>
         {/* Button container */}
         <div className="flex flex-wrap justify-between items-center space-x-4 md:space-x-6">
-          <button
-            type="button"
-            onClick={() => dispatch(removeItem())}
-            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
-          >
-            <FaMinus />
-          </button>
+          
 
           <button
             className="w-full md:w-auto bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600"
@@ -422,13 +418,7 @@ const handleInputCountChange = (event) => {
             Submit
           </button>
 
-          <button
-            type="button"
-            onClick={() => dispatch(addStage())}
-            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600"
-          >
-            <FaPlus />
-          </button>
+          
         </div>
 
       </div>
@@ -446,8 +436,23 @@ const handleInputCountChange = (event) => {
     {/* Dynamic Fields for Stages */}
     {stages.map((field, index) => (
       <div key={index} className="mb-4">
-        <h3 className="text-lg font-semibold mb-2 text-gray-500">Stage {index + 1}</h3>
-
+        <span className='flex flex-row items-center space-x-2'>
+        <button
+          type="button"
+          onClick={() => dispatch(removeItem({index}))}
+          className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center w-6 h-5"
+        >
+          <FaMinus className='text-xs font-bold' />
+        </button>
+        <h3 className="text-lg font-semibold text-gray-500">Stage {index + 1}</h3>
+        <button
+            type="button"
+            onClick={() => dispatch(addStage({index}))}
+            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center justify-center w-6 h-5"
+          >
+            <FaPlus className='text-xs font-bold'/>
+          </button>
+      </span>
         <div className="flex flex-col md:flex-row md:space-x-4 md:space-y-0 items-center">
 
           {/* Stage Amount */}
@@ -462,6 +467,7 @@ const handleInputCountChange = (event) => {
               value={field.stageAmount}
               onChange={(e) => handleFieldChange(index, e, 'stageAmount')}
               placeholder={`Stage Amount ${index + 1}`}
+              onFocus={e => e.target.select()}
             />
           </div>
 
@@ -476,6 +482,7 @@ const handleInputCountChange = (event) => {
               value={field.description}
               onChange={(e) => handleFieldChange(index, e, 'description')}
               placeholder={`Description for stage ${index + 1}`}
+              onFocus={e => e.target.select()}
             />
           </div>
 
@@ -496,8 +503,12 @@ const handleInputCountChange = (event) => {
                 showIcon
               />
             </div>
-
+            <div>
+            
           </div>
+          </div>
+          
+          
         </div>
       </div>
     ))}

@@ -23,23 +23,30 @@ const stageSlice = createSlice({
       const { index, field, value } = action.payload;
       state.stages[index][field] = value;
     },
-    removeItem: (state) => {
-      if (state.stages.length > 0) {
-        // Remove the last stage in the array
-        state.stages.pop();
+    removeItem: (state, action) => {
+      const { index } = action.payload;
+
+      // Remove the stage at the specific index and shift the remaining stages up
+      if (state.stages.length > 1) {
+        state.stages.splice(index, 1);
       }
     },
-    
     resetStageItem: (state) => {
       return initialState
     },
-    addStage: (state) => {
-      state.stages.push({ 
+    addStage: (state, action) => {
+      const { index } = action.payload;
+
+      // Create a new stage with empty fields
+      const newStage = {
         title: "", 
         description: "", 
         dueDate: getCurrentDate(), 
         stageAmount: "" 
-      });
+      };
+
+      // Insert the new stage at the specific index and shift existing stages
+      state.stages.splice(index, 0, newStage);
     }
   },
 });
