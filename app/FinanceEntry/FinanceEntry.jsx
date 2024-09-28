@@ -971,7 +971,7 @@ useEffect(() => {
 
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-7 mt-4">
+      <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
   
   {/* Search Input Section */}
   <div className="w-full sm:w-1/2">
@@ -1107,7 +1107,7 @@ useEffect(() => {
             <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input 
-            className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''}`}
+            className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                 type="text"
                 placeholder="Client Name" 
                 id='2'
@@ -1163,7 +1163,7 @@ useEffect(() => {
         </label>
         <div className="w-full flex gap-3">
           <input
-           className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''}`}
+           className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
             type="text"
             placeholder="Ex. 10000"
             value={rateWiseOrderNumber}
@@ -1194,7 +1194,7 @@ useEffect(() => {
         </label>
         <div className="w-full flex gap-3">
           <input
-            className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''}`}
+            className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
             type="text"
             placeholder="Ex. 10000"
             value={orderNumber}

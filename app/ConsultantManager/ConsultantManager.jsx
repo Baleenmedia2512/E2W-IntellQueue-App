@@ -53,6 +53,7 @@ const ConsultantManager = () => {
     icRequired: false,
     validity: true,
   });
+  const [showInvalid, setShowInvalid] = useState(false);
   
 
   const dispatch = useDispatch();
@@ -92,8 +93,8 @@ const validateFields = () => {
     setSearchSuggestions([]);
     setSearchTerm("");
 
-    setIcRequired(false);
-    setSmsRequired(false);
+    setIcRequired(true);
+    setSmsRequired(true);
 
     setErrors({});
 
@@ -241,6 +242,7 @@ const validateFields = () => {
 
   const handleRemoveConsultant = () => {
     setIsRemoveDialogOpen(true);
+    
   };
 
   const handleRestoreConsultant = async(event) => {
@@ -250,6 +252,8 @@ const validateFields = () => {
         const data = await response.json();
         if (data.message === "Consultant restored successfully!") {
                   fetchConsultantDetails(consultantID);
+                  const updatedSearchTerm = `${consultantID} - ${consultantName} - ${consultantNumber} - Valid`;
+                  setSearchTerm(updatedSearchTerm);
                   setSuccessMessage('Consultant restored successfully!');
                   setTimeout(() => {
                   setSuccessMessage('');
@@ -277,7 +281,7 @@ const validateFields = () => {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/RemoveOrRestoreConsultant.php/?JsonConsultantId=${consultantID}&JsonDBName=${companyName}&JsonActivity=Remove`)
         const data = await response.json();
         if (data.message === "Consultant removed successfully!") {
-                  fetchConsultantDetails(consultantID);
+                  handleEditMode();
                   setSuccessMessage('Consultant removed successfully!');
                   setTimeout(() => {
                   setSuccessMessage('');
@@ -344,7 +348,7 @@ const validateFields = () => {
   const handleConsultantSearchTermChange = async (event) => {
     const input = event.target.value
     setSearchTerm(input);
-    const searchSuggestions = await FetchConsultantSearchTerm(companyName, input);
+    const searchSuggestions = await FetchConsultantSearchTerm(companyName, input, showInvalid);
     setSearchSuggestions(searchSuggestions);
   };
 
@@ -358,6 +362,11 @@ const validateFields = () => {
     setConsultantID(id);
     setDisplayConsultantID(id);
   };
+
+  const handleCheckboxChange = () => {
+    setShowInvalid((prev) => !prev); // Toggle checkbox state
+  };
+
   
     return (
 <div className='min-h-screen bg-gray-100 mb-14 p-2'>
@@ -430,9 +439,23 @@ const validateFields = () => {
 
         </div>
       </div>
+      
 
       {/* Search bar positioned on top of heading and buttons section */}
-      <div className="absolute top-6 sm:top-0 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
+      <div className="absolute top-4 sm:-top-8 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
+      {/* Checkbox for showing invalid consultants */}
+      <div className="mb-2 flex items-center text-black">
+  <label className="flex items-center cursor-pointer">
+    <input
+      type="checkbox"
+      className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+      checked={showInvalid}
+      onChange={handleCheckboxChange} // Handle checkbox change
+    />
+    <span className="ml-2 text-sm font-medium">Show Removed Consultants Only</span>
+  </label>
+</div>
+
         <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
           <input
             className="w-full px-4 py-2 text-black focus:outline-none"
@@ -446,6 +469,7 @@ const validateFields = () => {
             <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
           </div>
         </div>
+        
         {/* Search Suggestions */}
     <div className="relative">
       {searchSuggestions.length > 0  && searchTerm !== '' && (
@@ -470,7 +494,7 @@ const validateFields = () => {
   </div>
 
   {/* Form Section */}
-  <div className="flex items-center justify-center mt-20 sm:mt-6">
+  <div className="flex items-center justify-center mt-24 sm:mt-6">
   
     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
     {consultantID && (

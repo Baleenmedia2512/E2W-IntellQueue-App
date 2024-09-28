@@ -34,20 +34,22 @@ export const FetchFinanceSeachTerm = async(DBName, SearchTerm) => {
     return SearchTerms;
 }
 
-export const FetchConsultantSearchTerm = async(DBName, SearchTerm) => {
+export const FetchConsultantSearchTerm = async (DBName, SearchTerm, showInvalid) => {
     let SearchTerms = [];
-    const response = await api.get("SearchConsultant.php/get",{
+    const response = await api.get("SearchConsultant.php/get", {
         headers: {
             'Content-Type': 'application/json; charset=utf-8'
         },
-        params:{
+        params: {
             JsonDBName: DBName,
-            JsonSearchTerm: SearchTerm
+            JsonSearchTerm: SearchTerm,
+            InvalidOnly: showInvalid 
         }
     });
     SearchTerms = response.data;
     return SearchTerms;
 }
+
 
 
 export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
