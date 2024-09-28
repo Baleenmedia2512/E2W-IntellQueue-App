@@ -27,6 +27,18 @@
   }
 }
 
+.filter-icon {
+  color: gray; /* Default color when no filter is active */
+  transition: color 0.3s ease;
+  margin-left: 0.5rem; /* Space between title and icon */
+}
+
+.filter-icon.active {
+  color: #007ad9; /* PrimeReact blue or any highlight color you prefer */
+  background-color: rgba(0, 122, 255, 0.1); /* Light blue background */
+  border-radius: 50%; /* Rounded effect for highlighting */
+  padding: 0.2rem; /* Add some padding to make it look better */
+}
 
  
   

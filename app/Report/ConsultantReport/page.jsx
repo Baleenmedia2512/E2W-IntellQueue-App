@@ -18,7 +18,7 @@ import SuccessToast from '../../components/SuccessToast';
 import { useAppSelector } from '@/redux/store';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { Dropdown } from 'primereact/dropdown';
-import { FaCheck, FaTimes, FaWindowClose } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaWindowClose, FaFilter } from 'react-icons/fa';
 import Tippy from '@tippyjs/react'; // Tooltip library
 import 'tippy.js/dist/tippy.css'; // Import Tippy's default CSS
 
@@ -375,7 +375,7 @@ export default function GroupedRowsDemo() {
                     const isFilteredByName = activeFilters.name
                         ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
                         : false;
-    
+                    
                     // Add name if any of the filters apply
                     const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
                     
@@ -418,7 +418,7 @@ export default function GroupedRowsDemo() {
     
     
     const activeFilters = {
-        rateCard: filters.id ? filters.id.value : '',
+        rateCard: filters.rateCard ? filters.rateCard.value : '',
         name: filters.originalName ? filters.originalName.value : '',
         rateType: filters.rateType ? filters.rateType.value : ''
     };
@@ -774,22 +774,27 @@ const [tempFilterValues, setTempFilterValues] = useState({
 
 const filterHeaderTemplate = (column, filterField) => {
     const handleApplyFilter = () => {
-        if (tempFilterValues[filterField] !== '') {
-            let newFilters = { ...filters };
-            newFilters[filterField] = { value: tempFilterValues[filterField], matchMode: 'contains' };
-            setFilters(newFilters);
-            
-            const filteredRows = groupedData.filter(row => {
-                const fieldValue = row[filterField]; // Dynamically access the field based on filterField
-                if (typeof fieldValue === 'string') {
-                    return fieldValue.toLowerCase().includes(tempFilterValues[filterField].toLowerCase());
-                }
-                return false;
-            });
+        let newFilters = { ...filters };
+        let combinedFilteredRows = [...groupedData]; // Start with the entire dataset
     
-            setSelectedRows(filteredRows); // Automatically select the filtered rows
+        // Apply filters based on each filter field
+        for (const key in tempFilterValues) {
+            if (tempFilterValues[key] !== '') {
+                newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
+                combinedFilteredRows = combinedFilteredRows.filter(row => {
+                    const fieldValue = row[key]; // Dynamically access the field based on key
+                    if (typeof fieldValue === 'string') {
+                        return fieldValue.toLowerCase().includes(tempFilterValues[key].toLowerCase());
+                    }
+                    return false;
+                });
+            }
         }
+    
+        setFilters(newFilters);
+        setSelectedRows(combinedFilteredRows); // Automatically select the filtered rows
     };
+    
 
     return (
         <div>
@@ -906,6 +911,9 @@ const handleClickOpen = () => {
 const handleClose = () => {
     setOpen(false);
 };
+
+
+
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -1050,6 +1058,7 @@ const handleClose = () => {
                             showFilterMatchModes={false}
                             showApplyButton={false}
                             showClearButton={false}
+                            
                             ></Column>
                             <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             filter

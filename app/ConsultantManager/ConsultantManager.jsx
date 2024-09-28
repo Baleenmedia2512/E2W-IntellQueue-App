@@ -252,8 +252,6 @@ const validateFields = () => {
         const data = await response.json();
         if (data.message === "Consultant restored successfully!") {
                   fetchConsultantDetails(consultantID);
-                  const updatedSearchTerm = `${consultantID} - ${consultantName} - ${consultantNumber} - Valid`;
-                  setSearchTerm(updatedSearchTerm);
                   setSuccessMessage('Consultant restored successfully!');
                   setTimeout(() => {
                   setSuccessMessage('');
@@ -348,9 +346,11 @@ const validateFields = () => {
   const handleConsultantSearchTermChange = async (event) => {
     const input = event.target.value
     setSearchTerm(input);
+    
     const searchSuggestions = await FetchConsultantSearchTerm(companyName, input, showInvalid);
     setSearchSuggestions(searchSuggestions);
   };
+
 
   const handleConsultantSearchTermSelection = async (event) => {
     const input = event.target.value
@@ -365,7 +365,8 @@ const validateFields = () => {
 
   const handleCheckboxChange = () => {
     setShowInvalid((prev) => !prev); // Toggle checkbox state
-  };
+    handleConsultantSearchTermChange({ target: { value: searchTerm } });
+};
 
   
     return (
@@ -452,7 +453,7 @@ const validateFields = () => {
       checked={showInvalid}
       onChange={handleCheckboxChange} // Handle checkbox change
     />
-    <span className="ml-2 text-sm font-medium">Show Removed Consultants Only</span>
+    <span className="ml-2 text-sm font-medium">Show Removed Consultants Also</span>
   </label>
 </div>
 
@@ -470,24 +471,27 @@ const validateFields = () => {
           </div>
         </div>
         
-        {/* Search Suggestions */}
+    {/* Search Suggestions */}
     <div className="relative">
-      {searchSuggestions.length > 0  && searchTerm !== '' && (
-        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
-          {searchSuggestions.map((name, index) => (
-            <li key={index}>
-              <button
-                type="button"
-                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                onClick={handleConsultantSearchTermSelection}
-                value={name}
-              >
-                {name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+    {Array.isArray(searchSuggestions) && searchSuggestions.length > 0 && searchTerm !== '' && (
+            <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+                {searchSuggestions.map((consultant, index) => {
+                    const isInvalid = consultant.Validity === 0; // Check validity for highlighting
+                    return (
+                        <li key={index}>
+                            <button
+                                type="button"
+                                className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
+                                onClick={handleConsultantSearchTermSelection}
+                                value={consultant.SearchTerm} // Set value as the search term
+                            >
+                                {consultant.SearchTerm} {/* Display the search term only */}
+                            </button>
+                        </li>
+                    );
+                })}
+            </ul>
+        )}
     </div>
       </div>
     </div>

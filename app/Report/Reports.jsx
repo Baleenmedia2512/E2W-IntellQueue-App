@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import { DataGrid, GridToolbar, getGridNumericOperators} from '@mui/x-data-grid';
+import { DataGrid, useGridApiRef} from '@mui/x-data-grid';
 import axios from 'axios';
 import { useAppSelector } from '@/redux/store';
 import { Menu, MenuItem, IconButton } from '@mui/material';
@@ -1133,33 +1133,95 @@ const handleDateChange = (range) => {
   return number;
 };
 
-console.log(displayOrderDetails)
+const apiRef = useGridApiRef();
+const [filterModel, setFilterModel] = useState({ items: [] }); 
+const [filteredData, setFilteredData] = useState([]);
+const [rateStats, setRateStats] = useState({});
+const [filterValues, setFilterValues] = useState({});
 
-const calculateRateStats = () => {
-  const rateStats = {};
+console.log(filterModel)
 
-  displayOrderDetails.forEach(order => {
-    const rateName = order.Card;
-    const orderValue = Number(order.Receivable) || 0;  // Ensure Receivable (Order Value) is a number
-    const income = Number(order.TotalAmountReceived) || 0;  // Ensure TotalAmountReceived (Income) is a number
+   // Function to filter the order data based on the filter model
+ const applyFilters = () => {
+    let filteredRows = orderDetails;
 
-    if (rateStats[rateName]) {
-      rateStats[rateName].orderCount += 1;
-      rateStats[rateName].totalOrderValue += orderValue;
-      rateStats[rateName].totalIncome += income;
-    } else {
-      rateStats[rateName] = {
-        orderCount: 1,
-        totalOrderValue: orderValue,
-        totalIncome: income,
-      };
-    }
-  });
+    filterModel.items.forEach(filter => {
+      const { field, value } = filter;
+      console.log(field, value)
+      // Check if value is defined and not null before proceeding
+      if (value !== undefined && value !== null) {
+        filteredRows = filteredRows.filter(row => {
+          const cellValue = String(row[field]).toLowerCase(); // Get the cell value and convert to lowercase
+          return cellValue.includes(value.toLowerCase()); // Apply the filter condition
+        });
+      }
+    });
 
-  return rateStats;
-};
+    setFilteredData(filteredRows); // Update filtered data
+  };
 
-const rateStats = calculateRateStats();
+  // Function to calculate the statistics based on filtered rows
+  const calculateRateStats = () => {
+    const stats = {};
+
+    filteredData.forEach(order => {
+      const rateName = order.Card; // Assuming the 'Card' field is used for rate classification
+      const orderValue = Number(order.Receivable.replace('₹', '').trim()) || 0; // Ensure it's a number
+      const income = Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0; // Ensure it's a number
+
+      if (stats[rateName]) {
+        stats[rateName].orderCount += 1;
+        stats[rateName].totalOrderValue += orderValue;
+        stats[rateName].totalIncome += income;
+      } else {
+        stats[rateName] = {
+          orderCount: 1,
+          totalOrderValue: orderValue,
+          totalIncome: income,
+        };
+      }
+    });
+
+    setRateStats(stats); // Update state with new stats
+  };
+
+  // UseEffect to apply filters and calculate stats when orderDetails or filterModel changes
+  // useEffect(() => {
+  //   fetchOrderDetails(); // Fetch order details on mount
+  // }, []);
+
+  useEffect(() => {
+    applyFilters(); // Apply filters
+  }, [filterModel, orderDetails]); // Reapply filters on change
+
+  useEffect(() => {
+    calculateRateStats(); // Calculate stats based on filtered data
+  }, [filteredData]); // Recalculate when filteredData changes
+// const calculateRateStats = () => {
+//   const rateStats = {};
+
+//   displayOrderDetails.forEach(order => {
+//     const rateName = order.Card;
+//     const orderValue = Number(order.Receivable) || 0;  // Ensure Receivable (Order Value) is a number
+//     const income = Number(order.TotalAmountReceived) || 0;  // Ensure TotalAmountReceived (Income) is a number
+
+//     if (rateStats[rateName]) {
+//       rateStats[rateName].orderCount += 1;
+//       rateStats[rateName].totalOrderValue += orderValue;
+//       rateStats[rateName].totalIncome += income;
+//     } else {
+//       rateStats[rateName] = {
+//         orderCount: 1,
+//         totalOrderValue: orderValue,
+//         totalIncome: income,
+//       };
+//     }
+//   });
+
+//   return rateStats;
+// };
+
+// const rateStats = calculateRateStats();
 
 
     return (
@@ -1340,10 +1402,33 @@ const rateStats = calculateRateStats();
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
     <div style={{ flex: 1, width: '100%', boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
       <DataGrid
-        rows={orderDetails}
+         rows={filteredData.length > 0 ? filteredData : orderDetails}
         columns={orderColumns}
         columnVisibilityModel={{ Margin: !elementsToHide.includes('QuoteSenderNavigation') }}
         pageSize={10}
+        onFilterModelChange={(newFilterModel) => {
+          // Merge new filters with existing filters
+          setFilterModel(prevModel => {
+            const existingItems = prevModel.items;
+
+            // Update or add new filter
+            const updatedItems = newFilterModel.items.reduce((acc, newFilter) => {
+              const existingFilter = acc.find(filter => filter.field === newFilter.field);
+
+              if (existingFilter) {
+                // If filter already exists, you can either update it or ignore the new one
+                // Here we choose to update the existing filter
+                existingFilter.value = newFilter.value;
+              } else {
+                acc.push(newFilter); // Add new filter
+              }
+
+              return acc;
+            }, existingItems);
+
+            return { items: updatedItems }; // Return the updated filter model
+          });
+        }} // Update the filter model state
         initialState={{
           sorting: {
             sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
@@ -1364,7 +1449,9 @@ const rateStats = calculateRateStats();
           }
         }}
       />
+      
     </div>
+    
   </div>
 </div>
 
