@@ -26,22 +26,17 @@ import { TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchOrderSeachTerm } from '../api/FetchAPI';
+import { resetStageItem } from '@/redux/features/stage-slice';
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
-    //const stageDetails = useAppSelector(state => state.stageSlice);
+    const stages = useAppSelector(state => state.stageSlice.stages);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
-    //const { } = stageDetails;
-    const stageDetails = useAppSelector((state) => state.stages) || {}; // Add fallback to an empty object
-const { stages = [], errorMessage = '' } = stageDetails;
 
-//console.log(stages); // This will log the stages array
-
-    console.log()
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
@@ -742,9 +737,47 @@ const fetchOrderDetailsByOrderNumber = () => {
     setDisplayUnitPrice(receivableRP);
   }, [orderNumber]); // Re-fetch when orderNumber changes
 
+//creating stages ----
+const PlaceOrder = () =>{
+  CreateStages();
+  createNewOrder();
+}
+
+
+const CreateStages = async () => {
+  try {
+    // Create API promises for each field, dynamically passing the stage count
+    const apiPromises = stages.map(async (field, index) => {
+      const formattedDueDate = format(new Date(field.dueDate), 'yyyy-MM-dd');
+
+      // Send API request with the dynamic stage count
+      const response = await fetch(
+        `https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientNameCR}&JsonClientNumber=${clientNumberCR}&JsonStage=${index + 1}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`
+      );
+
+      return await response.json();
+    });
+
+    const results = await Promise.all(apiPromises);
+
+    results.forEach((data, index) => {
+      if (data === "Stage Created Successfully!") {
+        // setSuccessMessage('Stages Created Successfully!');
+        // setTimeout(() => {
+        //   setSuccessMessage('');
+        // }, 3000);
+        dispatch(resetStageItem());
+      } else {
+        console.error('Error creating stage:', data);
+      }
+    });
+  } catch (error) {
+    console.error('Error creating stages:', error);
+  }
+};
 
   
-      const createNewOrder = async(event) => {
+      const createNewOrder = async() => {
         // If the discount amount has changed and remarks are not filled
         if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
           setToastMessage('Please provide a reason in the Remarks field.');
@@ -756,7 +789,7 @@ const fetchOrderDetailsByOrderNumber = () => {
           return;
         }
         
-        event.preventDefault()
+        //event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
@@ -770,6 +803,7 @@ const fetchOrderDetailsByOrderNumber = () => {
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
+                //CreateStages()
                 if (elementsToHide.includes('OrderNumberText')) {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
@@ -1370,7 +1404,7 @@ return (
     {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
   </div>
 ) : (
-  <button className="placeorder-button" onClick={createNewOrder}>Place Order</button>
+  <button className="placeorder-button" onClick={PlaceOrder}>Place Order</button>
 )}
     
     <Dialog
@@ -1548,7 +1582,23 @@ return (
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
-      <label className='text-gray-500 text-xs hover:cursor-pointer'>Separate Amount?<span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/Amount-Separation')}>Click Here</span></label>
+      <label className='text-gray-500 text-xs hover:cursor-pointer'>
+  Payment Milestone? 
+  <span 
+    className='underline text-sky-500 hover:text-sky-600' 
+    onClick={() => {
+      // Trim the clientName to prevent empty spaces from bypassing the check
+      if (clientName && clientName.trim() !== '') {  
+        router.push('/Payment-Milestone');
+      } else {
+        // You can use any notification, such as toast or alert, to notify the user
+        //alert('Please fill out the Client Name before proceeding.');
+      }
+    }}
+  >
+    Click Here
+  </span>
+</label>
 
     </div>
     <div>
