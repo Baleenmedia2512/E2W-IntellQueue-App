@@ -12,6 +12,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { useAppSelector } from '@/redux/store';
 import { FetchOrderSeachTerm } from '../api/FetchAPI';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 const activities = [
     { label: 'Client Discussion', value: 'Client Discussion' },
@@ -32,6 +33,10 @@ const TimeSheetModule = () => {
     const [editingRows, setEditingRows] = useState({});
     const [orderNumberSuggestions, setOrderNumberSuggestions] = useState([]);
     const [quoteNumberSuggestions, setQuoteNumberSuggestions] = useState([]);
+    const [deleteRowIndex, setDeleteRowIndex] = useState(null); // For the row to be deleted
+    const [openDialog, setOpenDialog] = useState(false);
+
+    console.log(deleteRowIndex, rows)
 
     // Format date for DB
     const formatDateForDB = (date) => {
@@ -157,7 +162,7 @@ const TimeSheetModule = () => {
             // If it's a new row, send a POST request
             try {
                 const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertTimeSheet.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${newData.orderNumber}&JsonQuoteNumber=${newData.quoteNumber}&JsonActivity=${newData.activity}&JsonDuration=${newData.duration}&JsonWorkDate=${formatDateForDB(selectedDate)}&JsonDBName=${companyName}`);
-                const result = await response.text();
+                const result = await response.json();
                 updatedRows[index].isNew = false; // Mark as saved
                 console.log(result);
             } catch (error) {
@@ -167,7 +172,7 @@ const TimeSheetModule = () => {
             // If it's an edited row, send a PUT request
             try {
                 const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateTimeSheet.php/?JsonId=${newData.ID}&JsonOrderNumber=${newData.orderNumber}&JsonQuoteNumber=${newData.quoteNumber}&JsonActivity=${newData.activity}&JsonDuration=${newData.duration}&JsonLastModifiedUser=${loggedInUser}&JsonDBName=${companyName}`);
-                const result = await response.text();
+                const result = await response.json();
                 console.log(result);
             } catch (error) {
                 console.error("Error updating row:", error);
@@ -197,7 +202,7 @@ const TimeSheetModule = () => {
     // Add a new row to the table
     const addNewRow = () => {
         const newRow = {
-            ID: rows.length + 1,
+            ID: `new-${rows.length + 1}`, // Unique ID for the new row
             orderNumber: '',
             quoteNumber: '',
             activity: '',
@@ -205,14 +210,61 @@ const TimeSheetModule = () => {
             isNew: true,   // Mark as new
             isEdited: false // Not yet edited
         };
-        setRows([newRow, ...rows]);
-
-        // Enable editing for the new row
+    
+        const newRows = [newRow, ...rows]; // Add new row to the beginning of the rows array
+    
+        setRows(newRows);
+    
+        // Enable editing for the new row right after adding it
         setEditingRows((prevState) => ({
             ...prevState,
-            [newRow.ID]: true,
+            [newRow.ID]: true, // Mark the new row as editable by its ID
         }));
     };
+
+    const handleDeleteRow = async () => {
+        const rowToDelete = rows[deleteRowIndex];
+        const { ID } = rowToDelete; // Extract the ID of the row to delete
+        console.log(ID , rowToDelete)
+
+        try {
+            // Send DELETE request to the API to remove the row by ID
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteATimeSheetRecord.php/?JsonLastModifiedUser=${loggedInUser}&JsonId=${ID}&JsonDBName=${companyName}`);
+
+            const result = await response.json();
+
+            if (result === "Row deleted successfully.") {
+                // Remove row from the frontend after successful deletion
+                fetchTimeSheetData();
+                setOpenDialog(false); // Close the dialog after deletion
+            } else {
+                console.error("Failed to delete row from database:", result);
+            }
+        } catch (error) {
+            console.error("Error deleting row:", error);
+        }
+    };
+
+    const openDeleteConfirmation = (index) => {
+        setDeleteRowIndex(index);
+        setOpenDialog(true); // Open confirmation dialog
+    };
+
+    const closeDialog = () => {
+        setOpenDialog(false);
+    };
+
+    const deleteBodyTemplate = (rowData, options) => {
+        return (
+            <Button
+                icon="pi pi-trash"
+                className="p-button-danger"
+                onClick={() => openDeleteConfirmation(options.rowIndex)}
+            />
+            
+        );
+    };
+    
 
     return (
         <div className="relative min-h-screen mb-20 px-4 sm:px-8 lg:px-12 py-6 sm:py-8">
@@ -243,8 +295,8 @@ const TimeSheetModule = () => {
                         setEditingRows(updatedEditingRows);
                     }}
                     editingRows={editingRows}
-                    className="mt-2 bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
-                    tableClassName="min-w-full text-sm text-left text-black"
+                    className="mt-2 h-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
+                    tableClassName="min-w-full min-h-full text-sm text-left text-black"
                     rowClassName="hover:bg-gray-50"
                 >
                     <Column
@@ -283,11 +335,43 @@ const TimeSheetModule = () => {
                     />
                     <Column
                         rowEditor
+                        headerStyle={{ width: '10px', textAlign: 'center' }}
+                        bodyStyle={{ textAlign: 'center' }}
+                    />
+                     <Column
+                        body={deleteBodyTemplate}
                         headerStyle={{ width: '120px', textAlign: 'center' }}
                         bodyStyle={{ textAlign: 'center' }}
                     />
                 </DataTable>
             </div>
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={openDialog} onClose={closeDialog}>
+    <DialogTitle className="text-lg font-semibold">Confirm Delete</DialogTitle>
+    <DialogContent>
+        <DialogContentText>
+            Are you sure you want to delete this row? This action cannot be undone.
+        </DialogContentText>
+    </DialogContent>
+    <DialogActions className="flex justify-end space-x-2 p-4">
+        {/* Cancel Button */}
+        <Button
+            onClick={closeDialog}
+            className="border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-md px-4 py-2"
+        >
+            Cancel
+        </Button>
+
+        {/* Delete Button */}
+        <Button
+            onClick={handleDeleteRow}
+            className="bg-red-600 text-white hover:bg-red-700 rounded-md px-4 py-2"
+        >
+            Delete
+        </Button>
+    </DialogActions>
+</Dialog>
+
         </div>
     );
 };
