@@ -403,7 +403,7 @@ const handleInputCountChange = (event) => {
       
        <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-3xl font-bold text-left text-blue-600 mb-4">Create Your Stages</h2>
+          <h2 className="text-3xl font-bold text-left text-blue-600 mb-4">Create Payment MileStone</h2>
           <div className="border-2 w-10 border-blue-500 "></div>
 
         </div>
@@ -461,7 +461,7 @@ const handleInputCountChange = (event) => {
               Stage Amount
             </label>
             <input
-              type="text"
+              type="number"
               id={`stageAmount-${index}`}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black"
               value={field.stageAmount}
