@@ -6,7 +6,7 @@ import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
 import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
-import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} from '@/redux/features/order-slice';
+import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate, setClientName, setClientNumber} from '@/redux/features/order-slice';
 
 import Select from 'react-select';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
@@ -35,14 +35,13 @@ const CreateOrder = () => {
     const stages = useAppSelector(state => state.stageSlice.stages);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
-    const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
-
-    const [clientName, setClientName] = useState(clientNameCR || "");
+    const {orderNumber: orderNumberRP, receivable: receivableRP, clientName, clientNumber} = orderDetails;
+    // const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
-    const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
+    // const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
     const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
     const [UpdateRateWiseOrderNumber, setUpdateRateWiseOrderNumber] = useState("");
@@ -139,11 +138,11 @@ const CreateOrder = () => {
     },[])
 
     useEffect(() => {
-      setClientName(clientNameCR || '');
+      // dispatch(setClientName(clientNameCR || ''));
       setConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
       setClientNumber(clientNumberCR || '');
-      dispatch(setOrderData({ clientName: clientNameCR, clientNumber: clientNumberCR, clientID: clientIDCR, consultantName: consultantNameCR }))
+      dispatch(setOrderData({ clientID: clientIDCR, consultantName: consultantNameCR }))
       fetchPreviousOrderDetails(clientNumberCR, clientNameCR);
     }, [clientNameCR, clientIDCR]);
 
@@ -581,12 +580,12 @@ const fetchRates = async () => {
     }, [qty])
 
     const handleSearchTermChange = (event) => {
-        const newName = event.target.value
+        const newName = event.target.value;
+        dispatch(setClientName(newName));
         fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
-        setClientName(newName);
-        dispatch(setOrderData({ clientName: clientName }))
+        // dispatch(setOrderData({ clientName: clientName }))
         if (errors.clientName) {
           setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
         }
@@ -600,7 +599,7 @@ const fetchRates = async () => {
     const name = rest.substring(0, rest.indexOf('(')).trim();
     const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
-        setClientName(name);
+        dispatch(setClientName(name));
         setClientNumber(number);
         dispatch(setOrderData({ clientName: name, clientNumber: number  }))
         fetchClientDetails(ID);
@@ -699,7 +698,7 @@ const fetchOrderDetailsByOrderNumber = () => {
           const formattedDate = parseDateFromDB(data.orderDate);
           console.log(data)
           // Set all the necessary states
-          setClientName(data.clientName);
+          dispatch(setClientName(data.clientName));
           setOrderDate(data.orderDate);
           setDisplayOrderDate(formattedDate);
           setUnitPrice(data.receivable);
@@ -752,7 +751,7 @@ const CreateStages = async () => {
 
       // Send API request with the dynamic stage count
       const response = await fetch(
-        `https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientNameCR}&JsonClientNumber=${clientNumberCR}&JsonStage=${index + 1}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`
+        `https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientName}&JsonClientNumber=${clientNumberCR}&JsonStage=${index + 1}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`
       );
 
       return await response.json();
@@ -767,8 +766,9 @@ const CreateStages = async () => {
         //   setSuccessMessage('');
         // }, 3000);
         dispatch(resetStageItem());
+        dispatch(resetOrderData());
       } else {
-        console.error('Error creating stage:', data);
+        alert("Payment Milestone not Created due to following error: " + error)
       }
     });
   } catch (error) {
@@ -899,7 +899,7 @@ const updateNewOrder = async (event) => {
         dispatch(setIsOrderExist(true));
         dispatch(setIsOrderUpdate(false));
         dispatch(resetOrderData());
-        setClientName('');
+        dispatch(setClientName(''));
         setOrderDate(new Date());
         setDisplayOrderDate(new Date())
         setUpdateRateWiseOrderNumber('');
@@ -1246,7 +1246,7 @@ const handleOpenDialog = () => {
   // };
 
   const handleCancelUpdate = () => {
-    setClientName('');
+    dispatch(setClientName(''));
     setOrderDate(new Date());
     setDisplayOrderDate(new Date())
     setUpdateRateWiseOrderNumber('');
@@ -1284,7 +1284,7 @@ const handleOrderSearch = async (e) => {
   // If search term is cleared, reset the update mode
   if (searchTerm.trim() === "") {
     dispatch(setIsOrderUpdate(false));
-          setClientName('');
+          dispatch(setClientName(''));
           setOrderDate(new Date());
           setDisplayOrderDate(new Date())
           setUpdateRateWiseOrderNumber('');
@@ -1553,7 +1553,7 @@ return (
                 ))}
               </ul>
             )}
-            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}<br/></span>}
             {/* New Client */}
             <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
           </div>
@@ -1582,8 +1582,8 @@ return (
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
-      <label className='text-gray-500 text-xs hover:cursor-pointer'>
-  Payment Milestone? 
+      <label className='text-gray-500 text-[13px] hover:cursor-pointer'> 
+      Add &nbsp;
   <span 
     className='underline text-sky-500 hover:text-sky-600' 
     onClick={() => {
@@ -1591,12 +1591,13 @@ return (
       if (clientName && clientName.trim() !== '') {  
         router.push('/Payment-Milestone');
       } else {
+        setErrors({clientName: "Please enter a valid Client Name"})
         // You can use any notification, such as toast or alert, to notify the user
         //alert('Please fill out the Client Name before proceeding.');
       }
     }}
   >
-    Click Here
+    Payment Milestone
   </span>
 </label>
 

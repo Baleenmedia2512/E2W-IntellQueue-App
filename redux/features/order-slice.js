@@ -30,6 +30,12 @@ export const orderSlice = createSlice({
     setOrderData: (state, action) => {
       return { ...state, ...action.payload };
     },
+    setClientName: (state, action) => {
+      state.clientName = action.payload;
+    },
+    setClientNumber: (state, action) => {
+      state.clientNumber = action.payload;
+    },
     resetOrderData: (state) => {
         return initialState;
     },
@@ -42,5 +48,5 @@ export const orderSlice = createSlice({
   }
 });
 
-export const { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} = orderSlice.actions;
+export const { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate, setClientName, setClientNumber} = orderSlice.actions;
 export const orderReducer = orderSlice.reducer;
