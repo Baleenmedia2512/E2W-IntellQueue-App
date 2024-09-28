@@ -1139,7 +1139,6 @@ const [filteredData, setFilteredData] = useState([]);
 const [rateStats, setRateStats] = useState({});
 const [filterValues, setFilterValues] = useState({});
 
-console.log(filterModel)
 
    // Function to filter the order data based on the filter model
  const applyFilters = () => {
@@ -1147,7 +1146,6 @@ console.log(filterModel)
 
     filterModel.items.forEach(filter => {
       const { field, value } = filter;
-      console.log(field, value)
       // Check if value is defined and not null before proceeding
       if (value !== undefined && value !== null) {
         filteredRows = filteredRows.filter(row => {
@@ -1410,25 +1408,26 @@ console.log(filterModel)
           // Merge new filters with existing filters
           setFilterModel(prevModel => {
             const existingItems = prevModel.items;
-
+            console.log(prevModel)
+        
             // Update or add new filter
             const updatedItems = newFilterModel.items.reduce((acc, newFilter) => {
               const existingFilter = acc.find(filter => filter.field === newFilter.field);
-
+        
               if (existingFilter) {
-                // If filter already exists, you can either update it or ignore the new one
-                // Here we choose to update the existing filter
-                existingFilter.value = newFilter.value;
+                // If the filter already exists, update the value
+                existingFilter.value = newFilter.value !== undefined ? newFilter.value : existingFilter.value; // Keep existing value if new is undefined
               } else {
-                acc.push(newFilter); // Add new filter
+                acc.push({ ...newFilter }); // Add new filter, making sure to spread the newFilter object
               }
-
+        
               return acc;
             }, existingItems);
-
+        
             return { items: updatedItems }; // Return the updated filter model
           });
-        }} // Update the filter model state
+        }}
+         // Update the filter model state
         initialState={{
           sorting: {
             sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
