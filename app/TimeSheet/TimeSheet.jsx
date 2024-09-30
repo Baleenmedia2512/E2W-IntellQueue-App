@@ -1,6 +1,6 @@
 'use client';
 import axios from 'axios';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
@@ -11,8 +11,10 @@ import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { useAppSelector } from '@/redux/store';
-import { FetchOrderSeachTerm } from '../api/FetchAPI';
+import { FetchOrderSeachTerm, FetchQuoteSearchTerm } from '../api/FetchAPI';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 const activities = [
     { label: 'Client Discussion', value: 'Client Discussion' },
@@ -35,8 +37,12 @@ const TimeSheetModule = () => {
     const [quoteNumberSuggestions, setQuoteNumberSuggestions] = useState([]);
     const [deleteRowIndex, setDeleteRowIndex] = useState(null); // For the row to be deleted
     const [openDialog, setOpenDialog] = useState(false);
-
-    console.log(deleteRowIndex, rows)
+    const [toast, setToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [severity, setSeverity] = useState('');
+    const [errors, setErrors] = useState({});
+    const [successMessage, setSuccessMessage] = useState('');
+    const inputRef = useRef(null);
 
     // Format date for DB
     const formatDateForDB = (date) => {
@@ -79,8 +85,6 @@ const TimeSheetModule = () => {
 
     // Handle input changes for order number and fetch suggestions
     const handleOrderNumberChange = async (e, options) => {
-      // e.preventDefault(); // Prevent default action
-      e.stopPropagation(); 
         const value = e.target.value;
         setTypedOrderNumber(value); // Update the local state for the typed value
          // Update the field with the current input
@@ -89,10 +93,14 @@ const TimeSheetModule = () => {
         setOrderNumberSuggestions(searchSuggestions);
 
         options.editorCallback(value);
+
+        inputRef.current.focus();
     };
     
     // Function to handle selection of a suggestion
-    const handleSuggestionSelect = (suggestion, options) => {
+    const handleOrderSuggestionSelect = (suggestion, options) => {
+
+        console.log(suggestion, options)
         const splitResult = suggestion.split('-'); // Split by '-'
     
         const orderNumber = splitResult[0].trim();  // First part as order number
@@ -101,13 +109,33 @@ const TimeSheetModule = () => {
         options.editorCallback(orderNumber); // Set the order number
         setTypedOrderNumber(''); // Clear the typed input after selection
         setOrderNumberSuggestions([]); // Clear suggestions
+
+        inputRef.current.focus();
     };
 
 
-
     // Handle input changes for quote number and fetch suggestions
-    const handleQuoteNumberChange = (e, options) => {
+    const handleQuoteNumberChange = async (e, options) => {
+        const value = e.target.value;
+    
+        const searchSuggestions = await FetchQuoteSearchTerm(companyName, value);
+        setQuoteNumberSuggestions(searchSuggestions);
+
         options.editorCallback(e.target.value);
+    };
+
+    const handleQuoteSuggestionSelect = (suggestion, options) => {
+
+        console.log(suggestion, options)
+        const splitResult = suggestion.split('-'); // Split by '-'
+    
+        const QuoteNumber = splitResult[0].trim();  // First part as order number
+        const additionalInfo = splitResult.slice(1).join('-').trim(); // Remaining parts
+    
+        options.editorCallback(QuoteNumber);
+        setQuoteNumberSuggestions([]); // Clear suggestions
+
+        inputRef.current.focus();
     };
 
     // Editor for text fields with suggestions
@@ -115,10 +143,12 @@ const TimeSheetModule = () => {
         return (
             <div className="relative">
                 <InputText
+                    ref={inputRef}
                     className="p-2 border border-blue-300"
                     type="text"
                     value={options.value}
                     onChange={(e) => (type === 'order' ? handleOrderNumberChange(e, options) : handleQuoteNumberChange(e, options))}
+                    
                 />
                 {type === 'order' && orderNumberSuggestions.length > 0 && (
                 <div className="absolute z-10 mt-1 max-h-40 w-full overflow-auto border border-gray-200 bg-white shadow-md">
@@ -126,7 +156,7 @@ const TimeSheetModule = () => {
                         <div
                             key={index}
                             className="p-2 hover:bg-gray-100 cursor-pointer"
-                            onClick={() => handleSuggestionSelect(suggestion, options)} // Select suggestion
+                            onClick={() => handleOrderSuggestionSelect(suggestion, options)} // Select suggestion
                         >
                             {suggestion}
                         </div>
@@ -139,7 +169,7 @@ const TimeSheetModule = () => {
                             <div
                                 key={index}
                                 className="p-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={() => options.editorCallback(suggestion)}
+                                onClick={() => handleQuoteSuggestionSelect(suggestion, options)}
                             >
                                 {suggestion}
                             </div>
@@ -163,8 +193,7 @@ const TimeSheetModule = () => {
             try {
                 const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertTimeSheet.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${newData.orderNumber}&JsonQuoteNumber=${newData.quoteNumber}&JsonActivity=${newData.activity}&JsonDuration=${newData.duration}&JsonWorkDate=${formatDateForDB(selectedDate)}&JsonDBName=${companyName}`);
                 const result = await response.json();
-                updatedRows[index].isNew = false; // Mark as saved
-                console.log(result);
+                updatedRows[index].isNew = false; 
             } catch (error) {
                 console.error("Error saving new row:", error);
             }
@@ -173,7 +202,6 @@ const TimeSheetModule = () => {
             try {
                 const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateTimeSheet.php/?JsonId=${newData.ID}&JsonOrderNumber=${newData.orderNumber}&JsonQuoteNumber=${newData.quoteNumber}&JsonActivity=${newData.activity}&JsonDuration=${newData.duration}&JsonLastModifiedUser=${loggedInUser}&JsonDBName=${companyName}`);
                 const result = await response.json();
-                console.log(result);
             } catch (error) {
                 console.error("Error updating row:", error);
             }
@@ -202,7 +230,7 @@ const TimeSheetModule = () => {
     // Add a new row to the table
     const addNewRow = () => {
         const newRow = {
-            ID: `new-${rows.length + 1}`, // Unique ID for the new row
+            ID: 0, // Unique ID for the new row
             orderNumber: '',
             quoteNumber: '',
             activity: '',
@@ -216,16 +244,22 @@ const TimeSheetModule = () => {
         setRows(newRows);
     
         // Enable editing for the new row right after adding it
-        setEditingRows((prevState) => ({
-            ...prevState,
-            [newRow.ID]: true, // Mark the new row as editable by its ID
-        }));
+        // setEditingRows((prevState) => ({
+        //     ...prevState,
+        //     [newRow.ID]: true, // Mark the new row as editable by its ID
+        // }));
+        setEditingRows({ ...editingRows, [newRow.ID]: true })
+        dtRef.current.initRowEdit(newRow);
     };
+
+    console.log(editingRows)
+
+    console.log(rows)
 
     const handleDeleteRow = async () => {
         const rowToDelete = rows[deleteRowIndex];
         const { ID } = rowToDelete; // Extract the ID of the row to delete
-        console.log(ID , rowToDelete)
+       
 
         try {
             // Send DELETE request to the API to remove the row by ID
@@ -234,10 +268,19 @@ const TimeSheetModule = () => {
             const result = await response.json();
 
             if (result === "Row deleted successfully.") {
-                // Remove row from the frontend after successful deletion
+                setSuccessMessage('Record removed successfully!');
+                  setTimeout(() => {
+                  setSuccessMessage('');
+                }, 2000);
                 fetchTimeSheetData();
                 setOpenDialog(false); // Close the dialog after deletion
             } else {
+                setToastMessage(`The following error occurred while removing data: ${result}`);
+                setSeverity('error');
+                setToast(true);
+                setTimeout(() => {
+                    setToast(false);
+                }, 2000);
                 console.error("Failed to delete row from database:", result);
             }
         } catch (error) {
@@ -371,6 +414,9 @@ const TimeSheetModule = () => {
         </Button>
     </DialogActions>
 </Dialog>
+
+    {successMessage && <SuccessToast message={successMessage} />}
+  {toast && <ToastMessage message={toastMessage} type="error" />}
 
         </div>
     );

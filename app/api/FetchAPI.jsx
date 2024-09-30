@@ -71,3 +71,24 @@ export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
     
     return SearchTerms;
 }
+
+
+export const FetchQuoteSearchTerm = async(DBName, SearchTerm) => {
+    let SearchTerms = [];
+    try{
+        const response = await api.get("SearchQuote.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                JsonSearchTerm: SearchTerm
+            }
+        });
+        SearchTerms = response.data;
+    }catch(error){
+        console.error(error)
+    }
+    
+    return SearchTerms;
+}

@@ -1197,6 +1197,7 @@ const [filterInputs, setFilterInputs] = useState({});
       return filterModel.items.every((filter) => {
         const field = filter.field;
         const value = filter.value ? filter.value.toLowerCase() : '';
+        console.log(filter)
   
         if (value === '') return true; // Skip if the filter value is empty
   
