@@ -810,18 +810,13 @@ const filterHeaderTemplate = (column, filterField) => {
     
             if (filterValue && filterValue !== '') { // Check for non-empty filter values
                 combinedFilteredRows = combinedFilteredRows.filter(row => {
-                    const fieldValue = row[key]; // Dynamically access the field based on key
-                    console.log(row);
-                    console.log(key);
-                    console.log(fieldValue);
-    
+                    const fieldValue = row[key]; 
                     // Handle null or undefined values
                     if (fieldValue === null || fieldValue === undefined) {
                         return false; // Skip rows with null/undefined values for filtering
                     }
     
                     if (typeof fieldValue === 'string') {
-                        console.log(newFilters[key]);
                         return fieldValue.toLowerCase().includes(filterValue.toLowerCase());
                     }
                     return false; // Handle other cases if necessary
@@ -829,7 +824,6 @@ const filterHeaderTemplate = (column, filterField) => {
             }
         }
     
-        console.log('Final combined filtered rows after clearing filter:', combinedFilteredRows);
         setFilters(newFilters); // Update filters without the cleared filter
     
         // Reset selectedRows when all filters are cleared
@@ -840,7 +834,6 @@ const filterHeaderTemplate = (column, filterField) => {
         }
     };
 
-    console.log(filters)
 
     return (
         <div>
