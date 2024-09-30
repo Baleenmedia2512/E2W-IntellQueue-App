@@ -8,8 +8,11 @@ import ToastMessage from '../components/ToastMessage';
 import { Calendar } from 'primereact/calendar';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
 import 'primereact/resources/primereact.min.css';          // Core styles
-import { updateStage, removeItem, addStage } from '@/redux/features/stage-slice';
+import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem, setStageEdit } from '@/redux/features/stage-slice';
 import { FaPlus, FaMinus } from 'react-icons/fa'; // Import icons
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FetchFinanceSeachTerm } from '../api/FetchAPI';
 import './style.css';
 
 const Stages = () => {
@@ -17,9 +20,11 @@ const Stages = () => {
   const dispatch = useDispatch();
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const orderDetails = useAppSelector(state => state.orderSlice);
+  const companyName = useAppSelector(state => state.authSlice.companyName)
   const stages = useAppSelector(state => state.stageSlice.stages);
+  const stageEdit = useAppSelector(state => state.stageSlice.editMode);
   const {orderNumber: orderNumberRP, nextRateWiseOrderNumber : orderNumberRW ,receivable: receivableRP, clientName: clientNameCR, clientNumber: clientNumberCR} = orderDetails;
-  
+  const [financeSearchTerm,setFinanceSearchTerm] = useState("");
   const [clientName, setClientName] = useState(clientNameCR || "");
   const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
   const [orderNumber, setOrderNumber] = useState(orderNumberRW);
@@ -31,9 +36,11 @@ const Stages = () => {
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [stage, setStage] = useState("");
+  const [editMode, setEditMode] = useState(true);
   const [stageAmount, setStageAmount] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [financeSearchSuggestion, setFinanceSearchSuggestion] = useState("")
 
   
   useEffect(() => {
@@ -182,7 +189,43 @@ const handleInputCountChange = (event) => {
     setErrors(newErrors); // Update the state
   };
   
+  const handleFinanceSearch = async (e) => {
+    const searchTerm = e.target.value;
+    setFinanceSearchTerm(searchTerm);
+  
+    const searchSuggestions = await FetchFinanceSeachTerm(companyName, searchTerm);
+    setFinanceSearchSuggestion(searchSuggestions);
+  };
+  
+  const handleFinanceSelection = (e) => {
+    const selectedFinance = e.target.value;
+  
+    // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
+    const selectedFinanceId = selectedFinance.split('-')[0];
+  
+    // Clear finance suggestions and set the search term
+    setFinanceSearchSuggestion([]);
+    setFinanceSearchTerm(selectedFinance);
+  
+    FetchMilestoneData(selectedFinanceId)
 
+    dispatch(setStageEdit(true));
+
+  };
+
+  const FetchMilestoneData = async (FinanceId) => {
+    // Fetch the data (replace with your actual API call)
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonFinanceId=${FinanceId}&JsonDBName=${companyName}`);
+    const data = await response.json();
+
+    // Dispatch the action to update stages with the received data
+    dispatch(setStagesFromServer(data));
+  };
+
+  const updateStages = async(StageId) => {
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonFinanceId=${StageId}&JsonDBName=${companyName}`);
+    const data = await response.json();
+  }
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl"> {/* Reduced max-width on larger screens */}
@@ -196,17 +239,24 @@ const handleInputCountChange = (event) => {
         {/* Button container */}
         <div className="flex justify-between items-center space-x-4 md:space-x-6">
           
-
-          <button
+         {stageEdit ? <button
             className="submit-button"
             onClick={postStages}
           >
             Submit
           </button>
+        :
+        <button
+          className="submit-button"
+          onClick={updateStages}
+        >
+          Update
+        </button>
+        }
 
           <button
             className="cancelupdate-button"
-            onClick={postStages}
+            onClick={() => dispatch(resetStageItem())}
           >
             Clear All
           </button>
@@ -214,6 +264,46 @@ const handleInputCountChange = (event) => {
         </div>
 
       </div>
+      <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
+  
+  {/* Search Input Section */}
+  <div className="w-full sm:w-1/2">
+    <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+      <input
+        className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
+        type="text"
+        id="RateSearchInput"
+        placeholder="Search Milestone for Update.."
+        value={financeSearchTerm}
+        onChange={handleFinanceSearch}
+        onFocus={(e) => { e.target.select() }}
+      />
+      <div className="px-3">
+        <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
+      </div>
+    </div>
+
+    {/* Search Suggestions */}
+    <div className="relative">
+      {financeSearchSuggestion.length > 0 && financeSearchTerm !== "" && (
+        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+          {financeSearchSuggestion.map((name, index) => (
+            <li key={index}>
+              <button
+                type="button"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                onClick={handleFinanceSelection}
+                value={name}
+              >
+                {name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</div>
     <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-10 rounded-lg shadow-md"> {/* Increased padding */}
   {/* Header Section */}
   <div className="flex flex-col sm:flex-row justify-between items-center mb-4"> {/* Use flex-col for mobile view */}
