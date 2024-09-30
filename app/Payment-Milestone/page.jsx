@@ -184,44 +184,36 @@ const handleInputCountChange = (event) => {
   
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
-     <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl"> {/* Reduced max-width on larger screens */}
-      
-       <div className="flex justify-between items-center mb-4">
-        <div>
-          <h2 className="text-3xl font-bold text-left text-blue-600 mb-4 max-w-[90%] md:max-w-full">Payment MileStone</h2>
-          <div className="border-2 w-10 border-blue-500 "></div>
+    <div className="flex items-start justify-start sm:items-center sm:justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
 
-        </div>
-        {/* Button container */}
-        <div className="flex justify-between items-center space-x-4 md:space-x-6">
-          
-
-          <button
-            className="submit-button"
-            onClick={postStages}
-          >
-            Submit
-          </button>
-
-          <button
-            className="cancelupdate-button"
-            onClick={postStages}
-          >
-            Clear All
-          </button>
-          
-        </div>
-
+  <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl">
+    
+    {/* Sticky Button container */}
+    <div className="flex justify-between items-center mb-4 sticky top-0 bg-gray-100 z-10 p-4">
+      <div>
+        <h2 className="text-3xl font-bold text-left text-blue-600 mb-4 max-w-[90%] md:max-w-full">Payment MileStone</h2>
+        <div className="border-2 w-10 border-blue-500"></div>
       </div>
-    <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-10 rounded-lg shadow-md"> {/* Increased padding */}
+
+      {/* Button container with sticky positioning */}
+      <div className="flex justify-between items-center space-x-4 md:space-x-6">
+        <button className="submit-button" onClick={postStages}>
+          Submit
+        </button>
+        <button className="cancelupdate-button" onClick={postStages}>
+          Clear All
+        </button>
+      </div>
+    </div>
+    <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-6 sm:p-10 rounded-lg shadow-md">{/* Increased padding */}
   {/* Header Section */}
-  <div className="flex flex-col sm:flex-row justify-between items-center mb-4"> {/* Use flex-col for mobile view */}
+  <div className="flex flex-row justify-between items-center mb-4"> {/* Use flex-row for all views */}
   <h4 className="text-xl sm:text-2xl font-bold text-gray-800">Total Stages: {stages.length}</h4> {/* Adjusted font size for responsiveness */}
-  <div className="bg-blue-100 p-4 rounded-lg ml-auto mt-2 sm:mt-0"> {/* Added margin-top for mobile spacing */}
+  <div className="bg-blue-100 p-4 rounded-lg ml-auto"> {/* Removed mt-2 for phone view */}
     <h4 className="text-sm sm:text-lg font-semibold text-blue-700">Order Amount: ₹{orderAmount}</h4>
   </div>
 </div>
+
 
 
   <div className="space-y-6">
