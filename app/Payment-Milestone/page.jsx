@@ -23,11 +23,8 @@ const Stages = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName)
   const stages = useAppSelector(state => state.stageSlice.stages);
   const stageEdit = useAppSelector(state => state.stageSlice.editMode);
-  const {orderNumber: orderNumberRP, nextRateWiseOrderNumber : orderNumberRW ,receivable: receivableRP, clientName: clientNameCR, clientNumber: clientNumberCR} = orderDetails;
+  const {receivable: receivableRP} = orderDetails;
   const [financeSearchTerm,setFinanceSearchTerm] = useState("");
-  const [clientName, setClientName] = useState(clientNameCR || "");
-  const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
-  const [orderNumber, setOrderNumber] = useState(orderNumberRW);
   const [orderAmount, setOrderAmount] = useState(receivableRP);
   const [inputCount, setInputCount] = useState(1); // For user input
   const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -35,11 +32,6 @@ const Stages = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [stage, setStage] = useState("");
-  const [editMode, setEditMode] = useState(true);
-  const [stageAmount, setStageAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
   const [financeSearchSuggestion, setFinanceSearchSuggestion] = useState("")
 
   
@@ -106,10 +98,11 @@ const handleInputCountChange = (event) => {
   const validateAllFields = () => {
     const newErrors = [];
     let hasError = false;
-  
+    let totalStageAmount = 0;
+
     stages.forEach((field, index) => {
       const error = { stageAmount: "", description: "", dueDate: "" };
-  
+
       // Validate stageAmount
       if (!field.stageAmount) {
         error.stageAmount = "Stage Amount is required";
@@ -117,40 +110,39 @@ const handleInputCountChange = (event) => {
       } else if (isNaN(field.stageAmount) || Number(field.stageAmount) <= 0) {
         error.stageAmount = "Stage Amount must be a positive number";
         hasError = true;
+      } else {
+        totalStageAmount += Number(field.stageAmount); // Sum stage amounts
       }
-  
+
       // Validate description
       if (!field.description) {
         error.description = "Description is required";
         hasError = true;
       }
-  
+
       // Validate dueDate
       if (!field.dueDate) {
         error.dueDate = "Due date is required";
         hasError = true;
       }
-  
-      newErrors[index] = error; // Store the errors for each field
+
+      newErrors[index] = error;
     });
-  
-    setErrors(newErrors); // Update errors state
-    return hasError; // If there's any error, return true
-  };
-  
-  const handleFieldChange = (index, event, field) => {
-    const value = event.target.value;
-    dispatch(updateStage({ index, field, value }));
-  
-    // Validate the field after update
-    validateField(index, field, value);
+
+    // Check if the total stage amounts match the orderAmount
+    if (totalStageAmount !== Number(orderAmount)) {
+      setToast(true);
+      setToastMessage(`Total stage amount (${totalStageAmount}) does not match the order amount (${orderAmount})`);
+      hasError = true;
+    }
+
+    setErrors(newErrors);
+    return hasError;
   };
   
   const validateField = (index, fieldName, value) => {
-    // Create a copy of the current errors state
     const error = { ...errors[index] };
-  
-    // Validate based on the field name
+
     switch (fieldName) {
       case "stageAmount":
         if (!value) {
@@ -158,37 +150,40 @@ const handleInputCountChange = (event) => {
         } else if (isNaN(value) || Number(value) <= 0) {
           error.stageAmount = "Stage Amount must be a positive number";
         } else {
-          error.stageAmount = ""; // Clear error if valid
+          error.stageAmount = "";
         }
         break;
-  
+
       case "description":
         if (!value) {
           error.description = "Description is required";
         } else {
-          error.description = ""; // Clear error if valid
+          error.description = "";
         }
         break;
-  
+
       case "dueDate":
         if (!value) {
           error.dueDate = "Due date is required";
         } else {
-          error.dueDate = ""; // Clear error if valid
+          error.dueDate = "";
         }
         break;
-  
+
       default:
         break;
     }
-  
-    // Update the errors array with the new error object for this stage
+
     const newErrors = [...errors];
-    newErrors[index] = error; // Update specific stage errors
-  
-    setErrors(newErrors); // Update the state
+    newErrors[index] = error;
+    setErrors(newErrors);
   };
-  
+
+  useEffect(() => {
+    // Sync errors array with stages length
+    setErrors(stages.map(() => ({ stageAmount: "", description: "", dueDate: "" })));
+  }, [stages]);
+
   const handleFinanceSearch = async (e) => {
     const searchTerm = e.target.value;
     setFinanceSearchTerm(searchTerm);
@@ -206,11 +201,8 @@ const handleInputCountChange = (event) => {
     // Clear finance suggestions and set the search term
     setFinanceSearchSuggestion([]);
     setFinanceSearchTerm(selectedFinance);
-  
     FetchMilestoneData(selectedFinanceId)
-
     dispatch(setStageEdit(true));
-
   };
 
   const FetchMilestoneData = async (FinanceId) => {
@@ -226,11 +218,23 @@ const handleInputCountChange = (event) => {
     const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonFinanceId=${StageId}&JsonDBName=${companyName}`);
     const data = await response.json();
   }
+
+  const handleCancelUpdate = () => {
+    dispatch(resetStageItem());
+    dispatch(setStageEdit(false));
+  }
+
+  const handleFieldChange = (index, event, field) => {
+    const value = event.target.value;
+    dispatch(updateStage({ index, field, value }));
+    validateField(index, field, value);
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl"> {/* Reduced max-width on larger screens */}
       
-       <div className="flex justify-between items-center mb-4">
+     <div className="flex justify-between items-center mb-4 top-0 left-0 right-0 z-10 sticky bg-gray-100">
         <div>
           <h2 className="text-3xl font-bold text-left text-blue-600 mb-4 max-w-[90%] md:max-w-full">Payment MileStone</h2>
           <div className="border-2 w-10 border-blue-500 "></div>
@@ -239,7 +243,8 @@ const handleInputCountChange = (event) => {
         {/* Button container */}
         <div className="flex justify-between items-center space-x-4 md:space-x-6">
           
-         {stageEdit ? <button
+         {!stageEdit ? 
+         <button
             className="submit-button"
             onClick={postStages}
           >
@@ -264,6 +269,7 @@ const handleInputCountChange = (event) => {
         </div>
 
       </div>
+      
       <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
   
   {/* Search Input Section */}
@@ -304,8 +310,21 @@ const handleInputCountChange = (event) => {
     </div>
   </div>
 </div>
-    <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-10 rounded-lg shadow-md"> {/* Increased padding */}
+    <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-10 min-h-[60vh] rounded-lg shadow-md overflow-y-scroll"> {/* Increased padding */}
   {/* Header Section */}
+  {stageEdit ? (
+  <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
+    <button
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+       onClick={() => dispatch(resetStageItem())}
+    >
+      Exit Edit
+    </button>
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
+      <p className="text-gray-600 font-semibold">Edit for Order Number</p>
+    </div>
+  </div>
+) : ''}
   <div className="flex flex-col sm:flex-row justify-between items-center mb-4"> {/* Use flex-col for mobile view */}
   <h4 className="text-xl sm:text-2xl font-bold text-gray-800">Total Stages: {stages.length}</h4> {/* Adjusted font size for responsiveness */}
   <div className="bg-blue-100 p-4 rounded-lg ml-auto mt-2 sm:mt-0"> {/* Added margin-top for mobile spacing */}
@@ -351,6 +370,7 @@ const handleInputCountChange = (event) => {
               placeholder={`Stage Amount ${index + 1}`}
               onFocus={e => e.target.select()}
             />
+            {(errors && errors[index].stageAmount) && <p className="text-red-500 text-sm mt-2">{errors[index].stageAmount}</p>}
           </div>
 
           {/* Description */}
@@ -366,6 +386,7 @@ const handleInputCountChange = (event) => {
               placeholder={`Description for stage ${index + 1}`}
               onFocus={e => e.target.select()}
             />
+            {(errors && errors[index].description) && <p className="text-red-500 text-sm mt-2">{errors[index].description}</p>}
           </div>
 
           {/* Due Date and Plus Icon */}
@@ -383,6 +404,7 @@ const handleInputCountChange = (event) => {
                 className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300`}
                 inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400"
                 showIcon
+                minDate={new Date()}
               />
             </div>
             <div>

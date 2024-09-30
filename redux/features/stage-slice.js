@@ -9,7 +9,7 @@ const getCurrentDate = () => {
 };
 
 const initialState = {
-  stages: [{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" , id: ""}],
+  stages: [{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" , id: "", orderNumber: 0}],
   editMode: false
 };
 
@@ -63,7 +63,7 @@ const stageSlice = createSlice({
       }));
     },
     setStageEdit: (state, action) => {
-      state.editMode - action.payload
+      state.editMode = action.payload
     }
   },
 });
