@@ -1,17 +1,16 @@
 "use client";  // Mark as client-side component
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-// import { addStage, setSuccessMessage, setErrorMessage, resetStages } from '@/redux/features/stage-slice'; 
+import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
 import SuccessToast from '../components/SuccessToast';
 import ToastMessage from '../components/ToastMessage';
 import { Calendar } from 'primereact/calendar';
-import { format } from 'date-fns';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
 import 'primereact/resources/primereact.min.css';          // Core styles
-import { addItemsToStage, updateStage, removeItem, addStage } from '@/redux/features/stage-slice';
+import { updateStage, removeItem, addStage } from '@/redux/features/stage-slice';
 import { FaPlus, FaMinus } from 'react-icons/fa'; // Import icons
+import './style.css';
 
 const Stages = () => {
   const router = useRouter();
@@ -75,219 +74,6 @@ const handleInputCountChange = (event) => {
       router.push("/login");  
     }
   },[])
-// const postStages = () => {
-    
-//   const hasError = validateAllFields(); // Validate all fields before submission
-
-//   if (!hasError) {
-//     setSuccessMessage('Stages Created');
-//     setTimeout(() => {
-//       setSuccessMessage('');
-//     }, 3000);
-//     router.push('/Create-Order');
-//   } else {
-//     // setToast(true);
-//     // setToastMessage('Please fill all necessary fields before submitting.');
-//     // setTimeout(() => {
-//     //   setToastMessage('');
-//     // }, 3000);
-//   }
-// };
-
-// const validateAllFields = () => {
-//   const newErrors = [];
-//   let hasError = false;
-
-//   stages.forEach((field, index) => {
-//     const error = { stageAmount: "", description: "", dueDate: "" };
-
-//     if (!field.stageAmount) {
-//       error.stageAmount = 'Stage Amount is required';
-//       hasError = true;
-//     } else if (isNaN(field.stageAmount) || Number(field.stageAmount) <= 0) {
-//       error.stageAmount = 'Stage Amount must be a positive number';
-//       hasError = true;
-//     }
-
-//     if (!field.description) {
-//       error.description = 'Description is required';
-//       hasError = true;
-//     }
-
-//     if (!field.dueDate) {
-//       error.dueDate = 'Due date is required';
-//       hasError = true;
-//     }
-
-//     newErrors[index] = error;
-//   });
-
-//   setErrors(newErrors);
-//   return hasError;
-// };
-
-  
-  // const postStages = () => {
-  //   const hasError = validateAllFields();
-  
-  //   if (!hasError) {
-  //     // If no error, create stages and show success message
-  //     CreateStages(); // Call CreateStages after validation is successful
-  //     setSuccessMessage('Stages Created');
-  //     setTimeout(() => {
-  //       setSuccessMessage('');
-  //     }, 3000);
-  //     // Additional submission logic can go here if needed
-  //   } else {
-  //     // If there is an error, show toast message
-  //     setToast(true);
-  //     setToastMessage('Please fill all necessary fields before submitting.');
-  //     setTimeout(() => {
-  //       setToastMessage('');
-  //     }, 3000);
-  //   }
-  // };
- 
-  
-
-  // const createFields = () => {
-  //   const newFields = [];
-
-  //   // Create new fields based on the inputCount
-  //   for (let i = 0; i < inputCount; i++) {
-  //     newFields.push({
-  //       title: "",
-  //       description: "",
-  //       dueDate: getCurrentDate(),
-  //       stageAmount: ""  
-  //     });
-  //   }
-
-  //   dispatch(addItemsToStage(newFields));
-  //   setErrors(new Array(newFields.length).fill({ title: "", description: "", dueDate: "" })); // Ensure error array matches the fields array
-  // };
-   // Function to add a new stage
-  //  const addStage = () => {
-  //   dispatch(addItemsToStage([
-  //     ...stages,
-  //     {
-  //       title: '',
-  //       description: '',
-  //       dueDate: getCurrentDate(),
-  //       stageAmount: '',
-  //     },
-  //   ]));
-  // };
-
-
-  // Function to remove a stage
-  // const removeStage = (index) => {
-  //   if (stages.length > 1) {
-  //     const newFields = stages.filter((_, i) => i !== index);
-  //     dispatch(addItemsToStage(newFields));
-  //   }
-  // };
-
-  // const handleFieldChange = (index, event, field) => {
-  //   const value = event.target.value;
-  //   dispatch(updateStage({ index, field, value }));
-  
-  //   // Validate field after update
-  //   validateField(index, field, value);
-  // };
-  
-
-  // const validateField = (index, fieldName, value) => {
-  //   const error = { ...errors[index] }; // Copy the current error object for that stage
-  
-  //   switch (fieldName) {
-  //     case 'stageAmount':
-  //       if (!value) {
-  //         error.stageAmount = 'Stage Amount is required';
-  //       } else if (isNaN(value) || Number(value) <= 0) {
-  //         error.stageAmount = 'Stage Amount must be a positive number';
-  //       } else {
-  //         error.stageAmount = ''; // Clear error if valid
-  //       }
-  //       break;
-  
-  //     case 'description':
-  //       if (!value) {
-  //         error.description = 'Description is required';
-  //       } else {
-  //         error.description = ''; // Clear error if valid
-  //       }
-  //       break;
-  
-  //     case 'dueDate':
-  //       if (!value) {
-  //         error.dueDate = 'Due date is required';
-  //       } else {
-  //         error.dueDate = ''; // Clear error if valid
-  //       }
-  //       break;
-  
-  //     default:
-  //       break;
-  //   }
-  
-  //   const newErrors = [...errors];
-  //   newErrors[index] = error; // Update the error for the specific stage
-  //   setErrors(newErrors);
-  // };
-  
-
-
-  
-  // const CreateStages = async (event) => {
-  //   event.preventDefault();
-  
-  //   // Check if all required fields are filled
-  //   if (validateAllFields()) {
-  //     try {
-  //       // Create API promises for each field, dynamically passing the stage count
-  //       const apiPromises = stages.map(async (field, index) => {
-  //         const formattedDueDate = format(new Date(field.dueDate), 'yyyy-MM-dd');
-  
-  //         // Dynamically set the stage count for each stage
-  //         // const stageCount = `Stage ${index + 1}`;
-  
-  //         // Send API request with the dynamic stage count
-  //         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${orderNumber}&JsonClientName=${clientNameCR}&JsonClientNumber=${clientNumberCR}&JsonStage=${index + 1}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`);
-  
-  //         return await response.json();
-  //       });
-  
-  //       // Wait for all API promises to resolve
-  //       const results = await Promise.all(apiPromises);
-  
-  //       // Handle results of API calls
-  //       results.forEach((data, index) => {
-  //         if (data === "Stage Created Successfully!") {
-  //           // Dispatch action to add created stages
-  //           //dispatch(addItemsToStage( fields ));
-  
-  //           // Show success message
-  //           setSuccessMessage('Stages Created Successfully!');
-  //           setTimeout(() => {
-  //             setSuccessMessage('');
-  //           }, 3000);
-  //         } else {
-  //           console.error('Error creating stage:', data);
-  //         }
-  //       });
-  //     } catch (error) {
-  //       console.error('Error creating stages:', error);
-  //     }
-  //   } else {
-  //     // Show error message if fields are not valid
-  //     setToastMessage('Please fill all necessary fields.');
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   console.log('Stages component rendered');
-  // }, [fields]);
 
   const [errors, setErrors] = useState(stages.map(() => ({ stageAmount: "", description: "", dueDate: "" })));
 
@@ -403,21 +189,27 @@ const handleInputCountChange = (event) => {
       
        <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-3xl font-bold text-left text-blue-600 mb-4">Create Payment MileStone</h2>
+          <h2 className="text-3xl font-bold text-left text-blue-600 mb-4 max-w-[90%] md:max-w-full">Payment MileStone</h2>
           <div className="border-2 w-10 border-blue-500 "></div>
 
         </div>
         {/* Button container */}
-        <div className="flex flex-wrap justify-between items-center space-x-4 md:space-x-6">
+        <div className="flex justify-between items-center space-x-4 md:space-x-6">
           
 
           <button
-            className="w-full md:w-auto bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600"
+            className="submit-button"
             onClick={postStages}
           >
             Submit
           </button>
 
+          <button
+            className="cancelupdate-button"
+            onClick={postStages}
+          >
+            Clear All
+          </button>
           
         </div>
 
