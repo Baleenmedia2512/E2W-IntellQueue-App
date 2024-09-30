@@ -1137,7 +1137,7 @@ const apiRef = useGridApiRef();
 const [filterModel, setFilterModel] = useState({ items: [] }); 
 const [filteredData, setFilteredData] = useState([]);
 const [rateStats, setRateStats] = useState({});
-const [filterValues, setFilterValues] = useState({});
+const [filterInputs, setFilterInputs] = useState({});
 
 
    // Function to filter the order data based on the filter model
@@ -1161,12 +1161,16 @@ const [filterValues, setFilterValues] = useState({});
   // Function to calculate the statistics based on filtered rows
   const calculateRateStats = () => {
     const stats = {};
-
-    filteredData.forEach(order => {
+  
+    // Filter out rows where RateWiseOrderNumber <= 0
+    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+  
+    // Iterate over the filtered rows to calculate the stats
+    filteredRows.forEach(order => {
       const rateName = order.Card; // Assuming the 'Card' field is used for rate classification
       const orderValue = Number(order.Receivable.replace('₹', '').trim()) || 0; // Ensure it's a number
       const income = Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0; // Ensure it's a number
-
+  
       if (stats[rateName]) {
         stats[rateName].orderCount += 1;
         stats[rateName].totalOrderValue += orderValue;
@@ -1179,14 +1183,31 @@ const [filterValues, setFilterValues] = useState({});
         };
       }
     });
-
+  
     setRateStats(stats); // Update state with new stats
   };
-
+  
   // UseEffect to apply filters and calculate stats when orderDetails or filterModel changes
   // useEffect(() => {
   //   fetchOrderDetails(); // Fetch order details on mount
   // }, []);
+
+  useEffect(() => {
+    const filteredRows = orderDetails.filter((row) => {
+      return filterModel.items.every((filter) => {
+        const field = filter.field;
+        const value = filter.value ? filter.value.toLowerCase() : '';
+  
+        if (value === '') return true; // Skip if the filter value is empty
+  
+        const cellValue = String(row[field]).toLowerCase(); // Case-insensitive comparison
+        return cellValue.includes(value);
+      });
+    });
+  
+    setFilteredData(filteredRows);
+  }, [filterModel, orderDetails]);  // Recalculate rows whenever filterModel or orderDetails change
+  
 
   useEffect(() => {
     applyFilters(); // Apply filters
@@ -1406,27 +1427,33 @@ const [filterValues, setFilterValues] = useState({});
         pageSize={10}
         onFilterModelChange={(newFilterModel) => {
           // Merge new filters with existing filters
-          setFilterModel(prevModel => {
+          setFilterModel((prevModel) => {
             const existingItems = prevModel.items;
-            console.log(prevModel)
         
             // Update or add new filter
             const updatedItems = newFilterModel.items.reduce((acc, newFilter) => {
-              const existingFilter = acc.find(filter => filter.field === newFilter.field);
+              const existingFilterIndex = acc.findIndex((filter) => filter.field === newFilter.field);
         
-              if (existingFilter) {
-                // If the filter already exists, update the value
-                existingFilter.value = newFilter.value !== undefined ? newFilter.value : existingFilter.value; // Keep existing value if new is undefined
-              } else {
-                acc.push({ ...newFilter }); // Add new filter, making sure to spread the newFilter object
+              if (existingFilterIndex !== -1) {
+                // If the filter already exists, update it or remove it if the value is empty
+                if (newFilter.value === '') {
+                  acc.splice(existingFilterIndex, 1); // Remove filter only if the input is explicitly cleared
+                } else {
+                  acc[existingFilterIndex] = { ...acc[existingFilterIndex], ...newFilter }; // Update existing filter with new value
+                }
+              } else if (newFilter.value && newFilter.value !== '') {
+                acc.push({ ...newFilter }); // Add new filter if it's not empty
               }
         
               return acc;
-            }, existingItems);
+            }, [...existingItems]); // Ensure we work on a copy of the existing items
         
-            return { items: updatedItems }; // Return the updated filter model
+            return { items: updatedItems };
           });
         }}
+        
+        
+        
          // Update the filter model state
         initialState={{
           sorting: {
