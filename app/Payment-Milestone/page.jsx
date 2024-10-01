@@ -8,8 +8,11 @@ import ToastMessage from '../components/ToastMessage';
 import { Calendar } from 'primereact/calendar';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
 import 'primereact/resources/primereact.min.css';          // Core styles
-import { updateStage, removeItem, addStage } from '@/redux/features/stage-slice';
+import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem, setStageEdit } from '@/redux/features/stage-slice';
 import { FaPlus, FaMinus } from 'react-icons/fa'; // Import icons
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FetchFinanceSeachTerm } from '../api/FetchAPI';
 import './style.css';
 
 const Stages = () => {
@@ -17,12 +20,11 @@ const Stages = () => {
   const dispatch = useDispatch();
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const orderDetails = useAppSelector(state => state.orderSlice);
+  const companyName = useAppSelector(state => state.authSlice.companyName)
   const stages = useAppSelector(state => state.stageSlice.stages);
-  const {orderNumber: orderNumberRP, nextRateWiseOrderNumber : orderNumberRW ,receivable: receivableRP, clientName: clientNameCR, clientNumber: clientNumberCR} = orderDetails;
-  
-  const [clientName, setClientName] = useState(clientNameCR || "");
-  const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
-  const [orderNumber, setOrderNumber] = useState(orderNumberRW);
+  const stageEdit = useAppSelector(state => state.stageSlice.editMode);
+  const {receivable: receivableRP} = orderDetails;
+  const [financeSearchTerm,setFinanceSearchTerm] = useState("");
   const [orderAmount, setOrderAmount] = useState(receivableRP);
   const [inputCount, setInputCount] = useState(1); // For user input
   const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -30,10 +32,7 @@ const Stages = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [stage, setStage] = useState("");
-  const [stageAmount, setStageAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [financeSearchSuggestion, setFinanceSearchSuggestion] = useState("")
 
   
   useEffect(() => {
@@ -99,10 +98,11 @@ const handleInputCountChange = (event) => {
   const validateAllFields = () => {
     const newErrors = [];
     let hasError = false;
-  
+    let totalStageAmount = 0;
+
     stages.forEach((field, index) => {
       const error = { stageAmount: "", description: "", dueDate: "" };
-  
+
       // Validate stageAmount
       if (!field.stageAmount) {
         error.stageAmount = "Stage Amount is required";
@@ -110,40 +110,39 @@ const handleInputCountChange = (event) => {
       } else if (isNaN(field.stageAmount) || Number(field.stageAmount) <= 0) {
         error.stageAmount = "Stage Amount must be a positive number";
         hasError = true;
+      } else {
+        totalStageAmount += Number(field.stageAmount); // Sum stage amounts
       }
-  
+
       // Validate description
       if (!field.description) {
         error.description = "Description is required";
         hasError = true;
       }
-  
+
       // Validate dueDate
       if (!field.dueDate) {
         error.dueDate = "Due date is required";
         hasError = true;
       }
-  
-      newErrors[index] = error; // Store the errors for each field
+
+      newErrors[index] = error;
     });
-  
-    setErrors(newErrors); // Update errors state
-    return hasError; // If there's any error, return true
-  };
-  
-  const handleFieldChange = (index, event, field) => {
-    const value = event.target.value;
-    dispatch(updateStage({ index, field, value }));
-  
-    // Validate the field after update
-    validateField(index, field, value);
+
+    // Check if the total stage amounts match the orderAmount
+    if (totalStageAmount !== Number(orderAmount)) {
+      setToast(true);
+      setToastMessage(`Total stage amount (${totalStageAmount}) does not match the order amount (${orderAmount})`);
+      hasError = true;
+    }
+
+    setErrors(newErrors);
+    return hasError;
   };
   
   const validateField = (index, fieldName, value) => {
-    // Create a copy of the current errors state
     const error = { ...errors[index] };
-  
-    // Validate based on the field name
+
     switch (fieldName) {
       case "stageAmount":
         if (!value) {
@@ -151,37 +150,85 @@ const handleInputCountChange = (event) => {
         } else if (isNaN(value) || Number(value) <= 0) {
           error.stageAmount = "Stage Amount must be a positive number";
         } else {
-          error.stageAmount = ""; // Clear error if valid
+          error.stageAmount = "";
         }
         break;
-  
+
       case "description":
         if (!value) {
           error.description = "Description is required";
         } else {
-          error.description = ""; // Clear error if valid
+          error.description = "";
         }
         break;
-  
+
       case "dueDate":
         if (!value) {
           error.dueDate = "Due date is required";
         } else {
-          error.dueDate = ""; // Clear error if valid
+          error.dueDate = "";
         }
         break;
-  
+
       default:
         break;
     }
-  
-    // Update the errors array with the new error object for this stage
+
     const newErrors = [...errors];
-    newErrors[index] = error; // Update specific stage errors
+    newErrors[index] = error;
+    setErrors(newErrors);
+  };
+
+  useEffect(() => {
+    // Sync errors array with stages length
+    setErrors(stages.map(() => ({ stageAmount: "", description: "", dueDate: "" })));
+  }, [stages]);
+
+  const handleFinanceSearch = async (e) => {
+    const searchTerm = e.target.value;
+    setFinanceSearchTerm(searchTerm);
   
-    setErrors(newErrors); // Update the state
+    const searchSuggestions = await FetchFinanceSeachTerm(companyName, searchTerm);
+    setFinanceSearchSuggestion(searchSuggestions);
   };
   
+  const handleFinanceSelection = (e) => {
+    const selectedFinance = e.target.value;
+  
+    // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
+    const selectedFinanceId = selectedFinance.split('-')[0];
+  
+    // Clear finance suggestions and set the search term
+    setFinanceSearchSuggestion([]);
+    setFinanceSearchTerm(selectedFinance);
+    FetchMilestoneData(selectedFinanceId)
+    dispatch(setStageEdit(true));
+  };
+
+  const FetchMilestoneData = async (FinanceId) => {
+    // Fetch the data (replace with your actual API call)
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonFinanceId=${FinanceId}&JsonDBName=${companyName}`);
+    const data = await response.json();
+
+    // Dispatch the action to update stages with the received data
+    dispatch(setStagesFromServer(data));
+  };
+
+  const updateStages = async(StageId) => {
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonFinanceId=${StageId}&JsonDBName=${companyName}`);
+    const data = await response.json();
+  }
+
+  const handleCancelUpdate = () => {
+    dispatch(resetStageItem());
+    dispatch(setStageEdit(false));
+  }
+
+  const handleFieldChange = (index, event, field) => {
+    const value = event.target.value;
+    dispatch(updateStage({ index, field, value }));
+    validateField(index, field, value);
+  };
 
   return (
     <div className="flex items-start justify-start sm:items-center sm:justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
@@ -253,6 +300,7 @@ const handleInputCountChange = (event) => {
               placeholder={`Stage Amount ${index + 1}`}
               onFocus={e => e.target.select()}
             />
+            {(errors && errors[index].stageAmount) && <p className="text-red-500 text-sm mt-2">{errors[index].stageAmount}</p>}
           </div>
 
           {/* Description */}
@@ -268,6 +316,7 @@ const handleInputCountChange = (event) => {
               placeholder={`Description for stage ${index + 1}`}
               onFocus={e => e.target.select()}
             />
+            {(errors && errors[index].description) && <p className="text-red-500 text-sm mt-2">{errors[index].description}</p>}
           </div>
 
           {/* Due Date and Plus Icon */}
@@ -285,6 +334,7 @@ const handleInputCountChange = (event) => {
                 className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300`}
                 inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400"
                 showIcon
+                minDate={new Date()}
               />
             </div>
             <div>
