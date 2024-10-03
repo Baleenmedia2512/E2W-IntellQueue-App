@@ -148,7 +148,8 @@ export const AdDetails = () => {
       adType: item.adType,
       formattedDate: item.formattedDate,
       remarks: item.remarks,
-      width: item.width
+      width: item.width,
+      rateId: item.rateId
     };
   };
 
