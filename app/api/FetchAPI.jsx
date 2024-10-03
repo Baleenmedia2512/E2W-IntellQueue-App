@@ -71,3 +71,20 @@ export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
     
     return SearchTerms;
 }
+
+export const UpdatePaymentMilestone = async(Stages, DBName) => {
+    let result = "";
+    try{
+        const response = await api.post("UpdatePaymentMilestone.php",{
+            FormData: {
+                JsonDBName: DBName,
+                JsonStages: Stages
+            }
+        })
+        result = response.data.success;
+    }catch(error){
+        console.error(error);
+        result = `Error while Updating stage: ${Stages.index}`
+    }
+    return result;
+}

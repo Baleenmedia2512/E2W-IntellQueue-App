@@ -12,7 +12,7 @@ import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem,
 import { FaPlus, FaMinus } from 'react-icons/fa'; // Import icons
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FetchOrderSeachTerm } from '../api/FetchAPI';
+import { FetchFinanceSeachTerm, FetchOrderSeachTerm, UpdatePaymentMilestone } from '../api/FetchAPI';
 import './style.css';
 
 const Stages = () => {
@@ -33,10 +33,9 @@ const Stages = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
-  const [orderNumber, setOrderNumber] = useState(orderNumberRP);
-  const [displayClientName, setDisplayClientName] = useState(clientName);
-
+  const [financeSearchSuggestion, setFinanceSearchSuggestion] = useState("");
+  const [stagesToUpdate, setStagesToUpdate] = useState([])
+  
   useEffect(() => {
     setOrderAmount(receivableRP);
   },[])
@@ -188,18 +187,10 @@ const handleInputCountChange = (event) => {
 
   const handleOrderSearch = async (e) => {
     const searchTerm = e.target.value;
-    setOrderSearchTerm(searchTerm);
-  
-    // If search term is cleared, reset the update mode
-    if (searchTerm.trim() === "") {
-            dispatch(resetStageItem());
-            setOrderSearchTerm('');
-      setOrderSearchSuggestion([]); // Clear suggestions
-      return; // Exit early
-    }
+    setFinanceSearchTerm(searchTerm);
   
     const searchSuggestions = await FetchOrderSeachTerm(companyName, searchTerm);
-    setOrderSearchSuggestion(searchSuggestions);
+    setFinanceSearchSuggestion(searchSuggestions);
   };
   
   const handleOrderSelection = (e) => {
@@ -220,9 +211,9 @@ const handleInputCountChange = (event) => {
   
   };
 
-  const FetchMilestoneData = async (orderNumber) => {
-    // Fetch the data using OrderNumber (instead of FinanceId)
-    const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonOrderNumber=${orderNumber}&JsonDBName=${companyName}`);
+  const FetchMilestoneData = async (OrderId) => {
+    // Fetch the data (replace with your actual API call)
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonOrderNumber=${OrderId}&JsonDBName=${companyName}`);
     const data = await response.json();
 
     // Dispatch the action to update stages with the received data
@@ -230,8 +221,8 @@ const handleInputCountChange = (event) => {
 };
 
   const updateStages = async(StageId) => {
-    const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdatePaymentMilestone.php?JsonFinanceId=${StageId}&JsonDBName=${companyName}`);
-    const data = await response.json();
+
+    const response = UpdatePaymentMilestone()
   }
 
   const handleCancelUpdate = () => {
@@ -242,6 +233,28 @@ const handleInputCountChange = (event) => {
   const handleFieldChange = (index, event, field) => {
     const value = event.target.value;
     dispatch(updateStage({ index, field, value }));
+    stageEdit && setStagesToUpdate((prevStages) => {
+      const existingStageIndex = prevStages.findIndex((stage) => stage.index === index);
+  
+      // If the stage for this index is already in stagesToUpdate, update the corresponding field
+      if (existingStageIndex !== -1) {
+        const updatedStages = [...prevStages];
+        updatedStages[existingStageIndex] = {
+          ...updatedStages[existingStageIndex],
+          [field]: value
+        };
+        return updatedStages;
+      }
+  
+      // If it's a new stage being updated, add it to the array
+      return [
+        ...prevStages,
+        {
+          index: index,
+          [field]: value
+        }
+      ];
+    });
     validateField(index, field, value);
   };
 
@@ -251,7 +264,7 @@ const handleInputCountChange = (event) => {
       
      <div className="flex justify-between items-center mb-4 top-0 left-0 right-0 z-10 sticky bg-gray-100">
         <div>
-          <h2 className="text-3xl font-bold text-left text-blue-600 mb-4 max-w-[90%] md:max-w-full">Payment MileStone</h2>
+          <h2 className="text-3xl font-bold text-left text-blue-600 mb-4 max-w-[90%] md:max-w-full">Payment Milestone</h2>
           <div className="border-2 w-10 border-blue-500 "></div>
 
         </div>
@@ -297,8 +310,8 @@ const handleInputCountChange = (event) => {
         className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
         type="text"
         id="RateSearchInput"
-        placeholder="Search Order for Update.."
-        value={orderSearchTerm}
+        placeholder="Search Milestone for Update.."
+        value={financeSearchTerm}
         onChange={handleOrderSearch}
         onFocus={(e) => { e.target.select() }}
       />
