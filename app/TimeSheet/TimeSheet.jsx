@@ -293,7 +293,7 @@ console.log(successMessage)
                     {orderSuggestions.length > 0 && (
                         <ul>
                             {orderSuggestions.map((suggestion, index) => (
-                                <li key={index} onClick={() => handleOrderSelect(suggestion)}>
+                                <li key={`${suggestion}-${index}`} onClick={() => handleOrderSelect(suggestion)}>
                                     {suggestion}
                                 </li>
                             ))}
@@ -318,7 +318,7 @@ console.log(successMessage)
                     {quoteSuggestions.length > 0 && (
                         <ul>
                             {quoteSuggestions.map((suggestion, index) => (
-                                <li key={index} onClick={() => handleQuoteSelect(suggestion)}>
+                                <li key={`${suggestion}-${index}`} onClick={() => handleQuoteSelect(suggestion)}>
                                     {suggestion}
                                 </li>
                             ))}
