@@ -293,7 +293,7 @@ console.log(successMessage)
                     {orderSuggestions.length > 0 && (
                         <ul>
                             {orderSuggestions.map((suggestion, index) => (
-                                <li key={`${suggestion}-${index}`} onClick={() => handleOrderSelect(suggestion)}>
+                                <li key={index} onClick={() => handleOrderSelect(suggestion)}>
                                     {suggestion}
                                 </li>
                             ))}
@@ -318,7 +318,7 @@ console.log(successMessage)
                     {quoteSuggestions.length > 0 && (
                         <ul>
                             {quoteSuggestions.map((suggestion, index) => (
-                                <li key={`${suggestion}-${index}`} onClick={() => handleQuoteSelect(suggestion)}>
+                                <li key={index} onClick={() => handleQuoteSelect(suggestion)}>
                                     {suggestion}
                                 </li>
                             ))}
@@ -355,11 +355,13 @@ console.log(successMessage)
                 if (isInEditMode) {
                   return [
                       <GridActionsCellItem
+                          key="save"
                           icon={<SaveIcon className="text-green-500" />} // Save icon in green
                           label="Save"
                           onClick={handleSaveClick(id)}
                       />,
                       <GridActionsCellItem
+                          key="cancel"
                           icon={<CancelIcon className="text-red-500" />} // Cancel icon in red
                           label="Cancel"
                           onClick={handleCancelClick(id)}
@@ -369,11 +371,13 @@ console.log(successMessage)
               
               return [
                   <GridActionsCellItem
+                      key="edit"
                       icon={<EditIcon className="text-blue-500" />} // Edit icon in blue
                       label="Edit"
                       onClick={handleEditClick(id)}
                   />,
                   <GridActionsCellItem
+                      key="delete"
                       icon={<DeleteIcon className="text-red-500" />} // Delete icon in red
                       label="Delete"
                       onClick={handleDeleteClick(id)}
