@@ -119,7 +119,10 @@ export default function BottomBarTest() {
           break; 
         case '/ConsultantManager':
           setSelected('ConsultantManager');
-          break;     
+          break;
+        case '/Payment-Milestone':
+          setSelected('paymentMilestone');
+          break;          
         default:
           break;
       }
@@ -159,7 +162,10 @@ export default function BottomBarTest() {
         break; 
       case 9:
         router.push('/ConsultantManager');
-        break;    
+        break;
+      case 10:
+        router.push('/Payment-Milestone');
+        break;          
       default:
         break;
     }
@@ -289,6 +295,22 @@ export default function BottomBarTest() {
       />
     </svg>
 
+  );
+  const PaymentMilestoneIcon = () => (
+    <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="h-5 w-5"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 8.25h18M3 8.25c0-1.242.92-2.25 2.05-2.25h13.9c1.13 0 2.05 1.008 2.05 2.25M3 8.25v7.5c0 1.242.92 2.25 2.05 2.25h13.9c1.13 0 2.05-1.008 2.05-2.25v-7.5M3 15.75h18M9 12h6m-3-3v6"
+    />
+  </svg>
   );
   
   const OrderManagerIcon = () => (
@@ -472,6 +494,13 @@ export default function BottomBarTest() {
             onClick={() => { setSelected('consultantManager'); setShowMoreOptions(false); handleChange(null, 9); }} // Ensure the value corresponds to the correct route
             additionalClasses="hover:bg-blue-50"
             dataTag=""
+          />
+          <SubNavItem
+          icon={<PaymentMilestoneIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
+          label="Payment Milestone"
+          onClick={() => { setSelected('paymentMilestone'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
+          additionalClasses="hover:bg-blue-50"
+          dataTag=""
           />
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
