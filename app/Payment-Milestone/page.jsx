@@ -12,7 +12,7 @@ import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem,
 import { FaPlus, FaMinus } from 'react-icons/fa'; // Import icons
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FetchFinanceSeachTerm, FetchOrderSeachTerm, UpdatePaymentMilestone } from '../api/FetchAPI';
+import { FetchOrderSeachTerm, UpdatePaymentMilestone } from '../api/FetchAPI';
 import './style.css';
 
 const Stages = () => {
@@ -33,8 +33,9 @@ const Stages = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [financeSearchSuggestion, setFinanceSearchSuggestion] = useState("");
   const [stagesToUpdate, setStagesToUpdate] = useState([])
+  const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
+  const [orderNumber, setOrderNumber] = useState(orderNumberRP);
   
   useEffect(() => {
     setOrderAmount(receivableRP);
@@ -187,10 +188,10 @@ const handleInputCountChange = (event) => {
 
   const handleOrderSearch = async (e) => {
     const searchTerm = e.target.value;
-    setFinanceSearchTerm(searchTerm);
+    setOrderSearchTerm(searchTerm);
   
     const searchSuggestions = await FetchOrderSeachTerm(companyName, searchTerm);
-    setFinanceSearchSuggestion(searchSuggestions);
+    setOrderSearchSuggestion(searchSuggestions);
   };
   
   const handleOrderSelection = (e) => {
@@ -220,10 +221,14 @@ const handleInputCountChange = (event) => {
     dispatch(setStagesFromServer(data));
 };
 
-  const updateStages = async(StageId) => {
-
-    const response = UpdatePaymentMilestone()
-  }
+const updateStages = async (Stages, DBName) => {
+    const result = await UpdatePaymentMilestone(Stages, DBName);
+    if (result) {
+        console.log("Stages updated successfully:", result);
+    } else {
+        console.error("Failed to update stages.");
+    }
+};
 
   const handleCancelUpdate = () => {
     dispatch(resetStageItem());
@@ -311,7 +316,7 @@ const handleInputCountChange = (event) => {
         type="text"
         id="RateSearchInput"
         placeholder="Search Milestone for Update.."
-        value={financeSearchTerm}
+        value={orderSearchTerm}
         onChange={handleOrderSearch}
         onFocus={(e) => { e.target.select() }}
       />
