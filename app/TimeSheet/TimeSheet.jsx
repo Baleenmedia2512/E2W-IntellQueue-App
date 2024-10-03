@@ -377,7 +377,7 @@ console.log(successMessage)
                       onClick={handleEditClick(id)}
                   />,
                   <GridActionsCellItem
-                      key="delete"
+                      key="save"
                       icon={<DeleteIcon className="text-red-500" />} // Delete icon in red
                       label="Delete"
                       onClick={handleDeleteClick(id)}
