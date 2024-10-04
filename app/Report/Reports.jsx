@@ -423,8 +423,8 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         const data = await response.json();
     
         // Ensure the fetched data is formatted correctly
-        const TotalOrderAmt = data.order_amount !== null ? formatIndianNumber(data.order_amount) : '0';
-        const TotalFinanceAmt = data.finance_amount !== null ? formatIndianNumber(data.finance_amount) : '0';
+        const TotalOrderAmt = data.order_amount !== null ? data.order_amount : '0';
+        const TotalFinanceAmt = data.finance_amount !== null ? data.finance_amount : '0';
     
         // Update state with formatted values
         setTotalOrderAmount(TotalOrderAmt);
@@ -1155,7 +1155,29 @@ const [filterInputs, setFilterInputs] = useState({});
       }
     });
 
-    setFilteredData(filteredRows); // Update filtered data
+      // Update the filtered data in the grid (without RateWiseOrderNumber condition)
+      setFilteredData(filteredRows);
+
+      // Calculate summary info only for rows where RateWiseOrderNumber > 0
+      const rowsForSummary = filteredRows.filter(row => row.RateWiseOrderNumber > 0);
+      // Sum values for the summary information
+      const sumOfOrders = rowsForSummary.length; // Total number of orders
+      const totalOrderAmount = rowsForSummary.reduce((sum, row) => 
+        sum + (parseFloat(row.Receivable.replace(/[₹,]/g, '').trim()) || 0), 
+      0); // Sum of order values
+      const totalFinanceAmount = rowsForSummary.reduce((sum, row) => 
+        sum + (parseFloat(row.TotalAmountReceived.replace(/[₹,]/g, '').trim()) || 0), 
+      0); // Sum of finance amounts
+
+      // Update state for summary info
+      setSumOfOrders(sumOfOrders);
+      setTotalOrderAmount(totalOrderAmount);
+      setTotalFinanceAmount(totalFinanceAmount);
+
+      // Improved logging for clarity
+      console.log('Sum of Orders:', sumOfOrders);
+      console.log('Total Order Amount:', totalOrderAmount);
+      console.log('Total Finance Amount:', totalFinanceAmount);
   };
 
   // Function to calculate the statistics based on filtered rows
@@ -1364,7 +1386,7 @@ const [filterInputs, setFilterInputs] = useState({});
     {/* Combined Total Orders and Amounts box */}
     <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
       <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
-        {sumOfOrders}
+        {formatIndianNumber(sumOfOrders)}
       </div>
       <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
         Total Orders
@@ -1372,13 +1394,13 @@ const [filterInputs, setFilterInputs] = useState({});
 
       <div className="flex mt-4 w-fit">
         <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-          ₹{totalOrderAmount}
+          ₹{formatIndianNumber(totalOrderAmount)}
           <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
             Order Value
           </div>
         </div>
         <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
-          ₹{totalFinanceAmount}
+          ₹{formatIndianNumber(totalFinanceAmount)}
           <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
             Income
           </div>
@@ -1393,7 +1415,7 @@ const [filterInputs, setFilterInputs] = useState({});
         className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
       >
         <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
-          {rateStats[rateName].orderCount}
+          {formatIndianNumber(rateStats[rateName].orderCount)}
         </div>
         <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
           {rateName} Orders
@@ -1401,13 +1423,13 @@ const [filterInputs, setFilterInputs] = useState({});
 
         <div className="flex mt-4 w-fit">
           <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-            ₹{Number(rateStats[rateName].totalOrderValue)}
+            ₹{formatIndianNumber(Number(rateStats[rateName].totalOrderValue))}
             <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
               Order Value
             </div>
           </div>
           <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
-            ₹{Number(rateStats[rateName].totalIncome)}
+            ₹{formatIndianNumber(Number(rateStats[rateName].totalIncome))}
             <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
               Income
             </div>
