@@ -237,7 +237,7 @@ const Stages = () => {
   };
 
   const updateStages = async() => {
-    const response = await UpdatePaymentMilestone(stages, companyName)
+    const response = await UpdatePaymentMilestone(stages, companyName, orderNumber, loggedInUser)
     console.log(response);
   }
 

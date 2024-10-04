@@ -72,19 +72,33 @@ export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
     return SearchTerms;
 }
 
-export const UpdatePaymentMilestone = async(Stages, DBName) => {
+export const UpdatePaymentMilestone = async (Stages, DBName, OrderNumber, loggedInUser) => {
     let result = "";
     try {
         // Post request without FormData wrapper
         const response = await api.post("UpdatePaymentMilestone.php", {
             JsonDBName: DBName,
-            JsonStages: Stages
+            JsonStages: Stages,
+            JsonOrderNumber:OrderNumber,
+            JsonUser: loggedInUser
+        }, {
+            headers: {
+                'Content-Type': "application/json"
+            }
         });
-        result = response.data.success;
+
+        result = response.data; // Return the entire response data instead of just 'success'
         console.log(response);
     } catch (error) {
         console.error(error);
-        result = `Error while updating stage: ${Stages.id}`;
+
+        // Check if error contains response data
+        if (error.response && error.response.data) {
+            result = `Error: ${error.response.data.error}`;
+        } else {
+            result = `Error while updating stage: ${error.message}`;
+        }
     }
-    return result;
+
+    return result; // Return full result object
 };

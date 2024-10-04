@@ -9,7 +9,7 @@ const getCurrentDate = () => {
 };
 
 const initialState = {
-  stages: [{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" , id: ""}],
+  stages: [{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" , id: "", index: ""}],
   orderNumber: 0,
   editMode: false
 };
@@ -24,6 +24,7 @@ const stageSlice = createSlice({
     updateStage: (state, action) => {
       const { index, field, value } = action.payload;
       state.stages[index][field] = value;
+      state.stages[index]["index"] = index + 1;
     },
     removeItem: (state, action) => {
       const { index } = action.payload;
