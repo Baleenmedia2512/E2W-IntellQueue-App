@@ -8,7 +8,7 @@ import ToastMessage from '../components/ToastMessage';
 import { Calendar } from 'primereact/calendar';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
 import 'primereact/resources/primereact.min.css';          // Core styles
-import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem, setStageEdit } from '@/redux/features/stage-slice';
+import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem, setStageEdit, setOrderNumber } from '@/redux/features/stage-slice';
 import { FaPlus, FaMinus } from 'react-icons/fa'; // Import icons
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -23,19 +23,17 @@ const Stages = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName)
   const stages = useAppSelector(state => state.stageSlice.stages);
   const stageEdit = useAppSelector(state => state.stageSlice.editMode);
-  //const {receivable: receivableRP} = orderDetails;
-  const {orderNumber: orderNumberRP, receivable: receivableRP, clientName, clientNumber} = orderDetails;
+  const {receivable: receivableRP} = orderDetails;
   const [orderSearchTerm,setOrderSearchTerm] = useState("");
   const [orderAmount, setOrderAmount] = useState(receivableRP);
   const [inputCount, setInputCount] = useState(1); // For user input
   const dbName = useAppSelector(state => state.authSlice.dbName);
+  const orderNumber = useAppSelector(state => state.stageSlice.orderNumber)
   //const [errors, setErrors] = useState([]); // Array to store field-specific errors
   const [successMessage, setSuccessMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [stagesToUpdate, setStagesToUpdate] = useState([])
-  const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
-  const [orderNumber, setOrderNumber] = useState(orderNumberRP);
+  const [orderSearchSuggestion, setOrderSearchSuggestion] = useState("");
   
   useEffect(() => {
     setOrderAmount(receivableRP);
@@ -90,6 +88,7 @@ const Stages = () => {
     } else {
       // Show some form of error message or toast to the user if validation fails
       setToast(true);
+      console.error(errors)
       setToastMessage("Please fill all necessary fields before submitting.");
       setTimeout(() => {
         setToastMessage("");
@@ -194,7 +193,7 @@ const Stages = () => {
     setOrderSearchSuggestion(searchSuggestions);
   };
   
-  const handleOrderSelection = (e) => {
+  const handleFinanceSelection = (e) => {
     const selectedOrder = e.target.value;
   
     // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
@@ -203,9 +202,8 @@ const Stages = () => {
     // Clear finance suggestions and set the search term
     setOrderSearchSuggestion([]);
     setOrderSearchTerm(selectedOrder);
-  
-    // Call the handleFinanceId function with the selected ID
     FetchMilestoneData(selectedOrderId);
+    dispatch(setOrderNumber(selectedOrderId))
     dispatch(setStageEdit(true));
     // Set the finance ID state
     setOrderNumber(selectedOrderId);
@@ -242,7 +240,7 @@ const Stages = () => {
   };
 
   const updateStages = async() => {
-    const response = await UpdatePaymentMilestone(stagesToUpdate, companyName)
+    const response = await UpdatePaymentMilestone(stages, companyName)
     console.log(response);
   }
 
@@ -254,28 +252,6 @@ const Stages = () => {
   const handleFieldChange = (index, event, field) => {
     const value = event.target.value;
     dispatch(updateStage({ index, field, value }));
-    stageEdit && setStagesToUpdate((prevStages) => {
-      const existingStageIndex = prevStages.findIndex((stage) => stage.index === index);
-  
-      // If the stage for this index is already in stagesToUpdate, update the corresponding field
-      if (existingStageIndex !== -1) {
-        const updatedStages = [...prevStages];
-        updatedStages[existingStageIndex] = {
-          ...updatedStages[existingStageIndex],
-          [field]: value
-        };
-        return updatedStages;
-      }
-  
-      // If it's a new stage being updated, add it to the array
-      return [
-        ...prevStages,
-        {
-          index: index,
-          [field]: value
-        }
-      ];
-    });
     validateField(index, field, value);
   };
 
@@ -378,14 +354,8 @@ const Stages = () => {
     >
       Exit Edit
     </button>
-    {/* <div className="flex flex-row text-left text-sm md:text-base pr-2">
-      <p className="text-gray-600 font-semibold">Edit for Order Number</p> */}
-      <div className="flex flex-row text-left text-sm md:text-base pr-2">
-      <p className="text-gray-600 font-semibold">Edit for :{orderNumber}</p>
-      {/* <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">{displayClientName}</p> */}
-      {/* <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">₹{orderAmount}</p> */}
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
+      <p className="text-gray-600 font-semibold">{orderNumber}</p>
     </div>
     {/* </div> */}
   </div>
