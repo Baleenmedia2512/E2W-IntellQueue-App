@@ -58,7 +58,7 @@ const cartPersistConfig = {
 const stagePersistConfig = {
   key: "stages",
   storage: storage,
-  whitelist: ["stages"]
+  whitelist: ["stages", "editMode"]
 }
 
 const ratePersistConfig = {

@@ -9,7 +9,8 @@ const getCurrentDate = () => {
 };
 
 const initialState = {
-  stages: [{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" , id: "", orderNumber: 0}],
+  stages: [{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" , id: ""}],
+  orderNumber: 0,
   editMode: false
 };
 
@@ -64,9 +65,12 @@ const stageSlice = createSlice({
     },
     setStageEdit: (state, action) => {
       state.editMode = action.payload
+    },
+    setOrderNumber: (state, action) => {
+      state.orderNumber = action.payload
     }
   },
 });
 
-export const { addItemsToStage, removeItem, resetStageItem, updateStage, addStage, setStagesFromServer, setStageEdit } = stageSlice.actions;
+export const { addItemsToStage, removeItem, resetStageItem, updateStage, addStage, setStagesFromServer, setStageEdit, setOrderNumber } = stageSlice.actions;
 export const stageReducer = stageSlice.reducer;
