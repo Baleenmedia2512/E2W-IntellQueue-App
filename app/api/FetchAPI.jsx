@@ -76,7 +76,7 @@ export const UpdatePaymentMilestone = async(Stages, DBName) => {
     let result = "";
     try {
         // Post request without FormData wrapper
-        const response = await api.post("UpdatePaymentMilestone.php", {
+        const response = await api.post("RemoveAllPaymentMilestone.php", {
             JsonDBName: DBName,
             JsonStages: Stages
         });

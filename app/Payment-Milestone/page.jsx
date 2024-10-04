@@ -8,7 +8,7 @@ import ToastMessage from '../components/ToastMessage';
 import { Calendar } from 'primereact/calendar';
 import 'primereact/resources/themes/saga-blue/theme.css'; // Theme
 import 'primereact/resources/primereact.min.css';          // Core styles
-import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem, setStageEdit, setOrderNumber } from '@/redux/features/stage-slice';
+import { updateStage, removeItem, addStage, setStagesFromServer, resetStageItem, setStageEdit, setOrderNumber, removeAllStages} from '@/redux/features/stage-slice';
 import { FaPlus, FaMinus } from 'react-icons/fa'; // Import icons
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -193,7 +193,7 @@ const Stages = () => {
     setOrderSearchSuggestion(searchSuggestions);
   };
   
-  const handleFinanceSelection = (e) => {
+  const handleOrderSelection = (e) => {
     const selectedOrder = e.target.value;
   
     // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
@@ -241,8 +241,22 @@ const Stages = () => {
 
   const updateStages = async() => {
     const response = await UpdatePaymentMilestone(stages, companyName)
-    console.log(response);
+    console.log(stages);
   }
+
+  const removeAll = async () => {
+    // Dispatch the action to remove all stages in Redux
+    dispatch(removeAllStages());
+    
+    // Call the API to mark all stages as valid
+    // const response = await UpdatePaymentMilestone([], companyName, { action: 'removeAllStages', JsonDBName: companyName, JsonOrderNumber: orderNumber });
+    
+    // if (response.success) {
+    //     console.log("All stages marked as valid."); // Corrected the log message to reflect the action
+    // } else {
+    //     console.error("Failed to mark all stages as valid:", response.error);
+    // }
+};
 
   const handleCancelUpdate = () => {
     dispatch(resetStageItem());
@@ -277,12 +291,20 @@ const Stages = () => {
             Submit
           </button>
         :
+        <>
         <button
           className="submit-button"
           onClick={updateStages}
         >
           Update
         </button>
+        <button
+        className="bg-red-500 text-white px-4 py-2 rounded"
+        onClick={removeAll}
+      >
+        Remove All
+      </button>
+      </>
         }
 
           <button

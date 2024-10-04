@@ -68,9 +68,12 @@ const stageSlice = createSlice({
     },
     setOrderNumber: (state, action) => {
       state.orderNumber = action.payload
-    }
+    },
+    removeAllStages: (state) => {
+      state.stages = [{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "", id: "" }];
+    },
   },
 });
 
-export const { addItemsToStage, removeItem, resetStageItem, updateStage, addStage, setStagesFromServer, setStageEdit, setOrderNumber } = stageSlice.actions;
+export const { addItemsToStage, removeItem, resetStageItem, updateStage, addStage, setStagesFromServer, setStageEdit, setOrderNumber, removeAllStages } = stageSlice.actions;
 export const stageReducer = stageSlice.reducer;
