@@ -501,7 +501,7 @@ const validateFields = () => {
   <div className="flex items-center justify-center mt-24 sm:mt-6">
   
     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
-    {consultantID && (
+    {consultantValidity && consultantID && (
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"

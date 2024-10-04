@@ -98,6 +98,7 @@ export default function GroupedRowsDemo() {
     useEffect(() => {
         fetchConsultants();
     }, [startDate, endDate]);
+    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -289,6 +290,7 @@ export default function GroupedRowsDemo() {
     
         return groupedData;
     };
+
     
     
 
@@ -420,7 +422,8 @@ export default function GroupedRowsDemo() {
 
     
     const groupedData = renderGroupedData(consultants, activeFilters);
-
+    
+    
 
     const handlePriceChange = (id, newPrice) => {
         setConsultants(prevConsultants => {
@@ -828,12 +831,20 @@ const filterHeaderTemplate = (column, filterField) => {
     
         // Reset selectedRows when all filters are cleared
         if (Object.values(newFilters).every(filter => filter.value === null || filter.value === '')) {
-            setSelectedRows([]); // Clear selected rows when all filters are empty
+            setSelectedRows(groupedData); // Clear selected rows when all filters are empty
         } else {
             setSelectedRows(combinedFilteredRows); // Update selected rows based on remaining active filters
         }
     };
 
+    useEffect(() => {
+        // Select all rows by default when groupedData is ready
+        if (groupedData.length > 0) {
+            setSelectedRows(groupedData);
+        }
+    }, [groupedData]);
+
+    console.log(selectedRows)
 
     return (
         <div>
@@ -1070,12 +1081,13 @@ const handleClose = () => {
                             onSelectionChange={handleSelectionChange}
                             className="text-left"
                             dataKey="id"
-                            selectionMode="multiple"
+                            selectionMode="checkbox"
                             metaKeySelection={false}
                             paginator
                             rows={20}
                             filters={filters}
                             globalFilterFields={['originalName', 'rateCard', 'rateType']}
+                            
             
                         >
                         
