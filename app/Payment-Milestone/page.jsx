@@ -41,34 +41,34 @@ const Stages = () => {
     setOrderAmount(receivableRP);
   },[])
   // Helper function to get the current date in YYYY-MM-DD format
-  const getCurrentDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed, so we add 1
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+  // const getCurrentDate = () => {
+  //   const today = new Date();
+  //   const year = today.getFullYear();
+  //   const month = String(today.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed, so we add 1
+  //   const day = String(today.getDate()).padStart(2, '0');
+  //   return `${year}-${month}-${day}`;
+  // };
 
   // Initialize fields with a single field and current due date
   // const [fields, setFields] = useState([{ title: "", description: "", dueDate: getCurrentDate(), stageAmount: "" }]);
 
-const handleInputCountChange = (event) => {
-    const value = event.target.value;
+// const handleInputCountChange = (event) => {
+//     const value = event.target.value;
 
-    // Check if the value is empty; if so, set inputCount to an empty string
-    if (value === '') {
-        setInputCount('');
-    } else {
-        const newCount = parseInt(value, 10) || 1; // Default to 1 if not a valid number
+//     // Check if the value is empty; if so, set inputCount to an empty string
+//     if (value === '') {
+//         setInputCount('');
+//     } else {
+//         const newCount = parseInt(value, 10) || 1; // Default to 1 if not a valid number
 
-        // Enforce the limit so that the count does not exceed 5
-        if (newCount > 5) {
-            setInputCount(5); // Set to 5 if the input exceeds the limit
-        } else {
-            setInputCount(newCount);
-        }
-    }
-};
+//         // Enforce the limit so that the count does not exceed 5
+//         if (newCount > 5) {
+//             setInputCount(5); // Set to 5 if the input exceeds the limit
+//         } else {
+//             setInputCount(newCount);
+//         }
+//     }
+// };
 
   useEffect(() => {
     if(!loggedInUser){
@@ -213,22 +213,38 @@ const handleInputCountChange = (event) => {
   };
 
   const FetchMilestoneData = async (OrderId) => {
-    // Fetch the data (replace with your actual API call)
-    const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonOrderNumber=${OrderId}&JsonDBName=${companyName}`);
-    const data = await response.json();
-
-    // Dispatch the action to update stages with the received data
-    dispatch(setStagesFromServer(data));
-};
-
-const updateStages = async (Stages, DBName) => {
-    const result = await UpdatePaymentMilestone(Stages, DBName);
-    if (result) {
-        console.log("Stages updated successfully:", result);
-    } else {
-        console.error("Failed to update stages.");
+    try {
+      // Fetch the data (replace with your actual API call)
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchPaymentMilestone.php?JsonOrderNumber=${OrderId}&JsonDBName=${companyName}`);
+      const data = await response.json();
+      
+      // Check if data is empty or null
+      if (!data || data.length === 0) {
+        // Set initial state if no data is found
+        const initialStages = [
+          {
+            stageAmount: 0,
+            description: "",
+            dueDate: new Date().toISOString().slice(0, 10), // Default to today's date
+          },
+        ];
+        
+        // Dispatch initial state if no data
+        dispatch(setStagesFromServer(initialStages));
+      } else {
+        // If data exists, update the stages with received data
+        dispatch(setStagesFromServer(data));
+      }
+    } catch (error) {
+      console.error("Error fetching milestone data:", error);
+      // Optionally handle the error by dispatching an error state or showing a message
     }
-};
+  };
+
+  const updateStages = async() => {
+    const response = await UpdatePaymentMilestone(stagesToUpdate, companyName)
+    console.log(response);
+  }
 
   const handleCancelUpdate = () => {
     dispatch(resetStageItem());
@@ -417,10 +433,7 @@ const updateStages = async (Stages, DBName) => {
               placeholder={`Stage Amount ${index + 1}`}
               onFocus={e => e.target.select()}
             />
-            {errors && errors[index] && errors[index].stageAmount && (
-  <p className="text-red-500 text-sm mt-2">{errors[index].stageAmount}</p>
-)}
-
+            {(errors && errors[index] && errors[index].stageAmount) && <p className="text-red-500 text-sm mt-2">{errors[index].stageAmount}</p>}
           </div>
 
           {/* Description */}
@@ -436,10 +449,7 @@ const updateStages = async (Stages, DBName) => {
               placeholder={`Description for stage ${index + 1}`}
               onFocus={e => e.target.select()}
             />
-           {errors && errors[index] && errors[index].description && (
-  <p className="text-red-500 text-sm mt-2">{errors[index].description}</p>
-)}
-
+            {(errors && errors[index] && errors[index].description) && <p className="text-red-500 text-sm mt-2">{errors[index].description}</p>}
           </div>
 
           {/* Due Date and Plus Icon */}

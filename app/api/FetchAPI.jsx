@@ -74,17 +74,17 @@ export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
 
 export const UpdatePaymentMilestone = async(Stages, DBName) => {
     let result = "";
-    try{
-        const response = await api.post("UpdatePaymentMilestone.php",{
-            FormData: {
-                JsonDBName: DBName,
-                JsonStages: Stages
-            }
-        })
+    try {
+        // Post request without FormData wrapper
+        const response = await api.post("UpdatePaymentMilestone.php", {
+            JsonDBName: DBName,
+            JsonStages: Stages
+        });
         result = response.data.success;
-    }catch(error){
+        console.log(response);
+    } catch (error) {
         console.error(error);
-        result = `Error while Updating stage: ${Stages.index}`
+        result = `Error while updating stage: ${Stages.id}`;
     }
     return result;
-}
+};
