@@ -37,6 +37,7 @@ export default function GroupedRowsDemo() {
     // const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
+    const [groupedData, setGroupedData] = useState([]);
     // const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
@@ -98,6 +99,15 @@ export default function GroupedRowsDemo() {
     useEffect(() => {
         fetchConsultants();
     }, [startDate, endDate]);
+
+    useEffect(() => {
+        // Select all rows by default when groupedData is ready
+        if (consultants.length > 0) {
+            const data = renderGroupedData(consultants, activeFilters);
+            setGroupedData(data)
+            setSelectedRows(data);
+        }
+    }, [consultants]);
     
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -421,7 +431,7 @@ export default function GroupedRowsDemo() {
     };
 
     
-    const groupedData = renderGroupedData(consultants, activeFilters);
+    
     
     
 
@@ -837,14 +847,8 @@ const filterHeaderTemplate = (column, filterField) => {
         }
     };
 
-    useEffect(() => {
-        // Select all rows by default when groupedData is ready
-        if (groupedData.length > 0) {
-            setSelectedRows(groupedData);
-        }
-    }, [groupedData]);
+    
 
-    console.log(selectedRows)
 
     return (
         <div>
@@ -955,6 +959,8 @@ const handleClickOpen = () => {
 const handleClose = () => {
     setOpen(false);
 };
+
+
 
 
 
@@ -1091,13 +1097,16 @@ const handleClose = () => {
             
                         >
                         
-                            <Column field="originalName" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2 border-r-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="originalName" header="Consultant" body={nameBodyTemplate} 
+                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.originalName?.value ? 'text-blue-600' : 'text-gray-800'}`} 
+                            className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
                             showFilterMatchModes={false}
+                            
                             ></Column>
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateCard?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'rateCard')}
                             showFilterMatchModes={false}
@@ -1105,7 +1114,7 @@ const handleClose = () => {
                             showClearButton={false}
                             
                             ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
+                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateType?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white w-fit p-2"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}
                             showFilterMatchModes={false}
