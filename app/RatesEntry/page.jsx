@@ -1519,6 +1519,20 @@ const handleEditMode = () => {
   setRateValidity(true);
   setIsNewRate(true);
 
+    setValidityDays(0);
+    setValidityDate(new Date());
+    setValidTill("");
+    setLeadDays(0);
+    setCampaignDuration("");
+    setSelectedCampaignUnits("");
+    setShowCampaignDuration(false);
+    setIsSlabAvailable(false);
+    setQty(0);
+    setUnitPrice(0);
+    setNewUnitPrice(0);
+    setTempSlabData([]);
+    setMarginPercentage(0);
+
   // Focus on the name input field
   // setTimeout(() => {
   //   if (consultantNameRef.current) {
@@ -1836,7 +1850,7 @@ const handleMouseLeave = () => {
       <form className="space-y-4">
       {/* <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3> */}
       {/* { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>}  */}
-      {rateId > 0 && (
+      {rateId > 0 && rateValidity && (
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
@@ -1875,12 +1889,14 @@ const handleMouseLeave = () => {
                           value={selectedValues.rateName}
                           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
                           options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+                          isDisabled={!rateValidity}
                         />
                         <button 
                           className='justify-center text-blue-500 ml-1' 
                           onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Rate Card Name");}}
                           id='14'
                           name='AddRateNameButton'
+                          disabled={!rateValidity}
                         >
                           <MdAddCircle size={28}/>
                         </button>
@@ -1905,8 +1921,10 @@ const handleMouseLeave = () => {
                         options={getOptions('typeOfAd', 'rateName')}
                         // options={filters.typeOfAd}
                         required
+                        isDisabled={!rateValidity}
                       />
-                      <button className='justify-center text-blue-500 ml-6' onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Category");}}>
+                      <button className='justify-center text-blue-500 ml-6' onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Category");}}
+                        disabled={!rateValidity}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -1931,11 +1949,13 @@ const handleMouseLeave = () => {
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                         options={getOptions('adType', 'typeOfAd')}
+                        isDisabled={!rateValidity}
                       />
                       <button className='justify-center text-blue-500 ml-1' 
                       id='18'
                       name='AddAdCategoryButton'
-                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Type");}}>
+                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Type");}}
+                      disabled={!rateValidity}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -1961,11 +1981,13 @@ const handleMouseLeave = () => {
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
                         options={getOptions('Location', 'adType')}
                         required
+                        isDisabled={!rateValidity}
                       />
                       <button className='justify-center text-blue-500 ml-1' 
                       id='20'
                       name='AddLocationButton'
-                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Location");}}>
+                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Location");}}
+                      disabled={!rateValidity}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -1992,11 +2014,13 @@ const handleMouseLeave = () => {
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
                       options={getOptions('Package', 'Location')}
                       required = {isNewRate ? true : false}
+                      isDisabled={!rateValidity}
                     />
                     <button className='justify-center text-blue-500 ml-1' 
                     id='22'
                     name='AddPackageButton'
-                    onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Package");}}>
+                    onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Package");}}
+                    disabled={!rateValidity}>
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
@@ -2039,6 +2063,7 @@ const handleMouseLeave = () => {
                     optionLabel="label"
                     optionGroupLabel="label"
                     optionGroupChildren="options"
+                    isDisabled={!rateValidity}
                   />
                 </div>                  
 
@@ -2063,6 +2088,7 @@ const handleMouseLeave = () => {
                       optionLabel="label"
                       optionGroupLabel="label"
                       optionGroupChildren="options"
+                      isDisabled={!rateValidity}
                     />
                     {isUnitsSelected && <p className='text-red-500 mt-2 font-medium'>Please select a valid Unit</p>}
                   </div>
@@ -2090,6 +2116,7 @@ const handleMouseLeave = () => {
                           //setChanging(true);
                         }}
                         onFocus={(e) => e.target.select()}
+                        disabled={!rateValidity}
                       />
                     </div>
                     </div>
@@ -2109,6 +2136,7 @@ const handleMouseLeave = () => {
                           setWidth(e.target.value); setIsQty(false); setIsQtySlab(false);
                         }}
                         onFocus={(e) => e.target.select()}
+                        disabled={!rateValidity}
                       />
                     </div>
                     
@@ -2123,6 +2151,7 @@ const handleMouseLeave = () => {
                         //onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
                         id='26'
                         name='AddQuantityButton'  
+                        disabled={!rateValidity}
                       >
                         <MdAddCircle size={28}/>
                       </button> 
@@ -2143,6 +2172,7 @@ const handleMouseLeave = () => {
                         onFocus={(e) => {
                           e.target.select()
                         }}
+                        disabled={!rateValidity}
                         />
                         
                       <button 
@@ -2154,6 +2184,7 @@ const handleMouseLeave = () => {
                         //onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
                         id='26'
                         name='AddQuantityButton'  
+                        disabled={!rateValidity}
                       >
                         <MdAddCircle size={28}/>
                       </button> 
@@ -2173,12 +2204,12 @@ const handleMouseLeave = () => {
                           <span onClick={() => handleItemClick(data)}>{(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit.value} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit.value}</span>
                         ) : (
                           <option key={selectedUnit === "SCM" ? data.StartQty : data.StartQty * data.Width} className="mt-1.5" 
-                            onClick={() => handleItemClick(data)}
+                            onClick={() => handleItemClick(data)} disabled={!rateValidity}
                           >
                             {(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit ? selectedUnit.value : ''} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit ? selectedUnit.value : ''}
                           </option>
                         )}
-                        <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index, data.Width)}>
+                        <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index, data.Width)} disabled={!rateValidity}>
                           <RemoveCircleOutline color='secondary' fontSize='small'/>
                         </IconButton>
                       </div>
@@ -2192,7 +2223,9 @@ const handleMouseLeave = () => {
                     <div className='flex mr-16 mt-2'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
-                      }}/>
+                      }}
+                      disabled={!rateValidity}
+                      />
                       <label className='justify-left ml-2 text-gray-700 font-semibold'>Service Duration</label>
                     </div>
                     <div className='mb-8'>
@@ -2219,6 +2252,7 @@ const handleMouseLeave = () => {
                         value={selectedCampaignUnits}
                         onChange={(selectedOption) => {setSelectedCampaignUnits(selectedOption); setEditMode(true)}}
                         options={campaignUnits}
+                        isDisabled={!rateValidity}
                       />
                     </div>
                     )}
@@ -2238,6 +2272,7 @@ const handleMouseLeave = () => {
                           type='text'
                           onChange={e => {setLeadDays(e.target.value); setIsLeadDays(false); setEditMode(true)}} onFocus={(e) => {e.target.select()}}
                           onKeyDown ={handleKeyDown}
+                          disabled={!rateValidity}
                         />
                         <p className='ml-2 mt-2 w-1/3'>Day (s)</p>
                       </span>
@@ -2256,6 +2291,7 @@ const handleMouseLeave = () => {
                         onFocus={(e) => {
                           e.target.select()
                         }}
+                        disabled={!rateValidity}
                       />
                   </div>
               <div className='mr-9' name="RatesValidTillTextField">
@@ -2274,6 +2310,7 @@ const handleMouseLeave = () => {
                       required
                       onKeyDown ={handleKeyDown}
                       type='number' 
+                      disabled={!rateValidity}
                       onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
@@ -2319,41 +2356,15 @@ const handleMouseLeave = () => {
                     onChange={(selectedOption) => {dispatch(setRateGST(selectedOption)); setEditMode(true)}}
                     options={GSTOptions}
                     required
+                    isDisabled={!rateValidity}
                   />
 </div>
                 </div>
-                {!(selectedValues.rateName === "" || selectedValues.adType === "" || selectedValues.vendorName === "") ? 
-                <div className="flex items-center justify-center mb-8 mt-11 mr-14">
-                  <button 
-                   className="Clear-button mr-2" 
-                  onClick={() => {dispatch(resetRatesData()); }}>Clear
-                          {/* <span className='flex flex-row justify-center'><MdOutlineClearAll className='mt-1 mr-1'/> Clear</span> */}
-                        </button> 
-                  {!isNewRate && (<button 
-                   className="Delete-button ml-4" 
-                  onClick={rejectRates}>Delete
-                    {/* <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span> */}
-                    </button> 
-                  )}
-                    {(isNewRate)  ? (
-                      <button 
-                      className="Add-button " 
-                      onClick={insertNewRate}>Add
-                      {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span> */}
-                      </button>
-                    ) : ( 
-                        <button 
-                        className="Update-button ml-4" 
-                        onClick={(e) => {updateRates(e); }} disabled={!isFormChanged}> Update
-                          {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span> */}
-                        </button> 
-                    )}
-                    
-                </div>
-                :<></>}
+                
                <div className="flex items-center justify-center mb-8 mt-11 sm:mt-5 sm:mr-0">
                  <button 
                   className="Createorder-button flex items-center justify-center space-x-2 sm:flex-col sm:space-x-0 sm:space-y-2"
+                  disabled={!rateValidity}
                   onClick={(e) => {
                     e.preventDefault();
                     if(rateId){
