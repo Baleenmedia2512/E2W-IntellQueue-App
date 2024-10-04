@@ -280,7 +280,8 @@ const Stages = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4 mb-10 sm:mb-0">
+    <div className="flex items-start justify-start min-h-screen bg-gray-100 p-4 mb-10 sm:items-center sm:justify-center sm:mb-0">
+
      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl"> {/* Reduced max-width on larger screens */}
       
      <div className="flex justify-between items-center mb-4 top-0 left-0 right-0 z-10 sticky bg-gray-100">
