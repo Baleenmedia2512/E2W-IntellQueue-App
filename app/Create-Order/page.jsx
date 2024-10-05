@@ -908,6 +908,9 @@ const updateNewOrder = async (event) => {
         setConsultantName('');
         setDiscountAmount(0);
         setOrderSearchTerm('');
+        setMarginAmount('');
+        setMarginPercentage('');
+        setQty('');
         setTimeout(() => {
           setSuccessMessage('');
           // Only navigate if orderNumberRP satisfies the condition
@@ -1031,9 +1034,12 @@ const updateNewOrder = async (event) => {
     if (elementsToHide.includes("OrderMarginAmount") === false) {
       if (!marginAmount || isNaN(marginAmount)) errors.marginAmount = 'Valid Margin Amount is required';
     }
-    if (elementsToHide.includes("RatesVendorSelect") === false) {
-      if (!selectedValues.vendorName) errors.vendorName = 'Vendor is required';
-    }
+    if (!isOrderUpdate && !elementsToHide.includes("RatesVendorSelect")) {
+      if (!selectedValues.vendorName) {
+          errors.vendorName = 'Vendor is required';
+      }
+  }
+  
     if (elementsToHide.includes("RatesPackageSelect") === false) {
       if (!selectedValues.Location) errors.Package = 'Package is required';
     }
