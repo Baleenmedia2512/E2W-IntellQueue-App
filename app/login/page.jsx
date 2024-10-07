@@ -68,7 +68,7 @@ const Login = () => {
     
   };
 
-  // Validate form fields
+
   const validateFields = () => {
     let errors = {};
     if (!userName.trim()) {
