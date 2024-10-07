@@ -699,6 +699,7 @@ useEffect(() => {
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
           dispatch(resetOrderData());
+          
   };
 
   const cancelFinance = (e) => {
