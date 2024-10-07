@@ -37,6 +37,7 @@ export default function GroupedRowsDemo() {
     // const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
+    const [groupedData, setGroupedData] = useState([]);
     // const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
@@ -49,14 +50,9 @@ export default function GroupedRowsDemo() {
       const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
 
       const [filters, setFilters] = useState({
-        global: { value: null, matchMode: 'contains' },
-        id:{ value: null, matchMode: 'contains' },
-        name: { value: null, matchMode: 'contains' },
+        originalName: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
-        count: { value: null, matchMode: 'equals' },
-        price: { value: null, matchMode: 'equals' },
-        total: { value: null, matchMode: 'equals' }
     });
     const [dates, setDates] = useState([currentStartDate, currentEndDate]);
     const [toast, setToast] = useState(false);
@@ -103,6 +99,16 @@ export default function GroupedRowsDemo() {
     useEffect(() => {
         fetchConsultants();
     }, [startDate, endDate]);
+
+    useEffect(() => {
+        // Select all rows by default when groupedData is ready
+        if (consultants.length > 0) {
+            const data = renderGroupedData(consultants, activeFilters);
+            setGroupedData(data)
+            setSelectedRows(data);
+        }
+    }, [consultants]);
+    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -294,6 +300,7 @@ export default function GroupedRowsDemo() {
     
         return groupedData;
     };
+
     
     
 
@@ -424,8 +431,9 @@ export default function GroupedRowsDemo() {
     };
 
     
-    const groupedData = renderGroupedData(consultants, activeFilters);
-
+    
+    
+    
 
     const handlePriceChange = (id, newPrice) => {
         setConsultants(prevConsultants => {
@@ -755,20 +763,16 @@ const handleSelectionChange = (e) => {
 
 const resetFilters = () => {
     setFilters({
-        global: { value: null, matchMode: 'contains' },
-        id:{ value: null, matchMode: 'contains' },
-        name: { value: null, matchMode: 'contains' },
+        originalName: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
-        count: { value: null, matchMode: 'equals' },
-        price: { value: null, matchMode: 'equals' },
-        total: { value: null, matchMode: 'equals' }
     });
 };
 
 const [tempFilterValues, setTempFilterValues] = useState({
     originalName: '',
-    rateCard: ''
+    rateCard: '',
+    rateType: '',
 });
 
 
@@ -777,16 +781,24 @@ const filterHeaderTemplate = (column, filterField) => {
         let newFilters = { ...filters };
         let combinedFilteredRows = [...groupedData]; // Start with the entire dataset
     
+    
         // Apply filters based on each filter field
         for (const key in tempFilterValues) {
             if (tempFilterValues[key] !== '') {
                 newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
+                // Apply the filter on the combinedFilteredRows
                 combinedFilteredRows = combinedFilteredRows.filter(row => {
                     const fieldValue = row[key]; // Dynamically access the field based on key
+                    
+                    // Handle null or undefined values
+                    if (fieldValue === null || fieldValue === undefined) {
+                        return false; // Skip rows with null/undefined values for filtering
+                    }
+                    
                     if (typeof fieldValue === 'string') {
                         return fieldValue.toLowerCase().includes(tempFilterValues[key].toLowerCase());
                     }
-                    return false;
+                    return false; // Handle other cases if necessary
                 });
             }
         }
@@ -794,7 +806,49 @@ const filterHeaderTemplate = (column, filterField) => {
         setFilters(newFilters);
         setSelectedRows(combinedFilteredRows); // Automatically select the filtered rows
     };
+
+    const handleClearFilter = () => {
+        let newFilters = { ...filters };
+        newFilters[filterField].value = '';
     
+        // Clear the temporary filter value for the specific filter
+        setTempFilterValues({ ...tempFilterValues, [filterField]: '' });
+    
+        // Reset combined filtered rows to the original dataset
+        let combinedFilteredRows = [...groupedData]; 
+    
+        // Apply remaining filters
+        for (const key in newFilters) {
+            const filterValue = newFilters[key]?.value; // Safely access the filter value
+    
+            if (filterValue && filterValue !== '') { // Check for non-empty filter values
+                combinedFilteredRows = combinedFilteredRows.filter(row => {
+                    const fieldValue = row[key]; 
+                    // Handle null or undefined values
+                    if (fieldValue === null || fieldValue === undefined) {
+                        return false; // Skip rows with null/undefined values for filtering
+                    }
+    
+                    if (typeof fieldValue === 'string') {
+                        return fieldValue.toLowerCase().includes(filterValue.toLowerCase());
+                    }
+                    return false; // Handle other cases if necessary
+                });
+            }
+        }
+    
+        setFilters(newFilters); // Update filters without the cleared filter
+    
+        // Reset selectedRows when all filters are cleared
+        if (Object.values(newFilters).every(filter => filter.value === null || filter.value === '')) {
+            setSelectedRows(groupedData); // Clear selected rows when all filters are empty
+        } else {
+            setSelectedRows(combinedFilteredRows); // Update selected rows based on remaining active filters
+        }
+    };
+
+    
+
 
     return (
         <div>
@@ -815,7 +869,7 @@ const filterHeaderTemplate = (column, filterField) => {
             <Tippy content="Apply Filter" placement="bottom">
                 <button
                     onClick={handleApplyFilter}
-                    className="mt-2 px-4 py-2 text-gray-700 font-base bg-green-600 text-white border border-green-200 font-semibold rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                    className="mt-2 px-4 py-2 font-base bg-green-600 text-white border border-green-200 font-semibold rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
                 >
                     <FaCheck />
                 </button>
@@ -824,15 +878,8 @@ const filterHeaderTemplate = (column, filterField) => {
             {/* Clear Button */}
             <Tippy content="Clear Filter" placement="bottom">
                 <button
-                    onClick={() => {
-                        let newFilters = { ...filters };
-                        newFilters[filterField] = { value: '', matchMode: 'contains' };
-                        setFilters(newFilters);
-
-                        setTempFilterValues({ ...tempFilterValues, [filterField]: '' }); // Clear temporary filter value for specific filter
-                        setSelectedRows([]); // Clear selected rows
-                    }}
-                    className="mt-2 px-4 py-2 ml-2 text-gray-700 font-base bg-red-600 text-white border border-red-200 font-semibold rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                    onClick={handleClearFilter}
+                    className="mt-2 px-4 py-2 ml-2 font-base bg-red-600 text-white border border-red-200 font-semibold rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
                 >
                     <FaTimes />
                 </button>
@@ -840,6 +887,7 @@ const filterHeaderTemplate = (column, filterField) => {
         </div>
     );
 };
+
 
 
 //Working filter
@@ -911,6 +959,8 @@ const handleClickOpen = () => {
 const handleClose = () => {
     setOpen(false);
 };
+
+
 
 
 
@@ -1037,22 +1087,26 @@ const handleClose = () => {
                             onSelectionChange={handleSelectionChange}
                             className="text-left"
                             dataKey="id"
-                            selectionMode="multiple"
+                            selectionMode="checkbox"
                             metaKeySelection={false}
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['name', 'rateCard', 'rateType', 'count', 'price', 'total']}
+                            globalFilterFields={['originalName', 'rateCard', 'rateType']}
+                            
             
                         >
                         
-                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2 border-r-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="originalName" header="Consultant" body={nameBodyTemplate} 
+                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.originalName?.value ? 'text-blue-600' : 'text-gray-800'}`} 
+                            className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
                             showFilterMatchModes={false}
+                            
                             ></Column>
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateCard?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'rateCard')}
                             showFilterMatchModes={false}
@@ -1060,7 +1114,7 @@ const handleClose = () => {
                             showClearButton={false}
                             
                             ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
+                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateType?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white w-fit p-2"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}
                             showFilterMatchModes={false}

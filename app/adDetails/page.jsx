@@ -148,7 +148,8 @@ export const AdDetails = () => {
       adType: item.adType,
       formattedDate: item.formattedDate,
       remarks: item.remarks,
-      width: item.width
+      width: item.width,
+      rateId: item.rateId
     };
   };
 
@@ -159,7 +160,7 @@ export const AdDetails = () => {
     let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuoteTest.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}`)
       const data = await response.text();
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);

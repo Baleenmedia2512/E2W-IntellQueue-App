@@ -423,8 +423,8 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         const data = await response.json();
     
         // Ensure the fetched data is formatted correctly
-        const TotalOrderAmt = data.order_amount !== null ? formatIndianNumber(data.order_amount) : '0';
-        const TotalFinanceAmt = data.finance_amount !== null ? formatIndianNumber(data.finance_amount) : '0';
+        const TotalOrderAmt = data.order_amount !== null ? data.order_amount : '0';
+        const TotalFinanceAmt = data.finance_amount !== null ? data.finance_amount : '0';
     
         // Update state with formatted values
         setTotalOrderAmount(TotalOrderAmt);
@@ -1137,7 +1137,7 @@ const apiRef = useGridApiRef();
 const [filterModel, setFilterModel] = useState({ items: [] }); 
 const [filteredData, setFilteredData] = useState([]);
 const [rateStats, setRateStats] = useState({});
-const [filterValues, setFilterValues] = useState({});
+const [filterInputs, setFilterInputs] = useState({});
 
 
    // Function to filter the order data based on the filter model
@@ -1155,18 +1155,44 @@ const [filterValues, setFilterValues] = useState({});
       }
     });
 
-    setFilteredData(filteredRows); // Update filtered data
+      // Update the filtered data in the grid (without RateWiseOrderNumber condition)
+      setFilteredData(filteredRows);
+
+      // Calculate summary info only for rows where RateWiseOrderNumber > 0
+      const rowsForSummary = filteredRows.filter(row => row.RateWiseOrderNumber > 0);
+      // Sum values for the summary information
+      const sumOfOrders = rowsForSummary.length; // Total number of orders
+      const totalOrderAmount = rowsForSummary.reduce((sum, row) => 
+        sum + (parseFloat(row.Receivable.replace(/[₹,]/g, '').trim()) || 0), 
+      0); // Sum of order values
+      const totalFinanceAmount = rowsForSummary.reduce((sum, row) => 
+        sum + (parseFloat(row.TotalAmountReceived.replace(/[₹,]/g, '').trim()) || 0), 
+      0); // Sum of finance amounts
+
+      // Update state for summary info
+      setSumOfOrders(sumOfOrders);
+      setTotalOrderAmount(totalOrderAmount);
+      setTotalFinanceAmount(totalFinanceAmount);
+
+      // Improved logging for clarity
+      console.log('Sum of Orders:', sumOfOrders);
+      console.log('Total Order Amount:', totalOrderAmount);
+      console.log('Total Finance Amount:', totalFinanceAmount);
   };
 
   // Function to calculate the statistics based on filtered rows
   const calculateRateStats = () => {
     const stats = {};
-
-    filteredData.forEach(order => {
+  
+    // Filter out rows where RateWiseOrderNumber <= 0
+    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+  
+    // Iterate over the filtered rows to calculate the stats
+    filteredRows.forEach(order => {
       const rateName = order.Card; // Assuming the 'Card' field is used for rate classification
       const orderValue = Number(order.Receivable.replace('₹', '').trim()) || 0; // Ensure it's a number
       const income = Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0; // Ensure it's a number
-
+  
       if (stats[rateName]) {
         stats[rateName].orderCount += 1;
         stats[rateName].totalOrderValue += orderValue;
@@ -1179,14 +1205,32 @@ const [filterValues, setFilterValues] = useState({});
         };
       }
     });
-
+  
     setRateStats(stats); // Update state with new stats
   };
-
+  
   // UseEffect to apply filters and calculate stats when orderDetails or filterModel changes
   // useEffect(() => {
   //   fetchOrderDetails(); // Fetch order details on mount
   // }, []);
+
+  useEffect(() => {
+    const filteredRows = orderDetails.filter((row) => {
+      return filterModel.items.every((filter) => {
+        const field = filter.field;
+        const value = filter.value ? filter.value.toLowerCase() : '';
+        console.log(filter)
+  
+        if (value === '') return true; // Skip if the filter value is empty
+  
+        const cellValue = String(row[field]).toLowerCase(); // Case-insensitive comparison
+        return cellValue.includes(value);
+      });
+    });
+  
+    setFilteredData(filteredRows);
+  }, [filterModel, orderDetails]);  // Recalculate rows whenever filterModel or orderDetails change
+  
 
   useEffect(() => {
     applyFilters(); // Apply filters
@@ -1342,7 +1386,7 @@ const [filterValues, setFilterValues] = useState({});
     {/* Combined Total Orders and Amounts box */}
     <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
       <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
-        {sumOfOrders}
+        {formatIndianNumber(sumOfOrders)}
       </div>
       <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
         Total Orders
@@ -1350,13 +1394,13 @@ const [filterValues, setFilterValues] = useState({});
 
       <div className="flex mt-4 w-fit">
         <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-          ₹{totalOrderAmount}
+          ₹{formatIndianNumber(totalOrderAmount)}
           <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
             Order Value
           </div>
         </div>
         <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
-          ₹{totalFinanceAmount}
+          ₹{formatIndianNumber(totalFinanceAmount)}
           <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
             Income
           </div>
@@ -1371,7 +1415,7 @@ const [filterValues, setFilterValues] = useState({});
         className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
       >
         <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
-          {rateStats[rateName].orderCount}
+          {formatIndianNumber(rateStats[rateName].orderCount)}
         </div>
         <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
           {rateName} Orders
@@ -1379,13 +1423,13 @@ const [filterValues, setFilterValues] = useState({});
 
         <div className="flex mt-4 w-fit">
           <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-            ₹{Number(rateStats[rateName].totalOrderValue)}
+            ₹{formatIndianNumber(Number(rateStats[rateName].totalOrderValue))}
             <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
               Order Value
             </div>
           </div>
           <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
-            ₹{Number(rateStats[rateName].totalIncome)}
+            ₹{formatIndianNumber(Number(rateStats[rateName].totalIncome))}
             <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
               Income
             </div>
@@ -1406,27 +1450,33 @@ const [filterValues, setFilterValues] = useState({});
         pageSize={10}
         onFilterModelChange={(newFilterModel) => {
           // Merge new filters with existing filters
-          setFilterModel(prevModel => {
+          setFilterModel((prevModel) => {
             const existingItems = prevModel.items;
-            console.log(prevModel)
         
             // Update or add new filter
             const updatedItems = newFilterModel.items.reduce((acc, newFilter) => {
-              const existingFilter = acc.find(filter => filter.field === newFilter.field);
+              const existingFilterIndex = acc.findIndex((filter) => filter.field === newFilter.field);
         
-              if (existingFilter) {
-                // If the filter already exists, update the value
-                existingFilter.value = newFilter.value !== undefined ? newFilter.value : existingFilter.value; // Keep existing value if new is undefined
-              } else {
-                acc.push({ ...newFilter }); // Add new filter, making sure to spread the newFilter object
+              if (existingFilterIndex !== -1) {
+                // If the filter already exists, update it or remove it if the value is empty
+                if (newFilter.value === '') {
+                  acc.splice(existingFilterIndex, 1); // Remove filter only if the input is explicitly cleared
+                } else {
+                  acc[existingFilterIndex] = { ...acc[existingFilterIndex], ...newFilter }; // Update existing filter with new value
+                }
+              } else if (newFilter.value && newFilter.value !== '') {
+                acc.push({ ...newFilter }); // Add new filter if it's not empty
               }
         
               return acc;
-            }, existingItems);
+            }, [...existingItems]); // Ensure we work on a copy of the existing items
         
-            return { items: updatedItems }; // Return the updated filter model
+            return { items: updatedItems };
           });
         }}
+        
+        
+        
          // Update the filter model state
         initialState={{
           sorting: {

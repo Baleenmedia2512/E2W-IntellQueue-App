@@ -191,13 +191,14 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.text(`${adMedium} Campaign (GST@${gstPercentage})`, 10, 230);
 
     const data = items.map((item, i) => [
-      (i + quoteNumber).toString(), item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? item.remarks ? item.remarks : 'NA' : null
+      (i + quoteNumber).toString(), item.rateId, item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? item.remarks ? item.remarks : 'NA' : null
     ].filter(Boolean))
 
-    const headerColumns = [['Quote No.', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
+    const headerColumns = [['Quote No.', 'Rate Card ID', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
 
     let columnWidths = {
       'Quote No.': 45,
+      'Rate Card ID': 45,
       // 'Ad Type': 60,
       'Ad Category': 80,
       // 'Edition': 60,
