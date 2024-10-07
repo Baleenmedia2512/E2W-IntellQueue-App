@@ -699,7 +699,7 @@ useEffect(() => {
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
           dispatch(resetOrderData());
-          setOrderAmount('');
+          setRateWiseOrderNumber('');
   };
 
   const cancelFinance = (e) => {
