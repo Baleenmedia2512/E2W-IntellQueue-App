@@ -653,12 +653,12 @@ useEffect(() => {
     if ((!orderNumber || isNaN(orderNumber) ) && !expenseCategory ) errors.orderNumber = 'Order Number is required';
     // if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
     if (!taxType) errors.taxType = 'Tax Type is required';
-    if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
-      errors.gstPercentage = 'Valid GST % is required';
-    }
-    if (taxType?.value === 'GST' && !gstAmount) {
-      errors.gstAmount = 'GST Amount is required';
-    }
+    // if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
+    //   errors.gstPercentage = 'Valid GST % is required';
+    // }
+    // if (taxType?.value === 'GST' && !gstAmount) {
+    //   errors.gstAmount = 'GST Amount is required';
+    // }
     if (!transactionDate) {
       errors.transactionDate = 'Transaction Date is required';
     } else if (!dayjs(transactionDate).isValid()) {
