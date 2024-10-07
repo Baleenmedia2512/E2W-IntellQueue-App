@@ -20,7 +20,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import './styles.css';
 import { Calendar } from 'primereact/calendar';
-import { format } from 'date-fns';
+import { isValid, format } from 'date-fns';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import { TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -696,7 +696,7 @@ const fetchOrderDetailsByOrderNumber = () => {
         if (data) {
           // Parse the date
           const formattedDate = parseDateFromDB(data.orderDate);
-          console.log(data)
+          //console.log(data)
           // Set all the necessary states
           dispatch(setClientName(data.clientName));
           setOrderDate(data.orderDate);
@@ -710,7 +710,7 @@ const fetchOrderDetailsByOrderNumber = () => {
           setDiscountAmount(data.adjustedOrderAmount);
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
-
+          setMarginAmount(data.margin);
           // Store the fetched data in a state to compare later
           setPrevData({
             clientName: data.clientName,
@@ -720,7 +720,8 @@ const fetchOrderDetailsByOrderNumber = () => {
             rateId: data.rateId,
             clientID: data.clientID,
             consultantName: data.consultantName,
-            discountAmount: data.adjustedOrderAmount
+            discountAmount: data.adjustedOrderAmount,
+            marginAmount: data.margin
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -884,7 +885,7 @@ const updateNewOrder = async (event) => {
        JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
        JsonAdjustedOrderAmount: discountAmount
     });
-    console.log(formattedOrderDate)
+    //console.log(formattedOrderDate)
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
@@ -1095,11 +1096,20 @@ function formatReleaseDatesToSave(dates) {
 
 
 function parseDateFromDB(dateString) {
+  if (!dateString) {
+    // Handle cases where the dateString is undefined, null, or an empty string
+    return null; // or return a default date, like new Date()
+  }
+  
   const [year, month, day] = dateString.split('-');
   return new Date(year, month - 1, day);
 }
 
-const formattedOrderDate = format(orderDate, 'dd-MMM-yyyy').toUpperCase();
+
+// const formattedOrderDate = format(orderDate, 'dd-MMM-yyyy').toUpperCase();
+const formattedOrderDate = orderDate && isValid(new Date(orderDate))
+  ? format(new Date(orderDate), 'dd-MMM-yyyy').toUpperCase()
+  : 'Invalid Date'; // or handle as per your needs
 
 const consultantDialog = () => {
   setConsultantDialogOpen(true); 
@@ -1229,7 +1239,8 @@ const handleOpenDialog = () => {
     parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
     rateId !== prevData.rateId ||
     consultantName.trim() !== prevData.consultantName.trim() ||
-    discountAmount !== prevData.discountAmount
+    discountAmount !== prevData.discountAmount ||
+    parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) 
 
   );
 
