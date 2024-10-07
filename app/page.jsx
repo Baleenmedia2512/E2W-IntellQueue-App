@@ -32,7 +32,6 @@ const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
   const [title, setTitle] = useState('Mr.');
