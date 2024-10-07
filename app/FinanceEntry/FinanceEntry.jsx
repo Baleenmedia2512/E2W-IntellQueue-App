@@ -661,9 +661,12 @@ useEffect(() => {
     }
     if (!transactionDate) {
       errors.transactionDate = 'Transaction Date is required';
-    } else if (dayjs(transactionDate).isAfter(dayjs())) {
+    } else if (!dayjs(transactionDate).isValid()) {
+      errors.transactionDate = 'Invalid Transaction Date';
+    } else if (dayjs(transactionDate).isAfter(dayjs(), 'day')) {
       errors.transactionDate = 'Transaction Date cannot be in the future';
     }
+    
     if (!transactionTime) errors.transactionTime = 'Transaction Time is required';
     if (!chequeTime) errors.chequeTime = 'Transaction Time is required';
     if (!paymentMode) errors.paymentMode = 'Payment Mode is required';
@@ -848,7 +851,6 @@ useEffect(() => {
   };
   
   const updateFinance = async () => {
-
     // Check if remarks are empty
     if (remarks.trim() === '') {
       setToastMessage('Remarks cannot be empty.');
@@ -859,12 +861,28 @@ useEffect(() => {
       }, 3000);
       return; // Exit the function early if remarks are empty
     }
-    
+  
     const hasRemarksChanged = remarks.trim() !== prevData.remarks.trim();
-
-
+  
+    // Validate transaction date
+    const transactionDateError = validateTransactionDate(transactionDate);
+    
+    if (transactionDateError) {
+      setToastMessage(transactionDateError);
+      setSeverity('error');
+      setToast(true);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        transactionDate: transactionDateError, // Update the errors state
+      }));
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+      return; // Exit if transaction date is invalid
+    }
+  
+    // Check if there are any changes
     const hasChanges = (
-      //clientName.trim() !== prevData.clientName.trim() ||
       orderAmount !== prevData.orderAmount ||
       remarks.trim() !== prevData.remarks.trim() ||
       taxType.value !== prevData.taxType.value ||
@@ -873,32 +891,30 @@ useEffect(() => {
       transactionType.value !== prevData.transactionType.value ||
       expenseCategory.value !== prevData.expenseCategory.value ||
       formattedChequeDate !== dayjs(prevData.chequeDate).format('YYYY-MM-DD') ||
-      chequeNumber !== prevData.chequeNumber 
+      chequeNumber !== prevData.chequeNumber
     );
-
-
+  
     // Check if remarks haven't been changed and show popup
-
     if (!hasChanges) {
       setToastMessage('No changes have been made.');
-    setSeverity('warning');
-    setToast(true);
-    setTimeout(() => {
-      setToast(false);
-    }, 2000);
-      //alert('No changes have been made');
-      return; // Exit the function early if no changes are detected
+      setSeverity('warning');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+      return; // Exit if no changes are detected
     }
-
+  
     if (!hasRemarksChanged) {
-      setToastMessage('Remarks need to be change.');
+      setToastMessage('Remarks need to be changed.');
       setSeverity('error');
       setToast(true);
       setTimeout(() => {
         setToast(false);
       }, 3000);
-      return; // Exit the function early if remarks have not been changed
+      return; // Exit if remarks have not been changed
     }
+  
     try {
       // Send the GET request with query parameters using axios
       const response = await axios.get(`https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php`, {
@@ -913,27 +929,25 @@ useEffect(() => {
           JsonTransactionType: transactionType.value,
           JsonExpenseCategory: expenseCategory.value,
           JsonChequeDate: formattedChequeDate + ' ' + formattedChequeTime,
-          JsonClentName : clientName,
-          JsonTaxAmount : gstAmount,
+          JsonClentName: clientName,
+          JsonTaxAmount: gstAmount,
           JsonDBName: companyName,
           JsonOrderNumber: orderNumber,
           JsonRateWiseOrderNumber: rateWiseOrderNumber,
           JsonChequeNumber: chequeNumber
-          
         }
       });
-      
-
+  
       // Check if the response is successful
       const data = response.data;
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Finance record updated successfully!');
-
+  
         // Clear the success message after 3 seconds
         setTimeout(() => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
-
+  
         // Clear form fields and switch to normal mode if needed
         setFinanceSearchTerm('');
         setRateWiseOrderNumber('');
@@ -948,8 +962,18 @@ useEffect(() => {
       alert('An error occurred while updating the finance record.');
     }
   };
+  
 
   
+ const validateTransactionDate = (newDate) => {
+  if (!newDate) {
+    return 'Transaction Date is required';
+  } else if (dayjs(newDate).isAfter(dayjs(), 'day')) {
+    return 'Transaction Date cannot be in the future';
+  }
+  return ''; // No error
+};
+
   
   
 
@@ -1434,6 +1458,13 @@ useEffect(() => {
               value={transactionDate}
               onChange={(newValue) => {
                 setTransactionDate(newValue);
+                validateTransactionDate(newValue);  // Call validation after setting the new date
+                // Validate the new transaction date and set errors
+    const errorMsg = validateTransactionDate(newValue);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      transactionDate: errorMsg, // Set the error message if any
+    }));
                 handleDateClose();
               }}
               
