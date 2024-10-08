@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
 import { RemoveCircleOutline } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
-import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
 import { setQuotesData, resetQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';

@@ -240,23 +240,9 @@ const Stages = () => {
   };
 
   const updateStages = async() => {
-    const response = await UpdatePaymentMilestone(stages, companyName)
-    console.log(stages);
+    const response = await UpdatePaymentMilestone(stages, companyName, orderNumber, loggedInUser)
+    console.log(response);
   }
-
-  const removeAll = async () => {
-    // Dispatch the action to remove all stages in Redux
-    dispatch(removeAllStages());
-    
-    // Call the API to mark all stages as valid
-    // const response = await UpdatePaymentMilestone([], companyName, { action: 'removeAllStages', JsonDBName: companyName, JsonOrderNumber: orderNumber });
-    
-    // if (response.success) {
-    //     console.log("All stages marked as valid."); // Corrected the log message to reflect the action
-    // } else {
-    //     console.error("Failed to mark all stages as valid:", response.error);
-    // }
-};
 
   const handleCancelUpdate = () => {
     dispatch(resetStageItem());

@@ -171,7 +171,11 @@ export const AdDetails = () => {
     }
   }
 
-  
+  const getTnC = async() => {
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/GetTnC.php/?JsonDBName=${companyName}`);
+    const TnC = response.json();
+    return TnC;
+  }
 
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
@@ -189,12 +193,13 @@ export const AdDetails = () => {
 
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
     const quoteNumber = await fetchNextQuoteNumber(companyName);
+    const TnC = await getTnC();
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
       try{
         const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber);
+        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
         const promises = cartItems.map(item => addQuoteToDB(item));
         await Promise.all(promises);
       //   setTimeout(() => {
