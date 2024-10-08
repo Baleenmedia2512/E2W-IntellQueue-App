@@ -2,9 +2,9 @@ import { data } from 'autoprefixer';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, quoteNumber) => {
+export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, quoteNumber, TnC) => {
   const ImageUrl = '/images/WHITE PNG.png';
-  
+
   const getMinValidityDays = () => {
     // Define an array of month abbreviations
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -122,11 +122,11 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
-    pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, yPosition + 40);
-    pdf.text(`2.Ad. Material shall be shared by ${clientTitle} ${clientName}`, 10, yPosition + 55)
-    pdf.text("3.100% Upfront payment required for releasing the Ads", 10, yPosition + 70)
+    pdf.text( TnC[0]["Message"], 10, yPosition + 40); //"1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX"
+    pdf.text(`${TnC[1]["Message"]} ${clientTitle} ${clientName}`, 10, yPosition + 55) //2.Ad. Material shall be shared by
+    pdf.text(TnC[2]["Message"], 10, yPosition + 70) //"3.100% Upfront payment required for releasing the Ads"
     //pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
-    pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, yPosition + 85)
+    pdf.text(TnC[3]["Message"], 10, yPosition + 85) //"4.Tax invoice shall be issued only on or after Ad. Release date"
 
     pdf.setDrawColor("#df5f98");
     pdf.line(10, yPosition + 100, 400, yPosition + 100);
