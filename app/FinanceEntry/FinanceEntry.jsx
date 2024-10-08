@@ -396,6 +396,7 @@ const FinanceData = () => {
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
+        setClientNumber(clientDetails.clientContact);
         setBalanceAmount(clientDetails.balanceAmount);
         setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
       } else {
@@ -410,6 +411,7 @@ const FinanceData = () => {
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
     }
   };
+
 
   const handleRateWiseOrderNumberChange = (event) => {
     
@@ -426,6 +428,7 @@ const FinanceData = () => {
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
+        setClientNumber(clientDetails.clientContact);
         setBalanceAmount(clientDetails.balanceAmount);
         setOrderNumber(clientDetails.orderNumber);
       } else {
