@@ -221,8 +221,9 @@ const ClientsData = () => {
   
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
-    const name = input.substring(0, input.indexOf('(')).trim();
-    const number = input.substring(input.indexOf('(') + 1, input.indexOf(')')).trim();
+    const [id, rest] = input.split('-');
+    const name = rest.substring(0, rest.indexOf('(')).trim();
+    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
   
     setConsultantNameSuggestions([]);
     setConsultantName(name)
