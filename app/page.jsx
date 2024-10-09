@@ -221,9 +221,20 @@ const ClientsData = () => {
   
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
-    const [id, rest] = input.split('-');
-    const name = rest.substring(0, rest.indexOf('(')).trim();
-    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
+      // Split by '-' to separate the ID and the rest of the input
+      const parts = input.split('-');
+
+      // Extract the rest after '-' (name and any parentheses)
+      const rest = parts.length > 1 ? parts.slice(1).join('-').trim() : parts[0].trim();
+  
+      // Use regex to match the phone number (if any) inside parentheses
+      const phoneMatch = rest.match(/\((\d{10,})\)$/); // Matches the number if it's in parentheses at the end
+  
+      // Extract the name, ignoring parentheses
+      const name = rest.replace(/\(.*?\)/g, '').trim(); // Remove anything in parentheses from the name
+      const number = phoneMatch ? phoneMatch[1] : '';
+
+    console.log({ name, number });
   
     setConsultantNameSuggestions([]);
     setConsultantName(name)
