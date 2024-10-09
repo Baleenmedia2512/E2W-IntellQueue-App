@@ -766,6 +766,7 @@ const orderColumns = [
 
 
 const financeColumns = [
+  { field: 'ID', headerName: 'Finance ID', width: 150 },
   { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
   { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
   { field: 'Amount', headerName: 'Amount(₹)', width: 100},
