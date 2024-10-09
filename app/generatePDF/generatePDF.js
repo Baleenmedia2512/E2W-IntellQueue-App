@@ -2,9 +2,9 @@ import { data } from 'autoprefixer';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, quoteNumber) => {
+export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, quoteNumber, TnC) => {
   const ImageUrl = '/images/WHITE PNG.png';
-  
+
   const getMinValidityDays = () => {
     // Define an array of month abbreviations
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -122,31 +122,57 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
-    pdf.text( "1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX", 10, yPosition + 40);
-    pdf.text(`2.Ad. Material shall be shared by ${clientTitle} ${clientName}`, 10, yPosition + 55)
-    pdf.text("3.100% Upfront payment required for releasing the Ads", 10, yPosition + 70)
-    //pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
-    pdf.text("5.Tax invoice shall be issued only on or after Ad. Release date", 10, yPosition + 85)
+
+    let tempPosition = yPosition + 40;
+    TnC.forEach((message, index) => {
+      
+      if (TnC[index]["ID"] === 2) {
+          // For the 2nd content, include clientTitle and clientName
+          pdf.text(`${index+1}. ${TnC[index]["Message"]} ${clientTitle} ${clientName}`, 10, tempPosition);
+          tempPosition += 15; // Move down for the next line (as per your original example)
+      } else {
+          // Adjust yPosition for the 3rd content
+          pdf.text((index+1) + ". " + TnC[index]["Message"], 10, tempPosition);
+          tempPosition += 15; // Move down for the next line (as per your original example)
+      }
+  });
+
+  yPosition = tempPosition
+  //   let tempPosition = yposition + 40;
+  //   TnC.map((message, index) => {
+  //     pdf.text( TnC[index][message], 10, tempPosition)
+  //     tempPosition += 1;
+  // });
+
+     //"1.For Online Transfer: Current Acc.No:104005500375,IFSC: ICIC0001040,SWIFT: ICICNBBXXX"
+    // pdf.text(`${TnC[1]["Message"]} ${clientTitle} ${clientName}`, 10, yPosition + 55) //2.Ad. Material shall be shared by
+    // pdf.text(TnC[2]["Message"], 10, yPosition + 70) //"3.100% Upfront payment required for releasing the Ads"
+    // //pdf.text(`4.Lead time to book the Ad : ${getMinLeadDays()} Days`, 10, pdf.internal.pageSize.height - 75)
+    // pdf.text(TnC[3]["Message"], 10, yPosition + 85) //"4.Tax invoice shall be issued only on or after Ad. Release date"
 
     pdf.setDrawColor("#df5f98");
-    pdf.line(10, yPosition + 100, 400, yPosition + 100);
+    pdf.line(10, yPosition, 400, yPosition);
 
     pdf.setDrawColor("#0097d0");
-    pdf.line(401, yPosition + 100, 790, yPosition + 100);
+    pdf.line(401, yPosition , 790, yPosition);
     
+    yPosition += 15;
+
     const Address = "No.32, 3rd Cross Street, Kasturba Nagar, Adyar, Chennai-20 | GST: 33AEDPL3590D1ZT"
-    pdf.text(Address, 200, yPosition + 115)
+    pdf.text(Address, 200, yPosition)
     
+    yPosition += 15;
+
     pdf.setFont('helvetica', 'normal', 'bold');
     pdf.setFontSize(12);
-    pdf.text('Call: 95660 31113', 10, yPosition + 130)
+    pdf.text('Call: 95660 31113', 10, yPosition)
 
     
 
     var pageWidth = pdf.internal.pageSize.width;
     var textWidth = pdf.getStringUnitWidth('www.baleenmedia.com') * 12;
     var xCoordinate = pageWidth - textWidth - 20;
-    pdf.text('www.baleenmedia.com', xCoordinate, yPosition + 130);
+    pdf.text('www.baleenmedia.com', xCoordinate, yPosition);
     // pageWidth = pdf.internal.pageSize.width;
     // textWidth = pdf.getStringUnitWidth('Page 10 Of 10') * 12;
     // xCoordinate = pageWidth - textWidth - 20;
@@ -191,13 +217,14 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.text(`${adMedium} Campaign (GST@${gstPercentage})`, 10, 230);
 
     const data = items.map((item, i) => [
-      (i + quoteNumber).toString(), item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? item.remarks ? item.remarks : 'NA' : null
+      (i + quoteNumber).toString(), item.rateId, item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? item.remarks ? item.remarks : 'NA' : null
     ].filter(Boolean))
 
-    const headerColumns = [['Quote No.', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
+    const headerColumns = [['Quote No.', 'Rate Card ID', hasAdType ? 'Ad Type' : null, hasAdCategory ? 'Ad Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
 
     let columnWidths = {
       'Quote No.': 45,
+      'Rate Card ID': 45,
       // 'Ad Type': 60,
       'Ad Category': 80,
       // 'Edition': 60,

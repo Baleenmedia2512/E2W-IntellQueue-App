@@ -148,7 +148,8 @@ export const AdDetails = () => {
       adType: item.adType,
       formattedDate: item.formattedDate,
       remarks: item.remarks,
-      width: item.width
+      width: item.width,
+      rateId: item.rateId
     };
   };
 
@@ -159,7 +160,7 @@ export const AdDetails = () => {
     let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuoteTest.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}`)
       const data = await response.text();
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
@@ -170,7 +171,11 @@ export const AdDetails = () => {
     }
   }
 
-  
+  const getTnC = async() => {
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/GetTnC.php/?JsonDBName=${companyName}`);
+    const TnC = response.json();
+    return TnC;
+  }
 
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
@@ -188,12 +193,13 @@ export const AdDetails = () => {
 
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
     const quoteNumber = await fetchNextQuoteNumber(companyName);
+    const TnC = await getTnC();
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
       try{
         const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber);
+        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
         const promises = cartItems.map(item => addQuoteToDB(item));
         await Promise.all(promises);
       //   setTimeout(() => {
@@ -286,13 +292,13 @@ export const AdDetails = () => {
           {currentPage === "checkout" ?(
             <div className='flex flex-row justify-center items-center'>
             <button
-              className={`${cartItems.length > 0 ? 'bg-green-500' : 'bg-gray-500'} text-white p-1.5 rounded-lg transition-all duration-300 ease-in-out ${cartItems.length > 0 ? 'hover:bg-green-700' : 'hover:bg-gray-500'} `}
+              className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
               disabled = {cartItems.length > 0 ? false : true}
               onClick={handlePdfGeneration}
             >
               Download Quote
             </button>
-            <button className={`border ml-2 p-1.5 h-fit max-h-10 ${cartItems.length > 0 ? 'bg-blue-500' : 'bg-gray-500'} text-white rounded-lg ${cartItems.length > 0 ? 'hover:bg-blue-700' : 'hover:bg-gray-500'}`} disabled = {cartItems.length > 0 ? false : true} onClick={() => dispatch(resetCartItem())}>Clear All</button>
+            <button className={`ml-2  ${cartItems.length > 0 ? 'Clearall-button':'Clearallafter-button'}`} disabled = {cartItems.length > 0 ? false : true} onClick={() => dispatch(resetCartItem())}>Clear All</button>
             </div>
           ):(
             // <button aria-label="cart" 

@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
 import { RemoveCircleOutline } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
-import { generatePdf } from '../generatePDF/generatePDF';
 import { useAppSelector } from '@/redux/store';
 import { setQuotesData, resetQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
@@ -30,6 +29,7 @@ const CheckoutPage = () => {
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [datas, setDatas] = useState([]);
+  const [nextQuoteNumber, setNextQuoteNumber] = useState([]);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   
   const clientDetails = useAppSelector(state => state.clientSlice)
@@ -91,11 +91,15 @@ const CheckoutPage = () => {
             )
             .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
           setDatas(filterdata);
+
+          const quoteNumber = await fetchNextQuoteNumber(companyName);
+          setNextQuoteNumber(quoteNumber)
         }
       } catch (error) {
         console.error(error);
       }
     };
+    
 
     fetchData();
   }, []);
@@ -121,6 +125,7 @@ const CheckoutPage = () => {
 
   const hasRemarks = cartItems.some(item => item.remarks);
   const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
+
 
   return (
     <div className=" mt-2 text-black w-screen">
@@ -157,6 +162,7 @@ const CheckoutPage = () => {
         <thead>
           <tr>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate ID</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quote No.</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Medium</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Type</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Category</th>
@@ -174,6 +180,7 @@ const CheckoutPage = () => {
           {cartItems.map((item, index) => (
             <tr key={index}>
               <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
+              <td className='p-1.5 border border-gray-200'>{nextQuoteNumber + index}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
