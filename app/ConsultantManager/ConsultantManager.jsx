@@ -113,7 +113,7 @@ const validateFields = () => {
   const handleConsultantNameChange = (e) => {
     const newName = e.target.value;
     setConsultantName(newName)
-    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
       .then((data) => {setConsultantNameSuggestions(data)});
       if (errors.consultantName) {
@@ -370,7 +370,7 @@ const validateFields = () => {
 
   
     return (
-<div className='min-h-screen bg-gray-100 mb-14 p-2'>
+<div className='min-h-screen bg-gray-100 p-2'>
   <div className="flex items-center justify-center">
     <div className="w-full max-w-6xl relative">
       {/* Flex container for heading and buttons */}
@@ -443,7 +443,7 @@ const validateFields = () => {
       
 
       {/* Search bar positioned on top of heading and buttons section */}
-      <div className="absolute top-4 sm:-top-8 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
+      <div className="absolute top-8 sm:-top-8 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
       {/* Checkbox for showing invalid consultants */}
       <div className="mb-2 flex items-center text-black">
   <label className="flex items-center cursor-pointer">
@@ -498,7 +498,7 @@ const validateFields = () => {
   </div>
 
   {/* Form Section */}
-  <div className="flex items-center justify-center mt-24 sm:mt-6">
+  <div className="flex items-center justify-center mt-[120px] sm:mt-6">
   
     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
     {consultantValidity && consultantID && (
