@@ -436,6 +436,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
+        setClientNumber(clientDetails.clientContact);
         setBalanceAmount(clientDetails.balanceAmount);
         setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
       } else {
@@ -466,6 +467,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
+        setClientNumber(clientDetails.clientContact);
         setBalanceAmount(clientDetails.balanceAmount);
         setOrderNumber(clientDetails.orderNumber);
       } else {
@@ -699,7 +701,7 @@ useEffect(() => {
           setTaxType(taxTypeOptions[2]);
           setTransactionType(transactionOptions[0]);
           dispatch(resetOrderData());
-          setOrderAmount('');
+          setRateWiseOrderNumber('');
   };
 
   const cancelFinance = (e) => {
