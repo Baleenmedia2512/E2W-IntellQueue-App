@@ -14,9 +14,8 @@ import {
   ChartPieIcon,
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
-
+import { SupportIcon } from '@heroicons/react/outline';
 import './globals.css';
-
 
 
 export default function BottomBarTest() {
@@ -117,7 +116,13 @@ export default function BottomBarTest() {
           break;
         case '/Employee':
           setSelected('Employee');
-          break;  
+          break; 
+        case '/ConsultantManager':
+          setSelected('ConsultantManager');
+          break;
+        case '/Payment-Milestone':
+          setSelected('paymentMilestone');
+          break;          
         default:
           break;
       }
@@ -154,7 +159,13 @@ export default function BottomBarTest() {
         break; 
       case 8:
         router.push('/Employee');
-        break;   
+        break; 
+      case 9:
+        router.push('/ConsultantManager');
+        break;
+      case 10:
+        router.push('/Payment-Milestone');
+        break;          
       default:
         break;
     }
@@ -258,6 +269,23 @@ export default function BottomBarTest() {
       viewBox="0 0 24 24" 
       strokeWidth={1.5} 
       stroke="currentColor" 
+      className="h-5 w-5">
+    <path 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
+</svg>
+
+
+  );
+
+  const ConsultantManagerIcon = () => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      strokeWidth={1.5} 
+      stroke="currentColor" 
       className="h-5 w-5"
       >
     <path 
@@ -267,6 +295,22 @@ export default function BottomBarTest() {
       />
     </svg>
 
+  );
+  const PaymentMilestoneIcon = () => (
+    <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="h-5 w-5"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 8.25h18M3 8.25c0-1.242.92-2.25 2.05-2.25h13.9c1.13 0 2.05 1.008 2.05 2.25M3 8.25v7.5c0 1.242.92 2.25 2.05 2.25h13.9c1.13 0 2.05-1.008 2.05-2.25v-7.5M3 15.75h18M9 12h6m-3-3v6"
+    />
+  </svg>
   );
   
   const OrderManagerIcon = () => (
@@ -410,7 +454,7 @@ export default function BottomBarTest() {
   {/* Sub Navigation Sidebar */}
   <div
         className={`fixed bottom-[96px] mr-14 sm:mr-0 w-fit pt-2 border-1 bg-white border-blue-300 shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
-          showMoreOptions ? 'translate-y-3' : 'translate-y-[500px]'
+          showMoreOptions ? 'translate-y-3' : 'translate-y-[600px]'
         }`}
       >
         <div className="flex flex-col items-start">
@@ -444,6 +488,20 @@ export default function BottomBarTest() {
             dataTag=""
           />
           : null}
+           <SubNavItem
+            icon={<ConsultantManagerIcon className="h-5 w-5 text-gray-600" />}
+            label="Consultant Manager"
+            onClick={() => { setSelected('consultantManager'); setShowMoreOptions(false); handleChange(null, 9); }} // Ensure the value corresponds to the correct route
+            additionalClasses="hover:bg-blue-50"
+            dataTag=""
+          />
+          {/* <SubNavItem
+          icon={<PaymentMilestoneIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
+          label="Payment Milestone"
+          onClick={() => { setSelected('paymentMilestone'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
+          additionalClasses="hover:bg-blue-50"
+          dataTag=""
+          /> */}
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
             label={<span className="text-red-600">Log Out</span>}
