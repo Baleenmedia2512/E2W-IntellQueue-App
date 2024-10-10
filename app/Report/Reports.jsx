@@ -553,6 +553,41 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
   }
 };
 
+const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      if (data.success) {
+        setSuccessMessage('Transaction Restored!');
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 2000);
+        fetchFinanceDetails();
+        fetchAmounts();
+        fetchSumOfFinance();
+        fetchRateBaseIncome();
+      } else {
+        setToastMessage(data.message);
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      setToastMessage('Failed to restore transaction. Please try again.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    });
+};
+
+
 const handleConfirm = async () => {
   try {
       await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
@@ -780,7 +815,7 @@ const financeColumns = [
   {
     field: 'actions',
     headerName: 'Actions',
-    width: 100,
+    width: 220,
     renderCell: (params) => (
       <div>
         <button
@@ -789,6 +824,26 @@ const financeColumns = [
           style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold' }}
         >
           Delete
+        </button> 
+        <button
+          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
+          onClick={(e) => e.preventDefault()} // Prevent any action on click
+          style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold', cursor: 'not-allowed', opacity: 0.6 }}
+          disabled // This makes the button disabled
+        >
+          Delete
+        </button>
+        <button
+          className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
+          disabled={params.row.restoreDisabled} // Conditional disabling
+          onClick={() => handleFinanceRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.ClientName)}
+          style={{ backgroundColor: '#1976d2',
+            color: 'white',
+            fontWeight: 'bold',
+            opacity: params.row.restoreDisabled ? 0.5 : 1,
+            pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+        >
+          Restore
         </button>
       </div>
     ),
