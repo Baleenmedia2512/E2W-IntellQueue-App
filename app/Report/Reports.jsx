@@ -91,7 +91,7 @@ const Report = () => {
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
-
+  const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
 const checkIfSMSSentToday = () => {
   axios
     .get(`https://orders.baleenmedia.com/API/Media/CheckCDRSmsCount.php?JsonDBName=${companyName}`)
@@ -377,9 +377,13 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                     OrderValue: `₹ ${transaction.OrderValue}`,
+                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
+                    restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));
+                console.log(response.data)  
+                //const displayData = response.data
                 setFinanceDetails(financeDetails);
-                
+                //setDisplayFinanceDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -465,9 +469,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         });
 };
 
-const handleTransactionDelete = (rateWiseOrderNum, orderNum) => {
+const handleTransactionDelete = (id) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&JsonOrderNumber=${orderNum}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -819,29 +823,35 @@ const financeColumns = [
     renderCell: (params) => (
       <div>
         <button
-          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs'
-          onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-          style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold' }}
+          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
+          disabled={params.row.markInvalidFinanceDisabled }
+          onClick={() => handleOpenConfirmDialog(params.row.ID)}
+          style={{  backgroundColor: '#fa594d',
+            color: 'white',
+            fontWeight: 'bold', 
+            opacity: params.row.markInvalidFinanceDisabled ? 0.2 : 1,
+            pointerEvents: params.row.markInvalidFinanceDisabled ? 'none' : 'auto'
+           }}
         >
           Delete
         </button> 
-        <button
+        {/* <button
           className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
           onClick={(e) => e.preventDefault()} // Prevent any action on click
           style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold', cursor: 'not-allowed', opacity: 0.6 }}
           disabled // This makes the button disabled
         >
           Delete
-        </button>
+        </button> */}
         <button
-          className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
-          disabled={params.row.restoreDisabled} // Conditional disabling
+          className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
+          disabled={params.row.restoreFinanceDisabled} // Conditional disabling
           onClick={() => handleFinanceRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.ClientName)}
           style={{ backgroundColor: '#1976d2',
             color: 'white',
             fontWeight: 'bold',
-            opacity: params.row.restoreDisabled ? 0.5 : 1,
-            pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+            opacity: params.row.restoreFinanceDisabled ? 0.5 : 1,
+            pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
         >
           Restore
         </button>
@@ -868,15 +878,16 @@ const financeColumns = [
 // },
 ];
 
-    const handleOpenConfirmDialog = (rateWiseOrderNum, orderNum) => {
-      setSelectedTransaction({ rateWiseOrderNum, orderNum });
+    const handleOpenConfirmDialog = (ID) => {
+      setSelectedTransaction({ ID });
       setOpenConfirmDialog(true);
     };
     
 
     const handleConfirmDelete = () => {
-      const { rateWiseOrderNum, orderNum } = selectedTransaction;
-      handleTransactionDelete(rateWiseOrderNum, orderNum);
+      const { ID } = selectedTransaction;
+      console.log(selectedTransaction)
+      handleTransactionDelete(ID);
       setOpenConfirmDialog(false);
     };
     
