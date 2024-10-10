@@ -877,6 +877,7 @@ const financeColumns = [
         value: parseFloat(item.total_amount || 0)
     })) : [];
 
+    
   
     const expenseData = sumOfFinance.length > 0 ? [
       { name: 'Bank', value: parseFloat(sumOfFinance[0].expense_bank || 0) },
