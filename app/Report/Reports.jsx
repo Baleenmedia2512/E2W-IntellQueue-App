@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import { DataGrid, GridToolbar, getGridNumericOperators} from '@mui/x-data-grid';
+import { DataGrid, useGridApiRef} from '@mui/x-data-grid';
 import axios from 'axios';
 import { useAppSelector } from '@/redux/store';
 import { Menu, MenuItem, IconButton } from '@mui/material';
@@ -12,6 +12,7 @@ import Button from '@mui/material/Button';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import DateRangePicker from './CustomDateRangePicker';
+import { startOfMonth, endOfMonth, format, parseISO  } from 'date-fns';
 import { startOfMonth, endOfMonth, format, parseISO  } from 'date-fns';
 import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from '@mui/material';
 import './styles.css';
@@ -90,7 +91,8 @@ const Report = () => {
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-
+  const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
+  const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
 const checkIfSMSSentToday = () => {
   axios
     .get(`https://orders.baleenmedia.com/API/Media/CheckCDRSmsCount.php?JsonDBName=${companyName}`)
@@ -358,7 +360,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
                 }));
+                const displayData = response.data
                 setOrderDetails(data);
+                setDisplayOrderDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -373,9 +377,13 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                     OrderValue: `₹ ${transaction.OrderValue}`,
+                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
+                    restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));
+                console.log(response.data)  
+                //const displayData = response.data
                 setFinanceDetails(financeDetails);
-                
+                //setDisplayFinanceDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -419,8 +427,8 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         const data = await response.json();
     
         // Ensure the fetched data is formatted correctly
-        const TotalOrderAmt = data.order_amount !== null ? formatIndianNumber(data.order_amount) : '0';
-        const TotalFinanceAmt = data.finance_amount !== null ? formatIndianNumber(data.finance_amount) : '0';
+        const TotalOrderAmt = data.order_amount !== null ? data.order_amount : '0';
+        const TotalFinanceAmt = data.finance_amount !== null ? data.finance_amount : '0';
     
         // Update state with formatted values
         setTotalOrderAmount(TotalOrderAmt);
@@ -461,9 +469,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         });
 };
 
-const handleTransactionDelete = (rateWiseOrderNum, orderNum) => {
+const handleTransactionDelete = (id) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&JsonOrderNumber=${orderNum}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -548,6 +556,41 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
       setTimeout(() => setToast(false), 2000);
   }
 };
+
+const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      if (data.success) {
+        setSuccessMessage('Transaction Restored!');
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 2000);
+        fetchFinanceDetails();
+        fetchAmounts();
+        fetchSumOfFinance();
+        fetchRateBaseIncome();
+      } else {
+        setToastMessage(data.message);
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      setToastMessage('Failed to restore transaction. Please try again.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    });
+};
+
 
 const handleConfirm = async () => {
   try {
@@ -677,10 +720,11 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
+  {field: 'ClientContact', headerName: 'Client Contact', width: 100 },
   { field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
   { 
     field: 'Receivable', 
-    headerName: 'Value(₹)', 
+    headerName: 'Order Value(₹)', 
     width: 100,
     renderCell: (params) => (
       <div>{params.value}</div>
@@ -720,24 +764,20 @@ const orderColumns = [
     width: 270,
     renderCell: (params) => (
         <div>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
+            <button
+               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                style={{  backgroundColor: '#fa594d',
                     color: 'white',
                     fontWeight: 'bold', 
                     opacity: params.row.markInvalidDisabled ? 0.2 : 1,
                     pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
             >
                 Cancel 
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
+            </button>
+            <button
+                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
                 style={{ backgroundColor: '#1976d2',
@@ -747,30 +787,25 @@ const orderColumns = [
                   pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
             >
                 Restore
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => handleEditIconClick(params.row)}
-                style={{ marginLeft: '12px',
-                  backgroundColor: '#499b25',
-                  color: 'white',
-                  fontWeight: 'bold',
-                 }}  
-            >  
-               Edit
-            </Button>
-        </div>
-    ),
-},
-];
-
-
-
+            </button>
+            <button
+            className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
+            disabled={params.row.editDisabled}
+            onClick={() => handleEditIconClick(params.row)}
+            style={{  
+              opacity: params.row.editDisabled ? 0.5 : 1,
+              pointerEvents: params.row.editDisabled ? 'none' : 'auto' }}
+        >
+            Edit
+        </button>
+                </div>
+            ),
+        },
+        ];
 
 
 const financeColumns = [
+  { field: 'ID', headerName: 'Finance ID', width: 150 },
   { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
   { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
   { field: 'Amount', headerName: 'Amount(₹)', width: 100},
@@ -784,18 +819,42 @@ const financeColumns = [
   {
     field: 'actions',
     headerName: 'Actions',
-    width: 100,
+    width: 220,
     renderCell: (params) => (
       <div>
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-          style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+        <button
+          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
+          disabled={params.row.markInvalidFinanceDisabled }
+          onClick={() => handleOpenConfirmDialog(params.row.ID)}
+          style={{  backgroundColor: '#fa594d',
+            color: 'white',
+            fontWeight: 'bold', 
+            opacity: params.row.markInvalidFinanceDisabled ? 0.2 : 1,
+            pointerEvents: params.row.markInvalidFinanceDisabled ? 'none' : 'auto'
+           }}
         >
           Delete
-        </Button>
+        </button> 
+        {/* <button
+          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
+          onClick={(e) => e.preventDefault()} // Prevent any action on click
+          style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold', cursor: 'not-allowed', opacity: 0.6 }}
+          disabled // This makes the button disabled
+        >
+          Delete
+        </button> */}
+        <button
+          className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
+          disabled={params.row.restoreFinanceDisabled} // Conditional disabling
+          onClick={() => handleFinanceRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.ClientName)}
+          style={{ backgroundColor: '#1976d2',
+            color: 'white',
+            fontWeight: 'bold',
+            opacity: params.row.restoreFinanceDisabled ? 0.5 : 1,
+            pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
+        >
+          Restore
+        </button>
       </div>
     ),
   },
@@ -819,15 +878,16 @@ const financeColumns = [
 // },
 ];
 
-    const handleOpenConfirmDialog = (rateWiseOrderNum, orderNum) => {
-      setSelectedTransaction({ rateWiseOrderNum, orderNum });
+    const handleOpenConfirmDialog = (ID) => {
+      setSelectedTransaction({ ID });
       setOpenConfirmDialog(true);
     };
     
 
     const handleConfirmDelete = () => {
-      const { rateWiseOrderNum, orderNum } = selectedTransaction;
-      handleTransactionDelete(rateWiseOrderNum, orderNum);
+      const { ID } = selectedTransaction;
+      console.log(selectedTransaction)
+      handleTransactionDelete(ID);
       setOpenConfirmDialog(false);
     };
     
@@ -883,6 +943,7 @@ const financeColumns = [
         value: parseFloat(item.total_amount || 0)
     })) : [];
 
+    
   
     const expenseData = sumOfFinance.length > 0 ? [
       { name: 'Bank', value: parseFloat(sumOfFinance[0].expense_bank || 0) },
@@ -1131,19 +1192,146 @@ const handleDateChange = (range) => {
     startDate: range.startDate,
     endDate: range.endDate,
   }));
-  // const formattedStartDate = format(range.startDate, 'yyyy-MM-dd');
-  // const formattedEndDate = format(range.endDate, 'yyyy-MM-dd');
-  // setStartDate(formattedStartDate);
-  // setEndDate(formattedEndDate);
 };
 
- // Utility function to format number as Indian currency (₹)
  const formatIndianCurrency = (number) => {
   if (typeof number === 'number') {
     return number.toLocaleString('en-IN');
   }
   return number;
 };
+
+const apiRef = useGridApiRef();
+const [filterModel, setFilterModel] = useState({ items: [] }); 
+const [filteredData, setFilteredData] = useState([]);
+const [rateStats, setRateStats] = useState({});
+const [filterInputs, setFilterInputs] = useState({});
+
+
+   // Function to filter the order data based on the filter model
+ const applyFilters = () => {
+    let filteredRows = orderDetails;
+
+    filterModel.items.forEach(filter => {
+      const { field, value } = filter;
+      // Check if value is defined and not null before proceeding
+      if (value !== undefined && value !== null) {
+        filteredRows = filteredRows.filter(row => {
+          const cellValue = String(row[field]).toLowerCase(); // Get the cell value and convert to lowercase
+          return cellValue.includes(value.toLowerCase()); // Apply the filter condition
+        });
+      }
+    });
+
+      // Update the filtered data in the grid (without RateWiseOrderNumber condition)
+      setFilteredData(filteredRows);
+
+      // Calculate summary info only for rows where RateWiseOrderNumber > 0
+      const rowsForSummary = filteredRows.filter(row => row.RateWiseOrderNumber > 0);
+      // Sum values for the summary information
+      const sumOfOrders = rowsForSummary.length; // Total number of orders
+      const totalOrderAmount = rowsForSummary.reduce((sum, row) => 
+        sum + (parseFloat(row.Receivable.replace(/[₹,]/g, '').trim()) || 0), 
+      0); // Sum of order values
+      const totalFinanceAmount = rowsForSummary.reduce((sum, row) => 
+        sum + (parseFloat(row.TotalAmountReceived.replace(/[₹,]/g, '').trim()) || 0), 
+      0); // Sum of finance amounts
+
+      // Update state for summary info
+      setSumOfOrders(sumOfOrders);
+      setTotalOrderAmount(totalOrderAmount);
+      setTotalFinanceAmount(totalFinanceAmount);
+
+      // Improved logging for clarity
+      console.log('Sum of Orders:', sumOfOrders);
+      console.log('Total Order Amount:', totalOrderAmount);
+      console.log('Total Finance Amount:', totalFinanceAmount);
+  };
+
+  // Function to calculate the statistics based on filtered rows
+  const calculateRateStats = () => {
+    const stats = {};
+  
+    // Filter out rows where RateWiseOrderNumber <= 0
+    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+  
+    // Iterate over the filtered rows to calculate the stats
+    filteredRows.forEach(order => {
+      const rateName = order.Card; // Assuming the 'Card' field is used for rate classification
+      const orderValue = Number(order.Receivable.replace('₹', '').trim()) || 0; // Ensure it's a number
+      const income = Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0; // Ensure it's a number
+  
+      if (stats[rateName]) {
+        stats[rateName].orderCount += 1;
+        stats[rateName].totalOrderValue += orderValue;
+        stats[rateName].totalIncome += income;
+      } else {
+        stats[rateName] = {
+          orderCount: 1,
+          totalOrderValue: orderValue,
+          totalIncome: income,
+        };
+      }
+    });
+  
+    setRateStats(stats); // Update state with new stats
+  };
+  
+  // UseEffect to apply filters and calculate stats when orderDetails or filterModel changes
+  // useEffect(() => {
+  //   fetchOrderDetails(); // Fetch order details on mount
+  // }, []);
+
+  useEffect(() => {
+    const filteredRows = orderDetails.filter((row) => {
+      return filterModel.items.every((filter) => {
+        const field = filter.field;
+        const value = filter.value ? filter.value.toLowerCase() : '';
+        console.log(filter)
+  
+        if (value === '') return true; // Skip if the filter value is empty
+  
+        const cellValue = String(row[field]).toLowerCase(); // Case-insensitive comparison
+        return cellValue.includes(value);
+      });
+    });
+  
+    setFilteredData(filteredRows);
+  }, [filterModel, orderDetails]);  // Recalculate rows whenever filterModel or orderDetails change
+  
+
+  useEffect(() => {
+    applyFilters(); // Apply filters
+  }, [filterModel, orderDetails]); // Reapply filters on change
+
+  useEffect(() => {
+    calculateRateStats(); // Calculate stats based on filtered data
+  }, [filteredData]); // Recalculate when filteredData changes
+// const calculateRateStats = () => {
+//   const rateStats = {};
+
+//   displayOrderDetails.forEach(order => {
+//     const rateName = order.Card;
+//     const orderValue = Number(order.Receivable) || 0;  // Ensure Receivable (Order Value) is a number
+//     const income = Number(order.TotalAmountReceived) || 0;  // Ensure TotalAmountReceived (Income) is a number
+
+//     if (rateStats[rateName]) {
+//       rateStats[rateName].orderCount += 1;
+//       rateStats[rateName].totalOrderValue += orderValue;
+//       rateStats[rateName].totalIncome += income;
+//     } else {
+//       rateStats[rateName] = {
+//         orderCount: 1,
+//         totalOrderValue: orderValue,
+//         totalIncome: income,
+//       };
+//     }
+//   });
+
+//   return rateStats;
+// };
+
+// const rateStats = calculateRateStats();
 
 
     return (
@@ -1238,41 +1426,55 @@ const handleDateChange = (range) => {
 
             <Box className="px-3">
             {value === 0 && (
-  <div style={{ width: '100%' }}>
-    <div>
+              <div style={{ width: '100%' }}>
+  <div>
     <RestoreOrderDialog
-                open={restoredialogOpen}
-                onClose={handleRestoreClose}
-                onConfirm={handleConfirm}
-                newRateWiseOrderNumber={newRateWiseOrderNumber}
-            />
-            </div>
-            <h1 className='md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500'>Reports</h1>
-            <div className="flex flex-nowrap overflow-x-auto ">
-  {/* Combined Total Orders and Amounts box */}
-  <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
-    {/* Sum of Orders */}
-    <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
-      {sumOfOrders}
-    </div>
-    <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
-      Total Orders
-    </div>
-    
-    {/* Amounts Section */}
-    <div className="flex mt-4 w-fit">
-      {/* Order Amount */}
-      <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
-        ₹{totalOrderAmount}
-        <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">Order Value</div>
-      </div>
-      {/* Finance Amount */}
-      <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold ">
-        ₹{totalFinanceAmount}
-        <div className="text-xs sm:text-sm lg:text-base text-sky-500  text-opacity-80 font-normal text-nowrap">Income</div>
-      </div>
-    </div>
+      open={restoredialogOpen}
+      onClose={handleRestoreClose}
+      onConfirm={handleConfirm}
+      newRateWiseOrderNumber={newRateWiseOrderNumber}
+    />
   </div>
+  <h1 className="md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500">
+    Reports
+  </h1>
+
+{/* Sticky Container */}
+<div className="sticky top-0 z-10 bg-white p-2 shadow-md">
+  <div className="flex flex-nowrap overflow-x-auto">
+    {/* DateRangePicker and Spacer */}
+    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
+      <DateRangePicker
+        startDate={selectedRange.startDate}
+        endDate={selectedRange.endDate}
+        onDateChange={handleDateChange}
+      />
+    </div>
+
+    {/* Combined Total Orders and Amounts box */}
+    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
+      <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
+        {formatIndianNumber(sumOfOrders)}
+      </div>
+      <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
+        Total Orders
+      </div>
+
+      <div className="flex mt-4 w-fit">
+        <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
+          ₹{formatIndianNumber(totalOrderAmount)}
+          <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
+            Order Value
+          </div>
+        </div>
+        <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
+          ₹{formatIndianNumber(totalFinanceAmount)}
+          <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
+            Income
+          </div>
+        </div>
+      </div>
+    </div>
 
   {/* Spacer to center the DateRangePicker */}
   <div className="flex flex-grow text-black ml-2 mb-4 flex-shrink-0">
@@ -1373,13 +1575,18 @@ const handleDateChange = (range) => {
       endDate={endDate} 
       onDateChange={handleDateChange} 
     /> */}
+    {/* <DateRangePicker 
+      startDate={startDate} 
+      endDate={endDate} 
+      onDateChange={handleDateChange} 
+    /> */}
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+    <button className="custom-button" onClick={handleClickOpen}>
       Show Balance
     </button>
     {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+      <button className="consultant-button" onClick={handleConsultantReportOpen}>
         Cons. Report
       </button>
     )}
