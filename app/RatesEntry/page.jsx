@@ -824,6 +824,7 @@ var selectedRate = '';
   };
 
   const handleRateId = async (selectedRateId) => {
+    console.log(selectedRateId)
     if(selectedRateId > 0){
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendorTest.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
@@ -1033,7 +1034,7 @@ var selectedRate = '';
     try{
     await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteRates.php/?JsonRateId=${rateID}&JsonDBName=${companyName}`)
     // showToastMessage('success', 'Rejected Successfully!')
-    setSuccessMessage('Rejected Successfully!');
+    setSuccessMessage('Removed Successfully!');
         setTimeout(() => {
       setSuccessMessage('');
     }, 2000);
@@ -1055,10 +1056,11 @@ var selectedRate = '';
     setSuccessMessage('Restored Successfully!');
         setTimeout(() => {
       setSuccessMessage('');
-    }, 2000);
-    fetchRates();
-    handleRateId(rateId);
+      fetchRates();
+    handleRateId(rateID);
     setOpenDialog(false);
+    }, 2000);
+    
     } catch(error){
       console.error(error);
     }
