@@ -1080,7 +1080,6 @@ var selectedRate = '';
     // Convert the difference to days
     const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
   
-    // Update state with the calculated difference
     setValidityDays(differenceInDays);
 
     setValidityDate(parsedDate1);
