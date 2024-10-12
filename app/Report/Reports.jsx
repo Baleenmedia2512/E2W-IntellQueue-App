@@ -676,7 +676,8 @@ const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: 80 },
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
-  { field: 'ClientName', headerName: 'Client Name', width: 170 },
+  { field: 'ClientName', headerName: 'Client Name', width: 170 }, 
+  {field: 'ClientContact', headerName: 'Client Contact', width: 100 },
   { field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
   { 
     field: 'Receivable', 
@@ -1683,7 +1684,7 @@ const handleDateChange = (range) => {
                       params.row.OrderNumber === selectedOrder ? 'highlighted-row' : ''
                   }
                  />
-             </div>
+             </div> 
          </div>
         //   <div style={{ width: '100%' }}>
         //   <div style={{ height: 500 , width: '100%' }}>
