@@ -295,7 +295,7 @@ const Stages = () => {
       <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
   
   {/* Search Input Section */}
-  <div className="w-full sm:w-1/2">
+  {/* <div className="w-full sm:w-1/2">
     <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
       <input
         className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
@@ -311,7 +311,7 @@ const Stages = () => {
       </div>
     </div>
 
-    {/* Search Suggestions */}
+    {/* Search Suggestions 
     <div className="relative">
       {orderSearchSuggestion.length > 0 && orderSearchTerm !== "" && (
         <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
@@ -330,8 +330,8 @@ const Stages = () => {
         </ul>
       )}
     </div>
-  </div>
-</div>
+  </div>*/}
+</div> 
     <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-10 min-h-[60vh] rounded-lg shadow-md overflow-y-scroll"> {/* Increased padding */}
   {/* Header Section */}
   {stageEdit ? (
