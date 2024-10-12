@@ -6,7 +6,7 @@ import { useAppSelector } from '@/redux/store';
 import IconButton from '@mui/material/IconButton';
 import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
-import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate, setClientName, setClientNumber} from '@/redux/features/order-slice';
+import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} from '@/redux/features/order-slice';
 
 import Select from 'react-select';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
@@ -20,28 +20,25 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import './styles.css';
 import { Calendar } from 'primereact/calendar';
-import { isValid, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import { TextField } from '@mui/material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FetchOrderSeachTerm } from '../api/FetchAPI';
-import { resetStageItem } from '@/redux/features/stage-slice';
+
+
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
-    const stages = useAppSelector(state => state.stageSlice.stages);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
-    const {orderNumber: orderNumberRP, receivable: receivableRP, clientName, clientNumber} = orderDetails;
-    // const [clientName, setClientName] = useState(clientNameCR || "");
+    const {orderNumber: orderNumberRP, receivable: receivableRP} = orderDetails;
+    const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
-    // const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
+    const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
     const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
     const [UpdateRateWiseOrderNumber, setUpdateRateWiseOrderNumber] = useState("");
@@ -113,13 +110,8 @@ const CreateOrder = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [consultantDialogOpen, setConsultantDialogOpen] = useState(false);
     const [hasOrderDetails, setHasOrderDetails] = useState(false);
-    const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
-    const [orderSearchTerm,setOrderSearchTerm] = useState("");
-    const [ordereId, setOrderId] = useState(null);
-    const [displayClientName, setDisplayClientName] = useState(clientName);
-    const [orderNumber, setOrderNumber] = useState(orderNumberRP);
-    const [orderAmount, setorderAmount] = useState('');
-   
+   // const [isUpdateMode, setIsUpdateMode] = useState(false); 
+    
 
      // Function to toggle expand/collapse
   const toggleExpand = () => {
@@ -127,7 +119,7 @@ const CreateOrder = () => {
   };
     
     useEffect(() => {
-      if (!loggedInUser || dbName === "" ) {
+      if (!loggedInUser || dbName === "") {
         router.push('/login');
       }
       fetchMaxOrderNumber();
@@ -138,11 +130,11 @@ const CreateOrder = () => {
     },[])
 
     useEffect(() => {
-      // dispatch(setClientName(clientNameCR || ''));
+      setClientName(clientNameCR || '');
       setConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
       setClientNumber(clientNumberCR || '');
-      dispatch(setOrderData({ clientID: clientIDCR, consultantName: consultantNameCR }))
+      dispatch(setOrderData({ clientName: clientNameCR, clientNumber: clientNumberCR, clientID: clientIDCR, consultantName: consultantNameCR }))
       fetchPreviousOrderDetails(clientNumberCR, clientNameCR);
     }, [clientNameCR, clientIDCR]);
 
@@ -580,12 +572,12 @@ const fetchRates = async () => {
     }, [qty])
 
     const handleSearchTermChange = (event) => {
-        const newName = event.target.value;
-        dispatch(setClientName(newName));
+        const newName = event.target.value
         fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
-        // dispatch(setOrderData({ clientName: clientName }))
+        setClientName(newName);
+        dispatch(setOrderData({ clientName: clientName }))
         if (errors.clientName) {
           setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
         }
@@ -599,7 +591,7 @@ const fetchRates = async () => {
     const name = rest.substring(0, rest.indexOf('(')).trim();
     const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
-        dispatch(setClientName(name));
+        setClientName(name);
         setClientNumber(number);
         dispatch(setOrderData({ clientName: name, clientNumber: number  }))
         fetchClientDetails(ID);
@@ -687,18 +679,52 @@ const fetchRates = async () => {
 
       
 //report oderenumber data fetch --SK--
+// const [orderNumber, setOrderNumber] = useState(null);
+// const [companyName, setCompanyName] = useState('');
 
+// const fetchOrderDetailsByOrderNumber = () => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
+//     .then((response) => {
+//       const data = response.data;
+//       if (data) {
+//         // Assuming orderDetails is a typo and you meant data
+//         //const formattedOrderDate = format(data.orderDate, 'dd-MMM-yyyy').toUpperCase();
+//         //const formattedOrderDate = format(new Date(data.orderDate), 'dd-MMM-yyyy').toUpperCase();
+//         const formattedDate = parseDateFromDB(data.orderDate);
+//         setClientName(data.clientName);
+//         setOrderDate(data.orderDate);
+//         setDisplayOrderDate(formattedDate);
+//         setUnitPrice(data.receivable);
+//         setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
+//         dispatch(setRateId(data.rateId));
+//         setHasOrderDetails(true);
+//         setClientID(data.clientID);
+//         setConsultantName(data.consultantName);
+//       } else {
+//         setHasOrderDetails(false); // Set to false if there are no details
+//       }
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// };
+
+
+// useEffect(() => {
+//   fetchOrderDetailsByOrderNumber();
+// }, [orderNumberRP]);
 const fetchOrderDetailsByOrderNumber = () => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumberRP}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data) {
           // Parse the date
           const formattedDate = parseDateFromDB(data.orderDate);
-          //console.log(data)
+
           // Set all the necessary states
-          dispatch(setClientName(data.clientName));
+          setClientName(data.clientName);
           setOrderDate(data.orderDate);
           setDisplayOrderDate(formattedDate);
           setUnitPrice(data.receivable);
@@ -708,9 +734,7 @@ const fetchOrderDetailsByOrderNumber = () => {
           setClientID(data.clientID);
           setConsultantName(data.consultantName);
           setDiscountAmount(data.adjustedOrderAmount);
-          setDisplayClientName(data.clientName);
-          setorderAmount(data.receivable);
-          setMarginAmount(data.margin);
+
           // Store the fetched data in a state to compare later
           setPrevData({
             clientName: data.clientName,
@@ -720,8 +744,7 @@ const fetchOrderDetailsByOrderNumber = () => {
             rateId: data.rateId,
             clientID: data.clientID,
             consultantName: data.consultantName,
-            discountAmount: data.adjustedOrderAmount,
-            marginAmount: data.margin
+            discountAmount: data.adjustedOrderAmount
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -735,50 +758,11 @@ const fetchOrderDetailsByOrderNumber = () => {
   useEffect(() => {
     fetchOrderDetailsByOrderNumber();
     setDisplayUnitPrice(receivableRP);
-  }, [orderNumber]); // Re-fetch when orderNumber changes
+  }, [orderNumberRP]); // Re-fetch when orderNumberRP changes
 
-//creating stages ----
-const PlaceOrder = () =>{
-  CreateStages();
-  createNewOrder();
-}
-
-
-const CreateStages = async () => {
-  try {
-    // Create API promises for each field, dynamically passing the stage count
-    const apiPromises = stages.map(async (field, index) => {
-      const formattedDueDate = format(new Date(field.dueDate), 'yyyy-MM-dd');
-
-      // Send API request with the dynamic stage count
-      const response = await fetch(
-        `https://www.orders.baleenmedia.com/API/Media/CreateStages.php/?JsonEntryUser=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonClientName=${clientName}&JsonClientNumber=${clientNumberCR}&JsonStage=${index + 1}&JsonStageAmount=${field.stageAmount}&JsonOrderAmount=${orderAmount}&JsonDescription=${field.description}&JsonDueDate=${formattedDueDate}&JsonDBName=${companyName}`
-      );
-
-      return await response.json();
-    });
-
-    const results = await Promise.all(apiPromises);
-
-    results.forEach((data, index) => {
-      if (data === "Stage Created Successfully!") {
-        // setSuccessMessage('Stages Created Successfully!');
-        // setTimeout(() => {
-        //   setSuccessMessage('');
-        // }, 3000);
-        dispatch(resetStageItem());
-        //dispatch(resetOrderData());
-      } else {
-        alert("Payment Milestone not Created due to following error: " + error)
-      }
-    });
-  } catch (error) {
-    console.error('Error creating stages:', error);
-  }
-};
 
   
-      const createNewOrder = async() => {
+      const createNewOrder = async(event) => {
         // If the discount amount has changed and remarks are not filled
         if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
           setToastMessage('Please provide a reason in the Remarks field.');
@@ -790,7 +774,7 @@ const CreateStages = async () => {
           return;
         }
         
-        //event.preventDefault()
+        event.preventDefault()
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
@@ -804,7 +788,6 @@ const CreateStages = async () => {
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
-                //CreateStages()
                 if (elementsToHide.includes('OrderNumberText')) {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
@@ -848,7 +831,7 @@ const updateNewOrder = async (event) => {
 
     const params = new URLSearchParams({
       JsonUserName: loggedInUser,
-      JsonOrderNumber: orderNumber, // Assuming orderNumber is the order number to update
+      JsonOrderNumber: orderNumberRP, // Assuming orderNumberRP is the order number to update
       JsonRateId: rateId,
       JsonClientName: clientName,
       JsonClientContact: clientNumber,
@@ -885,7 +868,7 @@ const updateNewOrder = async (event) => {
        JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
        JsonAdjustedOrderAmount: discountAmount
     });
-    //console.log(formattedOrderDate)
+
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
@@ -900,24 +883,9 @@ const updateNewOrder = async (event) => {
         dispatch(setIsOrderExist(true));
         dispatch(setIsOrderUpdate(false));
         dispatch(resetOrderData());
-        dispatch(setClientName(''));
-        setOrderDate(new Date());
-        setDisplayOrderDate(new Date())
-        setUpdateRateWiseOrderNumber('');
-        dispatch(setRateId(''));
-        setClientID('');
-        setConsultantName('');
-        setDiscountAmount(0);
-        setOrderSearchTerm('');
-        setMarginAmount('');
-        setMarginPercentage('');
-        setQty('');
         setTimeout(() => {
           setSuccessMessage('');
-          // Only navigate if orderNumberRP satisfies the condition
-          if (orderNumberRP) { // Replace this condition with your actual logic
-            router.push('/Report');
-          }
+          router.push('/Report');
         }, 3000);
       } else {
         alert(`The following error occurred while updating data: ${data}`);
@@ -1035,12 +1003,9 @@ const updateNewOrder = async (event) => {
     if (elementsToHide.includes("OrderMarginAmount") === false) {
       if (!marginAmount || isNaN(marginAmount)) errors.marginAmount = 'Valid Margin Amount is required';
     }
-    if (!isOrderUpdate && !elementsToHide.includes("RatesVendorSelect")) {
-      if (!selectedValues.vendorName) {
-          errors.vendorName = 'Vendor is required';
-      }
-  }
-  
+    if (elementsToHide.includes("RatesVendorSelect") === false) {
+      if (!selectedValues.vendorName) errors.vendorName = 'Vendor is required';
+    }
     if (elementsToHide.includes("RatesPackageSelect") === false) {
       if (!selectedValues.Location) errors.Package = 'Package is required';
     }
@@ -1096,20 +1061,11 @@ function formatReleaseDatesToSave(dates) {
 
 
 function parseDateFromDB(dateString) {
-  if (!dateString) {
-    // Handle cases where the dateString is undefined, null, or an empty string
-    return null; // or return a default date, like new Date()
-  }
-  
   const [year, month, day] = dateString.split('-');
   return new Date(year, month - 1, day);
 }
 
-
-// const formattedOrderDate = format(orderDate, 'dd-MMM-yyyy').toUpperCase();
-const formattedOrderDate = orderDate && isValid(new Date(orderDate))
-  ? format(new Date(orderDate), 'dd-MMM-yyyy').toUpperCase()
-  : 'Invalid Date'; // or handle as per your needs
+const formattedOrderDate = format(orderDate, 'dd-MMM-yyyy').toUpperCase();
 
 const consultantDialog = () => {
   setConsultantDialogOpen(true); 
@@ -1239,8 +1195,7 @@ const handleOpenDialog = () => {
     parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
     rateId !== prevData.rateId ||
     consultantName.trim() !== prevData.consultantName.trim() ||
-    discountAmount !== prevData.discountAmount ||
-    parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) 
+    discountAmount !== prevData.discountAmount
 
   );
 
@@ -1263,7 +1218,7 @@ const handleOpenDialog = () => {
   // };
 
   const handleCancelUpdate = () => {
-    dispatch(setClientName(''));
+    setClientName('');
     setOrderDate(new Date());
     setDisplayOrderDate(new Date())
     setUpdateRateWiseOrderNumber('');
@@ -1272,8 +1227,6 @@ const handleOpenDialog = () => {
     setConsultantName('');
     setDiscountAmount(0);
     dispatch(resetOrderData());
-    setOrderSearchTerm('');
-    dispatch(setIsOrderUpdate(false));
     //window.location.reload(); // Reload the page
   };
 
@@ -1290,57 +1243,6 @@ const handleOpenDialog = () => {
   const handleReasonChange = (event) => {
     setUpdateReason(event.target.value);
   };
-
- 
-
-//search bar to update orders
-const handleOrderSearch = async (e) => {
-  const searchTerm = e.target.value;
-  setOrderSearchTerm(searchTerm);
-
-  // If search term is cleared, reset the update mode
-  if (searchTerm.trim() === "") {
-    dispatch(setIsOrderUpdate(false));
-          dispatch(setClientName(''));
-          setOrderDate(new Date());
-          setDisplayOrderDate(new Date())
-          setUpdateRateWiseOrderNumber('');
-          dispatch(setRateId(''));
-          setClientID('');
-          setConsultantName('');
-          setDiscountAmount(0);
-          dispatch(resetOrderData());
-          setOrderSearchTerm('');
-    setOrderSearchSuggestion([]); // Clear suggestions
-    return; // Exit early
-  }
-
-  const searchSuggestions = await FetchOrderSeachTerm(companyName, searchTerm);
-  setOrderSearchSuggestion(searchSuggestions);
-};
-
-const handleOrderSelection = (e) => {
-  const selectedOrder = e.target.value;
-
-  // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
-  const selectedOrderId = selectedOrder.split('-')[0];
-
-  // Clear finance suggestions and set the search term
-  setOrderSearchSuggestion([]);
-  setOrderSearchTerm(selectedOrder);
-
-  // Call the handleFinanceId function with the selected ID
-  fetchOrderDetailsByOrderNumber(selectedOrderId);
-
-  // Set the finance ID state
-  setOrderNumber(selectedOrderId);
-  
-  dispatch(setIsOrderUpdate(true));
-  // Set the mode to "Update"
-  //setIsUpdateMode(true);
-
-};
-
 
 
 return (
@@ -1407,7 +1309,7 @@ return (
       {/* Conditional text based on isOrderUpdate */}
       <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">
       {isOrderUpdate ? (
-          <>Updating order number: <strong>{orderNumber}</strong></>
+          <>Updating order number: <strong>{orderNumberRP}</strong></>
         ) : (
           <div></div>
         )}
@@ -1418,10 +1320,10 @@ return (
     {isOrderUpdate ? (
   <div className="button-container">
     <button className="update-button" onClick={handleOpenDialog}>Update Order</button>
-    {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
+    <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button>
   </div>
 ) : (
-  <button className="placeorder-button" onClick={PlaceOrder}>Place Order</button>
+  <button className="custom-button" onClick={createNewOrder}>Place Order</button>
 )}
     
     <Dialog
@@ -1456,124 +1358,60 @@ return (
         </Button>
       </DialogActions>
     </Dialog>
-
-  
-
-
   </div>
 
-  <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
-  
-  {/* Search Input Section */}
-  <div className="w-full sm:w-1/2">
-    <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
-      <input
-        className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
-        type="text"
-        id="RateSearchInput"
-        placeholder="Search Order for Update.."
-        value={orderSearchTerm}
-        onChange={handleOrderSearch}
-        onFocus={(e) => { e.target.select() }}
-      />
-      <div className="px-3">
-        <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
-      </div>
-    </div>
 
-    {/* Search Suggestions */}
-    <div className="relative">
-      {orderSearchSuggestion.length > 0 && orderSearchTerm !== "" && (
-        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
-          {orderSearchSuggestion.map((name, index) => (
-            <li key={index}>
-              <button
-                type="button"
-                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                onClick={handleOrderSelection}
-                value={name}
-              >
-                {name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  </div>
-</div>
 
 
 
     {/* Order Selection */}
     <div className="bg-white p-4 mt-2 rounded-lg shadow-lg">
-
-    {isOrderUpdate ? (
-  <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
-    <button
-      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-       onClick={handleCancelUpdate}
-    >
-      Exit Edit
-    </button>
-    <div className="flex flex-row text-left text-sm md:text-base pr-2">
-      <p className="text-gray-600 font-semibold">{orderNumber}</p>
-      <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">{displayClientName}</p>
-      <p className="text-gray-600 font-semibold mx-1">-</p>
-      <p className="text-gray-600 font-semibold">₹{orderAmount}</p>
-    </div>
-  </div>
-) : ''}
-
       <form className="space-y-4">
       <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 ">Select Your Order</h3>
           {/* Client Name */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
-            <input 
-              type='text' 
-              className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline 
-                ${errors.clientName ? 'border-red-400' : 'border-gray-300'} 
-                focus:border-blue-300 focus:ring focus:ring-blue-300 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
-              placeholder='Client Name'
-              value={clientName}
-              onChange={handleSearchTermChange}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const inputs = document.querySelectorAll('input, select, textarea');
-                  const index = Array.from(inputs).findIndex(input => input === e.target);
-                  if (index !== -1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                  }
-                }
-              }}
-              disabled={isOrderUpdate}
-              //&& !elementsToHide.includes("ClientAgeInput")
-            />
-            {(clientNameSuggestions.length > 0 && clientName !== '') && (
-              <ul className="list-none bg-white shadow-lg rounded-md mt-2">
-                {clientNameSuggestions.map((name, index) => (
-                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                    <button
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      onClick={handleClientNameSelection}
-                      value={name}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}<br/></span>}
-            {/* New Client */}
-            <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
-          </div>
+  <label className="block text-gray-700 font-semibold mb-2">Client Name</label>
+  <input 
+    type='text' 
+    className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline 
+      ${errors.clientName ? 'border-red-400' : isOrderUpdate && !elementsToHide.includes("ClientAgeInput") ? 'border-yellow-500' : 'border-gray-300'} 
+      focus:border-blue-300 focus:ring focus:ring-blue-300`}
+    placeholder='Client Name'
+    value={clientName}
+    onChange={handleSearchTermChange}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const inputs = document.querySelectorAll('input, select, textarea');
+        const index = Array.from(inputs).findIndex(input => input === e.target);
+        if (index !== -1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      }
+    }}
+    disabled={isOrderUpdate && elementsToHide.includes("ClientAgeInput")}
+  />
+  {(clientNameSuggestions.length > 0 && clientName !== '') && (
+    <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+      {clientNameSuggestions.map((name, index) => (
+        <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+          <button
+            type="button"
+            className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+            onClick={handleClientNameSelection}
+            value={name}
+          >
+            {name}
+          </button>
+        </li>
+      ))}
+    </ul>
+  )}
+  {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}
+  {/* New Client */}
+  <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
+</div>
 
           <div>
                     <label className="block mb-1 text-gray-700 font-medium">Order Date</label>
@@ -1599,25 +1437,6 @@ return (
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
-      <label className='text-gray-500 text-[13px] hover:cursor-pointer'> 
-      Add &nbsp;
-  <span 
-    className='underline text-sky-500 hover:text-sky-600' 
-    onClick={() => {
-      // Trim the clientName to prevent empty spaces from bypassing the check
-      if (clientName && clientName.trim() !== '') {  
-        router.push('/Payment-Milestone');
-      } else {
-        setErrors({clientName: "Please enter a valid Client Name"})
-        // You can use any notification, such as toast or alert, to notify the user
-        //alert('Please fill out the Client Name before proceeding.');
-      }
-    }}
-  >
-    Payment Milestone
-  </span>
-</label>
-
     </div>
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
