@@ -234,7 +234,6 @@ const ClientsData = () => {
       const name = rest.replace(/\(.*?\)/g, '').trim(); // Remove anything in parentheses from the name
       const number = phoneMatch ? phoneMatch[1] : '';
 
-    console.log({ name, number });
   
     setConsultantNameSuggestions([]);
     setConsultantName(name)
