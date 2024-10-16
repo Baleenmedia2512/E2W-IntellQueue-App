@@ -478,7 +478,7 @@ const Stages = () => {
                     <button
                       type="button"
                       onClick={() => dispatch(addStage(index))}
-                      className="p-1 text-white bg-green-500  rounded-md flex justify-center text-center"
+                      className="p-1 text-white bg-green-500 rounded-md flex justify-center text-center"
                     >
                       Add
                     </button>
