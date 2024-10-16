@@ -101,7 +101,7 @@ const AdDetailsPage = () => {
 
   const handleRateSearch = async(e) =>{
     setRateSearchTerm(e.target.value);
-    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value, false);
     setRatesSearchSuggestion(searchSuggestions);
   }
 
@@ -717,9 +717,9 @@ const AdDetailsPage = () => {
                       type="button"
                       className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
                       onClick={handleRateSelection}
-                      value={name}
+                      value={name.SearchTerm}
                     >
-                      {name}
+                      {name.SearchTerm}
                     </button>
                   </li>
                 ))}
