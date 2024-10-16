@@ -26,10 +26,12 @@ import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import ControlPointRoundedIcon from '@mui/icons-material/ControlPointRounded';
 import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualization/useGridVirtualScroller';
 // import { Carousel } from 'primereact/carousel';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
+import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const AdDetailsPage = () => {
 
@@ -89,7 +91,7 @@ const AdDetailsPage = () => {
   const [invalidRatesData, setInvalidRatesData] = useState([]);
   const [validRatesData, setValidRatesData] = useState([]);
   const [newRateModel, setNewRateModel] = useState(false);
-  const [isNewRate, setIsNewRate] = useState(false);
+  const [isNewRate, setIsNewRate] = useState(true);
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
   const [minimumPrice, setMinimumPrice] = useState("");
@@ -109,7 +111,14 @@ const AdDetailsPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [openSCMModel, setSCMModel] = useState(false);
   const newData = ratesData.filter(item => Number(item.rateId) === Number(rateId));
-  
+  const [showInvalid, setShowInvalid] = useState(false);
+  const [rateValidity, setRateValidity] = useState(true);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [longPressRateId, setLongPressRateId] = useState(null);
+  const [dialogAction, setDialogAction] = useState(null); // Store action type (Remove/Restore)
+
+  let pressTimer = null;
+
 
   const [filters, setFilters] = useState({
     rateName: [],
@@ -814,6 +823,7 @@ var selectedRate = '';
     }
   };
 
+
   const handleRateId = async (selectedRateId) => {
     if(selectedRateId > 0){
     try {
@@ -823,14 +833,14 @@ var selectedRate = '';
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      if(data === "Rate is rejected" || data === "No rates found for the provided Rate ID"){
+      if(data === "No rates found for the provided Rate ID"){
         return null
       } else{
-        const validityDate = new Date(data.ValidityDate);
-        const currentDate = new Date()
-        if (validityDate < currentDate){
-          return
-        }
+        // const validityDate = new Date(data.ValidityDate);
+        // const currentDate = new Date()
+        // if (validityDate < currentDate){
+        //   return
+        // }
         // var locationValues = data.location;
         // var packageValues = data.package;
         // const colonIndex = data.adCategory.indexOf(':');
@@ -879,6 +889,8 @@ var selectedRate = '';
       setValidTill(data.ValidityDate)
       setValidityDate(data.ValidityDate)
       setMarginPercentage(data.AgencyCommission);
+      setRateValidity(data.ApprovedStatus === "Approved")
+      setIsNewRate(false);
       // const validityDate = new Date(data.ValidityDate);
       // const currentDate = new Date()
       // if (validityDate < currentDate){
@@ -1017,17 +1029,37 @@ var selectedRate = '';
   };
   
 
-  const rejectRates = async(e) => {
+  const rejectRates = async(e, rateID) => {
     e.preventDefault()
     try{
-    await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteRates.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`)
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/DeleteRates.php/?JsonRateId=${rateID}&JsonDBName=${companyName}`)
     // showToastMessage('success', 'Rejected Successfully!')
-    setSuccessMessage('Rejected Successfully!');
+    setSuccessMessage('Removed Successfully!');
         setTimeout(() => {
       setSuccessMessage('');
     }, 2000);
     handleClearRateId();
+    handleEditMode();
     fetchRates();
+    setOpenDialog(false);
+    } catch(error){
+      console.error(error);
+    }
+  }
+
+  const restoreRates = async(e, rateID) => {
+    e.preventDefault()
+    try{
+    await fetch(`https://www.orders.baleenmedia.com/API/Media/RestoreRates.php/?JsonRateId=${rateID}&JsonDBName=${companyName}`)
+    // showToastMessage('success', 'Rejected Successfully!')
+    setSuccessMessage('Restored Successfully!');
+        setTimeout(() => {
+      setSuccessMessage('');
+      fetchRates();
+    handleRateId(rateID);
+    setOpenDialog(false);
+    }, 2000);
+    
     } catch(error){
       console.error(error);
     }
@@ -1047,7 +1079,6 @@ var selectedRate = '';
     // Convert the difference to days
     const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
   
-    // Update state with the calculated difference
     setValidityDays(differenceInDays);
 
     setValidityDate(parsedDate1);
@@ -1312,7 +1343,7 @@ var selectedRate = '';
               }, 2000);
 
                 // Setting the new Rate into Old Rate
-                setIsNewRate(false);
+                setIsNewRate(true);
                 fetchMaxRateID()
                 fetchRates()
                 handleRateId(maxRateID)
@@ -1330,7 +1361,7 @@ var selectedRate = '';
 
 const handleRateSearch = async(e) =>{
   setRateSearchTerm(e.target.value);
-  const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+  const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value, showInvalid);
   setRatesSearchSuggestion(searchSuggestions);
 }
 
@@ -1473,6 +1504,70 @@ setEditModal(false);
   };
   };
 
+  const handleCheckboxChange = () => {
+    setShowInvalid((prev) => !prev); // Toggle checkbox state
+    handleRateSearch({ target: { value: rateSearchTerm } });
+};
+
+const handleEditMode = () => {
+
+  dispatch(resetRatesData());
+
+  setRateSearchTerm("");
+
+  setShowInvalid(false);
+  setRateValidity(true);
+  setIsNewRate(true);
+
+    setValidityDays(0);
+    setValidityDate(new Date());
+    setValidTill("");
+    setLeadDays(0);
+    setCampaignDuration("");
+    setSelectedCampaignUnits("");
+    setShowCampaignDuration(false);
+    setIsSlabAvailable(false);
+    setQty(0);
+    setUnitPrice(0);
+    setNewUnitPrice(0);
+    setTempSlabData([]);
+    setMarginPercentage(0);
+
+  // Focus on the name input field
+  // setTimeout(() => {
+  //   if (consultantNameRef.current) {
+  //     consultantNameRef.current.focus();
+  //   }
+  // }, 150);  
+};
+
+const handleLongPress = (rate, isInvalid) => {
+  console.log(rate)
+  pressTimer = setTimeout(() => {
+    setLongPressRateId(rate);
+    setDialogAction(isInvalid ? 'restore' : 'remove');
+    setOpenDialog(true);
+  }, 600); 
+};
+
+const handleTouchEnd = () => {
+  clearTimeout(pressTimer);
+};
+
+const handleTouchStart = (rate, isInvalid) => {
+  handleLongPress(rate, isInvalid); 
+};
+
+const handleMouseDown = (rate, isInvalid) => {
+  handleLongPress(rate, isInvalid); 
+};
+
+const handleMouseLeave = () => {
+  clearTimeout(pressTimer);
+};
+
+
+
   return (
     
     <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1593,14 +1688,143 @@ setEditModal(false);
               <Button color = 'primary' variant="contained" onClick={handleMinimumPrice}>Submit</Button>
             </DialogActions>
       </Dialog>
-            <div className="w-full ">
-  <div className="flex items-center justify-between">
+            <div className="w-full max-w-6xl">
+            <div className="flex items-center justify-center">
+  <div className="w-full max-w-6xl relative">
+    {/* Flex container for heading and buttons */}
+    <div className="flex justify-between items-center relative z-10 px-2">
+      {/* Heading on the far left */}
       <div>
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-1">Rate Manager</h2>
-        <div className="border-2 w-10 inline-block mb-0 border-blue-500"></div>
-        {/* <p className="text-sm md:text-base lg:text-lg text-gray-400 mb-4">Add your rates here</p> */}
+        <h2 className="text-xl w-24 sm:w-full sm:text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">
+          Rates Manager
+        </h2>
+        <div className="border-2 w-10 mt-1 pl-2 border-blue-500"></div>
       </div>
+      
+      {/* Buttons on the far right */}
+      <div className="flex space-x-2 sm:mt-20">
+      {isNewRate ? (
+  <button 
+    className="Add-button" 
+    onClick={insertNewRate}
+  >
+    Add
+  </button>
+) : (
+  rateValidity ? (
+    <>
+      <button 
+        className="Update-button" 
+        onClick={updateRates}
+        disabled={!isFormChanged}
+      >
+        Update
+      </button>
+      <button 
+        className="Delete-button" 
+        onClick={(e) => rejectRates(e, rateId)}
+      >
+        Remove
+      </button>
+    </>
+  ) : (
+    <button 
+      className="Add-button" 
+      onClick={(e) => restoreRates(e, rateId)}
+    >
+      Restore
+    </button>
+  )
+)}
+
+
+
       </div>
+    </div>
+    
+    {/* Search bar positioned on top of heading and buttons section */}
+    <div className="absolute top-4 sm:-top-8 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
+      <div className="mb-2 flex items-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={showInvalid}
+            onChange={handleCheckboxChange}
+          />
+          <span className="ml-2 text-sm font-medium">Show Rejected Rate Cards Also</span>
+        </label>
+      </div>
+
+      <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
+        <input
+          className="w-full px-4 py-2 text-black focus:outline-none"
+          type="text"
+          placeholder="Ex: RateName Type"
+          value={rateSearchTerm}
+          onFocus={(e) => { e.target.select(); }}
+          onChange={handleRateSearch}
+        />
+        <div className="px-3">
+          <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
+        </div>
+      </div>
+      
+      {/* Search Suggestions */}
+      <div className="relative">
+        {Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
+          <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+            {ratesSearchSuggestion.map((name, index) => {
+              const isInvalid = name.ApprovedStatus === "Rejected";
+              return (
+                <li key={index}>
+                  <button
+                    type="button"
+                    className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
+                    onClick={handleRateSelection}
+                    onTouchStart={() => handleTouchStart(name.RateID, isInvalid)}
+                    onTouchEnd={handleTouchEnd} 
+                    onMouseDown={() => handleMouseDown(name.RateID, isInvalid)} 
+                    onMouseUp={handleTouchEnd}
+                    onMouseLeave={handleMouseLeave}
+                    value={name.SearchTerm}
+                  >
+                    {name.SearchTerm}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
+    {/* MUI Dialog for long press actions */}
+    <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      <DialogTitle>{dialogAction === 'remove' ? 'Confirm Removal' : 'Confirm Restore'}</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          {dialogAction === 'remove'
+            ? 'Are you sure you want to remove this rate?'
+            : 'Are you sure you want to restore this rate?'}
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setOpenDialog(false)} color="primary">
+          Cancel
+        </Button>
+        <Button
+          onClick={dialogAction === 'remove' ? (e) => rejectRates(e, longPressRateId) : (e) => restoreRates(e, longPressRateId)}
+          color={dialogAction === 'remove' ? 'secondary' : 'primary'}
+          autoFocus
+        >
+          {dialogAction === 'remove' ? 'Remove' : 'Restore'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+    
 
       {/* { editModal && (
       <div className="flex justify-center items-center fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-50">
@@ -1620,50 +1844,31 @@ setEditModal(false);
             </div>
           </div>
       )} */}
-            <div className="bg-white p-4 rounded-lg shadow-lg">
+      <div className="flex items-center justify-center mt-24 sm:mt-6">
+        
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
       <form className="space-y-4">
       {/* <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3> */}
-      { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>} 
+      {/* { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>}  */}
+      {rateId > 0 && rateValidity && (
+  <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
+    <button 
+      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+      onClick={handleEditMode}
+    >
+      Exit Edit
+    </button>
+    <div className="flex flex-row text-left text-sm md:text-base pr-2">
+      <p className="text-gray-600 font-semibold">{rateId}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{selectedValues.rateName.value}</p>
+      <p className="text-gray-600 font-semibold mx-1">-</p>
+      <p className="text-gray-600 font-semibold">{selectedValues.adType.value}</p>
+    </div>
+  </div>
+)}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-          <div className='mt-4' > {/*name="RateSearchInput"*/}
-                <label className='mt-4 mb-2 text-gray-700 font-semibold' >Search Rate Card</label>
-                <span className='flex flex-row mt-2'>
-                <input
-                  className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300 `}
-                  // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
-                  type="text"
-                  id="RateSearchInput"
-                 // name='RateSearchInput'
-                  placeholder="Ex: RateName Type"
-                  value={rateSearchTerm}
-                  onChange = {handleRateSearch}
-                  onFocus={(e) => {e.target.select()}}
-                />
-                <Button 
-                  className='border' 
-                  id='RatesClearButton'
-                  //name='RatesClearButton'
-                  onClick={handleClearRateId}>
-                <FontAwesomeIcon icon={faTimesCircle} className=' w-6 h-6'/>
-              </Button>
-              </span>
-              {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "")&& (
-              <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
-                {ratesSearchSuggestion.map((name, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      onClick={handleRateSelection}
-                      value={name}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-              </div>
+
 
 
                     <div>
@@ -1684,12 +1889,14 @@ setEditModal(false);
                           value={selectedValues.rateName}
                           onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
                           options={getDistinctValues('rateName').map(value => ({ value, label: value }))}
+                          isDisabled={!rateValidity}
                         />
                         <button 
                           className='justify-center text-blue-500 ml-1' 
                           onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Rate Card Name");}}
                           id='14'
                           name='AddRateNameButton'
+                          disabled={!rateValidity}
                         >
                           <MdAddCircle size={28}/>
                         </button>
@@ -1714,8 +1921,10 @@ setEditModal(false);
                         options={getOptions('typeOfAd', 'rateName')}
                         // options={filters.typeOfAd}
                         required
+                        isDisabled={!rateValidity}
                       />
-                      <button className='justify-center text-blue-500 ml-6' onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Category");}}>
+                      <button className='justify-center text-blue-500 ml-6' onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Category");}}
+                        disabled={!rateValidity}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -1740,11 +1949,13 @@ setEditModal(false);
                         value={selectedValues.adType}
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
                         options={getOptions('adType', 'typeOfAd')}
+                        isDisabled={!rateValidity}
                       />
                       <button className='justify-center text-blue-500 ml-1' 
                       id='18'
                       name='AddAdCategoryButton'
-                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Type");}}>
+                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Type");}}
+                      disabled={!rateValidity}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -1770,11 +1981,13 @@ setEditModal(false);
                         onChange={(selectedOption) => handleSelectChange(selectedOption, 'Location')}
                         options={getOptions('Location', 'adType')}
                         required
+                        isDisabled={!rateValidity}
                       />
                       <button className='justify-center text-blue-500 ml-1' 
                       id='20'
                       name='AddLocationButton'
-                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Location");}}>
+                      onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Location");}}
+                      disabled={!rateValidity}>
                         <MdAddCircle size={28}/>
                       </button>
                     </div>
@@ -1801,11 +2014,13 @@ setEditModal(false);
                       onChange={(selectedOption) => handleSelectChange(selectedOption, 'Package')}
                       options={getOptions('Package', 'Location')}
                       required = {isNewRate ? true : false}
+                      isDisabled={!rateValidity}
                     />
                     <button className='justify-center text-blue-500 ml-1' 
                     id='22'
                     name='AddPackageButton'
-                    onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Package");}}>
+                    onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Package");}}
+                    disabled={!rateValidity}>
                       <MdAddCircle size={28}/>
                     </button>
                   </div>
@@ -1848,6 +2063,7 @@ setEditModal(false);
                     optionLabel="label"
                     optionGroupLabel="label"
                     optionGroupChildren="options"
+                    isDisabled={!rateValidity}
                   />
                 </div>                  
 
@@ -1872,6 +2088,7 @@ setEditModal(false);
                       optionLabel="label"
                       optionGroupLabel="label"
                       optionGroupChildren="options"
+                      isDisabled={!rateValidity}
                     />
                     {isUnitsSelected && <p className='text-red-500 mt-2 font-medium'>Please select a valid Unit</p>}
                   </div>
@@ -1899,6 +2116,7 @@ setEditModal(false);
                           //setChanging(true);
                         }}
                         onFocus={(e) => e.target.select()}
+                        disabled={!rateValidity}
                       />
                     </div>
                     </div>
@@ -1918,6 +2136,7 @@ setEditModal(false);
                           setWidth(e.target.value); setIsQty(false); setIsQtySlab(false);
                         }}
                         onFocus={(e) => e.target.select()}
+                        disabled={!rateValidity}
                       />
                     </div>
                     
@@ -1932,6 +2151,7 @@ setEditModal(false);
                         //onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
                         id='26'
                         name='AddQuantityButton'  
+                        disabled={!rateValidity}
                       >
                         <MdAddCircle size={28}/>
                       </button> 
@@ -1952,6 +2172,7 @@ setEditModal(false);
                         onFocus={(e) => {
                           e.target.select()
                         }}
+                        disabled={!rateValidity}
                         />
                         
                       <button 
@@ -1963,6 +2184,7 @@ setEditModal(false);
                         //onClick={() => (Number.isInteger(parseFloat(qty)) && parseInt(qty) !== 0 ? selectedUnit === "" ? showToastMessage("error", "Select a valid Unit!") :toggleModal() : showToastMessage('warning', 'Please enter a valid Quantity!'))}
                         id='26'
                         name='AddQuantityButton'  
+                        disabled={!rateValidity}
                       >
                         <MdAddCircle size={28}/>
                       </button> 
@@ -1982,12 +2204,12 @@ setEditModal(false);
                           <span onClick={() => handleItemClick(data)}>{(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit.value} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit.value}</span>
                         ) : (
                           <option key={selectedUnit === "SCM" ? data.StartQty : data.StartQty * data.Width} className="mt-1.5" 
-                            onClick={() => handleItemClick(data)}
+                            onClick={() => handleItemClick(data)} disabled={!rateValidity}
                           >
                             {(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit ? selectedUnit.value : ''} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit ? selectedUnit.value : ''}
                           </option>
                         )}
-                        <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index, data.Width)}>
+                        <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index, data.Width)} disabled={!rateValidity}>
                           <RemoveCircleOutline color='secondary' fontSize='small'/>
                         </IconButton>
                       </div>
@@ -2001,7 +2223,9 @@ setEditModal(false);
                     <div className='flex mr-16 mt-2'>
                       <input type='checkbox' checked={showCampaignDuration} value={showCampaignDuration} onChange={() => {
                         setShowCampaignDuration(!showCampaignDuration);
-                      }}/>
+                      }}
+                      disabled={!rateValidity}
+                      />
                       <label className='justify-left ml-2 text-gray-700 font-semibold'>Service Duration</label>
                     </div>
                     <div className='mb-8'>
@@ -2028,6 +2252,7 @@ setEditModal(false);
                         value={selectedCampaignUnits}
                         onChange={(selectedOption) => {setSelectedCampaignUnits(selectedOption); setEditMode(true)}}
                         options={campaignUnits}
+                        isDisabled={!rateValidity}
                       />
                     </div>
                     )}
@@ -2047,6 +2272,7 @@ setEditModal(false);
                           type='text'
                           onChange={e => {setLeadDays(e.target.value); setIsLeadDays(false); setEditMode(true)}} onFocus={(e) => {e.target.select()}}
                           onKeyDown ={handleKeyDown}
+                          disabled={!rateValidity}
                         />
                         <p className='ml-2 mt-2 w-1/3'>Day (s)</p>
                       </span>
@@ -2065,6 +2291,7 @@ setEditModal(false);
                         onFocus={(e) => {
                           e.target.select()
                         }}
+                        disabled={!rateValidity}
                       />
                   </div>
               <div className='mr-9' name="RatesValidTillTextField">
@@ -2083,6 +2310,7 @@ setEditModal(false);
                       required
                       onKeyDown ={handleKeyDown}
                       type='number' 
+                      disabled={!rateValidity}
                       onFocus={(e) => {e.target.select()}}/>
                     <IconButton aria-label="Add" onClick={() => setShowDatePicker(!showDatePicker)}>
                         <Event color='primary'/>
@@ -2128,41 +2356,15 @@ setEditModal(false);
                     onChange={(selectedOption) => {dispatch(setRateGST(selectedOption)); setEditMode(true)}}
                     options={GSTOptions}
                     required
+                    isDisabled={!rateValidity}
                   />
 </div>
                 </div>
-                {!(selectedValues.rateName === "" || selectedValues.adType === "" || selectedValues.vendorName === "") ? 
-                <div className="flex items-center justify-center mb-8 mt-11 mr-14">
-                  <button 
-                   className="px-6 py-2 mr-3 bg-blue-500 text-white rounded-lg w-fit" 
-                  onClick={() => {dispatch(resetRatesData()); }}>Clear
-                          {/* <span className='flex flex-row justify-center'><MdOutlineClearAll className='mt-1 mr-1'/> Clear</span> */}
-                        </button> 
-                  {!isNewRate && (<button 
-                   className="px-6 py-2 mr-3 bg-red-500 text-white rounded-lg w-fit" 
-                  onClick={rejectRates}>Delete
-                    {/* <span className='flex flex-row justify-center'><MdDeleteOutline className='mt-1 mr-1'/> Delete</span> */}
-                    </button> 
-                  )}
-                    {(isNewRate)  ? (
-                      <button 
-                      className="px-6 py-2 mr-3 bg-green-500 text-white rounded-lg w-fit" 
-                      onClick={insertNewRate}>Add
-                      {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Add</span> */}
-                      </button>
-                    ) : ( 
-                        <button 
-                        className="px-6 py-2 mr-3 bg-green-500 text-white rounded-lg w-fit" 
-                        onClick={(e) => {updateRates(e); }} disabled={!isFormChanged}> Update
-                          {/* <span className='flex flex-row justify-center'><MdOutlineSave className='mt-1 mr-1'/> Update</span> */}
-                        </button> 
-                    )}
-                    
-                </div>
-                :<></>}
-                <div className="flex items-center justify-center mb-8 mt-11 mr-14">
+                
+               <div className="flex items-center justify-center mb-8 mt-11 sm:mt-5 sm:mr-0">
                  <button 
-                  className="outline-none text-[#008000] shadow-2xl p-2 flex flex-row bg-[#ffffff] hover:border-[#b7e0a5] border-[1px] ring-[#008000] border-gray-300 hover:border-solid hover:border-[1px] w-44 hover:text-[#008000] font-semibold rounded-2xl justify-center"
+                  className="Createorder-button flex items-center justify-center space-x-2 sm:flex-col sm:space-x-0 sm:space-y-2"
+                  disabled={!rateValidity}
                   onClick={(e) => {
                     e.preventDefault();
                     if(rateId){
@@ -2193,9 +2395,10 @@ setEditModal(false);
                     }
                     
                   }}>
-                 <img src='/images/add.png' className='w-7 h-7 mr-2'/>Create Order</button>
+                 <ControlPointRoundedIcon className="mr-2" />Create Order</button>
                  </div> 
                 </form>
+              </div>
               </div>
               </div>
       {/* <div className='bg-surface-card p-8 rounded-2xl mb-4'>
