@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWhatsapp, faCheck, faSearch, faSms } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import { FetchSeachTerm } from '../api/getSearchTerm';
+import { Dropdown } from 'primereact/dropdown';
 
 export default function AppointmentForm() {
   const inputRef = useRef(null);
@@ -19,6 +20,13 @@ export default function AppointmentForm() {
   const [appointmentDate, setAppointmentDate] = useState();
   const [appointmentMessage, setAppointmentMessage] = useState("");
   const [hours, setHours] = useState(30)
+  const appointmentTimePeriod = [
+    { label: 'Week 1', value: 'Week 1' },
+    { label: '10 Days', value: '10 Days' },
+    { label: '2 Weeks', value: '2 Weeks' },
+    { label: '4 Weeks', value: '4 Weeks' },
+    { label: '6 Weeks', value: '6 Weeks' }
+  ];
 
   useEffect(() => {
     inputRef?.current.focus();
@@ -232,12 +240,28 @@ export default function AppointmentForm() {
             </div>
 
             <div className="flex flex-col justify-between">
-              <label className="font-montserrat text-lg mb-1">Appointment Range <span className="text-red-500">*</span></label>
-              <select className={`border p-3 font-montserrat w-full bg-white rounded-md ${error ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} focus:outline-none`}>
-                <option >
-                  1 Week
-                </option>
-              </select>
+              <label className="font-montserrat text-lg mb-1">Appointment Period <span className="text-red-500">*</span></label>
+              <Dropdown
+              className={`border p-3 font-montserrat w-full bg-white rounded-md ${error ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} focus:outline-none`}
+            //  className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
+            //   ${error ? 'border-red-400' : 'border-gray-300'}
+            //   focus:border-blue-300 focus:ring focus:ring-blue-300`}
+            
+              
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  minHeight: '50px',
+                }),
+              }}
+              placeholder="Select Time Period"
+              options={appointmentTimePeriod}
+              // value={selectedValues.rateName.value}
+              // onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
+              // options={{label: '1 Week', value: '1 Week'}}
+              
+            />
+            {error && <p className="text-red-500 font-montserrat">{error}</p>}
               {/* <div className="flex flex-col w-full">
                 <label className="font-montserrat text-lg mb-1">Appt. Date <span className="text-red-500">*</span></label>
                 <input
