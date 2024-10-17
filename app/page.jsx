@@ -218,18 +218,39 @@ const ClientsData = () => {
     setDisplayClientNumber(number);
   };
   
+  // const handleConsultantNameSelection = (event) => {
+  //   const input = event.target.value;
+  //    const [id, rest] = input.split('-');
+  //    const name = rest.substring(0, rest.indexOf('(')).trim();
+  //    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
+  
+  //   setConsultantNameSuggestions([]);
+  //   setConsultantName(name)
+  //   dispatch(setClientData({ consultantName: name || "" }));
+  //   setConsultantNumber(number);
+  //   // fetchConsultantDetails(name, number);
+  // };
+
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
-     const [id, rest] = input.split('-');
-     const name = rest.substring(0, rest.indexOf('(')).trim();
-     const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
-  
+    const id = input.split('-')[0].trim();
+    
     setConsultantNameSuggestions([]);
-    setConsultantName(name)
-    dispatch(setClientData({ consultantName: name || "" }));
-    setConsultantNumber(number);
-    // fetchConsultantDetails(name, number);
+    fetchConsultantDetails(id);
   };
+  
+  const fetchConsultantDetails = (Id) => {
+    fetch(`https://orders.baleenmedia.com/API/Media/FetchConsultantDetails.php?JsonConsultantID=${Id}&JsonDBName=${companyName}`)
+    .then((response) => response.json())
+    .then((data) => {
+        setConsultantName(data.ConsultantName);
+        setConsultantNumber( data.ConsultantNumber ? data.ConsultantNumber : '');
+        dispatch(setClientData({ consultantName: data.ConsultantName || "" }));
+        dispatch(setClientData({ consultantNumber: data.ConsultantNumber || "" }));
+    })
+    .catch((error) => {
+    });
+  }
 
   const fetchClientDetails = (clientID) => {
     axios
