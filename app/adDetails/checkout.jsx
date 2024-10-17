@@ -180,7 +180,7 @@ const CheckoutPage = () => {
           {cartItems.map((item, index) => (
             <tr key={index}>
               <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
-              <td className='p-1.5 border border-gray-200'>{nextQuoteNumber + index}</td>
+              <td className='p-1.5 border border-gray-200'>{nextQuoteNumber}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
