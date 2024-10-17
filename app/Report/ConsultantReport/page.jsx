@@ -368,23 +368,23 @@ export default function GroupedRowsDemo() {
                 //     const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
 
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                    // Filter conditions for name, rateCard, and rateType
-                    const isFilteredByRateCard = activeFilters.rateCard
-                        ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase())
-                        : false;
-                    const isFilteredByRateType = activeFilters.rateType
-                        ? rateType.rateType.toLowerCase().includes(activeFilters.rateType.toLowerCase())
-                        : false;
-                    const isFilteredByName = activeFilters.name
-                        ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
-                        : false;
+                    // // Filter conditions for name, rateCard, and rateType
+                    // const isFilteredByRateCard = activeFilters.rateCard
+                    //     ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase())
+                    //     : false;
+                    // const isFilteredByRateType = activeFilters.rateType
+                    //     ? rateType.rateType.toLowerCase().includes(activeFilters.rateType.toLowerCase())
+                    //     : false;
+                    // const isFilteredByName = activeFilters.name
+                    //     ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
+                    //     : false;
                     
-                    // Add name if any of the filters apply
-                    const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
+                    // // Add name if any of the filters apply
+                    // const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
                     
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: shouldAddName ? group.name : null,  // Add name if filter applies
+                        name: group.name,  // Add name if filter applies
                         rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
