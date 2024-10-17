@@ -5,11 +5,16 @@ import { faWhatsapp, faCheck, faSearch, faSms } from '@fortawesome/free-solid-sv
 import Image from 'next/image';
 import { FetchSeachTerm } from '../api/getSearchTerm';
 import { Dropdown } from 'primereact/dropdown';
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
+import { useAppSelector } from '@/redux/store';
 
 export default function AppointmentForm() {
   const inputRef = useRef(null);
   const nameRef = useRef(null);
   const mobileRef = useRef(null);
+  const userName = useAppSelector(state => state.authSlice.userName);
   const [mobileNumber, setMobileNumber] = useState("");
   const [error, setError] = useState("");
   const [clientNameError, setClientNameError] = useState("");
@@ -21,7 +26,7 @@ export default function AppointmentForm() {
   const [appointmentMessage, setAppointmentMessage] = useState("");
   const [hours, setHours] = useState(30)
   const appointmentTimePeriod = [
-    { label: 'Week 1', value: 'Week 1' },
+    { label: '1 Week', value: '1 Week' },
     { label: '10 Days', value: '10 Days' },
     { label: '2 Weeks', value: '2 Weeks' },
     { label: '4 Weeks', value: '4 Weeks' },
@@ -116,10 +121,9 @@ export default function AppointmentForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          JsonName: clientName,
-          JsonContact: mobileNumber,
-          JsonMessage: "Appointment fixed on " + (appointmentDate ? appointmentDate : getFormattedDate()) + " @" + (appointmentTime ?  appointmentTime :  getFormattedTime()) + " for " + hours + " mins.",
-          JsonUser: "Siva",
+          JsonUserName: userName,
+          JsonClientId: clientId,
+          JsonDate: date,
         }),
       });
 
@@ -167,7 +171,7 @@ export default function AppointmentForm() {
           />
         </div>
         <div className="w-full m-auto max-w-[400px] h-auto">
-          <h1 className="text-blue-500 font-montserrat font-bold text-2xl mb-4">Get In Touch</h1>
+          <h1 className="text-blue-500 font-montserrat font-bold text-2xl mb-4">Appointment Manager</h1>
           <div className="flex flex-col space-y-4" onTouchStart={handleTouchStart}>
             <div className="flex flex-col">
               <label className="font-montserrat text-lg mb-1">Search</label>
@@ -242,7 +246,7 @@ export default function AppointmentForm() {
             <div className="flex flex-col justify-between">
               <label className="font-montserrat text-lg mb-1">Appointment Period <span className="text-red-500">*</span></label>
               <Dropdown
-              className={`border p-3 font-montserrat w-full bg-white rounded-md ${error ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} focus:outline-none`}
+              className={`border p-2 --font-montserrat w-full bg-white rounded-md ${error ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} focus:outline-none`}
             //  className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
             //   ${error ? 'border-red-400' : 'border-gray-300'}
             //   focus:border-blue-300 focus:ring focus:ring-blue-300`}
