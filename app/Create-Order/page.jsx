@@ -1581,7 +1581,19 @@ return (
             )}
             {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}<br/></span>}
             {/* New Client */}
-            <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label>
+            {/* <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label> */}
+            {!isOrderUpdate && (
+    <label className='text-gray-500 text-sm hover:cursor-pointer'>
+        New Client? 
+        <span 
+            className='underline text-sky-500 hover:text-sky-600' 
+            onClick={() => router.push('/')}
+        >
+            Click Here
+        </span>
+    </label>
+)}
+
           </div>
 
           <div>
