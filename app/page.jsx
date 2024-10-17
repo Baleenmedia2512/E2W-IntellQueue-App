@@ -219,28 +219,49 @@ const ClientsData = () => {
     setDisplayClientNumber(number);
   };
   
+  // const handleConsultantNameSelection = (event) => {
+  //   const input = event.target.value;
+  //     // Split by '-' to separate the ID and the rest of the input
+  //     const parts = input.split('-');
+
+  //     // Extract the rest after '-' (name and any parentheses)
+  //     const rest = parts.length > 1 ? parts.slice(1).join('-').trim() : parts[0].trim();
+  
+  //     // Use regex to match the phone number (if any) inside parentheses
+  //     const phoneMatch = rest.match(/\((\d{10,})\)$/); // Matches the number if it's in parentheses at the end
+  
+  //     // Extract the name, ignoring parentheses
+  //     const name = rest.replace(/\(.*?\)/g, '').trim(); // Remove anything in parentheses from the name
+  //     const number = phoneMatch ? phoneMatch[1] : '';
+
+  
+  //   setConsultantNameSuggestions([]);
+  //   setConsultantName(name)
+  //   dispatch(setClientData({ consultantName: name || "" }));
+  //   setConsultantNumber(number);
+  //   // fetchConsultantDetails(name, number);
+  // };
+
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
-      // Split by '-' to separate the ID and the rest of the input
-      const parts = input.split('-');
-
-      // Extract the rest after '-' (name and any parentheses)
-      const rest = parts.length > 1 ? parts.slice(1).join('-').trim() : parts[0].trim();
-  
-      // Use regex to match the phone number (if any) inside parentheses
-      const phoneMatch = rest.match(/\((\d{10,})\)$/); // Matches the number if it's in parentheses at the end
-  
-      // Extract the name, ignoring parentheses
-      const name = rest.replace(/\(.*?\)/g, '').trim(); // Remove anything in parentheses from the name
-      const number = phoneMatch ? phoneMatch[1] : '';
-
-  
+    const id = input.split('-')[0].trim();
+    
     setConsultantNameSuggestions([]);
-    setConsultantName(name)
-    dispatch(setClientData({ consultantName: name || "" }));
-    setConsultantNumber(number);
-    // fetchConsultantDetails(name, number);
+    fetchConsultantDetails(id);
   };
+  
+  const fetchConsultantDetails = (Id) => {
+    fetch(`https://orders.baleenmedia.com/API/Media/FetchConsultantDetails.php?JsonConsultantID=${Id}&JsonDBName=${companyName}`)
+    .then((response) => response.json())
+    .then((data) => {
+        setConsultantName(data.ConsultantName);
+        setConsultantNumber( data.ConsultantNumber ? data.ConsultantNumber : '');
+        dispatch(setClientData({ consultantName: data.ConsultantName || "" }));
+        dispatch(setClientData({ consultantNumber: data.ConsultantNumber || "" }));
+    })
+    .catch((error) => {
+    });
+  }
 
   const fetchClientDetails = (clientID) => {
     axios
