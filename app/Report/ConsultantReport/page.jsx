@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import 'primereact/resources/themes/saga-blue/theme.css';
@@ -18,6 +18,9 @@ import SuccessToast from '../../components/SuccessToast';
 import { useAppSelector } from '@/redux/store';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { Dropdown } from 'primereact/dropdown';
+import { FaCheck, FaTimes, FaWindowClose, FaFilter } from 'react-icons/fa';
+import Tippy from '@tippyjs/react'; // Tooltip library
+import 'tippy.js/dist/tippy.css'; // Import Tippy's default CSS
 
 const matchModes = [
     { label: 'Contains', value: 'contains' },
@@ -30,10 +33,9 @@ const matchModes = [
 export default function GroupedRowsDemo() {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
-    // const dbName = 'Grace Scans';
-    // const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
+    const [groupedData, setGroupedData] = useState([]);
     // const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
@@ -46,14 +48,9 @@ export default function GroupedRowsDemo() {
       const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
 
       const [filters, setFilters] = useState({
-        global: { value: null, matchMode: 'contains' },
-        id:{ value: null, matchMode: 'contains' },
-        name: { value: null, matchMode: 'contains' },
+        originalName: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
-        count: { value: null, matchMode: 'equals' },
-        price: { value: null, matchMode: 'equals' },
-        total: { value: null, matchMode: 'equals' }
     });
     const [dates, setDates] = useState([currentStartDate, currentEndDate]);
     const [toast, setToast] = useState(false);
@@ -64,8 +61,7 @@ export default function GroupedRowsDemo() {
     const [selectedOrderNumbers, setSelectedOrderNumbers] = useState([]);
     const [open, setOpen] = useState(false);
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
-    const [matchMode, setMatchMode] = useState('contains');
-    
+
     useEffect(() => {
         if (!username || dbName === "") {
           router.push('/login');
@@ -99,6 +95,16 @@ export default function GroupedRowsDemo() {
     useEffect(() => {
         fetchConsultants();
     }, [startDate, endDate]);
+
+    useEffect(() => {
+        // Select all rows by default when groupedData is ready
+        if (consultants.length > 0) {
+            const data = renderGroupedData(consultants, activeFilters);
+            setGroupedData(data)
+            setSelectedRows(data);
+        }
+    }, [consultants]);
+    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -290,6 +296,7 @@ export default function GroupedRowsDemo() {
     
         return groupedData;
     };
+
     
     
 
@@ -357,12 +364,27 @@ export default function GroupedRowsDemo() {
             group.rates.forEach((rateCard, scanIndex) => {
                 rateCardNames.push(rateCard.rateCard);
                 
+                // rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
+                //     const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
+
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                    const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
+                    // Filter conditions for name, rateCard, and rateType
+                    const isFilteredByRateCard = activeFilters.rateCard
+                        ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase())
+                        : false;
+                    const isFilteredByRateType = activeFilters.rateType
+                        ? rateType.rateType.toLowerCase().includes(activeFilters.rateType.toLowerCase())
+                        : false;
+                    const isFilteredByName = activeFilters.name
+                        ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
+                        : false;
+                    
+                    // Add name if any of the filters apply
+                    const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
                     
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: currentIndex === middleIndex || isFilteredByRateCard ? group.name : null,  // Add name if filter applies
+                        name: shouldAddName ? group.name : null,  // Add name if filter applies
                         rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
@@ -399,12 +421,15 @@ export default function GroupedRowsDemo() {
     
     
     const activeFilters = {
-        rateCard: filters.id ? filters.id.value : ''
+        rateCard: filters.rateCard ? filters.rateCard.value : '',
+        name: filters.originalName ? filters.originalName.value : '',
+        rateType: filters.rateType ? filters.rateType.value : ''
     };
 
     
-    const groupedData = renderGroupedData(consultants, activeFilters);
-
+    
+    
+    
 
     const handlePriceChange = (id, newPrice) => {
         setConsultants(prevConsultants => {
@@ -734,22 +759,93 @@ const handleSelectionChange = (e) => {
 
 const resetFilters = () => {
     setFilters({
-        global: { value: null, matchMode: 'contains' },
-        id:{ value: null, matchMode: 'contains' },
-        name: { value: null, matchMode: 'contains' },
+        originalName: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
-        count: { value: null, matchMode: 'equals' },
-        price: { value: null, matchMode: 'equals' },
-        total: { value: null, matchMode: 'equals' }
     });
 };
 
+const [tempFilterValues, setTempFilterValues] = useState({
+    originalName: '',
+    rateCard: '',
+    rateType: '',
+});
 
 
-
-//Working filter
 const filterHeaderTemplate = (column, filterField) => {
+    const handleApplyFilter = () => {
+        let newFilters = { ...filters };
+        let combinedFilteredRows = [...groupedData]; // Start with the entire dataset
+    
+    
+        // Apply filters based on each filter field
+        for (const key in tempFilterValues) {
+            if (tempFilterValues[key] !== '') {
+                newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
+                // Apply the filter on the combinedFilteredRows
+                combinedFilteredRows = combinedFilteredRows.filter(row => {
+                    const fieldValue = row[key]; // Dynamically access the field based on key
+                    
+                    // Handle null or undefined values
+                    if (fieldValue === null || fieldValue === undefined) {
+                        return false; // Skip rows with null/undefined values for filtering
+                    }
+                    
+                    if (typeof fieldValue === 'string') {
+                        return fieldValue.toLowerCase().includes(tempFilterValues[key].toLowerCase());
+                    }
+                    return false; // Handle other cases if necessary
+                });
+            }
+        }
+    
+        setFilters(newFilters);
+        setSelectedRows(combinedFilteredRows); // Automatically select the filtered rows
+    };
+
+    const handleClearFilter = () => {
+        let newFilters = { ...filters };
+        newFilters[filterField].value = '';
+    
+        // Clear the temporary filter value for the specific filter
+        setTempFilterValues({ ...tempFilterValues, [filterField]: '' });
+    
+        // Reset combined filtered rows to the original dataset
+        let combinedFilteredRows = [...groupedData]; 
+    
+        // Apply remaining filters
+        for (const key in newFilters) {
+            const filterValue = newFilters[key]?.value; // Safely access the filter value
+    
+            if (filterValue && filterValue !== '') { // Check for non-empty filter values
+                combinedFilteredRows = combinedFilteredRows.filter(row => {
+                    const fieldValue = row[key]; 
+                    // Handle null or undefined values
+                    if (fieldValue === null || fieldValue === undefined) {
+                        return false; // Skip rows with null/undefined values for filtering
+                    }
+    
+                    if (typeof fieldValue === 'string') {
+                        return fieldValue.toLowerCase().includes(filterValue.toLowerCase());
+                    }
+                    return false; // Handle other cases if necessary
+                });
+            }
+        }
+    
+        setFilters(newFilters); // Update filters without the cleared filter
+    
+        // Reset selectedRows when all filters are cleared
+        if (Object.values(newFilters).every(filter => filter.value === null || filter.value === '')) {
+            setSelectedRows(groupedData); // Clear selected rows when all filters are empty
+        } else {
+            setSelectedRows(combinedFilteredRows); // Update selected rows based on remaining active filters
+        }
+    };
+
+    
+
+
     return (
         <div>
             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
@@ -758,114 +854,78 @@ const filterHeaderTemplate = (column, filterField) => {
             <span className="p-column-title">{column.header}</span>
             <input
                 type="text"
-                value={filters[filterField] ? filters[filterField].value : ''}
-                onChange={(e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    let newFilters = { ...filters };
-                    newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
-                    setFilters(newFilters);
-
-            //         if (searchTerm === '') {
-            //             // Reset filtered consultants to empty when search text is empty
-            //             setFilteredConsultants([]);
-            //             return;
-            //         }
-            //         console.log(searchTerm)
-            //         // if(filterField === 'id') {
-
-            //         // Process consultants to filter and include group totals row
-            //         const updatedRows = consultants.flatMap(consultant => {
-            //             if (!Array.isArray(consultant.rates)) return [];
-
-            //             let totalRows = consultant.rates.reduce((sum, rateCard) => 
-            //                 (rateCard.rateTypes ? sum + rateCard.rateTypes.length : sum), 
-            //                 0
-            //             );
-            //             let middleIndex = Math.floor(totalRows / 2);
-
-            //             let currentIndex = 0;
-
-            //             const rows = consultant.rates.flatMap(rateCard => {
-            //                 return (rateCard.rateTypes || []).map(rateType => {
-            //                     const isMiddleRow = currentIndex === middleIndex;
-            //                     const row = {
-            //                         id: `${consultant.name}-${rateCard.rateCard}-${rateType.rateType}`,
-            //                         name: isMiddleRow ? consultant.name : '',
-            //                         rateCard: rateCard.rateCard,
-            //                         rateType: rateType.rateType,
-            //                         count: rateType.count,
-            //                         price: rateType.price,
-            //                         total: rateType.count * rateType.price,
-            //                         isGroup: isMiddleRow,
-            //                         isScanGroup: rateType.rateCard === rateCard.rateCard,
-            //                         orderNumber: consultant.orderNumbers,
-            //                         originalName: consultant.name // Store the original name for potential use
-            //                     };
-            //                     currentIndex++;
-            //                     return row;
-            //                 });
-            //             });
-
-            //             rows.push({
-            //                 id: `${consultant.name}-${consultant.rates.map(r => r.rateCard).join('-')}-total`,
-            //                 name: '',
-            //                 rateCard: 'Total',
-            //                 count: '',
-            //                 price: '',
-            //                 total: `₹${Math.round(consultant.total)}`,
-            //                 isGroup: true,
-            //                 isScanGroup: false,
-            //                 originalName: consultant.name
-            //             });
-
-            //             return rows;
-            //         });
-
-                    
-
-            //         // Filter rows based on the search term
-            //         const filteredRows = updatedRows.map(row => {
-                        
-            //             const matchesSearch = 
-            //                 row.name?.toLowerCase().includes(searchTerm) ||
-            //                 row.rateCard?.toLowerCase().includes(searchTerm) ||
-            //                 row.rateType?.toLowerCase().includes(searchTerm) ||
-            //                 row.count?.toString().includes(searchTerm) ||
-            //                 row.price?.toString().includes(searchTerm) ||
-            //                 row.total?.toString().includes(searchTerm);
-
-            //             if (matchesSearch && row.name === '' && !row.id.includes('-total')) {
-            //                 return { ...row, name: row.originalName }; // Display the name
-            //             }
-
-            //             return row.id.includes('-total') || matchesSearch ? row : null;
-            //         }).filter(row => row !== null);
-
-            //         // // Update the state with filtered rows
-            //         setFilteredConsultants(filteredRows);
-            //     // }
-             }
-             }
+                value={tempFilterValues[filterField]}
+                onChange={(e) => setTempFilterValues({ ...tempFilterValues, [filterField]: e.target.value })}
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
-                
             />
-            <button
-    onClick={() => {
-        let newFilters = { ...filters };
-        newFilters[filterField] = { value: '', matchMode: 'contains' };
-        setFilters(newFilters);
-        // setFilteredConsultants([]); 
-    }}
-    className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
->
-    Clear
-</button>
+            
+            {/* Apply Button */}
+            <Tippy content="Apply Filter" placement="bottom">
+                <button
+                    onClick={handleApplyFilter}
+                    className="mt-2 px-4 py-2 font-base bg-green-600 text-white border border-green-200 font-semibold rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                >
+                    <FaCheck />
+                </button>
+            </Tippy>
 
+            {/* Clear Button */}
+            <Tippy content="Clear Filter" placement="bottom">
+                <button
+                    onClick={handleClearFilter}
+                    className="mt-2 px-4 py-2 ml-2 font-base bg-red-600 text-white border border-red-200 font-semibold rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+                >
+                    <FaTimes />
+                </button>
+            </Tippy>
         </div>
     );
 };
+
+
+
+//Working filter
+// const filterHeaderTemplate = (column, filterField) => {
+//     return (
+//         <div>
+//             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
+//                 <span className="font-bold text-sky-500">Contains</span>
+//             </div>
+//             <span className="p-column-title">{column.header}</span>
+//             <input
+//                 type="text"
+//                 value={filters[filterField] ? filters[filterField].value : ''}
+//                 onChange={(e) => {
+//                     const searchTerm = e.target.value.toLowerCase();
+//                     let newFilters = { ...filters };
+//                     newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
+//                     setFilters(newFilters);
+//                     setSelectedRows([]);
+//              }
+//              }
+//                 placeholder={`Search ${column.header}`}
+//                 className="p-inputtext-custom"
+//                 style={{ width: '100%' }}
+                
+//             />
+//             <button
+//     onClick={() => {
+//         let newFilters = { ...filters };
+//         newFilters[filterField] = { value: '', matchMode: 'contains' };
+//         setFilters(newFilters);
+//         // setFilteredConsultants([]); 
+//         setSelectedRows([]);
+//     }}
+//     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
+// >
+//     Clear
+// </button>
+
+//         </div>
+//     );
+// };
 //Working filter
 
 // console.log(filteredConsultants)
@@ -895,6 +955,11 @@ const handleClickOpen = () => {
 const handleClose = () => {
     setOpen(false);
 };
+
+
+
+
+
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -1018,29 +1083,39 @@ const handleClose = () => {
                             onSelectionChange={handleSelectionChange}
                             className="text-left"
                             dataKey="id"
-                            selectionMode="multiple"
+                            selectionMode="checkbox"
                             metaKeySelection={false}
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['name', 'rateCard', 'rateType', 'count', 'price', 'total']}
+                            globalFilterFields={['originalName', 'rateCard', 'rateType']}
+                            
             
                         >
                         
-                            <Column field="name" header="Consultant" body={nameBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-3 pr-2 border-r-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="originalName" header="Consultant" body={nameBodyTemplate} 
+                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.originalName?.value ? 'text-blue-600' : 'text-gray-800'}`} 
+                            className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
                             showFilterMatchModes={false}
+                            
                             ></Column>
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateCard?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'id')}
+                            filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'rateCard')}
                             showFilterMatchModes={false}
                             showApplyButton={false}
                             showClearButton={false}
+                            
                             ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
+                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateType?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white w-fit p-2"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}
+                            showFilterMatchModes={false}
+                            showApplyButton={false}
+                            showClearButton={false}
                             ></Column>
                             <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             ></Column>
