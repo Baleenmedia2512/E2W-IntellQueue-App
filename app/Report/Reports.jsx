@@ -471,7 +471,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
 const handleTransactionDelete = (id) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -886,7 +886,7 @@ const financeColumns = [
 
     const handleConfirmDelete = () => {
       const { ID } = selectedTransaction;
-      console.log(selectedTransaction)
+      //console.log(selectedTransaction)
       handleTransactionDelete(ID);
       setOpenConfirmDialog(false);
     };

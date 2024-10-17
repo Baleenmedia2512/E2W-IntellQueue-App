@@ -108,6 +108,7 @@ const CreateOrder = () => {
 
     const [orderDate, setOrderDate] = useState(new Date());
     const [displayOrderDate, setDisplayOrderDate] = useState(new Date());
+    //console.log(displayOrderDate)
     const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
 
     const [isExpanded, setIsExpanded] = useState(false);
@@ -131,7 +132,7 @@ const CreateOrder = () => {
         router.push('/login');
       }
       fetchMaxOrderNumber();
-      elementsToHideList();
+      elementsToHideList(); 
       fetchRates();
       fetchCampaignUnits();
       calculateReceivable();
@@ -732,10 +733,18 @@ const fetchOrderDetailsByOrderNumber = () => {
       });
   };
 
+  // useEffect(() => {
+  //   fetchOrderDetailsByOrderNumber();
+  //   setDisplayUnitPrice(receivableRP);
+  // }, [orderNumber]); // Re-fetch when orderNumber changes
   useEffect(() => {
-    fetchOrderDetailsByOrderNumber();
-    setDisplayUnitPrice(receivableRP);
-  }, [orderNumber]); // Re-fetch when orderNumber changes
+    if (orderNumber) {
+      fetchOrderDetailsByOrderNumber();
+      setIsOrderUpdate(true); // Set the update flag if orderNumber exists
+      setDisplayUnitPrice(receivableRP);
+    }
+  }, [orderNumber]);
+  
 
 //creating stages ----
 const PlaceOrder = () =>{
@@ -1106,10 +1115,10 @@ function parseDateFromDB(dateString) {
 }
 
 
-// const formattedOrderDate = format(orderDate, 'dd-MMM-yyyy').toUpperCase();
+// const formattedOrderDate = format(new Date(orderDate), 'dd-MMM-yyyy').toUpperCase();
 const formattedOrderDate = orderDate && isValid(new Date(orderDate))
-  ? format(new Date(orderDate), 'dd-MMM-yyyy').toUpperCase()
-  : 'Invalid Date'; // or handle as per your needs
+  ? format(new Date(orderDate), 'dd-M-yyyy').toUpperCase()
+  : format(new Date(),'dd-M-yyyy'); // or handle as per your needs
 
 const consultantDialog = () => {
   setConsultantDialogOpen(true); 
