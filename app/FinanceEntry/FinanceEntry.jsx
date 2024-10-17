@@ -508,7 +508,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
       return response.data
     } catch (error) {
       console.error(error);
-      // alert("Error uploading file: " + (error.response?.data?.error || error.message));
     }
   };
   

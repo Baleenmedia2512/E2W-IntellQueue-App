@@ -776,7 +776,7 @@ const CreateStages = async () => {
         //   setSuccessMessage('');
         // }, 3000);
         dispatch(resetStageItem());
-        dispatch(resetOrderData());
+        //dispatch(resetOrderData());
       } else {
         alert("Payment Milestone not Created due to following error: " + error)
       }
