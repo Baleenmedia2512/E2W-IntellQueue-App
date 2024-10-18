@@ -1251,15 +1251,15 @@ const handleOpenDialog = () => {
   const isDiscountChanged = discountAmount !== prevData.discountAmount;
 
   // If the discount amount has changed and remarks are not filled
-  if (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !remarks.trim()) {
-    setToastMessage('Please provide a reason in the Remarks field.');
-    setSeverity('warning');
-    setToast(true);
-    setTimeout(() => {
-      setToast(false);
-    }, 2000);
-    return;
-  }
+  // if (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !remarks.trim()) {
+  //   setToastMessage('Please provide a reason in the Remarks field.');
+  //   setSeverity('warning');
+  //   setToast(true);
+  //   setTimeout(() => {
+  //     setToast(false);
+  //   }, 2000);
+  //   return;
+  // }
   // Compare current data with previous data to check if any field has changed
   const isDataChanged = (
     clientName.trim() !== prevData.clientName.trim() ||
@@ -1582,22 +1582,23 @@ return (
               disabled={isOrderUpdate}
               //&& !elementsToHide.includes("ClientAgeInput")
             />
-            {(clientNameSuggestions.length > 0 && clientName !== '') && (
-              <ul className="list-none bg-white shadow-lg rounded-md mt-2">
-                {clientNameSuggestions.map((name, index) => (
-                  <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                    <button
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      onClick={handleClientNameSelection}
-                      value={name}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {(clientNameSuggestions.length > 0 && clientName !== '' && !isOrderUpdate) && (
+            <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+              {clientNameSuggestions.map((name, index) => (
+                <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                  <button
+                    type="button"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                    onClick={handleClientNameSelection}
+                    value={name}
+                  >
+                    {name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
             {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}<br/></span>}
             {/* New Client */}
             {/* <label className='text-gray-500 text-sm hover:cursor-pointer'>New Client? <span className='underline text-sky-500 hover:text-sky-600' onClick={() => router.push('/')}>Click Here</span></label> */}
@@ -1675,7 +1676,7 @@ return (
   
         </div>
         {/* ICR YTC*/}
-        { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '') && (<div >
+        {/* { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '') && (<div >
                    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
                     <input 
                         type='text' 
@@ -1696,7 +1697,30 @@ return (
                       />
                       {errors.remarks && <p className="text-red-500 text-sm mt-2">{errors.remarks}</p>}
                     </div>)
-}
+} */}
+{ (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !isOrderUpdate) && (
+  <div>
+    <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
+    <input
+      type='text'
+      className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline
+        ${errors.remarks ? 'border-red-400' : isOrderUpdate  ? 'border-yellow-500' : 'border-gray-300'}
+        focus:border-blue-300 focus:ring focus:ring-blue-300`}
+      placeholder='Remarks'
+      value={remarks}
+      onChange={e => {
+        setRemarks(e.target.value);
+        if (e.target.value === '' && discountAmount !== '0' && discountAmount !== 0) {
+          setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
+        } else {
+          setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
+        }
+      }}
+    />
+    {errors.remarks && <p className="text-red-500 text-sm mt-2">{errors.remarks}</p>}
+  </div>
+)}
+
    
         
         
@@ -1958,7 +1982,9 @@ return (
         </div>
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative" id="4" name="RateWiseOrderNumberText">
       <p className="text-gray-500 text-xs mb-1">Next Order#</p>
-       <p className="text-black">{nextRateWiseOrderNumber}</p>
+       {/* <p className="text-black">{nextRateWiseOrderNumber}</p> */}
+       {!isOrderUpdate && <p className="text-black">{nextRateWiseOrderNumber}</p>}
+
        </div>
        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative" id="21" name="OrderNumberText">
        <p className="text-gray-500 text-xs mb-1">Previous Order#</p>
@@ -1966,7 +1992,9 @@ return (
         </div>
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative" id="21" name="OrderNumberText">
       <p className="text-gray-500 text-xs mb-1">Next Order#</p>
-       <p className="text-black">{maxOrderNumber}</p>
+       {/* <p className="text-black">{maxOrderNumber}</p> */}
+       {!isOrderUpdate && <p className="text-black">{maxOrderNumber}</p>}
+
        </div>
     </div>
     <label className={`text-gray-500 text-sm hover:cursor-pointer p-1 ${isOrderUpdate ? 'text-yellow-500' : ''}`}>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
@@ -2034,7 +2062,7 @@ return (
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Consultant</p>
-              <p className="text-black">{consultantCR}</p>
+              <p className="text-black">{consultantName}</p>
             </div>
           </div>
         </div>
