@@ -139,7 +139,7 @@ const CreateOrder = () => {
     },[])
 
     useEffect(() => {
-      // dispatch(setClientName(clientNameCR || ''));
+      dispatch(setClientName(clientNameCR || ''));
       setConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
       setClientNumber(clientNumberCR || '');
@@ -660,7 +660,7 @@ const fetchRates = async () => {
               const clientDetails = data[0];
               const formattedDate = parseDateFromDB(clientDetails.orderDate);
               // dispatch(setRateId(""));
-              // setOrderDate(clientDetails.orderDate);
+               setOrderDate(clientDetails.orderDate);
               // setDisplayOrderDate(formattedDate);
               const formattedOrderDate = format(clientDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
               setPreviousOrderDate(formattedOrderDate);
@@ -2034,7 +2034,7 @@ return (
             </div>
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
               <p className="text-gray-500 text-xs mb-1">Consultant</p>
-              <p className="text-black">{consultantName}</p>
+              <p className="text-black">{consultantCR}</p>
             </div>
           </div>
         </div>

@@ -40,7 +40,7 @@ const authPersistConfig = {
 const clientPersistConfig = {
   key: "client",
   storage: storage,
-  whitelist: ["clientName", "clientContact", "clientEmail", "clientSource"]
+  whitelist: ["clientName", "clientContact", "clientEmail", "clientSource", "consultantName"]
 }
 
 const quotePersistConfig = {
