@@ -1612,11 +1612,7 @@ const [filterInputs, setFilterInputs] = useState({});
               <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-    {/* <DateRangePicker 
-      startDate={startDate} 
-      endDate={endDate} 
-      onDateChange={handleDateChange} 
-    /> */}
+    
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
     <button className="custom-button" onClick={handleClickOpen}>
@@ -1708,7 +1704,7 @@ const [filterInputs, setFilterInputs] = useState({});
                     <Button onClick={handlePasswordSubmit} color="primary">
                         Submit
                     </Button>
-                    
+
                 </DialogActions>
             </Dialog>
 
