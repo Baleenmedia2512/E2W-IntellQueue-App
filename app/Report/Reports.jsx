@@ -380,7 +380,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
                     restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));
-                console.log(response.data)  
+                //console.log(response.data)  
                 //const displayData = response.data
                 setFinanceDetails(financeDetails);
                 //setDisplayFinanceDetails(displayData)
@@ -557,9 +557,42 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
   }
 };
 
-const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
+// const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
+//     .then((response) => {
+//       const data = response.data;
+//       if (data.success) {
+//         setSuccessMessage('Transaction Restored!');
+//         setTimeout(() => {
+//           setSuccessMessage('');
+//         }, 2000);
+//         fetchFinanceDetails();
+//         fetchAmounts();
+//         fetchSumOfFinance();
+//         fetchRateBaseIncome();
+//       } else {
+//         setToastMessage(data.message);
+//         setSeverity('error');
+//         setToast(true);
+//         setTimeout(() => {
+//           setToast(false);
+//         }, 2000);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//       setToastMessage('Failed to restore transaction. Please try again.');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//         setToast(false);
+//       }, 2000);
+//     });
+// };
+const handleFinanceRestore = (id) => {
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.success) {
@@ -846,7 +879,7 @@ const financeColumns = [
         <button
           className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
           disabled={params.row.restoreFinanceDisabled} // Conditional disabling
-          onClick={() => handleFinanceRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.ClientName)}
+          onClick={() => handleFinanceRestore(params.row.ID)}
           style={{ backgroundColor: '#1976d2',
             color: 'white',
             fontWeight: 'bold',
@@ -876,7 +909,7 @@ const financeColumns = [
 //         </div>
 //     ),
 // },
-];
+];  
 
     const handleOpenConfirmDialog = (ID) => {
       setSelectedTransaction({ ID });
@@ -1884,15 +1917,28 @@ const [filterInputs, setFilterInputs] = useState({});
                     //  }}
                     sx={{
                       '& .MuiDataGrid-row:hover': {
-                          backgroundColor: '#e3f2fd', // Light blue on hover
+                        backgroundColor: '#e3f2fd', // Light blue on hover
                       },
                       '& .highlighted-row': {
-                          backgroundColor: '#fff385', // Yellow highlight
+                        backgroundColor: '#fff385', // Yellow highlight
                       },
-                  }}
-                  getRowClassName={(params) =>
-                      params.row.OrderNumber === selectedOrder ? 'highlighted-row' : ''
-                  }
+                      '& .grey-row': {
+                        backgroundColor: '#ededed', // Grey highlight for invalid rows
+                      },
+                    }}
+                    getRowClassName={(params) => {
+                      // Check if the row has 'markInvalidFinanceDisabled' set to true (i.e., ValidStatus is 'Invalid')
+                      const isInvalid = params.row.markInvalidFinanceDisabled;
+                    
+                      // If markInvalidFinanceDisabled is true, return 'grey-row' to apply grey background, else return 'highlighted-row' for selected order
+                      if (isInvalid) {
+                        return 'grey-row';
+                      }
+                    
+                      // Highlight row if it matches the selected order
+                      return params.row.OrderNumber === selectedOrder ? 'highlighted-row' : '';
+                    }}
+                    
                  />
              </div>
          </div>
