@@ -95,7 +95,6 @@ const FinanceData = () => {
   const [gstPercentage, setGSTPercentage] = useState(null);
   const [expenseCategory, setExpenseCategory] = useState(expenseCategoryOptions[0]);
   const [transactionDate, setTransactionDate] = useState(dayjs());
-  console.log(transactionDate)
   const [transactionTime, setTransactionTime] = useState(dayjs());
   const [paymentMode, setPaymentMode] = useState(paymentModeOptions[0]);
   const [transactionType, setTransactionType] = useState(transactionOptions[0]);
