@@ -351,7 +351,7 @@ const AdDetailsPage = () => {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
         const data = await response.json();
        
-        //filter rates according to adMedium, adType and adCategory
+       
         const filterdata = data.filter(item => (item.rateId === parseInt(rateId)))
           .filter((value, index, self) =>
             self.findIndex(obj => obj.VendorName === value.VendorName) === index
