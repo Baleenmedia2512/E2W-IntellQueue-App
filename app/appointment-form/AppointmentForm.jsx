@@ -3,28 +3,36 @@ import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWhatsapp, faCheck, faSearch, faSms } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
-import { FetchSeachTerm } from '../api/getSearchTerm';
+import { FetchExistingAppointments, FetchSeachTerm } from '../api/getSearchTerm';
 import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { useAppSelector } from '@/redux/store';
+import CustomAlert from '../components/CustomAlert';
+import { setClientNumber } from '@/redux/features/order-slice';
 
 export default function AppointmentForm() {
-  const inputRef = useRef(null);
+  const searchRef = useRef(null);
   const nameRef = useRef(null);
   const mobileRef = useRef(null);
+  const periodRef = useRef(null);
   const userName = useAppSelector(state => state.authSlice.userName);
   const [mobileNumber, setMobileNumber] = useState("");
-  const [error, setError] = useState("");
-  const [clientNameError, setClientNameError] = useState("");
+  const [error, setError] = useState({
+    name: "",
+    number: "",
+    period: ""
+  });
   const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [existingAppointments, setExistingAppointments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientName, setClientName] = useState("");
-  const [appointmentTime, setAppointmentTime] = useState();
-  const [appointmentDate, setAppointmentDate] = useState();
-  const [appointmentMessage, setAppointmentMessage] = useState("");
-  const [hours, setHours] = useState(30)
+  const [selectedPeriod, setSelectedPeriod] = useState("");
+  const [clientId, setClientId] = useState(0);
+  const [hours, setHours] = useState(30);
+  const [showAlert, setShowAlert] = useState(false);
+
   const appointmentTimePeriod = [
     { label: '1 Week', value: '1 Week' },
     { label: '10 Days', value: '10 Days' },
@@ -34,13 +42,31 @@ export default function AppointmentForm() {
   ];
 
   useEffect(() => {
-    inputRef?.current.focus();
+    searchRef?.current.focus();
   }, []);
 
+  async function getExistingAppointment(e){
+    const inputData = e.target.value;
+    setSearchTerm(inputData);
+    const existingAppointmentData = await FetchExistingAppointments(inputData);
+    setExistingAppointments(existingAppointmentData);
+  }
+
+  function handleAppointmentSearchSelection(e) {
+    const selectedValue = e.target.value;
+    const arrayValues = selectedValue.split("-");
+    setSearchTerm(selectedValue)
+    setClientId(arrayValues[0]);
+    setClientName(arrayValues[1]);
+    setMobileWithoutString(arrayValues[2]);
+    setSelectedPeriod(arrayValues[3]);
+    setExistingAppointments([])
+  }
   // Handling Search suggestions fetch
   async function getSearchSuggestions(e) {
     const inputData = e.target.value;
-    setSearchTerm(inputData);
+    setClientName(inputData);
+    setError({name: ""});
     const searchSuggestionsData = await FetchSeachTerm(inputData);
     setSearchSuggestions(searchSuggestionsData);
   };
@@ -48,10 +74,11 @@ export default function AppointmentForm() {
   function handleSearchTermSelection(e) {
     const selectedValue = e.target.value;
     const arrayValues = selectedValue.split("-");
-    setSearchTerm(selectedValue);
+    const seperatedNameContact = arrayValues[1].split("(");
     setSearchSuggestions([]);
-    setClientName(arrayValues[1]);
-    setMobileNumber(arrayValues[2]);
+    setClientId(arrayValues[0]);
+    setClientName(seperatedNameContact[0]);
+    setMobileWithoutString(seperatedNameContact[1]);
   };
 
   const handleInputChange = (e) => {
@@ -63,32 +90,28 @@ export default function AppointmentForm() {
     if (value.includes("+") && value.length > 13) return;
 
     if (validPattern.test(value)) {
-      setError("");
+      setError({number: ""});
     } else {
-      setError("Invalid Mobile Number Format");
+      setError({number: "Invalid Mobile Number Format"});
     }
     setMobileNumber(value);
   };
 
-  const getFormattedDate = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const getFormattedTime = () => {
-    const date = new Date();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
-
-  function containsInteger() {
+  function setMobileWithoutString(contactNumber) {
     // Check if the string contains both letters and digits
-    const regex = /\d/.test(clientName);
-    return regex;
+    let value = contactNumber;
+    value = value.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+
+    const validPattern = /^([0|\+[0-9]{1,5})?([7-9][0-9]{9})$/;
+    if (value.length > 10 && !value.includes("+")) return;
+    if (value.includes("+") && value.length > 13) return;
+
+    if (validPattern.test(value)) {
+      setError({number: ""});
+    } else {
+      setError({number: "Invalid Mobile Number Format"});
+    }
+    setMobileNumber(value);
   }
 
   const timeOptions = [];
@@ -96,24 +119,97 @@ export default function AppointmentForm() {
     timeOptions.push(i);
   }
 
+  const calculateFutureDate = () => {
+    const today = new Date(); // Get today's date
+    let daysToAdd = 0;
+  
+    // Parse the time period (e.g., "3 weeks" or "10 days")
+    const [amount, period] = selectedPeriod.split(" ");
+  
+    // Convert weeks or days to the equivalent number of days
+    if (period.includes("Weeks")) {
+      daysToAdd = parseInt(amount) * 7; // 1 week = 7 days
+    } else if (period.includes("Days")) {
+      daysToAdd = parseInt(amount); // Directly add days
+    }
+  
+    // Add the calculated days to today's date
+    const futureDate = new Date(today);
+    futureDate.setDate(today.getDate() + daysToAdd);
+  
+    return futureDate.toISOString().slice(0, 10); // Format the date to a readable string
+  };
+
+  async function addNewClient() {
+    try {
+      const response = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/InsertNewClient.php",{
+        method: "POST",
+        headers:{
+          "Content-Type": "application/json"
+        },
+        body:JSON.stringify({
+          JsonUserName: userName,
+          JsonClientName: clientName,
+          JsonClientContact: mobileNumber
+        })
+      });
+
+      
+      if (!response.ok) {
+        let errorMessage = `Error ${response.status}: ${response.statusText}`;
+        const errorData = await response.json();
+        errorMessage += ` - ${errorData.error || "Unknown error"}`;
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      setClientId(data.ClientId); 
+      
+      if(data.ClientId){
+        addAppointment(data.ClientId)
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert(error);
+    }
+  }
+
   async function handleFormSubmit() {
     if(clientName === ""){
       nameRef?.current.focus();
-      setClientNameError("Please Enter a client Name")
+      setError({name: "Please Enter a client Name"})
       return
     }
 
     if(mobileNumber === ""){
       mobileRef?.current.focus();
-      setError("Please Enter Client Contact");
+      setError({number: "Please Enter Client Contact"});
       return;
     }
 
+    if(selectedPeriod === ""){
+      periodRef?.current.focus();
+      setError({period: "Select a valid Date Range!"});
+      return;
+    }
     // if(containsInteger){
     //   nameRef?.current.focus();
     //   setClientNameError("Name should not contain numbers");
     //   return;
     // }
+    if(clientId === 0){
+      setShowAlert(true);
+      return;
+    }
+
+    if(clientId !== 0){
+      addAppointment(clientId);
+    }
+  }
+
+  const addAppointment = async(clientId) => {
+    const appointmentDate = calculateFutureDate();
     try {
       const response = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/Insert.php", {
         method: "POST",
@@ -123,7 +219,7 @@ export default function AppointmentForm() {
         body: JSON.stringify({
           JsonUserName: userName,
           JsonClientId: clientId,
-          JsonDate: date,
+          JsonDate: appointmentDate,
         }),
       });
 
@@ -135,13 +231,15 @@ export default function AppointmentForm() {
       }
 
       const data = await response.json();
-      alert("Client Added Successfully!");
+      setClientName("");
+      setMobileNumber("");
+      setSelectedPeriod("")
+      alert("Appoitment Created Successfully!");
     } catch (error) {
       console.error("Form submission failed:", error);
       alert(`Form submission failed: ${error.message}`);
     }
   }
-
   // useEffect(() => {
   //   if(appointmentDate && appointmentTime && hours){
   //     setAppointmentMessage("Appointment fixed on " + appointmentDate + " @" + appointmentTime + " for " + hours)
@@ -150,10 +248,14 @@ export default function AppointmentForm() {
 
   const handleTouchStart = () => {
     // Blur the input to remove the keyboard
-    if (inputRef.current) {
-      inputRef.current.blur();
+    if (searchRef.current) {
+      searchRef.current.blur();
     }
   };
+
+  const nameError = (error && error.name);
+  const numberError = (error && error.number);
+  const periodError = (error && error.period);
 
   return (
     <form className="shadow-md shadow-blue-200 border p-8 my-6 text-black rounded-xl bg-white">
@@ -170,6 +272,14 @@ export default function AppointmentForm() {
             blurDataURL='data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=='
           />
         </div>
+        {showAlert &&
+          <CustomAlert 
+          message="You are adding appointment for a new client. Do you want to proceed?"
+          onOk={addNewClient}
+          onCancel={() => {return}}
+          />
+        }
+        
         <div className="w-full m-auto max-w-[400px] h-auto">
           <h1 className="text-blue-500 font-montserrat font-bold text-2xl mb-4">Appointment Manager</h1>
           <div className="flex flex-col space-y-4" onTouchStart={handleTouchStart}>
@@ -181,9 +291,9 @@ export default function AppointmentForm() {
                   type="text"
                   id="RateSearchInput"
                   placeholder="Search Here.."
-                  ref={inputRef}
+                  ref={searchRef}
                   value={searchTerm}
-                  onChange={getSearchSuggestions}
+                  onChange={getExistingAppointment}
                   onFocus={(e) => { e.target.select(); }}
                 />
                 <div className="px-3">
@@ -191,14 +301,14 @@ export default function AppointmentForm() {
                 </div>
               </div>
               <div>
-              {searchSuggestions.length > 0 && searchTerm !== "" && (
+              {existingAppointments.length > 0 && searchTerm !== "" && (
                 <ul  className="absolute z-10 mt-1 w-fit bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48" >
-                  {searchSuggestions.map((name, index) => (
+                  {existingAppointments.map((name, index) => (
                     <li key={index}>
                       <button
                         type="button"
                         className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                        onClick={handleSearchTermSelection}
+                        onClick={handleAppointmentSearchSelection}
                         value={name}
                       >
                         {name}
@@ -218,13 +328,30 @@ export default function AppointmentForm() {
                   required
                   value={clientName}
                   ref={nameRef}
-                  onChange={e => {setClientName(e.target.value); setClientNameError("")}}
+                  onChange={getSearchSuggestions}
                   onFocus={e => e.target.select()}
-                  className="border p-3 border-gray-400 font-montserrat bg-white w-full rounded-md focus:border-blue-500 focus:outline-none"
+                  className={`border p-3 font-montserrat bg-white w-full rounded-md ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
                 />
-                {clientNameError && <p className="text-red-500 font-montserrat">{clientNameError}</p>}
+                {(nameError) && <p className="text-red-500 font-montserrat">{error.name}</p>}
               </div>
-              
+              <div>
+              {searchSuggestions.length > 0 && clientName !== "" && (
+                <ul  className="absolute z-10 mt-1 w-fit bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48" >
+                  {searchSuggestions.map((name, index) => (
+                    <li key={index}>
+                      <button
+                        type="button"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                        onClick={handleSearchTermSelection}
+                        value={name}
+                      >
+                        {name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              </div>
             </div>
 
             <div className="flex flex-col">
@@ -237,16 +364,16 @@ export default function AppointmentForm() {
                   required
                   ref={mobileRef}
                   onFocus={e => e.target.select()}
-                  className={`border p-3 font-montserrat w-full bg-white rounded-md ${error ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} focus:outline-none`}
+                  className={`border p-3 font-montserrat w-full bg-white rounded-md ${numberError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
                 />
-                {error && <p className="text-red-500 font-montserrat">{error}</p>}
+                {numberError && <p className="text-red-500 font-montserrat">{error.number}</p>}
               </div>
             </div>
 
             <div className="flex flex-col justify-between">
               <label className="font-montserrat text-lg mb-1">Appointment Period <span className="text-red-500">*</span></label>
               <Dropdown
-              className={`border p-2 --font-montserrat w-full bg-white rounded-md ${error ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} focus:outline-none`}
+              className={`border p-2 --font-montserrat w-full bg-white rounded-md ${periodError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
             //  className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
             //   ${error ? 'border-red-400' : 'border-gray-300'}
             //   focus:border-blue-300 focus:ring focus:ring-blue-300`}
@@ -259,13 +386,12 @@ export default function AppointmentForm() {
                 }),
               }}
               placeholder="Select Time Period"
+              ref={periodRef}
               options={appointmentTimePeriod}
-              // value={selectedValues.rateName.value}
-              // onChange={(selectedOption) => handleSelectChange(selectedOption, 'rateName')}
-              // options={{label: '1 Week', value: '1 Week'}}
-              
+              value={selectedPeriod}
+              onChange={(selectedOption) => {setSelectedPeriod(selectedOption.target.value); setError({period: ""})}}   
             />
-            {error && <p className="text-red-500 font-montserrat">{error}</p>}
+            {periodError && <p className="text-red-500 font-montserrat mt-2">{error.period}</p>}
               {/* <div className="flex flex-col w-full">
                 <label className="font-montserrat text-lg mb-1">Appt. Date <span className="text-red-500">*</span></label>
                 <input
