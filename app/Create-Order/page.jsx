@@ -1428,7 +1428,7 @@ return (
         </DialogActions>
       </Dialog>
       <div className="w-full max-w-6xl">
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between top-0 z-10 sticky bg-gray-100">
     <div>
       <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-blue-500 mb-0">Order Manager</h2>
       <div className="border-2 w-10 inline-block mb-0 border-blue-500"></div>
@@ -1473,14 +1473,14 @@ return (
         />
       </DialogContent>
       <DialogActions>
-      <Button
+        <Button onClick={handleUpdateCloseDialog} color="primary">
+          Cancel
+        </Button>
+        <Button
           onClick={handleUpdateConfirm}
           color="primary"
           disabled={!updateReason} // Disable if updateReason is empty
         >Confirm
-        </Button>
-        <Button onClick={handleUpdateCloseDialog} color="primary">
-          Cancel
         </Button>
       </DialogActions>
     </Dialog>
