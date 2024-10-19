@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWhatsapp, faCheck, faSearch, faSms } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp, faCheck, faSearch, faSms, faTimes } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import { FetchExistingAppointments, FetchSeachTerm } from '../api/getSearchTerm';
 import { Dropdown } from 'primereact/dropdown';
@@ -11,6 +11,7 @@ import 'primeicons/primeicons.css';
 import { useAppSelector } from '@/redux/store';
 import CustomAlert from '../components/CustomAlert';
 import { setClientNumber } from '@/redux/features/order-slice';
+import { set } from 'date-fns';
 
 export default function AppointmentForm() {
   const searchRef = useRef(null);
@@ -19,6 +20,7 @@ export default function AppointmentForm() {
   const periodRef = useRef(null);
   const userName = useAppSelector(state => state.authSlice.userName);
   const [mobileNumber, setMobileNumber] = useState("");
+  const [displayMobileNumber, setDisplayMobileNumber] = useState("");
   const [error, setError] = useState({
     name: "",
     number: "",
@@ -28,10 +30,13 @@ export default function AppointmentForm() {
   const [existingAppointments, setExistingAppointments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientName, setClientName] = useState("");
+  const [displayClientName, setDisplayClientName] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [clientId, setClientId] = useState(0);
+  const [displayClientId, setDisplayClientId] = useState("");
   const [hours, setHours] = useState(30);
   const [showAlert, setShowAlert] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const appointmentTimePeriod = [
     { label: '1 Week', value: '1 Week' },
@@ -54,14 +59,22 @@ export default function AppointmentForm() {
 
   function handleAppointmentSearchSelection(e) {
     const selectedValue = e.target.value;
-    const arrayValues = selectedValue.split("-");
+    const arrayValues = selectedValue.split("-").map(value => value.trim());
+
     setSearchTerm(selectedValue)
     setClientId(arrayValues[0]);
     setClientName(arrayValues[1]);
     setMobileWithoutString(arrayValues[2]);
     setSelectedPeriod(arrayValues[3]);
     setExistingAppointments([])
+
+    setDisplayClientId(arrayValues[0]);
+    setDisplayClientName(arrayValues[1]);
+    const cleanedMobile = arrayValues[2].replace(/\D/g, "");
+    setDisplayMobileNumber(cleanedMobile);
+    setEditMode(true);
   }
+
   // Handling Search suggestions fetch
   async function getSearchSuggestions(e) {
     const inputData = e.target.value;
@@ -73,12 +86,13 @@ export default function AppointmentForm() {
 
   function handleSearchTermSelection(e) {
     const selectedValue = e.target.value;
-    const arrayValues = selectedValue.split("-");
+    const arrayValues = selectedValue.split("-").map(value => value.trim());
     const seperatedNameContact = arrayValues[1].split("(");
     setSearchSuggestions([]);
     setClientId(arrayValues[0]);
     setClientName(seperatedNameContact[0]);
     setMobileWithoutString(seperatedNameContact[1]);
+
   };
 
   const handleInputChange = (e) => {
@@ -112,6 +126,7 @@ export default function AppointmentForm() {
       setError({number: "Invalid Mobile Number Format"});
     }
     setMobileNumber(value);
+    
   }
 
   const timeOptions = [];
@@ -164,6 +179,7 @@ export default function AppointmentForm() {
 
       const data = await response.json();
       setClientId(data.ClientId); 
+      setDisplayClientId(data.ClientId); 
       
       if(data.ClientId){
         addAppointment(data.ClientId)
@@ -231,14 +247,27 @@ export default function AppointmentForm() {
       }
 
       const data = await response.json();
+      setClientId(0);
       setClientName("");
       setMobileNumber("");
-      setSelectedPeriod("")
+      setSelectedPeriod("");
+
+      setDisplayClientId("");
+      setDisplayClientName("");
+      setDisplayMobileNumber("");
       alert("Appoitment Created Successfully!");
     } catch (error) {
       console.error("Form submission failed:", error);
       alert(`Form submission failed: ${error.message}`);
     }
+  }
+
+  async function handleUpdateAppointment() {
+    handleEditMode();
+  }
+
+  async function handleCancelAppointment() {
+    handleEditMode();
   }
   // useEffect(() => {
   //   if(appointmentDate && appointmentTime && hours){
@@ -256,6 +285,27 @@ export default function AppointmentForm() {
   const nameError = (error && error.name);
   const numberError = (error && error.number);
   const periodError = (error && error.period);
+
+  const handleEditMode = () => {
+
+    setClientId(0);
+    setSearchSuggestions([]);
+    setSearchTerm("");
+    setSelectedPeriod("");
+    setClientName("");
+    setMobileNumber("");
+    setError("");
+    setDisplayClientId("");
+    setDisplayClientName("");
+    setDisplayMobileNumber("");
+    setEditMode(false);
+
+    // setTimeout(() => {
+    //   if (nameInputRef.current) {
+    //     nameInputRef.current.focus();
+    //   }
+    // }, 0);  
+  };
 
   return (
     <form className="shadow-md shadow-blue-200 border p-8 my-6 text-black rounded-xl bg-white">
@@ -283,6 +333,23 @@ export default function AppointmentForm() {
         <div className="w-full m-auto max-w-[400px] h-auto">
           <h1 className="text-blue-500 font-montserrat font-bold text-2xl mb-4">Appointment Manager</h1>
           <div className="flex flex-col space-y-4" onTouchStart={handleTouchStart}>
+          {editMode && clientId !== 0 && (
+            <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg flex items-center shadow-md">
+              <button 
+                className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+                onClick={handleEditMode}
+              >
+                Exit Edit
+              </button>
+              <div className="flex flex-row text-left text-sm md:text-base pr-2">
+                <p className="text-gray-600 font-semibold">{displayClientId}</p>
+                <p className="text-gray-600 font-semibold mx-1">-</p>
+                <p className="text-gray-600 font-semibold">{displayClientName}</p>
+                <p className="text-gray-600 font-semibold mx-1">-</p>
+                <p className="text-gray-600 font-semibold">{displayMobileNumber}</p>
+              </div>
+            </div>
+          )}
             <div className="flex flex-col">
               <label className="font-montserrat text-lg mb-1">Search</label>
               <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
@@ -427,7 +494,30 @@ export default function AppointmentForm() {
                 </div> */}
           </div>
 
-          <div className="flex gap-4 justify-end mt-6 w-full">
+          <div className="flex flex-col gap-4 justify-end mt-6 w-full">
+          {editMode ? (
+            <>
+              {/* Update Appointment Button */}
+              <button
+                type="button"
+                onClick={handleUpdateAppointment}
+                className="w-full flex items-center justify-center font-montserrat py-3 px-6 bg-green-500 rounded-full text-white mt-2 transition-transform duration-200 ease-in-out active:scale-95 text-sm sm:text-lg hover:bg-green-600"
+              >
+                <FontAwesomeIcon icon={faCheck} className="text-xl sm:text-2xl mr-2" />
+                Update Appointment
+              </button>
+
+              {/* Cancel Appointment Button */}
+              <button
+                type="button"
+                onClick={handleCancelAppointment}
+                className="w-full flex items-center justify-center font-montserrat py-3 px-6 bg-red-500 rounded-full text-white transition-transform duration-200 ease-in-out active:scale-95 text-sm sm:text-lg hover:bg-red-600"
+              >
+                <FontAwesomeIcon icon={faTimes} className="text-xl sm:text-2xl mr-2" />
+                Cancel Appointment
+              </button>
+            </>
+          ) : (
             <button
               type="button"
               onClick={handleFormSubmit}
@@ -436,7 +526,10 @@ export default function AppointmentForm() {
               <FontAwesomeIcon icon={faCheck} className="text-xl sm:text-2xl mr-2" />
               Book Appointment
             </button>
-          </div>
+          )}
+        </div>
+
+
         </div>
       </div>
     </form>
