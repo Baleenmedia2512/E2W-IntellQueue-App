@@ -29,11 +29,21 @@ const Stages = () => {
   const [inputCount, setInputCount] = useState(1); // For user input
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const orderNumber = useAppSelector(state => state.stageSlice.orderNumber)
+  const maxOrderNumber = useAppSelector(state => state.orderSlice.maxOrderNumber.nextOrderNumber)
   //const [errors, setErrors] = useState([]); // Array to store field-specific errors
   const [successMessage, setSuccessMessage] = useState('');
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [orderSearchSuggestion, setOrderSearchSuggestion] = useState("");
+  const [editingField, setEditingField] = useState({ row: null, field: null });
+
+  const handleEdit = (index, field) => {
+    setEditingField({ row: index, field });
+  };
+
+  const handleSave = () => {
+    setEditingField({ row: null, field: null });
+  };
   
   useEffect(() => {
     setOrderAmount(receivableRP);
@@ -239,6 +249,12 @@ const Stages = () => {
     }
   };
 
+  const handleKeyDown = (e, index, field) => {
+    if (e.key === 'Enter') {
+      setEditingField({ row: null, field: null }); // Exit edit mode on Enter
+    }
+  };
+
   const updateStages = async() => {
     const response = await UpdatePaymentMilestone(stages, companyName, orderNumber, loggedInUser)
     console.log(response);
@@ -253,6 +269,17 @@ const Stages = () => {
     const value = event.target.value;
     dispatch(updateStage({ index, field, value }));
     validateField(index, field, value);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return ''; // Handle empty/null date
+  
+    const date = new Date(dateString);
+    const day = ('0' + date.getDate()).slice(-2); // Get day and pad with 0 if necessary
+    const month = date.toLocaleString('default', { month: 'short' }); // Get abbreviated month
+    const year = date.getFullYear(); // Get full year
+  
+    return `${day}-${month}-${year}`; // Format as dd-MMM-yyyy
   };
 
   return (
@@ -274,7 +301,7 @@ const Stages = () => {
             className="submit-button"
             onClick={postStages}
           >
-            Submit
+            Save
           </button>
         :
         <>
@@ -310,7 +337,7 @@ const Stages = () => {
       <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
   
   {/* Search Input Section */}
-  <div className="w-full sm:w-1/2">
+  {/* <div className="w-full sm:w-1/2">
     <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
       <input
         className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
@@ -326,7 +353,7 @@ const Stages = () => {
       </div>
     </div>
 
-    {/* Search Suggestions */}
+    {/* Search Suggestions 
     <div className="relative">
       {orderSearchSuggestion.length > 0 && orderSearchTerm !== "" && (
         <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
@@ -345,120 +372,138 @@ const Stages = () => {
         </ul>
       )}
     </div>
-  </div>
-</div>
-<div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-6 sm:p-10 rounded-lg shadow-md">
-{/* Increased padding */}
-  {/* Header Section */}
-  {stageEdit ? (
-  <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
-    <button
-      className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-      onClick={() => {
-        dispatch(resetStageItem());
-        setOrderSearchTerm(''); // Reset the search term
-      }}
-      
-    >
-      Exit Edit
-    </button>
-    <div className="flex flex-row text-left text-sm md:text-base pr-2">
-      <p className="text-gray-600 font-semibold">{orderNumber}</p>
-    </div>
-    {/* </div> */}
-  </div>
-) : ''}
-  <div className="flex flex-row justify-between items-center mb-4"> {/* Use flex-row for all views */}
-  <h4 className="text-xl sm:text-2xl font-bold text-gray-800">Total Stages: {stages.length}</h4> {/* Adjusted font size for responsiveness */}
-  <div className="bg-blue-100 p-4 rounded-lg ml-auto"> {/* Removed mt-2 for phone view */}
-    <h4 className="text-sm sm:text-lg font-semibold text-blue-700">Order Amount: ₹{orderAmount}</h4>
-  </div>
-</div>
-
-  <div className="space-y-6">
-    {/* Dynamic Fields for Stages */}
-    {stages.map((field, index) => (
-      <div key={index} className="mb-4">
-        <span className='flex flex-row items-center space-x-2'>
-        <button
-          type="button"
-          onClick={() => dispatch(removeItem({index}))}
-          className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center w-6 h-5"
-        >
-          <FaMinus className='text-xs font-bold' />
-        </button>
-        <h3 className="text-lg font-semibold text-gray-500">Stage {index + 1}</h3>
-        <button
-            type="button"
-            onClick={() => dispatch(addStage({index}))}
-            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center justify-center w-6 h-5"
+  </div>*/}
+</div> 
+<div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto my-4 bg-white p-10 min-h-[60vh] rounded-lg shadow-md overflow-y-scroll">
+      {/* Header Section */}
+      {stageEdit && (
+        <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
+          <button
+            className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+            onClick={() => dispatch(resetStageItem())}
           >
-            <FaPlus className='text-xs font-bold'/>
+            Exit Edit
           </button>
-      </span>
-        <div className="flex flex-col md:flex-row md:space-x-4 md:space-y-0 items-center">
-
-          {/* Stage Amount */}
-          <div className="w-full md:w-1/3 px-4">
-            <label htmlFor={`stageAmount-${index}`} className="block mb-1 text-black font-medium">
-              Stage Amount
-            </label>
-            <input
-              type="number"
-              id={`stageAmount-${index}`}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 text-black"
-              value={field.stageAmount}
-              onChange={(e) => handleFieldChange(index, e, 'stageAmount')}
-              placeholder={`Stage Amount ${index + 1}`}
-              onFocus={e => e.target.select()}
-            />
-            {(errors && errors[index] && errors[index].stageAmount) && <p className="text-red-500 text-sm mt-2">{errors[index].stageAmount}</p>}
+          <div className="flex flex-row text-left text-sm md:text-base pr-2">
+            <p className="text-gray-600 font-semibold">{orderNumber}</p>
           </div>
-
-          {/* Description */}
-          <div className="w-full md:w-1/3 px-4">
-            <label htmlFor={`description-${index}`} className="block mb-1 text-black font-medium">
-              Description
-            </label>
-            <textarea
-              id={`description-${index}`}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 resize-none h-10 text-black"
-              value={field.description}
-              onChange={(e) => handleFieldChange(index, e, 'description')}
-              placeholder={`Description for stage ${index + 1}`}
-              onFocus={e => e.target.select()}
-            />
-            {(errors && errors[index] && errors[index].description) && <p className="text-red-500 text-sm mt-2">{errors[index].description}</p>}
-          </div>
-
-          {/* Due Date and Plus Icon */}
-          <div className="flex flex-col sm:flex-row w-full md:w-1/3 px-4 items-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <div className="w-full">
-              <label htmlFor={`dueDate-${index}`} className="block mb-1 text-black font-medium">
-                Due Date
-              </label>
-              <Calendar
-                id={`dueDate-${index}`}
-                value={field.dueDate ? new Date(field.dueDate) : null}
-                onChange={(e) => handleFieldChange(index, e, 'dueDate')}
-                dateFormat="dd/mm/yy"
-                placeholder="dd/mm/yyyy"
-                className={`w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300`}
-                inputClassName="w-full px-3 py-2 text-gray-700 placeholder-gray-400"
-                showIcon
-                minDate={new Date()}
-              />
-            </div>
-            <div>
-            
-          </div>
-          </div>
-          
+        </div>
+      )}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+        <div className="flex bg-blue-100 p-4 rounded-lg ml-auto mt-2 sm:mt-0">
+          <h4 className="text-sm sm:text-lg font-semibold text-blue-700">
+            Order Amount: ₹{orderAmount.toLocaleString('en-IN')}
+          </h4>
           
         </div>
+        
       </div>
-    ))}
-  </div>
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+      <div className="flex bg-blue-100 p-4 rounded-lg ml-auto mt-2 sm:mt-0">
+        <h4 className="text-sm sm:text-lg font-semibold text-blue-700">
+          Order#: {maxOrderNumber}
+          </h4>
+          </div></div><div>
+      <h4 className="text-xl sm:text-2xl font-bold text-blue-500">
+          Total Milestones: {stages.length}
+        </h4>
+        <table className="min-w-full border-collapse block md:table border border-gray-300">
+          <thead className="block md:table-header-group border border-gray-300">
+            <tr className="border border-gray-300 md:border-none block md:table-row text-blue-500 text-md">
+              <th className="block md:table-cell p-2 text-left border border-gray-300">Milestone</th>
+              <th className="block md:table-cell p-2 text-left border border-gray-300">Amount</th>
+              <th className="block md:table-cell p-2 text-left border border-gray-300">Description</th>
+              <th className="block md:table-cell p-2 text-left border border-gray-300">Due Date</th>
+              <th className="block md:table-cell p-2 text-left border border-gray-300">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="block md:table-row-group border border-gray-300">
+            {stages.map((field, index) => (
+              <tr key={index} className="border border-gray-300 md:border-none block md:table-row">
+                {/* Milestone */}
+                <td className="block border border-gray-300 md:table-cell p-2">{index + 1}</td>
+
+                {/* Milestone Amount */}
+                <td className="block border border-gray-300 md:table-cell p-2" onClick={() => handleEdit(index, 'amount')}>
+                  {editingField.row === index && editingField.field === 'amount' ? (
+                    <input
+                      type="number"
+                      value={stages[index].amount}
+                      onChange={(e) => handleFieldChange(index, e, 'amount')}
+                      onBlur={handleSave}
+                      className="border border-gray-300 p-2 w-full rounded-xl"
+                      autoFocus
+                      onKeyDown={(e) => handleKeyDown(e, index, 'amount')}
+                      onFocus={e => e.target.select()}
+                    />
+                  ) : (
+                    <span>
+                      ₹ {Number(stages[index].amount || 0).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </td>
+
+                {/* Description */}
+                <td className="block border border-gray-300 md:table-cell p-2" onClick={() => handleEdit(index, 'description')}>
+                  {editingField.row === index && editingField.field === 'description' ? (
+                    <input
+                      type="text"
+                      value={stages[index].description}
+                      onChange={(e) => handleFieldChange(index, e, 'description')}
+                      onBlur={handleSave}
+                      className="border border-gray-300 p-2 w-full rounded-xl"
+                      autoFocus
+                      onKeyDown={(e) => handleKeyDown(e, index, 'description')}
+                    />
+                  ) : (
+                    <span>
+                      {stages[index].description || 'No description'}
+                    </span>
+                  )}
+                </td>
+
+                {/* Due Date */}
+                <td className="block border border-gray-300 md:table-cell p-2" onClick={() => handleEdit(index, 'dueDate')}>
+                  {editingField.row === index && editingField.field === 'dueDate' ? (
+                    <Calendar
+                      value={stages[index].dueDate ? new Date(stages[index].dueDate) : null}
+                      onChange={(e) => {handleFieldChange(index, { target: { value: e } }, 'dueDate'); setTimeout(() => handleSave(), 200)}}
+                      dateFormat="dd/mm/yy"
+                      className="border border-gray-300 p-2 rounded-xl"
+                    
+                      autoFocus
+                    />
+                  ) : (
+                    <span>
+                      {formatDate(stages[index].dueDate.value)}
+                    </span>
+                  )}
+                </td>
+
+                {/* Action Buttons */}
+                <td className="md:table-cell p-2 justify-center flex border border-gray-300">
+                  <div className='flex justify-center flex-col'>
+                  <button
+                    type="button"
+                    onClick={() => dispatch(removeItem(index))}
+                    className="p-1 my-2 text-white rounded-md bg-red-500 flex justify-center text-center"
+                  >
+                    Remove
+                  </button>
+                    <button
+                      type="button"
+                      onClick={() => dispatch(addStage(index))}
+                      className="p-1 text-white bg-green-500 rounded-md flex justify-center text-center"
+                    >
+                      Add
+                    </button>
+                    </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 </div>
 
 {/* </div> */}
