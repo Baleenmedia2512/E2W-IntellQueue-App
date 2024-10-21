@@ -25,10 +25,6 @@ import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
 import { Margin } from '@mui/icons-material';
 
 
-
-
-
-
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
