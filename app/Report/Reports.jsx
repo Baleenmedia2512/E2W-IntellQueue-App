@@ -474,7 +474,6 @@ const handleTransactionDelete = (id, RateWiseOrderNumber) => {
       .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&sonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
-          console.log(data)
           if (data.success) {
             setSuccessMessage('Transaction Deleted!');
             setTimeout(() => {
