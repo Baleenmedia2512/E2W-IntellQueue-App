@@ -466,9 +466,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         });
 };
 
-const handleTransactionDelete = (id) => {
+const handleTransactionDelete = (id, RateWiseOrderNumber) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&sonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -587,9 +587,9 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
 //       }, 2000);
 //     });
 // };
-const handleFinanceRestore = (id) => {
+const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonID=${id}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.success) {
@@ -870,7 +870,7 @@ const financeColumns = [
           color="primary"
           size="small"
           disabled={params.row.markInvalidFinanceDisabled}
-          onClick={() => handleOpenConfirmDialog(params.row.ID)}
+          onClick={() => handleOpenConfirmDialog(params.row.ID, params.row.RateWiseOrderNumber)}
           style={{
             backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold',
             opacity: params.row.markInvalidFinanceDisabled ? 0.5 : 1,
@@ -891,7 +891,7 @@ const financeColumns = [
                 color="primary"
                 size="small"
                 disabled={params.row.restoreDisabled}
-                onClick={() => handleFinanceRestore(params.row.ID)}
+                onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
                 style={{ backgroundColor: '#1976d2',
                   marginLeft: '12px',
                   color: 'white',
@@ -936,19 +936,18 @@ const financeColumns = [
 // },
 ];  
 
-    const handleOpenConfirmDialog = (ID) => {
-      setSelectedTransaction({ ID });
-      setOpenConfirmDialog(true);
-    };
-    
+const handleOpenConfirmDialog = (ID, RateWiseOrderNumber) => {
+  setSelectedTransaction({ ID, RateWiseOrderNumber});
+  setOpenConfirmDialog(true);
+};
 
-    const handleConfirmDelete = () => {
-      const { ID } = selectedTransaction;
-      //console.log(selectedTransaction)
-      handleTransactionDelete(ID);
-      setOpenConfirmDialog(false);
-    };
-    
+
+const handleConfirmDelete = () => {
+  const { ID, RateWiseOrderNumber } = selectedTransaction;
+  //console.log(selectedTransaction)
+  handleTransactionDelete(ID, RateWiseOrderNumber);
+  setOpenConfirmDialog(false);
+};
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
         filter === 'All' || transaction.TransactionType.toLowerCase().includes(filter.toLowerCase())
