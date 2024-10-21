@@ -468,7 +468,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
 const handleTransactionDelete = (id, RateWiseOrderNumber) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&sonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&sonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -589,7 +589,7 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
 // };
 const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.success) {
