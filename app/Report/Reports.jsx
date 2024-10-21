@@ -90,6 +90,8 @@ const Report = () => {
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  // const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
+  // const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
 
 const checkIfSMSSentToday = () => {
   axios
@@ -374,6 +376,8 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                     OrderValue: `₹ ${transaction.OrderValue}`,
+                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
+                    restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));
                 setFinanceDetails(financeDetails);
                 
@@ -462,9 +466,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         });
 };
 
-const handleTransactionDelete = (rateWiseOrderNum, orderNum) => {
+const handleTransactionDelete = (id) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&JsonOrderNumber=${orderNum}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -549,6 +553,74 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
       setTimeout(() => setToast(false), 2000);
   }
 };
+
+// const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
+//     .then((response) => {
+//       const data = response.data;
+//       if (data.success) {
+//         setSuccessMessage('Transaction Restored!');
+//         setTimeout(() => {
+//           setSuccessMessage('');
+//         }, 2000);
+//         fetchFinanceDetails();
+//         fetchAmounts();
+//         fetchSumOfFinance();
+//         fetchRateBaseIncome();
+//       } else {
+//         setToastMessage(data.message);
+//         setSeverity('error');
+//         setToast(true);
+//         setTimeout(() => {
+//           setToast(false);
+//         }, 2000);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//       setToastMessage('Failed to restore transaction. Please try again.');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//         setToast(false);
+//       }, 2000);
+//     });
+// };
+const handleFinanceRestore = (id) => {
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonDBName=${companyName}`)
+    .then((response) => {
+      const data = response.data;
+      if (data.success) {
+        setSuccessMessage('Transaction Restored!');
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 2000);
+        fetchFinanceDetails();
+        fetchAmounts();
+        fetchSumOfFinance();
+        fetchRateBaseIncome();
+      } else {
+        setToastMessage(data.message);
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      setToastMessage('Failed to restore transaction. Please try again.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    });
+};
+
 
 const handleConfirm = async () => {
   try {
@@ -790,18 +862,57 @@ const financeColumns = [
   {
     field: 'actions',
     headerName: 'Actions',
-    width: 100,
+    width: 220,
     renderCell: (params) => (
       <div>
         <Button
           variant="contained"
           color="primary"
           size="small"
-          onClick={() => handleOpenConfirmDialog(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-          style={{ backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold' }}
+          disabled={params.row.markInvalidFinanceDisabled}
+          onClick={() => handleOpenConfirmDialog(params.row.ID)}
+          style={{
+            backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold',
+            opacity: params.row.markInvalidFinanceDisabled ? 0.5 : 1,
+            pointerEvents: params.row.markInvalidFinanceDisabled ? 'none' : 'auto' }}
         >
           Delete
-        </Button>
+        </Button> 
+        {/* <button
+          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
+          onClick={(e) => e.preventDefault()} // Prevent any action on click
+          style={{ backgroundColor: '#fa594d', color: 'white', fontWeight: 'bold', cursor: 'not-allowed', opacity: 0.6 }}
+          disabled // This makes the button disabled
+        >
+          Delete
+        </button> */}
+        <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                disabled={params.row.restoreDisabled}
+                onClick={() => handleFinanceRestore(params.row.ID)}
+                style={{ backgroundColor: '#1976d2',
+                  marginLeft: '12px',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: params.row.restoreFinanceDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
+            >
+                Restore
+            </Button>
+        {/* <button
+          className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
+          disabled={params.row.restoreFinanceDisabled} // Conditional disabling
+          onClick={() => handleFinanceRestore(params.row.ID)}
+          style={{ backgroundColor: '#1976d2',
+            color: 'white',
+            fontWeight: 'bold',
+            opacity: params.row.restoreFinanceDisabled ? 0.5 : 1,
+            pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
+        >
+          Restore
+        </button> */}
       </div>
     ),
   },
@@ -823,17 +934,18 @@ const financeColumns = [
 //         </div>
 //     ),
 // },
-];
+];  
 
-    const handleOpenConfirmDialog = (rateWiseOrderNum, orderNum) => {
-      setSelectedTransaction({ rateWiseOrderNum, orderNum });
+    const handleOpenConfirmDialog = (ID) => {
+      setSelectedTransaction({ ID });
       setOpenConfirmDialog(true);
     };
     
 
     const handleConfirmDelete = () => {
-      const { rateWiseOrderNum, orderNum } = selectedTransaction;
-      handleTransactionDelete(rateWiseOrderNum, orderNum);
+      const { ID } = selectedTransaction;
+      //console.log(selectedTransaction)
+      handleTransactionDelete(ID);
       setOpenConfirmDialog(false);
     };
     
@@ -889,6 +1001,7 @@ const financeColumns = [
         value: parseFloat(item.total_amount || 0)
     })) : [];
 
+    
   
     const expenseData = sumOfFinance.length > 0 ? [
       { name: 'Bank', value: parseFloat(sumOfFinance[0].expense_bank || 0) },
@@ -1501,11 +1614,7 @@ const [rateStats, setRateStats] = useState({});
               <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-    {/* <DateRangePicker 
-      startDate={startDate} 
-      endDate={endDate} 
-      onDateChange={handleDateChange} 
-    /> */}
+    
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
     <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
@@ -1597,6 +1706,7 @@ const [rateStats, setRateStats] = useState({});
                     <Button onClick={handlePasswordSubmit} color="primary">
                         Submit
                     </Button>
+
                 </DialogActions>
             </Dialog>
 
@@ -1806,15 +1916,28 @@ const [rateStats, setRateStats] = useState({});
                     //  }}
                     sx={{
                       '& .MuiDataGrid-row:hover': {
-                          backgroundColor: '#e3f2fd', // Light blue on hover
+                        backgroundColor: '#e3f2fd', // Light blue on hover
                       },
                       '& .highlighted-row': {
-                          backgroundColor: '#fff385', // Yellow highlight
+                        backgroundColor: '#fff385', // Yellow highlight
                       },
-                  }}
-                  getRowClassName={(params) =>
-                      params.row.OrderNumber === selectedOrder ? 'highlighted-row' : ''
-                  }
+                      '& .grey-row': {
+                        backgroundColor: '#ededed', // Grey highlight for invalid rows
+                      },
+                    }}
+                    getRowClassName={(params) => {
+                      // Check if the row has 'markInvalidFinanceDisabled' set to true (i.e., ValidStatus is 'Invalid')
+                      const isInvalid = params.row.markInvalidFinanceDisabled;
+                    
+                      // If markInvalidFinanceDisabled is true, return 'grey-row' to apply grey background, else return 'highlighted-row' for selected order
+                      if (isInvalid) {
+                        return 'grey-row';
+                      }
+                    
+                      // Highlight row if it matches the selected order
+                      return params.row.OrderNumber === selectedOrder ? 'highlighted-row' : '';
+                    }}
+                    
                  />
              </div>
          </div>
