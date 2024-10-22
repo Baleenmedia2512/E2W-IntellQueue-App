@@ -15,6 +15,7 @@ import { set } from 'date-fns';
 import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/internals';
 
 export default function AppointmentForm() {
+  const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const nameRef = useRef(null);
   const mobileRef = useRef(null);
@@ -47,6 +48,22 @@ export default function AppointmentForm() {
     { label: '4 Weeks', value: '4 Weeks' },
     { label: '6 Weeks', value: '6 Weeks' }
   ];
+
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      // Close the dropdown if the click is outside of it
+      setSearchSuggestions([]);
+    }
+  };
+  useEffect(() => {
+    // Add event listener to detect clicks outside the dropdown
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      // Clean up the event listener
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     searchRef?.current.focus();
@@ -416,39 +433,44 @@ export default function AppointmentForm() {
               </div>
             </div>
 
-            <div className="flex flex-col">
-              <label className="font-montserrat text-lg mb-1">Name <span className="text-red-500">*</span></label>
-              <div>
-                <input
-                  placeholder="Your Name"
-                  required
-                  value={clientName}
-                  ref={nameRef}
-                  onChange={getSearchSuggestions}
-                  onFocus={e => e.target.select()}
-                  className={`border p-3 font-montserrat bg-white w-full rounded-md ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
-                />
-                {(nameError) && <p className="text-red-500 font-montserrat">{error.name}</p>}
-              </div>
-              <div>
-              {searchSuggestions.length > 0 && clientName !== "" && (
-                <ul  className="absolute z-10 mt-1 w-fit bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48" >
-                  {searchSuggestions.map((name, index) => (
-                    <li key={index}>
-                      <button
-                        type="button"
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                        onClick={handleSearchTermSelection}
-                        value={name}
-                      >
-                        {name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              </div>
-            </div>
+          <div className="flex flex-col">
+      <label className="font-montserrat text-lg mb-1">
+        Name <span className="text-red-500">*</span>
+      </label>
+      <div>
+        <input
+          placeholder="Your Name"
+          required
+          value={clientName}
+          ref={nameRef}
+          onChange={getSearchSuggestions}
+          onFocus={(e) => e.target.select()}
+          className={`border p-3 font-montserrat bg-white w-full rounded-md ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
+        />
+        {nameError && <p className="text-red-500 font-montserrat">{error.name}</p>}
+      </div>
+      <div>
+        {searchSuggestions.length > 0 && clientName !== '' && (
+          <ul
+            ref={dropdownRef} // Attach the dropdown ref here
+            className="absolute z-10 mt-1 w-fit bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48"
+          >
+            {searchSuggestions.map((name, index) => (
+              <li key={index}>
+                <button
+                  type="button"
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                  onClick={handleSearchTermSelection}
+                  value={name}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
 
             <div className="flex flex-col">
               <label className="font-montserrat text-lg mb-1">Contact Number <span className="text-red-500">*</span></label>
