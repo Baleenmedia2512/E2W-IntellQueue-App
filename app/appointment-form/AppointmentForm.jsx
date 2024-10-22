@@ -12,6 +12,7 @@ import { useAppSelector } from '@/redux/store';
 import CustomAlert from '../components/CustomAlert';
 import { setClientNumber } from '@/redux/features/order-slice';
 import { set } from 'date-fns';
+import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/internals';
 
 export default function AppointmentForm() {
   const searchRef = useRef(null);
@@ -37,6 +38,7 @@ export default function AppointmentForm() {
   const [hours, setHours] = useState(30);
   const [showAlert, setShowAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [appointmentId, setAppointmentId] = useState(0)
 
   const appointmentTimePeriod = [
     { label: '1 Week', value: '1 Week' },
@@ -66,6 +68,7 @@ export default function AppointmentForm() {
     setClientName(arrayValues[1]);
     setMobileWithoutString(arrayValues[2]);
     setSelectedPeriod(arrayValues[3]);
+    setAppointmentId(arrayValues[4]);
     setExistingAppointments([])
 
     setDisplayClientId(arrayValues[0]);
@@ -246,7 +249,10 @@ export default function AppointmentForm() {
         throw new Error(errorMessage);
       }
 
+      const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
+      const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_reminder_tamil&Param=${clientName},${weeks}`)
       const data = await response.json();
+      console.log(send)
       setClientId(0);
       setClientName("");
       setMobileNumber("");
@@ -263,8 +269,31 @@ export default function AppointmentForm() {
   }
 
   async function handleUpdateAppointment() {
-    handleEditMode();
-  }
+    const appointmentDate = calculateFutureDate();
+    try {
+      const response = await fetch(`https://orders.baleenmedia.com/API/Hospital-Form/Update.php?JsonUserName=${encodeURIComponent(userName)}&JsonAppointmentId=${encodeURIComponent(appointmentId)}&JsonDate=${encodeURIComponent(appointmentDate)}`, {
+        method: "GET", // Use GET method
+        headers: {
+            "Content-Type": "application/json",
+        }
+    });    
+    const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
+    const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=reminder_reschedule_tamil&Param=${clientName},${weeks}`)
+    console.log(send)    
+    // console.log(response.text());
+        // if (!response.ok) {
+        //     let errorMessage = `Error ${response.status}: ${response.statusText}`;
+        //     const errorData = await response.text();
+        //     console.log(errorData)
+        //     errorMessage += ` - ${errorData.error || "Unknown error"}`;
+        //     throw new Error(errorMessage);
+        // }
+
+        alert("Appointment Rescheduled Successfully!");
+    } catch (error) {
+        console.error(error);
+    }
+}
 
   async function handleCancelAppointment() {
     handleEditMode();
