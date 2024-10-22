@@ -617,12 +617,12 @@ useEffect(() => {
     if ((!orderNumber || isNaN(orderNumber) ) && !expenseCategory ) errors.orderNumber = 'Order Number is required';
     // if (!orderAmount || isNaN(orderAmount)) errors.orderAmount = 'Valid Amount is required';
     if (!taxType) errors.taxType = 'Tax Type is required';
-    if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
-      errors.gstPercentage = 'Valid GST % is required';
-    }
-    if (taxType?.value === 'GST' && !gstAmount) {
-      errors.gstAmount = 'GST Amount is required';
-    }
+    // if (taxType?.value === 'GST' && (!gstPercentage || isNaN(gstPercentage))) {
+    //   errors.gstPercentage = 'Valid GST % is required';
+    // }
+    // if (taxType?.value === 'GST' && !gstAmount) {
+    //   errors.gstAmount = 'GST Amount is required';
+    // }
     if (!transactionDate) {
       errors.transactionDate = 'Transaction Date is required';
     } else if (dayjs(transactionDate).isAfter(dayjs())) {
@@ -979,7 +979,7 @@ useEffect(() => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {taxType && taxType.value === 'GST' && (
+               {/* {taxType && taxType.value === 'GST' && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
@@ -1037,7 +1037,7 @@ useEffect(() => {
             </div>
             {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
             </div>
-            )}
+            )} */}
             
             <div className='mt-3'> 
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Remarks</label>
