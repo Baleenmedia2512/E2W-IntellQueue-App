@@ -102,7 +102,7 @@ const AdDetailsPage = () => {
   const handleRateSearch = async(e) =>{
     setRateSearchTerm(e.target.value);
     const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value, false);
-    setRatesSearchSuggestion(searchSuggestions); 
+    setRatesSearchSuggestion(searchSuggestions);
   }
 
   const fetchRate = async(rateId) => {
