@@ -372,8 +372,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                     OrderValue: `₹ ${transaction.OrderValue}`,
-                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
-                    restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
+                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid'
                 }));
                 setFinanceDetails(financeDetails);
                 
@@ -462,9 +461,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         });
 };
 
-const handleTransactionDelete = (id, RateWiseOrderNumber) => {
+const handleTransactionDelete = (id, RateWiseOrderNum) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&sonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNum}&JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -886,14 +885,14 @@ const financeColumns = [
                 variant="contained"
                 color="primary"
                 size="small"
-                disabled={params.row.restoreDisabled}
+                disabled={!params.row.markInvalidFinanceDisabled}
                 onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
                 style={{ backgroundColor: '#1976d2',
                   marginLeft: '12px',
                   color: 'white',
                   fontWeight: 'bold',
-                  opacity: params.row.restoreFinanceDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
+                  opacity: !params.row.markInvalidFinanceDisabled ? 0.5 : 1,
+                  pointerEvents: !params.row.markInvalidFinanceDisabled ? 'none' : 'auto' }}
             >
                 Restore
             </Button>
@@ -931,6 +930,8 @@ const financeColumns = [
 //     ),
 // },
 ];  
+
+
 
 const handleOpenConfirmDialog = (ID, RateWiseOrderNumber) => {
   setSelectedTransaction({ ID, RateWiseOrderNumber});
