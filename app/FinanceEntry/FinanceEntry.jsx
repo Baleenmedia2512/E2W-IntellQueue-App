@@ -49,6 +49,7 @@ const expenseCategoryOptions = [
   { value: 'Maintainance', label: 'Maintainance' },
   { value: 'Offering', label: 'Offering' },
   { value: 'PC', label: 'PC' },
+  { value: 'Project', label: 'Project' },
   { value: 'Promotion', label: 'Promotion' },
   { value: 'Rent', label: 'Rent' },
   { value: 'Laborcost', label: 'Labor Cost' },
