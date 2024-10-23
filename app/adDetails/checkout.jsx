@@ -128,7 +128,7 @@ const CheckoutPage = () => {
 
 
   return (
-    <div className=" mt-2 text-black w-screen">
+    <div className=" text-black w-screen items-center">
 
         <div className='mx-[8%]'>
         {cartItems.length >= 1 ? (

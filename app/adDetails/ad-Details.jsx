@@ -627,8 +627,8 @@ const AdDetailsPage = () => {
   
   return (
     
-    <div className="text-black ">    
-      <div className="p-2 pt-0 left-[2%] right-[2%]">
+    <div className="text-black justify-center flex w-full">    
+      <div className="justify-center w-full">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -692,9 +692,9 @@ const AdDetailsPage = () => {
           </button> */}
             {/* </div> */}
             
-              <div>
+              <div className='justify-center'>
                 <div className='mx-[8%] pt-7 mt-4'>
-                <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+                <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
               <input
           className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
           // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
