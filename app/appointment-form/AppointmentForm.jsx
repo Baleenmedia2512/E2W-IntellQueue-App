@@ -206,7 +206,7 @@ export default function AppointmentForm() {
       }
 
     } catch (error) {
-      console.error(error);
+      //console.error(error);
       alert(error);
     }
   }
@@ -244,9 +244,55 @@ export default function AppointmentForm() {
     }
   }
 
-  const addAppointment = async(clientId) => {
+  // const addAppointment = async(clientId) => {
+  //   const appointmentDate = calculateFutureDate();
+  //   try {
+  //     const response = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/Insert.php", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         JsonUserName: userName,
+  //         JsonClientId: clientId,
+  //         JsonDate: appointmentDate,
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       let errorMessage = `Error ${response.status}: ${response.statusText}`;
+  //       const errorData = await response.json();
+  //       errorMessage += ` - ${errorData.error || "Unknown error"}`;
+  //       throw new Error(errorMessage);
+  //     }
+
+  //     const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
+  //     const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_reminder_tamil&Param=${clientName},${weeks}`)
+  //     const data = await response.json();
+  //     console.log(send)
+  //     setClientId(0);
+  //     setClientName("");
+  //     setMobileNumber("");
+  //     setSelectedPeriod("");
+
+  //     setDisplayClientId("");
+  //     setDisplayClientName("");
+  //     setDisplayMobileNumber("");
+  //     alert("Appoitment Created Successfully!");
+  //   } catch (error) {
+  //     console.error("Form submission failed:", error);
+  //     alert(`Form submission failed: ${error.message}`);
+  //   }
+  // }
+
+
+  const addAppointment = async (clientId) => {
     const appointmentDate = calculateFutureDate();
     try {
+      console.log("Appointment Date:", appointmentDate); // Debugging log
+      console.log("Client ID:", clientId); // Debugging log
+      console.log("UserName:", userName); // Debugging log
+      
       const response = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/Insert.php", {
         method: "POST",
         headers: {
@@ -258,32 +304,76 @@ export default function AppointmentForm() {
           JsonDate: appointmentDate,
         }),
       });
-
+      
+      const responseText = await response.text(); // Read the response as text
+      console.log("Server response status:", response.status); // Debugging log
+      console.log("Server response:", responseText); // Debugging log to see full response
+      
       if (!response.ok) {
         let errorMessage = `Error ${response.status}: ${response.statusText}`;
-        const errorData = await response.json();
+        const errorData = JSON.parse(responseText); // Parse the text response for error details
         errorMessage += ` - ${errorData.error || "Unknown error"}`;
         throw new Error(errorMessage);
       }
-
+      
+      // Extract weeks from the selectedPeriod
       const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
-      const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_reminder_tamil&Param=${clientName},${weeks}`)
+      
+      // Log mobileNumber and clientName to verify if they are available and correct
+      console.log("Mobile Number for WhatsApp:", mobileNumber); // Debugging log
+      console.log("Client Name for WhatsApp:", clientName); // Debugging log
+      
+      // Call the WhatsApp API
+      const sendResponse = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_reminder_tamil&Param=${clientName},${weeks}`);
+  
+      // Check if WhatsApp message sent successfully
+      if (sendResponse.ok) {
+        console.log("WhatsApp message sent successfully."); // Debugging log
+        
+        const insertWhatsAppData = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/UpdateMessageHeader.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            JsonName: clientName,
+            JsonContactNumber: mobileNumber,
+            JsonTemplateName: "appointment_reminder_tamil",
+            JsonStatus: 1,  // Status set to 1
+            JsonSID: 2,     // SID set to 2
+            JsonCreatedOn: new Date().toISOString(),  // Current date and time
+          }),
+        });
+        
+        
+        if (!insertWhatsAppData.ok) {
+          throw new Error("Failed to insert data into whatsapp_table.");
+        } else {
+          console.log("Data inserted into whatsapp_table successfully."); // Debugging log
+        }
+      } else {
+        throw new Error("WhatsApp message not sent successfully.");
+      }
+  
+      // Reset the form and show success message
       const data = await response.json();
-      console.log(send)
+      console.log(sendResponse);
+      console.log("Success:", data);
       setClientId(0);
       setClientName("");
       setMobileNumber("");
       setSelectedPeriod("");
-
+  
       setDisplayClientId("");
       setDisplayClientName("");
       setDisplayMobileNumber("");
-      alert("Appoitment Created Successfully!");
+      alert("Appointment Created and WhatsApp message sent successfully!");
     } catch (error) {
       console.error("Form submission failed:", error);
       alert(`Form submission failed: ${error.message}`);
     }
-  }
+};
+
 
   async function handleUpdateAppointment() {
     const appointmentDate = calculateFutureDate();
