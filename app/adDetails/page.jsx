@@ -292,7 +292,7 @@ export const AdDetails = () => {
           {currentPage === "checkout" ?(
             <div className='flex flex-row justify-center items-center'>
             <button
-              className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
+              className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} //need to add css file or change it
               disabled = {cartItems.length > 0 ? false : true}
               onClick={handlePdfGeneration}
             >
