@@ -161,11 +161,11 @@ const CheckoutPage = () => {
               <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
         <thead>
           <tr>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate ID</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Card ID</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quote No.</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Medium</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Type</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Ad Category</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Medium</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Type</th>
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Category</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Edition</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Package</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
