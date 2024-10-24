@@ -41,7 +41,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.setFontSize(16);
 
     // Add a title
-    pdf.text(Header, 300, 30);
+    pdf.text(Header, 350, 30);
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
