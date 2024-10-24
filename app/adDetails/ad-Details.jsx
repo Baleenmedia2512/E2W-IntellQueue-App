@@ -692,7 +692,7 @@ const AdDetailsPage = () => {
           </button> */}
             {/* </div> */}
             
-              <div className='justify-center'>
+              <div className='justify-center relative'>
                 <div className='mx-[8%] pt-7 mt-4'>
                 <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
               <input
@@ -709,7 +709,7 @@ const AdDetailsPage = () => {
         <FontAwesomeIcon icon={faSearch} className="text-blue-500 " />
       </div></div>
       {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "") && (
-              <ul className="z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+              <ul className="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                 {ratesSearchSuggestion.map((name, index) => (
                   <li key={index}>
                     <button

@@ -313,12 +313,12 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className={`h-[100vh] bg-gray-100 flex flex-col justify-center items-center`}>
-        <form className={`bg-white p-6 rounded-lg shadow-lg w-full flex max-w-6xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'} max-h-[100vh] overflow-hidden mx-2 justify-center items-center`}>
+        <div className={`bg-gray-100 flex flex-col justify-center items-center`}>
+        <form className={`bg-white p-6 rounded-lg shadow-lg w-full flex max-w-6xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8 mb-[20vh]'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'} overflow-hidden mx-2 justify-center items-center`}>
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
-          <form className='bg-white rounded-3xl shadow-lg   pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2'>
+          <form className='bg-white rounded-3xl shadow-lg   pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
           <h1 className='mb-4 font-semibold text-center text-blue-500 text-lg mt-4'>Client Details</h1>
 
           <table className='mb-6 ml-4'>
