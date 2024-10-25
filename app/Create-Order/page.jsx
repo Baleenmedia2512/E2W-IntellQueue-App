@@ -665,7 +665,6 @@ const fetchRates = async () => {
               setPreviousAdType(clientDetails.adType);
               setPreviousOrderAmount(clientDetails.orderAmount);
               setPreviousConsultantName(clientDetails.consultantName);
-              setDiscountAmount(clientDetails.adjustedOrderAmount);
               // handleSelectChange(clientDetails.rateName, "rateName");
               // handleSelectChange(clientDetails.adType, "adType");
               
