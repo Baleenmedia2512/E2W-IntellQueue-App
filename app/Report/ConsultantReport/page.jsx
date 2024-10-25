@@ -33,8 +33,6 @@ const matchModes = [
 export default function GroupedRowsDemo() {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
-    // const dbName = 'Grace Scans';
-    // const companyName = 'Grace Scans';
     const username = useAppSelector(state => state.authSlice.userName);
     const [consultants, setConsultants] = useState([]);
     const [groupedData, setGroupedData] = useState([]);
@@ -77,6 +75,11 @@ export default function GroupedRowsDemo() {
         try {
             const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
+            console.log(constData)
+            if (constData.error === "No orders found.") {
+                setGroupedData([]);
+                return [];
+            }
             // Extract all order numbers
             const allOrderNumbers = constData.map(item => item.OrderNumbers);
             setOrderNumbers(allOrderNumbers);
@@ -388,7 +391,7 @@ export default function GroupedRowsDemo() {
                     
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: shouldAddName ? group.name : null,  // Add name if filter applies
+                        name: group.name,  // Add name if filter applies
                         rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
