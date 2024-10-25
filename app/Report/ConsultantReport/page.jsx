@@ -70,12 +70,10 @@ export default function GroupedRowsDemo() {
         }
       },[])
 
-
-    const getConsultants = async (companyName, startDate, endDate) => {
+    const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
             const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
-            console.log(constData)
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
                 return [];
@@ -93,7 +91,7 @@ export default function GroupedRowsDemo() {
 
 
     const fetchConsultants = async () => {
-        const data = await getConsultants(companyName, startDate, endDate);
+        const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
         const groupedData = groupConsultants(data);
         setConsultants(groupedData);
     };
@@ -208,10 +206,10 @@ export default function GroupedRowsDemo() {
                     }
                 }
                 setOpen(false);
+                fetchConsultants();
                 setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
                 setTimeout(() => {
                 setSuccessMessage('');
-                fetchConsultants();
                 // setFilteredConsultants([]);
                 resetFilters();
               }, 3000);
@@ -228,6 +226,46 @@ export default function GroupedRowsDemo() {
         }
         
     };
+
+
+
+const handleMarkAsUnprocessed = async () => {
+    if (selectedRows && selectedRows.length > 0) {
+        try {
+            const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
+
+                for (const row of filteredRows) {
+                const { orderNumber } = row;
+                if (orderNumber && orderNumber.length > 0) {
+                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/MarkAsICUnprocessed.php?JsonOrderNumber=${orderNumber.join(',')}&JsonDBName=${companyName}`);
+                    const result = await response.json();
+
+                    if (result.error) {
+                        console.error('Error marking as unprocessed:', result.error);
+                        return; // Stop if there's an error
+                    }
+                }
+            }
+
+            // Optionally refresh the consultants after marking them unprocessed
+            fetchConsultants();
+            setSuccessMessage(`Incentive(s) for selected consultant(s) marked as unprocessed successfully!`);
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+        } catch (error) {
+            console.error('Error marking as unprocessed:', error);
+        }
+    } else {
+        setToastMessage('No consultants selected to mark as unprocessed.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+            setToast(false);
+        }, 2000);
+    }
+};
+
     
 
     const handleDateChange = (range) => {
@@ -1036,16 +1074,26 @@ const handleCheckboxChange = () => {
           <i className="pi pi-file-excel mr-1 sm:mr-2"></i>
           Export to Excel
         </button>
-        <button
-          onClick={handleClickOpen}
-          disabled={showIcProcessedConsultantsOnly}
-          className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base
-            ${showIcProcessedConsultantsOnly ? "bg-blue-500 opacity-50 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"}
-          `}
-        >
-          <i className="pi pi-check mr-1 sm:mr-2"></i>
-          Process Incentive
-        </button>
+        {showIcProcessedConsultantsOnly ? (
+            <button
+                onClick={handleMarkAsUnprocessed}
+                className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base bg-red-500 hover:bg-red-600`}
+            >
+                <i className="pi pi-ban mr-1 sm:mr-2"></i>
+                Mark As Unprocessed
+            </button>
+        ) : (
+            <button
+                onClick={saveConsultant}
+                disabled={showIcProcessedConsultantsOnly}
+                className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base
+                    ${showIcProcessedConsultantsOnly ? "bg-blue-500 opacity-50 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"}
+                `}
+            >
+                <i className="pi pi-check mr-1 sm:mr-2"></i>
+                Process Incentive
+            </button>
+        )}
         <Dialog
                 open={open}
                 onClose={handleClose}
