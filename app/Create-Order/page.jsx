@@ -657,9 +657,6 @@ const fetchRates = async () => {
             const data = response.data;
             if (data.length > 0) {
               const clientDetails = data[0];
-              const formattedDate = parseDateFromDB(clientDetails.orderDate);
-              // dispatch(setRateId(""));
-            
               const formattedOrderDate = format(clientDetails.orderDate, 'dd-MMM-yyyy').toUpperCase();
               setPreviousOrderDate(formattedOrderDate);
               setPreviousOrderNumber(clientDetails.orderNumber);
