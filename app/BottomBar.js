@@ -140,7 +140,7 @@ export default function BottomBarTest() {
         router.push('/');
         break;
       case 2:
-        router.push('adDetails');
+        router.push('/adDetails');
         break;
       case 3:
         router.push('/Create-Order');
