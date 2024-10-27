@@ -16,12 +16,10 @@ export const checkClientContact = async (clientContact) => {
       }
   
       const data = await response.json();
-      console.log(data)
       if (data.exists) {
         return true; // Contact already exists
       } else {
         return false; // Contact does not exist
-        // Proceed with creating the appointment or any further action
       }
     } catch (error) {
       alert("Failed to check contact. Please try again.");

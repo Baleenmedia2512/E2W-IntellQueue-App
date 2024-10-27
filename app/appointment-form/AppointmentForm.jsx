@@ -41,6 +41,7 @@ export default function AppointmentForm() {
   const [editMode, setEditMode] = useState(false);
   const [appointmentId, setAppointmentId] = useState(0);
   const [appDate, setAppDate] = useState(new Date());
+  const [clientNumberExists, setClientNumberExists] = useState(false);
 
   const appointmentTimePeriod = [
     {label: "Tomorrow", value: "Tomorrow"},
@@ -111,7 +112,7 @@ export default function AppointmentForm() {
 
   };
 
-  const handleInputChange = async(e) => {
+  const handleInputChange = async (e) => {
     let value = e.target.value;
     value = value.replace(/\s+/g, '').replace(/[^\d+]/g, '');
 
@@ -119,15 +120,24 @@ export default function AppointmentForm() {
     if (value.length > 10 && !value.includes("+")) return;
     if (value.includes("+") && value.length > 13) return;
 
-    const clientExists = await value.length === 10 && checkClientContact(value);
-
-    if (validPattern.test(value)) {
-      setError({number: ""});
-    } else if(clientExists ){
-      setError({number: "Client number already exists."})
-    }else {
-      setError({number: "Invalid Mobile Number Format."});
+    var clientExists = false;
+    try{
+      clientExists = value.length === 10 && await checkClientContact(value);
+    } catch(error){
+      return false;
     }
+    
+    if(clientExists && !clientId){
+      setError({number: "Client number already exists."});
+      setClientNumberExists(clientExists);
+    }else if(!validPattern.test(value)){
+      setError({number: "Invalid Mobile Number Format."});
+      setClientNumberExists(false);
+    } else{
+      setError({number: ""});
+      setClientNumberExists(false);
+    }
+
     setMobileNumber(value);
   };
 
@@ -236,6 +246,10 @@ export default function AppointmentForm() {
     if(mobileNumber === ""){
       mobileRef?.current.focus();
       setError({number: "Please Enter Client Contact"});
+      return;
+    }else if(mobileNumber.length < 10){
+      mobileRef?.current.focus();
+      setError({number: "Please enter a 10 digit contact number!"});
       return;
     }
 
@@ -605,7 +619,8 @@ export default function AppointmentForm() {
             <button
               type="button"
               onClick={handleFormSubmit}
-              className="w-full flex items-center justify-center font-montserrat py-3 px-6 bg-green-500 rounded-full text-white mt-2 transition-transform duration-200 ease-in-out active:scale-95 text-sm sm:text-lg hover:bg-green-600"
+              disabled={clientNumberExists}
+              className={`w-full flex items-center justify-center font-montserrat py-3 px-6 ${!clientNumberExists ? 'bg-green-500' : 'bg-gray-200'} rounded-full text-white mt-2 ${!clientNumberExists && 'transition-transform duration-200 ease-in-out active:scale-95 hover:bg-green-600'} text-sm sm:text-lg `}
             >
               <FontAwesomeIcon icon={faCheck} className="text-xl sm:text-2xl mr-2" />
               Book Appointment
