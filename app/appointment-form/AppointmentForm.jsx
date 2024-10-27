@@ -335,7 +335,7 @@ export default function AppointmentForm() {
             "Content-Type": "application/json",
         }
     });    
-    const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
+    //const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
 
     try{
     const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
