@@ -75,13 +75,14 @@ export default function AppointmentForm() {
 
   function handleAppointmentSearchSelection(e) {
     const selectedValue = e.target.value;
-    const arrayValues = selectedValue.split("-").map(value => value.trim());
+    const arrayValues = selectedValue.split(" - ").map(value => value.trim());
 
     setSearchTerm(selectedValue)
     setClientId(arrayValues[0]);
     setClientName(arrayValues[1]);
     setMobileWithoutString(arrayValues[2]);
-    setSelectedPeriod(arrayValues[3]);
+    const formattedDate = new Date(arrayValues[3]).toISOString().slice(0, 10);
+    setAppDate(formattedDate);
     setAppointmentId(arrayValues[4]);
     setExistingAppointments([])
 
@@ -317,7 +318,7 @@ export default function AppointmentForm() {
       setDisplayClientId("");
       setDisplayClientName("");
       setDisplayMobileNumber("");
-      alert("Appoitment Created Successfully!");
+      alert("Appointment Created Successfully!");
     } catch (error) {
       alert(error);
     }
@@ -564,7 +565,7 @@ export default function AppointmentForm() {
                   value={appDate}
                   min={getFormattedDate()}
                   // onChange={e => setAppointmentDate(e.target.value)}
-                  onChange={(selectedOption) => {setAppDate(selectedOption.target.value); setError({period: ""})}} 
+                  onChange={(selectedOption) => {setAppDate(selectedOption.target.value); setError({period: ""}); console.log(selectedOption.target.value)}} 
                   className={`border p-3 bg-white ${periodError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} font-montserrat w-full rounded-md`}
                 />
                 {periodError && <p className="text-red-500 font-montserrat mt-2">{error.period}</p>}
