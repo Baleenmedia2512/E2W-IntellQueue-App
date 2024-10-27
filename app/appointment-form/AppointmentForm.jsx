@@ -116,7 +116,7 @@ export default function AppointmentForm() {
     let value = e.target.value;
     value = value.replace(/\s+/g, '').replace(/[^\d+]/g, '');
 
-    const validPattern = /^([0|\+[0-9]{1,5})?([6-9][0-9]{9})$/;
+    const validPattern = /^([0|\+[0-9]{1,5})?([0-9]{10})$/;
     if (value.length > 10 && !value.includes("+")) return;
     if (value.includes("+") && value.length > 13) return;
 
@@ -146,7 +146,7 @@ export default function AppointmentForm() {
     let value = contactNumber;
     value = value.replace(/\s+/g, '').replace(/[^\d+]/g, '');
 
-    const validPattern = /^([0|\+[0-9]{1,5})?([7-9][0-9]{9})$/;
+    const validPattern = /^([0|\+[0-9]{1,5})?([0-9]{10})$/;
     if (value.length > 10 && !value.includes("+")) return;
     if (value.includes("+") && value.length > 13) return;
 
@@ -183,6 +183,8 @@ export default function AppointmentForm() {
     // Convert weeks or days to the equivalent number of days
     if (selectedPeriod === "Tomorrow") {
       daysToAdd = 1; // Directly set 1 day for "Tomorrow"
+    } else if(period?.includes("Week")){
+      daysToAdd = parseInt(amount) * 7;
     }else if (period?.includes("Weeks")) {
       daysToAdd = parseInt(amount) * 7; // 1 week = 7 days
     } else if (period?.includes("Days")) {
