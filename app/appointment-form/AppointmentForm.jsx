@@ -13,6 +13,7 @@ import CustomAlert from '../components/CustomAlert';
 import { setClientNumber } from '@/redux/features/order-slice';
 import { set } from 'date-fns';
 import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/internals';
+import { checkClientContact } from './Validation';
 
 export default function AppointmentForm() {
   const searchRef = useRef(null);
@@ -38,15 +39,27 @@ export default function AppointmentForm() {
   const [hours, setHours] = useState(30);
   const [showAlert, setShowAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [appointmentId, setAppointmentId] = useState(0)
+  const [appointmentId, setAppointmentId] = useState(0);
+  const [appDate, setAppDate] = useState(new Date());
 
   const appointmentTimePeriod = [
-    { label: '1 Week', value: '1 Week' },
-    { label: '10 Days', value: '10 Days' },
-    { label: '2 Weeks', value: '2 Weeks' },
-    { label: '4 Weeks', value: '4 Weeks' },
-    { label: '6 Weeks', value: '6 Weeks' }
+    {label: "Tomorrow", value: "Tomorrow"},
+    {label: "After 3 Days", value: "After 3 Days"},
+    { label: 'After 1 Week', value: 'After 1 Week' },
+    { label: 'After 10 Days', value: 'After 10 Days' },
+    { label: 'After 2 Weeks', value: 'After 2 Weeks' },
+    { label: 'After 4 Weeks', value: 'After 4 Weeks' },
+    {label: "After 1 Month", value: "After 1 Month"},
+    { label: 'After 6 Weeks', value: 'After 6 Weeks' }
   ];
+
+  const getFormattedDate = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   useEffect(() => {
     searchRef?.current.focus();
@@ -98,18 +111,22 @@ export default function AppointmentForm() {
 
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = async(e) => {
     let value = e.target.value;
     value = value.replace(/\s+/g, '').replace(/[^\d+]/g, '');
 
-    const validPattern = /^([0|\+[0-9]{1,5})?([7-9][0-9]{9})$/;
+    const validPattern = /^([0|\+[0-9]{1,5})?([6-9][0-9]{9})$/;
     if (value.length > 10 && !value.includes("+")) return;
     if (value.includes("+") && value.length > 13) return;
 
+    const clientExists = await value.length === 10 && checkClientContact(value);
+
     if (validPattern.test(value)) {
       setError({number: ""});
-    } else {
-      setError({number: "Invalid Mobile Number Format"});
+    } else if(clientExists ){
+      setError({number: "Client number already exists."})
+    }else {
+      setError({number: "Invalid Mobile Number Format."});
     }
     setMobileNumber(value);
   };
@@ -137,18 +154,31 @@ export default function AppointmentForm() {
     timeOptions.push(i);
   }
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0'); // Pad single digits
+    const month = date.toLocaleString('default', { month: 'short' }); // Get short month name
+    const year = date.getFullYear();
+    
+    return `${day}-${month}-${year}`;
+};
+
   const calculateFutureDate = () => {
     const today = new Date(); // Get today's date
     let daysToAdd = 0;
   
     // Parse the time period (e.g., "3 weeks" or "10 days")
-    const [amount, period] = selectedPeriod.split(" ");
+    const [previous, amount, period] = selectedPeriod.split(" ");
   
     // Convert weeks or days to the equivalent number of days
-    if (period.includes("Weeks")) {
+    if (selectedPeriod === "Tomorrow") {
+      daysToAdd = 1; // Directly set 1 day for "Tomorrow"
+    }else if (period?.includes("Weeks")) {
       daysToAdd = parseInt(amount) * 7; // 1 week = 7 days
-    } else if (period.includes("Days")) {
+    } else if (period?.includes("Days")) {
       daysToAdd = parseInt(amount); // Directly add days
+    } else if(period?.includes("Month")){
+      daysToAdd = parseInt(amount) * 30;
     }
   
     // Add the calculated days to today's date
@@ -158,7 +188,8 @@ export default function AppointmentForm() {
     return futureDate.toISOString().slice(0, 10); // Format the date to a readable string
   };
 
-  async function addNewClient() {
+  async function addNewClient(e) {
+    e.preventDefault()
     try {
       const response = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/InsertNewClient.php",{
         method: "POST",
@@ -187,14 +218,15 @@ export default function AppointmentForm() {
       if(data.ClientId){
         addAppointment(data.ClientId)
       }
-
+      setShowAlert(false)
     } catch (error) {
-      console.error(error);
-      alert(error);
+      alert("Unable to add new Client!");
+      setShowAlert(false);
     }
   }
 
-  async function handleFormSubmit() {
+  async function handleFormSubmit(e) {
+    e.preventDefault()
     if(clientName === ""){
       nameRef?.current.focus();
       setError({name: "Please Enter a client Name"})
@@ -207,9 +239,9 @@ export default function AppointmentForm() {
       return;
     }
 
-    if(selectedPeriod === ""){
+    if(appDate === ""){
       periodRef?.current.focus();
-      setError({period: "Select a valid Date Range!"});
+      setError({period: "Select a valid Date!"});
       return;
     }
     // if(containsInteger){
@@ -228,7 +260,7 @@ export default function AppointmentForm() {
   }
 
   const addAppointment = async(clientId) => {
-    const appointmentDate = calculateFutureDate();
+    const appointmentDate = appDate;
     try {
       const response = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/Insert.php", {
         method: "POST",
@@ -238,7 +270,7 @@ export default function AppointmentForm() {
         body: JSON.stringify({
           JsonUserName: userName,
           JsonClientId: clientId,
-          JsonDate: appointmentDate,
+          JsonDate: appointmentDate
         }),
       });
 
@@ -249,10 +281,18 @@ export default function AppointmentForm() {
         throw new Error(errorMessage);
       }
 
-      const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
-      const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_reminder_tamil&Param=${clientName},${weeks}`)
-      const data = await response.json();
-      console.log(send)
+      // const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
+      try{
+      const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_ortho&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
+        
+        if (send.ok) {
+            alert("Appointment Created and Message Sent Successfully!");
+        } else {
+            alert("Appointment Created Successfully, but Message Failed to Send.");
+        }
+      }catch(error){
+        console.error(error)
+      }
       setClientId(0);
       setClientName("");
       setMobileNumber("");
@@ -263,13 +303,14 @@ export default function AppointmentForm() {
       setDisplayMobileNumber("");
       alert("Appoitment Created Successfully!");
     } catch (error) {
-      console.error("Form submission failed:", error);
-      alert(`Form submission failed: ${error.message}`);
+      alert(error);
     }
   }
 
+  
+
   async function handleUpdateAppointment() {
-    const appointmentDate = calculateFutureDate();
+    const appointmentDate = appDate;
     try {
       const response = await fetch(`https://orders.baleenmedia.com/API/Hospital-Form/Update.php?JsonUserName=${encodeURIComponent(userName)}&JsonAppointmentId=${encodeURIComponent(appointmentId)}&JsonDate=${encodeURIComponent(appointmentDate)}`, {
         method: "GET", // Use GET method
@@ -278,8 +319,12 @@ export default function AppointmentForm() {
         }
     });    
     const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
-    const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=reminder_reschedule_tamil&Param=${clientName},${weeks}`)
-    console.log(send)    
+
+    try{
+    const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+    }catch(error){
+      console.log(error);
+    }
     // console.log(response.text());
         // if (!response.ok) {
         //     let errorMessage = `Error ${response.status}: ${response.statusText}`;
@@ -291,7 +336,7 @@ export default function AppointmentForm() {
 
         alert("Appointment Rescheduled Successfully!");
     } catch (error) {
-        console.error(error);
+        alert(error)
     }
 }
 
@@ -303,6 +348,11 @@ export default function AppointmentForm() {
   //     setAppointmentMessage("Appointment fixed on " + appointmentDate + " @" + appointmentTime + " for " + hours)
   //   }
   // }, [appointmentDate, appointmentTime, hours]);
+
+  useEffect(() => {
+    const appointmentDate = calculateFutureDate()
+    setAppDate(appointmentDate)
+  },[selectedPeriod]);
 
   const handleTouchStart = () => {
     // Blur the input to remove the keyboard
@@ -353,9 +403,9 @@ export default function AppointmentForm() {
         </div>
         {showAlert &&
           <CustomAlert 
-          message="You are adding appointment for a new client. Do you want to proceed?"
+          message={`You are adding appointment for a new client(${clientName}). Do you want to proceed?`}
           onOk={addNewClient}
-          onCancel={() => {return}}
+          onCancel={(e) => {e.preventDefault(); setShowAlert(false);}}
           />
         }
         
@@ -426,6 +476,7 @@ export default function AppointmentForm() {
                   ref={nameRef}
                   onChange={getSearchSuggestions}
                   onFocus={e => e.target.select()}
+                  onBlur={() => setTimeout(() => setSearchSuggestions([]),150)}
                   className={`border p-3 font-montserrat bg-white w-full rounded-md ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
                 />
                 {(nameError) && <p className="text-red-500 font-montserrat">{error.name}</p>}
@@ -462,14 +513,14 @@ export default function AppointmentForm() {
                   onFocus={e => e.target.select()}
                   className={`border p-3 font-montserrat w-full bg-white rounded-md ${numberError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
                 />
-                {numberError && <p className="text-red-500 font-montserrat">{error.number}</p>}
+                {(numberError && mobileNumber !== "") && <p className="text-red-500 font-montserrat">{error.number}</p>}
               </div>
             </div>
 
             <div className="flex flex-col justify-between">
-              <label className="font-montserrat text-lg mb-1">Appointment Period <span className="text-red-500">*</span></label>
+              <label className="font-montserrat text-lg mb-1">Appointment Period</label>
               <Dropdown
-              className={`border p-2 --font-montserrat w-full bg-white rounded-md ${periodError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
+              className={`border p-2 --font-montserrat w-full bg-white rounded-md border-gray-400`}
             //  className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
             //   ${error ? 'border-red-400' : 'border-gray-300'}
             //   focus:border-blue-300 focus:ring focus:ring-blue-300`}
@@ -482,33 +533,37 @@ export default function AppointmentForm() {
                 }),
               }}
               placeholder="Select Time Period"
-              ref={periodRef}
+              
               options={appointmentTimePeriod}
               value={selectedPeriod}
               onChange={(selectedOption) => {setSelectedPeriod(selectedOption.target.value); setError({period: ""})}}   
             />
-            {periodError && <p className="text-red-500 font-montserrat mt-2">{error.period}</p>}
-              {/* <div className="flex flex-col w-full">
-                <label className="font-montserrat text-lg mb-1">Appt. Date <span className="text-red-500">*</span></label>
+            
+               <div className="flex flex-col w-full mt-2">
+                <label className="font-montserrat text-lg mb-1">Appointment Date <span className="text-red-500">*</span></label>
                 <input
                   type='date'
                   defaultValue={getFormattedDate()}
-                  value={appointmentDate}
-                  onChange={e => setAppointmentDate(e.target.value)}
-                  className='border p-3 bg-white border-gray-400 font-montserrat w-full rounded-md'
+                  ref={periodRef}
+                  value={appDate}
+                  min={getFormattedDate()}
+                  // onChange={e => setAppointmentDate(e.target.value)}
+                  onChange={(selectedOption) => {setAppDate(selectedOption.target.value); setError({period: ""})}} 
+                  className={`border p-3 bg-white ${periodError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} font-montserrat w-full rounded-md`}
                 />
+                {periodError && <p className="text-red-500 font-montserrat mt-2">{error.period}</p>}
               </div>
-              <div className="flex flex-col w-full ml-2">
-                <label className="font-montserrat text-lg mb-1">Appt. Time <span className="text-red-500">*</span></label>
-                <input
-                  type='time'
-                  defaultValue={getFormattedTime()}
-                  className='border p-3 bg-white border-gray-400 font-montserrat w-full rounded-md'
-                  value={appointmentTime}
-                  t
-                  onChange={e => setAppointmentTime(e.target.value)}
-                />
-              </div> */}
+              {/* // <div className="flex flex-col w-full ml-2">
+              //   <label className="font-montserrat text-lg mb-1">Appt. Time <span className="text-red-500">*</span></label>
+              //   <input
+              //     type='time'
+              //     defaultValue={getFormattedTime()}
+              //     className='border p-3 bg-white border-gray-400 font-montserrat w-full rounded-md'
+              //     value={appointmentTime}
+              //     t
+              //     onChange={e => setAppointmentTime(e.target.value)}
+              //   />
+              // </div> */} 
             </div>
 
            {/* <div className="flex flex-col">
