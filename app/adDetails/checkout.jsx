@@ -128,7 +128,7 @@ const CheckoutPage = () => {
 
 
   return (
-    <div className=" mt-2 text-black w-screen">
+    <div className="text-black w-screen items-center">
 
         <div className='mx-[8%]'>
         {cartItems.length >= 1 ? (
@@ -157,7 +157,7 @@ const CheckoutPage = () => {
             <div>
               
               {/* <h1 className='mb-4 font-bold text-center'>AD Details</h1> */}
-                <div className='overflow-x-auto'>
+                <div className='overflow-x-auto max-h-[40vh]'>
               <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
         <thead>
           <tr>
@@ -189,9 +189,12 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200'>{item.unit === "SCM" ? item.width + "W" + " x " + item.qty + "H" : item.qty} {item.unit}</td>
               {hasCampaignDuration && <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>}
               {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap'>{item.remarks}</td>}
-              <td className='p-1.5 border border-gray-200 w-fit text-nowrap'>₹ {formattedRupees(((item.unit === "SCM" ? item.qty * item.width : item.qty)* item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin)) / item.qty)} per {item.unit}</td>
+              <td className='p-1.5 border border-gray-200 w-fit text-nowrap'>
+                ₹ {formattedRupees(Math.round(((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration / item.minimumCampaignDuration) + parseInt(item.margin)) / item.qty))} per {item.unit}
+              </td>
               <td className='p-1.5 border border-gray-200 text-nowrap'>
-                ₹ {formattedRupees((((item.unit === "SCM" ? item.qty * item.width : item.qty)* item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ parseInt(item.margin))))}</td>
+                ₹ {formattedRupees(Math.round((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration / item.minimumCampaignDuration) + parseInt(item.margin)))}
+              </td>
               <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
                   onClick={() => handleRemoveRateId(item.index)}

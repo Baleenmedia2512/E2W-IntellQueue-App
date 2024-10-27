@@ -11,13 +11,13 @@ const CustomAlert = ({ message, onOk, onCancel }) => {
             onClick={onCancel}
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
           >
-            Cancel
+            No
           </button>
           <button
             onClick={onOk}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           >
-            OK
+            Yes
           </button>
         </div>
       </div>

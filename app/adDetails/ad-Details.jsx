@@ -312,9 +312,10 @@ const AdDetailsPage = () => {
       setChanging(false);
     }
   
-    const marginAmount = formattedMargin((((qty* width * selectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0);
+    // const marginAmount = formattedMargin((((qty* width * selectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0);
+    const marginAmount = formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
     dispatch(setQuotesData({ marginAmount }));
-  
+    
     // Update UnitPrice based on the selected QtySlab
     dispatch(setQuotesData({ ratePerUnit: selectedSlab.UnitPrice, unit: selectedSlab.Unit }));
   };
@@ -360,6 +361,7 @@ const AdDetailsPage = () => {
         setDatas(filterdata);
 
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
+        formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
         // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
         // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
         dispatch(setQuotesData({marginAmount: ((((((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty )* unitPrice * (campaignDuration / minimumCampaignDuration))/(100 - filterdata[0].AgencyCommission)) * 100).toFixed(2)  * (filterdata[0].AgencyCommission/100))).toFixed(0)}))
@@ -627,8 +629,8 @@ const AdDetailsPage = () => {
   
   return (
     
-    <div className="text-black ">    
-      <div className="p-2 pt-0 left-[2%] right-[2%]">
+    <div className="text-black justify-center flex w-full">    
+      <div className="justify-center w-full">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -692,9 +694,9 @@ const AdDetailsPage = () => {
           </button> */}
             {/* </div> */}
             
-              <div>
+              <div className='justify-center relative'>
                 <div className='mx-[8%] pt-7 mt-4'>
-                <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+                <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
               <input
           className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
           // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
@@ -709,7 +711,7 @@ const AdDetailsPage = () => {
         <FontAwesomeIcon icon={faSearch} className="text-blue-500 " />
       </div></div>
       {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "") && (
-              <ul className="z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+              <ul className="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                 {ratesSearchSuggestion.map((name, index) => (
                   <li key={index}>
                     <button
