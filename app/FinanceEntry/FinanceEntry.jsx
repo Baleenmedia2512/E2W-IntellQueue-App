@@ -505,7 +505,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
         }
       });
 
-      // alert(response.data.message || "File uploaded successfully!");
       return response.data
     } catch (error) {
       console.error(error);
