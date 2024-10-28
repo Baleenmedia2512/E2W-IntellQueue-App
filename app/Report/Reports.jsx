@@ -708,7 +708,7 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
-const isMobile = useMediaQuery('(max-width:640px)');
+// const isMobile = useMediaQuery('(max-width:640px)');
 const [anchorEl, setAnchorEl] = useState(null);
 
 
@@ -746,56 +746,39 @@ const handleEditConfirm = () => {
 };
 
 
+const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
 
 const orderColumns = [
-  { field: 'OrderNumber', headerName: 'Order#', width: 80 },
-  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
-  { field: 'OrderDate', headerName: 'Order Date', width: 100 },
-  { field: 'ClientName', headerName: 'Client Name', width: 170 },
-  {field: 'ClientContact', headerName: 'Client Contact', width: 100 },
-  { field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
-  { 
-    field: 'Receivable', 
-    headerName: 'Order Value(₹)', 
-    width: 100,
-    renderCell: (params) => (
-      <div>{params.value}</div>
-    )
-  },
-  { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: 100 },
-  { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: 100 },
-  { field: 'AmountDifference', headerName: 'Difference(₹)', width: 100 },
-  { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
-  { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: 130 },
-  { field: 'Remarks', headerName: 'Order Remarks', width: 160},
-  { 
-    field: 'Card', 
-    headerName: 'Rate Name', 
-    width: 150,
-    renderCell: (params) => (
-      <div>{params.value}</div>
-    )
-  },
-  { 
-    field: 'AdType', 
-    headerName: 'Rate Type', 
-    width: 150,
-    renderCell: (params) => (
-      <div>{params.value}</div>
-    )
-  },
-  { 
-    field: 'ConsultantName', 
-    headerName: 'Consultant Name', 
-    width: 150 
-  },
-
-  {
-    field: 'actions',
-    headerName: 'Actions',
-    width: 270,
-    renderCell: (params) => (
+  { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
+    { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: isMobile ? 130 : 80 },
+    { field: 'OrderDate', headerName: 'Order Date', width: isMobile ? 150 : 100 },
+    { field: 'ClientName', headerName: 'Client Name', width: isMobile ? 150 : 120 },
+    { field: 'ClientContact', headerName: 'Client Contact', width: isMobile ? 160 : 120 },
+    { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90, hide: elementsToHide.includes('RatesMarginPercentText') },
+    { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
+    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 220 : 170 },
+    { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
+    { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100 },
+    { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 120 },
+    { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: isMobile ? 190 : 130 },
+    { field: 'Remarks', headerName: 'Order Remarks', width: isMobile ? 180 : 160 },
+    { field: 'Card', headerName: 'Rate Name', width: isMobile ? 140 : 150, renderCell: (params) => <div>{params.value}</div> },
+    { field: 'AdType', headerName: 'Rate Type', width: isMobile ? 140 : 150, renderCell: (params) => <div>{params.value}</div> },
+    { field: 'ConsultantName', headerName: 'Consultant Name', width: isMobile ? 180 : 150 },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: isMobile ? 290 : 270,
+      renderCell: (params) => (
         <div>
             <button
                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
