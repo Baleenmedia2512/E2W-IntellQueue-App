@@ -761,7 +761,7 @@ const orderColumns = [
     { field: 'ClientContact', headerName: 'Client Contact', width: isMobile ? 160 : 120 },
     { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90, hide: elementsToHide.includes('RatesMarginPercentText') },
     { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
-    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 220 : 170 },
+    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 230 : 170 },
     { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
     { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100 },
     { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 120 },
@@ -817,21 +817,21 @@ const orderColumns = [
 
 
 const financeColumns = [
-  { field: 'ID', headerName: 'Finance ID', width: 150 },
-  { field: 'TransactionType', headerName: 'Transaction Type', width: 150 },
-  { field: 'TransactionDate', headerName: 'Transaction Date', width: 150 },
-  { field: 'Amount', headerName: 'Amount(₹)', width: 100},
-  { field: 'OrderValue', headerName: 'Order Value(₹)', width: 100},
-  { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
-  { field: 'OrderNumber', headerName: 'Order#', width: 100 },
-  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80},
-  { field: 'ClientName', headerName: 'Client Name', width: 200 },
-  { field: 'Remarks', headerName: 'Remarks', width: 200 },
-  { field: 'ConsultantName', headerName: 'Consultant Name', width: 150 },
+  { field: 'ID', headerName: 'Finance ID', width: isMobile ? 140 : 130 },
+  { field: 'TransactionType', headerName: 'Transaction Type', width: isMobile ? 180 : 150 },
+  { field: 'TransactionDate', headerName: 'Transaction Date', width: isMobile ? 180 : 150 },
+  { field: 'Amount', headerName: 'Amount(₹)', width: isMobile ? 140 : 100 },
+  { field: 'OrderValue', headerName: 'Order Value(₹)', width: isMobile ? 180 : 100 },
+  { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 100 },
+  { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
+  { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: isMobile ? 130 : 80 },
+  { field: 'ClientName', headerName: 'Client Name', width: isMobile ? 150 : 130 },
+  { field: 'Remarks', headerName: 'Remarks', width: isMobile ? 130 : 120 },
+  { field: 'ConsultantName', headerName: 'Consultant Name', width: isMobile ? 180 : 150 },
   {
     field: 'actions',
     headerName: 'Actions',
-    width: 220,
+    width: isMobile ? 210 : 220,
     renderCell: (params) => (
       <div>
         <button
