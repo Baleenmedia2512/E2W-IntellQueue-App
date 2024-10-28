@@ -25,10 +25,6 @@ import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
 import { Margin } from '@mui/icons-material';
 
 
-
-
-
-
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     // const companyName = "Baleen Test";
@@ -469,9 +465,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         });
 };
 
-const handleTransactionDelete = (id) => {
+const handleTransactionDelete = (id, RateWiseOrderNumber) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&sonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -590,9 +586,9 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
 //       }, 2000);
 //     });
 // };
-const handleFinanceRestore = (id) => {
+const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.success) {
@@ -858,7 +854,7 @@ const financeColumns = [
         <button
           className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
           disabled={params.row.markInvalidFinanceDisabled }
-          onClick={() => handleOpenConfirmDialog(params.row.ID)}
+          onClick={() => handleOpenConfirmDialog(params.row.ID, params.row.RateWiseOrderNumber)}
           style={{  backgroundColor: '#fa594d',
             color: 'white',
             fontWeight: 'bold', 
@@ -879,7 +875,7 @@ const financeColumns = [
         <button
           className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
           disabled={params.row.restoreFinanceDisabled} // Conditional disabling
-          onClick={() => handleFinanceRestore(params.row.ID)}
+          onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
           style={{ backgroundColor: '#1976d2',
             color: 'white',
             fontWeight: 'bold',
@@ -911,16 +907,16 @@ const financeColumns = [
 // },
 ];  
 
-    const handleOpenConfirmDialog = (ID) => {
-      setSelectedTransaction({ ID });
+    const handleOpenConfirmDialog = (ID, RateWiseOrderNumber) => {
+      setSelectedTransaction({ ID, RateWiseOrderNumber});
       setOpenConfirmDialog(true);
     };
     
 
     const handleConfirmDelete = () => {
-      const { ID } = selectedTransaction;
+      const { ID, RateWiseOrderNumber } = selectedTransaction;
       //console.log(selectedTransaction)
-      handleTransactionDelete(ID);
+      handleTransactionDelete(ID, RateWiseOrderNumber);
       setOpenConfirmDialog(false);
     };
     
