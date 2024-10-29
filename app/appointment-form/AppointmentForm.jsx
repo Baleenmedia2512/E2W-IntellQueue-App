@@ -92,6 +92,7 @@ export default function AppointmentForm() {
     setEditMode(true);
   }
 
+  
   // Handling Search suggestions fetch
   async function getSearchSuggestions(e) {
     const inputData = e.target.value;
