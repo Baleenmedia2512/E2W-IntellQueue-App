@@ -83,7 +83,25 @@ export default function GroupedRowsDemo() {
         }
     };
 
-
+        // Utility function to apply filters to data
+        const applyFilters = (data, filters) => {
+            let filteredData = [...data];
+            
+            for (const key in filters) {
+                const filterValue = filters[key]?.value;
+                if (filterValue) {
+                    filteredData = filteredData.filter(row => {
+                        const fieldValue = row[key];
+                        return (
+                            fieldValue &&
+                            typeof fieldValue === 'string' &&
+                            fieldValue.toLowerCase().includes(filterValue.toLowerCase())
+                        );
+                    });
+                }
+            }
+            return filteredData;
+        };
 
     const fetchConsultants = async () => {
         const data = await getConsultants(companyName, startDate, endDate);
@@ -97,11 +115,27 @@ export default function GroupedRowsDemo() {
     }, [startDate, endDate]);
 
     useEffect(() => {
-        // Select all rows by default when groupedData is ready
+         // Check if any filter has a non-null value
+        const hasActiveFilters = Object.values(filters).some(
+            filter => filter.value !== null
+        );
+        
+        // Select all rows by default when groupedData is ready and filters are active
         if (consultants.length > 0) {
-            const data = renderGroupedData(consultants, activeFilters);
-            setGroupedData(data)
-            setSelectedRows(data);
+            if (hasActiveFilters) {
+                const data = renderGroupedData(consultants, activeFilters);
+                setGroupedData(data)
+                const combinedFilteredRows = applyFilters(data, filters);
+                setSelectedRows(combinedFilteredRows);
+            } else {
+                const data = renderGroupedData(consultants, activeFilters);
+                setGroupedData(data)
+                setSelectedRows(data);
+            }
+            
+        } else {
+            setGroupedData([])
+            setSelectedRows([]);
         }
     }, [consultants]);
     
