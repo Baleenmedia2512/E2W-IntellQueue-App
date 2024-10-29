@@ -77,17 +77,17 @@ export default function AppointmentForm() {
     const arrayValues = selectedValue.split(" - ").map(value => value.trim());
 
     setSearchTerm(selectedValue)
-    setClientId(arrayValues[0]);
-    setClientName(arrayValues[1]);
-    setMobileWithoutString(arrayValues[2]);
-    const formattedDate = new Date(arrayValues[3]).toISOString().slice(0, 10);
+    setAppointmentId(arrayValues[0]);
+    setClientId(arrayValues[1]);
+    setClientName(arrayValues[2]);
+    setMobileWithoutString(arrayValues[3]);
+    const formattedDate = new Date(arrayValues[4]).toISOString().slice(0, 10);
     setAppDate(formattedDate);
-    setAppointmentId(arrayValues[4]);
     setExistingAppointments([])
 
-    setDisplayClientId(arrayValues[0]);
-    setDisplayClientName(arrayValues[1]);
-    const cleanedMobile = arrayValues[2].replace(/\D/g, "");
+    setDisplayClientId(arrayValues[1]);
+    setDisplayClientName(arrayValues[2]);
+    const cleanedMobile = arrayValues[3].replace(/\D/g, "");
     setDisplayMobileNumber(cleanedMobile);
     setEditMode(true);
   }
@@ -359,14 +359,44 @@ export default function AppointmentForm() {
         // }
 
         alert("Appointment Rescheduled Successfully!");
+        handleEditMode();
     } catch (error) {
         alert(error)
     }
 }
 
+  // async function handleCancelAppointment() {
+  //   handleEditMode();
+  // }
   async function handleCancelAppointment() {
-    handleEditMode();
-  }
+    const appointmentDate = appDate;
+    try {
+        const response = await fetch(`https://orders.baleenmedia.com/API/Hospital-Form/Update.php?JsonUserName=${encodeURIComponent(userName)}&JsonAppointmentId=${encodeURIComponent(appointmentId)}&JsonReject=true`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Error ${response.status}: ${errorData}`);
+        }
+
+        // Send WhatsApp notification for appointment cancellation
+        try {
+            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=reject_appointment&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+        } catch (error) {
+            console.error("Failed to send WhatsApp message:", error);
+        }
+
+        alert("Appointment Cancelled Successfully!");
+
+        handleEditMode();
+
+    } catch (error) {
+        alert(`Cancellation failed: ${error.message}`);
+    }
+}
+
   // useEffect(() => {
   //   if(appointmentDate && appointmentTime && hours){
   //     setAppointmentMessage("Appointment fixed on " + appointmentDate + " @" + appointmentTime + " for " + hours)
