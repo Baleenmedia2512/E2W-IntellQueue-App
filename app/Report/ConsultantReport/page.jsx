@@ -138,6 +138,7 @@ export default function GroupedRowsDemo() {
             setSelectedRows([]);
         }
     }, [consultants]);
+
     
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -659,7 +660,7 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 // Filter rows where total starts with "Total:"
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
-const filteredAmountRows = rowsToCalculate.filter(row => row.total && !row.rateCard.startsWith('Total'));
+const filteredAmountRows = selectedRows.filter(row => row.total && !row.rateCard.startsWith('Total'));
 
 // const filteredAmountRows = rowsToCalculate.filter(row => row.total);
 
@@ -673,7 +674,7 @@ const extractNameFromId = (id) => {
 
 // Filter out rows with null or empty values for name and rateCard
 // const filteredNameRows = rowsToCalculate.filter(row => row.name);
-const filteredNameRows = rowsToCalculate.map(row => {
+const filteredNameRows = selectedRows.map(row => {
     if (row.name) {
         return row;
     } else if (selectedRows.length > 0 && row.id) {
@@ -709,7 +710,7 @@ const extractRateCardFromId = (id) => {
 
 // Calculate number of rates
 // Get the sum of values from the count column
-const totalCount = rowsToCalculate.reduce((accumulator, row) => {
+const totalCount = selectedRows.reduce((accumulator, row) => {
   // Add the value of count column to the accumulator if it exists and is a number
   return accumulator + (row.count || 0);
 }, 0);
@@ -814,7 +815,8 @@ const filterHeaderTemplate = (column, filterField) => {
     
         // Apply filters based on each filter field
         for (const key in tempFilterValues) {
-            if (tempFilterValues[key] !== '') {
+            console.log(tempFilterValues[key])
+            // if (tempFilterValues[key] !== '') {
                 newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
                 // Apply the filter on the combinedFilteredRows
                 combinedFilteredRows = combinedFilteredRows.filter(row => {
@@ -830,7 +832,7 @@ const filterHeaderTemplate = (column, filterField) => {
                     }
                     return false; // Handle other cases if necessary
                 });
-            }
+            // }
         }
     
         setFilters(newFilters);
