@@ -364,7 +364,7 @@ const AdDetailsPage = () => {
         formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
         // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
         // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
-        dispatch(setQuotesData({marginAmount: ((((((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty )* unitPrice * (campaignDuration / minimumCampaignDuration))/(100 - filterdata[0].AgencyCommission)) * 100).toFixed(2)  * (filterdata[0].AgencyCommission/100))).toFixed(0)}))
+        dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
         // console.log(unit)
         setMarginPercentage(filterdata[0].AgencyCommission);
         
@@ -453,7 +453,10 @@ const AdDetailsPage = () => {
   const handleMarginPercentageChange = (event) => {
     const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(event.target.value);
-    dispatch(setQuotesData({marginAmount: formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)}));
+    dispatch(setQuotesData({marginAmount: formattedMargin(
+      ((unit === "SCM" ? qty * width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)
+    ).toFixed(0)}));
+    //old margin formula formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)})
     //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
@@ -877,7 +880,7 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * width * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage))* 100 )  * (marginPercentage/100)).toFixed(0)}))
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(e.target.value * unitPrice * campaignDuration / minimumCampaignDuration * (marginPercentage / 100)).toFixed(0)}))
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
@@ -903,7 +906,7 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * width * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((e.target.value * width * unitPrice * campaignDuration / minimumCampaignDuration) * (marginPercentage / 100)).toFixed(0)}));
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
@@ -927,7 +930,7 @@ const AdDetailsPage = () => {
                       value={width}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({width: e.target.value, marginAmount: formattedMargin((((e.target.value * qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
+                        dispatch(setQuotesData({width: e.target.value, marginAmount: formattedMargin(((unit === "SCM" ? qty * e.target.value : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (marginPercentage / 100))}));
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value, true));
@@ -954,7 +957,7 @@ const AdDetailsPage = () => {
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin((( unit === "SCM" ? (qty * width) : qty  * unitPrice * e.target.value )/(100 - marginPercentage)) * 100)  * (marginPercentage/100)})); 
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin((unit === "SCM" ? qty * width : qty) * unitPrice * e.target.value ) * (marginPercentage / 100)})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}
@@ -1097,7 +1100,7 @@ const AdDetailsPage = () => {
                       const selectedValue = JSON.parse(e.target.value);
                       setQtySlab(selectedValue);
                       // console.log(qty, selectedValue.Qty, formattedMargin((( (unit === "SCM" ? (selectedValue.Qty * selectedValue.Width) : selectedValue.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100))
-                      dispatch(setQuotesData({width: selectedValue.Width, quantity: selectedValue.Qty, marginAmount: formattedMargin((( (unit === "SCM" ? (selectedValue.Qty * selectedValue.Width) : selectedValue.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}));
+                      dispatch(setQuotesData({width: selectedValue.Width, quantity: selectedValue.Qty, marginAmount: formattedMargin((unit === "SCM" ? selectedValue.Qty * selectedValue.Width : selectedValue.Qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)}));
                     }}
                     options={slabOptions}
                   />
