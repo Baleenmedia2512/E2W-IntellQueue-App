@@ -433,35 +433,77 @@ const AdDetailsPage = () => {
   // }
   };
 
-  const handleMarginChange = (event) => {
-    const newValue = parseInt(event.target.value);
-    //setMargin(event.target.value);
-    dispatch(setQuotesData({marginAmount: event.target.value}))
+  // const handleMarginChange = (event) => {
+  //   const newValue = parseInt(event.target.value);
+  //   //setMargin(event.target.value);
+  //   dispatch(setQuotesData({marginAmount: event.target.value}))
 
-    if (newValue > 0) {
+  //   if (newValue > 0) {
+  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
+  //   }
+  // };
+
+  // const marginLostFocus = () => {
+  //   const cost = parseInt((unit === "SCM" ? (qty * width) : (qty)) * unitPrice * (campaignDuration / minimumCampaignDuration))
+  //   const price = cost + parseInt(margin)
+  //   setMarginPercentage(((margin/price)*100).toFixed(1))
+  //   //dispatch(setQuotesData({marginAmount: event.target.value}))
+  // }
+
+  // const handleMarginPercentageChange = (event) => {
+  //   const newPercentage = parseFloat(event.target.value);
+  //   setMarginPercentage(event.target.value);
+  //   dispatch(setQuotesData({marginAmount: formattedMargin(
+  //     ((unit === "SCM" ? qty * width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)
+  //   ).toFixed(0)}));
+  //   //old margin formula formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)})
+  //   //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
+  //   if (newPercentage > 0) {
+  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
+  //   }
+  // };
+
+  const handleMarginChange = (event) => {
+    const newMarginAmount = parseInt(event.target.value);
+    // setMargin(newMarginAmount);
+
+    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    const newMarginPercentage = ((newMarginAmount / (cost + newMarginAmount)) * 100).toFixed(1);
+    
+    // Update both marginAmount and marginPercentage consistently
+    dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newMarginPercentage }));
+    setMarginPercentage(newMarginPercentage);
+
+    if (newMarginAmount > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
-  };
+};
 
-  const marginLostFocus = () => {
-    const cost = parseInt((unit === "SCM" ? (qty * width) : (qty)) * unitPrice * (campaignDuration / minimumCampaignDuration))
-    const price = cost + parseInt(margin)
-    setMarginPercentage(((margin/price)*100).toFixed(1))
-    //dispatch(setQuotesData({marginAmount: event.target.value}))
-  }
-
-  const handleMarginPercentageChange = (event) => {
+const handleMarginPercentageChange = (event) => {
     const newPercentage = parseFloat(event.target.value);
-    setMarginPercentage(event.target.value);
-    dispatch(setQuotesData({marginAmount: formattedMargin(
-      ((unit === "SCM" ? qty * width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)
-    ).toFixed(0)}));
-    //old margin formula formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)})
-    //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
+    setMarginPercentage(newPercentage);
+
+    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    const newMarginAmount = ((cost * newPercentage) / (100 - newPercentage)).toFixed(0);
+
+    // Update both marginAmount and marginPercentage consistently
+    dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
+    // setMargin(newMarginAmount);
+
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
-  };
+};
+
+const marginLostFocus = () => {
+    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
+
+    // Ensure consistent update when margin field loses focus
+    dispatch(setQuotesData({ marginPercentage: newMarginPercentage }));
+    setMarginPercentage(newMarginPercentage);
+};
+
 
   // const marginPercentageLostFocus = () => {
   //   dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)}))
