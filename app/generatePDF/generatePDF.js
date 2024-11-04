@@ -208,8 +208,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const hasPosition = items.some(item => item.position && item.position !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
     const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA");
-console.log(items)
-console.log(hasCampaignDuration)
+    
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
 
@@ -264,7 +263,6 @@ console.log(hasCampaignDuration)
 
     // const headerColumns = [['S.No.', 'Rate Card ID', hasAdType ? 'Rate Type' : null, hasAdCategory ? 'Rate Category' : null, isNewspaper ? 'Edition' : 'Service Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Service Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
 
-    console.log(data)
 
     let columnWidths = {
       'S.No.': 45,
