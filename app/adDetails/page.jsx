@@ -149,7 +149,7 @@ export const AdDetails = () => {
       formattedDate: item.formattedDate,
       remarks: item.remarks,
       width: item.width,
-      rateId: item.rateId
+      rateId: item.rateId,
     };
   };
 
@@ -161,10 +161,11 @@ export const AdDetails = () => {
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.leadDay.CampaignDurationUnit === 'Day' ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.leadDay.CampaignDurationUnit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.leadDay.CampaignDurationUnit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}`)
-      const data = await response.text();
+      const data = await response.json();
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
       }
+      console.log(data)
     } catch (error) {
       alert('An unexpected error occured while inserting Quote:', error);
       return;
@@ -255,11 +256,11 @@ export const AdDetails = () => {
   
 
   return (
-    <div className='bg-gray-100 w-full h-[100vh] overflow-hidden'>
-      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 sm:overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : ''} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
+    <div className='bg-gray-100 w-full'>
+      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : 'h-[100vh]'} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
-      <div className="border-2 ml-3 w-10 inline-block mb-6 border-blue-500"></div>
-        <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100 ">
+      <div className="border-2 ml-3 w-10 inline-block mb-6 border-blue-500 "></div>
+        <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100">
         
        
         
@@ -271,7 +272,7 @@ export const AdDetails = () => {
             <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
           </button>
          ) : 
-         <button className={`mr-4 mt-2 ${rateId > 0 ? 'text-blue-500' : 'text-gray-500'} text-nowrap max-h-10 font-semibold ${rateId > 0 ?' border-blue-500' : 'border-gray-500'} border px-2 py-1 rounded-lg bg-white`} disabled = {!rateId} onClick={() => {
+         <button className={`mr-4 mt-2 ${rateId > 0 ? 'text-blue-500' : 'text-gray-500'} text-nowrap max-h-10 font-semibold ${rateId > 0 ?' border-blue-500' : 'border-gray-500 cursor-not-allowed'} border px-2 py-1 rounded-lg bg-white`} disabled = {!rateId} onClick={() => {
           dispatch(resetQuotesData());
           }}>
         <FontAwesomeIcon icon={faClose} className=' text-md' /> Clear
@@ -292,7 +293,7 @@ export const AdDetails = () => {
           {currentPage === "checkout" ?(
             <div className='flex flex-row justify-center items-center'>
             <button
-              className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} //need to add css file or change it
+              className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
               disabled = {cartItems.length > 0 ? false : true}
               onClick={handlePdfGeneration}
             >
@@ -313,12 +314,12 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className={`h-[100vh] bg-gray-100`}>
-        <form className={`bg-white rounded-t-3xl shadow-2xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'}  max-h-[100vh] overflow-x-hidden mx-2`}>
+        <div className={`bg-gray-100 flex flex-col justify-center items-center overflow-y-scroll sm:overflow-y-hidden`}>
+        <form className={`bg-white p-6 rounded-lg shadow-lg w-full flex max-w-6xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8 mb-[20vh]'} ${currentPage === 'checkout' ? 'h-fit':'h-fit '} overflow-hidden mx-2 justify-center items-center`}>
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
-          <form className='bg-white rounded-t-3xl shadow-2xl pb-16 mt-4 h-fit  justify-center mx-2'>
+          <form className='bg-white rounded-3xl shadow-lg   pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
           <h1 className='mb-4 font-semibold text-center text-blue-500 text-lg mt-4'>Client Details</h1>
 
           <table className='mb-6 ml-4'>

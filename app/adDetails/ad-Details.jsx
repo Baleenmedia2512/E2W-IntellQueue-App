@@ -26,6 +26,7 @@ import CreatableSelect from 'react-select/creatable';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { FetchRateSeachTerm } from '../api/FetchAPI';
+import './page.css';
 
 export const formattedMargin = (number) => {
   const roundedNumber = (number / 1).toFixed(0);
@@ -101,7 +102,7 @@ const AdDetailsPage = () => {
 
   const handleRateSearch = async(e) =>{
     setRateSearchTerm(e.target.value);
-    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value, false);
+    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
     setRatesSearchSuggestion(searchSuggestions);
   }
 
@@ -311,9 +312,10 @@ const AdDetailsPage = () => {
       setChanging(false);
     }
   
-    const marginAmount = formattedMargin((((qty* width * selectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0);
+    // const marginAmount = formattedMargin((((qty* width * selectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0);
+    const marginAmount = formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
     dispatch(setQuotesData({ marginAmount }));
-  
+    
     // Update UnitPrice based on the selected QtySlab
     dispatch(setQuotesData({ ratePerUnit: selectedSlab.UnitPrice, unit: selectedSlab.Unit }));
   };
@@ -350,7 +352,7 @@ const AdDetailsPage = () => {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
         const data = await response.json();
        
-        //filter rates according to adMedium, adType and adCategory
+       
         const filterdata = data.filter(item => (item.rateId === parseInt(rateId)))
           .filter((value, index, self) =>
             self.findIndex(obj => obj.VendorName === value.VendorName) === index
@@ -359,9 +361,10 @@ const AdDetailsPage = () => {
         setDatas(filterdata);
 
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
+        formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
         // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
         // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
-        dispatch(setQuotesData({marginAmount: ((((((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty )* unitPrice * (campaignDuration / minimumCampaignDuration))/(100 - filterdata[0].AgencyCommission)) * 100).toFixed(2)  * (filterdata[0].AgencyCommission/100))).toFixed(0)}))
+        dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
         // console.log(unit)
         setMarginPercentage(filterdata[0].AgencyCommission);
         
@@ -430,32 +433,77 @@ const AdDetailsPage = () => {
   // }
   };
 
-  const handleMarginChange = (event) => {
-    const newValue = parseInt(event.target.value);
-    //setMargin(event.target.value);
-    dispatch(setQuotesData({marginAmount: event.target.value}))
+  // const handleMarginChange = (event) => {
+  //   const newValue = parseInt(event.target.value);
+  //   //setMargin(event.target.value);
+  //   dispatch(setQuotesData({marginAmount: event.target.value}))
 
-    if (newValue > 0) {
+  //   if (newValue > 0) {
+  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
+  //   }
+  // };
+
+  // const marginLostFocus = () => {
+  //   const cost = parseInt((unit === "SCM" ? (qty * width) : (qty)) * unitPrice * (campaignDuration / minimumCampaignDuration))
+  //   const price = cost + parseInt(margin)
+  //   setMarginPercentage(((margin/price)*100).toFixed(1))
+  //   //dispatch(setQuotesData({marginAmount: event.target.value}))
+  // }
+
+  // const handleMarginPercentageChange = (event) => {
+  //   const newPercentage = parseFloat(event.target.value);
+  //   setMarginPercentage(event.target.value);
+  //   dispatch(setQuotesData({marginAmount: formattedMargin(
+  //     ((unit === "SCM" ? qty * width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)
+  //   ).toFixed(0)}));
+  //   //old margin formula formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)})
+  //   //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
+  //   if (newPercentage > 0) {
+  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
+  //   }
+  // };
+
+  const handleMarginChange = (event) => {
+    const newMarginAmount = parseInt(event.target.value);
+    // setMargin(newMarginAmount);
+
+    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    const newMarginPercentage = ((newMarginAmount / (cost + newMarginAmount)) * 100).toFixed(1);
+    
+    // Update both marginAmount and marginPercentage consistently
+    dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newMarginPercentage }));
+    setMarginPercentage(newMarginPercentage);
+
+    if (newMarginAmount > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
-  };
+};
 
-  const marginLostFocus = () => {
-    const cost = parseInt((unit === "SCM" ? (qty * width) : (qty)) * unitPrice * (campaignDuration / minimumCampaignDuration))
-    const price = cost + parseInt(margin)
-    setMarginPercentage(((margin/price)*100).toFixed(1))
-    //dispatch(setQuotesData({marginAmount: event.target.value}))
-  }
-
-  const handleMarginPercentageChange = (event) => {
+const handleMarginPercentageChange = (event) => {
     const newPercentage = parseFloat(event.target.value);
-    setMarginPercentage(event.target.value);
-    dispatch(setQuotesData({marginAmount: formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)}));
-    //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
+    setMarginPercentage(newPercentage);
+
+    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    const newMarginAmount = ((cost * newPercentage) / (100 - newPercentage)).toFixed(0);
+
+    // Update both marginAmount and marginPercentage consistently
+    dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
+    // setMargin(newMarginAmount);
+
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
-  };
+};
+
+const marginLostFocus = () => {
+    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
+
+    // Ensure consistent update when margin field loses focus
+    dispatch(setQuotesData({ marginPercentage: newMarginPercentage }));
+    setMarginPercentage(newMarginPercentage);
+};
+
 
   // const marginPercentageLostFocus = () => {
   //   dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)}))
@@ -622,14 +670,12 @@ const AdDetailsPage = () => {
     label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice / (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
   }))
 
-  // useEffect(() => {
-    
-  // },[qtySlab])
+
   
   return (
     
-    <div className="text-black mb-56 ">    
-      <div className="p-2 pt-0 left-[2%] right-[2%] ">
+    <div className="text-black justify-center flex w-full">    
+      <div className="justify-center w-full">
             {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
             {/* <div className="mb-8 flex items-center justify-between">
               <button
@@ -693,9 +739,9 @@ const AdDetailsPage = () => {
           </button> */}
             {/* </div> */}
             
-              <div>
+              <div className='justify-center relative'>
                 <div className='mx-[8%] pt-7 mt-4'>
-                <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+                <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
               <input
           className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
           // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
@@ -710,7 +756,7 @@ const AdDetailsPage = () => {
         <FontAwesomeIcon icon={faSearch} className="text-blue-500 " />
       </div></div>
       {(ratesSearchSuggestion.length > 0 && rateSearchTerm !== "") && (
-              <ul className="z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+              <ul className="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                 {ratesSearchSuggestion.map((name, index) => (
                   <li key={index}>
                     <button
@@ -788,7 +834,7 @@ const AdDetailsPage = () => {
               <span className='flex flex-row mb-2 justify-center'>
                 <div className="flex flex-col mr-2 items-center justify-center">
                   <button
-                    className={`${rateId > 0 ? 'bg-green-500' : 'bg-gray-500'} ${rateId > 0 ? 'hover:bg-green-700' : 'bg-gray-500'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
+                    className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
                     //className="bg-blue-500 hover:bg-purple-500 text-white px-4 py-2 rounded-full transition-all duration-300 ease-in-out"
                     disabled = {rateId > 0 ? false : true}
                     // onClick={() => {dispatch(addItemsToCart([{adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, extraDiscount, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate}])); dispatch(resetQuotesData())}}
@@ -833,7 +879,7 @@ const AdDetailsPage = () => {
                 </div>
                 <div className="flex flex-col ml-2 items-center justify-center">
                   <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md"
+                    className="Gotocart-button"
                     onClick={(e) => {
                       e.preventDefault();
                       handleSubmit();
@@ -876,7 +922,7 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * width * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage))* 100 )  * (marginPercentage/100)).toFixed(0)}))
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin(e.target.value * unitPrice * campaignDuration / minimumCampaignDuration * (marginPercentage / 100)).toFixed(0)}))
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
@@ -902,7 +948,7 @@ const AdDetailsPage = () => {
                       value={qty}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((((e.target.value * width * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: formattedMargin((e.target.value * width * unitPrice * campaignDuration / minimumCampaignDuration) * (marginPercentage / 100)).toFixed(0)}));
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
@@ -926,7 +972,7 @@ const AdDetailsPage = () => {
                       value={width}
                       onChange={(e) => {
                         //setQty(e.target.value);
-                        dispatch(setQuotesData({width: e.target.value, marginAmount: formattedMargin((((e.target.value * qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0)}));
+                        dispatch(setQuotesData({width: e.target.value, marginAmount: formattedMargin(((unit === "SCM" ? qty * e.target.value : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (marginPercentage / 100))}));
                         //setMargin(formattedMargin((e.target.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
                         // setMarginPercentage(((margin * 100) / (e.target.value * unitPrice * (campaignDuration === 0 ? 1 : campaignDuration))).toFixed(2));
                         setQtySlab(findMatchingQtySlab(e.target.value, true));
@@ -953,7 +999,7 @@ const AdDetailsPage = () => {
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin((( unit === "SCM" ? (qty * width) : qty  * unitPrice * e.target.value )/(100 - marginPercentage)) * 100)  * (marginPercentage/100)})); 
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: formattedMargin((unit === "SCM" ? qty * width : qty) * unitPrice * e.target.value ) * (marginPercentage / 100)})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}
@@ -1096,7 +1142,7 @@ const AdDetailsPage = () => {
                       const selectedValue = JSON.parse(e.target.value);
                       setQtySlab(selectedValue);
                       // console.log(qty, selectedValue.Qty, formattedMargin((( (unit === "SCM" ? (selectedValue.Qty * selectedValue.Width) : selectedValue.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100))
-                      dispatch(setQuotesData({width: selectedValue.Width, quantity: selectedValue.Qty, marginAmount: formattedMargin((( (unit === "SCM" ? (selectedValue.Qty * selectedValue.Width) : selectedValue.Qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100)  * (marginPercentage/100)}));
+                      dispatch(setQuotesData({width: selectedValue.Width, quantity: selectedValue.Qty, marginAmount: formattedMargin((unit === "SCM" ? selectedValue.Qty * selectedValue.Width : selectedValue.Qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)}));
                     }}
                     options={slabOptions}
                   />
