@@ -165,6 +165,7 @@ export const AdDetails = () => {
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
       }
+      console.log(data)
     } catch (error) {
       alert('An unexpected error occured while inserting Quote:', error);
       return;
@@ -256,7 +257,7 @@ export const AdDetails = () => {
 
   return (
     <div className='bg-gray-100 w-full'>
-      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 sm:overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : ''} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
+      <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : 'h-[100vh]'} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
       <div className="border-2 ml-3 w-10 inline-block mb-6 border-blue-500 "></div>
         <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100">
@@ -313,8 +314,8 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className={`bg-gray-100 flex flex-col justify-center items-center`}>
-        <form className={`bg-white p-6 rounded-lg shadow-lg w-full flex max-w-6xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8 mb-[20vh]'} ${currentPage === 'checkout' ? 'h-fit':'h-[100vh]'} overflow-hidden mx-2 justify-center items-center`}>
+        <div className={`bg-gray-100 flex flex-col justify-center items-center overflow-y-scroll sm:overflow-y-hidden`}>
+        <form className={`bg-white p-6 rounded-lg shadow-lg w-full flex max-w-6xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8 mb-[20vh]'} ${currentPage === 'checkout' ? 'h-fit':'h-fit '} overflow-hidden mx-2 justify-center items-center`}>
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
