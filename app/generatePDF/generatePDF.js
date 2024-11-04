@@ -35,13 +35,13 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
   //Helper function to add Header Section
   const addHeader = () => {
-    const Header = 'Advertisement Proposal'
+    const Header = 'Proposal'
     // Set font styles
     pdf.setFont('helvetica', 'normal', 'bold');
     pdf.setFontSize(16);
 
     // Add a title
-    pdf.text(Header, 300, 30);
+    pdf.text(Header, 350, 30);
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
@@ -201,13 +201,14 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     addHeader();
 
     const items = groupedData[adMedium];
-    const hasCampaignDuration = items.some(item => item.campaignDuration);
+    const hasCampaignDuration = items.some(item => item.campaignDuration && item.campaignDuration !== "NA");
     const hasAdType = items.some(item => item.adType && item.adType !== "");
     const hasAdCategory = items.some(item => item.adCategory && item.adCategory !== "");
-    const hasPosition = items.some(item => item.edition && item.edition !== "");
+    const hasEdition = items.some(item => item.edition && item.edition !== "");
+    const hasPosition = items.some(item => item.position && item.position !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
-    const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA")
-
+    const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA");
+    
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
 
@@ -217,16 +218,57 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.text(`${adMedium} Campaign (GST@${gstPercentage})`, 10, 230);
 
     const data = items.map((item, i) => [
-      (i + quoteNumber).toString(), item.rateId, item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? item.remarks ? item.remarks : 'NA' : null
-    ].filter(Boolean))
+      (i + 1).toString(), 
+      item.rateId, 
+      hasAdType ? (item.adType || 'NA') : null, 
+      hasAdCategory ? (item.adCategory || 'NA') : null, 
+      hasEdition ? (item.edition || 'NA') : null, 
+      hasPosition ? (item.position || 'NA') : null, 
+      item.qtyUnit === "SCM" 
+        ? `${item.width}W x ${item.qty}H (${item.qtyUnit})` 
+        : `${item.qty} ${item.qtyUnit}`, 
+      hasCampaignDuration 
+        ? (item.campaignDuration 
+          ? `${item.campaignDuration} ${(item.CampaignDurationUnit || '')}` 
+          : 'NA') 
+        : null, 
+      `${item.ratePerQty} Per ${item.qtyUnit}`, 
+      item.amountExclGst, 
+      item.amountInclGst, 
+      item.leadDays || 2, 
+      hasRemarks ? (item.remarks || 'NA') : null
+    ].filter(Boolean));
+    
+    const headerColumns = [
+      [
+        'S.No.', 
+        'Rate Card ID', 
+        hasAdType ? 'Rate Type' : null, 
+        hasAdCategory ? 'Rate Category' : null, 
+        hasEdition ? (isNewspaper ? 'Edition' : 'Service Location') : null, 
+        hasPosition ? 'Package' : null, 
+        isNewspaper ? 'Size' : 'Qty', 
+        hasCampaignDuration ? 'Service Duration' : null, 
+        'Unit Price (in Rs.)', 
+        'Price (Excl. GST) (in Rs.)', 
+        'Price (Incl. GST) (in Rs.)', 
+        'Lead Days', 
+        hasRemarks ? 'Remarks' : null
+      ].filter(Boolean)
+    ];
+    
 
-    const headerColumns = [['Quote No.', 'Rate Card ID', hasAdType ? 'Rate Type' : null, hasAdCategory ? 'Rate Category' : null, isNewspaper ? 'Edition' : 'Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Campaign Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
+    // const data = items.map((item, i) => [
+    //   (i + 1).toString(), item.rateId, item.adType ? item.adType : 'NA', item.adCategory ? item.adCategory : 'NA', item.edition, item.position ? item.position : 'NA', item.qtyUnit === "SCM" ? item.width + "W x " + item.qty + "H" + " (" + item.qtyUnit + ")": item.qty + " " + item.qtyUnit, hasCampaignDuration ? item.campaignDuration ? (item.campaignDuration + " " + (item.CampaignDurationUnit ? item.CampaignDurationUnit : '')) : 'NA' : null, item.ratePerQty + ' Per ' + item.qtyUnit, item.amountExclGst, item.amountInclGst, item.leadDays ? item.leadDays : 2, hasRemarks ? (item.remarks || 'NA') : null].filter(Boolean))
+
+    // const headerColumns = [['S.No.', 'Rate Card ID', hasAdType ? 'Rate Type' : null, hasAdCategory ? 'Rate Category' : null, isNewspaper ? 'Edition' : 'Service Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Service Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
+
 
     let columnWidths = {
-      'Quote No.': 45,
+      'S.No.': 45,
       'Rate Card ID': 45,
-      // 'Ad Type': 60,
-      'Ad Category': 80,
+      // 'Rate Type': 60,
+      'Rate Category': 80,
       // 'Edition': 60,
       // 'Package': 60,
       'Size': 60,

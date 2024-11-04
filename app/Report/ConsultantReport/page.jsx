@@ -61,6 +61,8 @@ export default function GroupedRowsDemo() {
     const [selectedOrderNumbers, setSelectedOrderNumbers] = useState([]);
     const [open, setOpen] = useState(false);
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
+    const [matchMode, setMatchMode] = useState('contains');
+    const [showIcProcessedConsultantsOnly, setShowIcProcessedConsultantsOnly] = useState(false);
 
     useEffect(() => {
         if (!username || dbName === "") {
@@ -68,11 +70,14 @@ export default function GroupedRowsDemo() {
         }
       },[])
 
-
-    const getConsultants = async (companyName, startDate, endDate) => {
+    const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
+            if (constData.error === "No orders found.") {
+                setGroupedData([]);
+                return [];
+            }
             // Extract all order numbers
             const allOrderNumbers = constData.map(item => item.OrderNumbers);
             setOrderNumbers(allOrderNumbers);
@@ -104,7 +109,7 @@ export default function GroupedRowsDemo() {
         };
 
     const fetchConsultants = async () => {
-        const data = await getConsultants(companyName, startDate, endDate);
+        const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
         const groupedData = groupConsultants(data);
         setConsultants(groupedData);
     };
@@ -112,7 +117,7 @@ export default function GroupedRowsDemo() {
 
     useEffect(() => {
         fetchConsultants();
-    }, [startDate, endDate]);
+    }, [startDate, endDate, showIcProcessedConsultantsOnly]);
 
     useEffect(() => {
          // Check if any filter has a non-null value
@@ -256,6 +261,46 @@ export default function GroupedRowsDemo() {
         }
         
     };
+
+
+
+const handleMarkAsUnprocessed = async () => {
+    if (selectedRows && selectedRows.length > 0) {
+        try {
+            const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
+
+                for (const row of filteredRows) {
+                const { orderNumber } = row;
+                if (orderNumber && orderNumber.length > 0) {
+                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/MarkAsICUnprocessed.php?JsonOrderNumber=${orderNumber.join(',')}&JsonDBName=${companyName}`);
+                    const result = await response.json();
+
+                    if (result.error) {
+                        console.error('Error marking as unprocessed:', result.error);
+                        return; // Stop if there's an error
+                    }
+                }
+            }
+
+            // Optionally refresh the consultants after marking them unprocessed
+            fetchConsultants();
+            setSuccessMessage(`Incentive(s) for selected consultant(s) marked as unprocessed successfully!`);
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+        } catch (error) {
+            console.error('Error marking as unprocessed:', error);
+        }
+    } else {
+        setToastMessage('No consultants selected to mark as unprocessed.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+            setToast(false);
+        }, 2000);
+    }
+};
+
     
 
     const handleDateChange = (range) => {
@@ -566,6 +611,7 @@ export default function GroupedRowsDemo() {
                 value={rowData.price === 0 ? '' : rowData.price}
                 onChange={handleChange}
                 onFocus={handleFocus}
+                disabled={showIcProcessedConsultantsOnly}
                 min="0"
                 className="p-inputtext p-component w-32 md:w-fit lg:w-fit h-full m-0 p-2 box-border rounded-md border border-sky-400 bg-white"
             />
@@ -992,9 +1038,9 @@ const handleClose = () => {
     setOpen(false);
 };
 
-
-
-
+const handleCheckboxChange = () => {
+    setShowIcProcessedConsultantsOnly((prev) => !prev);
+};
 
 
     return (
@@ -1065,13 +1111,26 @@ const handleClose = () => {
           <i className="pi pi-file-excel mr-1 sm:mr-2"></i>
           Export to Excel
         </button>
-        <button
-          onClick={handleClickOpen}
-          className="bg-blue-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-blue-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
-        >
-          <i className="pi pi-check mr-1 sm:mr-2"></i>
-          Process Incentive
-        </button>
+        {showIcProcessedConsultantsOnly ? (
+            <button
+                onClick={handleMarkAsUnprocessed}
+                className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base bg-red-500 hover:bg-red-600`}
+            >
+                <i className="pi pi-ban mr-1 sm:mr-2"></i>
+                Mark As Unprocessed
+            </button>
+        ) : (
+            <button
+                onClick={saveConsultant}
+                disabled={showIcProcessedConsultantsOnly}
+                className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base
+                    ${showIcProcessedConsultantsOnly ? "bg-blue-500 opacity-50 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"}
+                `}
+            >
+                <i className="pi pi-check mr-1 sm:mr-2"></i>
+                Process Incentive
+            </button>
+        )}
         <Dialog
                 open={open}
                 onClose={handleClose}
@@ -1109,8 +1168,19 @@ const handleClose = () => {
             </Dialog>
       </div>
         </div>
-
-
+        <div className="mb-2 flex items-center justify-end text-black">
+  <label className="flex items-center cursor-pointer">
+    <input
+      type="checkbox"
+      color='green'
+      className="h-5 w-5 text-green-600 border-gray-300 rounded-lg focus:ring-green-500 cursor-pointer"
+      checked={showIcProcessedConsultantsOnly}
+      onChange={handleCheckboxChange} // Handle checkbox change
+    />
+    <span className="ml-2 text-sm text-white font-medium">Show Processed ICs Only</span>
+  </label>
+</div>
+        
     <div className="overflow-x-auto border rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                         <DataTable
                             value={groupedData}
