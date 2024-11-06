@@ -978,7 +978,7 @@ useEffect(() => {
   } else if (dayjs(newDate).isAfter(dayjs(), 'day')) {
     return 'Transaction Date cannot be in the future';
   }
-  return ''; // No error
+  return '';
 };
 
   
