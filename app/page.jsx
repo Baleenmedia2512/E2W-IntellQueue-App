@@ -153,7 +153,7 @@ const ClientsData = () => {
     
     if (newName !== '') {
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
         .then((response) => response.json())
         .then((data) => setClientNameSuggestions(data));
       
@@ -417,7 +417,7 @@ const ClientsData = () => {
     // Client Name Suggestions
     if (newValue !== '' ) {
         try {
-            fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
+            fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesTest.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
                 .then((response) => response.json())
                 .then((data) => setClientNumberSuggestions(data));
         } catch (error) {
@@ -1123,7 +1123,9 @@ const BMvalidateFields = () => {
             />
           </div>
           {(clientNameSuggestions.length > 0 && clientDetails.clientName !== "") && (
-            <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+            <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
+              clientNameSuggestions.length > 5 ? 'h-40' : 'h-fit'
+            }`}>
             {clientNameSuggestions.map((name, index) => (
               <li key={index}>
                 <button
@@ -1187,7 +1189,9 @@ const BMvalidateFields = () => {
               }}
             />
             {(clientNumberSuggestions.length > 0 && clientContact !== "") && (
-              <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+              <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
+                clientNumberSuggestions.length > 5 ? 'h-40' : 'h-fit'
+              }`}>
                 {clientNumberSuggestions.map((name, index) => (
                   <li key={index}>
                     <button

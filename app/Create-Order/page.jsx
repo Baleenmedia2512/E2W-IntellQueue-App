@@ -583,7 +583,7 @@ const fetchRates = async () => {
     const handleSearchTermChange = (event) => {
         const newName = event.target.value;
         dispatch(setClientName(newName));
-        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
         // dispatch(setOrderData({ clientName: clientName }))
@@ -1578,7 +1578,9 @@ return (
               //&& !elementsToHide.includes("ClientAgeInput")
             />
             {(clientNameSuggestions.length > 0 && clientName !== '' && !isOrderUpdate) && (
-            <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+            <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
+              clientNameSuggestions.length > 5 ? 'h-40' : 'h-fit'
+            }`}>
               {clientNameSuggestions.map((name, index) => (
                 <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                   <button

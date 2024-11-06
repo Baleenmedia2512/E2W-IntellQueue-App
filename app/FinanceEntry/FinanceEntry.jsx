@@ -514,8 +514,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
     }
   };
 
-  console.log(orderNumber, rateWiseOrderNumber)
-  
 
   const insertNewFinance = async (e) => {
     e.preventDefault()
@@ -528,7 +526,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       }, 3000);
       return;
     }
-    if (balanceAmount === 0) {
+    if (balanceAmount === 0 || balanceAmount < 0) {
       setToastMessage('Full payment has already been received!');
       setSeverity('error');
       setToast(true);
@@ -1181,7 +1179,9 @@ useEffect(() => {
                 
             </div>
             {(clientNameSuggestions.length > 0 && clientName !== '') && (
-                <ul className="z-10 mt-1 w-full  bg-white border border-gray-200 rounded-md shadow-lg h-40 overflow-y-scroll">
+                <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
+                  clientNameSuggestions.length > 5 ? 'h-40' : 'h-fit'
+                }`}>
                 {clientNameSuggestions.map((name, index) => (
                     <li key={index}>
                     <button
