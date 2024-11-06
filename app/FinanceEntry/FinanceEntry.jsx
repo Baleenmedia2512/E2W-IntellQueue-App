@@ -554,19 +554,19 @@ const openChequeDate = Boolean(anchorElChequeDate);
             setSuccessMessage('');
 
             if (transactionType && transactionType.value === "Income") {
-              if (elementsToHide.includes("RateWiseOrderNumberText")) {
-                //BM
-                  SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
-              } else if (elementsToHide.includes("OrderNumberText")) {
+              // if (elementsToHide.includes("RateWiseOrderNumberText")) {
+              //   //BM
+              //     SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+              // } else if (elementsToHide.includes("OrderNumberText")) {
                 SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
-              } else {
-                setToastMessage('SMS Not Sent! Reason: No Database Found.');
-                setSeverity('warning');
-                setToast(true);
-                setTimeout(() => {
-                  setToast(false);
-                }, 2000);
-              }
+              // } else {
+              //   setToastMessage('SMS Not Sent! Reason: No Database Found.');
+              //   setSeverity('warning');
+              //   setToast(true);
+              //   setTimeout(() => {
+              //     setToast(false);
+              //   }, 2000);
+              // }
           }
 
           }, 1000);
