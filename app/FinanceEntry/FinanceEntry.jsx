@@ -513,6 +513,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
       console.error(error);
     }
   };
+
+  console.log(orderNumber, rateWiseOrderNumber)
   
 
   const insertNewFinance = async (e) => {
