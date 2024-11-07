@@ -293,7 +293,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     if (paymentMode === 'Cash') {
         message = `Hi, Your payment of Rs. ${orderAmount ? orderAmount : 0} received as Cash by Grace Scans.`;
     } else if (paymentMode === 'Online') {
-        message = `Hi, Your payment of Rs. ${orderAmount ? orderAmount : 0} received via Online by Grace Scans.`;
+        message = `Hi, Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans in Bank A/c.`;
     } else {
         message = `Hi, Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans. Thank You.`;
     }
