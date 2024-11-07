@@ -277,7 +277,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const SendSMSViaNetty = (clientNumber, clientName, orderAmount, paymentMode) => {
 
-    // Ensure clientNumber is valid
+
     if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
         setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
               setSeverity('warning');
