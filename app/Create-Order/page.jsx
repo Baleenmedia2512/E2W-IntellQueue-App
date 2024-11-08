@@ -601,6 +601,7 @@ const fetchRates = async () => {
     const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
         dispatch(setClientName(name));
+        setDisplayClientName(name);
         setClientNumber(number);
         dispatch(setOrderData({ clientName: name, clientNumber: number  }))
         fetchClientDetails(ID);
@@ -1287,6 +1288,7 @@ const handleOpenDialog = () => {
 
   const handleCancelUpdate = () => {
     dispatch(setClientName(''));
+    setDisplayClientName('');
     setOrderDate(new Date());
     setDisplayOrderDate(new Date())
     setUpdateRateWiseOrderNumber('');
@@ -1967,7 +1969,7 @@ return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-1">
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Name</p>
-        <p className="truncate text-black">{clientName}</p>
+        <p className="truncate text-black">{displayClientName}</p>
       </div>
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Consultant</p>
