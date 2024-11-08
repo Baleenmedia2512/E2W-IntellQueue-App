@@ -1289,17 +1289,18 @@ const [rateStats, setRateStats] = useState({});
           : receivableAmount - Math.abs(AdjustedOrderAmount); // Subtract if AdjustedOrderAmount is negative
         return sum + adjustedAmount;
       }, 0);
+      const roundedTotalOrderAmount = Math.round(totalOrderAmount);
       
        // Sum of order values
       const totalFinanceAmount = rowsForSummary.reduce((sum, row) => 
         sum + (parseFloat(row.TotalAmountReceived.replace(/[₹,]/g, '').trim()) || 0), 
       0); // Sum of finance amounts
-
+      const roundedTotalFinanceAmount = Math.round(totalFinanceAmount);
       
       // Update state for summary info
       setSumOfOrders(sumOfOrders);
-      setTotalOrderAmount(totalOrderAmount);
-      setTotalFinanceAmount(totalFinanceAmount);
+      setTotalOrderAmount(roundedTotalOrderAmount);
+      setTotalFinanceAmount(roundedTotalFinanceAmount);
   };
 
   // Function to calculate the statistics based on filtered rows
@@ -1312,14 +1313,14 @@ const [rateStats, setRateStats] = useState({});
     // Iterate over the filtered rows to calculate the stats
     filteredRows.forEach(order => {
       const rateName = order.Card; 
-      const orderValue = Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0;
+      const orderValue = Math.round(Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0);
       const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
 
       // Adjust the order value based on AdjustedOrderAmount
       const finalOrderValue = adjustedOrderAmount >= 0 
         ? orderValue + adjustedOrderAmount 
         : orderValue - Math.abs(adjustedOrderAmount);
-      const income = Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0; // Ensure it's a number
+      const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0); // Ensure it's a number
   
       if (stats[rateName]) {
         stats[rateName].orderCount += 1;
