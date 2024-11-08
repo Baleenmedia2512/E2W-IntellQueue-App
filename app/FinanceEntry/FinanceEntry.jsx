@@ -290,10 +290,14 @@ const openChequeDate = Boolean(anchorElChequeDate);
     }
 
     const sendableNumber = `91${clientNumber}`;
-//     const message = `Hello ${clientName}, 
-// Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans Finance Team. 
-// Thanks for choosing Grace Scans. Have a Nice Day!`;
-    const message = `Hi, Your payment of Rs.${orderAmount ? orderAmount : 0} received by Grace Scans. Thank You.`;
+    let message;
+    if (paymentMode === 'Cash') {
+        message = `Hi, Your payment of Rs. ${orderAmount ? orderAmount : 0} received as Cash by Grace Scans.`;
+    } else if (paymentMode === 'Online') {
+        message = `Hi, Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans in Bank A/c.`;
+    } else {
+        message = `Hi, Your payment of Rs. ${orderAmount ? orderAmount : 0} received by Grace Scans. Thank You.`;
+    }
     const encodedMessage = encodeURIComponent(message);
     
 
