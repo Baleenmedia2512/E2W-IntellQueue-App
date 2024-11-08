@@ -1088,7 +1088,9 @@ const BMvalidateFields = () => {
             />
           </div>
           {(clientNameSuggestions.length > 0 && clientDetails.clientName !== "") && (
-            <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+            <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
+              clientNameSuggestions.length > 5 ? 'h-40' : 'h-fit'
+            }`}>
             {clientNameSuggestions.map((name, index) => (
               <li key={index}>
                 <button

@@ -1560,7 +1560,9 @@ return (
               //&& !elementsToHide.includes("ClientAgeInput")
             />
             {(clientNameSuggestions.length > 0 && clientName !== '' && !isOrderUpdate) && (
-            <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+            <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
+              clientNameSuggestions.length > 5 ? 'h-40' : 'h-fit'
+            }`}>
               {clientNameSuggestions.map((name, index) => (
                 <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                   <button
