@@ -116,6 +116,10 @@ const AdDetailsPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [longPressRateId, setLongPressRateId] = useState(null);
   const [dialogAction, setDialogAction] = useState(null); // Store action type (Remove/Restore)
+  const [isFocused, setIsFocused] = useState(false);
+  const suggestionsRef = useRef(null);
+  const checkboxRef = useRef(null);
+  const inputRef = useRef(null);
 
   let pressTimer = null;
 
@@ -1038,6 +1042,7 @@ var selectedRate = '';
         setTimeout(() => {
       setSuccessMessage('');
     }, 2000);
+    handleRateSearch({ target: { value: rateSearchTerm } });
     handleClearRateId();
     handleEditMode();
     fetchRates();
@@ -1057,6 +1062,7 @@ var selectedRate = '';
       setSuccessMessage('');
       fetchRates();
     handleRateId(rateID);
+    handleRateSearch({ target: { value: rateSearchTerm } });
     setOpenDialog(false);
     }, 2000);
     
@@ -1419,7 +1425,7 @@ setEditModal(false);
   const handleClearRateId = () => {
     
     setEditMode(false)
-    setRateSearchTerm("")
+    // setRateSearchTerm("")
     dispatch(setRateId(""));
     
     setValidityDays(0);
@@ -1506,16 +1512,20 @@ setEditModal(false);
 
   const handleCheckboxChange = () => {
     setShowInvalid((prev) => !prev); // Toggle checkbox state
-    handleRateSearch({ target: { value: rateSearchTerm } });
+    
 };
+useEffect(() => {
+  handleRateSearch({ target: { value: rateSearchTerm } });
+  // setIsFocused(true);
+}, [showInvalid]);
 
 const handleEditMode = () => {
 
   dispatch(resetRatesData());
 
-  setRateSearchTerm("");
+  // setRateSearchTerm("");
 
-  setShowInvalid(false);
+  // setShowInvalid(false);
   setRateValidity(true);
   setIsNewRate(true);
 
@@ -1542,7 +1552,6 @@ const handleEditMode = () => {
 };
 
 const handleLongPress = (rate, isInvalid) => {
-  console.log(rate)
   pressTimer = setTimeout(() => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
@@ -1565,6 +1574,17 @@ const handleMouseDown = (rate, isInvalid) => {
 const handleMouseLeave = () => {
   clearTimeout(pressTimer);
 };
+
+const handleFocus = () => {
+  setIsFocused(true);
+};
+
+const handleBlur = (e) => {
+  if (!suggestionsRef.current.contains(e.relatedTarget)) {
+    setIsFocused(false);
+  }
+}
+
 
 
 
@@ -1747,6 +1767,7 @@ const handleMouseLeave = () => {
       <div className="mb-2 flex items-center text-black">
         <label className="flex items-center cursor-pointer">
           <input
+            ref={checkboxRef}
             type="checkbox"
             className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             checked={showInvalid}
@@ -1762,7 +1783,9 @@ const handleMouseLeave = () => {
           type="text"
           placeholder="Ex: RateName Type"
           value={rateSearchTerm}
-          onFocus={(e) => { e.target.select(); }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          // onFocus={(e) => { e.target.select(); }}
           onChange={handleRateSearch}
         />
         <div className="px-3">
@@ -1771,8 +1794,8 @@ const handleMouseLeave = () => {
       </div>
       
       {/* Search Suggestions */}
-      <div className="relative">
-        {Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
+      <div className="relative" ref={suggestionsRef}>
+        {isFocused && Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
           <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
             {ratesSearchSuggestion.map((name, index) => {
               const isInvalid = name.ApprovedStatus === "Rejected";
@@ -1854,7 +1877,7 @@ const handleMouseLeave = () => {
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-      onClick={handleEditMode}
+      onClick={() => { handleEditMode(); setRateSearchTerm(""); }}
     >
       Exit Edit
     </button>
