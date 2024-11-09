@@ -276,7 +276,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       });
   }; 
 
-  const SendSMSViaNetty = (clientNumber, clientName, orderAmount) => {
+  const SendSMSViaNetty = (clientNumber, clientName, orderAmount, paymentMode) => {
 
     // Ensure clientNumber is valid
     if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
@@ -559,7 +559,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
                 //BM
                   SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
               } else if (elementsToHide.includes("OrderNumberText")) {
-                SendSMSViaNetty(clientNumber, clientName, orderAmount);
+                SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode);
               } else {
                 setToastMessage('SMS Not Sent! Reason: No Database Found.');
                 setSeverity('warning');
