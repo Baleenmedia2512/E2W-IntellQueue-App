@@ -110,7 +110,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
   const addTermsAndConditions = (index) => {
     var pageHeight = pdf.internal.pageSize.height;
-    var bottomMargin = 50; // Space you want to leave at the bottom of the page
+    var bottomMargin = 10; // Space you want to leave at the bottom of the page
     var termsHeight = 130; // Estimated height of the terms and conditions section
 
     // Determine yPosition for terms and conditions
@@ -123,7 +123,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
 
-    let tempPosition = yPosition + 40;
+    let tempPosition = yPosition + 20;
     TnC.forEach((message, index) => {
       
       if (TnC[index]["ID"] === 2) {
@@ -322,8 +322,8 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   const yPosition = pdf.lastAutoTable.finalY + 20;
 
   const pageHeight = pdf.internal.pageSize.height;
-    const bottomMargin = 10; // Space you want to leave at the bottom of the page
-    const termsHeight = 10; // Estimated height of the terms and conditions section
+    const bottomMargin = 5; // Space you want to leave at the bottom of the page
+    const termsHeight = 5; // Estimated height of the terms and conditions section
 
   pdf.setFont('helvetica', 'normal', '100');
   const pageWidth = pdf.internal.pageSize.width;
