@@ -559,7 +559,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
                 //BM
                   SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
               } else if (elementsToHide.includes("OrderNumberText")) {
-                SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode);
+                SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
               } else {
                 setToastMessage('SMS Not Sent! Reason: No Database Found.');
                 setSeverity('warning');
