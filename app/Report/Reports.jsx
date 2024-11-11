@@ -165,7 +165,7 @@ useEffect(() => {
       if (!username || dbName === "") {
         router.push('/login');
       }
-      fetchCurrentDateConsultants();
+      // fetchCurrentDateConsultants();
       if(dbName){
         elementsToHideList()
       }
@@ -209,123 +209,123 @@ useEffect(() => {
   }
 
 
-  const handleOpenCDR = () => {
-    setOpenCDR(true);
-  };
+  // const handleOpenCDR = () => {
+  //   setOpenCDR(true);
+  // };
   
-  const handleCloseCDR = () => {
-    setOpenCDR(false);
-  };
+  // const handleCloseCDR = () => {
+  //   setOpenCDR(false);
+  // };
 
-  const fetchCurrentDateConsultants = () => {
-    axios
-        .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
-        .then((response) => {
-          const data = response.data.data;
-          const consultantNames = data.map(item => item.consultantName); 
-          setConsultantNameCDR(consultantNames); 
+//   const fetchCurrentDateConsultants = () => {
+//     axios
+//         .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
+//         .then((response) => {
+//           const data = response.data.data;
+//           const consultantNames = data.map(item => item.consultantName); 
+//           setConsultantNameCDR(consultantNames); 
 
-          // Group the results by consultant name
-          const consultantData = data.reduce((acc, item) => {
-              const { consultantName, consultantNumber, Card, card_count } = item;
+//           // Group the results by consultant name
+//           const consultantData = data.reduce((acc, item) => {
+//               const { consultantName, consultantNumber, Card, card_count } = item;
 
-              if (!acc[consultantName]) {
+//               if (!acc[consultantName]) {
                 
-                  acc[consultantName] = {
-                      consultantName: consultantName,
-                      consultantNumber: consultantNumber,
-                      totalCount: 0,
-                      cards: {}
-                  };
-              }
+//                   acc[consultantName] = {
+//                       consultantName: consultantName,
+//                       consultantNumber: consultantNumber,
+//                       totalCount: 0,
+//                       cards: {}
+//                   };
+//               }
 
-              // Update total count and individual card counts
-              acc[consultantName].totalCount += parseInt(card_count);
-              acc[consultantName].cards[Card] = (acc[consultantName].cards[Card] || 0) + parseInt(card_count);
+//               // Update total count and individual card counts
+//               acc[consultantName].totalCount += parseInt(card_count);
+//               acc[consultantName].cards[Card] = (acc[consultantName].cards[Card] || 0) + parseInt(card_count);
               
 
-              return acc;
-          }, {});
+//               return acc;
+//           }, {});
           
-          setConsultantDiagnosticsReportData(consultantData);
-      })
-      .catch((error) => {
-          console.error(error);
-      });
-};
+//           setConsultantDiagnosticsReportData(consultantData);
+//       })
+//       .catch((error) => {
+//           console.error(error);
+//       });
+// };
 
-const handleConsultantSMS = () => {
-// Generate SMS messages for each consultant and send SMS
-          Object.values(consultantDiagnosticsReportData).forEach((consultant) => {
-              const { consultantName, consultantNumber, totalCount, cards } = consultant;
+// const handleConsultantSMS = () => {
+// // Generate SMS messages for each consultant and send SMS
+//           Object.values(consultantDiagnosticsReportData).forEach((consultant) => {
+//               const { consultantName, consultantNumber, totalCount, cards } = consultant;
 
-              const usgCount = cards['USG Scan'] || 0;
-              const ctCount = cards['CT Scan'] || 0;
-              const xrayCount = cards['X-Ray'] || 0;
+//               const usgCount = cards['USG Scan'] || 0;
+//               const ctCount = cards['CT Scan'] || 0;
+//               const xrayCount = cards['X-Ray'] || 0;
 
-              // Create the message for the consultant
-              // const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
-              const message = `Hello ${consultantName}, 
-${totalCount} of your Patients utilized our Diagnostic Services Today. 
-USG - ${usgCount} 
-CT - ${ctCount} 
-X-Ray - ${xrayCount} 
-It was our pleasure to serve your Patients. 
-- Grace Scans`;
+//               // Create the message for the consultant
+//               // const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
+//               const message = `Hello ${consultantName}, 
+// ${totalCount} of your Patients utilized our Diagnostic Services Today. 
+// USG - ${usgCount} 
+// CT - ${ctCount} 
+// X-Ray - ${xrayCount} 
+// It was our pleasure to serve your Patients. 
+// - Grace Scans`;
               
-              // Call the function to send SMS
-              SendSMSViaNetty(consultantName, consultantNumber, message);
-          });
-};
+//               // Call the function to send SMS
+//               SendSMSViaNetty(consultantName, consultantNumber, message);
+//           });
+// };
 
 
-const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
+// const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
-  // Ensure consultantNumber is valid
-  if (!consultantName || consultantName === '' || consultantNumber === '0' || consultantNumber === '' || !/^\d+$/.test(consultantNumber)) {
-      setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
-            setSeverity('warning');
-            setToast(true);
-            setTimeout(() => {
-              setToast(false);
-            }, 2000);
-      return; // Prevent the function from continuing if consultantNumber is invalid
-  }
+//   // Ensure consultantNumber is valid
+//   if (!consultantName || consultantName === '' || consultantNumber === '0' || consultantNumber === '' || !/^\d+$/.test(consultantNumber)) {
+//       setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+//             setSeverity('warning');
+//             setToast(true);
+//             setTimeout(() => {
+//               setToast(false);
+//             }, 2000);
+//       return; // Prevent the function from continuing if consultantNumber is invalid
+//   }
 
-  const sendableNumber = `91${consultantNumber}`;
-  const encodedMessage = encodeURIComponent(message);
+//   const sendableNumber = `91${consultantNumber}`;
+//   const encodedMessage = encodeURIComponent(message);
   
 
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=${consultantName}&JsonConsultantNumber=${consultantNumber}&JsonDBName=${companyName}`)
-    .then((response) => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=${consultantName}&JsonConsultantNumber=${consultantNumber}&JsonDBName=${companyName}`)
+//     .then((response) => {
 
-      const result = response.data;
-      // if (result.includes('Done')) {
-      if (result === 'SMS Sent and Database Updated Successfully') {
-        // Success Case
-        handleCloseCDR();
-        checkIfSMSSentToday();
-        setSuccessMessage('SMS Sent!');
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 1500);
-      } else {
-        // Error Case
-        setToastMessage(`SMS Not Sent! Reason: ${result}`);
-        setSeverity('warning');
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
-      }
-  })
+//       const result = response.data;
+//       // if (result.includes('Done')) {
+//       if (result === 'SMS Sent and Database Updated Successfully') {
+//         // Success Case
+//         handleCloseCDR();
+//         checkIfSMSSentToday();
+//         setSuccessMessage('SMS Sent!');
+//         setTimeout(() => {
+//           setSuccessMessage('');
+//         }, 1500);
+//       } else {
+//         // Error Case
+//         setToastMessage(`SMS Not Sent! Reason: ${result}`);
+//         setSeverity('warning');
+//         setToast(true);
+//         setTimeout(() => {
+//           setToast(false);
+//         }, 2000);
+//       }
+//   })
 
-    .catch((error) => {
-      console.error(error);
-    });
+//     .catch((error) => {
+//       console.error(error);
+//     });
   
-};
+// };
 
 
     const fetchSumOfOrders = () => {
@@ -1429,12 +1429,12 @@ const [rateStats, setRateStats] = useState({});
 </Dialog>
 
 {/* CDR confirmation */}
-<Dialog open={openCDR} onClose={handleCloseCDR}>
+{/* <Dialog open={openCDR} onClose={handleCloseCDR}>
         <DialogTitle>SMS Confirmation</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {/* Show the names of all consultants */}
-            <>
+            {/* <>
             <strong>The SMS will be sent to the following consultant(s):</strong>
             <ul className="mt-2 ml-4 list-disc ">
               {consultantNameCDR.map((consultant, index) => (
@@ -1443,8 +1443,8 @@ const [rateStats, setRateStats] = useState({});
             </ul>
             <strong>Do you want to continue?</strong>
             </>
-          </DialogContentText>
-        </DialogContent>
+          </DialogContentText> */}
+        {/* </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCDR} color="primary">
             Cancel
@@ -1453,7 +1453,7 @@ const [rateStats, setRateStats] = useState({});
             Confirm
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
 
             <Box className="px-3">
@@ -1622,12 +1622,12 @@ const [rateStats, setRateStats] = useState({});
         Cons. Report
       </button>
     )}
-    <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
+    {/* <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
       </svg>
       Send CDR
-    </button>
+    </button> */}
   </div>
 </div>
 
