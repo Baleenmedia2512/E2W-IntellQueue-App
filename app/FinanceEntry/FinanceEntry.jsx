@@ -278,7 +278,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const SendSMSViaNetty = (clientNumber, clientName, orderAmount, paymentMode) => {
 
-    // Ensure clientNumber is valid
+
     if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
         setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
               setSeverity('warning');
@@ -300,7 +300,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
     }
     const encodedMessage = encodeURIComponent(message);
     
-
     axios
       .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=&JsonConsultantNumber=&JsonDBName=${companyName}`)
       .then((response) => {
@@ -489,7 +488,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
   };
 
   useEffect(()=>{
-    if(transactionType.value === 'Operational Expense'){
+    if(transactionType.value === 'Operational Expense' && expenseCategory.value !== 'Project'){
       setOrderNumber(0);
       setRateWiseOrderNumber(0);
     }
@@ -527,7 +526,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       }, 3000);
       return;
     }
-    if (balanceAmount === 0) {
+    if (balanceAmount === 0 || balanceAmount < 0) {
       setToastMessage('Full payment has already been received!');
       setSeverity('error');
       setToast(true);
@@ -689,24 +688,6 @@ useEffect(() => {
   };
 
 
-
-  const clearFinance = (e) => {
-    //e.preventDefault();
-          setChequeNumber('');
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          setRateWiseOrderNumber('');
-  };
-
   const cancelFinance = (e) => {
     e.preventDefault();
           setChequeNumber('');
@@ -725,6 +706,7 @@ useEffect(() => {
           setFinanceSearchTerm('');
           setIsUpdateMode(false);
           setTransactionDate(dayjs()); 
+          setDisplayClientName('');
 
   };
   const handleFileChange = (e) => {
@@ -811,13 +793,19 @@ useEffect(() => {
         setTaxType(taxType);
         setTransactionDate(transactionDate);
         setPaymentMode(paymentMode);
-        setTransactionType(transactionType);
-        setExpenseCategory(expenseCategory);
         setChequeDate(chequeDate);
         setChequeNumber(data.ChequeNumber);
         setFinanceClientID(data.ID);
         setFinanceAmount(data.Amount);
         setGSTAmount(data.TaxAmount);
+
+        if ( data.TransactionType === 'Project Expense') {
+          setTransactionType({value: 'Operational Expense', label: 'Operational Expense'});
+          setExpenseCategory({ value: 'Project', label: 'Project' });
+        } else {
+          setTransactionType(transactionType);
+          setExpenseCategory(expenseCategory);
+        }
       }
 
       try {
@@ -833,7 +821,6 @@ useEffect(() => {
       console.error("Error fetching finance details:", error);
     }
 };
-
   
   
   const handleFinanceSelection = (e) => {
@@ -925,17 +912,6 @@ useEffect(() => {
   
     try {
       
-      console.log('Finance ID:', financeId);
-      console.log('Amount:', orderAmount);
-      console.log('Remarks:', remarks);
-      console.log('Tax Type:', taxType.value);
-      console.log('Transaction Date:', formattedDate + ' ' + formattedTime);
-      console.log('Payment Mode:', paymentMode.value);
-      console.log('Transaction Type:', transactionType.value);
-      console.log('Expense Category:', expenseCategory.value);
-      console.log('Cheque Date:', formattedChequeDate + ' ' + formattedChequeTime);
-      console.log('Cheque Number:', chequeNumber);
-      console.log('RateWiseOrderNumber:', rateWiseOrderNumber);
       
       // Send the GET request with query parameters using axios
       const response = await axios.get(`https://www.orders.baleenmedia.com/API/Media/UpdateFinanceFields.php`, {
@@ -958,7 +934,6 @@ useEffect(() => {
           JsonChequeNumber: chequeNumber
         }
       });
-      console.log('API Response:', response.data);
       // Check if the response is successful
       const data = response.data;
       if (data === "Values Updated Successfully!") {
@@ -973,7 +948,7 @@ useEffect(() => {
         setFinanceSearchTerm('');
         setRateWiseOrderNumber('');
         setIsUpdateMode(false);
-        clearFinance();
+        cancelFinance();
       } else {
         alert(`Error updating finance data: ${data}`);
       }
@@ -1012,7 +987,7 @@ useEffect(() => {
       
       <div className="flex items-center mt-2 justify-center mb-2">
       {!isUpdateMode && (
-    <button className="cancel-button" onClick={clearFinance}>
+    <button className="cancel-button" onClick={cancelFinance}>
       Clear
     </button>
   )}
@@ -1130,7 +1105,8 @@ useEffect(() => {
             //   required
               /> 
                {errors.transactionType && <span className="text-red-500 text-sm">{errors.transactionType}</span>}
-               </div><div>
+               </div>
+               <div>
                <div className='mt-4' >
                {transactionType && transactionType.value === 'Operational Expense' && (
               <>
@@ -1151,6 +1127,7 @@ useEffect(() => {
               value={expenseCategory.value}
               options={expenseCategoryOptions}
               onChange={(option) => handleChange(option, 'ExpenseCategorySelect')}
+              disabled={isUpdateMode}
             //   required
               />
                {errors.expenseCategory && <span className="text-red-500 text-sm">{errors.expenseCategory}</span>}
@@ -1159,7 +1136,12 @@ useEffect(() => {
             </div>
 
             <div className='mt-2' >
-            {transactionType && transactionType.value !== 'Operational Expense' && (
+            {/* {transactionType && transactionType.value !== 'Operational Expense' && ( */}
+
+            {(
+  transactionType?.value === 'Income' || 
+  (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
+) ? (
               <>
             <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1212,7 +1194,9 @@ useEffect(() => {
                 ))}
                 </ul>
             )}
-{errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}</>)}
+{errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}</>
+) : null}
+ {/* )} */}
 </div></div>
     {/* {!elementsToHide.includes("RateWiseOrderNumber") ? ( */}
     {transactionType && transactionType.value !== 'Operational Expense' && (
@@ -1246,7 +1230,44 @@ useEffect(() => {
         {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
         </div>)}
       {/* ):( */}
-      {transactionType && transactionType.value !== 'Operational Expense' && (
+      {(
+  transactionType?.value === 'Income' || 
+  (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
+) ? (
+  <div name="OrderNumberText">
+    <label className="block mb-2 mt-4 text-gray-700 font-semibold">
+      Order Number<span className="text-red-500">*</span>
+    </label>
+    <div className="w-full flex gap-3">
+      <input
+        className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+        type="text"
+        placeholder="Ex. 10000"
+        value={orderNumber}
+        pattern="\d*"
+        inputMode="numeric"
+        onChange={handleOrderNumberChange}
+        disabled={isUpdateMode}
+        onFocus={(e) => { e.target.select(); }}
+        required
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const index = Array.from(inputs).findIndex(input => input === e.target);
+            if (index !== -1 && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+        }}
+      />
+    </div>
+    {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
+  </div>
+) : null}
+
+
+      {/* {transactionType && transactionType.value !== 'Operational Expense' && (
       <div name="OrderNumberText" >
         <label className='block mb-2 mt-4 text-gray-700 font-semibold'>
           Order Number<span className="text-red-500">*</span>
@@ -1276,7 +1297,7 @@ useEffect(() => {
           />
         </div>
         {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
-        </div>)}
+        </div>)} */}
      {/* )} */}
       {/* </>
     )}</div>
