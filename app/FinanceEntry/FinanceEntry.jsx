@@ -1198,8 +1198,10 @@ useEffect(() => {
 ) : null}
  {/* )} */}
 </div></div>
-    {/* {!elementsToHide.includes("RateWiseOrderNumber") ? ( */}
-    {transactionType && transactionType.value !== 'Operational Expense' && (
+    {(
+  transactionType?.value === 'Income' || 
+  (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
+) ? (
     <div id="4" name="RateWiseOrderNumberText">
         <label className='block mb-2 mt-4 text-gray-700 font-semibold' >
           Order Number<span className="text-red-500">*</span>
@@ -1228,8 +1230,8 @@ useEffect(() => {
           />
         </div>
         {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
-        </div>)}
-      {/* ):( */}
+        </div>
+        ) : null}
       {(
   transactionType?.value === 'Income' || 
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
