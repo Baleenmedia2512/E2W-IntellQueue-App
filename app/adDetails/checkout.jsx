@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faPlusCircle, faSearch } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
@@ -15,6 +15,7 @@ import { useDispatch } from 'react-redux';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
 import { setClientData } from '@/redux/features/client-slice';
+import { FetchQuoteSearchTerm } from '../api/FetchAPI';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -44,6 +45,8 @@ const CheckoutPage = () => {
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
   const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const rateId = useAppSelector(state => state.quoteSlice.rateId);
+  const [quoteSearchSuggestion, setQuoteSearchSuggestion] = useState([]);
+  const [quoteSearchTerm, setQuoteSearchTerm] = useState("")
   
 
   // const qty = useAppSelector(state => state.quoteSlice.quantity);
@@ -112,6 +115,13 @@ const CheckoutPage = () => {
     return totalAmount.toLocaleString('en-IN');
   };
 
+  const handleQuoteSearch = async(e) =>{
+    setQuoteSearchTerm(e.target.value);
+    const searchSuggestions = await FetchQuoteSearchTerm(companyName, e.target.value);
+    setQuoteSearchSuggestion(searchSuggestions);
+    console.log(searchSuggestions);
+  }
+
   // const calculateGrandTotal = () => {
   //   let grandTotal = [];
   //   cartItems.map((item, index) => {
@@ -126,10 +136,42 @@ const CheckoutPage = () => {
   const hasRemarks = cartItems.some(item => item.remarks);
   const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
 
+  const ratesSearchSuggestion = [];
 
   return (
     <div className="text-black w-screen items-center">
-
+    <div className='justify-center relative'>
+                <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+              <input
+          className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
+          // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
+          type="text"
+          id="QuoteSearchInput"
+          name='QuoteSearchInput'
+          placeholder="Ex: 2540 Tony Bus"
+          value={quoteSearchTerm}
+          onChange = {handleQuoteSearch}
+          onFocus={(e) => {e.target.select()}}
+        /><div className="px-3">
+        <FontAwesomeIcon icon={faSearch} className="text-blue-500 " />
+      </div></div>
+      {(quoteSearchSuggestion.length > 0 && quoteSearchTerm !== "") && (
+              <ul className="absolute mt-1 w-full bg-white border text-black border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+                {quoteSearchSuggestion.map((name, index) => (
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                      // onClick={handleRateSelection}
+                      value={name}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            </div>
         <div className='mx-[8%]'>
         {cartItems.length >= 1 ? (
           <div>

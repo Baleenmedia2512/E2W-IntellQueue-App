@@ -110,7 +110,6 @@ export const UpdatePaymentMilestone = async(Stages, DBName) => {
         });
 
         result = response.data; // Return the entire response data instead of just 'success'
-        console.log(response);
     } catch (error) {
         console.error(error);
 
@@ -124,3 +123,25 @@ export const UpdatePaymentMilestone = async(Stages, DBName) => {
 
     return result; // Return full result object
 };
+
+export const FetchQuoteData = async(DBName, QuoteId, RateId) => {
+    let result = [];
+    try{
+        const response = await api.get("FetchQuoteData.php/?",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params: {
+                JsonDBName: DBName,
+                JsonQuoteId: QuoteId,
+                JsonRateId: RateId
+            }
+        }); 
+        result = response.data;
+
+    }catch(error){
+        console.error(error);
+    }
+
+    return result;
+}
