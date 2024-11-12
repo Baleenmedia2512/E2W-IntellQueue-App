@@ -110,8 +110,8 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
   const addTermsAndConditions = (index) => {
     var pageHeight = pdf.internal.pageSize.height;
-    var bottomMargin = 50; // Space you want to leave at the bottom of the page
-    var termsHeight = 130; // Estimated height of the terms and conditions section
+    var bottomMargin = 15; // Space you want to leave at the bottom of the page
+    var termsHeight = 140; // Estimated height of the terms and conditions section
 
     // Determine yPosition for terms and conditions
     let yPosition = pageHeight - termsHeight - bottomMargin;
@@ -308,7 +308,9 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
         textColor: [0, 0, 0],
         lineColor: [0, 0, 0],
         lineWidth: 0.5,
-        valign: "middle"
+        valign: "middle",
+        overflow: 'linebreak', // This will wrap long text into multiple lines.
+        cellPadding: 3
       },
       headStyles: {
         textColor: [255, 255, 255],
@@ -322,14 +324,14 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
   const yPosition = pdf.lastAutoTable.finalY + 20;
 
   const pageHeight = pdf.internal.pageSize.height;
-    const bottomMargin = 10; // Space you want to leave at the bottom of the page
-    const termsHeight = 10; // Estimated height of the terms and conditions section
+    const bottomMargin = 5; // Space you want to leave at the bottom of the page
+    const termsHeight = 5; // Estimated height of the terms and conditions section
 
   pdf.setFont('helvetica', 'normal', '100');
   const pageWidth = pdf.internal.pageSize.width;
     const textWidth = pdf.getStringUnitWidth('Page 10 Of 10') * 12;
     var xCoordinate = pageWidth - textWidth - 20;
-    pdf.text(`Page ${index + 1} of ${pdf.internal.pages.length - 1}`, xCoordinate, pageHeight - termsHeight - bottomMargin)
+    // pdf.text(`Page ${index + 1} of ${pdf.internal.pages.length - 1}`, xCoordinate, pageHeight - termsHeight - bottomMargin)
   if(index === Object.keys(groupedData).length - 1 && yPosition + 150 <= pdf.internal.pageSize.height){
     addTermsAndConditions(index + 2)
     
@@ -339,6 +341,17 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     
   }
 })
+
+const pageCount = pdf.internal.getNumberOfPages();
+for (let i = 1; i <= pageCount; i++) {
+  pdf.setPage(i);
+  const pageWidth = pdf.internal.pageSize.width;
+  pdf.setFontSize(10);
+  const text = `Page ${i} of ${pageCount}`;
+  const textWidth = pdf.getStringUnitWidth(text) * pdf.internal.getFontSize();
+  const xCoordinate = pageWidth - textWidth - 20;
+  pdf.text(text, xCoordinate, pdf.internal.pageSize.height - 10);
+}
   // Save the PDF
   pdf.save(`Quote${quoteNumber}_${clientName}.pdf`);
 
