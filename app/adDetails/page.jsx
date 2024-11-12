@@ -165,7 +165,6 @@ export const AdDetails = () => {
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
       }
-      console.log(data)
     } catch (error) {
       alert('An unexpected error occured while inserting Quote:', error);
       return;

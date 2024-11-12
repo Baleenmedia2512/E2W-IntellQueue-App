@@ -308,7 +308,9 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
         textColor: [0, 0, 0],
         lineColor: [0, 0, 0],
         lineWidth: 0.5,
-        valign: "middle"
+        valign: "middle",
+        overflow: 'linebreak', // This will wrap long text into multiple lines.
+        cellPadding: 3
       },
       headStyles: {
         textColor: [255, 255, 255],
