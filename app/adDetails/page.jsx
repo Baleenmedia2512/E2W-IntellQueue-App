@@ -171,7 +171,6 @@ export const AdDetails = () => {
     }
   }
 
-  console.log(cartItems)
 
   const getTnC = async() => {
     const response = await fetch(`https://orders.baleenmedia.com/API/Media/GetTnC.php/?JsonDBName=${companyName}`);

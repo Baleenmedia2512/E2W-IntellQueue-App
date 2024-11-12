@@ -124,7 +124,7 @@ export const UpdatePaymentMilestone = async(Stages, DBName) => {
     return result; // Return full result object
 };
 
-export const FetchQuoteData = async(DBName, QuoteId, RateId) => {
+export const FetchQuoteData = async(DBName, QuoteId) => {
     let result = [];
     try{
         const response = await api.get("FetchQuoteData.php/?",{
@@ -133,8 +133,7 @@ export const FetchQuoteData = async(DBName, QuoteId, RateId) => {
             },
             params: {
                 JsonDBName: DBName,
-                JsonQuoteId: QuoteId,
-                JsonRateId: RateId
+                JsonQuoteId: QuoteId
             }
         }); 
         result = response.data;

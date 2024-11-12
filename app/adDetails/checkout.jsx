@@ -15,7 +15,8 @@ import { useDispatch } from 'react-redux';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
 import { setClientData } from '@/redux/features/client-slice';
-import { FetchQuoteSearchTerm } from '../api/FetchAPI';
+import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
+import EditIcon from '@mui/icons-material/Edit';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -117,10 +118,24 @@ const CheckoutPage = () => {
 
   const handleQuoteSearch = async(e) =>{
     setQuoteSearchTerm(e.target.value);
-    const searchSuggestions = await FetchQuoteSearchTerm(companyName, e.target.value);
-    setQuoteSearchSuggestion(searchSuggestions);
-    console.log(searchSuggestions);
+    if (e.target.value !== ''){
+      const searchSuggestions = await FetchQuoteSearchTerm(companyName, e.target.value);
+      setQuoteSearchSuggestion(searchSuggestions);
+    }
   }
+
+  const handleQuoteSelection = async(e) => {
+    const selectedResult = e.target.value
+    const selectedQuoteId = selectedResult.split(' - ')[0];
+    const data = await FetchQuoteData(companyName, selectedQuoteId);
+    // console.log(data)
+    data.forEach((item, index) => {
+      // console.log(item, index)
+        const newIndex = cartItems.length + 1;
+        console.log(newIndex)
+        // dispatch(addItemsToCart([{newIndex, item.adMedium, item.adType, item.adCategory, item.edition, item.position, item.selectedVendor, item.qty, item.unit, item.unitPrice, item.campaignDuration, item.margin, item.remarks, item.rateId, item.CampaignDurationUnit, item.leadDay, item.minimumCampaignDuration, item.formattedDate, item.rateGST, item.width, item.campaignDurationVisibility}]));
+      });
+    };
 
   // const calculateGrandTotal = () => {
   //   let grandTotal = [];
@@ -162,7 +177,7 @@ const CheckoutPage = () => {
                     <button
                       type="button"
                       className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      // onClick={handleRateSelection}
+                      onClick={handleQuoteSelection}
                       value={name}
                     >
                       {name}
@@ -215,7 +230,8 @@ const CheckoutPage = () => {
             {hasRemarks && <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>}
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Unit Price</th>
             <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price (excl. GST)</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th>
+            {/* <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th> */}
+            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -237,13 +253,26 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200 text-nowrap'>
                 ₹ {formattedRupees(Math.round((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration / item.minimumCampaignDuration) + parseInt(item.margin)))}
               </td>
-              <td className='p-1.5 border border-gray-200'>
+              <td className='p-1.5 py-3 border flex space-x-2 justify-center'>
+                <IconButton aria-label="Edit" className='align-top self-center bg-blue-500 border-blue-500' 
+                  // onClick={() => handleEditRow(item.index)}
+                >
+                  <EditIcon color='primary' fontSize='small'/>
+                </IconButton>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
                   onClick={() => handleRemoveRateId(item.index)}
                 >
                   <RemoveCircleOutline color='primary' fontSize='small'/>
                 </IconButton>
               </td>
+
+              {/* <td className='p-1.5 border border-gray-200'>
+                <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
+                  onClick={() => handleRemoveRateId(item.index)}
+                >
+                  <RemoveCircleOutline color='primary' fontSize='small'/>
+                </IconButton>
+              </td> */}
             </tr>
           ))}
         </tbody>    
