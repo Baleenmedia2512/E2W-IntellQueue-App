@@ -185,7 +185,7 @@ export const AdDetails = () => {
       try{
         const promises = cartItems.map(item => addQuoteToDB(item));
         await Promise.all(promises);
-        return; // Prevent further execution if PDF is already being generated
+        return; 
       } catch(error) {
         alert('An unexpected error occured while inserting Quote:', error);
         return;
