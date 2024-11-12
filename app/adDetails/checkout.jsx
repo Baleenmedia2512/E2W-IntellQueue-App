@@ -79,6 +79,10 @@ const CheckoutPage = () => {
     dispatch(removeItem(index));
   };
 
+  const handleEditRow = (index) => {
+  };
+  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -128,11 +132,12 @@ const CheckoutPage = () => {
     const selectedResult = e.target.value
     const selectedQuoteId = selectedResult.split(' - ')[0];
     const data = await FetchQuoteData(companyName, selectedQuoteId);
-    // console.log(data)
+    console.log(data)
     data.forEach((item, index) => {
       // console.log(item, index)
         const newIndex = cartItems.length + 1;
         console.log(newIndex)
+        
         // dispatch(addItemsToCart([{newIndex, item.adMedium, item.adType, item.adCategory, item.edition, item.position, item.selectedVendor, item.qty, item.unit, item.unitPrice, item.campaignDuration, item.margin, item.remarks, item.rateId, item.CampaignDurationUnit, item.leadDay, item.minimumCampaignDuration, item.formattedDate, item.rateGST, item.width, item.campaignDurationVisibility}]));
       });
     };
@@ -253,18 +258,27 @@ const CheckoutPage = () => {
               <td className='p-1.5 border border-gray-200 text-nowrap'>
                 ₹ {formattedRupees(Math.round((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration / item.minimumCampaignDuration) + parseInt(item.margin)))}
               </td>
-              <td className='p-1.5 py-3 border flex space-x-2 justify-center'>
-                <IconButton aria-label="Edit" className='align-top self-center bg-blue-500 border-blue-500' 
-                  // onClick={() => handleEditRow(item.index)}
+              <td className='p-1.5 border border-gray-200'>
+              <div className="flex space-x-3 items-center">
+                <IconButton 
+                  aria-label="Edit" 
+                  className='m-0 h-full'
+                  onClick={() => handleEditRow(item.index)}
+                  // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
                 >
-                  <EditIcon color='primary' fontSize='small'/>
+                  <EditIcon className='text-blue-500 hover:text-blue-700' fontSize='small'/>
                 </IconButton>
-                <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
+                <IconButton 
+                  aria-label="Remove" 
+                  className='m-0 h-full' 
                   onClick={() => handleRemoveRateId(item.index)}
+                  // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
                 >
-                  <RemoveCircleOutline color='primary' fontSize='small'/>
+                  <RemoveCircleOutline className='text-red-500 hover:text-red-700' fontSize='small'/>
                 </IconButton>
-              </td>
+              </div>
+            </td>
+
 
               {/* <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
