@@ -126,7 +126,7 @@ export const AdDetails = () => {
   };
 
   const pdfGeneration = async (item) => {
-    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + parseInt(item.margin))));
+    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration ? (item.campaignDuration >= 1 ? item.campaignDuration : item.campaignDuration / item.minimumCampaignDuration) : 1)) + parseInt(item.margin))));
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     // console.log(item.rateGST)
     const unitPrice = (AmountExclGST/item.qty).toFixed(2)
@@ -165,12 +165,13 @@ export const AdDetails = () => {
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
       }
-      console.log(data)
     } catch (error) {
       alert('An unexpected error occured while inserting Quote:', error);
       return;
     }
   }
+
+  console.log(cartItems)
 
   const getTnC = async() => {
     const response = await fetch(`https://orders.baleenmedia.com/API/Media/GetTnC.php/?JsonDBName=${companyName}`);
@@ -184,7 +185,7 @@ export const AdDetails = () => {
       try{
         const promises = cartItems.map(item => addQuoteToDB(item));
         await Promise.all(promises);
-        return; // Prevent further execution if PDF is already being generated
+        return; 
       } catch(error) {
         alert('An unexpected error occured while inserting Quote:', error);
         return;

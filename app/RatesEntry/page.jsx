@@ -116,6 +116,8 @@ const AdDetailsPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [longPressRateId, setLongPressRateId] = useState(null);
   const [dialogAction, setDialogAction] = useState(null); // Store action type (Remove/Restore)
+  const [isFocused, setIsFocused] = useState(false);
+  const suggestionsRef = useRef(null);
 
   let pressTimer = null;
 
@@ -1038,6 +1040,7 @@ var selectedRate = '';
         setTimeout(() => {
       setSuccessMessage('');
     }, 2000);
+    handleRateSearch({ target: { value: rateSearchTerm } });
     handleClearRateId();
     handleEditMode();
     fetchRates();
@@ -1048,7 +1051,6 @@ var selectedRate = '';
   }
 
   const restoreRates = async(e, rateID) => {
-    console.log(rateID)
     e.preventDefault()
     try{
     await fetch(`https://www.orders.baleenmedia.com/API/Media/RestoreRates.php/?JsonRateId=${rateID}&JsonDBName=${companyName}`)
@@ -1058,6 +1060,7 @@ var selectedRate = '';
       setSuccessMessage('');
       fetchRates();
     handleRateId(rateID);
+    handleRateSearch({ target: { value: rateSearchTerm } });
     setOpenDialog(false);
     }, 2000);
     
@@ -1420,7 +1423,7 @@ setEditModal(false);
   const handleClearRateId = () => {
     
     setEditMode(false)
-    setRateSearchTerm("")
+    // setRateSearchTerm("")
     dispatch(setRateId(""));
     
     setValidityDays(0);
@@ -1514,7 +1517,7 @@ const handleEditMode = () => {
 
   dispatch(resetRatesData());
 
-  setRateSearchTerm("");
+  // setRateSearchTerm("");
 
   setShowInvalid(false);
   setRateValidity(true);
@@ -1567,6 +1570,15 @@ const handleMouseLeave = () => {
   clearTimeout(pressTimer);
 };
 
+const handleFocus = () => {
+  setIsFocused(true);
+};
+
+const handleBlur = (e) => {
+  if (!suggestionsRef.current.contains(e.relatedTarget)) {
+    setIsFocused(false);
+  }
+};
 
 
   return (
@@ -1763,7 +1775,9 @@ const handleMouseLeave = () => {
           type="text"
           placeholder="Ex: RateName Type"
           value={rateSearchTerm}
-          onFocus={(e) => { e.target.select(); }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          // onFocus={(e) => { e.target.select(); }}
           onChange={handleRateSearch}
         />
         <div className="px-3">
@@ -1772,8 +1786,8 @@ const handleMouseLeave = () => {
       </div>
       
       {/* Search Suggestions */}
-      <div className="relative">
-        {Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
+      <div className="relative" ref={suggestionsRef}>
+        {isFocused && Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
           <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
             {ratesSearchSuggestion.map((name, index) => {
               const isInvalid = name.ApprovedStatus === "Rejected";

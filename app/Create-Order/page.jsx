@@ -583,7 +583,7 @@ const fetchRates = async () => {
     const handleSearchTermChange = (event) => {
         const newName = event.target.value;
         dispatch(setClientName(newName));
-        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
         // dispatch(setOrderData({ clientName: clientName }))
@@ -601,6 +601,7 @@ const fetchRates = async () => {
     const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
         dispatch(setClientName(name));
+        setDisplayClientName(name);
         setClientNumber(number);
         dispatch(setOrderData({ clientName: name, clientNumber: number  }))
         fetchClientDetails(ID);
@@ -1287,6 +1288,7 @@ const handleOpenDialog = () => {
 
   const handleCancelUpdate = () => {
     dispatch(setClientName(''));
+    setDisplayClientName('');
     setOrderDate(new Date());
     setDisplayOrderDate(new Date())
     setUpdateRateWiseOrderNumber('');
@@ -1578,7 +1580,9 @@ return (
               //&& !elementsToHide.includes("ClientAgeInput")
             />
             {(clientNameSuggestions.length > 0 && clientName !== '' && !isOrderUpdate) && (
-            <ul className="list-none bg-white shadow-lg rounded-md mt-2">
+            <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
+              clientNameSuggestions.length > 5 ? 'h-40' : 'h-fit'
+            }`}>
               {clientNameSuggestions.map((name, index) => (
                 <li key={index} className="relative z-10 mt-0 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                   <button
@@ -1965,7 +1969,7 @@ return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-1">
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Name</p>
-        <p className="truncate text-black">{clientName}</p>
+        <p className="truncate text-black">{displayClientName}</p>
       </div>
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Consultant</p>

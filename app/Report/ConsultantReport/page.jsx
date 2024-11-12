@@ -88,7 +88,25 @@ export default function GroupedRowsDemo() {
         }
     };
 
-
+        // Utility function to apply filters to data
+        const applyFilters = (data, filters) => {
+            let filteredData = [...data];
+            
+            for (const key in filters) {
+                const filterValue = filters[key]?.value;
+                if (filterValue) {
+                    filteredData = filteredData.filter(row => {
+                        const fieldValue = row[key];
+                        return (
+                            fieldValue &&
+                            typeof fieldValue === 'string' &&
+                            fieldValue.toLowerCase().includes(filterValue.toLowerCase())
+                        );
+                    });
+                }
+            }
+            return filteredData;
+        };
 
     const fetchConsultants = async () => {
         const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
@@ -102,13 +120,30 @@ export default function GroupedRowsDemo() {
     }, [startDate, endDate, showIcProcessedConsultantsOnly]);
 
     useEffect(() => {
-        // Select all rows by default when groupedData is ready
+         // Check if any filter has a non-null value
+        const hasActiveFilters = Object.values(filters).some(
+            filter => filter.value !== null
+        );
+        
+        // Select all rows by default when groupedData is ready and filters are active
         if (consultants.length > 0) {
-            const data = renderGroupedData(consultants, activeFilters);
-            setGroupedData(data)
-            setSelectedRows(data);
+            if (hasActiveFilters) {
+                const data = renderGroupedData(consultants, activeFilters);
+                setGroupedData(data)
+                const combinedFilteredRows = applyFilters(data, filters);
+                setSelectedRows(combinedFilteredRows);
+            } else {
+                const data = renderGroupedData(consultants, activeFilters);
+                setGroupedData(data)
+                setSelectedRows(data);
+            }
+            
+        } else {
+            setGroupedData([])
+            setSelectedRows([]);
         }
     }, [consultants]);
+
     
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -206,10 +241,10 @@ export default function GroupedRowsDemo() {
                     }
                 }
                 setOpen(false);
-                fetchConsultants();
                 setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
                 setTimeout(() => {
                 setSuccessMessage('');
+                fetchConsultants();
                 // setFilteredConsultants([]);
                 resetFilters();
               }, 3000);
@@ -413,19 +448,19 @@ const handleMarkAsUnprocessed = async () => {
                 //     const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
 
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                    // Filter conditions for name, rateCard, and rateType
-                    const isFilteredByRateCard = activeFilters.rateCard
-                        ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase())
-                        : false;
-                    const isFilteredByRateType = activeFilters.rateType
-                        ? rateType.rateType.toLowerCase().includes(activeFilters.rateType.toLowerCase())
-                        : false;
-                    const isFilteredByName = activeFilters.name
-                        ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
-                        : false;
+                    // // Filter conditions for name, rateCard, and rateType
+                    // const isFilteredByRateCard = activeFilters.rateCard
+                    //     ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase())
+                    //     : false;
+                    // const isFilteredByRateType = activeFilters.rateType
+                    //     ? rateType.rateType.toLowerCase().includes(activeFilters.rateType.toLowerCase())
+                    //     : false;
+                    // const isFilteredByName = activeFilters.name
+                    //     ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
+                    //     : false;
                     
-                    // Add name if any of the filters apply
-                    const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
+                    // // Add name if any of the filters apply
+                    // const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
                     
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
@@ -671,7 +706,7 @@ const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 // Filter rows where total starts with "Total:"
 const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
-const filteredAmountRows = rowsToCalculate.filter(row => row.total && !row.rateCard.startsWith('Total'));
+const filteredAmountRows = selectedRows.filter(row => row.total && !row.rateCard.startsWith('Total'));
 
 // const filteredAmountRows = rowsToCalculate.filter(row => row.total);
 
@@ -685,7 +720,7 @@ const extractNameFromId = (id) => {
 
 // Filter out rows with null or empty values for name and rateCard
 // const filteredNameRows = rowsToCalculate.filter(row => row.name);
-const filteredNameRows = rowsToCalculate.map(row => {
+const filteredNameRows = selectedRows.map(row => {
     if (row.name) {
         return row;
     } else if (selectedRows.length > 0 && row.id) {
@@ -721,7 +756,7 @@ const extractRateCardFromId = (id) => {
 
 // Calculate number of rates
 // Get the sum of values from the count column
-const totalCount = rowsToCalculate.reduce((accumulator, row) => {
+const totalCount = selectedRows.reduce((accumulator, row) => {
   // Add the value of count column to the accumulator if it exists and is a number
   return accumulator + (row.count || 0);
 }, 0);
@@ -826,7 +861,8 @@ const filterHeaderTemplate = (column, filterField) => {
     
         // Apply filters based on each filter field
         for (const key in tempFilterValues) {
-            if (tempFilterValues[key] !== '') {
+            console.log(tempFilterValues[key])
+            // if (tempFilterValues[key] !== '') {
                 newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
                 // Apply the filter on the combinedFilteredRows
                 combinedFilteredRows = combinedFilteredRows.filter(row => {
@@ -842,7 +878,7 @@ const filterHeaderTemplate = (column, filterField) => {
                     }
                     return false; // Handle other cases if necessary
                 });
-            }
+            // }
         }
     
         setFilters(newFilters);
@@ -1054,18 +1090,19 @@ const handleCheckboxChange = () => {
                 <div className="mt-8 p-4">
                 <div className="flex justify-end mb-4 gap-2 flex-wrap">
                 <div className="flex flex-col justify-end w-fit sm:w-auto">
-                <label className="text-white font-semibold items-center text-sm sm:text-base md:text-sm lg:text-base">Select Date Range</label>
-                <Calendar 
-                    value={dates} 
-                    onChange={(e) => handleDateChange(e.value)} 
-                    selectionMode="range" 
-                    dateFormat='dd-M-yy' 
-                    readOnlyInput 
-                    hideOnRangeSelection 
-                    className="w-56 text-sm sm:text-base md:text-sm lg:text-base"
-                    inputClassName="w-full border border-sky-300 rounded-lg pl-2 py-1 bg-white text-gray-900"
-                />
-                </div>
+  <label className="text-white font-semibold items-center text-sm sm:text-base md:text-sm lg:text-base">Select Date Range</label>
+  <Calendar 
+    value={dates} 
+    onChange={(e) => handleDateChange(e.value)} 
+    selectionMode="range" 
+    dateFormat='dd-M-yy' 
+    readOnlyInput 
+    hideOnRangeSelection 
+    className="w-56 text-sm sm:text-base md:text-sm lg:text-base"
+    inputClassName="w-full border border-sky-300 rounded-lg pl-2 py-1 bg-white text-gray-900"
+  />
+</div>
+
             <div className="mt-auto flex justify-end gap-2 flex-wrap">
         <button
           onClick={handleExport}
