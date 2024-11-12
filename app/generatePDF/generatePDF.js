@@ -197,6 +197,8 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     if(index > 0){
       pdf.addPage();
     }
+
+    
     
     addHeader();
 
@@ -208,6 +210,8 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const hasPosition = items.some(item => item.position && item.position !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
     const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA");
+
+    console.log(items)
     
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
