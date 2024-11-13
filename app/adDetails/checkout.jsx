@@ -402,12 +402,9 @@ const CheckoutPage = () => {
       </div>
       <div className='flex justify-center mt-4'>
         <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adDetails', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
+      </div>       
+        </div>
       </div>
-              
-            </div>
-
-</div>
-          
           </div>
         ):(
           <div>
