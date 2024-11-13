@@ -377,7 +377,7 @@ const AdDetailsPage = () => {
   const validateFields = () => {
     let errors = {};
     if (margin === "0") errors.marginAmount = 'Margin Amount is required';
-    marginAmountRef.current.focus()
+    // marginAmountRef.current.focus()
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -667,7 +667,7 @@ const marginLostFocus = () => {
       Qty: opt.StartQty,
       Width: unit !== "SCM" ? 1 : opt.Width
     }),
-    label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice / (campaignDuration === 0 ? 1 : campaignDuration)))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
+    label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
   }))
 
 
