@@ -29,7 +29,8 @@ const initialState = {
   qtySlab: {
     Qty: 1,
     Width: 1
-  }
+  },
+  isEditMode: false
 };
 
 export const quoteSlice = createSlice({

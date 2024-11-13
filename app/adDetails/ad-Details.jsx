@@ -86,8 +86,7 @@ const AdDetailsPage = () => {
   const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const cartItems = useAppSelector(state => state.cartSlice.cart);
-  // const quoteItems = useAppSelector(state => state.quoteSlice.quote);
-  // console.log(quoteItems)
+  const isQuoteEditMode = useAppSelector(state => state.quoteSlice.isEditMode);
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
@@ -143,32 +142,35 @@ const AdDetailsPage = () => {
   }
 
   useEffect(() => {
+    if (!isQuoteEditMode) {
     dispatch(setQuotesData({campaignDuration: (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1, validityDate: (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate'), leadDays: (leadDay) ? leadDay.LeadDays: ""}));
+    }
   }, [leadDay, minimumCampaignDuration])
 
   useEffect(() => {
-    if (selectedDayRange === "") {
-      setSelectedDayRange(dayRange[1]);
-    }
-    if(!rateId){
-      //dispatch(setQuotesData({currentPage: "adMedium"}));
-      dispatch(resetQuotesData())
-    }
-    dispatch(setQuotesData({
-      selectedVendor: {
-      label: selectedVendor,
-      value: selectedVendor
-    }}))
-    // if (adMedium === '') {
-    //   dispatch(setQuotesData({currentPage: 'adMedium'}));
-    // } else if (adType === '') {
-    //   dispatch(setQuotesData({currentPage: 'adType'}));
-    // } else if (adCategory === '') {
-    //   dispatch(setQuotesData({currentPage: 'adCategory'}));
-    // } else if (edition === '') {
-    //   dispatch(setQuotesData({currentPage: 'edition'}));
-    // }
-    
+    if (!isQuoteEditMode) {
+        if (selectedDayRange === "") {
+          setSelectedDayRange(dayRange[1]);
+        }
+        if(!rateId){
+          //dispatch(setQuotesData({currentPage: "adMedium"}));
+          dispatch(resetQuotesData())
+        }
+        dispatch(setQuotesData({
+          selectedVendor: {
+          label: selectedVendor,
+          value: selectedVendor
+        }}))
+        // if (adMedium === '') {
+        //   dispatch(setQuotesData({currentPage: 'adMedium'}));
+        // } else if (adType === '') {
+        //   dispatch(setQuotesData({currentPage: 'adType'}));
+        // } else if (adCategory === '') {
+        //   dispatch(setQuotesData({currentPage: 'adCategory'}));
+        // } else if (edition === '') {
+        //   dispatch(setQuotesData({currentPage: 'edition'}));
+        // }
+  }
   },[])
 
   // useEffect(() => {
@@ -196,83 +198,89 @@ const AdDetailsPage = () => {
   // },[marginPercentage])
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Clear existing slab data
-        setSlabData([]);
-    
-        // Fetch new data
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+    // if (!isQuoteEditMode) {
+      const fetchData = async () => {
+        try {
+          // Clear existing slab data
+          setSlabData([]);
+      
+          // Fetch new data
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+      
+          const data = await response.json();
+          // console.log(data)
+          // Sort the data by StartQty
+          const sortedData = [...data].sort((a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width));
+          // console.log(sortedData)
+          // Set sorted data in state
+          setSlabData(sortedData);
+      
+          // Handle the first selected slab if data exists
+          if (sortedData.length > 0) {
+            const firstSelectedSlab = sortedData[0];
+            // console.log(firstSelectedSlab)
+            setQtySlab({
+              Qty: firstSelectedSlab.StartQty,
+              Width: firstSelectedSlab.Width
+            });
+            
+            if(width === 1){
+              dispatch(setQuotesData({width: firstSelectedSlab.Width}))
+            }
+  
+            if(qty === 1){
+              dispatch(setQuotesData({quantity: firstSelectedSlab.StartQty}))
+            }
+  
+            setMarginPercentage(firstSelectedSlab.AgencyCommission || 0);
+            dispatch(setQuotesData({
+              ratePerUnit: firstSelectedSlab.UnitPrice,
+              unit: firstSelectedSlab.Unit            
+            }));
+            // console.log("Fetch Slab: " + firstSelectedSlab.StartQty)
+          } else {
+            // Handle case where there's no data, set default values, etc.
+          }
+        } catch (error) {
+          console.error('Error fetching and processing data:', error);
         }
-    
-        const data = await response.json();
-        // console.log(data)
-        // Sort the data by StartQty
-        const sortedData = [...data].sort((a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width));
-        // console.log(sortedData)
-        // Set sorted data in state
-        setSlabData(sortedData);
-    
-        // Handle the first selected slab if data exists
-        if (sortedData.length > 0) {
-          const firstSelectedSlab = sortedData[0];
-          // console.log(firstSelectedSlab)
-          setQtySlab({
-            Qty: firstSelectedSlab.StartQty,
-            Width: firstSelectedSlab.Width
-          });
-          
+      };    
+  
+      const fetchRate = async() => {
+        try {
+          const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
+          if(!response.ok){
+            throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
+          }
+          const data = await response.json();
+          const firstData = data[0];
+          dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, isDetails: true, rateGST: firstData.rategst}))
           if(width === 1){
-            dispatch(setQuotesData({width: firstSelectedSlab.Width}))
+            dispatch(setQuotesData({width: firstData.width}))
           }
-
           if(qty === 1){
-            dispatch(setQuotesData({quantity: firstSelectedSlab.StartQty}))
+            dispatch(setQuotesData({quantity: firstData.minimumUnit }))
           }
-
-          setMarginPercentage(firstSelectedSlab.AgencyCommission || 0);
-          dispatch(setQuotesData({
-            ratePerUnit: firstSelectedSlab.UnitPrice,
-            unit: firstSelectedSlab.Unit            
-          }));
-          // console.log("Fetch Slab: " + firstSelectedSlab.StartQty)
-        } else {
-          // Handle case where there's no data, set default values, etc.
+          //console.log("Fetch Rate UseEffect: " + firstData.minimumUnit)
+        } catch (error) {
+          console.error("Error while fetching rates: " + error)
         }
-      } catch (error) {
-        console.error('Error fetching and processing data:', error);
       }
-    };    
-
-    const fetchRate = async() => {
-      try {
-        const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
-        if(!response.ok){
-          throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
-        }
-        const data = await response.json();
-        const firstData = data[0];
-        dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, minimumUnit: firstData.minimumUnit, unit: firstData.Units, isDetails: true, rateGST: firstData.rategst}))
-        if(width === 1){
-          dispatch(setQuotesData({width: firstData.width}))
-        }
-        if(qty === 1){
-          dispatch(setQuotesData({quantity: firstData.minimumUnit }))
-        }
-        //console.log("Fetch Rate UseEffect: " + firstData.minimumUnit)
-      } catch (error) {
-        console.error("Error while fetching rates: " + error)
-      }
-    }
-
-    fetchRate();
-    fetchData();
-    fetchRateData();
+  
+      fetchRate();
+      fetchData();
+      fetchRateData();
+    // }
   }, [rateId]);
 
-  useEffect(() => {fetchRateData();},[adMedium, rateId])
+  useEffect(() => {
+    if (!isQuoteEditMode) {
+    fetchRateData();
+    }
+  }, [adMedium, rateId])
   // useEffect(() => {
   //   const fetchData = async () => {
   //     try {
@@ -341,7 +349,7 @@ const AdDetailsPage = () => {
   // };
 
   useEffect(() => {
-    if (qtySlab) {
+    if (!isQuoteEditMode && qtySlab) {
       handleQtySlabChange();
     }
   }, [qtySlab]);

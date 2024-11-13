@@ -114,6 +114,7 @@ const CheckoutPage = () => {
     //   Qty: 1,
     //   Width: 1
     // }
+    isEditMode: true
   }));
   };
   
@@ -360,11 +361,28 @@ const CheckoutPage = () => {
               {hasCampaignDuration && <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>}
               {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap'>{item.remarks}</td>}
               <td className='p-1.5 border border-gray-200 w-fit text-nowrap'>
-                ₹ {formattedRupees(Math.round(((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration / item.minimumCampaignDuration) + parseInt(item.margin)) / item.qty))} per {item.unit}
+                ₹ {formattedRupees(
+                  Math.round(
+                    (
+                      (item.unit === "SCM" ? item.qty * item.width : item.qty) *
+                      item.unitPrice *
+                      (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
+                      parseInt(item.margin)
+                    ) / item.qty
+                  )
+                )} per {item.unit}
               </td>
               <td className='p-1.5 border border-gray-200 text-nowrap'>
-                ₹ {formattedRupees(Math.round((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration / item.minimumCampaignDuration) + parseInt(item.margin)))}
+                ₹ {formattedRupees(
+                  Math.round(
+                    (item.unit === "SCM" ? item.qty * item.width : item.qty) *
+                    item.unitPrice *
+                    (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
+                    parseInt(item.margin)
+                  )
+                )}
               </td>
+
               <td className='p-1.5 border border-gray-200'>
               <div className="flex space-x-3 items-center">
                 <IconButton 
