@@ -80,11 +80,6 @@ const ClientsData = () => {
   const dispatch = useDispatch();
   const router = useRouter()
 
-  // useEffect(() => {
-  //   if (!clientSource && sources.length > 0) {
-  //     dispatch(setClientData({ clientSource: sources[0] }));
-  //   }
-  // }, [clientSource, dispatch]);
 
   useEffect(() => {
     // Check if age input violates constraints for selected option
