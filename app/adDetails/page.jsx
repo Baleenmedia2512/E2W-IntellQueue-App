@@ -180,9 +180,10 @@ export const AdDetails = () => {
 
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
+    const quoteNumber = await fetchNextQuoteNumber(companyName);
     if (isGeneratingPdf) {
       try{
-        const promises = cartItems.map(item => addQuoteToDB(item));
+        const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
         return; 
       } catch(error) {
@@ -193,7 +194,7 @@ export const AdDetails = () => {
     }
 
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
-    const quoteNumber = await fetchNextQuoteNumber(companyName);
+    
     const TnC = await getTnC();
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
