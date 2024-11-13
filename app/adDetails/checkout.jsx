@@ -14,10 +14,11 @@ import { setQuotesData, resetQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
-import { setClientData } from '@/redux/features/client-slice';
+import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
 import { addItemsToCart } from '@/redux/features/cart-slice';
+
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -81,7 +82,39 @@ const CheckoutPage = () => {
     dispatch(removeItem(index));
   };
 
-  const handleEditRow = (index) => {
+  const handleEditRow = (item) => {
+    console.log(item)
+    dispatch(setQuotesData({ 
+    selectedAdMedium: item.adMedium,
+    selectedAdType: item.adType,
+    selectedAdCategory: item.adCategory,
+    selectedEdition: item.edition,
+    selectedPosition: item.position,
+    selectedVendor: {label: item.selectedVendor, value: item.selectedVendor},
+    // selectedSlab: "",
+    quantity: item.qty,
+    width: item.width,
+    ratePerUnit: item.unitPrice,
+    unit: item.unit,
+    rateId: item.rateId,
+    validityDate: item.formattedDate,
+    leadDays: item.leadDay,
+    minimumUnit: item.minimumCampaignDuration,
+    campaignDuration: item.campaignDuration,
+    marginAmount: item.margin,
+    // extraDiscount: 0,
+    remarks: item.remarks,
+    currentPage: "adDetails",
+    // validRates: [],
+    isDetails: true,
+    previousPage: 'checkout',
+    // history: [],
+    rateGST: item.rateGST,
+    // qtySlab: {
+    //   Qty: 1,
+    //   Width: 1
+    // }
+  }));
   };
   
 
@@ -149,6 +182,7 @@ const CheckoutPage = () => {
         // Use cartItems.length + index to calculate unique index for each item
         const newIndex = cartItems.length + index + 1;
         
+        
         dispatch(addItemsToCart([{
           index: newIndex,
           adMedium: item.rateName || '',
@@ -175,6 +209,12 @@ const CheckoutPage = () => {
           clientName: item.ClientName || '',
           isEditMode: true
         }]));
+        {dispatch(setClientData({
+          clientName: item.ClientName ,
+          clientContact: item.ClientContact,
+          clientEmail: item.ClientEmail,
+          clientSource: item.Source,
+        }))};
       });
     } catch (error) {
       console.error("Error in handleQuoteSelection:", error);
@@ -198,10 +238,10 @@ const CheckoutPage = () => {
 
   const ratesSearchSuggestion = [];
 
-  console.log(cartItems)
+  // console.log(cartItems)
 
   return (
-    <div className="text-black w-screen items-center px-6">
+    <div className="text-black w-screen items-center px-3">
       <h1 className='text-2xl font-bold text-center mb-4 text-blue-500'>Cart</h1>
     <div className='justify-center relative'>
     
@@ -245,7 +285,10 @@ const CheckoutPage = () => {
             <div className="w-fit sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-1 flex items-center shadow-md sm:mr-4">
               <button
                 className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-                onClick={() => dispatch(resetCartItem())}
+                onClick={() => {
+                  dispatch(resetCartItem());
+                  dispatch(resetClientData());
+                }}
               >
                 Exit Edit
               </button>
@@ -327,7 +370,7 @@ const CheckoutPage = () => {
                 <IconButton 
                   aria-label="Edit" 
                   className='m-0 h-full'
-                  onClick={() => handleEditRow(item.index)}
+                  onClick={() => handleEditRow(item)}
                   // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
                 >
                   <EditIcon className='text-blue-500 hover:text-blue-700' fontSize='small'/>
@@ -385,15 +428,26 @@ const CheckoutPage = () => {
               <button disabled className='border px-2 py-2 h-fit bg-gray-500 text-white rounded-xl cursor-not-allowed'>Clear All</button>
               </>
           </div> */}
-          <h1 className='text-2xl mt-2 font-bold text-center mb-4 text-blue-500'>Cart</h1>
-          <div className='text-center justify-center'>
-            <label className='font-800 text-xl'> Oops! No Items in Cart</label>
-            <span className='flex flex-row justify-center mt-4'>
-            <label className='ml-2 text-xl'>
-              <button className='text-blue-600 underline text-xl' onClick={() => dispatch(setQuotesData({currentPage: "adDetails", previousPage: "checkout"}))}>Add Items </button>
-              &nbsp; in cart to generate quote</label>
+          {/* <h1 className='text-2xl mt-2 font-bold text-center mb-4 text-blue-500'>Cart</h1> */}
+          <div className="flex flex-col items-center justify-center space-y-1 py-12 px-4 sm:px-6 md:px-8">
+            <label className="text-xl sm:text-2xl font-semibold text-gray-800">
+              Looks like your cart is empty.
+            </label>
+            
+            <span className="flex items-center space-x-2 text-sm sm:text-base text-gray-600">
+              <label className="text-lg sm:text-xl">
+                <button 
+                  className="text-blue-600 font-semibold underline hover:text-blue-800 transition duration-300 ease-in-out"
+                  onClick={() => dispatch(setQuotesData({currentPage: "adDetails", previousPage: "checkout"}))}
+                >
+                  Add Items
+                </button>
+                &nbsp;in cart to generate quote
+              </label>
             </span>
           </div>
+
+
           
           </div>
         )}

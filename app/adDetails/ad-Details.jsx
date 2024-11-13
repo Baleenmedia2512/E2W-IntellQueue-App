@@ -86,6 +86,8 @@ const AdDetailsPage = () => {
   const routers = useRouter();
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const cartItems = useAppSelector(state => state.cartSlice.cart);
+  // const quoteItems = useAppSelector(state => state.quoteSlice.quote);
+  // console.log(quoteItems)
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
