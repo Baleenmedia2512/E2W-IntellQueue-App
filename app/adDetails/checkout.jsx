@@ -17,6 +17,7 @@ import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
 import { setClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
+import { addItemsToCart } from '@/redux/features/cart-slice';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 
@@ -48,6 +49,7 @@ const CheckoutPage = () => {
   const rateId = useAppSelector(state => state.quoteSlice.rateId);
   const [quoteSearchSuggestion, setQuoteSearchSuggestion] = useState([]);
   const [quoteSearchTerm, setQuoteSearchTerm] = useState("")
+  const [isEditMode, setIsEditMode] = useState(false);
   
 
   // const qty = useAppSelector(state => state.quoteSlice.quantity);
@@ -128,19 +130,57 @@ const CheckoutPage = () => {
     }
   }
 
-  const handleQuoteSelection = async(e) => {
-    const selectedResult = e.target.value
-    const selectedQuoteId = selectedResult.split(' - ')[0];
-    const data = await FetchQuoteData(companyName, selectedQuoteId);
-    console.log(data)
-    data.forEach((item, index) => {
-      // console.log(item, index)
-        const newIndex = cartItems.length + 1;
-        console.log(newIndex)
+  const handleQuoteSelection = async (e) => {
+    try {
+      const selectedResult = e.target.value;
+      setQuoteSearchTerm(selectedResult);
+      const selectedQuoteId = selectedResult.split(' - ')[0];
+      setQuoteSearchSuggestion([]);
+      const data = await FetchQuoteData(companyName, selectedQuoteId);
+      
+      if (!Array.isArray(data)) {
+        console.error("Data fetched is not an array:", data);
+        return;
+      }
+      // console.log(data)
+      setIsEditMode(true)
+      
+      data.forEach((item, index) => {
+        // Use cartItems.length + index to calculate unique index for each item
+        const newIndex = cartItems.length + index + 1;
         
-        // dispatch(addItemsToCart([{newIndex, item.adMedium, item.adType, item.adCategory, item.edition, item.position, item.selectedVendor, item.qty, item.unit, item.unitPrice, item.campaignDuration, item.margin, item.remarks, item.rateId, item.CampaignDurationUnit, item.leadDay, item.minimumCampaignDuration, item.formattedDate, item.rateGST, item.width, item.campaignDurationVisibility}]));
+        dispatch(addItemsToCart([{
+          index: newIndex,
+          adMedium: item.rateName || '',
+          adType: item.adType || '',
+          adCategory: item.adCategory || '',
+          edition: item.Location || '',
+          position: item.Package || '',
+          selectedVendor: item.Vendor || '',
+          qty: item.Quantity || 0,
+          unit: item.Units || '',
+          unitPrice: item.ratePerUnit || 0,
+          campaignDuration: item.CampaignDays || 0,
+          margin: item.Margin || 0,
+          remarks: item.Remarks || '',
+          rateId: item.RateID || null,
+          CampaignDurationUnit: item.CampaignDurationUnits || '',
+          leadDay: item.LeadDays || 0,
+          minimumCampaignDuration: item.MinimumCampaignDuration || 0,
+          formattedDate: item.ValidityDate || '',
+          rateGST: item.GSTPercentage || 0,
+          width: item.Width || 0,
+          campaignDurationVisibility: item.campaignDurationVisibility || 0,
+          editQuoteNumber: item.QuoteID || '',
+          clientName: item.ClientName || '',
+          isEditMode: true
+        }]));
       });
-    };
+    } catch (error) {
+      console.error("Error in handleQuoteSelection:", error);
+    }
+  };
+  
 
   // const calculateGrandTotal = () => {
   //   let grandTotal = [];
@@ -158,9 +198,13 @@ const CheckoutPage = () => {
 
   const ratesSearchSuggestion = [];
 
+  console.log(cartItems)
+
   return (
-    <div className="text-black w-screen items-center">
+    <div className="text-black w-screen items-center px-6">
+      <h1 className='text-2xl font-bold text-center mb-4 text-blue-500'>Cart</h1>
     <div className='justify-center relative'>
+    
                 <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
               <input
           className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
@@ -192,10 +236,30 @@ const CheckoutPage = () => {
               </ul>
             )}
             </div>
-        <div className='mx-[8%]'>
+        <div>
         {cartItems.length >= 1 ? (
           <div>
-            <h1 className='text-2xl mt-6 font-bold text-center mb-4 text-blue-500'>Cart</h1>
+            
+            {cartItems[0].isEditMode ? (
+            <div className='my-4'>
+            <div className="w-fit sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-1 flex items-center shadow-md sm:mr-4">
+              <button
+                className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+                onClick={() => dispatch(resetCartItem())}
+              >
+                Exit Edit
+              </button>
+              <div className="flex flex-row text-left text-sm md:text-base pr-2">
+                <p className="text-gray-600 font-semibold">#{cartItems[0].editQuoteNumber}</p>
+                <p className="text-gray-600 font-semibold mx-1">-</p>
+                <p className="text-gray-600 font-semibold">{cartItems[0].clientName}</p>
+                {/* <p className="text-gray-600 font-semibold mx-1">-</p>
+                <p className="text-gray-600 font-semibold">₹{cartItems[0].unitPrice}</p> */}
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 italic mt-1">Q.No - Name</p>
+            </div> 
+          ) : ''}
           {/* <div className="flex flex-row justify-between mt-8">
           
           <div className="mb-8 flex items-center">
@@ -214,7 +278,7 @@ const CheckoutPage = () => {
               </>
           </div> */}
           {/* <h1 className="text-lg font-medium text-blue-500 mb-4">Verify before sending Quote</h1> */}
-          <div className='flex flex-col lg:items-center md:items-center justify-center w-full'>
+          <div className='flex flex-col justify-center w-full'>
             
             <div>
               
@@ -243,7 +307,7 @@ const CheckoutPage = () => {
           {cartItems.map((item, index) => (
             <tr key={index}>
               <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
-              <td className='p-1.5 border border-gray-200'>{nextQuoteNumber}</td>
+              <td className='p-1.5 border border-gray-200'>{!item.editQuoteNumber ? nextQuoteNumber : item.editQuoteNumber}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
