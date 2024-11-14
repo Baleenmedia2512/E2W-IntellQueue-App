@@ -1160,7 +1160,7 @@ useEffect(() => {
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
 ) ? (
               <>
-            <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
+            <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name{(transactionType?.value === 'Income') && <span className="text-red-500">*</span>}</label>
             <div className="w-full flex gap-3">
             <input 
             className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
@@ -1319,6 +1319,39 @@ useEffect(() => {
       {/* </>
     )}</div>
   </> */}
+  {(transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project') &&<div>
+  <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Bill Number <span className="text-red-500">*</span><span className='text-xs text-red-500'>(Optional if no bills uploaded)</span></label>
+            <div className="w-full flex gap-3">
+            <input 
+            className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                type="text"
+                placeholder="Ex: 00346" 
+                id='2'
+                name="ClientNameInput" 
+                // required={!isEmpty} 
+                value={clientName}
+                onChange = {handleClientNameTermChange}
+                disabled={isUpdateMode}
+                onFocus={e => e.target.select()}
+                onBlur={() => {
+            setTimeout(() => {
+              setClientNameSuggestions([]);
+            }, 200); // Adjust the delay time according to your preference
+          }}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+                
+            </div>
+            </div>}
   <div className='mt-3' >
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount(₹)<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
