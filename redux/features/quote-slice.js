@@ -30,7 +30,9 @@ const initialState = {
     Qty: 1,
     Width: 1
   },
-  isEditMode: false
+  isEditMode: false,
+  editIndex: '',
+  editQuoteNumber: 0
 };
 
 export const quoteSlice = createSlice({

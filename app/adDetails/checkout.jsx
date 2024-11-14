@@ -83,7 +83,6 @@ const CheckoutPage = () => {
   };
 
   const handleEditRow = (item) => {
-    // console.log(item)
     dispatch(setQuotesData({ 
     selectedAdMedium: item.adMedium,
     selectedAdType: item.adType,
@@ -114,7 +113,9 @@ const CheckoutPage = () => {
     //   Qty: 1,
     //   Width: 1
     // }
-    isEditMode: true
+    isEditMode: true,
+    editIndex: item.index,
+    editQuoteNumber: item.editQuoteNumber
   }));
   };
   
@@ -176,7 +177,6 @@ const CheckoutPage = () => {
         console.error("Data fetched is not an array:", data);
         return;
       }
-      // console.log(data)
       setIsEditMode(true)
       
       data.forEach((item, index) => {
@@ -187,8 +187,8 @@ const CheckoutPage = () => {
         dispatch(addItemsToCart([{
           index: newIndex,
           adMedium: item.rateName || '',
-          adType: item.adType || '',
-          adCategory: item.adCategory || '',
+          adType: item.typeOfAd || '',
+          adCategory: item.adType || '',
           edition: item.Location || '',
           position: item.Package || '',
           selectedVendor: item.Vendor || '',
@@ -207,7 +207,6 @@ const CheckoutPage = () => {
           width: item.Width || 0,
           campaignDurationVisibility: item.campaignDurationVisibility || 0,
           editQuoteNumber: item.QuoteID || '',
-          clientName: item.ClientName || '',
           isEditMode: true
         }]));
         {dispatch(setClientData({
@@ -239,12 +238,11 @@ const CheckoutPage = () => {
 
   const ratesSearchSuggestion = [];
 
-  // console.log(cartItems)
 
   return (
     <div className="text-black w-screen items-center px-3">
       <h1 className='text-2xl font-bold text-center mb-4 text-blue-500'>Cart</h1>
-    <div className='justify-center relative'>
+    <div className='justify-center relative mb-4'>
     
                 <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
               <input
@@ -281,14 +279,16 @@ const CheckoutPage = () => {
         {cartItems.length >= 1 ? (
           <div>
             
-            {cartItems[0].isEditMode ? (
-            <div className='my-4'>
+            {cartItems[0].isEditMode && cartItems[0].editQuoteNumber ? (
+            <div className='mb-4'>
             <div className="w-fit sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-1 flex items-center shadow-md sm:mr-4">
               <button
                 className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
                 onClick={() => {
                   dispatch(resetCartItem());
                   dispatch(resetClientData());
+                  dispatch(resetQuotesData());
+                  dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails'}));
                 }}
               >
                 Exit Edit
@@ -296,12 +296,12 @@ const CheckoutPage = () => {
               <div className="flex flex-row text-left text-sm md:text-base pr-2">
                 <p className="text-gray-600 font-semibold">#{cartItems[0].editQuoteNumber}</p>
                 <p className="text-gray-600 font-semibold mx-1">-</p>
-                <p className="text-gray-600 font-semibold">{cartItems[0].clientName}</p>
+                <p className="text-gray-600 font-semibold">{clientName}</p>
                 {/* <p className="text-gray-600 font-semibold mx-1">-</p>
                 <p className="text-gray-600 font-semibold">₹{cartItems[0].unitPrice}</p> */}
               </div>
             </div>
-            <p className="text-xs text-gray-400 italic mt-1">Q.No - Name</p>
+            <p className="text-xs text-gray-400 italic mt-1">Q.No - Client Name</p>
             </div> 
           ) : ''}
           {/* <div className="flex flex-row justify-between mt-8">
@@ -419,7 +419,7 @@ const CheckoutPage = () => {
       {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
       </div>
       <div className='flex justify-center mt-4'>
-        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adDetails', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
+        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adDetails', previousPage: "checkout", isEditMode: cartItems.length > 0 ? cartItems[0].isEditMode : false, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
       </div>       
         </div>
       </div>

@@ -87,12 +87,15 @@ const AdDetailsPage = () => {
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const isQuoteEditMode = useAppSelector(state => state.quoteSlice.isEditMode);
+  const editIndex = useAppSelector(state => state.quoteSlice.editIndex);
+  const editQuoteNumber = useAppSelector(state => state.quoteSlice.editQuoteNumber);
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
   const [changing, setChanging] = useState(false);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
 
   const inputDate = new Date(ValidityDate);
   const day = ('0' + inputDate.getDate()).slice(-2); // Ensure two digits for day
@@ -152,17 +155,17 @@ const AdDetailsPage = () => {
 
 
   useEffect(() => {
-    if (!isQuoteEditMode) {
+    // if (!isQuoteEditMode) {
     dispatch(setQuotesData({campaignDuration: (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1, validityDate: (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate'), leadDays: (leadDay) ? leadDay.LeadDays: ""}));
-    }
+    // }
   }, [leadDay, minimumCampaignDuration])
 
   useEffect(() => {
-    if (!isQuoteEditMode) {
+    // if (!isQuoteEditMode) {
         if (selectedDayRange === "") {
           setSelectedDayRange(dayRange[1]);
         }
-        if(!rateId){
+        if(!rateId && !isQuoteEditMode){
           //dispatch(setQuotesData({currentPage: "adMedium"}));
           dispatch(resetQuotesData())
         }
@@ -180,7 +183,7 @@ const AdDetailsPage = () => {
         // } else if (edition === '') {
         //   dispatch(setQuotesData({currentPage: 'edition'}));
         // }
-  }
+  // }
   },[])
 
   // useEffect(() => {
@@ -287,9 +290,9 @@ const AdDetailsPage = () => {
   }, [rateId]);
 
   useEffect(() => {
-    if (!isQuoteEditMode) {
+    // if (!isQuoteEditMode) {
     fetchRateData();
-    }
+    // }
   }, [adMedium, rateId])
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -359,10 +362,10 @@ const AdDetailsPage = () => {
   // };
 
   useEffect(() => {
-    if (!isQuoteEditMode && qtySlab) {
+    // if (!isQuoteEditMode && qtySlab) {
       handleQtySlabChange();
-    }
-  }, [qtySlab]);
+    // }
+  }, [qtySlab]);  
 
   const fetchRateData = async () => {
     try {
@@ -689,22 +692,76 @@ const marginLostFocus = () => {
     }),
     label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
   }))
+// console.log(adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
+//   campaignDuration, margin, remarks, rateId, minimumCampaignDuration, formattedDate, rateGST, width, 
+//   campaignDurationVisibility)
 
   const handleCompleteEdit = () => {
-    // if (validateFields()) {
-          //   // Dispatch an action to update the quote instead of adding to cart
-          //   dispatch(updateQuote({ adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility }));
-          //   setSuccessMessage("Quote updated successfully.");
-          //   setTimeout(() => { setSuccessMessage(''); }, 2000);
-          // } else {
-          //   setToastMessage('Please fill the necessary details in the form.');
-          //   setSeverity('error');
-          //   setToast(true);
-          //   setTimeout(() => { setToast(false); }, 2000);
-          // }
-  }
+    if (validateFields()) {
+      // Prepare the updated item
+      const updatedItem = {
+        index: editIndex,
+        adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
+        campaignDuration, margin, remarks, rateId, 
+        CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
+        leadDay: leadDay ? leadDay.LeadDays : "", 
+        minimumCampaignDuration, formattedDate, rateGST, width, 
+        campaignDurationVisibility, editQuoteNumber, isEditMode: true
+      };
+  
+      // Find the existing item with the same editIndex
+      const existingItem = cartItems.find(item => item.index === editIndex);
+      // If the item exists, update it, else add it as a new item
+      let updatedCartItems;
+      if (existingItem) {
+        const isItemUpdated = Object.keys(updatedItem).some(key => 
+          isValueChanged(updatedItem[key], existingItem[key])
+        );
+        if (isItemUpdated) {
+          updatedCartItems = cartItems.map(item =>
+            item.index === editIndex ? { ...item, ...updatedItem } : item
+          );
+          setSuccessMessage("Item updated successfully.");
+        } else {
+          setSuccessMessage('No changes detected.');
+        }
+      } else {
+        // If item does not exist (new), add it as a new item
+        const newItem = { ...updatedItem, index: cartItems.length }; // Ensure unique index
+        updatedCartItems = [...cartItems, newItem];
+        setSuccessMessage("Item added to Cart");
+      }
+  
+      // Dispatch the updated cart
+      dispatch(addItemsToCart(updatedCartItems));
+  
+      setTimeout(() => { 
+        setSuccessMessage('');
+        dispatch(resetQuotesData()); 
+        dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails', isEditMode: true}));
+      }, 2000);
+    } else {
+      setToastMessage('Please fill the necessary details in the form.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => { setToast(false); }, 2000);
+    }
+  };
 
 
+  const isValueChanged = (updatedValue, existingValue) => {
+    // Handle empty string, null, and undefined comparisons
+    if (updatedValue === undefined || updatedValue === null) {
+      return existingValue !== undefined && existingValue !== null;
+    }
+    if (existingValue === undefined || existingValue === null) {
+      return true;
+    }
+    
+    // Handle case where values are different
+    return updatedValue !== existingValue;
+  };
+  
   
   return (
     
