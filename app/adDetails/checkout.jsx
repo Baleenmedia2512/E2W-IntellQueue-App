@@ -83,7 +83,7 @@ const CheckoutPage = () => {
   };
 
   const handleEditRow = (item) => {
-    console.log(item)
+    // console.log(item)
     dispatch(setQuotesData({ 
     selectedAdMedium: item.adMedium,
     selectedAdType: item.adType,

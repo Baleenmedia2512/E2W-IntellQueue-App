@@ -140,6 +140,16 @@ const AdDetailsPage = () => {
     dispatch(setQuotesData({rateId: selectedRateId}));
     dispatch(updateCurrentPage("adDetails"));
   }
+  // useEffect(() => {
+  //   if (isQuoteEditMode) {
+
+  //   const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+  //   const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
+    
+  //   setMarginPercentage(newMarginPercentage);
+  //   }
+  // }, [isQuoteEditMode])
+
 
   useEffect(() => {
     if (!isQuoteEditMode) {
@@ -680,6 +690,20 @@ const marginLostFocus = () => {
     label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
   }))
 
+  const handleCompleteEdit = () => {
+    // if (validateFields()) {
+          //   // Dispatch an action to update the quote instead of adding to cart
+          //   dispatch(updateQuote({ adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility }));
+          //   setSuccessMessage("Quote updated successfully.");
+          //   setTimeout(() => { setSuccessMessage(''); }, 2000);
+          // } else {
+          //   setToastMessage('Please fill the necessary details in the form.');
+          //   setSeverity('error');
+          //   setToast(true);
+          //   setTimeout(() => { setToast(false); }, 2000);
+          // }
+  }
+
 
   
   return (
@@ -842,6 +866,65 @@ const marginLostFocus = () => {
               {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
               <div className="mb-3 overflow-y-auto h-full" > 
               <span className='flex flex-row mb-2 justify-center'>
+  <div className="flex flex-col mr-2 items-center justify-center">
+    <button
+      className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
+      disabled={rateId > 0 ? false : true}
+      onClick={(e) => {
+        e.preventDefault();
+        if (isQuoteEditMode) {
+          // Complete Edit functionality
+          handleCompleteEdit();
+          
+        } else {
+          // Add to Cart functionality
+          if (validateFields()) {
+            const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
+            if (isDuplicate) {
+              let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
+              if (result) {
+                const index = cartItems.length;
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility }]));
+                setSuccessMessage("Item added to Cart");
+                setTimeout(() => { setSuccessMessage(''); }, 2000);
+              }
+              return;
+            }
+            const index = cartItems.length;
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility }]));
+            setSuccessMessage("Item added to Cart");
+            setTimeout(() => { setSuccessMessage(''); }, 2000);
+          } else {
+            setToastMessage('Please fill the necessary details in the form.');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => { setToast(false); }, 2000);
+          }
+        }
+      }}
+    >
+      <ShoppingCartIcon className='text-white mr-2'/>
+      {isQuoteEditMode ? "Complete Edit" : "Add to Cart"}
+    </button>
+  </div>
+
+  <div className="flex flex-col ml-2 items-center justify-center">
+    <button
+      className="Gotocart-button"
+      onClick={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <StyledBadge badgeContent={cartItems.length} color="primary">
+        <ShoppingCartCheckout className='text-white mr-2' />
+      </StyledBadge>
+      Go to Cart
+    </button>
+  </div>
+</span>
+
+              {/* <span className='flex flex-row mb-2 justify-center'>
                 <div className="flex flex-col mr-2 items-center justify-center">
                   <button
                     className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
@@ -902,7 +985,7 @@ const marginLostFocus = () => {
                     
                   </button>
                 </div>
-                </span>
+                </span> */}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
               {/* <div name="QuoteVendorSelect">
                 <label className="block mb-1 font-medium">Vendor</label>
