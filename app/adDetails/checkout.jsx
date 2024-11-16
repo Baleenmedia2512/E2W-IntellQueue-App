@@ -82,6 +82,7 @@ const CheckoutPage = () => {
     dispatch(removeItem(index));
   };
 
+  console.log(cartItems)
   const handleEditRow = (item) => {
     dispatch(setQuotesData({ 
     selectedAdMedium: item.adMedium,

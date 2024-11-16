@@ -62,6 +62,7 @@ const AdDetailsPage = () => {
   const marginAmountRef = useRef(null);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
+  const clientDetails = useAppSelector(state => state.clientSlice);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
@@ -696,71 +697,73 @@ const marginLostFocus = () => {
 //   campaignDuration, margin, remarks, rateId, minimumCampaignDuration, formattedDate, rateGST, width, 
 //   campaignDurationVisibility)
 
-  const handleCompleteEdit = () => {
-    if (validateFields()) {
-      // Prepare the updated item
-      const updatedItem = {
-        index: editIndex,
-        adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
-        campaignDuration, margin, remarks, rateId, 
-        CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
-        leadDay: leadDay ? leadDay.LeadDays : "", 
-        minimumCampaignDuration, formattedDate, rateGST, width, 
-        campaignDurationVisibility, editQuoteNumber, isEditMode: true
-      };
-  
-      // Find the existing item with the same editIndex
-      const existingItem = cartItems.find(item => item.index === editIndex);
-      // If the item exists, update it, else add it as a new item
-      let updatedCartItems;
-      if (existingItem) {
-        const isItemUpdated = Object.keys(updatedItem).some(key => 
-          isValueChanged(updatedItem[key], existingItem[key])
+const handleCompleteEdit = () => {
+  if (validateFields()) {
+    // Prepare the updated item
+    const updatedItem = {
+      index: editIndex,
+      adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
+      campaignDuration, margin, remarks, rateId, 
+      CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
+      leadDay: leadDay ? leadDay.LeadDays : "", 
+      minimumCampaignDuration, formattedDate, rateGST, width, 
+      campaignDurationVisibility, editQuoteNumber, isEditMode: true
+    };
+
+    // Find the existing item with the same editIndex
+    const existingItem = cartItems.find(item => item.index === editIndex);
+
+    // If the item exists, update it, else add it as a new item
+    let updatedCartItems;
+    if (existingItem) {
+      const isItemUpdated = Object.keys(updatedItem).some(key => 
+        isValueChanged(updatedItem[key], existingItem[key])
+      );
+
+      if (isItemUpdated) {
+        updatedCartItems = cartItems.map(item =>
+          item.index === editIndex ? { ...item, ...updatedItem } : item
         );
-        if (isItemUpdated) {
-          updatedCartItems = cartItems.map(item =>
-            item.index === editIndex ? { ...item, ...updatedItem } : item
-          );
-          setSuccessMessage("Item updated successfully.");
-        } else {
-          setSuccessMessage('No changes detected.');
-        }
+        setSuccessMessage("Item updated successfully.");
       } else {
-        // If item does not exist (new), add it as a new item
-        const newItem = { ...updatedItem, index: cartItems.length }; // Ensure unique index
-        updatedCartItems = [...cartItems, newItem];
-        setSuccessMessage("Item added to Cart");
+        setSuccessMessage('No changes detected.');
       }
-  
-      // Dispatch the updated cart
-      dispatch(addItemsToCart(updatedCartItems));
-  
-      setTimeout(() => { 
-        setSuccessMessage('');
-        dispatch(resetQuotesData()); 
-        dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails', isEditMode: true}));
-      }, 2000);
     } else {
-      setToastMessage('Please fill the necessary details in the form.');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => { setToast(false); }, 2000);
+      // If item does not exist (new), add it as a new item
+      const newItem = { ...updatedItem, index: cartItems.length }; // Ensure unique index
+      updatedCartItems = [...cartItems, newItem];
+      setSuccessMessage("Item added to Cart");
     }
-  };
 
+    // Dispatch the updated cart
+    dispatch(addItemsToCart(updatedCartItems));
 
-  const isValueChanged = (updatedValue, existingValue) => {
-    // Handle empty string, null, and undefined comparisons
-    if (updatedValue === undefined || updatedValue === null) {
-      return existingValue !== undefined && existingValue !== null;
-    }
-    if (existingValue === undefined || existingValue === null) {
-      return true;
-    }
-    
-    // Handle case where values are different
-    return updatedValue !== existingValue;
-  };
+    // Reset messages after a delay
+    setTimeout(() => { 
+      setSuccessMessage('');
+      dispatch(resetQuotesData()); 
+      dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails', isEditMode: true}));
+    }, 2000);
+  } else {
+    // Show error if validation fails
+    setToastMessage('Please fill the necessary details in the form.');
+    setSeverity('error');
+    setToast(true);
+    setTimeout(() => { setToast(false); }, 2000);
+  }
+};
+
+// Function to compare values and detect changes
+const isValueChanged = (newValue, oldValue) => {
+  if (Array.isArray(newValue) && Array.isArray(oldValue)) {
+    return newValue.some((val, index) => isValueChanged(val, oldValue[index]));
+  } else if (typeof newValue === 'object' && typeof oldValue === 'object') {
+    return Object.keys(newValue).some(key => isValueChanged(newValue[key], oldValue[key]));
+  } else {
+    return newValue !== oldValue;  // Direct comparison for primitive types
+  }
+};
+
   
   
   return (
