@@ -689,7 +689,7 @@ useEffect(() => {
 
 
   const cancelFinance = (e) => {
-    e.preventDefault();
+    // e.preventDefault();
           setChequeNumber('');
           setClientName('');
           setExpenseCategory('');
@@ -936,6 +936,7 @@ useEffect(() => {
       });
       // Check if the response is successful
       const data = response.data;
+      console.log(data)
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Finance record updated successfully!');
   
