@@ -689,7 +689,6 @@ useEffect(() => {
 
 
   const cancelFinance = (e) => {
-    // e.preventDefault();
           setChequeNumber('');
           setClientName('');
           setExpenseCategory('');
