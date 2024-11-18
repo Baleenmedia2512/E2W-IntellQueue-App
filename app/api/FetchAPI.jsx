@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: "https://orders.baleenmedia.com/API/Media/"
-})
+})    
 
 export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
     let SearchTerms = [];
@@ -14,6 +14,21 @@ export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
             JsonDBName: DBName,
             JsonSearchTerm: SearchTerm,
             InvalidOnly: showInvalid 
+        }
+    });
+    SearchTerms = response.data;
+    return SearchTerms;
+}
+
+export const FetchFinanceSearchTerm = async(DBName, SearchTerm) => {
+    let SearchTerms = [];
+    const response = await api.get("SearchFinance.php/get",{
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
+        params:{
+            JsonDBName: DBName,
+            JsonSearchTerm: SearchTerm
         }
     });
     SearchTerms = response.data;
@@ -36,6 +51,8 @@ export const FetchConsultantSearchTerm = async (DBName, SearchTerm, showInvalid)
     return SearchTerms;
 }
 
+
+
 export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
     try{
@@ -57,18 +74,43 @@ export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
 }
 
 
-
-export const FetchFinanceSeachTerm = async(DBName, SearchTerm) => {
+export const FetchQuoteSearchTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
-    const response = await api.get("SearchFinance.php/get",{
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8'
-        },
-        params:{
-            JsonDBName: DBName,
-            JsonSearchTerm: SearchTerm
-        }
-    });
-    SearchTerms = response.data;
+    try{
+        const response = await api.get("SearchQuote.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                JsonSearchTerm: SearchTerm
+            }
+        });
+        SearchTerms = response.data;
+    }catch(error){
+        console.error(error)
+    }
+    
     return SearchTerms;
+}
+
+export const FetchQuoteData = async(DBName, QuoteId) => {
+    let result = [];
+    try{
+        const response = await api.get("FetchQuoteData.php/?",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params: {
+                JsonDBName: DBName,
+                JsonQuoteId: QuoteId
+            }
+        }); 
+        result = response.data;
+
+    }catch(error){
+        console.error(error);
+    }
+
+    return result;
 }

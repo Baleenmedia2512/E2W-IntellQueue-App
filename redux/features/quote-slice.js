@@ -29,7 +29,11 @@ const initialState = {
   qtySlab: {
     Qty: 1,
     Width: 1
-  }
+  },
+  isEditMode: false,
+  editIndex: '',
+  editQuoteNumber: 0,
+  isNewCartOnEdit: false,
 };
 
 export const quoteSlice = createSlice({
