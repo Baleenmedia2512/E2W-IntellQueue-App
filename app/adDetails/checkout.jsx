@@ -174,8 +174,6 @@ const CheckoutPage = () => {
       setQuoteSearchSuggestion(searchSuggestions);
     }
   }
-  console.log(cartItems)
-
   const handleQuoteSelection = async (e) => {
     try {
       const selectedResult = e.target.value;

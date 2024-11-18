@@ -194,10 +194,8 @@ export const AdDetails = () => {
       
       try {
         if (item.isNewCart) {
-          console.log('insert is running')
           try {
             const response = await addQuoteToDB(item, item.editQuoteNumber);
-            console.log(response)
           
           } catch (error) {
             console.error('An unexpected error occured while inserting Quote:', error);
