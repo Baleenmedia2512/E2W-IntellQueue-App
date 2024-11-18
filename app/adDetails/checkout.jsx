@@ -220,7 +220,7 @@ const CheckoutPage = () => {
           rateId: item.RateID || null,
           CampaignDurationUnit: item.CampaignDurationUnits || '',
           leadDay: item.LeadDays || 0,
-          minimumCampaignDuration: item.MinimumCampaignDuration || 0,
+          minimumCampaignDuration: item.MinimumCampaignDuration === 0 ? 1 : item.MinimumCampaignDuration || 1,
           formattedDate: item.ValidityDate || '',
           rateGST: item.GSTPercentage || 0,
           width: item.width || 0,
