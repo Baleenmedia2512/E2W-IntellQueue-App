@@ -90,6 +90,7 @@ const AdDetailsPage = () => {
   const isQuoteEditMode = useAppSelector(state => state.quoteSlice.isEditMode);
   const editIndex = useAppSelector(state => state.quoteSlice.editIndex);
   const editQuoteNumber = useAppSelector(state => state.quoteSlice.editQuoteNumber);
+  const isNewCartOnEdit = useAppSelector(state => state.quoteSlice.isNewCartOnEdit);
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
@@ -726,7 +727,7 @@ const handleCompleteEdit = () => {
         updatedCartItems = cartItems.map(item =>
           item.index === editIndex ? { ...item, ...updatedItem } : item
         );
-        setSuccessMessage("Item updated successfully.");
+        setSuccessMessage("Item edited successfully.");
       } else {
         setToastMessage("No Changes Detected.");
         setSeverity("error");
@@ -737,7 +738,7 @@ const handleCompleteEdit = () => {
       }
     } else {
       // Add new item if not existing
-      const newItem = { ...updatedItem, index: cartItems.length }; // Ensure unique index
+      const newItem = { ...updatedItem, index: cartItems.length, isNewCart: true}; // Ensure unique index
       updatedCartItems = [...cartItems, newItem];
       isItemUpdated = true; // Treat as updated since it's a new addition
       setSuccessMessage("Item added to Cart");
@@ -789,8 +790,6 @@ const isValueChanged = (newValue, oldValue) => {
     return isDifferent;
   }
 };
-
-
   
   
   return (
@@ -971,14 +970,14 @@ const isValueChanged = (newValue, oldValue) => {
               let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
               if (result) {
                 const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility }]));
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true }]));
                 setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility }]));
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true }]));
             setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
@@ -991,7 +990,7 @@ const isValueChanged = (newValue, oldValue) => {
       }}
     >
       <ShoppingCartIcon className='text-white mr-2'/>
-      {isQuoteEditMode ? "Complete Edit" : "Add to Cart"}
+      {isQuoteEditMode && !isNewCartOnEdit ? "Complete Edit" : "Add to Cart"}
     </button>
   </div>
 

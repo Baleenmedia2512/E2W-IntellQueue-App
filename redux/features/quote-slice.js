@@ -32,7 +32,8 @@ const initialState = {
   },
   isEditMode: false,
   editIndex: '',
-  editQuoteNumber: 0
+  editQuoteNumber: 0,
+  isNewCartOnEdit: false,
 };
 
 export const quoteSlice = createSlice({
