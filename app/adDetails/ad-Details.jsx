@@ -96,7 +96,6 @@ const AdDetailsPage = () => {
   const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
   const [changing, setChanging] = useState(false);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  
 
   const inputDate = new Date(ValidityDate);
   const day = ('0' + inputDate.getDate()).slice(-2); // Ensure two digits for day
@@ -286,6 +285,7 @@ const AdDetailsPage = () => {
   
       fetchRate();
       fetchData();
+      
       fetchRateData();
     // }
   }, [rateId]);
@@ -363,9 +363,9 @@ const AdDetailsPage = () => {
   // };
 
   useEffect(() => {
-    // if (!isQuoteEditMode && qtySlab) {
+    if (!isQuoteEditMode && qtySlab) {
       handleQtySlabChange();
-    // }
+    }
   }, [qtySlab]);  
 
   const fetchRateData = async () => {
@@ -713,10 +713,12 @@ const handleCompleteEdit = () => {
     // Find the existing item with the same editIndex
     const existingItem = cartItems.find(item => item.index === editIndex);
 
-    // If the item exists, update it, else add it as a new item
-    let updatedCartItems;
+    let updatedCartItems = [...cartItems]; // Default to the current cartItems
+    let isItemUpdated = false; // Track whether an update occurred
+
     if (existingItem) {
-      const isItemUpdated = Object.keys(updatedItem).some(key => 
+      // Compare existing item with the updated item
+      isItemUpdated = Object.keys(updatedItem).some(key =>
         isValueChanged(updatedItem[key], existingItem[key])
       );
 
@@ -726,43 +728,68 @@ const handleCompleteEdit = () => {
         );
         setSuccessMessage("Item updated successfully.");
       } else {
-        setSuccessMessage('No changes detected.');
+        setToastMessage("No Changes Detected.");
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
       }
     } else {
-      // If item does not exist (new), add it as a new item
+      // Add new item if not existing
       const newItem = { ...updatedItem, index: cartItems.length }; // Ensure unique index
       updatedCartItems = [...cartItems, newItem];
+      isItemUpdated = true; // Treat as updated since it's a new addition
       setSuccessMessage("Item added to Cart");
     }
 
-    // Dispatch the updated cart
-    dispatch(addItemsToCart(updatedCartItems));
+    // Dispatch only if there is a change
+    if (isItemUpdated) {
+      dispatch(addItemsToCart(updatedCartItems));
 
-    // Reset messages after a delay
-    setTimeout(() => { 
-      setSuccessMessage('');
-      dispatch(resetQuotesData()); 
-      dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails', isEditMode: true}));
-    }, 2000);
+      // Reset messages after a delay
+      setTimeout(() => {
+        setSuccessMessage("");
+        dispatch(resetQuotesData());
+        dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails", isEditMode: true }));
+      }, 2000);
+    }
   } else {
     // Show error if validation fails
-    setToastMessage('Please fill the necessary details in the form.');
-    setSeverity('error');
+    setToastMessage("Please fill the necessary details in the form.");
+    setSeverity("error");
     setToast(true);
-    setTimeout(() => { setToast(false); }, 2000);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
   }
 };
 
 // Function to compare values and detect changes
 const isValueChanged = (newValue, oldValue) => {
+
   if (Array.isArray(newValue) && Array.isArray(oldValue)) {
-    return newValue.some((val, index) => isValueChanged(val, oldValue[index]));
-  } else if (typeof newValue === 'object' && typeof oldValue === 'object') {
-    return Object.keys(newValue).some(key => isValueChanged(newValue[key], oldValue[key]));
+    // Compare arrays element by element
+    return newValue.some((val, index) => {
+      return isValueChanged(val, oldValue[index]);
+    });
+  } else if (
+    typeof newValue === 'object' &&
+    newValue !== null &&
+    typeof oldValue === 'object' &&
+    oldValue !== null
+  ) {
+    // Compare objects by keys in newValue only
+    return Object.keys(newValue).some(key => {
+      return isValueChanged(newValue[key], oldValue[key]);
+    });
   } else {
-    return newValue !== oldValue;  // Direct comparison for primitive types
+    // Direct comparison for primitive types
+    const isDifferent = newValue !== oldValue;
+    return isDifferent;
   }
 };
+
 
   
   

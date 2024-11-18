@@ -216,9 +216,10 @@ export const AdDetails = () => {
       }
     } else {
       try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonQuoteId=${quoteNumber}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonScheme=&JsonBold=&JsonSemiBold=&JsonTick=&JsonColor=&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonCartId=${item.cartId}&JsonCartOnly=true&JsonQuoteOnly=true`)
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonScheme=&JsonBold=&JsonSemiBold=&JsonTick=&JsonColor=&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonCartId=${item.cartId}&JsonQuoteId=${item.editQuoteNumber}`)
         
         const data = await response.json();
+        console.log(data)
         if (!response.ok) {
           alert(`The following error occurred while inserting data: ${data}`);
         }
@@ -284,35 +285,76 @@ export const AdDetails = () => {
   const handleUpdateAndDownloadQuote = async (e) => {
     e.preventDefault();
     // if (isGeneratingPdf) {
-      try {
-        const updatePromises = cartItems.map(async (item) => {
-          // Compare each item property to check for any changes
-          const existingItem = await FetchQuoteData(companyName, item.editQuoteNumber); // Fetch current item in the DB
-          const hasChanges = Object.keys(item).some((key) => item[key] !== existingItem[key]);
-          console.log(item)
-          console.log(existingItem)
-          console.log(hasChanges)
-          // Only update if there’s a change
-          // if (hasChanges) {
-          //   await updateQuoteToDB(item);
-          // }
-          return hasChanges;
-        });
-  
-        const updateResults = await Promise.all(updatePromises);
-  
-        // Check if at least one item was updated
-        if (updateResults.some((wasUpdated) => wasUpdated)) {
-          console.log("Quote updated successfully.");
-        } else {
-          console.log("No changes detected. No updates were made.");
-        }
-  
-        return;
-      } catch (error) {
-        alert("An unexpected error occurred while updating the Quote:", error);
+    //   try{
+    //     const promises = cartItems.map(item => updateQuoteToDB(item));
+    //     await Promise.all(promises);
+    //     return; 
+    //   } catch(error) {
+    //     alert('An unexpected error occured while inserting Quote:', error);
+    //     return;
+    //   }
+      
+    // }
+
+    isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
+    
+    const TnC = await getTnC();
+    const quoteNumber = cartItems[0].editQuoteNumber;
+    let grandTotalAmount = calculateGrandTotal();
+    grandTotalAmount = grandTotalAmount.replace('₹', '');
+    if(clientName !== ""){
+      try{
+        const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
+        const promises = cartItems.map(item => updateQuoteToDB(item));
+        await Promise.all(promises);
+        setTimeout(() => {
+        dispatch(resetCartItem());
+        dispatch(resetQuotesData());
+        dispatch(resetClientData());
+      },3000)
+      } catch(error){
+        alert('An unexpected error occured while inserting Quote:' + error);
         return;
       }
+      
+    } else{
+      if(clientName === ""){
+        setIsClientName(false)
+      }else if(clientContact === ""){
+        setIsClientContact(false)
+      }
+    }
+    // if (isGeneratingPdf) {
+      // try {
+      //   const updatePromises = cartItems.map(async (item) => {
+      //     // Compare each item property to check for any changes
+      //     const existingItem = await FetchQuoteData(companyName, item.editQuoteNumber); // Fetch current item in the DB
+      //     const hasChanges = Object.keys(item).some((key) => item[key] !== existingItem[key]);
+      //     console.log(item)
+      //     console.log(existingItem)
+      //     console.log(hasChanges)
+      //     // Only update if there’s a change
+      //     // if (hasChanges) {
+      //     //   await updateQuoteToDB(item);
+      //     // }
+      //     return hasChanges;
+      //   });
+  
+      //   const updateResults = await Promise.all(updatePromises);
+  
+      //   // Check if at least one item was updated
+      //   if (updateResults.some((wasUpdated) => wasUpdated)) {
+      //     console.log("Quote updated successfully.");
+      //   } else {
+      //     console.log("No changes detected. No updates were made.");
+      //   }
+  
+      //   return;
+      // } catch (error) {
+      //   alert("An unexpected error occurred while updating the Quote:", error);
+      //   return;
+      // }
       
     // }
 

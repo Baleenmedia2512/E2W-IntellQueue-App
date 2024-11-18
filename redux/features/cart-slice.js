@@ -21,6 +21,18 @@ const cartSlice = createSlice({
         }
       });
     },
+    removeEditItem: (state, action) => {
+      const index = action.payload;
+
+      const existingIndex = state.cart.findIndex(item => item.index === index);
+      if (existingIndex !== -1) {
+        // Mark the item as removed if it exists
+        state.cart[existingIndex] = {
+          ...state.cart[existingIndex],
+          isCartRemoved: true,
+        };
+      }
+    },
     removeItem: (state, action) => {
       const index = action.payload;
       state.cart = state.cart.filter(item => item.index !== index);
@@ -31,5 +43,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addItemsToCart, removeItem, resetCartItem } = cartSlice.actions;
+export const { addItemsToCart, removeItem, removeEditItem, resetCartItem } = cartSlice.actions;
 export const cartReducer = cartSlice.reducer;

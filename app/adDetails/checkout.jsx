@@ -13,7 +13,7 @@ import { useAppSelector } from '@/redux/store';
 import { setQuotesData, resetQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
-import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
+import { removeItem, resetCartItem, removeEditItem } from '@/redux/features/cart-slice';
 import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
@@ -78,11 +78,16 @@ const CheckoutPage = () => {
 
   const routers = useRouter();
 
-  const handleRemoveRateId = (index) => {
-    dispatch(removeItem(index));
+  const handleRemoveRateId = (index, editMode) => {
+    if (editMode) {
+      dispatch(removeEditItem(index));
+    } else {
+      dispatch(removeItem(index));
+    }
+    
   };
-
   console.log(cartItems)
+
   const handleEditRow = (item) => {
     dispatch(setQuotesData({ 
     selectedAdMedium: item.adMedium,
@@ -184,7 +189,6 @@ const CheckoutPage = () => {
         // Use cartItems.length + index to calculate unique index for each item
         const newIndex = cartItems.length + index + 1;
         
-        
         dispatch(addItemsToCart([{
           index: newIndex,
           adMedium: item.rateName || '',
@@ -205,10 +209,11 @@ const CheckoutPage = () => {
           minimumCampaignDuration: item.MinimumCampaignDuration || 0,
           formattedDate: item.ValidityDate || '',
           rateGST: item.GSTPercentage || 0,
-          width: item.Width || 0,
+          width: item.width || 0,
           campaignDurationVisibility: item.campaignDurationVisibility || 0,
           editQuoteNumber: item.QuoteID || '',
-          isEditMode: true
+          isEditMode: true,
+          cartId: item.CartId
         }]));
         {dispatch(setClientData({
           clientName: item.ClientName ,
@@ -238,7 +243,6 @@ const CheckoutPage = () => {
   const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
 
   const ratesSearchSuggestion = [];
-
 
   return (
     <div className="text-black w-screen items-center px-3">
@@ -350,7 +354,10 @@ const CheckoutPage = () => {
         </thead>
         <tbody>
           {cartItems.map((item, index) => (
-            <tr key={index}>
+            <tr 
+            key={index}
+            className={item.isCartRemoved ? 'opacity-50 bg-gray-100' : ''}
+            >
               <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
               <td className='p-1.5 border border-gray-200'>{!item.editQuoteNumber ? nextQuoteNumber : item.editQuoteNumber}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
@@ -397,7 +404,7 @@ const CheckoutPage = () => {
                 <IconButton 
                   aria-label="Remove" 
                   className='m-0 h-full' 
-                  onClick={() => handleRemoveRateId(item.index)}
+                  onClick={() => handleRemoveRateId(item.index, item.isEditMode)}
                   // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
                 >
                   <RemoveCircleOutline className='text-red-500 hover:text-red-700' fontSize='small'/>
