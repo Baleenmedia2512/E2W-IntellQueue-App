@@ -182,7 +182,6 @@ const CheckoutPage = () => {
       const selectedQuoteId = selectedResult.split(' - ')[0];
       setQuoteSearchSuggestion([]);
       const data = await FetchQuoteData(companyName, selectedQuoteId);
-      console.log(data)
       
       if (!Array.isArray(data)) {
         console.error("Data fetched is not an array:", data);
@@ -242,8 +241,6 @@ const CheckoutPage = () => {
     }
   };
 
-  console.log(cartItems)
-  
 
   // const calculateGrandTotal = () => {
   //   let grandTotal = [];
