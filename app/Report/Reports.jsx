@@ -46,15 +46,6 @@ const Report = () => {
      const [successMessage, setSuccessMessage] = useState('');
      const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
-
-  // const currentStartDate = startOfMonth(new Date());
-  // const currentEndDate = endOfMonth(new Date());
-  // const [selectedRange, setSelectedRange] = useState({
-  //   startDate: currentStartDate,
-  //   endDate: currentEndDate,
-  // });
-  // const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
-  // const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
   const { dateRange } = useAppSelector(state => state.reportSlice);
    const startDateForDisplay = new Date(dateRange.startDate);
    const endDateForDisplay = new Date(dateRange.endDate);
@@ -86,8 +77,12 @@ const Report = () => {
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [orderReportDialogOpen, setOrderReportDialogOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
   const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
   const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
+
 const checkIfSMSSentToday = () => {
   axios
     .get(`https://orders.baleenmedia.com/API/Media/CheckCDRSmsCount.php?JsonDBName=${companyName}`)
@@ -376,7 +371,6 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
                     restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));
-                //console.log(response.data)  
                 //const displayData = response.data
                 setFinanceDetails(financeDetails);
                 //setDisplayFinanceDetails(displayData)
@@ -553,39 +547,6 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
   }
 };
 
-// const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
-//   axios
-//     .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
-//     .then((response) => {
-//       const data = response.data;
-//       if (data.success) {
-//         setSuccessMessage('Transaction Restored!');
-//         setTimeout(() => {
-//           setSuccessMessage('');
-//         }, 2000);
-//         fetchFinanceDetails();
-//         fetchAmounts();
-//         fetchSumOfFinance();
-//         fetchRateBaseIncome();
-//       } else {
-//         setToastMessage(data.message);
-//         setSeverity('error');
-//         setToast(true);
-//         setTimeout(() => {
-//           setToast(false);
-//         }, 2000);
-//       }
-//     })
-//     .catch((error) => {
-//       console.error(error);
-//       setToastMessage('Failed to restore transaction. Please try again.');
-//       setSeverity('error');
-//       setToast(true);
-//       setTimeout(() => {
-//         setToast(false);
-//       }, 2000);
-//     });
-// };
 const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
     .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
@@ -637,45 +598,6 @@ const handleConfirm = async () => {
   setRestoreDialogOpen(false);
 };
 
-// const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
-//   try {
-//       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}`);
-
-//       if (response.data.conflict) {
-//           const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
-//           if (!fetchResponse.ok) {
-//               throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
-//           }
-//           const data = await fetchResponse.json();
-//           const newRateWiseOrderNumber = data.nextRateWiseOrderNumber;
-
-//           if (confirm(`RateWiseOrderNumber is already occupied. Do you want to continue with the new number ${newRateWiseOrderNumber}?`)) {
-//               // User agrees to use a new RateWiseOrderNumber
-//               const restoreResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
-//               setSuccessMessage('Order Restored with new number!');
-//               setTimeout(() => {
-//                   setSuccessMessage('');
-//               }, 2000);
-//               fetchOrderDetails();
-//           }
-//       } else {
-//           setSuccessMessage('Order Restored!');
-//           setTimeout(() => {
-//               setSuccessMessage('');
-//           }, 2000);
-//           fetchOrderDetails();
-//       }
-//   } catch (error) {
-//       console.error(error);
-//       setToastMessage('Failed to restore. Please try again.');
-//       setSeverity('error');
-//       setToast(true);
-//       setTimeout(() => {
-//           setToast(false);
-//       }, 2000);
-//   }
-// };
-
   const fetchMarginAmount = () => {
     axios
         .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
@@ -692,6 +614,7 @@ const handleConfirm = async () => {
             console.error(error);
         });
 };
+
 const FetchCurrentBalanceAmount = () => {
   axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}`)
@@ -704,13 +627,7 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
-// const isMobile = useMediaQuery('(max-width:640px)');
-const [anchorEl, setAnchorEl] = useState(null);
 
-
-
-const [orderReportDialogOpen, setOrderReportDialogOpen] = useState(false);
-const [selectedRow, setSelectedRow] = useState(null);
 
 const handleEditIconClick = (row) => {
   setSelectedRow(row);
@@ -759,6 +676,7 @@ const orderColumns = [
     { field: 'OrderDate', headerName: 'Order Date', width: isMobile ? 150 : 100 },
     { field: 'ClientName', headerName: 'Client Name', width: isMobile ? 150 : 120 },
     { field: 'ClientContact', headerName: 'Client Contact', width: isMobile ? 160 : 120 },
+    { field: 'ClientAge', headerName: 'Client Age', width: isMobile ? 120 : 90 },
     { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90, hide: elementsToHide.includes('RatesMarginPercentText') },
     { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
     { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 230 : 170 },
@@ -898,7 +816,6 @@ const financeColumns = [
 
     const handleConfirmDelete = () => {
       const { ID, RateWiseOrderNumber } = selectedTransaction;
-      //console.log(selectedTransaction)
       handleTransactionDelete(ID, RateWiseOrderNumber);
       setOpenConfirmDialog(false);
     };
@@ -1254,10 +1171,6 @@ const [filterInputs, setFilterInputs] = useState({});
       setTotalOrderAmount(totalOrderAmount);
       setTotalFinanceAmount(totalFinanceAmount);
 
-      // Improved logging for clarity
-      console.log('Sum of Orders:', sumOfOrders);
-      console.log('Total Order Amount:', totalOrderAmount);
-      console.log('Total Finance Amount:', totalFinanceAmount);
   };
 
   // Function to calculate the statistics based on filtered rows
@@ -1299,7 +1212,6 @@ const [filterInputs, setFilterInputs] = useState({});
       return filterModel.items.every((filter) => {
         const field = filter.field;
         const value = filter.value ? filter.value.toLowerCase() : '';
-        console.log(filter)
   
         if (value === '') return true; // Skip if the filter value is empty
   
