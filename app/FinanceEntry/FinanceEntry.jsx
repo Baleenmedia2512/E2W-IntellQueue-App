@@ -30,7 +30,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FetchFinanceSeachTerm } from '../api/FetchAPI';
+import { FetchFinanceSearchTerm } from '../api/FetchAPI';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -748,7 +748,7 @@ useEffect(() => {
     return; // Exit early
   }
 
-  const searchSuggestions = await FetchFinanceSeachTerm(companyName, searchTerm);
+  const searchSuggestions = await FetchFinanceSearchTerm(companyName, searchTerm);
   setFinanceSearchSuggestion(searchSuggestions);
 };
 
