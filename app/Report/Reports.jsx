@@ -27,7 +27,6 @@ import { Margin } from '@mui/icons-material';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
-    // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
