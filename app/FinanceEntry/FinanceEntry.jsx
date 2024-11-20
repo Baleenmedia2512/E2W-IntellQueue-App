@@ -73,6 +73,7 @@ const FinanceData = () => {
   // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
+  const billNumberRef = useRef(null);
   // const dbName = "Grace Scans";
   // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
@@ -434,7 +435,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const handleOrderNumberChange = (event) => {
     
-    const newOrderNumber = event.target.value;
+    const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
@@ -465,7 +466,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const handleRateWiseOrderNumberChange = (event) => {
     
-    const newOrderNumber = event.target.value;
+    const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
+
     setRateWiseOrderNumber(newOrderNumber);
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
@@ -506,26 +508,61 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
     const jsonBillDate = billDate.format("YYYY-MM-DD")
     const formData = new FormData();
-    formData.append('JsonFile', bill);
-    formData.append('JsonCompanyName', companyName);
-    formData.append('JsonEntryUser', username);
-    formData.append('JsonBillNumber', billNumber);
-    formData.append('JsonBillDate', jsonBillDate);
-    formData.append('JsonOrderNumber', orderNumber);
-    formData.append('JsonOrderAmountExclGST', orderAmount - gstAmount);
-    formData.append('JsonGSTAmount', gstAmount);
+    var IsNotUploaded = true;
 
-    try {
-      const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData,{
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+    const orderAmountArray = orderAmount.split(',').map(amount => parseFloat(amount.trim()));
 
-      return response.data
-    } catch (error) {
-      console.error(error);
-    }
+    for (const amount of orderAmountArray) {
+      // Initialize FormData for each record
+      const formData = new FormData();
+      formData.append('JsonFile', bill);
+      formData.append('JsonCompanyName', companyName);
+      formData.append('JsonEntryUser', username);
+      formData.append('JsonBillNumber', billNumber);
+      formData.append('JsonBillDate', jsonBillDate);
+      formData.append('JsonOrderNumber', orderNumber);
+
+      // Update orderAmount and calculate excluding GST
+      const amountExclGST = amount - gstAmount;
+      formData.append('JsonOrderAmountExclGST', amountExclGST);
+      formData.append('JsonGSTAmount', gstAmount);
+      formData.append('JsonIsNotUploaded', IsNotUploaded);
+      IsNotUploaded = false;
+      try {
+          // Send POST request for each record
+          const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData, {
+              headers: {
+                  'Content-Type': 'multipart/form-data'
+              }
+          });
+
+          console.log(`Record for orderAmount ${amount} uploaded successfully:`, response.data);
+      } catch (error) {
+          console.error(`Error uploading record for orderAmount ${amount}:`, error);
+      }
+  }
+
+    // formData.append('JsonFile', bill);
+    // formData.append('JsonCompanyName', companyName);
+    // formData.append('JsonEntryUser', username);
+    // formData.append('JsonBillNumber', billNumber);
+    // formData.append('JsonBillDate', jsonBillDate);
+    // formData.append('JsonOrderNumber', orderNumber);
+    // formData.append('JsonOrderAmountExclGST', orderAmount - gstAmount);
+    // formData.append('JsonGSTAmount', gstAmount);
+    // formData.append('JsonIsNotUploaded', IsNotUploaded);
+
+    // try {
+    //   const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData,{
+    //     headers: {
+    //       'Content-Type': 'multipart/form-data'
+    //     }
+    //   });
+
+    //   return response.data
+    // } catch (error) {
+    //   console.error(error);
+    // }
   };
   
 
@@ -553,6 +590,10 @@ const openChequeDate = Boolean(anchorElChequeDate);
       return;
     }else if(isNaN(parseInt(orderAmount)) || orderAmount === "0"){
       setErrors((prevErrors) => ({...prevErrors, orderAmount: "Please enter an valid Order Amount!"}));
+      return;
+    }else if(bill && billNumber === ""){
+      setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
+      billNumberRef?.current.focus()
       return;
     }else {
 
@@ -1096,11 +1137,12 @@ useEffect(() => {
               <div className='mt-3' >
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Bill Number<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
-            <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderAmount ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+            <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.billNumber ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
                 type="text"
                 placeholder="Bill Number"
                 id='billno'
                 name="BillNumberInput" 
+                ref={billNumberRef}
                 // required={!isEmpty} 
                 value={billNumber}
                 pattern="\d*"
@@ -1109,8 +1151,8 @@ useEffect(() => {
                 onChange={(e) => {
                   const input = e.target.value;
                   setBillNumber(input);
-                  if (errors.orderAmount) {
-                    setErrors((prevErrors) => ({ ...prevErrors, orderAmount: undefined }));
+                  if (errors.billNumber) {
+                    setErrors((prevErrors) => ({ ...prevErrors, billNumber: undefined }));
                   }
                 }}
                 onKeyDown={(e) => {
@@ -1125,7 +1167,7 @@ useEffect(() => {
                 }}
                 />
             </div>
-            {errors.orderAmount && <span className="text-red-500 text-sm">{errors.orderAmount}</span>}
+            {errors.billNumber && <span className="text-red-500 text-sm">{errors.billNumber}</span>}
             </div>
             )}
             {bill && (
@@ -1314,7 +1356,7 @@ useEffect(() => {
             type="text"
             placeholder="Ex. 10000"
             value={rateWiseOrderNumber}
-            pattern="\d*"
+            pattern="/[^\d,]/g"
             inputMode="numeric"
             onChange={handleRateWiseOrderNumberChange}
             disabled={isUpdateMode}
