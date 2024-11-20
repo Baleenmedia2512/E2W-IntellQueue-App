@@ -30,7 +30,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FetchFinanceSeachTerm } from '../api/FetchAPI';
+import { FetchFinanceSearchTerm } from '../api/FetchAPI';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -79,8 +79,11 @@ const FinanceData = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
+  const [billAnchorElDate, setBillAnchorElDate] = useState(null);
   const [anchorElChequeDate, setAnchorElChequeDate] = React.useState(null);
-  const [bill, setBill] = useState(null)
+  const [bill, setBill] = useState(null);
+  const [billNumber, setBillNumber] = useState("");
+  const [billDate, setBillDate] = useState(dayjs());
   // const [orderNumber, setOrderNumber] = useState(null);
   // const [clientName, setClientName] = useState(null);
   // const [orderAmount, setOrderAmount] = useState(null);
@@ -148,6 +151,7 @@ const FinanceData = () => {
 
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
+  const transactionDateFormatted = transactionDate.format('DD-MMM-YY');
   //const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
 
   const year = transactionDate.$y;
@@ -157,6 +161,9 @@ const FinanceData = () => {
   const minutes = transactionTime.$m;
   const seconds = transactionTime.$s;
   
+  const formattedBillDate = billDate.format('DD-MMM-YY');
+  //const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
+
   // Assuming chequeTime is a dayjs object like transactionTime
 const chequeHours = chequeTime.$H;
 const chequeMinutes = chequeTime.$m;
@@ -497,9 +504,16 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const handleUploadBills = async () => {
 
+    const jsonBillDate = billDate.format("YYYY-MM-DD")
     const formData = new FormData();
     formData.append('JsonFile', bill);
-    formData.append('JsonCompanyName', companyName)
+    formData.append('JsonCompanyName', companyName);
+    formData.append('JsonEntryUser', username);
+    formData.append('JsonBillNumber', billNumber);
+    formData.append('JsonBillDate', jsonBillDate);
+    formData.append('JsonOrderNumber', orderNumber);
+    formData.append('JsonOrderAmountExclGST', amount - gstAmount);
+    formData.append('JsonGstAmount', gstAmount);
 
     try {
       const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData,{
@@ -688,26 +702,7 @@ useEffect(() => {
   };
 
 
-
-  const clearFinance = (e) => {
-    //e.preventDefault();
-          setChequeNumber('');
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          setRateWiseOrderNumber('');
-  };
-
   const cancelFinance = (e) => {
-    e.preventDefault();
           setChequeNumber('');
           setClientName('');
           setExpenseCategory('');
@@ -724,6 +719,7 @@ useEffect(() => {
           setFinanceSearchTerm('');
           setIsUpdateMode(false);
           setTransactionDate(dayjs()); 
+          setDisplayClientName('');
 
   };
   const handleFileChange = (e) => {
@@ -766,7 +762,7 @@ useEffect(() => {
     return; // Exit early
   }
 
-  const searchSuggestions = await FetchFinanceSeachTerm(companyName, searchTerm);
+  const searchSuggestions = await FetchFinanceSearchTerm(companyName, searchTerm);
   setFinanceSearchSuggestion(searchSuggestions);
 };
 
@@ -953,6 +949,7 @@ useEffect(() => {
       });
       // Check if the response is successful
       const data = response.data;
+      console.log(data)
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Finance record updated successfully!');
   
@@ -965,7 +962,7 @@ useEffect(() => {
         setFinanceSearchTerm('');
         setRateWiseOrderNumber('');
         setIsUpdateMode(false);
-        clearFinance();
+        cancelFinance();
       } else {
         alert(`Error updating finance data: ${data}`);
       }
@@ -1004,13 +1001,13 @@ useEffect(() => {
       
       <div className="flex items-center mt-2 justify-center mb-2">
       {!isUpdateMode && (
-    <button className="cancel-button" onClick={clearFinance}>
+    <button className="cancel-button" onClick={cancelFinance}>
       Clear
     </button>
   )}
 
   <button
-    className="Add-button ml-2"
+    className="custom-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
   >
     
@@ -1094,7 +1091,95 @@ useEffect(() => {
             <div className="mt-2 text-sm text-gray-700 break-words">
             {bill && bill.name}
             </div>
-            </div></div>}
+            </div>
+            { bill && (
+              <div className='mt-3' >
+            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Bill Number<span className="text-red-500">*</span></label>
+            <div className="w-full flex gap-3">
+            <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderAmount ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+                type="text"
+                placeholder="Bill Number"
+                id='billno'
+                name="BillNumberInput" 
+                // required={!isEmpty} 
+                value={billNumber}
+                pattern="\d*"
+                // inputMode="numeric"
+                onFocus={e => e.target.select()}
+                onChange={(e) => {
+                  const input = e.target.value;
+                  setBillNumber(input);
+                  if (errors.orderAmount) {
+                    setErrors((prevErrors) => ({ ...prevErrors, orderAmount: undefined }));
+                  }
+                }}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {errors.orderAmount && <span className="text-red-500 text-sm">{errors.orderAmount}</span>}
+            </div>
+            )}
+            {bill && (
+              <div className='mt-3 ml-4'>
+                    <label className="block mt-1 mb-2 text-gray-700 font-semibold">Bill Date<span className="text-red-500">*</span></label>
+                    <div className='flex w-full gap-1'>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box mb={2} >
+            <TextField
+
+              // className="py-2"
+              fullWidth
+              label="Select Date"
+              value={formattedBillDate}
+              onClick={(e) => setBillAnchorElDate(e.currentTarget)}
+              InputProps={{
+                style: {
+                  borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode, default otherwise
+                  borderWidth: isUpdateMode ? 1 : 1, // Thicker border when in update mode
+                  maxHeight: 40,
+                },
+              }}
+            />
+            <Popover
+              open={Boolean(billAnchorElDate)}
+              anchorEl={billAnchorElDate}
+              onClose={() => setBillAnchorElDate(null)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+            >
+              <DateCalendar
+                value={billDate}
+                onChange={(newValue) => {
+                  setBillDate(newValue);
+      //             validateTransactionDate(newValue);  // Call validation after setting the new date
+      //             // Validate the new transaction date and set errors
+      // const errorMsg = validateTransactionDate(newValue);
+      // setErrors((prevErrors) => ({
+      //   ...prevErrors,
+      //   transactionDate: errorMsg, // Set the error message if any
+      // }));
+                  setBillAnchorElDate(null);
+                }}
+                
+              />
+            </Popover>
+          </Box>
+          </LocalizationProvider>
+          </div>
+          </div>
+            )}
+            </div>}
             
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
       
@@ -1160,7 +1245,7 @@ useEffect(() => {
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
 ) ? (
               <>
-            <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name{(transactionType?.value === 'Income') && <span className="text-red-500">*</span>}</label>
+            <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input 
             className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
@@ -1215,8 +1300,10 @@ useEffect(() => {
 ) : null}
  {/* )} */}
 </div></div>
-    {/* {!elementsToHide.includes("RateWiseOrderNumber") ? ( */}
-    {transactionType && transactionType.value !== 'Operational Expense' && (
+    {(
+  transactionType?.value === 'Income' || 
+  (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
+) ? (
     <div id="4" name="RateWiseOrderNumberText">
         <label className='block mb-2 mt-4 text-gray-700 font-semibold' >
           Order Number<span className="text-red-500">*</span>
@@ -1245,8 +1332,8 @@ useEffect(() => {
           />
         </div>
         {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
-        </div>)}
-      {/* ):( */}
+        </div>
+        ) : null}
       {(
   transactionType?.value === 'Income' || 
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
@@ -1319,39 +1406,6 @@ useEffect(() => {
       {/* </>
     )}</div>
   </> */}
-  {(transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project') &&<div>
-  <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Bill Number <span className="text-red-500">*</span><span className='text-xs text-red-500'>(Optional if no bills uploaded)</span></label>
-            <div className="w-full flex gap-3">
-            <input 
-            className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none border-gray-400 focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
-                type="text"
-                placeholder="Ex: 00346" 
-                id='2'
-                name="ClientNameInput" 
-                // required={!isEmpty} 
-                value={clientName}
-                onChange = {handleClientNameTermChange}
-                disabled={isUpdateMode}
-                onFocus={e => e.target.select()}
-                onBlur={() => {
-            setTimeout(() => {
-              setClientNameSuggestions([]);
-            }, 200); // Adjust the delay time according to your preference
-          }}
-                onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const inputs = document.querySelectorAll('input, select, textarea');
-                    const index = Array.from(inputs).findIndex(input => input === e.target);
-                    if (index !== -1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                    }
-                }
-                }}
-                />
-                
-            </div>
-            </div>}
   <div className='mt-3' >
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Amount(₹)<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1446,34 +1500,36 @@ useEffect(() => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {/* {taxType && taxType.value === 'GST' && (
+               {taxType && taxType.value === 'GST' && (
               <div>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
-          <div className="w-full flex gap-3">
-          <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
-              type="text"
-              placeholder="GST%" 
-              id='4'
-              name="GSTInput" 
-              value={gstPercentage}
-              onChange = {(e) => {setGSTPercentage(e.target.value)
-                if (errors.gstPercentage) {
-                  setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
-                }
-              }}
-              onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const inputs = document.querySelectorAll('input, select, textarea');
-                  const index = Array.from(inputs).findIndex(input => input === e.target);
-                  if (index !== -1 && index < inputs.length - 1) {
-                  inputs[index + 1].focus();
-                  }
-              }
-              }}
-              />
-          </div>
-          {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+          {/*      <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
+          // <div className="w-full flex gap-3">
+          // <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+          //     type="text"
+          //     placeholder="GST%" 
+          //     id='4'
+          //     name="GSTInput" 
+          //     value={gstPercentage}
+          //     onChange = {(e) => {setGSTPercentage(e.target.value)
+          //       if (errors.gstPercentage) {
+          //         setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
+          //       }
+          //     }}
+          //     onKeyDown={(e) => {
+          //     if (e.key === 'Enter') {
+          //         e.preventDefault();
+          //         const inputs = document.querySelectorAll('input, select, textarea');
+          //         const index = Array.from(inputs).findIndex(input => input === e.target);
+          //         if (index !== -1 && index < inputs.length - 1) {
+          //         inputs[index + 1].focus();
+          //         }
+          //     }
+          //     }}
+          //     />
+          // </div>
+          // {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+          //      </div>
+               //      )} */}
           
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1504,7 +1560,7 @@ useEffect(() => {
             </div>
             {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
             </div>
-            )} */}
+            )} 
             
             <div className='mt-3'> 
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Remarks</label>
@@ -1529,7 +1585,7 @@ useEffect(() => {
             className="custom-date-picker"
             fullWidth
             label="Select Date"
-            value={formattedTransactionDate}
+            value={transactionDateFormatted}
             onClick={handleDateClick}
             InputProps={{
               style: {
