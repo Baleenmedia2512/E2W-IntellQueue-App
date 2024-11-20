@@ -495,13 +495,13 @@ export default function BottomBarTest() {
             additionalClasses="hover:bg-blue-50"
             dataTag=""
           />
-          <SubNavItem
+          {/* <SubNavItem
           icon={<PaymentMilestoneIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
           label="Payment Milestone"
           onClick={() => { setSelected('paymentMilestone'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
           additionalClasses="hover:bg-blue-50"
           dataTag=""
-          />
+          /> */}
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
             label={<span className="text-red-600">Log Out</span>}

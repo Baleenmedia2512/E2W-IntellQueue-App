@@ -10,7 +10,6 @@ import { orderReducer } from "./features/order-slice";
 import { employeeReducer } from "./features/emp-slice"; 
 import { cartReducer } from "./features/cart-slice";
 import { reportReducer } from "./features/report-slice";
-import { stageReducer } from "./features/stage-slice";
 
 const createNoopStorage = () => {
   return {
@@ -46,19 +45,13 @@ const clientPersistConfig = {
 const quotePersistConfig = {
   key: "quote",
   storage: storage,
-  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId", "previousPage", "history", "width", "qtySlab"]
+  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId", "previousPage", "history", "width", "qtySlab", "isEditMode", "editIndex", "editQuoteNumber", "isNewCartOnEdit"]
 }
 
 const cartPersistConfig = {
   key: "cart",
   storage: storage,
   whitelist: ["cart"]
-}
-
-const stagePersistConfig = {
-  key: "stages",
-  storage: storage,
-  whitelist: ["stages", "editMode"]
 }
 
 const ratePersistConfig = {
@@ -93,7 +86,6 @@ const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer);
 const persistedOrderReducer = persistReducer(orderPersistConfig, orderReducer);
 const persistedEmployeeReducer = persistReducer(employeePersistConfig, employeeReducer);
 const persistedReportReducer = persistReducer(reportPersistConfig, reportReducer);
-const persistedStageReducer = persistReducer(stagePersistConfig, stageReducer);
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
@@ -104,7 +96,6 @@ const rootReducer = combineReducers({
   orderSlice: persistedOrderReducer,
   employeeSlice: persistedEmployeeReducer,
   reportSlice: persistedReportReducer,
-  stageSlice: persistedStageReducer,
 });
 
 export const store = configureStore({

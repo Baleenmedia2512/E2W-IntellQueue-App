@@ -62,6 +62,7 @@ const AdDetailsPage = () => {
   const marginAmountRef = useRef(null);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const username = useAppSelector(state => state.authSlice.userName);
+  const clientDetails = useAppSelector(state => state.clientSlice);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
@@ -87,6 +88,9 @@ const AdDetailsPage = () => {
   const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
   const cartItems = useAppSelector(state => state.cartSlice.cart);
   const isQuoteEditMode = useAppSelector(state => state.quoteSlice.isEditMode);
+  const editIndex = useAppSelector(state => state.quoteSlice.editIndex);
+  const editQuoteNumber = useAppSelector(state => state.quoteSlice.editQuoteNumber);
+  const isNewCartOnEdit = useAppSelector(state => state.quoteSlice.isNewCartOnEdit);
   // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
   //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
   //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
@@ -140,19 +144,29 @@ const AdDetailsPage = () => {
     dispatch(setQuotesData({rateId: selectedRateId}));
     dispatch(updateCurrentPage("adDetails"));
   }
+  // useEffect(() => {
+  //   if (isQuoteEditMode) {
+
+  //   const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+  //   const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
+    
+  //   setMarginPercentage(newMarginPercentage);
+  //   }
+  // }, [isQuoteEditMode])
+
 
   useEffect(() => {
-    if (!isQuoteEditMode) {
+    // if (!isQuoteEditMode) {
     dispatch(setQuotesData({campaignDuration: (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1, validityDate: (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate'), leadDays: (leadDay) ? leadDay.LeadDays: ""}));
-    }
+    // }
   }, [leadDay, minimumCampaignDuration])
 
   useEffect(() => {
-    if (!isQuoteEditMode) {
+    // if (!isQuoteEditMode) {
         if (selectedDayRange === "") {
           setSelectedDayRange(dayRange[1]);
         }
-        if(!rateId){
+        if(!rateId && !isQuoteEditMode){
           //dispatch(setQuotesData({currentPage: "adMedium"}));
           dispatch(resetQuotesData())
         }
@@ -170,7 +184,7 @@ const AdDetailsPage = () => {
         // } else if (edition === '') {
         //   dispatch(setQuotesData({currentPage: 'edition'}));
         // }
-  }
+  // }
   },[])
 
   // useEffect(() => {
@@ -272,14 +286,15 @@ const AdDetailsPage = () => {
   
       fetchRate();
       fetchData();
+      
       fetchRateData();
     // }
   }, [rateId]);
 
   useEffect(() => {
-    if (!isQuoteEditMode) {
+    // if (!isQuoteEditMode) {
     fetchRateData();
-    }
+    // }
   }, [adMedium, rateId])
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -352,7 +367,7 @@ const AdDetailsPage = () => {
     if (!isQuoteEditMode && qtySlab) {
       handleQtySlabChange();
     }
-  }, [qtySlab]);
+  }, [qtySlab]);  
 
   const fetchRateData = async () => {
     try {
@@ -679,8 +694,103 @@ const marginLostFocus = () => {
     }),
     label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
   }))
+// console.log(adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
+//   campaignDuration, margin, remarks, rateId, minimumCampaignDuration, formattedDate, rateGST, width, 
+//   campaignDurationVisibility)
 
+const handleCompleteEdit = () => {
+  if (validateFields()) {
+    // Prepare the updated item
+    const updatedItem = {
+      index: editIndex,
+      adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
+      campaignDuration, margin, remarks, rateId, 
+      CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
+      leadDay: leadDay ? leadDay.LeadDays : "", 
+      minimumCampaignDuration, formattedDate, rateGST, width, 
+      campaignDurationVisibility, editQuoteNumber, isEditMode: true
+    };
 
+    // Find the existing item with the same editIndex
+    const existingItem = cartItems.find(item => item.index === editIndex);
+
+    let updatedCartItems = [...cartItems]; // Default to the current cartItems
+    let isItemUpdated = false; // Track whether an update occurred
+
+    if (existingItem) {
+      // Compare existing item with the updated item
+      isItemUpdated = Object.keys(updatedItem).some(key =>
+        isValueChanged(updatedItem[key], existingItem[key])
+      );
+
+      if (isItemUpdated) {
+        updatedCartItems = cartItems.map(item =>
+          item.index === editIndex ? { ...item, ...updatedItem } : item
+        );
+        setSuccessMessage("Item edited successfully.");
+      } else {
+        setToastMessage("No Changes Detected.");
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      }
+    } else {
+      // Add new item if not existing
+      const newItem = { ...updatedItem, index: cartItems.length, isNewCart: true}; // Ensure unique index
+      updatedCartItems = [...cartItems, newItem];
+      isItemUpdated = true; // Treat as updated since it's a new addition
+      setSuccessMessage("Item added to Cart");
+    }
+
+    // Dispatch only if there is a change
+    if (isItemUpdated) {
+      dispatch(addItemsToCart(updatedCartItems));
+
+      // Reset messages after a delay
+      setTimeout(() => {
+        setSuccessMessage("");
+        dispatch(resetQuotesData());
+        dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails", isEditMode: true }));
+      }, 2000);
+    }
+  } else {
+    // Show error if validation fails
+    setToastMessage("Please fill the necessary details in the form.");
+    setSeverity("error");
+    setToast(true);
+    setTimeout(() => {
+      setToast(false);
+    }, 2000);
+  }
+};
+
+// Function to compare values and detect changes
+const isValueChanged = (newValue, oldValue) => {
+
+  if (Array.isArray(newValue) && Array.isArray(oldValue)) {
+    // Compare arrays element by element
+    return newValue.some((val, index) => {
+      return isValueChanged(val, oldValue[index]);
+    });
+  } else if (
+    typeof newValue === 'object' &&
+    newValue !== null &&
+    typeof oldValue === 'object' &&
+    oldValue !== null
+  ) {
+    // Compare objects by keys in newValue only
+    return Object.keys(newValue).some(key => {
+      return isValueChanged(newValue[key], oldValue[key]);
+    });
+  } else {
+    // Direct comparison for primitive types
+    const isDifferent = newValue !== oldValue;
+    return isDifferent;
+  }
+};
+  
   
   return (
     
@@ -842,6 +952,65 @@ const marginLostFocus = () => {
               {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
               <div className="mb-3 overflow-y-auto h-full" > 
               <span className='flex flex-row mb-2 justify-center'>
+  <div className="flex flex-col mr-2 items-center justify-center">
+    <button
+      className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
+      disabled={rateId > 0 ? false : true}
+      onClick={(e) => {
+        e.preventDefault();
+        if (isQuoteEditMode) {
+          // Complete Edit functionality
+          handleCompleteEdit();
+          
+        } else {
+          // Add to Cart functionality
+          if (validateFields()) {
+            const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
+            if (isDuplicate) {
+              let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
+              if (result) {
+                const index = cartItems.length;
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true }]));
+                setSuccessMessage("Item added to Cart");
+                setTimeout(() => { setSuccessMessage(''); }, 2000);
+              }
+              return;
+            }
+            const index = cartItems.length;
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true }]));
+            setSuccessMessage("Item added to Cart");
+            setTimeout(() => { setSuccessMessage(''); }, 2000);
+          } else {
+            setToastMessage('Please fill the necessary details in the form.');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => { setToast(false); }, 2000);
+          }
+        }
+      }}
+    >
+      <ShoppingCartIcon className='text-white mr-2'/>
+      {isQuoteEditMode && !isNewCartOnEdit ? "Complete Edit" : "Add to Cart"}
+    </button>
+  </div>
+
+  <div className="flex flex-col ml-2 items-center justify-center">
+    <button
+      className="Gotocart-button"
+      onClick={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <StyledBadge badgeContent={cartItems.length} color="primary">
+        <ShoppingCartCheckout className='text-white mr-2' />
+      </StyledBadge>
+      Go to Cart
+    </button>
+  </div>
+</span>
+
+              {/* <span className='flex flex-row mb-2 justify-center'>
                 <div className="flex flex-col mr-2 items-center justify-center">
                   <button
                     className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
@@ -902,7 +1071,7 @@ const marginLostFocus = () => {
                     
                   </button>
                 </div>
-                </span>
+                </span> */}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
               {/* <div name="QuoteVendorSelect">
                 <label className="block mb-1 font-medium">Vendor</label>

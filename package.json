@@ -35,7 +35,6 @@
     "@tippyjs/react": "^4.2.6",
     "axios": "^1.6.5",
     "crypto": "^1.0.1",
-    "date-fns": "^3.2.0",
     "dayjs": "^1.11.11",
     "file-saver": "^2.0.5",
     "form-data": "^4.0.0",
@@ -64,7 +63,6 @@
     "react-window": "^1.8.10",
     "recharts": "^2.12.7",
     "redux-persist": "^6.0.0",
-    "tippy": "^0.0.0",
     "tippy.js": "^6.3.7",
     "xlsx": "^0.18.5"
   },

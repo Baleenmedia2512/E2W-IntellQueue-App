@@ -10,7 +10,6 @@ import { useAppSelector } from '@/redux/store';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { format } from 'date-fns';
-import './page.css';
 
 const GeneralDetailsPage = () => {
   const [severity, setSeverity] = useState('');
@@ -355,7 +354,7 @@ const validateFields = () => {
           <button
             type="submit"
             onClick={postGeneralDetails}
-            className="Create-button"
+            className="px-6 py-3 text-xs uppercase tracking-wider font-medium text-white bg-[#23c483] rounded-full shadow-md transition-transform duration-300 ease-in-out hover:bg-[#2376c4] hover:shadow-lg hover:translate-y-[-7px] active:translate-y-[-1px] focus:outline-none"
           >
             Create
           </button>

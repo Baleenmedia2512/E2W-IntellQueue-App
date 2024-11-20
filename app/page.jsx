@@ -32,6 +32,7 @@ const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
+  // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
   const [title, setTitle] = useState('Mr.');
@@ -215,9 +216,19 @@ const ClientsData = () => {
   
   // const handleConsultantNameSelection = (event) => {
   //   const input = event.target.value;
-  //    const [id, rest] = input.split('-');
-  //    const name = rest.substring(0, rest.indexOf('(')).trim();
-  //    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
+  //     // Split by '-' to separate the ID and the rest of the input
+  //     const parts = input.split('-');
+
+  //     // Extract the rest after '-' (name and any parentheses)
+  //     const rest = parts.length > 1 ? parts.slice(1).join('-').trim() : parts[0].trim();
+  
+  //     // Use regex to match the phone number (if any) inside parentheses
+  //     const phoneMatch = rest.match(/\((\d{10,})\)$/); // Matches the number if it's in parentheses at the end
+  
+  //     // Extract the name, ignoring parentheses
+  //     const name = rest.replace(/\(.*?\)/g, '').trim(); // Remove anything in parentheses from the name
+  //     const number = phoneMatch ? phoneMatch[1] : '';
+
   
   //   setConsultantNameSuggestions([]);
   //   setConsultantName(name)
@@ -476,14 +487,8 @@ const ClientsData = () => {
     }
     const isValid = BMvalidateFields();
     if (isValid) {
-      if(clientContact === '' || clientContact === 0 ){
-        const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
-       if (!result){
-        return
-       }
-      }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
@@ -534,15 +539,9 @@ const ClientsData = () => {
   else{
     const isValid = GSvalidateFields();
     if (isValid) {
-      if(clientContact === '' || clientContact === 0 ){
-        const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
-       if (!result){
-        return
-       }
-      }
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -995,44 +994,10 @@ const BMvalidateFields = () => {
       <div className='min-h-screen bg-gray-100 mb-14 p-2'>
         <div className="flex items-center justify-center">
           <div className="w-full max-w-6xl">
-          <div className="text-start">
-  <div className="flex justify-between items-center">
-    {/* Client Manager Heading */}
-    <div className='items-center justify-center'>
-      <h2 className="text-2xl mt-3 sm:mt-10 font-bold text-blue-500 mb-1">Client Manager</h2>
-      <div className="border-2 w-10 border-blue-500 mb-5"></div>   
-    </div>
-
-    {/* Buttons */}
-    <div className="text-center">
-      {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
-      {clientID === '' ? (
-        <button
-          className="add-button"
-          onClick={submitDetails}
-        >
-          Add
-        </button>
-      ) : (
-        <div className="flex space-x-2">
-          <button
-            className="Update-button"
-            onClick={submitDetails}
-          >
-            Update
-          </button>
-          <button
-            className="remove-button"
-            onClick={handleRemoveClient}
-          >
-            Remove
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-</div>
-
+            <div className="text-start">
+              <h2 className="text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">Client Manager</h2>
+              <div className="border-2 w-10 mb-6 border-blue-500"></div>
+            </div>
       </div></div>
         <div className="flex items-center justify-center ">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
@@ -1249,7 +1214,7 @@ const BMvalidateFields = () => {
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate<span className="text-red-500">*</span></label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1271,18 +1236,18 @@ const BMvalidateFields = () => {
               ) : (
                 <div className="flex space-x-2 mt-3">
                   <div className="w-1/2" name="MonthsInput">
-                    <label className="block mb-1 text-black font-medium">Months</label>
+                    <label className="block mb-1 text-black font-medium">Months<span className="text-red-500">*</span></label>
                     <input
                       className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       name="MonthsInput"
-                      placeholder="Months*"
+                      placeholder="Months"
                       value={months}
                       onChange={handleMonthsChange}
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate<span className="text-red-500">*</span></label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1336,7 +1301,7 @@ const BMvalidateFields = () => {
             {/* Right section */}
             <div className="space-y-4">
               <div name="ClientSourceSelect">
-                <label className="block mb-1 text-black font-medium">Source</label>
+                <label className="block mb-1 text-black font-medium">Source<span className="text-red-500">*</span></label>
                 <Dropdown
                   className={`w-full text-black border rounded-lg ${errors.clientSource ? 'border-red-400' : ''}`}
                   id="8"
@@ -1344,7 +1309,7 @@ const BMvalidateFields = () => {
                   options={sources}
                   value={clientSource}
                   defaultValue=""
-                  placeholder='Select Source'
+                  placeholder='Select a Source'
                   onChange={handleClientSourceChange}
                 />
               </div>
@@ -1417,11 +1382,11 @@ const BMvalidateFields = () => {
               )}
             </div>
           </div>
-          {/* <div className="text-center">
-           
+          <div className="text-center">
+            {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
             {clientID === '' ? (
               <button
-                className="add-button"
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg"
                 onClick={submitDetails}
               >
                 Add
@@ -1429,20 +1394,20 @@ const BMvalidateFields = () => {
             ) : (
               <div className="relative">
                 <button
-                  className="Update-button mr-2"
+                  className="px-6 py-2 mr-3 bg-blue-500 text-white rounded-lg w-fit"
                   onClick={submitDetails}
                 >
                   Update
                 </button>
                 <button
-                  className="remove-button"
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg w-fit"
                   onClick={handleRemoveClient}
                 >
                   Remove
                 </button>
               </div>
             )}
-          </div> */}
+          </div>
         </form>
       </div>
       </div>

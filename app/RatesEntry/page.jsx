@@ -118,6 +118,8 @@ const AdDetailsPage = () => {
   const [dialogAction, setDialogAction] = useState(null); // Store action type (Remove/Restore)
   const [isFocused, setIsFocused] = useState(false);
   const suggestionsRef = useRef(null);
+  const checkboxRef = useRef(null);
+  const inputRef = useRef(null);
 
   let pressTimer = null;
 
@@ -825,11 +827,11 @@ var selectedRate = '';
     }
   };
 
+
   const handleRateId = async (selectedRateId) => {
-    console.log(selectedRateId)
     if(selectedRateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendorTest.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -1510,8 +1512,12 @@ setEditModal(false);
 
   const handleCheckboxChange = () => {
     setShowInvalid((prev) => !prev); // Toggle checkbox state
-    handleRateSearch({ target: { value: rateSearchTerm } });
+    
 };
+useEffect(() => {
+  handleRateSearch({ target: { value: rateSearchTerm } });
+  // setIsFocused(true);
+}, [showInvalid]);
 
 const handleEditMode = () => {
 
@@ -1519,7 +1525,7 @@ const handleEditMode = () => {
 
   // setRateSearchTerm("");
 
-  setShowInvalid(false);
+  // setShowInvalid(false);
   setRateValidity(true);
   setIsNewRate(true);
 
@@ -1546,7 +1552,6 @@ const handleEditMode = () => {
 };
 
 const handleLongPress = (rate, isInvalid) => {
-  console.log(rate)
   pressTimer = setTimeout(() => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
@@ -1578,7 +1583,9 @@ const handleBlur = (e) => {
   if (!suggestionsRef.current.contains(e.relatedTarget)) {
     setIsFocused(false);
   }
-};
+}
+
+
 
 
   return (
@@ -1760,6 +1767,7 @@ const handleBlur = (e) => {
       <div className="mb-2 flex items-center text-black">
         <label className="flex items-center cursor-pointer">
           <input
+            ref={checkboxRef}
             type="checkbox"
             className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             checked={showInvalid}
@@ -1869,7 +1877,7 @@ const handleBlur = (e) => {
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-      onClick={handleEditMode}
+      onClick={() => { handleEditMode(); setRateSearchTerm(""); }}
     >
       Exit Edit
     </button>

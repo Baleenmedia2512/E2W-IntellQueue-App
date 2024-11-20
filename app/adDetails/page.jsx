@@ -21,6 +21,7 @@ import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { resetCartItem } from '@/redux/features/cart-slice';
+import { FetchQuoteData } from '../api/FetchAPI';
 
 export const AdDetails = () => {
   const routers = useRouter();
@@ -166,10 +167,55 @@ export const AdDetails = () => {
       if (!response.ok) {
         alert(`The following error occurred while inserting data: ${data}`);
       }
+      return data;
     } catch (error) {
       alert('An unexpected error occured while inserting Quote:', error);
       return;
     }
+  }
+
+  const updateQuoteToDB = async(item) => {
+    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
+    // console.log(item)
+    if (item.isCartRemoved) {
+      try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonCartId=${item.cartId}&JsonRemoveCart=true`)
+        
+        const data = await response.json();
+        if (!response.ok) {
+          alert(`The following error occurred while inserting data: ${data}`);
+        }
+      } catch (error) {
+        console.error('An unexpected error occured while inserting Quote:', error);
+        return;
+      }
+    } else {
+      
+      try {
+        if (item.isNewCart) {
+          try {
+            const response = await addQuoteToDB(item, item.editQuoteNumber);
+          
+          } catch (error) {
+            console.error('An unexpected error occured while inserting Quote:', error);
+            return;
+          }
+        } else {
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonScheme=&JsonBold=&JsonSemiBold=&JsonTick=&JsonColor=&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonCartId=${item.cartId}&JsonQuoteId=${item.editQuoteNumber}`)
+        
+          const data = await response.json();
+          if (!response.ok) {
+            alert(`The following error occurred while inserting data: ${data}`);
+          }
+        }
+        
+      } catch (error) {
+        alert('An unexpected error occured while inserting Quote:', error);
+        return;
+      }
+    }
+    
   }
 
   const getTnC = async() => {
@@ -223,6 +269,105 @@ export const AdDetails = () => {
     }
   };
   
+  const handleUpdateAndDownloadQuote = async (e) => {
+    e.preventDefault();
+    isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
+    
+    const TnC = await getTnC();
+    const quoteNumber = cartItems[0].editQuoteNumber;
+    let grandTotalAmount = calculateGrandTotal();
+    grandTotalAmount = grandTotalAmount.replace('₹', '');
+    if(clientName !== ""){
+      try{
+        const cart = await Promise.all(
+          cartItems
+            .filter(item => !item.isCartRemoved)
+            .map(item => pdfGeneration(item))
+        );
+        // console.log(cart)
+        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
+        const promises = cartItems.map(item => updateQuoteToDB(item));
+        await Promise.all(promises);
+        setTimeout(() => {
+        dispatch(resetCartItem());
+        dispatch(resetQuotesData());
+        dispatch(resetClientData());
+        dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
+      },200)
+      } catch(error){
+        alert('An unexpected error occured while inserting Quote:' + error);
+        return;
+      }
+      
+    } else{
+      if(clientName === ""){
+        setIsClientName(false)
+      }else if(clientContact === ""){
+        setIsClientContact(false)
+      }
+    }
+    // if (isGeneratingPdf) {
+      // try {
+      //   const updatePromises = cartItems.map(async (item) => {
+      //     // Compare each item property to check for any changes
+      //     const existingItem = await FetchQuoteData(companyName, item.editQuoteNumber); // Fetch current item in the DB
+      //     const hasChanges = Object.keys(item).some((key) => item[key] !== existingItem[key]);
+      //     console.log(item)
+      //     console.log(existingItem)
+      //     console.log(hasChanges)
+      //     // Only update if there’s a change
+      //     // if (hasChanges) {
+      //     //   await updateQuoteToDB(item);
+      //     // }
+      //     return hasChanges;
+      //   });
+  
+      //   const updateResults = await Promise.all(updatePromises);
+  
+      //   // Check if at least one item was updated
+      //   if (updateResults.some((wasUpdated) => wasUpdated)) {
+      //     console.log("Quote updated successfully.");
+      //   } else {
+      //     console.log("No changes detected. No updates were made.");
+      //   }
+  
+      //   return;
+      // } catch (error) {
+      //   alert("An unexpected error occurred while updating the Quote:", error);
+      //   return;
+      // }
+      
+    // }
+
+    // isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
+    
+    // const TnC = await getTnC();
+    // let grandTotalAmount = calculateGrandTotal();
+    // grandTotalAmount = grandTotalAmount.replace('₹', '');
+    // if(clientName !== ""){
+    //   try{
+    //     const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+    //     await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
+    //     // const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
+    //     // await Promise.all(promises);
+    //   //   setTimeout(() => {
+    //   //   dispatch(resetCartItem());
+    //   //   dispatch(resetQuotesData());
+    //   //   dispatch(resetClientData());
+    //   // },3000)
+    //   } catch(error){
+    //     alert('An unexpected error occured while inserting Quote:' + error);
+    //     return;
+    //   }
+      
+    // } else{
+    //   if(clientName === ""){
+    //     setIsClientName(false)
+    //   }else if(clientContact === ""){
+    //     setIsClientContact(false)
+    //   }
+    // }
+  };
 
   function showCurrentPage(){
     let showPage = '' 
@@ -275,6 +420,12 @@ export const AdDetails = () => {
          ) : 
          <button className={`mr-4 mt-2 ${rateId > 0 ? 'text-blue-500' : 'text-gray-500'} text-nowrap max-h-10 font-semibold ${rateId > 0 ?' border-blue-500' : 'border-gray-500 cursor-not-allowed'} border px-2 py-1 rounded-lg bg-white`} disabled = {!rateId} onClick={() => {
           dispatch(resetQuotesData());
+
+          // clear while on edit mode
+          if (cartItems.length > 0 && cartItems[0].isEditMode) {
+          dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+          }
+
           }}>
         <FontAwesomeIcon icon={faClose} className=' text-md' /> Clear
       </button>}
@@ -291,7 +442,38 @@ export const AdDetails = () => {
           </div>
           )}
           {/* Shopping Cart Button */}
-          {currentPage === "checkout" ?(
+          {currentPage === "checkout" ? (
+            <div className='flex flex-row justify-center items-center'>
+              {cartItems.length > 0 && cartItems[0].isEditMode ? (
+                <button
+                  className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
+                  disabled={cartItems.length > 0 ? false : true}
+                  onClick={handleUpdateAndDownloadQuote}
+                >
+                  Update and Download Quote
+                </button>
+              ) : (
+                <button
+                  className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
+                  disabled={cartItems.length > 0 ? false : true}
+                  onClick={handlePdfGeneration}
+                >
+                  Download Quote
+                </button>
+              )}
+              <button
+                className={`ml-2 ${cartItems.length > 0 ? 'Clearall-button' : 'Clearallafter-button'}`}
+                disabled={cartItems.length > 0 ? false : true}
+                onClick={() => dispatch(resetCartItem())}
+              >
+                Clear All
+              </button>
+            </div>
+          ) : (
+            <div></div>
+          )}
+
+          {/* {currentPage === "checkout" ?(
             <div className='flex flex-row justify-center items-center'>
             <button
               className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
@@ -310,7 +492,7 @@ export const AdDetails = () => {
             // </button>
             <div></div>
           )
-          }
+          } */}
         </div>
         <br />
   

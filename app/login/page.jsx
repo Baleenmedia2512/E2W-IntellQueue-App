@@ -11,8 +11,6 @@ import { resetOrderData } from '@/redux/features/order-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import './page.css';
-import { resetDateRange } from "@/redux/features/report-slice";
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -68,7 +66,7 @@ const Login = () => {
     
   };
 
-
+  // Validate form fields
   const validateFields = () => {
     let errors = {};
     if (!userName.trim()) {
@@ -91,7 +89,7 @@ const handleLogin = (event) => {
         const encodedPassw = encodeURIComponent(password);
 
         // Assuming companyName, userName, and encodedPassw are defined and used correctly
-        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${'Baleen Test'}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(response.statusText);
@@ -112,7 +110,7 @@ const handleLogin = (event) => {
 
                     // Dispatch actions and navigate based on conditions
                     
-                    dispatch(setCompanyName('Baleen Test'))
+                    // dispatch(setCompanyName('Baleen Test'))
                     dispatch(login(userName));
                     
                     dispatch(setAppRights(data.appRights));
@@ -120,7 +118,6 @@ const handleLogin = (event) => {
                     dispatch(resetRatesData());
                     dispatch(resetQuotesData());
                     dispatch(resetOrderData());
-                    dispatch(resetDateRange());
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{
@@ -248,16 +245,13 @@ const handleLogin = (event) => {
                             )}
                         </div>
                         
-                        <div className="button-container">
                         <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                             type="button"
                             onClick={handleLogin}
-                            >
-                             Sign In
+                        >
+                            Sign In
                         </button>
-</div>
-
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
                         Version 1.8.8
@@ -272,6 +266,7 @@ const handleLogin = (event) => {
                 </div>
                 </div>
             </div>
+            {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
         </div>

@@ -20,7 +20,7 @@ export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
     return SearchTerms;
 }
 
-export const FetchFinanceSeachTerm = async(DBName, SearchTerm) => {
+export const FetchFinanceSearchTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
     const response = await api.get("SearchFinance.php/get",{
         headers: {
@@ -94,36 +94,26 @@ export const FetchQuoteSearchTerm = async(DBName, SearchTerm) => {
     return SearchTerms;
 }
 
-export const UpdatePaymentMilestone = async(Stages, DBName) => {
-    let result = "";
-    try {
-        // Post request without FormData wrapper
-        const response = await api.post("RemoveAllPaymentMilestone.php", {
-            JsonDBName: DBName,
-            JsonStages: Stages,
-            JsonOrderNumber:OrderNumber,
-            JsonUser: loggedInUser
-        }, {
+export const FetchQuoteData = async(DBName, QuoteId) => {
+    let result = [];
+    try{
+        const response = await api.get("FetchQuoteData.php/?",{
             headers: {
-                'Content-Type': "application/json"
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params: {
+                JsonDBName: DBName,
+                JsonQuoteId: QuoteId
             }
         });
 
         result = response.data; // Return the entire response data instead of just 'success'
     } catch (error) {
         console.error(error);
-
-        // Check if error contains response data
-        if (error.response && error.response.data) {
-            result = `Error: ${error.response.data.error}`;
-        } else {
-            result = `Error while updating stage: ${error.message}`;
-        }
     }
 
-    return result; // Return full result object
-};
-
+    return result;
+}
 export const FetchQuoteData = async(DBName, QuoteId) => {
     let result = [];
     try{

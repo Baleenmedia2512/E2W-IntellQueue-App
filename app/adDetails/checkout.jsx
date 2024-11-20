@@ -8,12 +8,13 @@ import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import MuiAlert from '@mui/material/Alert';
 import { RemoveCircleOutline } from '@mui/icons-material';
+import UndoIcon from '@mui/icons-material/Undo';
 import IconButton from '@mui/material/IconButton';
 import { useAppSelector } from '@/redux/store';
 import { setQuotesData, resetQuotesData } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
-import { removeItem, resetCartItem } from '@/redux/features/cart-slice';
+import { removeItem, resetCartItem, removeEditItem } from '@/redux/features/cart-slice';
 import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
@@ -78,12 +79,20 @@ const CheckoutPage = () => {
 
   const routers = useRouter();
 
-  const handleRemoveRateId = (index) => {
-    dispatch(removeItem(index));
-  };
+  const handleRemoveRateId = (index, editMode, newCartOnEdit) => {
 
+    if (editMode) {
+      if(newCartOnEdit) {
+        dispatch(removeItem(index));
+      } else {
+        dispatch(removeEditItem(index));
+      }
+    } else {
+      dispatch(removeItem(index));
+    }
+    
+  };
   const handleEditRow = (item) => {
-    console.log(item)
     dispatch(setQuotesData({ 
     selectedAdMedium: item.adMedium,
     selectedAdType: item.adType,
@@ -114,7 +123,9 @@ const CheckoutPage = () => {
     //   Qty: 1,
     //   Width: 1
     // }
-    isEditMode: true
+    isEditMode: true,
+    editIndex: item.index,
+    editQuoteNumber: item.editQuoteNumber
   }));
   };
   
@@ -163,7 +174,6 @@ const CheckoutPage = () => {
       setQuoteSearchSuggestion(searchSuggestions);
     }
   }
-
   const handleQuoteSelection = async (e) => {
     try {
       const selectedResult = e.target.value;
@@ -176,19 +186,27 @@ const CheckoutPage = () => {
         console.error("Data fetched is not an array:", data);
         return;
       }
-      // console.log(data)
       setIsEditMode(true)
+
+      // Update existing items in cart to isEditMode: true
+      const updatedCartItems = cartItems.map(item => ({
+        ...item,
+        isEditMode: true,
+        editQuoteNumber: data[0].QuoteID || ''
+      }));
+
+      // Update the cart with the modified existing items
+      dispatch(addItemsToCart(updatedCartItems));
       
       data.forEach((item, index) => {
         // Use cartItems.length + index to calculate unique index for each item
         const newIndex = cartItems.length + index + 1;
         
-        
         dispatch(addItemsToCart([{
           index: newIndex,
           adMedium: item.rateName || '',
-          adType: item.adType || '',
-          adCategory: item.adCategory || '',
+          adType: item.typeOfAd || '',
+          adCategory: item.adType || '',
           edition: item.Location || '',
           position: item.Package || '',
           selectedVendor: item.Vendor || '',
@@ -201,14 +219,14 @@ const CheckoutPage = () => {
           rateId: item.RateID || null,
           CampaignDurationUnit: item.CampaignDurationUnits || '',
           leadDay: item.LeadDays || 0,
-          minimumCampaignDuration: item.MinimumCampaignDuration || 0,
+          minimumCampaignDuration: item.MinimumCampaignDuration === 0 ? 1 : item.MinimumCampaignDuration || 1,
           formattedDate: item.ValidityDate || '',
           rateGST: item.GSTPercentage || 0,
-          width: item.Width || 0,
+          width: item.width || 0,
           campaignDurationVisibility: item.campaignDurationVisibility || 0,
           editQuoteNumber: item.QuoteID || '',
-          clientName: item.ClientName || '',
-          isEditMode: true
+          isEditMode: true,
+          cartId: item.CartId
         }]));
         {dispatch(setClientData({
           clientName: item.ClientName ,
@@ -221,7 +239,7 @@ const CheckoutPage = () => {
       console.error("Error in handleQuoteSelection:", error);
     }
   };
-  
+
 
   // const calculateGrandTotal = () => {
   //   let grandTotal = [];
@@ -239,12 +257,17 @@ const CheckoutPage = () => {
 
   const ratesSearchSuggestion = [];
 
-  // console.log(cartItems)
-
+  const handleUndoRemove = (index) => {
+    const updatedCartItems = cartItems.map(item =>
+      item.index === index ? { ...item, isCartRemoved: false } : item
+    );
+    dispatch(addItemsToCart(updatedCartItems)); 
+  };
+  
   return (
-    <div className="text-black w-screen items-center px-3">
+    <div className="text-black w-full items-center px-3">
       <h1 className='text-2xl font-bold text-center mb-4 text-blue-500'>Cart</h1>
-    <div className='justify-center relative'>
+    <div className='justify-center relative mb-4'>
     
                 <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
               <input
@@ -281,14 +304,16 @@ const CheckoutPage = () => {
         {cartItems.length >= 1 ? (
           <div>
             
-            {cartItems[0].isEditMode ? (
-            <div className='my-4'>
+            {cartItems[0].isEditMode && cartItems[0].editQuoteNumber ? (
+            <div className='mb-4'>
             <div className="w-fit sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-1 flex items-center shadow-md sm:mr-4">
               <button
                 className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
                 onClick={() => {
                   dispatch(resetCartItem());
                   dispatch(resetClientData());
+                  dispatch(resetQuotesData());
+                  dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails'}));
                 }}
               >
                 Exit Edit
@@ -296,12 +321,12 @@ const CheckoutPage = () => {
               <div className="flex flex-row text-left text-sm md:text-base pr-2">
                 <p className="text-gray-600 font-semibold">#{cartItems[0].editQuoteNumber}</p>
                 <p className="text-gray-600 font-semibold mx-1">-</p>
-                <p className="text-gray-600 font-semibold">{cartItems[0].clientName}</p>
+                <p className="text-gray-600 font-semibold">{clientName}</p>
                 {/* <p className="text-gray-600 font-semibold mx-1">-</p>
                 <p className="text-gray-600 font-semibold">₹{cartItems[0].unitPrice}</p> */}
               </div>
             </div>
-            <p className="text-xs text-gray-400 italic mt-1">Q.No - Name</p>
+            <p className="text-xs text-gray-400 italic mt-1">Q.No - Client Name</p>
             </div> 
           ) : ''}
           {/* <div className="flex flex-row justify-between mt-8">
@@ -349,7 +374,10 @@ const CheckoutPage = () => {
         </thead>
         <tbody>
           {cartItems.map((item, index) => (
-            <tr key={index}>
+            <tr 
+            key={index}
+            className={item.isCartRemoved ? 'opacity-50 bg-gray-100' : ''}
+            >
               <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
               <td className='p-1.5 border border-gray-200'>{!item.editQuoteNumber ? nextQuoteNumber : item.editQuoteNumber}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
@@ -389,18 +417,29 @@ const CheckoutPage = () => {
                   aria-label="Edit" 
                   className='m-0 h-full'
                   onClick={() => handleEditRow(item)}
+                  disabled={item.isCartRemoved}
                   // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
                 >
                   <EditIcon className='text-blue-500 hover:text-blue-700' fontSize='small'/>
                 </IconButton>
-                <IconButton 
-                  aria-label="Remove" 
-                  className='m-0 h-full' 
-                  onClick={() => handleRemoveRateId(item.index)}
-                  // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
-                >
-                  <RemoveCircleOutline className='text-red-500 hover:text-red-700' fontSize='small'/>
-                </IconButton>
+                {/* Remove or Undo Button */}
+                {item.isCartRemoved ? (
+                  <IconButton
+                    aria-label="Undo"
+                    className='m-0 h-full'
+                    onClick={() => handleUndoRemove(item.index)}
+                  >
+                    <UndoIcon className='text-green-500 hover:text-green-700 opacity-100' fontSize='small' />
+                  </IconButton>
+                ) : (
+                  <IconButton
+                    aria-label="Remove"
+                    className='m-0 h-full'
+                    onClick={() => handleRemoveRateId(item.index, item.isEditMode, item.isNewCart)}
+                  >
+                    <RemoveCircleOutline className='text-red-500 hover:text-red-700' fontSize='small' />
+                  </IconButton>
+                )}
               </div>
             </td>
 
@@ -419,7 +458,21 @@ const CheckoutPage = () => {
       {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
       </div>
       <div className='flex justify-center mt-4'>
-        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white' onClick={() => dispatch(setQuotesData({currentPage: 'adDetails', previousPage: "checkout"}))}><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
+        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white'
+        onClick={() => {
+          // Reset quotes data
+          dispatch(resetQuotesData());
+      
+          // Set quotes data
+          dispatch(setQuotesData({
+              currentPage: 'adDetails',
+              previousPage: "checkout",
+              isEditMode: cartItems.length > 0 ? cartItems[0].isEditMode : false,
+              editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0,
+              isNewCartOnEdit: cartItems.length > 0 && cartItems[0].isEditMode ? true : false
+          }));
+      }}
+      ><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
       </div>       
         </div>
       </div>
