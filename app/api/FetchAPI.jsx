@@ -114,23 +114,3 @@ export const FetchQuoteData = async(DBName, QuoteId) => {
 
     return result;
 }
-export const FetchQuoteData = async(DBName, QuoteId) => {
-    let result = [];
-    try{
-        const response = await api.get("FetchQuoteData.php/?",{
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8'
-            },
-            params: {
-                JsonDBName: DBName,
-                JsonQuoteId: QuoteId
-            }
-        }); 
-        result = response.data;
-
-    }catch(error){
-        console.error(error);
-    }
-
-    return result;
-}
