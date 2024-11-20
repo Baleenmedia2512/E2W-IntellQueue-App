@@ -512,8 +512,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
     formData.append('JsonBillNumber', billNumber);
     formData.append('JsonBillDate', jsonBillDate);
     formData.append('JsonOrderNumber', orderNumber);
-    formData.append('JsonOrderAmountExclGST', amount - gstAmount);
-    formData.append('JsonGstAmount', gstAmount);
+    formData.append('JsonOrderAmountExclGST', orderAmount - gstAmount);
+    formData.append('JsonGSTAmount', gstAmount);
 
     try {
       const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData,{
