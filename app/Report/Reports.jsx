@@ -745,8 +745,9 @@ const orderColumns = [
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: 80 },
   { field: 'OrderDate', headerName: 'Order Date', width: 100 },
   { field: 'ClientName', headerName: 'Client Name', width: 170 },
-  {field: 'ClientContact', headerName: 'Client Contact', width: 100 },
-  { field: 'Margin', headerName:'Margin', width: 100, hide: elementsToHide.includes('RatesMarginPercentText') },
+  { field: 'ClientContact', headerName: 'Client Contact', width: 100 },
+  { field: 'ClientAge', headerName: 'Client Age', width: isMobile ? 120 : 90 },
+  { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },
   { 
     field: 'Receivable', 
     headerName: 'Order Value(₹)', 
@@ -1546,7 +1547,7 @@ const [rateStats, setRateStats] = useState({});
       <DataGrid
          rows={filteredData.length > 0 ? filteredData : orderDetails}
         columns={orderColumns}
-        columnVisibilityModel={{ Margin: !elementsToHide.includes('QuoteSenderNavigation') }}
+        columnVisibilityModel={{ Margin: elementsToHide.includes('RateWiseOrderNumberText'), ClientAge: elementsToHide.includes('QuoteSenderNavigation') }}
         pageSize={10}
         onFilterModelChange={(newFilterModel) => {
           // Merge new filters with existing filters
