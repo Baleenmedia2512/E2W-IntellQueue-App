@@ -11,7 +11,6 @@ import { resetOrderData } from '@/redux/features/order-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import './page.css';
 import { resetDateRange } from "@/redux/features/report-slice";
 
 const Login = () => {
@@ -257,7 +256,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.7.28 {/*Commenting for release */}
+                        Version 1.7.29 {/*Commenting for release */}
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
