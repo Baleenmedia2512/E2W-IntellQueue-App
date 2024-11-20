@@ -668,6 +668,7 @@ useEffect(() => {
   window.addEventListener('resize', handleResize);
   return () => window.removeEventListener('resize', handleResize);
 }, []);
+console.log(elementsToHide)
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
@@ -676,7 +677,7 @@ const orderColumns = [
     { field: 'ClientName', headerName: 'Client Name', width: isMobile ? 150 : 120 },
     { field: 'ClientContact', headerName: 'Client Contact', width: isMobile ? 160 : 120 },
     { field: 'ClientAge', headerName: 'Client Age', width: isMobile ? 120 : 90 },
-    { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90, hide: elementsToHide.includes('RatesMarginPercentText') },
+    { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },
     { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
     { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 230 : 170 },
     { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
@@ -1437,7 +1438,7 @@ const [filterInputs, setFilterInputs] = useState({});
       <DataGrid
          rows={filteredData.length > 0 ? filteredData : orderDetails}
         columns={orderColumns}
-        columnVisibilityModel={{ Margin: !elementsToHide.includes('QuoteSenderNavigation') }}
+        columnVisibilityModel={{ Margin: elementsToHide.includes('RateWiseOrderNumberText'), ClientAge: elementsToHide.includes('QuoteSenderNavigation') }}
         pageSize={10}
         onFilterModelChange={(newFilterModel) => {
           // Merge new filters with existing filters
