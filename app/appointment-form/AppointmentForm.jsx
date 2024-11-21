@@ -22,6 +22,7 @@ export default function AppointmentForm() {
   const mobileRef = useRef(null);
   const periodRef = useRef(null);
   const userName = useAppSelector(state => state.authSlice.userName);
+  const dbName = useAppSelector(state => state.authSlice.dbName);
   const [mobileNumber, setMobileNumber] = useState("");
   const [displayMobileNumber, setDisplayMobileNumber] = useState("");
   const [error, setError] = useState({
@@ -43,6 +44,7 @@ export default function AppointmentForm() {
   const [appointmentId, setAppointmentId] = useState(0);
   const [appDate, setAppDate] = useState(new Date());
   const [clientNumberExists, setClientNumberExists] = useState(false);
+  const [elementsToHide, setElementsToHide] = useState([]);
 
   const appointmentTimePeriod = [
     {label: "Tomorrow", value: "Tomorrow"},
@@ -61,9 +63,31 @@ export default function AppointmentForm() {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
   useEffect(() => {
     searchRef?.current.focus();
+    elementsToHideList(); 
   }, []);
+
+  const elementsToHideList = () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
+        .then((response) => response.json())
+        .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
+
+
+  useEffect(() => {
+    elementsToHide.forEach((name) => {
+      const elements = document.getElementsByName(name);
+      elements.forEach((element) => {
+        element.style.display = 'none'; // Hide the element
+      });
+    });
+  }, [elementsToHide])
 
   async function getExistingAppointment(e){
     const inputData = e.target.value;
@@ -594,7 +618,7 @@ export default function AppointmentForm() {
               onChange={(selectedOption) => {setSelectedPeriod(selectedOption.target.value); setError({period: ""})}}   
             />
             
-               <div className="flex flex-col w-full mt-2">
+               <div className="flex flex-col w-full mt-2" name="AppointmentDateSelect" id="22">
                 <label className="font-montserrat text-lg mb-1">Appointment Date <span className="text-red-500">*</span></label>
                 <input
                   type='date'
