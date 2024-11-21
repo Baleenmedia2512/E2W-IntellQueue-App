@@ -516,9 +516,10 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const handleUploadBills = async () => {
     // Format bill date
+    var orderNumberToBeUploaded = elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
     const formattedBillDate = billDate.format("YYYY-MM-DD");
-    const orderNumberArray = (parseInt(orderNumber))
-      ? orderNumber.split(",").map(num => parseFloat(num.trim())) 
+    const orderNumberArray = (parseInt(orderNumberToBeUploaded))
+      ? orderNumberToBeUploaded.split(",").map(num => parseFloat(num.trim())) 
       : null;
   
     // Function to create FormData
@@ -540,7 +541,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     const uploadBill = async (formData) => {
       try {
         const response = await axios.post(
-          "https://orders.baleenmedia.com/API/Media/UploadExpenseBillsTest.php",
+          "https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php",
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
@@ -553,7 +554,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
   
     // Handle upload logic
     if (!orderNumberArray) {
-      const formData = createFormData(orderNumber, true);
+      const formData = createFormData(orderNumberToBeUploaded, true);
       await uploadBill(formData);
     } else {
       let isNotUploaded = true;
