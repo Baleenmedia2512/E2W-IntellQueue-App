@@ -3,7 +3,7 @@ import './page.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
-import { TextField } from '@mui/material';
+import { CircularProgress, TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -30,7 +30,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FetchFinanceSeachTerm } from '../api/FetchAPI';
+import { FetchFinanceSearchTerm } from '../api/FetchAPI';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -72,15 +72,21 @@ const FinanceData = () => {
   const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, rateWiseOrderNumber: nextRateWiseOrderNumber, remarks: orderRemarks } = orderData;
   // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
+  const amountRef = useRef(null);
+  const orderNumberRef = useRef(null);
   const companyName = useAppSelector(state => state.authSlice.companyName);
+  const billNumberRef = useRef(null);
   // const dbName = "Grace Scans";
   // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
   const [anchorElDate, setAnchorElDate] = React.useState(null);
+  const [billAnchorElDate, setBillAnchorElDate] = useState(null);
   const [anchorElChequeDate, setAnchorElChequeDate] = React.useState(null);
-  const [bill, setBill] = useState(null)
+  const [bill, setBill] = useState(null);
+  const [billNumber, setBillNumber] = useState("");
+  const [billDate, setBillDate] = useState(dayjs());
   // const [orderNumber, setOrderNumber] = useState(null);
   // const [clientName, setClientName] = useState(null);
   // const [orderAmount, setOrderAmount] = useState(null);
@@ -111,6 +117,7 @@ const FinanceData = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [balanceAmount, setBalanceAmount] = useState('');
   // const [isOrderExist, setIsOrderExist] = useState(false);
+  const [billsOnly, setBillsOnly] = useState(false);
   const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -148,6 +155,7 @@ const FinanceData = () => {
 
 
   const formattedTransactionDate = transactionDate.format('YYYY-MM-DD');
+  const transactionDateFormatted = transactionDate.format('DD-MMM-YY');
   //const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
 
   const year = transactionDate.$y;
@@ -157,6 +165,9 @@ const FinanceData = () => {
   const minutes = transactionTime.$m;
   const seconds = transactionTime.$s;
   
+  const formattedBillDate = billDate.format('DD-MMM-YY');
+  //const formattedChequeDate = chequeDate.format('YYYY-MM-DD');
+
   // Assuming chequeTime is a dayjs object like transactionTime
 const chequeHours = chequeTime.$H;
 const chequeMinutes = chequeTime.$m;
@@ -427,8 +438,10 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const handleOrderNumberChange = (event) => {
     
-    const newOrderNumber = event.target.value;
+    const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
+    
+    {!billsOnly &&
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
@@ -454,11 +467,13 @@ const openChequeDate = Boolean(anchorElChequeDate);
     if (errors.orderNumber) {
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
     }
+  }
   };
 
   const handleRateWiseOrderNumberChange = (event) => {
     
-    const newOrderNumber = event.target.value;
+    const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
+
     setRateWiseOrderNumber(newOrderNumber);
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
@@ -492,31 +507,117 @@ const openChequeDate = Boolean(anchorElChequeDate);
       setOrderNumber(0);
       setRateWiseOrderNumber(0);
     }
+    if(transactionType.value === 'Income'){
+      setBillsOnly(false);
+    }
+
   },[transactionType])
 
 
   const handleUploadBills = async () => {
-
-    const formData = new FormData();
-    formData.append('JsonFile', bill);
-    formData.append('JsonCompanyName', companyName)
-
-    try {
-      const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData,{
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      return response.data
-    } catch (error) {
-      console.error(error);
+    // Format bill date
+    const formattedBillDate = billDate.format("YYYY-MM-DD");
+    const orderNumberArray = (parseInt(orderNumber))
+      ? orderNumber.split(",").map(num => parseFloat(num.trim())) 
+      : null;
+  
+    // Function to create FormData
+    const createFormData = (orderNum, isNotUploaded) => {
+      const formData = new FormData();
+      formData.append("JsonFile", bill);
+      formData.append("JsonCompanyName", companyName);
+      formData.append("JsonEntryUser", username);
+      formData.append("JsonBillNumber", billNumber);
+      formData.append("JsonBillDate", formattedBillDate);
+      formData.append("JsonOrderNumber", orderNum);
+      formData.append("JsonOrderAmountExclGST", orderAmount - gstAmount);
+      formData.append("JsonGSTAmount", gstAmount);
+      formData.append("JsonIsNotUploaded", isNotUploaded);
+      return formData;
+    };
+  
+    // Function to send data
+    const uploadBill = async (formData) => {
+      try {
+        const response = await axios.post(
+          "https://orders.baleenmedia.com/API/Media/UploadExpenseBillsTest.php",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        console.log(response.data);
+        
+      } catch (error) {
+        console.error("Error uploading record:", error);
+      }
+    };
+  
+    // Handle upload logic
+    if (!orderNumberArray) {
+      const formData = createFormData(orderNumber, true);
+      await uploadBill(formData);
+    } else {
+      let isNotUploaded = true;
+      setToastMessage(<span>
+        <CircularProgress size={20} style={{ marginRight: "8px" }} />
+        {`Please wait while we are uploading your bills for ${orderNumberArray.length} Orders`}
+      </span>);
+      setSeverity('warning');
+      setToast(true);
+      for (const number of orderNumberArray) {
+        const formData = createFormData(number, isNotUploaded);
+        await uploadBill(formData);
+        isNotUploaded = false; // Only the first record is marked as "not uploaded"
+      }
+      setToast(false);
+      setSuccessMessage("Bill added successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
   
+  
 
   const insertNewFinance = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+
+    if(billsOnly){
+      if(!bill){
+        setToastMessage("Please upload a Bill!");
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 3000);
+        return;
+      }else if(orderAmount === 0 || orderAmount === ""){
+        setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
+        amountRef?.current.focus();
+        return;
+      }else if(bill && billNumber === ''){
+        setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
+        billNumberRef?.current.focus();
+        return;
+      }else if((orderNumber === "" || parseInt(orderNumber) === 0) && expenseCategory?.value === 'Project'){
+        setErrors((prevErrors) => ({...prevErrors, orderNumber: "Order Number is required for Project Category!"}));
+        orderNumberRef?.current.focus();
+        return;
+      }else{
+        await handleUploadBills();
+        setBill(null);
+        setClientName('');
+        setErrors({})
+        setExpenseCategory('');
+        setGSTAmount('');
+        setOrderAmount('');
+        setOrderNumber('');
+        setRateWiseOrderNumber('');
+        setTaxType(taxTypeOptions[2]);
+        setTransactionType(transactionOptions[0]);
+        dispatch(resetOrderData());
+        dispatch(resetClientData());
+        return;
+      }
+    }
+
     if (!isOrderExist && !expenseCategory) {
       setToastMessage('Order Number does not exist!');
       setSeverity('error');
@@ -535,18 +636,22 @@ const openChequeDate = Boolean(anchorElChequeDate);
       }, 3000);
       return;
     } else if(orderNumber === "" || isNaN(orderNumber)){
+      // orderNumber?.current.focus()
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter an valid Order Number!" }));
       return;
     }else if(isNaN(parseInt(orderAmount)) || orderAmount === "0"){
+      orderAmount?.current.focus()
       setErrors((prevErrors) => ({...prevErrors, orderAmount: "Please enter an valid Order Amount!"}));
+      return;
+    }else if(bill && billNumber === ""){
+      setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
+      billNumberRef?.current.focus()
       return;
     }else {
 
     if (validateFields()) {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClientName=${clientName}`);
-
-
           const data = await response.json();
           if (data === 'Inserted Successfully!') {
             setSuccessMessage('Finance Entry Added');
@@ -688,26 +793,7 @@ useEffect(() => {
   };
 
 
-
-  const clearFinance = (e) => {
-    //e.preventDefault();
-          setChequeNumber('');
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          setRateWiseOrderNumber('');
-  };
-
   const cancelFinance = (e) => {
-    e.preventDefault();
           setChequeNumber('');
           setClientName('');
           setExpenseCategory('');
@@ -724,6 +810,7 @@ useEffect(() => {
           setFinanceSearchTerm('');
           setIsUpdateMode(false);
           setTransactionDate(dayjs()); 
+          setDisplayClientName('');
 
   };
   const handleFileChange = (e) => {
@@ -766,7 +853,7 @@ useEffect(() => {
     return; // Exit early
   }
 
-  const searchSuggestions = await FetchFinanceSeachTerm(companyName, searchTerm);
+  const searchSuggestions = await FetchFinanceSearchTerm(companyName, searchTerm);
   setFinanceSearchSuggestion(searchSuggestions);
 };
 
@@ -953,6 +1040,7 @@ useEffect(() => {
       });
       // Check if the response is successful
       const data = response.data;
+      console.log(data)
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Finance record updated successfully!');
   
@@ -965,7 +1053,7 @@ useEffect(() => {
         setFinanceSearchTerm('');
         setRateWiseOrderNumber('');
         setIsUpdateMode(false);
-        clearFinance();
+        cancelFinance();
       } else {
         alert(`Error updating finance data: ${data}`);
       }
@@ -1004,13 +1092,13 @@ useEffect(() => {
       
       <div className="flex items-center mt-2 justify-center mb-2">
       {!isUpdateMode && (
-    <button className="cancel-button" onClick={clearFinance}>
+    <button className="cancel-button" onClick={cancelFinance}>
       Clear
     </button>
   )}
 
   <button
-    className="Add-button ml-2"
+    className="custom-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
   >
     
@@ -1019,11 +1107,12 @@ useEffect(() => {
 </div>
 
       </div>
-
+      
       <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
-  
+      
   {/* Search Input Section */}
   <div className="w-full sm:w-1/2">
+    
     <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
       <input
         className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
@@ -1080,21 +1169,121 @@ useEffect(() => {
       <p className="text-gray-600 font-semibold">₹{financeAmount}</p>
     </div>
   </div>
-) : ''}
+) : (transactionType?.value === "Operational Expense" && <div className="mb-2 flex items-center text-black">
+<label className="flex items-center cursor-pointer">
+  <input
+    type="checkbox"
+    className="ml-5 form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+    checked={billsOnly}
+    onChange={() => setBillsOnly(!billsOnly)}
+  />
+  <span className="ml-2 text-sm font-medium">Add Bills Only </span>
+</label>
+</div>
+)}
       <form className="space-y-4 ">
       
       {transactionType.value === 'Operational Expense' && 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div className=' bg-white rounded-lg ml-4 '>
                         <div className='relative '>
-                      <button className="Upload-button">
-                      Upload Bill
-                    <input type = "file" accept="application/pdf, image/jpg, image/jpeg" onChange={handleFileChange} className={`absolute inset-0 opacity-0`}/>
+                      <button type="button" className="Upload-button" onClick={(e) => {setBill(null)}}>
+                      {!bill ? 'Upload Bill' : 'Clear Bill'}
+                    {!bill && <input type = "file" accept="application/pdf, image/jpg, image/jpeg" onChange={handleFileChange} className={`absolute inset-0 opacity-0`}/>}
                     </button></div>
             <div className="mt-2 text-sm text-gray-700 break-words">
             {bill && bill.name}
             </div>
-            </div></div>}
+            </div>
+            { bill && (
+              <div className='mt-3' >
+            <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Bill Number<span className="text-red-500">*</span></label>
+            <div className="w-full flex gap-3">
+            <input className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.billNumber ? 'border-red-400' : isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+                type="text"
+                placeholder="Bill Number"
+                id='billno'
+                name="BillNumberInput" 
+                ref={billNumberRef}
+                // required={!isEmpty} 
+                value={billNumber}
+                pattern="\d*"
+                // inputMode="numeric"
+                onFocus={e => e.target.select()}
+                onChange={(e) => {
+                  const input = e.target.value;
+                  setBillNumber(input);
+                  if (errors.billNumber) {
+                    setErrors((prevErrors) => ({ ...prevErrors, billNumber: undefined }));
+                  }
+                }}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {errors.billNumber && <span className="text-red-500 text-sm">{errors.billNumber}</span>}
+            </div>
+            )}
+            {bill && (
+              <div className='mt-3 ml-4'>
+                    <label className="block mt-1 mb-2 text-gray-700 font-semibold">Bill Date<span className="text-red-500">*</span></label>
+                    <div className='flex w-full gap-1'>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box mb={2} >
+            <TextField
+
+              // className="py-2"
+              fullWidth
+              label="Select Date"
+              value={formattedBillDate}
+              onClick={(e) => setBillAnchorElDate(e.currentTarget)}
+              InputProps={{
+                style: {
+                  borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode, default otherwise
+                  borderWidth: isUpdateMode ? 1 : 1, // Thicker border when in update mode
+                  maxHeight: 40,
+                },
+              }}
+            />
+            <Popover
+              open={Boolean(billAnchorElDate)}
+              anchorEl={billAnchorElDate}
+              onClose={() => setBillAnchorElDate(null)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+            >
+              <DateCalendar
+                value={billDate}
+                onChange={(newValue) => {
+                  setBillDate(newValue);
+      //             validateTransactionDate(newValue);  // Call validation after setting the new date
+      //             // Validate the new transaction date and set errors
+      // const errorMsg = validateTransactionDate(newValue);
+      // setErrors((prevErrors) => ({
+      //   ...prevErrors,
+      //   transactionDate: errorMsg, // Set the error message if any
+      // }));
+                  setBillAnchorElDate(null);
+                }}
+                
+              />
+            </Popover>
+          </Box>
+          </LocalizationProvider>
+          </div>
+          </div>
+            )}
+            </div>}
             
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
       
@@ -1171,7 +1360,7 @@ useEffect(() => {
                 // required={!isEmpty} 
                 value={clientName}
                 onChange = {handleClientNameTermChange}
-                disabled={isUpdateMode}
+                disabled={isUpdateMode || billsOnly}
                 onFocus={e => e.target.select()}
                 onBlur={() => {
             setTimeout(() => {
@@ -1215,8 +1404,10 @@ useEffect(() => {
 ) : null}
  {/* )} */}
 </div></div>
-    {/* {!elementsToHide.includes("RateWiseOrderNumber") ? ( */}
-    {transactionType && transactionType.value !== 'Operational Expense' && (
+    {(
+  transactionType?.value === 'Income' || 
+  (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
+) ? (
     <div id="4" name="RateWiseOrderNumberText">
         <label className='block mb-2 mt-4 text-gray-700 font-semibold' >
           Order Number<span className="text-red-500">*</span>
@@ -1226,8 +1417,9 @@ useEffect(() => {
            className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
             type="text"
             placeholder="Ex. 10000"
+            ref={orderNumberRef}
             value={rateWiseOrderNumber}
-            pattern="\d*"
+            pattern="/[^\d,]/g"
             inputMode="numeric"
             onChange={handleRateWiseOrderNumberChange}
             disabled={isUpdateMode}
@@ -1245,8 +1437,8 @@ useEffect(() => {
           />
         </div>
         {errors.orderNumber && <span className="text-red-500 text-sm">{errors.orderNumber}</span>}
-        </div>)}
-      {/* ):( */}
+        </div>
+        ) : null}
       {(
   transactionType?.value === 'Income' || 
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
@@ -1260,6 +1452,7 @@ useEffect(() => {
         className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
         type="text"
         placeholder="Ex. 10000"
+        ref={orderNumberRef}
         value={orderNumber}
         pattern="\d*"
         inputMode="numeric"
@@ -1326,6 +1519,7 @@ useEffect(() => {
                 type="text"
                 placeholder="Amount (₹)" 
                 id='4'
+                ref={amountRef}
                 name="AmountInput" 
                 // required={!isEmpty} 
                 value={orderAmount}
@@ -1413,34 +1607,36 @@ useEffect(() => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {/* {taxType && taxType.value === 'GST' && (
+               {taxType && taxType.value === 'GST' && (
               <div>
-               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
-          <div className="w-full flex gap-3">
-          <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
-              type="text"
-              placeholder="GST%" 
-              id='4'
-              name="GSTInput" 
-              value={gstPercentage}
-              onChange = {(e) => {setGSTPercentage(e.target.value)
-                if (errors.gstPercentage) {
-                  setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
-                }
-              }}
-              onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const inputs = document.querySelectorAll('input, select, textarea');
-                  const index = Array.from(inputs).findIndex(input => input === e.target);
-                  if (index !== -1 && index < inputs.length - 1) {
-                  inputs[index + 1].focus();
-                  }
-              }
-              }}
-              />
-          </div>
-          {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+          {/*      <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
+          // <div className="w-full flex gap-3">
+          // <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+          //     type="text"
+          //     placeholder="GST%" 
+          //     id='4'
+          //     name="GSTInput" 
+          //     value={gstPercentage}
+          //     onChange = {(e) => {setGSTPercentage(e.target.value)
+          //       if (errors.gstPercentage) {
+          //         setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
+          //       }
+          //     }}
+          //     onKeyDown={(e) => {
+          //     if (e.key === 'Enter') {
+          //         e.preventDefault();
+          //         const inputs = document.querySelectorAll('input, select, textarea');
+          //         const index = Array.from(inputs).findIndex(input => input === e.target);
+          //         if (index !== -1 && index < inputs.length - 1) {
+          //         inputs[index + 1].focus();
+          //         }
+          //     }
+          //     }}
+          //     />
+          // </div>
+          // {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+          //      </div>
+               //      )} */}
           
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1471,7 +1667,7 @@ useEffect(() => {
             </div>
             {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
             </div>
-            )} */}
+            )} 
             
             <div className='mt-3'> 
             <label className='block mb-2 mt-1 text-gray-700 font-semibold'>Remarks</label>
@@ -1482,6 +1678,7 @@ useEffect(() => {
               name="RemarksTextArea"
               placeholder="Remarks"
               value={remarks}
+              disabled={billsOnly}
               onChange={e => setRemarks(e.target.value)}
               onFocus={e => e.target.select()}
             ></TextareaAutosize>
@@ -1496,8 +1693,9 @@ useEffect(() => {
             className="custom-date-picker"
             fullWidth
             label="Select Date"
-            value={formattedTransactionDate}
+            value={transactionDateFormatted}
             onClick={handleDateClick}
+            disabled={billsOnly}
             InputProps={{
               style: {
                 borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode, default otherwise
@@ -1534,6 +1732,7 @@ useEffect(() => {
         </Box>
         <Box>
         <TimePicker
+            disabled={billsOnly}
             className="custom-time-picker"
             label="Select Time"
             value={transactionTime}
@@ -1563,9 +1762,10 @@ useEffect(() => {
                 <label className="block mt-1 mb-2 text-gray-700 font-semibold">Payment Mode</label>
             {/* <div className='flex w-full'> */}
             <Dropdown
-              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible ${isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline disabled:cursor-not-allowed focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible ${isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               id="5"
               name="PaymentModeSelect"
+              disabled={billsOnly}
               placeholder="Select Payment Mode"
               styles={{
                 control: (provided) => ({
@@ -1591,6 +1791,7 @@ useEffect(() => {
                 placeholder="Ex. 10000" 
                 id='3'
                 name="ChequeNumberInput"
+                disabled={billsOnly}
                 value={chequeNumber} 
                 onChange = {(e) => {setChequeNumber(e.target.value)
                   if (errors.chequeNumber) {
@@ -1621,6 +1822,7 @@ useEffect(() => {
                  <TextField
                    className="custom-date-picker"
                    fullWidth
+                   disabled={billsOnly}
                    label="Select Date"
                    value={formattedChequeDate}
                    onClick={handleChequeDateClick}
