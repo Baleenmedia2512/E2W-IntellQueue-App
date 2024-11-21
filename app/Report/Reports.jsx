@@ -1469,7 +1469,6 @@ const [filterInputs, setFilterInputs] = useState({});
         
         
         
-         // Update the filter model state
         initialState={{
           sorting: {
             sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
