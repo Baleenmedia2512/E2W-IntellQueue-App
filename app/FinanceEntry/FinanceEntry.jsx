@@ -3,7 +3,7 @@ import './page.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
-import { TextField } from '@mui/material';
+import { CircularProgress, TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -72,6 +72,8 @@ const FinanceData = () => {
   const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, rateWiseOrderNumber: nextRateWiseOrderNumber, remarks: orderRemarks } = orderData;
   // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
+  const amountRef = useRef(null);
+  const orderNumberRef = useRef(null);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const billNumberRef = useRef(null);
   // const dbName = "Grace Scans";
@@ -115,6 +117,7 @@ const FinanceData = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [balanceAmount, setBalanceAmount] = useState('');
   // const [isOrderExist, setIsOrderExist] = useState(false);
+  const [billsOnly, setBillsOnly] = useState(false);
   const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -437,6 +440,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
+    
+    {!billsOnly &&
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
@@ -462,6 +467,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     if (errors.orderNumber) {
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
     }
+  }
   };
 
   const handleRateWiseOrderNumberChange = (event) => {
@@ -501,76 +507,117 @@ const openChequeDate = Boolean(anchorElChequeDate);
       setOrderNumber(0);
       setRateWiseOrderNumber(0);
     }
+    if(transactionType.value === 'Income'){
+      setBillsOnly(false);
+    }
+
   },[transactionType])
 
 
   const handleUploadBills = async () => {
-
-    const jsonBillDate = billDate.format("YYYY-MM-DD")
-    const formData = new FormData();
-    var IsNotUploaded = true;
-
-    const orderAmountArray = orderAmount.split(',').map(amount => parseFloat(amount.trim()));
-
-    for (const amount of orderAmountArray) {
-      // Initialize FormData for each record
+    // Format bill date
+    const formattedBillDate = billDate.format("YYYY-MM-DD");
+    const orderNumberArray = (parseInt(orderNumber))
+      ? orderNumber.split(",").map(num => parseFloat(num.trim())) 
+      : null;
+  
+    // Function to create FormData
+    const createFormData = (orderNum, isNotUploaded) => {
       const formData = new FormData();
-      formData.append('JsonFile', bill);
-      formData.append('JsonCompanyName', companyName);
-      formData.append('JsonEntryUser', username);
-      formData.append('JsonBillNumber', billNumber);
-      formData.append('JsonBillDate', jsonBillDate);
-      formData.append('JsonOrderNumber', orderNumber);
-
-      // Update orderAmount and calculate excluding GST
-      const amountExclGST = amount - gstAmount;
-      formData.append('JsonOrderAmountExclGST', amountExclGST);
-      formData.append('JsonGSTAmount', gstAmount);
-      formData.append('JsonIsNotUploaded', IsNotUploaded);
-      IsNotUploaded = false;
+      formData.append("JsonFile", bill);
+      formData.append("JsonCompanyName", companyName);
+      formData.append("JsonEntryUser", username);
+      formData.append("JsonBillNumber", billNumber);
+      formData.append("JsonBillDate", formattedBillDate);
+      formData.append("JsonOrderNumber", orderNum);
+      formData.append("JsonOrderAmountExclGST", orderAmount - gstAmount);
+      formData.append("JsonGSTAmount", gstAmount);
+      formData.append("JsonIsNotUploaded", isNotUploaded);
+      return formData;
+    };
+  
+    // Function to send data
+    const uploadBill = async (formData) => {
       try {
-          // Send POST request for each record
-          const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData, {
-              headers: {
-                  'Content-Type': 'multipart/form-data'
-              }
-          });
-
-          setSuccessMessage('Bill added successfully!');
-              setTimeout(() => {
-            setSuccessMessage('');
-          });
+        const response = await axios.post(
+          "https://orders.baleenmedia.com/API/Media/UploadExpenseBillsTest.php",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        console.log(response.data);
+        
       } catch (error) {
-          console.error(`Error uploading record for orderAmount ${amount}:`, error);
+        console.error("Error uploading record:", error);
       }
-  }
-
-    // formData.append('JsonFile', bill);
-    // formData.append('JsonCompanyName', companyName);
-    // formData.append('JsonEntryUser', username);
-    // formData.append('JsonBillNumber', billNumber);
-    // formData.append('JsonBillDate', jsonBillDate);
-    // formData.append('JsonOrderNumber', orderNumber);
-    // formData.append('JsonOrderAmountExclGST', orderAmount - gstAmount);
-    // formData.append('JsonGSTAmount', gstAmount);
-    // formData.append('JsonIsNotUploaded', IsNotUploaded);
-
-    // try {
-    //   const response = await axios.post('https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php', formData,{
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data'
-    //     }
-    //   });
-
-    //   return response.data
-    // } catch (error) {
-    //   console.error(error);
-    // }
+    };
+  
+    // Handle upload logic
+    if (!orderNumberArray) {
+      const formData = createFormData(orderNumber, true);
+      await uploadBill(formData);
+    } else {
+      let isNotUploaded = true;
+      setToastMessage(<span>
+        <CircularProgress size={20} style={{ marginRight: "8px" }} />
+        {`Please wait while we are uploading your bills for ${orderNumberArray.length} Orders`}
+      </span>);
+      setSeverity('warning');
+      setToast(true);
+      for (const number of orderNumberArray) {
+        const formData = createFormData(number, isNotUploaded);
+        await uploadBill(formData);
+        isNotUploaded = false; // Only the first record is marked as "not uploaded"
+      }
+      setToast(false);
+      setSuccessMessage("Bill added successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
   };
+  
   
 
   const insertNewFinance = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+
+    if(billsOnly){
+      if(!bill){
+        setToastMessage("Please upload a Bill!");
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 3000);
+        return;
+      }else if(orderAmount === 0 || orderAmount === ""){
+        setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
+        amountRef?.current.focus();
+        return;
+      }else if(bill && billNumber === ''){
+        setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
+        billNumberRef?.current.focus();
+        return;
+      }else if((orderNumber === "" || parseInt(orderNumber) === 0) && expenseCategory?.value === 'Project'){
+        setErrors((prevErrors) => ({...prevErrors, orderNumber: "Order Number is required for Project Category!"}));
+        orderNumberRef?.current.focus();
+        return;
+      }else{
+        await handleUploadBills();
+        setBill(null);
+        setClientName('');
+        setErrors({})
+        setExpenseCategory('');
+        setGSTAmount('');
+        setOrderAmount('');
+        setOrderNumber('');
+        setRateWiseOrderNumber('');
+        setTaxType(taxTypeOptions[2]);
+        setTransactionType(transactionOptions[0]);
+        dispatch(resetOrderData());
+        dispatch(resetClientData());
+        return;
+      }
+    }
+
     if (!isOrderExist && !expenseCategory) {
       setToastMessage('Order Number does not exist!');
       setSeverity('error');
@@ -589,9 +636,11 @@ const openChequeDate = Boolean(anchorElChequeDate);
       }, 3000);
       return;
     } else if(orderNumber === "" || isNaN(orderNumber)){
+      // orderNumber?.current.focus()
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter an valid Order Number!" }));
       return;
     }else if(isNaN(parseInt(orderAmount)) || orderAmount === "0"){
+      orderAmount?.current.focus()
       setErrors((prevErrors) => ({...prevErrors, orderAmount: "Please enter an valid Order Amount!"}));
       return;
     }else if(bill && billNumber === ""){
@@ -603,8 +652,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
     if (validateFields()) {
       try {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClientName=${clientName}`);
-
-
           const data = await response.json();
           if (data === 'Inserted Successfully!') {
             setSuccessMessage('Finance Entry Added');
@@ -1060,11 +1107,12 @@ useEffect(() => {
 </div>
 
       </div>
-
+      
       <div className="flex flex-col sm:flex-row justify-center mx-auto mb-4 pt-3 sm:pt-7 mt-4">
-  
+      
   {/* Search Input Section */}
   <div className="w-full sm:w-1/2">
+    
     <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
       <input
         className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0"
@@ -1121,7 +1169,18 @@ useEffect(() => {
       <p className="text-gray-600 font-semibold">₹{financeAmount}</p>
     </div>
   </div>
-) : ''}
+) : (transactionType?.value === "Operational Expense" && <div className="mb-2 flex items-center text-black">
+<label className="flex items-center cursor-pointer">
+  <input
+    type="checkbox"
+    className="ml-5 form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+    checked={billsOnly}
+    onChange={() => setBillsOnly(!billsOnly)}
+  />
+  <span className="ml-2 text-sm font-medium">Add Bills Only </span>
+</label>
+</div>
+)}
       <form className="space-y-4 ">
       
       {transactionType.value === 'Operational Expense' && 
@@ -1301,7 +1360,7 @@ useEffect(() => {
                 // required={!isEmpty} 
                 value={clientName}
                 onChange = {handleClientNameTermChange}
-                disabled={isUpdateMode}
+                disabled={isUpdateMode || billsOnly}
                 onFocus={e => e.target.select()}
                 onBlur={() => {
             setTimeout(() => {
@@ -1358,6 +1417,7 @@ useEffect(() => {
            className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
             type="text"
             placeholder="Ex. 10000"
+            ref={orderNumberRef}
             value={rateWiseOrderNumber}
             pattern="/[^\d,]/g"
             inputMode="numeric"
@@ -1392,6 +1452,7 @@ useEffect(() => {
         className={`w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderNumber ? 'border-red-400' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
         type="text"
         placeholder="Ex. 10000"
+        ref={orderNumberRef}
         value={orderNumber}
         pattern="\d*"
         inputMode="numeric"
@@ -1458,6 +1519,7 @@ useEffect(() => {
                 type="text"
                 placeholder="Amount (₹)" 
                 id='4'
+                ref={amountRef}
                 name="AmountInput" 
                 // required={!isEmpty} 
                 value={orderAmount}
@@ -1616,6 +1678,7 @@ useEffect(() => {
               name="RemarksTextArea"
               placeholder="Remarks"
               value={remarks}
+              disabled={billsOnly}
               onChange={e => setRemarks(e.target.value)}
               onFocus={e => e.target.select()}
             ></TextareaAutosize>
@@ -1632,6 +1695,7 @@ useEffect(() => {
             label="Select Date"
             value={transactionDateFormatted}
             onClick={handleDateClick}
+            disabled={billsOnly}
             InputProps={{
               style: {
                 borderColor: isUpdateMode ? '#facc15' : '', // Yellow in update mode, default otherwise
@@ -1668,6 +1732,7 @@ useEffect(() => {
         </Box>
         <Box>
         <TimePicker
+            disabled={billsOnly}
             className="custom-time-picker"
             label="Select Time"
             value={transactionTime}
@@ -1697,9 +1762,10 @@ useEffect(() => {
                 <label className="block mt-1 mb-2 text-gray-700 font-semibold">Payment Mode</label>
             {/* <div className='flex w-full'> */}
             <Dropdown
-              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible ${isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+              className={`w-full text-black border border-gray-400 rounded-lg focus:outline-none focus:shadow-outline disabled:cursor-not-allowed focus:border-blue-300 focus:ring focus:ring-blue-300 overflow-visible ${isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               id="5"
               name="PaymentModeSelect"
+              disabled={billsOnly}
               placeholder="Select Payment Mode"
               styles={{
                 control: (provided) => ({
@@ -1725,6 +1791,7 @@ useEffect(() => {
                 placeholder="Ex. 10000" 
                 id='3'
                 name="ChequeNumberInput"
+                disabled={billsOnly}
                 value={chequeNumber} 
                 onChange = {(e) => {setChequeNumber(e.target.value)
                   if (errors.chequeNumber) {
@@ -1755,6 +1822,7 @@ useEffect(() => {
                  <TextField
                    className="custom-date-picker"
                    fullWidth
+                   disabled={billsOnly}
                    label="Select Date"
                    value={formattedChequeDate}
                    onClick={handleChequeDateClick}
