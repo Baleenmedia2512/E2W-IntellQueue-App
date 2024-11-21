@@ -687,7 +687,7 @@ const fetchRates = async () => {
       
 //report oderenumber data fetch --SK--
 
-const fetchOrderDetailsByOrderNumber = () => {
+const fetchOrderDetailsByOrderNumber = (orderNum) => {
     axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`)
       .then((response) => {
@@ -742,7 +742,7 @@ const fetchOrderDetailsByOrderNumber = () => {
   // }, [orderNumber]); // Re-fetch when orderNumber changes
   useEffect(() => {
     if (orderNumber) {
-      fetchOrderDetailsByOrderNumber();
+      fetchOrderDetailsByOrderNumber(orderNumber);
       setIsOrderUpdate(true); // Set the update flag if orderNumber exists
       setDisplayUnitPrice(receivableRP);
     }
