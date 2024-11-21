@@ -122,6 +122,9 @@ export default function BottomBarTest() {
           break;
         case '/Payment-Milestone':
           setSelected('paymentMilestone');
+          break;   
+        case '/appointment-form':
+          setSelected('appointmentForm');
           break;          
         default:
           break;
@@ -165,7 +168,10 @@ export default function BottomBarTest() {
         break;
       case 10:
         router.push('/Payment-Milestone');
-        break;          
+        break;
+      case 11:
+        router.push('/appointment-form');
+        break;            
       default:
         break;
     }
@@ -329,6 +335,24 @@ export default function BottomBarTest() {
       />
     </svg>
   );
+
+  const AppointmentFormIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-5 w-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 2v2m8-2v2M3 10h18M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2zm2 4v6m4-6v6m4-6v6"
+      />
+    </svg>
+  );
+  
   
 
   const Menus = [
@@ -496,12 +520,19 @@ export default function BottomBarTest() {
             dataTag=""
           />
           <SubNavItem
+          icon={<AppointmentFormIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
+          label="Appointment Manager"
+          onClick={() => { setSelected('appointmentForm'); setShowMoreOptions(false); handleChange(null, 11); }} // Ensure the value corresponds to the correct route
+          additionalClasses="hover:bg-blue-50"
+          dataTag=""
+          />
+          {/* <SubNavItem
           icon={<PaymentMilestoneIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
           label="Payment Milestone"
           onClick={() => { setSelected('paymentMilestone'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
           additionalClasses="hover:bg-blue-50"
           dataTag=""
-          />
+          /> */}
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
             label={<span className="text-red-600">Log Out</span>}

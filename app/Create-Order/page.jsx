@@ -80,7 +80,6 @@ const CreateOrder = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
   const [waiverAmount, setWaiverAmount] = useState(0);
-console.log(isConsultantWaiverChecked)
   
     
     const dispatch = useDispatch();
@@ -696,7 +695,6 @@ const fetchOrderDetailsByOrderNumber = () => {
         if (data) {
           // Parse the date
           const formattedDate = parseDateFromDB(data.orderDate);
-          //console.log(data)
           // Set all the necessary states
           dispatch(setClientName(data.clientName));
           setOrderDate(data.orderDate);
@@ -713,7 +711,6 @@ const fetchOrderDetailsByOrderNumber = () => {
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
           setWaiverAmount(data.waiverAmount);
-          console.log(data)
           if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
             setIsConsultantWaiverChecked(true);
           }
