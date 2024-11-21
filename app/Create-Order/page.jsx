@@ -32,7 +32,7 @@ const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
-    const stages = useAppSelector(state => state.stageSlice.stages);
+    const stages = useAppSelector(state => state.stageSlice?.stages);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP, clientName, clientNumber} = orderDetails;
@@ -1446,7 +1446,7 @@ return (
     {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
   </div>
 ) : (
-  <button className="placeorder-button" onClick={PlaceOrder}>Place Order</button>
+  <button className="custom-button" onClick={PlaceOrder}>Place Order</button>
 )}
     
     <Dialog

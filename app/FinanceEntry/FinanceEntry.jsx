@@ -536,7 +536,10 @@ const openChequeDate = Boolean(anchorElChequeDate);
               }
           });
 
-          console.log(`Record for orderAmount ${amount} uploaded successfully:`, response.data);
+          setSuccessMessage('Bill added successfully!');
+              setTimeout(() => {
+            setSuccessMessage('');
+          });
       } catch (error) {
           console.error(`Error uploading record for orderAmount ${amount}:`, error);
       }
@@ -1125,9 +1128,9 @@ useEffect(() => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                       <div className=' bg-white rounded-lg ml-4 '>
                         <div className='relative '>
-                      <button className="Upload-button">
-                      Upload Bill
-                    <input type = "file" accept="application/pdf, image/jpg, image/jpeg" onChange={handleFileChange} className={`absolute inset-0 opacity-0`}/>
+                      <button type="button" className="Upload-button" onClick={(e) => {setBill(null)}}>
+                      {!bill ? 'Upload Bill' : 'Clear Bill'}
+                    {!bill && <input type = "file" accept="application/pdf, image/jpg, image/jpeg" onChange={handleFileChange} className={`absolute inset-0 opacity-0`}/>}
                     </button></div>
             <div className="mt-2 text-sm text-gray-700 break-words">
             {bill && bill.name}
