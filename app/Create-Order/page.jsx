@@ -80,7 +80,7 @@ const CreateOrder = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
   const [waiverAmount, setWaiverAmount] = useState(0);
-
+console.log(isConsultantWaiverChecked)
   
     
     const dispatch = useDispatch();
@@ -690,7 +690,7 @@ const fetchRates = async () => {
 
 const fetchOrderDetailsByOrderNumber = () => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchReportDetailsFromReport.php?OrderNumber=${orderNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data) {
@@ -712,6 +712,11 @@ const fetchOrderDetailsByOrderNumber = () => {
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
+          setWaiverAmount(data.waiverAmount);
+          console.log(data)
+          if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
+            setIsConsultantWaiverChecked(true);
+          }
           // Store the fetched data in a state to compare later
           setPrevData({
             clientName: data.clientName,
@@ -722,7 +727,8 @@ const fetchOrderDetailsByOrderNumber = () => {
             clientID: data.clientID,
             consultantName: data.consultantName,
             discountAmount: data.adjustedOrderAmount,
-            marginAmount: data.margin
+            marginAmount: data.margin,
+            waiverAmount: data.waiverAmount
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -1060,6 +1066,12 @@ const updateNewOrder = async (event) => {
     if (elementsToHide.includes("OrderMarginPercentage") === false) {
       if (!marginPercentage || isNaN(marginPercentage)) errors.marginPercentage = 'Valid Margin % is required';
     }
+
+    if (isConsultantWaiverChecked) {
+      if (!waiverAmount) {
+        errors.waiverAmount = 'Consultant Waiver value is required';
+      }
+    }
     
 
     setErrors(errors);
@@ -1284,7 +1296,8 @@ const handleOpenDialog = () => {
     rateId !== prevData.rateId ||
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount ||
-    parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) 
+    parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
+    parseFloat(waiverAmount) !== parseFloat(prevData.waiverAmount)
 
   );
 
@@ -1321,6 +1334,7 @@ const handleOpenDialog = () => {
     setOrderSearchTerm('');
     dispatch(setIsOrderUpdate(false));
     setWaiverAmount(0);
+    setIsConsultantWaiverChecked(false);
     //window.location.reload(); // Reload the page
   };
 
@@ -1556,7 +1570,7 @@ return (
     {/* Order Selection */}
     <div className="bg-white p-4 mt-2 rounded-lg shadow-lg">
 
-    {isOrderUpdate ? (
+    {isOrderUpdate  ? (
   <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
     <button
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
@@ -1697,11 +1711,11 @@ return (
         <input
           type="checkbox"
           id="consultantWaiver"
-          className="h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 border-gray-300 rounded"
+          className={`h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} rounded`}
           checked={isConsultantWaiverChecked}
           onChange={(e) => setIsConsultantWaiverChecked(e.target.checked)}
         />
-        <label htmlFor="consultantWaiver" className="text-gray-500 font-medium text-sm">
+        <label htmlFor="consultantWaiver" className={`text-gray-500 font-medium text-sm ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'}`}>
           Consultant Waiver
         </label>
       </div>
@@ -1724,6 +1738,7 @@ return (
         onChange={handleWaiverChange}
         onFocus={(e) => e.target.select()}
       />
+      {errors.waiverAmount && <p className="text-red-500 text-sm mt-2">{errors.waiverAmount}</p>}
     </div>
   )}
 
