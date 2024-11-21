@@ -45,6 +45,7 @@ export default function AppointmentForm() {
   const [appDate, setAppDate] = useState(new Date());
   const [clientNumberExists, setClientNumberExists] = useState(false);
   const [elementsToHide, setElementsToHide] = useState([]);
+  const [whatsappKeys, setWhatsappKeys] = useState([]);
 
   const appointmentTimePeriod = [
     {label: "Tomorrow", value: "Tomorrow"},
@@ -66,7 +67,8 @@ export default function AppointmentForm() {
 
   useEffect(() => {
     searchRef?.current.focus();
-    elementsToHideList(); 
+    elementsToHideList();
+    fetchWhatsappKeys(); 
   }, []);
 
   const elementsToHideList = () => {
@@ -74,6 +76,17 @@ export default function AppointmentForm() {
       fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
         .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
+  console.log(whatsappKeys)
+
+  const fetchWhatsappKeys= () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php/get?JsonDBName=${dbName}`)
+        .then((response) => response.json())
+        .then((data) => setWhatsappKeys(data));
     } catch(error){
       console.error("Error showing element names: " + error)
     }
@@ -332,12 +345,18 @@ export default function AppointmentForm() {
 
       // const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
       try{
-      const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_ortho&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
-        
-        if (send.ok) {
-            alert("Appointment Created and Message Sent Successfully!");
+        if (whatsappKeys.length > 0) {
+          const { LicenceNumber, APIKey } = whatsappKeys[0];
+
+          const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=appointment_ortho&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
+            
+            if (send.ok) {
+                alert("Appointment Created and Message Sent Successfully!");
+            } else {
+                alert("Appointment Created Successfully, but Message Failed to Send.");
+            }
         } else {
-            alert("Appointment Created Successfully, but Message Failed to Send.");
+          console.log("No keys available to send message.");
         }
       }catch(error){
         console.error(error)
@@ -370,7 +389,12 @@ export default function AppointmentForm() {
     //const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
 
     try{
-    const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+      if (whatsappKeys.length > 0) {
+      const { LicenceNumber, APIKey } = whatsappKeys[0];  
+         const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+      } else {
+        console.log("No keys available to send message.");
+      }
     }catch(error){
       console.log(error);
     }
@@ -408,7 +432,12 @@ export default function AppointmentForm() {
 
         // Send WhatsApp notification for appointment cancellation
         try {
-            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=reject_appointment&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+          if (whatsappKeys.length > 0) {
+            const { LicenceNumber, APIKey } = whatsappKeys[0];
+            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=reject_appointment&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+          } else {
+            console.log("No keys available to send message.");
+          }  
         } catch (error) {
             console.error("Failed to send WhatsApp message:", error);
         }
