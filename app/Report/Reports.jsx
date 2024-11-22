@@ -356,6 +356,7 @@ useEffect(() => {
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
+                    WaiverAmount: `₹ ${order.WaiverAmount}`,
                 }));
                 setOrderDetails(data);
             })
@@ -757,6 +758,7 @@ const orderColumns = [
     )
   },
   { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: 100 },
+  { field: 'WaiverAmount', headerName: 'Waiver Amount(₹)', width: 100 },
   { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: 100 },
   { field: 'AmountDifference', headerName: 'Difference(₹)', width: 100 },
   { field: 'PaymentMode', headerName: 'Payment Mode', width: 100},
@@ -1281,15 +1283,28 @@ const [rateStats, setRateStats] = useState({});
 
       const rowsForSummary = filteredRows.filter(row => row.RateWiseOrderNumber > 0);
       const sumOfOrders = rowsForSummary.length;
+      
       const totalOrderAmount = rowsForSummary.reduce((sum, row) => {
         const receivableAmount = parseFloat(row.Receivable.replace(/[₹,]/g, '').trim()) || 0;
       
-        const AdjustedOrderAmount = parseFloat(row.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
-        const adjustedAmount = AdjustedOrderAmount >= 0 
-          ? receivableAmount + AdjustedOrderAmount   // Add if AdjustedOrderAmount is positive
-          : receivableAmount - Math.abs(AdjustedOrderAmount); // Subtract if AdjustedOrderAmount is negative
-        return sum + adjustedAmount;
+        const adjustedOrderAmount = parseFloat(row.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+        const waiverAmount = parseFloat(row.WaiverAmount?.replace(/[₹,]/g, '').trim()) || 0;
+      
+        // Adjust the receivable amount based on AdjustedOrderAmount
+        const adjustedValue = 
+          adjustedOrderAmount >= 0 
+            ? receivableAmount + adjustedOrderAmount 
+            : receivableAmount - Math.abs(adjustedOrderAmount);
+      
+        // Further adjust the amount based on WaiverAmount
+        const finalAmount = 
+          waiverAmount >= 0 
+            ? adjustedValue + waiverAmount 
+            : adjustedValue - Math.abs(waiverAmount);
+      
+        return sum + finalAmount;
       }, 0);
+
       const roundedTotalOrderAmount = Math.round(totalOrderAmount);
       
        // Sum of order values
@@ -1305,39 +1320,49 @@ const [rateStats, setRateStats] = useState({});
   };
 
   // Function to calculate the statistics based on filtered rows
-  const calculateRateStats = () => {
-    const stats = {};
-  
-    // Filter out rows where RateWiseOrderNumber <= 0
-    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
-  
-    // Iterate over the filtered rows to calculate the stats
-    filteredRows.forEach(order => {
-      const rateName = order.Card; 
-      const orderValue = Math.round(Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0);
-      const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+  // Function to calculate the statistics based on filtered rows
+const calculateRateStats = () => {
+  const stats = {};
 
-      // Adjust the order value based on AdjustedOrderAmount
-      const finalOrderValue = adjustedOrderAmount >= 0 
+  // Filter out rows where RateWiseOrderNumber <= 0
+  const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+
+  // Iterate over the filtered rows to calculate the stats
+  filteredRows.forEach(order => {
+    const rateName = order.Card;
+    const orderValue = Math.round(Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0);
+    const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+    const waiverAmount = Number(order.WaiverAmount?.replace(/[₹,]/g, '').trim()) || 0;
+
+    // Adjust the order value based on AdjustedOrderAmount and WaiverAmount
+    const adjustedValue = 
+      adjustedOrderAmount >= 0 
         ? orderValue + adjustedOrderAmount 
         : orderValue - Math.abs(adjustedOrderAmount);
-      const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0); // Ensure it's a number
-  
-      if (stats[rateName]) {
-        stats[rateName].orderCount += 1;
-        stats[rateName].totalOrderValue += finalOrderValue;
-        stats[rateName].totalIncome += income;
-      } else {
-        stats[rateName] = {
-          orderCount: 1,
-          totalOrderValue: finalOrderValue,
-          totalIncome: income,
-        };
-      }
-    });
-  
-    setRateStats(stats); // Update state with new stats
-  };
+
+    const finalOrderValue = 
+      waiverAmount >= 0 
+        ? adjustedValue + waiverAmount 
+        : adjustedValue - Math.abs(waiverAmount);
+
+    const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0); // Ensure it's a number
+
+    if (stats[rateName]) {
+      stats[rateName].orderCount += 1;
+      stats[rateName].totalOrderValue += finalOrderValue;
+      stats[rateName].totalIncome += income;
+    } else {
+      stats[rateName] = {
+        orderCount: 1,
+        totalOrderValue: finalOrderValue,
+        totalIncome: income,
+      };
+    }
+  });
+
+  setRateStats(stats); // Update state with new stats
+};
+
   
 
 
