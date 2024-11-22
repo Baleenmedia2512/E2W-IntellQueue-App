@@ -349,6 +349,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
+                    WaiverAmount: `₹ ${order.WaiverAmount}`,
                 }));
                 const displayData = response.data
                 setOrderDetails(data);
@@ -680,7 +681,8 @@ const orderColumns = [
     { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },
     { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
     { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 230 : 170 },
-    { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
+    { field: 'WaiverAmount', headerName: 'Waiver Amount(₹)', width: 100 },
+  { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
     { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100 },
     { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 120 },
     { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: isMobile ? 190 : 130 },
@@ -1157,11 +1159,32 @@ const [filterInputs, setFilterInputs] = useState({});
 
       // Calculate summary info only for rows where RateWiseOrderNumber > 0
       const rowsForSummary = filteredRows.filter(row => row.RateWiseOrderNumber > 0);
-      // Sum values for the summary information
-      const sumOfOrders = rowsForSummary.length; // Total number of orders
-      const totalOrderAmount = rowsForSummary.reduce((sum, row) => 
-        sum + (parseFloat(row.Receivable.replace(/[₹,]/g, '').trim()) || 0), 
-      0); // Sum of order values
+      const sumOfOrders = rowsForSummary.length;
+      
+      const totalOrderAmount = rowsForSummary.reduce((sum, row) => {
+        const receivableAmount = parseFloat(row.Receivable.replace(/[₹,]/g, '').trim()) || 0;
+      
+        const adjustedOrderAmount = parseFloat(row.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+        const waiverAmount = parseFloat(row.WaiverAmount?.replace(/[₹,]/g, '').trim()) || 0;
+      
+        // Adjust the receivable amount based on AdjustedOrderAmount
+        const adjustedValue = 
+          adjustedOrderAmount >= 0 
+            ? receivableAmount + adjustedOrderAmount 
+            : receivableAmount - Math.abs(adjustedOrderAmount);
+      
+        // Further adjust the amount based on WaiverAmount
+        const finalAmount = 
+          waiverAmount >= 0 
+            ? adjustedValue + waiverAmount 
+            : adjustedValue - Math.abs(waiverAmount);
+      
+        return sum + finalAmount;
+      }, 0);
+
+      const roundedTotalOrderAmount = Math.round(totalOrderAmount);
+      
+       // Sum of order values
       const totalFinanceAmount = rowsForSummary.reduce((sum, row) => 
         sum + (parseFloat(row.TotalAmountReceived.replace(/[₹,]/g, '').trim()) || 0), 
       0); // Sum of finance amounts
@@ -1174,33 +1197,49 @@ const [filterInputs, setFilterInputs] = useState({});
   };
 
   // Function to calculate the statistics based on filtered rows
-  const calculateRateStats = () => {
-    const stats = {};
-  
-    // Filter out rows where RateWiseOrderNumber <= 0
-    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
-  
-    // Iterate over the filtered rows to calculate the stats
-    filteredRows.forEach(order => {
-      const rateName = order.Card; // Assuming the 'Card' field is used for rate classification
-      const orderValue = Number(order.Receivable.replace('₹', '').trim()) || 0; // Ensure it's a number
-      const income = Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0; // Ensure it's a number
-  
-      if (stats[rateName]) {
-        stats[rateName].orderCount += 1;
-        stats[rateName].totalOrderValue += orderValue;
-        stats[rateName].totalIncome += income;
-      } else {
-        stats[rateName] = {
-          orderCount: 1,
-          totalOrderValue: orderValue,
-          totalIncome: income,
-        };
-      }
-    });
-  
-    setRateStats(stats); // Update state with new stats
-  };
+  // Function to calculate the statistics based on filtered rows
+const calculateRateStats = () => {
+  const stats = {};
+
+  // Filter out rows where RateWiseOrderNumber <= 0
+  const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+
+  // Iterate over the filtered rows to calculate the stats
+  filteredRows.forEach(order => {
+    const rateName = order.Card;
+    const orderValue = Math.round(Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0);
+    const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+    const waiverAmount = Number(order.WaiverAmount?.replace(/[₹,]/g, '').trim()) || 0;
+
+    // Adjust the order value based on AdjustedOrderAmount and WaiverAmount
+    const adjustedValue = 
+      adjustedOrderAmount >= 0 
+        ? orderValue + adjustedOrderAmount 
+        : orderValue - Math.abs(adjustedOrderAmount);
+
+    const finalOrderValue = 
+      waiverAmount >= 0 
+        ? adjustedValue + waiverAmount 
+        : adjustedValue - Math.abs(waiverAmount);
+
+    const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0); // Ensure it's a number
+
+    if (stats[rateName]) {
+      stats[rateName].orderCount += 1;
+      stats[rateName].totalOrderValue += finalOrderValue;
+      stats[rateName].totalIncome += income;
+    } else {
+      stats[rateName] = {
+        orderCount: 1,
+        totalOrderValue: finalOrderValue,
+        totalIncome: income,
+      };
+    }
+  });
+
+  setRateStats(stats); // Update state with new stats
+};
+
   
   // UseEffect to apply filters and calculate stats when orderDetails or filterModel changes
   // useEffect(() => {
