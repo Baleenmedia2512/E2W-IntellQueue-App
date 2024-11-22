@@ -517,12 +517,14 @@ const openChequeDate = Boolean(anchorElChequeDate);
   const handleUploadBills = async () => {
     // Format bill date
     var orderNumberToBeUploaded = elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
+    console.log(orderNumberToBeUploaded)
     const formattedBillDate = billDate.format("YYYY-MM-DD");
     const orderNumberArray = (parseInt(orderNumberToBeUploaded))
       ? orderNumberToBeUploaded.split(",").map(num => parseFloat(num.trim())) 
       : null;
   
-    // Function to create FormData
+      console.log(orderNumberArray);
+    // // Function to create FormData
     const createFormData = (orderNum, isNotUploaded) => {
       const formData = new FormData();
       formData.append("JsonFile", bill);
@@ -537,7 +539,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       return formData;
     };
   
-    // Function to send data
+    // // Function to send data
     const uploadBill = async (formData) => {
       try {
         const response = await axios.post(
@@ -552,8 +554,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
       }
     };
   
-    // Handle upload logic
+    // // Handle upload logic
     if (!orderNumberArray) {
+      console.log(orderNumberToBeUploaded);
       const formData = createFormData(orderNumberToBeUploaded, true);
       await uploadBill(formData);
     } else {
