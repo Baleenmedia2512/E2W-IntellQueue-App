@@ -758,7 +758,6 @@ const PlaceOrder = () =>{
 
 const CreateStages = async () => {
   try {
-    // Create API promises for each field, dynamically passing the stage count
     const apiPromises = stages.map(async (field, index) => {
       const formattedDueDate = format(new Date(field.dueDate), 'yyyy-MM-dd');
 
