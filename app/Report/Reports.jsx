@@ -27,6 +27,7 @@ import { Margin } from '@mui/icons-material';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
+    // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
@@ -45,6 +46,15 @@ const Report = () => {
      const [successMessage, setSuccessMessage] = useState('');
      const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+
+  // const currentStartDate = startOfMonth(new Date());
+  // const currentEndDate = endOfMonth(new Date());
+  // const [selectedRange, setSelectedRange] = useState({
+  //   startDate: currentStartDate,
+  //   endDate: currentEndDate,
+  // });
+  // const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
+  // const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
   const { dateRange } = useAppSelector(state => state.reportSlice);
    const startDateForDisplay = new Date(dateRange.startDate);
    const endDateForDisplay = new Date(dateRange.endDate);
@@ -76,11 +86,8 @@ const Report = () => {
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [orderReportDialogOpen, setOrderReportDialogOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
-  const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
+  // const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
+  // const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
 
 const checkIfSMSSentToday = () => {
   axios
@@ -158,7 +165,7 @@ useEffect(() => {
       if (!username || dbName === "") {
         router.push('/login');
       }
-      fetchCurrentDateConsultants();
+      // fetchCurrentDateConsultants();
       if(dbName){
         elementsToHideList()
       }
@@ -202,123 +209,123 @@ useEffect(() => {
   }
 
 
-  const handleOpenCDR = () => {
-    setOpenCDR(true);
-  };
+  // const handleOpenCDR = () => {
+  //   setOpenCDR(true);
+  // };
   
-  const handleCloseCDR = () => {
-    setOpenCDR(false);
-  };
+  // const handleCloseCDR = () => {
+  //   setOpenCDR(false);
+  // };
 
-  const fetchCurrentDateConsultants = () => {
-    axios
-        .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
-        .then((response) => {
-          const data = response.data.data;
-          const consultantNames = data.map(item => item.consultantName); 
-          setConsultantNameCDR(consultantNames); 
+//   const fetchCurrentDateConsultants = () => {
+//     axios
+//         .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
+//         .then((response) => {
+//           const data = response.data.data;
+//           const consultantNames = data.map(item => item.consultantName); 
+//           setConsultantNameCDR(consultantNames); 
 
-          // Group the results by consultant name
-          const consultantData = data.reduce((acc, item) => {
-              const { consultantName, consultantNumber, Card, card_count } = item;
+//           // Group the results by consultant name
+//           const consultantData = data.reduce((acc, item) => {
+//               const { consultantName, consultantNumber, Card, card_count } = item;
 
-              if (!acc[consultantName]) {
+//               if (!acc[consultantName]) {
                 
-                  acc[consultantName] = {
-                      consultantName: consultantName,
-                      consultantNumber: consultantNumber,
-                      totalCount: 0,
-                      cards: {}
-                  };
-              }
+//                   acc[consultantName] = {
+//                       consultantName: consultantName,
+//                       consultantNumber: consultantNumber,
+//                       totalCount: 0,
+//                       cards: {}
+//                   };
+//               }
 
-              // Update total count and individual card counts
-              acc[consultantName].totalCount += parseInt(card_count);
-              acc[consultantName].cards[Card] = (acc[consultantName].cards[Card] || 0) + parseInt(card_count);
+//               // Update total count and individual card counts
+//               acc[consultantName].totalCount += parseInt(card_count);
+//               acc[consultantName].cards[Card] = (acc[consultantName].cards[Card] || 0) + parseInt(card_count);
               
 
-              return acc;
-          }, {});
+//               return acc;
+//           }, {});
           
-          setConsultantDiagnosticsReportData(consultantData);
-      })
-      .catch((error) => {
-          console.error(error);
-      });
-};
+//           setConsultantDiagnosticsReportData(consultantData);
+//       })
+//       .catch((error) => {
+//           console.error(error);
+//       });
+// };
 
-const handleConsultantSMS = () => {
-// Generate SMS messages for each consultant and send SMS
-          Object.values(consultantDiagnosticsReportData).forEach((consultant) => {
-              const { consultantName, consultantNumber, totalCount, cards } = consultant;
+// const handleConsultantSMS = () => {
+// // Generate SMS messages for each consultant and send SMS
+//           Object.values(consultantDiagnosticsReportData).forEach((consultant) => {
+//               const { consultantName, consultantNumber, totalCount, cards } = consultant;
 
-              const usgCount = cards['USG Scan'] || 0;
-              const ctCount = cards['CT Scan'] || 0;
-              const xrayCount = cards['X-Ray'] || 0;
+//               const usgCount = cards['USG Scan'] || 0;
+//               const ctCount = cards['CT Scan'] || 0;
+//               const xrayCount = cards['X-Ray'] || 0;
 
-              // Create the message for the consultant
-              // const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
-              const message = `Hello ${consultantName}, 
-${totalCount} of your Patients utilized our Diagnostic Services Today. 
-USG - ${usgCount} 
-CT - ${ctCount} 
-X-Ray - ${xrayCount} 
-It was our pleasure to serve your Patients. 
-- Grace Scans`;
+//               // Create the message for the consultant
+//               // const message = `Hello Dr. ${consultantName}, \n${totalCount} of your Patients utilized our Diagnostic Services today. \n${usgCount} - USG + ${ctCount} - CT + ${xrayCount} - X-Ray.\nIt was our pleasure to serve your Patients.\n- Grace Scans`;
+//               const message = `Hello ${consultantName}, 
+// ${totalCount} of your Patients utilized our Diagnostic Services Today. 
+// USG - ${usgCount} 
+// CT - ${ctCount} 
+// X-Ray - ${xrayCount} 
+// It was our pleasure to serve your Patients. 
+// - Grace Scans`;
               
-              // Call the function to send SMS
-              SendSMSViaNetty(consultantName, consultantNumber, message);
-          });
-};
+//               // Call the function to send SMS
+//               SendSMSViaNetty(consultantName, consultantNumber, message);
+//           });
+// };
 
 
-const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
+// const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
 
-  // Ensure consultantNumber is valid
-  if (!consultantName || consultantName === '' || consultantNumber === '0' || consultantNumber === '' || !/^\d+$/.test(consultantNumber)) {
-      setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
-            setSeverity('warning');
-            setToast(true);
-            setTimeout(() => {
-              setToast(false);
-            }, 2000);
-      return; // Prevent the function from continuing if consultantNumber is invalid
-  }
+//   // Ensure consultantNumber is valid
+//   if (!consultantName || consultantName === '' || consultantNumber === '0' || consultantNumber === '' || !/^\d+$/.test(consultantNumber)) {
+//       setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
+//             setSeverity('warning');
+//             setToast(true);
+//             setTimeout(() => {
+//               setToast(false);
+//             }, 2000);
+//       return; // Prevent the function from continuing if consultantNumber is invalid
+//   }
 
-  const sendableNumber = `91${consultantNumber}`;
-  const encodedMessage = encodeURIComponent(message);
+//   const sendableNumber = `91${consultantNumber}`;
+//   const encodedMessage = encodeURIComponent(message);
   
 
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=${consultantName}&JsonConsultantNumber=${consultantNumber}&JsonDBName=${companyName}`)
-    .then((response) => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/SendSmsNetty.php?JsonNumber=${sendableNumber}&JsonMessage=${encodedMessage}&JsonConsultantName=${consultantName}&JsonConsultantNumber=${consultantNumber}&JsonDBName=${companyName}`)
+//     .then((response) => {
 
-      const result = response.data;
-      // if (result.includes('Done')) {
-      if (result === 'SMS Sent and Database Updated Successfully') {
-        // Success Case
-        handleCloseCDR();
-        checkIfSMSSentToday();
-        setSuccessMessage('SMS Sent!');
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 1500);
-      } else {
-        // Error Case
-        setToastMessage(`SMS Not Sent! Reason: ${result}`);
-        setSeverity('warning');
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
-      }
-  })
+//       const result = response.data;
+//       // if (result.includes('Done')) {
+//       if (result === 'SMS Sent and Database Updated Successfully') {
+//         // Success Case
+//         handleCloseCDR();
+//         checkIfSMSSentToday();
+//         setSuccessMessage('SMS Sent!');
+//         setTimeout(() => {
+//           setSuccessMessage('');
+//         }, 1500);
+//       } else {
+//         // Error Case
+//         setToastMessage(`SMS Not Sent! Reason: ${result}`);
+//         setSeverity('warning');
+//         setToast(true);
+//         setTimeout(() => {
+//           setToast(false);
+//         }, 2000);
+//       }
+//   })
 
-    .catch((error) => {
-      console.error(error);
-    });
+//     .catch((error) => {
+//       console.error(error);
+//     });
   
-};
+// };
 
 
     const fetchSumOfOrders = () => {
@@ -351,9 +358,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     editDisabled: order.RateWiseOrderNumber < 0,
                     WaiverAmount: `₹ ${order.WaiverAmount}`,
                 }));
-                const displayData = response.data
                 setOrderDetails(data);
-                setDisplayOrderDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -368,12 +373,10 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                     OrderValue: `₹ ${transaction.OrderValue}`,
-                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
-                    restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
+                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid'
                 }));
-                //const displayData = response.data
                 setFinanceDetails(financeDetails);
-                //setDisplayFinanceDetails(displayData)
+                
             })
             .catch((error) => {
                 console.error(error);
@@ -421,8 +424,8 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         const TotalFinanceAmt = data.finance_amount !== null ? data.finance_amount : '0';
     
         // Update state with formatted values
-        setTotalOrderAmount(TotalOrderAmt);
-        setTotalFinanceAmount(TotalFinanceAmt);
+        // setTotalOrderAmount(TotalOrderAmt);
+        // setTotalFinanceAmount(TotalFinanceAmt);
       } catch (error) {
         console.error(error);
       }
@@ -459,9 +462,9 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
         });
 };
 
-const handleTransactionDelete = (id, RateWiseOrderNumber) => {
+const handleTransactionDelete = (id, RateWiseOrderNum) => {
   axios
-      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransactionTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&sonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/DeleteTransaction.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNum}&JsonDBName=${companyName}`)
       .then((response) => {
           const data = response.data;
           if (data.success) {
@@ -547,9 +550,42 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
   }
 };
 
+// const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
+//   axios
+//     .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
+//     .then((response) => {
+//       const data = response.data;
+//       if (data.success) {
+//         setSuccessMessage('Transaction Restored!');
+//         setTimeout(() => {
+//           setSuccessMessage('');
+//         }, 2000);
+//         fetchFinanceDetails();
+//         fetchAmounts();
+//         fetchSumOfFinance();
+//         fetchRateBaseIncome();
+//       } else {
+//         setToastMessage(data.message);
+//         setSeverity('error');
+//         setToast(true);
+//         setTimeout(() => {
+//           setToast(false);
+//         }, 2000);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//       setToastMessage('Failed to restore transaction. Please try again.');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//         setToast(false);
+//       }, 2000);
+//     });
+// };
 const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinanceTest.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.success) {
@@ -598,6 +634,45 @@ const handleConfirm = async () => {
   setRestoreDialogOpen(false);
 };
 
+// const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+//   try {
+//       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}`);
+
+//       if (response.data.conflict) {
+//           const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
+//           if (!fetchResponse.ok) {
+//               throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
+//           }
+//           const data = await fetchResponse.json();
+//           const newRateWiseOrderNumber = data.nextRateWiseOrderNumber;
+
+//           if (confirm(`RateWiseOrderNumber is already occupied. Do you want to continue with the new number ${newRateWiseOrderNumber}?`)) {
+//               // User agrees to use a new RateWiseOrderNumber
+//               const restoreResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+//               setSuccessMessage('Order Restored with new number!');
+//               setTimeout(() => {
+//                   setSuccessMessage('');
+//               }, 2000);
+//               fetchOrderDetails();
+//           }
+//       } else {
+//           setSuccessMessage('Order Restored!');
+//           setTimeout(() => {
+//               setSuccessMessage('');
+//           }, 2000);
+//           fetchOrderDetails();
+//       }
+//   } catch (error) {
+//       console.error(error);
+//       setToastMessage('Failed to restore. Please try again.');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//           setToast(false);
+//       }, 2000);
+//   }
+// };
+
   const fetchMarginAmount = () => {
     axios
         .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
@@ -614,7 +689,6 @@ const handleConfirm = async () => {
             console.error(error);
         });
 };
-
 const FetchCurrentBalanceAmount = () => {
   axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}`)
@@ -627,7 +701,13 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
+const isMobile = useMediaQuery('(max-width:640px)');
+const [anchorEl, setAnchorEl] = useState(null);
 
+
+
+const [orderReportDialogOpen, setOrderReportDialogOpen] = useState(false);
+const [selectedRow, setSelectedRow] = useState(null);
 
 const handleEditIconClick = (row) => {
   setSelectedRow(row);
@@ -659,17 +739,7 @@ const handleEditConfirm = () => {
 };
 
 
-const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-useEffect(() => {
-  const handleResize = () => {
-    setIsMobile(window.innerWidth <= 768);
-  };
-
-  window.addEventListener('resize', handleResize);
-  return () => window.removeEventListener('resize', handleResize);
-}, []);
-console.log(elementsToHide)
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
@@ -696,20 +766,24 @@ const orderColumns = [
       width: isMobile ? 290 : 270,
       renderCell: (params) => (
         <div>
-            <button
-               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
                 disabled={params.row.markInvalidDisabled}
                 onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{  backgroundColor: '#fa594d',
+                style={{ marginRight: '12px', backgroundColor: '#ff5252',
                     color: 'white',
                     fontWeight: 'bold', 
                     opacity: params.row.markInvalidDisabled ? 0.2 : 1,
                     pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
             >
                 Cancel 
-            </button>
-            <button
-                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
+            </Button>
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
                 disabled={params.row.restoreDisabled}
                 onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
                 style={{ backgroundColor: '#1976d2',
@@ -719,21 +793,30 @@ const orderColumns = [
                   pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
             >
                 Restore
-            </button>
-            <button
-            className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
-            disabled={params.row.editDisabled}
-            onClick={() => handleEditIconClick(params.row)}
-            style={{  
-              opacity: params.row.editDisabled ? 0.5 : 1,
-              pointerEvents: params.row.editDisabled ? 'none' : 'auto' }}
-        >
-            Edit
-        </button>
-                </div>
-            ),
-        },
-        ];
+            </Button>
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleEditIconClick(params.row)}
+                disabled={params.row.editDisabled}
+                style={{ marginLeft: '12px',
+                  backgroundColor: '#499b25',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: params.row.editDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.editDisabled ? 'none' : 'auto'
+                 }}  
+            >  
+               Edit
+            </Button>
+        </div>
+    ),
+},
+];
+
+
+
 
 
 const financeColumns = [
@@ -775,10 +858,25 @@ const financeColumns = [
         >
           Delete
         </button> */}
-        <button
+        <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                disabled={!params.row.markInvalidFinanceDisabled}
+                onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
+                style={{ backgroundColor: '#1976d2',
+                  marginLeft: '12px',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: !params.row.markInvalidFinanceDisabled ? 0.5 : 1,
+                  pointerEvents: !params.row.markInvalidFinanceDisabled ? 'none' : 'auto' }}
+            >
+                Restore
+            </Button>
+        {/* <button
           className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
           disabled={params.row.restoreFinanceDisabled} // Conditional disabling
-          onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
+          onClick={() => handleFinanceRestore(params.row.ID)}
           style={{ backgroundColor: '#1976d2',
             color: 'white',
             fontWeight: 'bold',
@@ -786,7 +884,7 @@ const financeColumns = [
             pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
         >
           Restore
-        </button>
+        </button> */}
       </div>
     ),
   },
@@ -810,18 +908,20 @@ const financeColumns = [
 // },
 ];  
 
-    const handleOpenConfirmDialog = (ID, RateWiseOrderNumber) => {
-      setSelectedTransaction({ ID, RateWiseOrderNumber});
-      setOpenConfirmDialog(true);
-    };
-    
 
-    const handleConfirmDelete = () => {
-      const { ID, RateWiseOrderNumber } = selectedTransaction;
-      handleTransactionDelete(ID, RateWiseOrderNumber);
-      setOpenConfirmDialog(false);
-    };
-    
+
+const handleOpenConfirmDialog = (ID, RateWiseOrderNumber) => {
+  setSelectedTransaction({ ID, RateWiseOrderNumber});
+  setOpenConfirmDialog(true);
+};
+
+
+const handleConfirmDelete = () => {
+  const { ID, RateWiseOrderNumber } = selectedTransaction;
+  //console.log(selectedTransaction)
+  handleTransactionDelete(ID, RateWiseOrderNumber);
+  setOpenConfirmDialog(false);
+};
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
         filter === 'All' || transaction.TransactionType.toLowerCase().includes(filter.toLowerCase())
@@ -1132,11 +1232,9 @@ const handleDateChange = (range) => {
   return number;
 };
 
-const apiRef = useGridApiRef();
 const [filterModel, setFilterModel] = useState({ items: [] }); 
 const [filteredData, setFilteredData] = useState([]);
 const [rateStats, setRateStats] = useState({});
-const [filterInputs, setFilterInputs] = useState({});
 
 
    // Function to filter the order data based on the filter model
@@ -1157,7 +1255,6 @@ const [filterInputs, setFilterInputs] = useState({});
       // Update the filtered data in the grid (without RateWiseOrderNumber condition)
       setFilteredData(filteredRows);
 
-      // Calculate summary info only for rows where RateWiseOrderNumber > 0
       const rowsForSummary = filteredRows.filter(row => row.RateWiseOrderNumber > 0);
       const sumOfOrders = rowsForSummary.length;
       
@@ -1188,12 +1285,12 @@ const [filterInputs, setFilterInputs] = useState({});
       const totalFinanceAmount = rowsForSummary.reduce((sum, row) => 
         sum + (parseFloat(row.TotalAmountReceived.replace(/[₹,]/g, '').trim()) || 0), 
       0); // Sum of finance amounts
-
+      const roundedTotalFinanceAmount = Math.round(totalFinanceAmount);
+      
       // Update state for summary info
       setSumOfOrders(sumOfOrders);
-      setTotalOrderAmount(totalOrderAmount);
-      setTotalFinanceAmount(totalFinanceAmount);
-
+      setTotalOrderAmount(roundedTotalOrderAmount);
+      setTotalFinanceAmount(roundedTotalFinanceAmount);
   };
 
   // Function to calculate the statistics based on filtered rows
@@ -1241,10 +1338,8 @@ const calculateRateStats = () => {
 };
 
   
-  // UseEffect to apply filters and calculate stats when orderDetails or filterModel changes
-  // useEffect(() => {
-  //   fetchOrderDetails(); // Fetch order details on mount
-  // }, []);
+
+
 
   useEffect(() => {
     const filteredRows = orderDetails.filter((row) => {
@@ -1264,38 +1359,12 @@ const calculateRateStats = () => {
   
 
   useEffect(() => {
-    applyFilters(); // Apply filters
+    applyFilters(); 
   }, [filterModel, orderDetails]); // Reapply filters on change
 
   useEffect(() => {
-    calculateRateStats(); // Calculate stats based on filtered data
+    calculateRateStats();
   }, [filteredData]); // Recalculate when filteredData changes
-// const calculateRateStats = () => {
-//   const rateStats = {};
-
-//   displayOrderDetails.forEach(order => {
-//     const rateName = order.Card;
-//     const orderValue = Number(order.Receivable) || 0;  // Ensure Receivable (Order Value) is a number
-//     const income = Number(order.TotalAmountReceived) || 0;  // Ensure TotalAmountReceived (Income) is a number
-
-//     if (rateStats[rateName]) {
-//       rateStats[rateName].orderCount += 1;
-//       rateStats[rateName].totalOrderValue += orderValue;
-//       rateStats[rateName].totalIncome += income;
-//     } else {
-//       rateStats[rateName] = {
-//         orderCount: 1,
-//         totalOrderValue: orderValue,
-//         totalIncome: income,
-//       };
-//     }
-//   });
-
-//   return rateStats;
-// };
-
-// const rateStats = calculateRateStats();
-
 
     return (
       
@@ -1360,12 +1429,12 @@ const calculateRateStats = () => {
 </Dialog>
 
 {/* CDR confirmation */}
-<Dialog open={openCDR} onClose={handleCloseCDR}>
+{/* <Dialog open={openCDR} onClose={handleCloseCDR}>
         <DialogTitle>SMS Confirmation</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {/* Show the names of all consultants */}
-            <>
+            {/* <>
             <strong>The SMS will be sent to the following consultant(s):</strong>
             <ul className="mt-2 ml-4 list-disc ">
               {consultantNameCDR.map((consultant, index) => (
@@ -1374,8 +1443,8 @@ const calculateRateStats = () => {
             </ul>
             <strong>Do you want to continue?</strong>
             </>
-          </DialogContentText>
-        </DialogContent>
+          </DialogContentText> */}
+        {/* </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCDR} color="primary">
             Cancel
@@ -1384,7 +1453,7 @@ const calculateRateStats = () => {
             Confirm
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
 
             <Box className="px-3">
@@ -1508,6 +1577,7 @@ const calculateRateStats = () => {
         
         
         
+         // Update the filter model state
         initialState={{
           sorting: {
             sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
@@ -1544,20 +1614,20 @@ const calculateRateStats = () => {
     
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="custom-button" onClick={handleClickOpen}>
+    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
       Show Balance
     </button>
     {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="consultant-button" onClick={handleConsultantReportOpen}>
+      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
         Cons. Report
       </button>
     )}
-    <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
+    {/* <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
       </svg>
       Send CDR
-    </button>
+    </button> */}
   </div>
 </div>
 
@@ -1833,7 +1903,7 @@ const calculateRateStats = () => {
                      columns={financeColumns}
                      initialState={{
                       sorting: {
-                        sortModel: [{ field: 'OrderNumber', sort: 'desc' }],
+                        sortModel: [{ field: 'ID', sort: 'desc' }],
                       },
                     }} 
                     //  filterModel={financeFilterModel}
