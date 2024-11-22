@@ -22,6 +22,7 @@ export default function AppointmentForm() {
   const mobileRef = useRef(null);
   const periodRef = useRef(null);
   const userName = useAppSelector(state => state.authSlice.userName);
+  const dbName = useAppSelector(state => state.authSlice.dbName);
   const [mobileNumber, setMobileNumber] = useState("");
   const [displayMobileNumber, setDisplayMobileNumber] = useState("");
   const [error, setError] = useState({
@@ -43,6 +44,8 @@ export default function AppointmentForm() {
   const [appointmentId, setAppointmentId] = useState(0);
   const [appDate, setAppDate] = useState(new Date());
   const [clientNumberExists, setClientNumberExists] = useState(false);
+  const [elementsToHide, setElementsToHide] = useState([]);
+  const [whatsappKeys, setWhatsappKeys] = useState([]);
 
   const appointmentTimePeriod = [
     {label: "Tomorrow", value: "Tomorrow"},
@@ -61,9 +64,43 @@ export default function AppointmentForm() {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
   useEffect(() => {
     searchRef?.current.focus();
+    elementsToHideList();
+    fetchWhatsappKeys(); 
   }, []);
+
+  const elementsToHideList = () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
+        .then((response) => response.json())
+        .then((data) => setElementsToHide(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
+  console.log(whatsappKeys)
+
+  const fetchWhatsappKeys= () => {
+    try{
+      fetch(`https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php/get?JsonDBName=${dbName}`)
+        .then((response) => response.json())
+        .then((data) => setWhatsappKeys(data));
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }
+
+
+  useEffect(() => {
+    elementsToHide.forEach((name) => {
+      const elements = document.getElementsByName(name);
+      elements.forEach((element) => {
+        element.style.display = 'none'; // Hide the element
+      });
+    });
+  }, [elementsToHide])
 
   async function getExistingAppointment(e){
     const inputData = e.target.value;
@@ -308,12 +345,18 @@ export default function AppointmentForm() {
 
       // const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
       try{
-      const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=appointment_ortho&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
-        
-        if (send.ok) {
-            alert("Appointment Created and Message Sent Successfully!");
+        if (whatsappKeys.length > 0) {
+          const { LicenceNumber, APIKey } = whatsappKeys[0];
+
+          const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=appointment_ortho&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
+            
+            if (send.ok) {
+                alert("Appointment Created and Message Sent Successfully!");
+            } else {
+                alert("Appointment Created Successfully, but Message Failed to Send.");
+            }
         } else {
-            alert("Appointment Created Successfully, but Message Failed to Send.");
+          console.log("No keys available to send message.");
         }
       }catch(error){
         console.error(error)
@@ -346,7 +389,12 @@ export default function AppointmentForm() {
     //const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
 
     try{
-    const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+      if (whatsappKeys.length > 0) {
+      const { LicenceNumber, APIKey } = whatsappKeys[0];  
+         const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+      } else {
+        console.log("No keys available to send message.");
+      }
     }catch(error){
       console.log(error);
     }
@@ -384,7 +432,12 @@ export default function AppointmentForm() {
 
         // Send WhatsApp notification for appointment cancellation
         try {
-            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=95445308244&APIKey=duxby0porheW2IM798tNKCPYH&Contact=91${mobileNumber}&Template=reject_appointment&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+          if (whatsappKeys.length > 0) {
+            const { LicenceNumber, APIKey } = whatsappKeys[0];
+            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=reject_appointment&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+          } else {
+            console.log("No keys available to send message.");
+          }  
         } catch (error) {
             console.error("Failed to send WhatsApp message:", error);
         }
@@ -594,7 +647,7 @@ export default function AppointmentForm() {
               onChange={(selectedOption) => {setSelectedPeriod(selectedOption.target.value); setError({period: ""})}}   
             />
             
-               <div className="flex flex-col w-full mt-2">
+               <div className="flex flex-col w-full mt-2" name="AppointmentDateSelect" id="22">
                 <label className="font-montserrat text-lg mb-1">Appointment Date <span className="text-red-500">*</span></label>
                 <input
                   type='date'
