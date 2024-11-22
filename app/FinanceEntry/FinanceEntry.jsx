@@ -1,6 +1,7 @@
 'use client';
 import './page.css';
 import React, { useState, useEffect, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import { useRouter } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
 import { CircularProgress, TextField } from '@mui/material';
@@ -31,6 +32,7 @@ import 'primeicons/primeicons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchFinanceSearchTerm } from '../api/FetchAPI';
+import { generateBillPdf } from '../generatePDF/generateBillPDF';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -655,6 +657,29 @@ const openChequeDate = Boolean(anchorElChequeDate);
           const data = await response.json();
           if (data === 'Inserted Successfully!') {
             setSuccessMessage('Finance Entry Added');
+            // Prepare data for receipt
+              const financeData = {
+                date: formattedDate,
+                clientName,
+                address: 'Client Address',
+                receiptNumber: '12345',
+                contactNumber: clientNumber,
+                items: [
+                  { qty: 1, description: 'Order Payment', price: orderAmount, amount: orderAmount },
+                ],
+                total: orderAmount,
+              };
+        // Call the PDF generator
+        await generateBillPdf({
+          clientName,
+          orderNumber,
+          orderAmount,
+          gstAmount,
+          transactionDate: formattedDate + " " + formattedTime,
+          paymentMode: paymentMode?.value,
+          remarks,
+        });
+              
               setTimeout(() => {
             setSuccessMessage('');
 
