@@ -475,7 +475,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
 
     setRateWiseOrderNumber(newOrderNumber);
-    axios
+    {!billsOnly && axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
@@ -499,7 +499,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     // Clear validation errors
     if (errors.orderNumber) {
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-    }
+    }}
   };
 
   useEffect(()=>{
@@ -516,14 +516,13 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const handleUploadBills = async () => {
     // Format bill date
-    var orderNumberToBeUploaded = elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
-    console.log(orderNumberToBeUploaded)
+    var orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
+ 
     const formattedBillDate = billDate.format("YYYY-MM-DD");
     const orderNumberArray = (parseInt(orderNumberToBeUploaded))
       ? orderNumberToBeUploaded.split(",").map(num => parseFloat(num.trim())) 
       : null;
-  
-      console.log(orderNumberArray);
+
     // // Function to create FormData
     const createFormData = (orderNum, isNotUploaded) => {
       const formData = new FormData();
@@ -547,7 +546,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
-        console.log(response.data);
+        // setSuccessMessage("Bills Uploaded Successfully!")
         
       } catch (error) {
         console.error("Error uploading record:", error);
@@ -583,6 +582,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
   const insertNewFinance = async (e) => {
     e.preventDefault();
 
+    var orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
+
     if(billsOnly){
       if(!bill){
         setToastMessage("Please upload a Bill!");
@@ -592,6 +593,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setToast(false);
         }, 3000);
         return;
+      }else if(!expenseCategory){
+        setErrors((prevErrors) => ({...prevErrors, expenseCategory: "Select an Expense Category!"}));
+        return;
       }else if(orderAmount === 0 || orderAmount === ""){
         setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
         amountRef?.current.focus();
@@ -600,7 +604,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
         billNumberRef?.current.focus();
         return;
-      }else if((orderNumber === "" || parseInt(orderNumber) === 0) && expenseCategory?.value === 'Project'){
+      }else if((orderNumberToBeUploaded === "" || parseInt(orderNumberToBeUploaded) === 0) && expenseCategory?.value === 'Project'){
         setErrors((prevErrors) => ({...prevErrors, orderNumber: "Order Number is required for Project Category!"}));
         orderNumberRef?.current.focus();
         return;
@@ -613,6 +617,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setGSTAmount('');
         setOrderAmount('');
         setOrderNumber('');
+        setBillNumber("");
         setRateWiseOrderNumber('');
         setTaxType(taxTypeOptions[2]);
         setTransactionType(transactionOptions[0]);
