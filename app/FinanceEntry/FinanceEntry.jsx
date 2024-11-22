@@ -618,6 +618,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setOrderAmount('');
         setOrderNumber('');
         setBillNumber("");
+        setBillDate(dayjs());
         setRateWiseOrderNumber('');
         setTaxType(taxTypeOptions[2]);
         setTransactionType(transactionOptions[0]);
@@ -1184,7 +1185,7 @@ useEffect(() => {
     type="checkbox"
     className="ml-5 form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
     checked={billsOnly}
-    onChange={() => setBillsOnly(!billsOnly)}
+    onChange={() => {setBillsOnly(!billsOnly); setClientName('')}}
   />
   <span className="ml-2 text-sm font-medium">Add Bills Only </span>
 </label>
