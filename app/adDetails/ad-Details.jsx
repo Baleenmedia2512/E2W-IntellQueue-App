@@ -384,9 +384,8 @@ const AdDetailsPage = () => {
           )
           .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
         setDatas(filterdata);
-
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-        formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
+        formattedMargin(qty* width * filterdata[0]?.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
         // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
         // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
         dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))

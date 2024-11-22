@@ -227,54 +227,55 @@ export const AdDetails = () => {
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
     const quoteNumber = await fetchNextQuoteNumber(companyName);
+  
     if (isGeneratingPdf) {
-      try{
+      try {
         const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
-        return; 
-      } catch(error) {
-        alert('An unexpected error occured while inserting Quote:', error);
+        return;
+      } catch (error) {
+        alert("An unexpected error occurred while inserting Quote: " + error);
         return;
       }
-      
     }
-
+  
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
-    
-    const TnC = await getTnC();
-    let grandTotalAmount = calculateGrandTotal();
-    grandTotalAmount = grandTotalAmount.replace('₹', '');
-    if(clientName !== ""){
-      try{
-        const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-        const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
-        await Promise.all(promises);
-      //   setTimeout(() => {
-      //   dispatch(resetCartItem());
-      //   dispatch(resetQuotesData());
-      //   dispatch(resetClientData());
-      // },3000)
-      } catch(error){
-        alert('An unexpected error occured while inserting Quote:' + error);
-        return;
+  
+    try {
+      const TnC = await getTnC();
+      let grandTotalAmount = calculateGrandTotal();
+      grandTotalAmount = grandTotalAmount.replace("₹", "");
+  
+      if (clientName !== "") {
+        try {
+          const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+          await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
+  
+          const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
+          await Promise.all(promises);
+        } catch (error) {
+          alert("An unexpected error occurred during PDF generation or database insertion: " + error);
+          return;
+        }
+      } else {
+        if (clientName === "") {
+          setIsClientName(false);
+        } else if (clientContact === "") {
+          setIsClientContact(false);
+        }
       }
-      
-    } else{
-      if(clientName === ""){
-        setIsClientName(false)
-      }else if(clientContact === ""){
-        setIsClientContact(false)
-      }
+    } finally {
+      isGeneratingPdf = false; // Reset flag regardless of success or error
     }
   };
+  
   
   const handleUpdateAndDownloadQuote = async (e) => {
     e.preventDefault();
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
     
     const TnC = await getTnC();
-    const quoteNumber = cartItems[0].editQuoteNumber;
+    const quoteNumber = cartItems[0].editQuoteNumber ?? await fetchNextQuoteNumber(companyName);
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
@@ -286,14 +287,16 @@ export const AdDetails = () => {
         );
         // console.log(cart)
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-        const promises = cartItems.map(item => updateQuoteToDB(item));
+        const promises = cartItems.map(item => {cartItems[0].editQuoteNumber ? updateQuoteToDB(item) : addQuoteToDB(item)});
         await Promise.all(promises);
-        setTimeout(() => {
-        dispatch(resetCartItem());
         dispatch(resetQuotesData());
         dispatch(resetClientData());
         dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
-      },200)
+        if(cartItems[0].editQuoteNumber){ 
+          setTimeout(() => {
+            dispatch(resetCartItem());
+          },200)
+        }
       } catch(error){
         alert('An unexpected error occured while inserting Quote:' + error);
         return;
@@ -444,7 +447,7 @@ export const AdDetails = () => {
           {/* Shopping Cart Button */}
           {currentPage === "checkout" ? (
             <div className='flex flex-row justify-center items-center'>
-              {cartItems.length > 0 && cartItems[0].isEditMode ? (
+              {cartItems.length > 0 && cartItems[0].isEditMode && cartItems[0].editQuoteNumber ? (
                 <button
                   className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
                   disabled={cartItems.length > 0 ? false : true}
