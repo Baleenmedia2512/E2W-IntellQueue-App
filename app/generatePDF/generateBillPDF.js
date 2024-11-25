@@ -10,123 +10,138 @@ export const generateBillPdf = async (entryDetails) => {
     transactionDate,
     paymentMode,
     remarks,
-    clientContact, // Assuming you might get client contact info
-    clientAddress, // Assuming you might get client address info
+    clientContact,
+    clientAddress,
   } = entryDetails;
 
   // Initialize jsPDF with A4 size in portrait orientation
   const pdf = new jsPDF("portrait", "pt", "A4");
 
-  // Set modern font style (Helvetica)
-  pdf.setFont("helvetica");
+  // Watermark Image (Replace with your Base64 string or image URL)
+  const watermarkBase64 = '/GS/icon-BW-512x512.png'; // Replace with your Base64 image
+  const pageWidth = pdf.internal.pageSize.width;
+  const pageHeight = pdf.internal.pageSize.height;
 
-  // Header Section (Receipt Title and Clinic Logo)
-  pdf.setFontSize(32); // Larger font size for title
-  pdf.setTextColor(0, 0, 0); // Black color for text
-  pdf.text("RECEIPT", 20, 80); // Left-aligned title with more vertical space
+  // Create a canvas to adjust image opacity
+  const img = new Image();
+  img.src = watermarkBase64;
 
-  // Add clinic logo or name (right-aligned)
-  pdf.setFontSize(18); // Slightly smaller font for logo
-  pdf.text("GRACE SCANS", pdf.internal.pageSize.width - 150, 80);
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-  // Add a thin grey line below the title section
-  pdf.setDrawColor(200, 200, 200); // Grey color for the line
-  pdf.setLineWidth(1); // Thin line width
-  pdf.line(20, 100, pdf.internal.pageSize.width - 20, 100); // Draw the line across the page
+    // Set canvas size and draw the image
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.globalAlpha = 0.2; // Set the desired opacity (0.0 to 1.0)
+    ctx.drawImage(img, 0, 0, img.width, img.height);
 
-  // Client Details Section (Name, Date, Contact, Bill No.)
-  const clientDetailsY = 130;
-  pdf.setFontSize(16); // Standard font size for labels
-  pdf.setTextColor(0, 0, 0); // Dark grey for labels
+    // Get the Base64 string of the modified image
+    const transparentImage = canvas.toDataURL("image/png");
 
-  // Name and Date (dark grey for labels)
-  pdf.text("Name", 20, clientDetailsY);
-  pdf.text("Date", pdf.internal.pageSize.width - 250, clientDetailsY);
+    // Add the adjusted image to the PDF
+    const watermarkHeight = pageHeight / 3;
+    const watermarkAspectRatio = 1; // Assuming the watermark is square
+    const watermarkWidth = watermarkHeight * watermarkAspectRatio;
 
-  // Name and Date values (bold black)
-  pdf.setFontSize(18);
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(0, 0, 0); // Black for the values
-  pdf.text(clientName || "N/A", 20, clientDetailsY + 25);
-  pdf.text(transactionDate || "N/A", pdf.internal.pageSize.width - 250, clientDetailsY + 25);
+    pdf.addImage(
+      transparentImage,
+      "PNG",
+      (pageWidth - watermarkWidth) / 2, // Center horizontally
+      (pageHeight - watermarkHeight) / 2, // Center vertically
+      watermarkWidth,
+      watermarkHeight
+    );
 
-  // Contact and Bill No. (dark grey for labels)
-  pdf.setFontSize(16);
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(0, 0, 0); // Dark grey for labels
-  pdf.text("Contact", 20, clientDetailsY + 65);
-  pdf.text("Bill No", pdf.internal.pageSize.width - 250, clientDetailsY + 65);
+    pdf.setTextColor(0, 0, 0);
 
-  // Contact and Bill No. values (bold black)
-  pdf.setFontSize(18);
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(0, 0, 0); // Black for the values
-  pdf.text(clientContact || "N/A", 20, clientDetailsY + 90);
-  pdf.text("007" || "N/A", pdf.internal.pageSize.width - 250, clientDetailsY + 90);
+    // Header Section (Receipt Title and Clinic Logo)
+    pdf.setFontSize(32);
+    pdf.text("RECEIPT", 20, 80);
+    pdf.setFontSize(18);
+    pdf.text("GRACE SCANS", pageWidth - 150, 80);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setLineWidth(1);
+    pdf.line(20, 100, pageWidth - 20, 100);
 
-  // Address (dark grey for label)
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(0, 0, 0); // Dark grey for label
-  pdf.text("Address", 20, clientDetailsY + 130);
+    // Client Details Section
+    const clientDetailsY = 130;
+    pdf.setFontSize(16);
+    pdf.text("Name", 20, clientDetailsY);
+    pdf.text("Date", pageWidth - 250, clientDetailsY);
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(clientName || "N/A", 20, clientDetailsY + 25);
+    pdf.text(transactionDate || "N/A", pageWidth - 250, clientDetailsY + 25);
 
-  // Address value (bold black)
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(0, 0, 0); // Black for the value
-  const clientAddressBreak = clientAddress || "N/A";
+    // Contact and Bill No.
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Contact", 20, clientDetailsY + 65);
+    pdf.text("Bill No", pageWidth - 250, clientDetailsY + 65);
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(clientContact || "N/A", 20, clientDetailsY + 90);
+    pdf.text("007" || "N/A", pageWidth - 250, clientDetailsY + 90);
 
-  // Split the address into multiple lines if it's too long
-  const addressLines = pdf.splitTextToSize(clientAddressBreak, pdf.internal.pageSize.width - 40); // -40 for left and right margins
-  
-  // Print each line of the address, incrementing the Y position for each line
-  let yPosition = clientDetailsY + 155; // Starting position for the address
-  addressLines.forEach((line, index) => {
-    pdf.text(line, 20, yPosition + index * 20); // 20px line spacing
-  });
-  
-  // Adjust the startY for the table based on the number of lines in the address
-  const tableStartY = yPosition + addressLines.length * 20 + 20; // Add 20px for spacing after the last address line
-  
-  // Itemized List Table (Qty, Description, Price, Amount)
-  autoTable(pdf, {
-    startY: tableStartY, // Start the table after the address
-    head: [["Qty", "Description", "Price", "Amount"]],
-    body: [
-      ["1", "Consultation", orderAmount || "0.00", orderAmount || "0.00"],
-      ["1", "GST (5%)", gstAmount || "0.00", gstAmount || "0.00"],
-    ],
-    styles: {
-      fontSize: 12, // Standard font size for table content
-      halign: "center", // Horizontal alignment in the center
-      lineWidth: 0.5, // Set line width for table borders
-      lineColor: [0, 0, 0], // Set line color (black)
-    },
-    headStyles: {
-      fillColor: [0, 0, 0], // Black background for header
-      textColor: [255, 255, 255], // White text for header
-      lineWidth: 0.5, // Border width for header
-      lineColor: [0, 0, 0], // Border color for header
-    },
-    margin: { left: 20, right: 20 },
-  });
-  
-  // Total Section (Right-aligned Total)
-  pdf.setFontSize(16); // Larger font for total
-  const totalAmount = parseFloat(orderAmount || 0) + parseFloat(gstAmount || 0);
-  pdf.text(
-    `Total: ₹${totalAmount.toFixed(2)}`,
-    pdf.internal.pageSize.width - 120,
-    pdf.lastAutoTable.finalY + 20, // Adjust position to be below the table
-    { align: "right" }
-  );
-  
+    // Address Section
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Address", 20, clientDetailsY + 130);
+    const clientAddressBreak = clientAddress || "N/A";
+    const addressLines = pdf.splitTextToSize(clientAddressBreak, pageWidth - 40);
+    let yPosition = clientDetailsY + 155;
+    addressLines.forEach((line, index) => {
+      pdf.setFont("helvetica", "bold");
+      pdf.text(line, 20, yPosition + index * 20);
+    });
 
-  // Footer Section (Clinic Contact Details)
-  pdf.setFontSize(12); // Standard font size for footer
-  pdf.text("1942 Ethels Lane, Fort Myers, Florida, 33912", 20, pdf.internal.pageSize.height - 60);
-  pdf.text("Tel: (605) 905-8389", 20, pdf.internal.pageSize.height - 45);
-  pdf.text("Fax: (605) 916-7847", pdf.internal.pageSize.width - 80, pdf.internal.pageSize.height - 60);
-  pdf.text("firstrefuge@gmail.com", pdf.internal.pageSize.width - 80, pdf.internal.pageSize.height - 45);
+    const tableStartY = yPosition + addressLines.length * 20 + 20;
 
-  // Save the generated PDF
-  pdf.save(`Receipt_${clientName || "Unknown"}.pdf`);
+    // Itemized List Table
+    autoTable(pdf, {
+      startY: tableStartY,
+      head: [["S.No", "Description", "Qty", "Amount"]],
+      body: [
+        ["1", "USG Scan - Abdomen", "1", orderAmount || "0.00"],
+        ["2", "X-Ray - Hand", "1", orderAmount || "0.00"],
+      ],
+      styles: {
+        fontSize: 12,
+        halign: "center",
+        lineWidth: 0.5,
+        lineColor: [0, 0, 0],
+        textColor: [0, 0, 0],
+      },
+      headStyles: {
+        fillColor: [0, 0, 0],
+        textColor: [255, 255, 255],
+      },
+      margin: { left: 20, right: 20 },
+    });
+
+    // Total Section
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bold"); // Set font to bold
+
+    const totalAmount = parseFloat(orderAmount || 0) + parseFloat(gstAmount || 0);
+    const totalText = `Total: Rs ${totalAmount}`;
+    const letterSpacing = 3; // Adjust letter spacing (in points)
+
+    let currentX = pageWidth - 70;
+    for (let i = totalText.length - 1; i >= 0; i--) {
+      const charWidth = pdf.getTextWidth(totalText[i]);
+      currentX -= charWidth + letterSpacing;
+      pdf.text(totalText[i], currentX, pdf.lastAutoTable.finalY + 30);
+    }
+
+    // Footer Section
+    pdf.setFontSize(12);
+    pdf.text("19/61, Jawahar Main Road, NRT Nagar, Theni, 625531", 20, pageHeight - 60);
+    pdf.text("Tel: 04546-253607", 20, pageHeight - 45);
+    pdf.text("Email: gracescans@gmail.com", pageWidth - 200, pageHeight - 60);
+    pdf.text("Website: gracescans.com", pageWidth - 200, pageHeight - 45);
+
+    // Save the PDF
+    pdf.save(`Receipt_${clientName || "Unknown"}.pdf`);
+  };
 };
