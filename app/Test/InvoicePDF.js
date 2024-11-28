@@ -1,8 +1,29 @@
+import { Padding } from "@mui/icons-material";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-const generatePDF = (data) => {
+export const generateBillPdf = async (data) => {
   const doc = new jsPDF();
+
+    // Add watermark logo
+    const watermarkLogoUrl = '/GS/GSBWLogo500x500.png'; // Path to watermark image
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const watermarkSize = 130; // Adjust the watermark size as needed
+  
+    // Add the logo as a watermark in the center
+    doc.addImage(
+      watermarkLogoUrl,
+      'PNG',
+      (pageWidth - watermarkSize) / 2, // Center X position
+      (pageHeight - watermarkSize) / 2, // Center Y position
+      watermarkSize, // Width
+      watermarkSize, // Height
+      undefined,
+      'NONE', // Keep aspect ratio without compression
+      0.1 // Set opacity to make it light as a watermark
+    );
+  
 
   // Add high-resolution logo image
   const logoUrl = '/GS/GSTitleLogo360x120.png'; // Path to your high-resolution logo
@@ -30,6 +51,7 @@ const generatePDF = (data) => {
   // Add sender details
   doc.setFontSize(10);
   doc.setTextColor("#545454");
+  doc.setFont("helvetica", "normal");
   doc.text("From:", 190, 55, { align: "right" });
   doc.setFontSize(14);
   doc.setTextColor("#292929");
@@ -74,17 +96,36 @@ const tableBody = data.items.map((item) => [
 ]);
 
 doc.autoTable({
-  startY: 130,
+  startY: 135,
   head: [["Description", "Qty", "Price", "Total"]],
   body: tableBody,
-  theme: "plain", // Removes grid lines and fill colors
-  headStyles: { fontSize: 12, fontStyle: "bold", textColor: "#292929" }, // Font size for the header
-  bodyStyles: { fontSize: 11, fontStyle: "bold", textColor: "#292929" }, // Font size for the body
+  theme: "plain",
+  headStyles: {
+    fontSize: 12,
+    fontStyle: "bold",
+    textColor: "#292929",
+    halign: "left", // Center-align header text
+  },
+  bodyStyles: {
+    fontSize: 11,
+    fontStyle: "bold",
+    textColor: "#292929",
+    lineHeight: 5,
+  },
+  margin: { top: 30, left: 25, right: 20, bottom: 30 },
+  pageBreak: 'auto',
+  didParseCell: (data) => {
+    // Add extra space between rows
+    if (data.section === 'body') {
+      data.cell.y += 3; // Adjust the '3' value to add more or less space between rows
+    }
+  },
   didDrawCell: (data) => {
+    
     // Only draw the line after the header is drawn
     if (data.section === "head" && data.row.index === 0) {
-      const startX = 20;  // Start X position (matches left margin)
-      const endX = 190;   // End X position (matches right margin)
+      const startX = 20; // Start X position (matches left margin)
+      const endX = 190; // End X position (matches right margin)
       const lineY = data.cell.y + data.cell.height; // Position for the line after the header
 
       // Draw the line
@@ -151,7 +192,7 @@ doc.text(`${data.amountDue}`, 20, finalY + 8, { align: "left" });
   doc.text("This is a computer-generated invoice,", 20, finalY + 20);
   doc.text("no signature required.", 20, finalY + 25);
 
-  const lineContactFooterY = lineY + 190;
+  const lineContactFooterY = lineY + 175;
 
   doc.setFont("helvetica", "italic", "bold");
   doc.setTextColor("#292929");

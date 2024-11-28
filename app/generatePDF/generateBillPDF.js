@@ -1,147 +1,245 @@
+import { Padding } from "@mui/icons-material";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import "jspdf-autotable";
 
-export const generateBillPdf = async (entryDetails) => {
-  const {
-    clientName,
-    orderNumber,
-    orderAmount,
-    gstAmount,
-    transactionDate,
-    paymentMode,
-    remarks,
-    clientContact,
-    clientAddress,
-  } = entryDetails;
+export const generateBillPdf = async (data) => {
+  const doc = new jsPDF();
 
-  // Initialize jsPDF with A4 size in portrait orientation
-  const pdf = new jsPDF("portrait", "pt", "A4");
-
-  // Watermark Image (Replace with your Base64 string or image URL)
-  const watermarkBase64 = '/GS/icon-BW-512x512.png'; // Replace with your Base64 image
-  const pageWidth = pdf.internal.pageSize.width;
-  const pageHeight = pdf.internal.pageSize.height;
-
-  // Create a canvas to adjust image opacity
-  const img = new Image();
-  img.src = watermarkBase64;
-
-  img.onload = () => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    // Set canvas size and draw the image
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.globalAlpha = 0.2; // Set the desired opacity (0.0 to 1.0)
-    ctx.drawImage(img, 0, 0, img.width, img.height);
-
-    // Get the Base64 string of the modified image
-    const transparentImage = canvas.toDataURL("image/png");
-
-    // Add the adjusted image to the PDF
-    const watermarkHeight = pageHeight / 3;
-    const watermarkAspectRatio = 1; // Assuming the watermark is square
-    const watermarkWidth = watermarkHeight * watermarkAspectRatio;
-
-    pdf.addImage(
-      transparentImage,
-      "PNG",
-      (pageWidth - watermarkWidth) / 2, // Center horizontally
-      (pageHeight - watermarkHeight) / 2, // Center vertically
-      watermarkWidth,
-      watermarkHeight
+    // Add watermark logo
+    const watermarkLogoUrl = '/GS/GSBWLogo500x500.png'; // Path to watermark image
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const watermarkSize = 130; // Adjust the watermark size as needed
+  
+    // Add the logo as a watermark in the center
+    doc.addImage(
+      watermarkLogoUrl,
+      'PNG',
+      (pageWidth - watermarkSize) / 2, // Center X position
+      (pageHeight - watermarkSize) / 2, // Center Y position
+      watermarkSize, // Width
+      watermarkSize, // Height
+      undefined,
+      'NONE', // Keep aspect ratio without compression
+      0.1 // Set opacity to make it light as a watermark
     );
+  
 
-    pdf.setTextColor(0, 0, 0);
+  // Add high-resolution logo image
+  const logoUrl = '/GS/GSTitleLogo360x120.png'; // Path to your high-resolution logo
+  const logoX = 20; // X position for the logo
+  const logoY = 20; // Y position for the logo
 
-    // Header Section (Receipt Title and Clinic Logo)
-    pdf.setFontSize(32);
-    pdf.text("RECEIPT", 20, 80);
-    pdf.setFontSize(18);
-    pdf.text("GRACE SCANS", pageWidth - 150, 80);
-    pdf.setDrawColor(200, 200, 200);
-    pdf.setLineWidth(1);
-    pdf.line(20, 100, pageWidth - 20, 100);
+  // Adjust width and height (use points for scaling: 1 point = 1/72 inch)
+  const logoWidth = 80; // Width in points (scaled from original for higher resolution)
+  const logoHeight = 26.67; // Height in points (proportional to 240x80 resolution)
+  doc.addImage(logoUrl, 'PNG', logoX, logoY, logoWidth, logoHeight);
 
-    // Client Details Section
-    const clientDetailsY = 130;
-    pdf.setFontSize(16);
-    pdf.text("Name", 20, clientDetailsY);
-    pdf.text("Date", pageWidth - 250, clientDetailsY);
-    pdf.setFontSize(18);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(clientName || "N/A", 20, clientDetailsY + 25);
-    pdf.text(transactionDate || "N/A", pageWidth - 250, clientDetailsY + 25);
+  // Add customer details
+  doc.setFontSize(10);
+  doc.setTextColor("#545454");
+  doc.text("Bill to:", 20, 55);
+  doc.setFontSize(14);
+  doc.setTextColor("#292929");
+  doc.setFont("helvetica", "bold");
+  doc.text(`${data.customerName}`, 20, 62);
+  doc.setFontSize(9);
+  doc.setTextColor("#545454");
+  doc.text(`${data.customerContact}`, 20, 69);
+  doc.text(`${data.customerAddress}`, 20, 74);
 
-    // Contact and Bill No.
-    pdf.setFontSize(16);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("Contact", 20, clientDetailsY + 65);
-    pdf.text("Bill No", pageWidth - 250, clientDetailsY + 65);
-    pdf.setFontSize(18);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(clientContact || "N/A", 20, clientDetailsY + 90);
-    pdf.text("007" || "N/A", pageWidth - 250, clientDetailsY + 90);
+  // Add sender details
+  doc.setFontSize(10);
+  doc.setTextColor("#545454");
+  doc.setFont("helvetica", "normal");
+  doc.text("From:", 190, 55, { align: "right" });
+  doc.setFontSize(14);
+  doc.setTextColor("#292929");
+  doc.setFont("helvetica", "bold");
+  doc.text("Grace Scans", 190, 62, { align: "right" });
+  doc.setFontSize(9);
+  doc.setTextColor("#545454");
+  doc.text("19/61, Jawahar Main Road,", 190, 69, { align: "right" });
+  doc.text("NRT Nagar, Theni", 190, 74, { align: "right" });
+  doc.text("625531", 190, 79, { align: "right" });
 
-    // Address Section
-    pdf.setFont("helvetica", "normal");
-    pdf.text("Address", 20, clientDetailsY + 130);
-    const clientAddressBreak = clientAddress || "N/A";
-    const addressLines = pdf.splitTextToSize(clientAddressBreak, pageWidth - 40);
-    let yPosition = clientDetailsY + 155;
-    addressLines.forEach((line, index) => {
-      pdf.setFont("helvetica", "bold");
-      pdf.text(line, 20, yPosition + index * 20);
-    });
+  // Add divider line below customer and sender details
+  const lineY = 90; // Y-coordinate for the line
+  doc.setDrawColor(84); // Black color for the line
+  doc.setLineWidth(0.2); // Line thickness
+  doc.line(20, lineY, 190, lineY); // Draw line from (20, lineY) to (190, lineY)
 
-    const tableStartY = yPosition + addressLines.length * 20 + 20;
+  // Add invoice details
+  doc.setFontSize(26);
+  doc.setTextColor("#292929");
+  doc.text("Invoice", 20, 105);
+  doc.setFontSize(10);
+  doc.setTextColor("#545454");
+  doc.text(`Invoice #: ${data.invoiceNumber}`, 20, 112);
+  doc.text(`Ref #: ${data.refNumber}`, 20, 117);
+  doc.text(`${data.date}`, 20, 122);
 
-    // Itemized List Table
-    autoTable(pdf, {
-      startY: tableStartY,
-      head: [["S.No", "Description", "Qty", "Amount"]],
-      body: [
-        ["1", "USG Scan - Abdomen", "1", orderAmount || "0.00"],
-        ["2", "X-Ray - Hand", "1", orderAmount || "0.00"],
-      ],
-      styles: {
-        fontSize: 12,
-        halign: "center",
-        lineWidth: 0.5,
-        lineColor: [0, 0, 0],
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        fillColor: [0, 0, 0],
-        textColor: [255, 255, 255],
-      },
-      margin: { left: 20, right: 20 },
-    });
+  // Add invoice details
+  doc.setFontSize(26);
+  doc.setTextColor("#292929");
+  doc.text(`Rs. ${data.total}`, 190, 105, { align: "right" });
+  doc.setFontSize(10);
+  doc.setTextColor("#545454");
+  doc.text("Total Amount", 190, 112, { align: "right" });
 
-    // Total Section
-    pdf.setFontSize(18);
-    pdf.setFont("helvetica", "bold"); // Set font to bold
+// Add table for items
+const tableBody = data.items.map((item) => [
+  item.description,
+  item.qty,
+  `Rs. ${item.price}`,
+  `Rs. ${item.total}`,
+]);
 
-    const totalAmount = parseFloat(orderAmount || 0) + parseFloat(gstAmount || 0);
-    const totalText = `Total: Rs ${totalAmount}`;
-    const letterSpacing = 3; // Adjust letter spacing (in points)
-
-    let currentX = pageWidth - 70;
-    for (let i = totalText.length - 1; i >= 0; i--) {
-      const charWidth = pdf.getTextWidth(totalText[i]);
-      currentX -= charWidth + letterSpacing;
-      pdf.text(totalText[i], currentX, pdf.lastAutoTable.finalY + 30);
+doc.autoTable({
+  startY: 135,
+  head: [["Description", "Qty", "Price", "Total"]],
+  body: tableBody,
+  theme: "plain",
+  headStyles: {
+    fontSize: 12,
+    fontStyle: "bold",
+    textColor: "#292929",
+    halign: "left", // Center-align header text
+  },
+  bodyStyles: {
+    fontSize: 11,
+    fontStyle: "bold",
+    textColor: "#292929",
+    lineHeight: 5,
+  },
+  margin: { top: 30, left: 25, right: 20, bottom: 30 },
+  pageBreak: 'auto',
+  didParseCell: (data) => {
+    // Add extra space between rows
+    if (data.section === 'body') {
+      data.cell.y += 3; // Adjust the '3' value to add more or less space between rows
     }
+  },
+  didDrawCell: (data) => {
+    
+    // Only draw the line after the header is drawn
+    if (data.section === "head" && data.row.index === 0) {
+      const startX = 20; // Start X position (matches left margin)
+      const endX = 190; // End X position (matches right margin)
+      const lineY = data.cell.y + data.cell.height; // Position for the line after the header
 
-    // Footer Section
-    pdf.setFontSize(12);
-    pdf.text("19/61, Jawahar Main Road, NRT Nagar, Theni, 625531", 20, pageHeight - 60);
-    pdf.text("Tel: 04546-253607", 20, pageHeight - 45);
-    pdf.text("Email: gracescans@gmail.com", pageWidth - 200, pageHeight - 60);
-    pdf.text("Website: gracescans.com", pageWidth - 200, pageHeight - 45);
+      // Draw the line
+      doc.setDrawColor(84); // Black color for the line
+      doc.setLineWidth(0.2); // Line thickness
+      doc.line(startX, lineY, endX, lineY); // Draw the line from startX to endX at lineY
+    }
+  },
+});
 
-    // Save the PDF
-    pdf.save(`Receipt_${clientName || "Unknown"}.pdf`);
-  };
+
+  doc.setDrawColor(84); // Black color for the line
+  doc.setLineWidth(0.2); // Line thickness
+  doc.line(20, doc.lastAutoTable.finalY + 5, 190, doc.lastAutoTable.finalY + 5); // Draw line from (20, lineY) to (190, lineY)
+
+
+// Add totals with more space between label and value
+const finalY = doc.lastAutoTable.finalY + 15;
+
+doc.setTextColor("#292929");
+
+// Adjust the Y-values to add more space
+doc.setFontSize(12);
+doc.text(`Sub-Total:`, 130, finalY, { align: "right" });
+doc.text(`Rs. ${data.subtotal}`, 190, finalY, { align: "right" });
+
+doc.setFontSize(10);
+doc.text(`Discount:`, 130, finalY + 5, { align: "right" });
+doc.text(`Rs. ${data.discount}`, 190, finalY + 5, { align: "right" });
+
+doc.setDrawColor(0); // Black color for the line
+doc.setLineWidth(0.2); // Line thickness
+doc.line(110, finalY + 11, 190, finalY + 11);
+
+doc.setFontSize(12);
+doc.text(`Total:`, 130, finalY + 21, { align: "right" });
+doc.text(`Rs. ${data.total}`, 190, finalY + 21, { align: "right" });
+
+doc.setFontSize(10);
+doc.text(`Paid:`, 130, finalY + 26, { align: "right" });
+doc.text(`Rs. ${data.paid}`, 190, finalY + 26, { align: "right" });
+
+doc.setDrawColor(0); // Black color for the line
+doc.setLineWidth(0.2); // Line thickness
+doc.line(110, finalY + 32, 190, finalY + 32);
+
+doc.setFontSize(12);
+doc.text(`Amount Due:`, 130, finalY + 41, { align: "right" });
+doc.text(`Rs. ${data.amountDue}`, 190, finalY + 41, { align: "right" });
+
+doc.setFont("helvetica", "normal");
+doc.setFontSize(12);
+doc.text(`Payment Method`, 20, finalY, { align: "left" });
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
+doc.text(`${data.amountDue}`, 20, finalY + 8, { align: "left" });
+
+
+
+  // Add footer
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(10);
+  doc.setTextColor("#6B7280");
+  doc.text("This is a computer-generated invoice,", 20, finalY + 20);
+  doc.text("no signature required.", 20, finalY + 25);
+
+  const lineContactFooterY = lineY + 175;
+
+  doc.setFont("helvetica", "italic", "bold");
+  doc.setTextColor("#292929");
+  doc.text("Tel: 04546 - 253607", 20, lineContactFooterY);
+  doc.text("Cell: 97918 03006", 20, lineContactFooterY + 5);
+
+  doc.setFont("helvetica", "italic", "bold");
+  doc.setTextColor("#292929");
+  doc.text("E-mail: contact@gracescans.com", 190, lineContactFooterY, { align: "right" });
+  doc.text("Website: gracescans.com", 190, lineContactFooterY + 5, { align: "right" });
+
+  // Save the PDF
+  doc.save("Invoice.pdf");
 };
+
+// const InvoicePDF = () => {
+//   // Example dynamic data
+//   const invoiceData = {
+//     customerName: "Logeshwaran",
+//     customerAddress: "Andipatti",
+//     customerContact: "01310983913",
+//     invoiceNumber: "1234",
+//     refNumber: "220",
+//     date: "November 27, 2024",
+//     items: [
+//       { description: "CT Scan - Abdomen & Thorax", qty: 1, price: 5500, total: 5500 },
+//       { description: "CT Scan - Duplicate Report", qty: 2, price: 200, total: 400 },
+//       { description: "CT Scan - Abdomen & Thorax", qty: 1, price: 5500, total: 5500 },
+//       { description: "CT Scan - Duplicate Report", qty: 2, price: 200, total: 400 },
+//     ],
+//     subtotal: 5900,
+//     discount: 1000,
+//     total: 4900,
+//     contactInfo: "Tel: 04546 - 253607 | Cell: 97918 03006",
+//   };
+
+//   return (
+//     <div className="p-4">
+//       <h1 className="text-2xl font-bold mb-4">Invoice Generator</h1>
+//       <button
+//         onClick={() => generatePDF(invoiceData)}
+//         className="px-4 py-2 bg-blue-500 text-white rounded"
+//       >
+//         Download Invoice
+//       </button>
+//     </div>
+//   );
+// };
+
+// export default InvoicePDF;

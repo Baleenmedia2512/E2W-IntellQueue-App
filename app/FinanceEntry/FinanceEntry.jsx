@@ -133,10 +133,21 @@ const FinanceData = () => {
   const [financeClientID, setFinanceClientID] = useState('');
   const [financeAmount, setFinanceAmount] = useState('');
   const [prevData, setPrevData] = useState(null);
+  const [invoiceData, setInvoiceData] = useState([]);
 
   useEffect(() => {
     if(dbName){
     elementsToHideList();
+    const fetchSubscriptions = async () => {
+      try {
+        const data = await fetchActiveSubscriptions();
+        setInvoiceData(data);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    fetchSubscriptions();
     }
   },[dbName])
 
@@ -237,6 +248,23 @@ const openChequeDate = Boolean(anchorElChequeDate);
     }
     setErrors(prev => ({ ...prev, [name]: '' }));
     elementsToHideList()
+  };
+
+  const fetchActiveSubscriptions = async () => {
+    try {
+      const response = await fetch('https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php?JsonDBName=Grace Scans');
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch active subscriptions:', error.message);
+      throw error;
+    }
   };
 
   const handleClientNameTermChange = (event) => {
@@ -576,6 +604,30 @@ const openChequeDate = Boolean(anchorElChequeDate);
     }
   };
   
+  const sendDataToPdf = () => {
+    const PDFData = {
+        customerName: clientName,
+        customerAddress: additionalData?.customerAddress || "Not Provided",
+        customerContact: clientNumber,
+        invoiceNumber: additionalData?.invoiceNumber || "N/A",
+        refNumber: additionalData?.refNumber || "N/A",
+        date: new Date().toLocaleDateString(),
+        items: additionalData?.items || [
+            { description: "Service", qty: 1, price: orderAmount, total: orderAmount },
+        ],
+        subtotal: orderAmount,
+        discount: additionalData?.discount || 0,
+        total: orderAmount - (additionalData?.discount || 0),
+        paid: additionalData?.paid || orderAmount,
+        amountDue: orderAmount - (additionalData?.discount || 0) - (additionalData?.paid || orderAmount),
+        contactInfo: "Tel: 04546 - 253607 | Cell: 97918 03006",
+        paymentMethod: paymentMode,
+    };
+
+    // Generate the PDF with the prepared data
+    generateBillPdf(PDFData);
+};
+
   
 
   const insertNewFinance = async (e) => {
@@ -657,29 +709,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
           const data = await response.json();
           if (data === 'Inserted Successfully!') {
             setSuccessMessage('Finance Entry Added');
-            // Prepare data for receipt
-              const financeData = {
-                date: formattedDate,
-                clientName,
-                address: 'Client Address',
-                receiptNumber: '12345',
-                contactNumber: clientNumber,
-                items: [
-                  { qty: 1, description: 'Order Payment', price: orderAmount, amount: orderAmount },
-                ],
-                total: orderAmount,
-              };
-        // Call the PDF generator
-        await generateBillPdf({
-          clientName,
-          orderNumber,
-          orderAmount,
-          gstAmount,
-          transactionDate: formattedDate + " " + formattedTime,
-          paymentMode: paymentMode?.value,
-          remarks,
-        });
-              
               setTimeout(() => {
             setSuccessMessage('');
 
@@ -689,6 +718,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
                   SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
               } else if (elementsToHide.includes("OrderNumberText")) {
                 SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
+                sendDataToPdf();
               } else {
                 setToastMessage('SMS Not Sent! Reason: No Database Found.');
                 setSeverity('warning');
