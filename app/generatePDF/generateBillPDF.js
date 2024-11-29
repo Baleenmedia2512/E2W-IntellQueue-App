@@ -6,7 +6,7 @@ export const generateBillPdf = async (data) => {
   const doc = new jsPDF();
 
     // Add watermark logo
-    const watermarkLogoUrl = '/GS/GSBWLogo500x500.png'; // Path to watermark image
+    const watermarkLogoUrl = data.companyWatermarkLogoPath; // Path to watermark image
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const watermarkSize = 130; // Adjust the watermark size as needed
@@ -26,7 +26,7 @@ export const generateBillPdf = async (data) => {
   
 
   // Add high-resolution logo image
-  const logoUrl = '/GS/GSTitleLogo360x120.png'; // Path to your high-resolution logo
+  const logoUrl = data.companyLogoPath; // Path to your high-resolution logo
   const logoX = 20; // X position for the logo
   const logoY = 20; // Y position for the logo
 
@@ -56,12 +56,12 @@ export const generateBillPdf = async (data) => {
   doc.setFontSize(14);
   doc.setTextColor("#292929");
   doc.setFont("helvetica", "bold");
-  doc.text("Grace Scans", 190, 62, { align: "right" });
+  doc.text(`${data.companyName}`, 190, 62, { align: "right" });
   doc.setFontSize(9);
   doc.setTextColor("#545454");
-  doc.text("19/61, Jawahar Main Road,", 190, 69, { align: "right" });
-  doc.text("NRT Nagar, Theni", 190, 74, { align: "right" });
-  doc.text("625531", 190, 79, { align: "right" });
+  doc.text(`${data.companyStreetAddress}`, 190, 69, { align: "right" });
+  doc.text(`${data.companyAreaAddress}`, 190, 74, { align: "right" });
+  doc.text(`${data.companyPincodeAddress}`, 190, 79, { align: "right" });
 
   // Add divider line below customer and sender details
   const lineY = 90; // Y-coordinate for the line
@@ -153,7 +153,8 @@ doc.text(`Sub-Total:`, 130, finalY, { align: "right" });
 doc.text(`Rs. ${data.subtotal}`, 190, finalY, { align: "right" });
 
 doc.setFontSize(10);
-doc.text(`Discount:`, 130, finalY + 5, { align: "right" });
+const discountLabel = data.discount > 0 ? "Extra Charges:" : "Discount:";
+doc.text(discountLabel, 130, finalY + 5, { align: "right" });
 doc.text(`Rs. ${data.discount}`, 190, finalY + 5, { align: "right" });
 
 doc.setDrawColor(0); // Black color for the line
@@ -181,7 +182,7 @@ doc.setFontSize(12);
 doc.text(`Payment Method`, 20, finalY, { align: "left" });
 doc.setFont("helvetica", "bold");
 doc.setFontSize(10);
-doc.text(`${data.amountDue}`, 20, finalY + 8, { align: "left" });
+doc.text(`${data.paymentMethod}`, 20, finalY + 8, { align: "left" });
 
 
 
@@ -196,50 +197,14 @@ doc.text(`${data.amountDue}`, 20, finalY + 8, { align: "left" });
 
   doc.setFont("helvetica", "italic", "bold");
   doc.setTextColor("#292929");
-  doc.text("Tel: 04546 - 253607", 20, lineContactFooterY);
-  doc.text("Cell: 97918 03006", 20, lineContactFooterY + 5);
+  doc.text(`Tel: ${data.companyTelephoneNumber}`, 20, lineContactFooterY);
+  doc.text(`Cell: ${data.companyContactNumber}`, 20, lineContactFooterY + 5);
 
   doc.setFont("helvetica", "italic", "bold");
   doc.setTextColor("#292929");
-  doc.text("E-mail: contact@gracescans.com", 190, lineContactFooterY, { align: "right" });
-  doc.text("Website: gracescans.com", 190, lineContactFooterY + 5, { align: "right" });
+  doc.text(`E-Mail: ${data.companyEmailAddress}`, 190, lineContactFooterY, { align: "right" });
+  doc.text(`Website: ${data.companyWebsiteURL}`, 190, lineContactFooterY + 5, { align: "right" });
 
   // Save the PDF
-  doc.save("Invoice.pdf");
+  doc.save(`INV${data.invoiceNumber}_${data.customerName}.pdf`);
 };
-
-// const InvoicePDF = () => {
-//   // Example dynamic data
-//   const invoiceData = {
-//     customerName: "Logeshwaran",
-//     customerAddress: "Andipatti",
-//     customerContact: "01310983913",
-//     invoiceNumber: "1234",
-//     refNumber: "220",
-//     date: "November 27, 2024",
-//     items: [
-//       { description: "CT Scan - Abdomen & Thorax", qty: 1, price: 5500, total: 5500 },
-//       { description: "CT Scan - Duplicate Report", qty: 2, price: 200, total: 400 },
-//       { description: "CT Scan - Abdomen & Thorax", qty: 1, price: 5500, total: 5500 },
-//       { description: "CT Scan - Duplicate Report", qty: 2, price: 200, total: 400 },
-//     ],
-//     subtotal: 5900,
-//     discount: 1000,
-//     total: 4900,
-//     contactInfo: "Tel: 04546 - 253607 | Cell: 97918 03006",
-//   };
-
-//   return (
-//     <div className="p-4">
-//       <h1 className="text-2xl font-bold mb-4">Invoice Generator</h1>
-//       <button
-//         onClick={() => generatePDF(invoiceData)}
-//         className="px-4 py-2 bg-blue-500 text-white rounded"
-//       >
-//         Download Invoice
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default InvoicePDF;
