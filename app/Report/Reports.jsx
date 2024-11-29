@@ -23,6 +23,8 @@ import { useDispatch } from 'react-redux';
 import { Select } from '@mui/material';
 import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
 import { Margin } from '@mui/icons-material';
+import { generateBillPdf } from '../generatePDF/generateBillPDF';
+import dayjs from 'dayjs';
 
 
 const Report = () => {
@@ -81,6 +83,7 @@ const Report = () => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
   const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
+  const [invoiceData, setInvoiceData] = useState([]);
 
 const checkIfSMSSentToday = () => {
   axios
@@ -161,6 +164,16 @@ useEffect(() => {
       fetchCurrentDateConsultants();
       if(dbName){
         elementsToHideList()
+        const fetchSubscriptions = async () => {
+          try {
+            const data = await fetchInvoiceData();
+            setInvoiceData(data);
+          } catch (err) {
+            console.error("Error Fetching Invoice Data: " + err)
+          }
+        };
+    
+        fetchSubscriptions();
       }
     },[])
     
@@ -208,6 +221,23 @@ useEffect(() => {
   
   const handleCloseCDR = () => {
     setOpenCDR(false);
+  };
+
+  const fetchInvoiceData = async () => {
+    try {
+      const response = await fetch('https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php?JsonDBName=Grace Scans');
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch active subscriptions:', error.message);
+      throw error;
+    }
   };
 
   const fetchCurrentDateConsultants = () => {
@@ -349,6 +379,7 @@ const SendSMSViaNetty = (consultantName, consultantNumber, message) => {
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
+                    invoiceDisabled: order.TotalAmountReceived === undefined || order.TotalAmountReceived === null || order.TotalAmountReceived === '',
                 }));
                 const displayData = response.data
                 setOrderDetails(data);
@@ -626,7 +657,56 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
+const handleDownloadInvoiceIconClick = (row) => {
+  console.log(row)
+  const PDFData = {
+    companyName: invoiceData.SubscriberName,
+    companyLogoPath: invoiceData.SubscriberLogoPath,
+    companyWatermarkLogoPath: invoiceData.SubscriberWatermarkPath,
+    companyStreetAddress: invoiceData?.SubscriberStreetAddress || "Not Provided",
+    companyAreaAddress: invoiceData?.SubscriberAreaAddress || "",
+    companyPincodeAddress: invoiceData?.SubscriberPincodeAddress || "",
+    companyEmailAddress: invoiceData?.SubscriberEmailAddress || "",
+    companyTelephoneNumber: invoiceData?.SubscriberTelephoneNumber || "",
+    companyContactNumber: invoiceData?.SubscriberContactNumber || "",
+    companyWebsiteURL: invoiceData?.SubscriberWebsiteURL || "",
+    customerName: row.ClientName,
+    customerContact: (row.ClientContact === 0 || row.ClientContact === '0' || row.ClientContact === null || row.ClientContact === "") ? 
+    "Contact number not provided" : row.ClientContact,
+    customerAddress: "Chennai",
+    invoiceNumber: row.OrderNumber,
+    refNumber: row.RateWiseOrderNumber || "N/A",
+    date: dayjs(row.OrderDate).format("MMMM D, YYYY"),
+    items: [
+      {
+        description: `${row.Card || ""} - ${row.AdType || ""}`,
+        qty: 1,
+        price: row.Receivable.replace(/[^\d.-]/g, ''),
+        total: row.Receivable.replace(/[^\d.-]/g, ''),
+      },
+    ],
+    subtotal: row.Receivable.replace(/[^\d.-]/g, '') || 0,  // Ensure subtotal is always a number
+    // Discount can be negative (e.g., Rs. -1500) and it should be added to the total amount
+    discount: (parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) + (parseFloat(row.WaiverAmount.replace(/[^\d.-]/g, '')) || 0), // Ensure valid numbers
+    // Total is receivableAmount + discount, where discount can be negative
+    total: (parseFloat(row.Receivable.replace(/[^\d.-]/g, '')) || 0) + ((parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) + (parseFloat(row.WaiverAmount.replace(/[^\d.-]/g, '')) || 0)),  
+    paid: (parseFloat(row.TotalAmountReceived.replace(/[^\d.-]/g, '')) || 0),  // Ensure paid is a number
+    // Amount Due is the difference between total and paid amount
+    amountDue: (parseFloat(row.AmountDifference.replace(/[^\d.-]/g, '')) || 0), 
+    paymentMethod: row.PaymentMode
+      .replace(/:\s*\d+/g, '')  // Remove numbers and colons
+      .replace(/,/g, '')         // Remove commas
+      .split(/\s+/)              // Split into words (payment methods) based on whitespace
+      .filter((item, index, self) => self.indexOf(item) === index)  // Remove duplicates
+      .join(', ')                // Join with a comma and space
+      .trim(),                   // Remove leading/trailing whitespace
 
+
+  };
+  
+  // Generate the PDF with the prepared data
+  generateBillPdf(PDFData);
+};
 
 const handleEditIconClick = (row) => {
   setSelectedRow(row);
@@ -668,7 +748,6 @@ useEffect(() => {
   window.addEventListener('resize', handleResize);
   return () => window.removeEventListener('resize', handleResize);
 }, []);
-console.log(elementsToHide)
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
@@ -691,46 +770,81 @@ const orderColumns = [
     {
       field: 'actions',
       headerName: 'Actions',
-      width: isMobile ? 290 : 270,
+      width: isMobile ? 290 : 290,
       renderCell: (params) => (
-        <div>
-            <button
-               className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
-                disabled={params.row.markInvalidDisabled}
-                onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{  backgroundColor: '#fa594d',
+          <div>
+              <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  disabled={params.row.markInvalidDisabled}
+                  onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+                  style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                      color: 'white',
+                      fontWeight: 'bold', 
+                      opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+                      pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+              >
+                  Cancel 
+              </Button>
+              <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  disabled={params.row.restoreDisabled}
+                  onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
+                  style={{ backgroundColor: '#1976d2',
                     color: 'white',
-                    fontWeight: 'bold', 
-                    opacity: params.row.markInvalidDisabled ? 0.2 : 1,
-                    pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
-            >
-                Cancel 
-            </button>
-            <button
-                className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs mr-2"
-                disabled={params.row.restoreDisabled}
-                onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
-                style={{ backgroundColor: '#1976d2',
+                    fontWeight: 'bold',
+                    opacity: params.row.restoreDisabled ? 0.5 : 1,
+                    pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+              >
+                  Restore
+              </Button>
+              <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => handleEditIconClick(params.row)}
+                  disabled={params.row.editDisabled}
+                  style={{ marginLeft: '12px',
+                    backgroundColor: '#499b25',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    opacity: params.row.editDisabled ? 0.5 : 1,
+                    pointerEvents: params.row.editDisabled ? 'none' : 'auto'
+                   }}  
+              >  
+                 Edit
+              </Button>
+          </div>
+      ),
+  },
+  {
+    field: 'invoice',
+    headerName: 'Invoice',
+    width: isMobile ? 180 : 150,
+    renderCell: (params) => (
+        <div>
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleDownloadInvoiceIconClick(params.row)}
+                disabled={params.row.invoiceDisabled}
+                style={{ marginLeft: '12px',
+                  backgroundColor: '#499b25',
                   color: 'white',
                   fontWeight: 'bold',
-                  opacity: params.row.restoreDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
-            >
-                Restore
-            </button>
-            <button
-            className="edit-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3"
-            disabled={params.row.editDisabled}
-            onClick={() => handleEditIconClick(params.row)}
-            style={{  
-              opacity: params.row.editDisabled ? 0.5 : 1,
-              pointerEvents: params.row.editDisabled ? 'none' : 'auto' }}
-        >
-            Edit
-        </button>
-                </div>
-            ),
-        },
+                  opacity: params.row.invoiceDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
+                 }}  
+            >  
+               Download
+            </Button>
+        </div>
+    ),
+},
         ];
 
 
