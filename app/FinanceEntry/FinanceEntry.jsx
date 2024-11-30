@@ -626,7 +626,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
           : 0),  // Ensure paid is a number
       // Amount Due is the difference between total and paid amount
       amountDue: ((parseFloat(balanceAmount) || 0) - (parseFloat(orderAmount) || 0)), 
-      paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value ? `${previousPaymentMode}, ${paymentMode.value}` : paymentMode.value,
+      paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value
+      ? Array.from(new Set([...previousPaymentMode.split(',').map(item => item.trim()), paymentMode.value])).join(', ') 
+      : paymentMode.value,
     };
     
     // Generate the PDF with the prepared data
