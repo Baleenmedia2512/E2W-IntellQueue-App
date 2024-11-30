@@ -631,7 +631,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       : paymentMode.value,
     };
     
-    // Generate the PDF with the prepared data
+
     generateBillPdf(PDFData);
 };
 
