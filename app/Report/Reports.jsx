@@ -23,11 +23,12 @@ import { useDispatch } from 'react-redux';
 import { Select } from '@mui/material';
 import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
 import { Margin } from '@mui/icons-material';
+import { generateBillPdf } from '../generatePDF/generateBillPDF';
+import dayjs from 'dayjs';
 
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
-    // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
@@ -46,15 +47,6 @@ const Report = () => {
      const [successMessage, setSuccessMessage] = useState('');
      const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
-
-  // const currentStartDate = startOfMonth(new Date());
-  // const currentEndDate = endOfMonth(new Date());
-  // const [selectedRange, setSelectedRange] = useState({
-  //   startDate: currentStartDate,
-  //   endDate: currentEndDate,
-  // });
-  // const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
-  // const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
   const { dateRange } = useAppSelector(state => state.reportSlice);
    const startDateForDisplay = new Date(dateRange.startDate);
    const endDateForDisplay = new Date(dateRange.endDate);
@@ -86,8 +78,12 @@ const Report = () => {
   const [openCDR, setOpenCDR] = useState(false);
   const [consultantNameCDR, setConsultantNameCDR] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  // const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
-  // const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [orderReportDialogOpen, setOrderReportDialogOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
+  const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
+  const [invoiceData, setInvoiceData] = useState([]);
 
 const checkIfSMSSentToday = () => {
   axios
@@ -168,6 +164,16 @@ useEffect(() => {
       // fetchCurrentDateConsultants();
       if(dbName){
         elementsToHideList()
+        const fetchSubscriptions = async () => {
+          try {
+            const data = await fetchInvoiceData();
+            setInvoiceData(data);
+          } catch (err) {
+            console.error("Error Fetching Invoice Data: " + err)
+          }
+        };
+    
+        fetchSubscriptions();
       }
     },[])
     
@@ -217,13 +223,30 @@ useEffect(() => {
   //   setOpenCDR(false);
   // };
 
-//   const fetchCurrentDateConsultants = () => {
-//     axios
-//         .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
-//         .then((response) => {
-//           const data = response.data.data;
-//           const consultantNames = data.map(item => item.consultantName); 
-//           setConsultantNameCDR(consultantNames); 
+  const fetchInvoiceData = async () => {
+    try {
+      const response = await fetch('https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php?JsonDBName=Grace Scans');
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch active subscriptions:', error.message);
+      throw error;
+    }
+  };
+
+  // const fetchCurrentDateConsultants = () => {
+  //   axios
+  //       .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentDateConsultants.php?JsonDBName=${companyName}`)
+  //       .then((response) => {
+  //         const data = response.data.data;
+  //         const consultantNames = data.map(item => item.consultantName); 
+  //         setConsultantNameCDR(consultantNames); 
 
 //           // Group the results by consultant name
 //           const consultantData = data.reduce((acc, item) => {
@@ -356,9 +379,11 @@ useEffect(() => {
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
-                    WaiverAmount: `₹ ${order.WaiverAmount}`,
+                    invoiceDisabled: order.TotalAmountReceived === undefined || order.TotalAmountReceived === null || order.TotalAmountReceived === '',
                 }));
+                const displayData = response.data
                 setOrderDetails(data);
+                setDisplayOrderDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -373,10 +398,12 @@ useEffect(() => {
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
                     OrderValue: `₹ ${transaction.OrderValue}`,
-                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid'
+                    markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
+                    restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));
+                //const displayData = response.data
                 setFinanceDetails(financeDetails);
-                
+                //setDisplayFinanceDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -550,39 +577,6 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
   }
 };
 
-// const handleFinanceRestore = (rateWiseOrderNum, orderNum, clientName) => {
-//   axios
-//     .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&JsonDBName=${companyName}`)
-//     .then((response) => {
-//       const data = response.data;
-//       if (data.success) {
-//         setSuccessMessage('Transaction Restored!');
-//         setTimeout(() => {
-//           setSuccessMessage('');
-//         }, 2000);
-//         fetchFinanceDetails();
-//         fetchAmounts();
-//         fetchSumOfFinance();
-//         fetchRateBaseIncome();
-//       } else {
-//         setToastMessage(data.message);
-//         setSeverity('error');
-//         setToast(true);
-//         setTimeout(() => {
-//           setToast(false);
-//         }, 2000);
-//       }
-//     })
-//     .catch((error) => {
-//       console.error(error);
-//       setToastMessage('Failed to restore transaction. Please try again.');
-//       setSeverity('error');
-//       setToast(true);
-//       setTimeout(() => {
-//         setToast(false);
-//       }, 2000);
-//     });
-// };
 const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
     .get(`https://orders.baleenmedia.com/API/Media/RestoreFinance.php?JsonID=${id}&JsonRateWiseOrderNumber=${RateWiseOrderNumber}&JsonDBName=${companyName}`)
@@ -634,45 +628,6 @@ const handleConfirm = async () => {
   setRestoreDialogOpen(false);
 };
 
-// const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
-//   try {
-//       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}`);
-
-//       if (response.data.conflict) {
-//           const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
-//           if (!fetchResponse.ok) {
-//               throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
-//           }
-//           const data = await fetchResponse.json();
-//           const newRateWiseOrderNumber = data.nextRateWiseOrderNumber;
-
-//           if (confirm(`RateWiseOrderNumber is already occupied. Do you want to continue with the new number ${newRateWiseOrderNumber}?`)) {
-//               // User agrees to use a new RateWiseOrderNumber
-//               const restoreResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
-//               setSuccessMessage('Order Restored with new number!');
-//               setTimeout(() => {
-//                   setSuccessMessage('');
-//               }, 2000);
-//               fetchOrderDetails();
-//           }
-//       } else {
-//           setSuccessMessage('Order Restored!');
-//           setTimeout(() => {
-//               setSuccessMessage('');
-//           }, 2000);
-//           fetchOrderDetails();
-//       }
-//   } catch (error) {
-//       console.error(error);
-//       setToastMessage('Failed to restore. Please try again.');
-//       setSeverity('error');
-//       setToast(true);
-//       setTimeout(() => {
-//           setToast(false);
-//       }, 2000);
-//   }
-// };
-
   const fetchMarginAmount = () => {
     axios
         .get(`https://orders.baleenmedia.com/API/Media/FetchMarginAmount.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
@@ -689,6 +644,7 @@ const handleConfirm = async () => {
             console.error(error);
         });
 };
+
 const FetchCurrentBalanceAmount = () => {
   axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchCurrentBalanceAmount.php?JsonDBName=${companyName}`)
@@ -701,13 +657,56 @@ const FetchCurrentBalanceAmount = () => {
       });
 };
 
-const isMobile = useMediaQuery('(max-width:640px)');
-const [anchorEl, setAnchorEl] = useState(null);
+const handleDownloadInvoiceIconClick = (row) => {
+  console.log(row)
+  const PDFData = {
+    companyName: invoiceData.SubscriberName,
+    companyLogoPath: invoiceData.SubscriberLogoPath,
+    companyWatermarkLogoPath: invoiceData.SubscriberWatermarkPath,
+    companyStreetAddress: invoiceData?.SubscriberStreetAddress || "Not Provided",
+    companyAreaAddress: invoiceData?.SubscriberAreaAddress || "",
+    companyPincodeAddress: invoiceData?.SubscriberPincodeAddress || "",
+    companyEmailAddress: invoiceData?.SubscriberEmailAddress || "",
+    companyTelephoneNumber: invoiceData?.SubscriberTelephoneNumber || "",
+    companyContactNumber: invoiceData?.SubscriberContactNumber || "",
+    companyWebsiteURL: invoiceData?.SubscriberWebsiteURL || "",
+    customerName: row.ClientName,
+    customerContact: (row.ClientContact === 0 || row.ClientContact === '0' || row.ClientContact === null || row.ClientContact === "") ? 
+    "Contact number not provided" : row.ClientContact,
+    customerAddress: "Chennai",
+    invoiceNumber: row.OrderNumber,
+    refNumber: row.RateWiseOrderNumber || "N/A",
+    date: dayjs(row.OrderDate).format("MMMM D, YYYY"),
+    items: [
+      {
+        description: `${row.Card || ""} - ${row.AdType || ""}`,
+        qty: 1,
+        price: row.Receivable.replace(/[^\d.-]/g, ''),
+        total: row.Receivable.replace(/[^\d.-]/g, ''),
+      },
+    ],
+    subtotal: row.Receivable.replace(/[^\d.-]/g, '') || 0,  // Ensure subtotal is always a number
+    // Discount can be negative (e.g., Rs. -1500) and it should be added to the total amount
+    discount: (parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) + (parseFloat(row.WaiverAmount.replace(/[^\d.-]/g, '')) || 0), // Ensure valid numbers
+    // Total is receivableAmount + discount, where discount can be negative
+    total: (parseFloat(row.Receivable.replace(/[^\d.-]/g, '')) || 0) + ((parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) + (parseFloat(row.WaiverAmount.replace(/[^\d.-]/g, '')) || 0)),  
+    paid: (parseFloat(row.TotalAmountReceived.replace(/[^\d.-]/g, '')) || 0),  // Ensure paid is a number
+    // Amount Due is the difference between total and paid amount
+    amountDue: (parseFloat(row.AmountDifference.replace(/[^\d.-]/g, '')) || 0), 
+    paymentMethod: row.PaymentMode
+      .replace(/:\s*\d+/g, '')  // Remove numbers and colons
+      .replace(/,/g, '')         // Remove commas
+      .split(/\s+/)              // Split into words (payment methods) based on whitespace
+      .filter((item, index, self) => self.indexOf(item) === index)  // Remove duplicates
+      .join(', ')                // Join with a comma and space
+      .trim(),                   // Remove leading/trailing whitespace
 
 
-
-const [orderReportDialogOpen, setOrderReportDialogOpen] = useState(false);
-const [selectedRow, setSelectedRow] = useState(null);
+  };
+  
+  // Generate the PDF with the prepared data
+  generateBillPdf(PDFData);
+};
 
 const handleEditIconClick = (row) => {
   setSelectedRow(row);
@@ -739,7 +738,16 @@ const handleEditConfirm = () => {
 };
 
 
+const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
 
 const orderColumns = [
   { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
@@ -765,58 +773,80 @@ const orderColumns = [
       headerName: 'Actions',
       width: isMobile ? 290 : 270,
       renderCell: (params) => (
+          <div>
+              <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  disabled={params.row.markInvalidDisabled}
+                  onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
+                  style={{ marginRight: '12px', backgroundColor: '#ff5252',
+                      color: 'white',
+                      fontWeight: 'bold', 
+                      opacity: params.row.markInvalidDisabled ? 0.2 : 1,
+                      pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
+              >
+                  Cancel 
+              </Button>
+              <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  disabled={params.row.restoreDisabled}
+                  onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
+                  style={{ backgroundColor: '#1976d2',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    opacity: params.row.restoreDisabled ? 0.5 : 1,
+                    pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
+              >
+                  Restore
+              </Button>
+              <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => handleEditIconClick(params.row)}
+                  disabled={params.row.editDisabled}
+                  style={{ marginLeft: '12px',
+                    backgroundColor: '#499b25',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    opacity: params.row.editDisabled ? 0.5 : 1,
+                    pointerEvents: params.row.editDisabled ? 'none' : 'auto'
+                   }}  
+              >  
+                 Edit
+              </Button>
+          </div>
+      ),
+  },
+  {
+    field: 'invoice',
+    headerName: 'Invoice',
+    width: isMobile ? 180 : 150,
+    renderCell: (params) => (
         <div>
             <Button
                 variant="contained"
                 color="primary"
                 size="small"
-                disabled={params.row.markInvalidDisabled}
-                onClick={() => handleOrderDelete(params.row.RateWiseOrderNumber, params.row.OrderNumber)}
-                style={{ marginRight: '12px', backgroundColor: '#ff5252',
-                    color: 'white',
-                    fontWeight: 'bold', 
-                    opacity: params.row.markInvalidDisabled ? 0.2 : 1,
-                    pointerEvents: params.row.markInvalidDisabled ? 'none' : 'auto' }}
-            >
-                Cancel 
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                disabled={params.row.restoreDisabled}
-                onClick={() => handleRestore(params.row.RateWiseOrderNumber, params.row.OrderNumber, params.row.Card)}
-                style={{ backgroundColor: '#1976d2',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  opacity: params.row.restoreDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.restoreDisabled ? 'none' : 'auto' }}
-            >
-                Restore
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => handleEditIconClick(params.row)}
-                disabled={params.row.editDisabled}
+                onClick={() => handleDownloadInvoiceIconClick(params.row)}
+                disabled={params.row.invoiceDisabled}
                 style={{ marginLeft: '12px',
-                  backgroundColor: '#499b25',
+                  backgroundColor: '#ff7f50',
                   color: 'white',
                   fontWeight: 'bold',
-                  opacity: params.row.editDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.editDisabled ? 'none' : 'auto'
+                  opacity: params.row.invoiceDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
                  }}  
             >  
-               Edit
+               Download
             </Button>
         </div>
     ),
 },
-];
-
-
-
+        ];
 
 
 const financeColumns = [
@@ -858,25 +888,10 @@ const financeColumns = [
         >
           Delete
         </button> */}
-        <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                disabled={!params.row.markInvalidFinanceDisabled}
-                onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
-                style={{ backgroundColor: '#1976d2',
-                  marginLeft: '12px',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  opacity: !params.row.markInvalidFinanceDisabled ? 0.5 : 1,
-                  pointerEvents: !params.row.markInvalidFinanceDisabled ? 'none' : 'auto' }}
-            >
-                Restore
-            </Button>
-        {/* <button
+        <button
           className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
           disabled={params.row.restoreFinanceDisabled} // Conditional disabling
-          onClick={() => handleFinanceRestore(params.row.ID)}
+          onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
           style={{ backgroundColor: '#1976d2',
             color: 'white',
             fontWeight: 'bold',
@@ -884,7 +899,7 @@ const financeColumns = [
             pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
         >
           Restore
-        </button> */}
+        </button>
       </div>
     ),
   },
@@ -908,20 +923,18 @@ const financeColumns = [
 // },
 ];  
 
+    const handleOpenConfirmDialog = (ID, RateWiseOrderNumber) => {
+      setSelectedTransaction({ ID, RateWiseOrderNumber});
+      setOpenConfirmDialog(true);
+    };
+    
 
-
-const handleOpenConfirmDialog = (ID, RateWiseOrderNumber) => {
-  setSelectedTransaction({ ID, RateWiseOrderNumber});
-  setOpenConfirmDialog(true);
-};
-
-
-const handleConfirmDelete = () => {
-  const { ID, RateWiseOrderNumber } = selectedTransaction;
-  //console.log(selectedTransaction)
-  handleTransactionDelete(ID, RateWiseOrderNumber);
-  setOpenConfirmDialog(false);
-};
+    const handleConfirmDelete = () => {
+      const { ID, RateWiseOrderNumber } = selectedTransaction;
+      handleTransactionDelete(ID, RateWiseOrderNumber);
+      setOpenConfirmDialog(false);
+    };
+    
     
     const filteredFinanceDetails = financeDetails.filter(transaction => 
         filter === 'All' || transaction.TransactionType.toLowerCase().includes(filter.toLowerCase())
@@ -1294,7 +1307,6 @@ const [rateStats, setRateStats] = useState({});
   };
 
   // Function to calculate the statistics based on filtered rows
-  // Function to calculate the statistics based on filtered rows
 const calculateRateStats = () => {
   const stats = {};
 
@@ -1365,6 +1377,32 @@ const calculateRateStats = () => {
   useEffect(() => {
     calculateRateStats();
   }, [filteredData]); // Recalculate when filteredData changes
+// const calculateRateStats = () => {
+//   const rateStats = {};
+
+//   displayOrderDetails.forEach(order => {
+//     const rateName = order.Card;
+//     const orderValue = Number(order.Receivable) || 0;  // Ensure Receivable (Order Value) is a number
+//     const income = Number(order.TotalAmountReceived) || 0;  // Ensure TotalAmountReceived (Income) is a number
+
+//     if (rateStats[rateName]) {
+//       rateStats[rateName].orderCount += 1;
+//       rateStats[rateName].totalOrderValue += orderValue;
+//       rateStats[rateName].totalIncome += income;
+//     } else {
+//       rateStats[rateName] = {
+//         orderCount: 1,
+//         totalOrderValue: orderValue,
+//         totalIncome: income,
+//       };
+//     }
+//   });
+
+//   return rateStats;
+// };
+
+// const rateStats = calculateRateStats();
+
 
     return (
       
@@ -1577,7 +1615,6 @@ const calculateRateStats = () => {
         
         
         
-         // Update the filter model state
         initialState={{
           sorting: {
             sortModel: [{ field: 'OrderNumber', sort: 'desc' }],

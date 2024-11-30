@@ -1,6 +1,7 @@
 'use client';
 import './page.css';
 import React, { useState, useEffect, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import { useRouter } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
 import { CircularProgress, TextField } from '@mui/material';
@@ -31,6 +32,7 @@ import 'primeicons/primeicons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchFinanceSearchTerm } from '../api/FetchAPI';
+import { generateBillPdf } from '../generatePDF/generateBillPDF';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -131,10 +133,28 @@ const FinanceData = () => {
   const [financeClientID, setFinanceClientID] = useState('');
   const [financeAmount, setFinanceAmount] = useState('');
   const [prevData, setPrevData] = useState(null);
+  const [invoiceData, setInvoiceData] = useState([]);
+  const [rateName, setRateName] = useState('');
+  const [rateType, setRateType] = useState('');
+  const [adjustedOrderAmount, setAdjustedOrderAmount] = useState(0);
+  const [waiverAmount, setWaiverAmount] = useState(0);
+  const [receivableAmount, setReceivableAmount] = useState(0);
+  const [previousPaymentMode, setPreviousPaymentMode] = useState('');
+  const [previousAmountPaid, setPreviousAmountPaid] = useState(0);
 
   useEffect(() => {
     if(dbName){
     elementsToHideList();
+    const fetchSubscriptions = async () => {
+      try {
+        const data = await fetchInvoiceData();
+        setInvoiceData(data);
+      } catch (err) {
+        console.error("Error Fetching Invoice Data: " + err)
+      }
+    };
+
+    fetchSubscriptions();
     }
   },[dbName])
 
@@ -237,6 +257,23 @@ const openChequeDate = Boolean(anchorElChequeDate);
     elementsToHideList()
   };
 
+  const fetchInvoiceData = async () => {
+    try {
+      const response = await fetch('https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php?JsonDBName=Grace Scans');
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch active subscriptions:', error.message);
+      throw error;
+    }
+  };
+
   const handleClientNameTermChange = (event) => {
     const newName = event.target.value
     
@@ -268,7 +305,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const fetchClientDetails = (clientNumber, clientName) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
@@ -280,6 +317,13 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setOrderAmount(clientDetails.balanceAmount);
           setBalanceAmount(clientDetails.balanceAmount);
           setGSTPercentage(clientDetails.gstPercentage);
+          setRateName(clientDetails.rateName);
+          setRateType(clientDetails.rateType);
+          setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+          setWaiverAmount(clientDetails.waiverAmount);
+          setReceivableAmount(clientDetails.receivableAmount);
+          setPreviousPaymentMode(clientDetails.previousPaymentMode);
+          setPreviousAmountPaid(clientDetails.previousAmountPaid);
         }
       })
       .catch((error) => {
@@ -387,54 +431,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
   }; 
 
 
-  // const SendSMS = (clientNumber, orderAmount, rateWiseOrderNumber) => {
-
-  //   // Ensure clientNumber is valid
-  //   if (!clientNumber || clientNumber === '0' || clientNumber === '' || !/^\d+$/.test(clientNumber)) {
-  //       console.log('Client number is 0 or invalid. Exiting function.');
-  //       setToastMessage('SMS Not Sent! Reason: Phone Number is Unavailable');
-  //             setSeverity('warning');
-  //             setToast(true);
-  //             setTimeout(() => {
-  //               setToast(false);
-  //             }, 2000);
-  //       return; // Prevent the function from continuing if clientNumber is invalid
-  //   }
-
-  //   const sendableNumber = `91${clientNumber}`;
-  //   const sender = 'BALEEN';
-  //   const message = `Your payment of Rs. ${orderAmount ? orderAmount : 0} paid against WO# ${rateWiseOrderNumber} is received by Baleen Media Finance team. Thanks for your Payment. - Baleen Media`
-  //   const encodedMessage = encodeURIComponent(message);
-
-
-  //   axios
-  //     .get(`https://orders.baleenmedia.com/API/Media/SendSms.php?JsonPhoneNumber=${sendableNumber}&JsonSender=${sender}&JsonMessage=${encodedMessage}`)
-  //     .then((response) => {
-
-  //       const responseData = JSON.parse(response.data);
-
-  //       if (responseData.status === 'success') {
-  //           console.log('SMS Sent!');
-  //           setSuccessMessage('SMS Sent!');
-  //             setTimeout(() => {
-  //           setSuccessMessage('');
-  //         }, 1500);
-  //       } else {
-  //           console.log('SMS Not Sent! Status:', responseData.message);
-  //           setToastMessage('SMS Not Sent! Reason', responseData.message);
-  //             setSeverity('warning');
-  //             setToast(true);
-  //             setTimeout(() => {
-  //               setToast(false);
-  //             }, 2000);
-  //       }
-  //   })
-
-  //     .catch((error) => {
-  //       console.error(error);
-  //     });
-    
-  // }; 
 
   const handleOrderNumberChange = (event) => {
     
@@ -443,7 +439,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     
     {!billsOnly &&
     axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumberTest.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.length > 0) {
@@ -456,6 +452,13 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setClientNumber(clientDetails.clientContact);
         setBalanceAmount(clientDetails.balanceAmount);
         setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
+        setRateName(clientDetails.rateName);
+        setRateType(clientDetails.rateType);
+        setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+        setWaiverAmount(clientDetails.waiverAmount);
+        setReceivableAmount(clientDetails.receivableAmount);
+        setPreviousPaymentMode(clientDetails.previousPaymentMode);
+        setPreviousAmountPaid(clientDetails.previousAmountPaid);
       } else {
         dispatch(setIsOrderExist(false));
       }
@@ -476,7 +479,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
     setRateWiseOrderNumber(newOrderNumber);
     {!billsOnly && axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumberTest.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.length > 0) {
@@ -489,6 +492,13 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setClientNumber(clientDetails.clientContact);
         setBalanceAmount(clientDetails.balanceAmount);
         setOrderNumber(clientDetails.orderNumber);
+        setRateName(clientDetails.rateName);
+        setRateType(clientDetails.rateType);
+        setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+        setWaiverAmount(clientDetails.waiverAmount);
+        setReceivableAmount(clientDetails.receivableAmount);
+        setPreviousPaymentMode(clientDetails.previousPaymentMode);
+        setPreviousAmountPaid(clientDetails.previousAmountPaid);
       } else {
         dispatch(setIsOrderExist(false));
       }
@@ -555,7 +565,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
   
     // // Handle upload logic
     if (!orderNumberArray) {
-      console.log(orderNumberToBeUploaded);
+      // console.log(orderNumberToBeUploaded);
       const formData = createFormData(orderNumberToBeUploaded, true);
       await uploadBill(formData);
     } else {
@@ -576,7 +586,53 @@ const openChequeDate = Boolean(anchorElChequeDate);
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
+
   
+  const sendDataToPdf = () => {
+    const PDFData = {
+      companyName: invoiceData.SubscriberName,
+      companyLogoPath: invoiceData.SubscriberLogoPath,
+      companyWatermarkLogoPath: invoiceData.SubscriberWatermarkPath,
+      companyStreetAddress: invoiceData?.SubscriberStreetAddress || "Not Provided",
+      companyAreaAddress: invoiceData?.SubscriberAreaAddress || "",
+      companyPincodeAddress: invoiceData?.SubscriberPincodeAddress || "",
+      companyEmailAddress: invoiceData?.SubscriberEmailAddress || "",
+      companyTelephoneNumber: invoiceData?.SubscriberTelephoneNumber || "",
+      companyContactNumber: invoiceData?.SubscriberContactNumber || "",
+      companyWebsiteURL: invoiceData?.SubscriberWebsiteURL || "",
+      customerName: clientName,
+      customerContact: (clientNumber === 0 || clientNumber === '0' || clientNumber === null || clientNumber === "") ? 
+      "Contact number not provided" : clientNumber,
+      customerAddress: "Chennai",
+      invoiceNumber: orderNumber,
+      refNumber: rateWiseOrderNumber || "N/A",
+      date: dayjs(transactionDate).format("MMMM D, YYYY"),
+      items: [
+        {
+          description: `${rateName || ""} - ${rateType || ""}`,
+          qty: 1,
+          price: receivableAmount,
+          total: receivableAmount,
+        },
+      ],
+      subtotal: receivableAmount || 0,  // Ensure subtotal is always a number
+      // Discount can be negative (e.g., Rs. -1500) and it should be added to the total amount
+      discount: (parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0), // Ensure valid numbers
+      // Total is receivableAmount + discount, where discount can be negative
+      total: (parseFloat(receivableAmount) || 0) + ((parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0)),  
+      paid: (parseFloat(orderAmount) || 0) +
+      (previousAmountPaid !== null && previousAmountPaid !== undefined && previousAmountPaid !== ""
+          ? parseFloat(previousAmountPaid)
+          : 0),  // Ensure paid is a number
+      // Amount Due is the difference between total and paid amount
+      amountDue: ((parseFloat(balanceAmount) || 0) - (parseFloat(orderAmount) || 0)), 
+      paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value ? `${previousPaymentMode}, ${paymentMode.value}` : paymentMode.value,
+    };
+    
+    // Generate the PDF with the prepared data
+    generateBillPdf(PDFData);
+};
+
   
 
   const insertNewFinance = async (e) => {
@@ -674,6 +730,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
                   SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
               } else if (elementsToHide.includes("OrderNumberText")) {
                 SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
+                sendDataToPdf();
               } else {
                 setToastMessage('SMS Not Sent! Reason: No Database Found.');
                 setSeverity('warning');
@@ -707,6 +764,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
           dispatch(resetOrderData());
           dispatch(resetClientData());
           // window.location.reload();
+          cancelFinance();
           
     
       } catch (error) {
@@ -821,6 +879,14 @@ useEffect(() => {
           setIsUpdateMode(false);
           setTransactionDate(dayjs()); 
           setDisplayClientName('');
+          setRateName('');
+          setRateType('');
+          setAdjustedOrderAmount(0);
+          setWaiverAmount(0);
+          setReceivableAmount(0);
+          setPreviousPaymentMode('');
+          setPreviousAmountPaid(0);
+          setBalanceAmount(0);
 
   };
   const handleFileChange = (e) => {
@@ -923,10 +989,17 @@ useEffect(() => {
       }
 
       try {
-        const clientResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${data.OrderNumber}&JsonDBName=${companyName}`);
+        const clientResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumberTest.php?OrderNumber=${data.OrderNumber}&JsonDBName=${companyName}`);
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
         setDisplayClientName(clientData[0].clientName);
+        setRateName(clientData[0].rateName);
+        setRateType(clientData[0].rateType);
+        setAdjustedOrderAmount(clientData[0].adjustedOrderAmount);
+        setWaiverAmount(clientData[0].waiverAmount);
+        setReceivableAmount(clientData[0].receivableAmount);
+        setPreviousPaymentMode(clientData[0].previousPaymentMode);
+        setBalanceAmount(((parseFloat(clientData[0].balanceAmount) || 0) + (parseFloat(clientData[0].previousAmountPaid) || 0)));
       } catch (clientError) {
         console.error("Error fetching client details:", clientError);
       }
@@ -1050,7 +1123,6 @@ useEffect(() => {
       });
       // Check if the response is successful
       const data = response.data;
-      console.log(data)
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Finance record updated successfully!');
   
@@ -1058,7 +1130,11 @@ useEffect(() => {
         setTimeout(() => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
-  
+
+        if (elementsToHide.includes("OrderNumberText")) {
+          sendDataToPdf();
+        }
+
         // Clear form fields and switch to normal mode if needed
         setFinanceSearchTerm('');
         setRateWiseOrderNumber('');
