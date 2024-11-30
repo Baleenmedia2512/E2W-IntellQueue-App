@@ -1,28 +1,38 @@
-import { Padding } from "@mui/icons-material";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 export const generateBillPdf = async (data) => {
   const doc = new jsPDF();
 
-    // Add watermark logo
-    const watermarkLogoUrl = data.companyWatermarkLogoPath; // Path to watermark image
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const watermarkSize = 130; // Adjust the watermark size as needed
-  
-    // Add the logo as a watermark in the center
-    doc.addImage(
-      watermarkLogoUrl,
-      'PNG',
-      (pageWidth - watermarkSize) / 2, // Center X position
-      (pageHeight - watermarkSize) / 2, // Center Y position
-      watermarkSize, // Width
-      watermarkSize, // Height
-      undefined,
-      'NONE', // Keep aspect ratio without compression
-      0.1 // Set opacity to make it light as a watermark
-    );
+  // Determine label image based on payment status
+  const labelUrl = data.amountDue > '0' || data.amountDue > 0 ? '/images/UnpaidLabel.png' : '/images/PaidLabel.png';
+
+  // Add the label to the top-left of the page
+  const labelX = -2; // X position
+  const labelY = -1; // Y position
+  const labelWidth = 30; // Adjust the width as needed
+  const labelHeight = 30; // Adjust the height as needed
+  doc.addImage(labelUrl, 'PNG', labelX, labelY, labelWidth, labelHeight);
+
+
+  // Add watermark logo
+  const watermarkLogoUrl = data.companyWatermarkLogoPath; // Path to watermark image data.companyWatermarkLogoPath
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const watermarkSize = 130; // Adjust the watermark size as needed
+
+  // Add the logo as a watermark in the center
+  doc.addImage(
+    watermarkLogoUrl,
+    'PNG',
+    (pageWidth - watermarkSize) / 2, // Center X position
+    (pageHeight - watermarkSize) / 2, // Center Y position
+    watermarkSize, // Width
+    watermarkSize, // Height
+    undefined,
+    'NONE', // Keep aspect ratio without compression
+    0.1 // Set opacity to make it light as a watermark
+  );
   
 
   // Add high-resolution logo image
@@ -46,7 +56,7 @@ export const generateBillPdf = async (data) => {
   doc.setFontSize(9);
   doc.setTextColor("#545454");
   doc.text(`${data.customerContact}`, 20, 69);
-  doc.text(`${data.customerAddress}`, 20, 74);
+  // doc.text(`${data.customerAddress}`, 20, 74); //address
 
   // Add sender details
   doc.setFontSize(10);
@@ -114,12 +124,6 @@ doc.autoTable({
   },
   margin: { top: 30, left: 25, right: 20, bottom: 30 },
   pageBreak: 'auto',
-  didParseCell: (data) => {
-    // Add extra space between rows
-    if (data.section === 'body') {
-      data.cell.y += 3; // Adjust the '3' value to add more or less space between rows
-    }
-  },
   didDrawCell: (data) => {
     
     // Only draw the line after the header is drawn
@@ -127,7 +131,7 @@ doc.autoTable({
       const startX = 20; // Start X position (matches left margin)
       const endX = 190; // End X position (matches right margin)
       const lineY = data.cell.y + data.cell.height; // Position for the line after the header
-
+      data.row.height = 10;
       // Draw the line
       doc.setDrawColor(84); // Black color for the line
       doc.setLineWidth(0.2); // Line thickness
@@ -139,7 +143,7 @@ doc.autoTable({
 
   doc.setDrawColor(84); // Black color for the line
   doc.setLineWidth(0.2); // Line thickness
-  doc.line(20, doc.lastAutoTable.finalY + 5, 190, doc.lastAutoTable.finalY + 5); // Draw line from (20, lineY) to (190, lineY)
+  doc.line(20, doc.lastAutoTable.finalY + 3, 190, doc.lastAutoTable.finalY + 3); // Draw line from (20, lineY) to (190, lineY)
 
 
 // Add totals with more space between label and value
