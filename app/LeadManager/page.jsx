@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { FiFilter } from "react-icons/fi";
+import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
 import { AiOutlineClose } from "react-icons/ai";
@@ -56,9 +56,11 @@ const EventCards = ({ rows }) => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [followupDate, setFollowupDate] = useState(new Date());
+  const [followupDate, setFollowupDate] = useState("");
+  const [followupTime, setFollowupTime] = useState("");
+  const [hideOtherStatus, setHideOtherStatus] = useState(false);
 
-  const handleCallButtonClick = (phone, name, sNo) => {
+  const handleCallButtonClick = async (phone, name, sNo) => {
     setCurrentCall({phone, name, sNo });
 
     // Trigger a call using `tel:` protocol
@@ -70,7 +72,7 @@ const EventCards = ({ rows }) => {
     }, 3000);
   };
 
-  const handleSave = async (phone, name, Sno) => {
+  const handleSave = async (Sno) => {
     const payload = {
       sNo: currentCall.sNo,
       status: selectedStatus,
@@ -99,8 +101,54 @@ const EventCards = ({ rows }) => {
     }
   };
 
+  const handleDateChange = (selectedDate) => {
+    // Format date as dd-MMM-yyyy
+    const date = selectedDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }); // Example: 02-Dec-2024
+
+    // Format time as hh:mm AM/PM
+    const time = selectedDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }); // Example: 03:30 PM
+
+    setFollowupDate(date); // Set the date
+    setFollowupTime(time); // Set the time
+  };
+
+  const addNewFollowup = (phone, name, sNo) => {
+    setCurrentCall({phone, name, sNo});
+
+    setHideOtherStatus(true);
+    const now = new Date(); // Get the current date and time
+
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+
+    // Format tomorrow's date as dd-MMM-yyyy
+    const formattedDate = tomorrow.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    // Format the current time as hh:mm AM/PM
+    const formattedTime = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    setSelectedStatus("Call Followup");
+    setShowModal(true);
+    setFollowupDate(formattedDate); // Set the followupDate to tomorrow's date
+    setFollowupTime(formattedTime); // Set the followupTime to the current time
+  }
+
   return (
-    <div className="p-4">
+    <div className="p-4 text-black">
       {/* Top Bar with Filter Button */}
       <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
         <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
@@ -124,18 +172,38 @@ const EventCards = ({ rows }) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.Status}); setSelectedStatus(row.Status); setRemarks(row.Remarks)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setSelectedStatus(row.Status); setRemarks(row.Remarks)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
               </span>
             </div>
 
-            {/* Platform at Top Left */}
-            <div className="absolute top-2 left-2">
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
+            <div className="absolute top-2 left-2 flex flex-row">
+            <span
+              onClick={() => toggleQuoteSent(row.SNo)} // Function to toggle the QuoteSent status
+              className={`inline-block rounded-full p-1 ${
+                row.QuoteSent === "Yes"
+                  ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
+                  : "bg-gray-200"
+              } hover:cursor-pointer`}
+              title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
+            >
+              {/* Icon from React Icons */}
+              {row.QuoteSent === "Yes" ? (
+                <FiCheckCircle className="text-white text-lg" /> // Icon for "Yes"
+              ) : (
+                <FiXCircle className="text-gray-400 text-lg" /> // Icon for "No"
+              )}
+            </span>
+            <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
               </span>
+          </div>
+
+            {/* Platform at Top Left */}
+            <div className="absolute top-2 left-2">
+              
             </div>
 
             {/* Name and Company */}
@@ -175,11 +243,18 @@ const EventCards = ({ rows }) => {
               </p>
             </div>
             {/* Follow-Up Date */}
-            {row.FollowupDate !== "No Followup Date" && (
-              <div className="text-sm">
-                <p className="bg-red-500 text-white p-2 text-[14px] rounded-lg">
-                  Followup On: {row.FollowupDate} {row.FollowupTime}
+            {row.FollowupDate !== "No Followup Date" ? (
+              <div className="text-sm max-w-fit" onClick={() => {
+                
+            }}>
+        
+                <p className="bg-red-500 hover:cursor-pointer text-white p-2 text-[14px] rounded-lg">
+                <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
+              </div>
+            ) : (
+              <div className="text-sm max-w-fit mt-4">
+                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo)}}>+ Add Followup</button>
               </div>
             )}
              {/* Remarks */}
@@ -210,7 +285,7 @@ const EventCards = ({ rows }) => {
 
             {/* Floating Radio Buttons for Status */}
             <div className="mb-4 flex flex-wrap gap-2 justify-center">
-              {["New", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
+              {!hideOtherStatus ? ["New", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
                 (status) => (
                   <label
                     key={status}
@@ -229,23 +304,42 @@ const EventCards = ({ rows }) => {
                     {status}
                   </label>
                 )
-              )}
+              ): 
+              <label
+              className={`cursor-pointer border p-2 rounded-full px-4 bg-blue-500 text-white`}
+            >
+              <input
+                type="radio"
+                name="CallFollowup"
+                value={"Call Followup"}
+                checked={true}
+                onChange={() => setSelectedStatus("Call Followup")}
+                className="hidden"
+              />
+              Call Followup
+            </label>
+              }
             </div>
-
-            {/* <div className="mb-4">
+            { (selectedStatus === "Call Followup" || selectedStatus === "Unreachable") &&
+             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 Date
               </label>
               <DatePicker
-                selected={followupDate}
+                selected={followupDate ? new Date(`${followupDate} ${followupTime}`) : new Date()}
+                onChange={handleDateChange}
                 // onChange={handleDateChange}
-                dateFormat="MMMM d, yyyy"
+                showTimeSelect
+                timeFormat="h:mm aa" // Sets the format for time (24-hour format)
+                timeIntervals={15} // Time interval options (15 minutes in this case)
+                timeCaption="Time" // Caption for time section
+                dateFormat="dd MMM yyyy h:mm aa" // Displays date and time together
                 className="border border-gray-300 p-2 rounded-md w-full"
                 calendarClassName="bg-white border border-gray-200 rounded-md"
               />
-            </div> */}
-
-            {/* <div className="mb-4">
+            </div> 
+}
+            <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Company Name</label>
               <input
                 value={companyName}
@@ -254,7 +348,7 @@ const EventCards = ({ rows }) => {
                 rows={3}
                 onFocus={e => e.target.select()}
               />
-            </div> */}
+            </div> 
 
             {/* Remarks */}
             <div className="mb-4">
@@ -342,7 +436,7 @@ async function fetchDataFromAPI(queryId, filters) {
       // For "Call Followup" and "New", sort ascending by lead date
       const aLeadTimestamp = new Date(a.LeadDate).getTime();
       const bLeadTimestamp = new Date(b.LeadDate).getTime();
-      return aLeadTimestamp - bLeadTimestamp;
+      return bLeadTimestamp - aLeadTimestamp;
     } else {
       // For "Unreachable" and "Unqualified", sort descending by lead date
       const aLeadTimestamp = new Date(a.LeadDate).getTime();
