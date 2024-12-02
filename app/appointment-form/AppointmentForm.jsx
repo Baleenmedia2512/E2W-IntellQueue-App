@@ -14,6 +14,8 @@ import { setClientNumber } from '@/redux/features/order-slice';
 import { set } from 'date-fns';
 import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/internals';
 import { checkClientContact } from './Validation';
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 export default function AppointmentForm() {
   const dropdownRef = useRef(null);
@@ -46,6 +48,10 @@ export default function AppointmentForm() {
   const [clientNumberExists, setClientNumberExists] = useState(false);
   const [elementsToHide, setElementsToHide] = useState([]);
   const [whatsappKeys, setWhatsappKeys] = useState([]);
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const appointmentTimePeriod = [
     {label: "Tomorrow", value: "Tomorrow"},
@@ -270,7 +276,14 @@ export default function AppointmentForm() {
       }
       setShowAlert(false)
     } catch (error) {
-      alert("Unable to add new Client!");
+      // alert("Unable to add new Client!");
+      setToastMessage("Unable to add new Client!");
+      setSeverity('error');
+      setToast(true);
+      
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
       setShowAlert(false);
     }
   }
@@ -345,15 +358,29 @@ export default function AppointmentForm() {
 
       // const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
       try{
-        if (whatsappKeys.length > 0) {
-          const { LicenceNumber, APIKey } = whatsappKeys[0];
+        if (whatsappKeys) {
+          const { LicenceNumber, APIKey } = whatsappKeys;
+          console.log(LicenceNumber, APIKey)
+          console.log(whatsappKeys)
 
-          const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=appointment_ortho&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
+          const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=new_appointment_template&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
             
             if (send.ok) {
-                alert("Appointment Created and Message Sent Successfully!");
+                // alert("Appointment Created and Message Sent Successfully!");
+                setSuccessMessage("Appointment Created and Message Sent Successfully!");
+  
+                setTimeout(() => {
+                  setSuccessMessage('');
+                }, 2000); 
             } else {
-                alert("Appointment Created Successfully, but Message Failed to Send.");
+                // alert("Appointment Created Successfully, but Message Failed to Send.");
+                setToastMessage("Appointment Created Successfully, but Message Failed to Send.");
+                setSeverity('warning');
+                setToast(true);
+
+                setTimeout(() => {
+                  setToast(false);
+                }, 2000);
             }
         } else {
           console.log("No keys available to send message.");
@@ -369,9 +396,16 @@ export default function AppointmentForm() {
       setDisplayClientId("");
       setDisplayClientName("");
       setDisplayMobileNumber("");
-      alert("Appointment Created Successfully!");
+      // alert("Appointment Created Successfully!");
     } catch (error) {
-      alert(error);
+      // alert(error);
+      setToastMessage(error);
+      setSeverity('error');
+      setToast(true);
+      
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
     }
   }
 
@@ -389,8 +423,8 @@ export default function AppointmentForm() {
     //const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
 
     try{
-      if (whatsappKeys.length > 0) {
-      const { LicenceNumber, APIKey } = whatsappKeys[0];  
+      if (whatsappKeys) {
+      const { LicenceNumber, APIKey } = whatsappKeys;  
          const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
       } else {
         console.log("No keys available to send message.");
@@ -407,10 +441,22 @@ export default function AppointmentForm() {
         //     throw new Error(errorMessage);
         // }
 
-        alert("Appointment Rescheduled Successfully!");
+        // alert("Appointment Rescheduled Successfully!");
+        setSuccessMessage("Appointment Rescheduled Successfully!");
+  
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 2000); 
         handleEditMode();
     } catch (error) {
-        alert(error)
+        // alert(error)
+        setToastMessage(error);
+        setSeverity('error');
+        setToast(true);
+        
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
     }
 }
 
@@ -432,9 +478,9 @@ export default function AppointmentForm() {
 
         // Send WhatsApp notification for appointment cancellation
         try {
-          if (whatsappKeys.length > 0) {
-            const { LicenceNumber, APIKey } = whatsappKeys[0];
-            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=reject_appointment&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
+          if (whatsappKeys) {
+            const { LicenceNumber, APIKey } = whatsappKeys;
+            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=reject_appointment_template&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
           } else {
             console.log("No keys available to send message.");
           }  
@@ -442,12 +488,23 @@ export default function AppointmentForm() {
             console.error("Failed to send WhatsApp message:", error);
         }
 
-        alert("Appointment Cancelled Successfully!");
-
+        // alert("Appointment Cancelled Successfully!");
+        setSuccessMessage("Appointment Cancelled Successfully!");
+  
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 2000); 
         handleEditMode();
 
     } catch (error) {
-        alert(`Cancellation failed: ${error.message}`);
+        // alert(`Cancellation failed: ${error.message}`);
+        setToastMessage(`Cancellation failed: ${error.message}`);
+        setSeverity('error');
+        setToast(true);
+        
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
     }
 }
 
@@ -725,6 +782,10 @@ export default function AppointmentForm() {
 
         </div>
       </div>
+      {/* ToastMessage component */}
+      {successMessage && <SuccessToast message={successMessage} />}
+      {toast && <ToastMessage message={toastMessage} type="error"/>}
+      {toast && <ToastMessage message={toastMessage} type="warning"/>}
     </form>
     
   );
