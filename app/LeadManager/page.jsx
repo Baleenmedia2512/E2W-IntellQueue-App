@@ -1,0 +1,404 @@
+'use client'
+import { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { FiFilter } from "react-icons/fi";
+import CustomButton from './filterButton'
+import { FiPhoneCall } from "react-icons/fi";
+import { AiOutlineClose } from "react-icons/ai";
+
+const statusColors = {
+  New: "bg-green-200 text-green-800",
+  Unreachable: "bg-red-200 text-red-800",
+  "Call Followup": "bg-yellow-200 text-yellow-800",
+  Unqualified: "bg-orange-200 text-orange-800",
+  "No Status": "bg-gray-200 text-gray-800",
+};
+
+const availableStatuses = [
+  "New",
+  "Call Followup",
+  "Unreachable",
+  "Unqualified",
+  "No Status",
+];
+
+function toTitleCase(str) {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+const parseFollowupDate = (dateStr) => {
+  if(dateStr === 'No Followup Date'){
+    return;
+  }
+
+  const [day, month, year] = dateStr.split("-");
+  const monthIndex = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ].indexOf(month);
+
+  if (monthIndex === -1 || !day || !year) {
+    console.error("Invalid date format:", dateStr);
+    return null;
+  }
+
+  return new Date(2000 + parseInt(year, 10), monthIndex, parseInt(day, 10));
+};
+
+const EventCards = ({ rows }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "" });
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [followupDate, setFollowupDate] = useState(new Date());
+
+  const handleCallButtonClick = (phone, name, sNo) => {
+    setCurrentCall({phone, name, sNo });
+
+    // Trigger a call using `tel:` protocol
+    window.location.href = `tel:${phone}`;
+
+    // Simulate the call end before showing the modal
+    setTimeout(() => {
+      setShowModal(true);
+    }, 3000);
+  };
+
+  const handleSave = async (phone, name, Sno) => {
+    const payload = {
+      sNo: currentCall.sNo,
+      status: selectedStatus,
+      remarks,
+    };
+
+    try {
+      const response = await fetch("https://leads.baleenmedia.com/api/updateLeads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Failed to update lead");
+
+      alert("Lead updated successfully!");
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      alert("Failed to update lead. Please try again.");
+    } finally {
+      setShowModal(false);
+      setSelectedStatus("");
+      setRemarks("");
+    }
+  };
+
+  return (
+    <div className="p-4">
+      {/* Top Bar with Filter Button */}
+      <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
+        <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+        {/* <button
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700"
+          onClick={() => console.log("Filter panel opened!")}
+        >
+          <FiFilter className="mr-2 text-lg" />
+          Filter
+        </button> */}
+      </div>
+
+      {/* Lead Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {rows.map((row) => (
+          <div
+            key={row.SNo}
+            className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
+            style={{ minHeight: "240px" }}
+          >
+            {/* Status at Top Right */}
+            <div className="absolute top-2 right-2">
+              <span
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.Status}); setSelectedStatus(row.Status); setRemarks(row.Remarks)}}
+                className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
+              >
+                {row.Status}
+              </span>
+            </div>
+
+            {/* Platform at Top Left */}
+            <div className="absolute top-2 left-2">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
+                {row.Platform || "Unknown Platform"}
+              </span>
+            </div>
+
+            {/* Name and Company */}
+            <div className="mb-2 mt-8">
+              <h3 className="text-lg font-bold text-gray-900">
+                {row.Name}
+                {row.CompanyName && row.CompanyName !== "No Company Name"
+                  ? ` - ${row.CompanyName}`
+                  : ""}
+              </h3>
+            </div>
+
+            {/* Core Details */}
+            <div className="text-sm text-gray-700 mb-2">
+              <p>
+                <strong>Arrival On:</strong> {row.LeadDate} {row.LeadTime}
+              </p>
+              <p className="flex items-center">
+                <strong>Phone:</strong>
+                <a
+                  // href={`tel:${row.Phone}`}
+                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo)}
+                  className="text-blue-600 hover:underline ml-1"
+                >
+                  {row.Phone}
+                </a>
+                <button
+                  className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
+                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo)}
+                  title="Call"
+                >
+                  <FiPhoneCall className="text-lg" />
+                </button>
+              </p>
+              <p>
+                <strong>Enquiry:</strong> {row.Enquiry || "N/A"}
+              </p>
+            </div>
+            {/* Follow-Up Date */}
+            {row.FollowupDate !== "No Followup Date" && (
+              <div className="text-sm">
+                <p className="bg-red-500 text-white p-2 text-[14px] rounded-lg">
+                  Followup On: {row.FollowupDate} {row.FollowupTime}
+                </p>
+              </div>
+            )}
+             {/* Remarks */}
+             {row.Remarks && (
+              <div className="text-sm bg-gray-200 text-gray-900 mt-2 p-1 rounded-md">
+                <p>
+                  <strong>Remarks:</strong> {row.Remarks}
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Modal for Call Status */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-[90%] max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Call Status</h3>
+              <button onClick={() => setShowModal(false)}>
+                <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
+              </button>
+            </div>
+            <p className="mb-4">
+              <strong>Updating Lead for:</strong> {currentCall.name} ({currentCall.phone})
+            </p>
+
+            {/* Floating Radio Buttons for Status */}
+            <div className="mb-4 flex flex-wrap gap-2 justify-center">
+              {["New", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
+                (status) => (
+                  <label
+                    key={status}
+                    className={`cursor-pointer border p-2 rounded-full px-4 ${
+                      selectedStatus === status ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="status"
+                      value={status}
+                      checked={selectedStatus === status}
+                      onChange={() => setSelectedStatus(status)}
+                      className="hidden"
+                    />
+                    {status}
+                  </label>
+                )
+              )}
+            </div>
+
+            {/* <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Date
+              </label>
+              <DatePicker
+                selected={followupDate}
+                // onChange={handleDateChange}
+                dateFormat="MMMM d, yyyy"
+                className="border border-gray-300 p-2 rounded-md w-full"
+                calendarClassName="bg-white border border-gray-200 rounded-md"
+              />
+            </div> */}
+
+            {/* <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Company Name</label>
+              <input
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full border border-gray-500 rounded-lg p-2"
+                rows={3}
+                onFocus={e => e.target.select()}
+              />
+            </div> */}
+
+            {/* Remarks */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Remarks</label>
+              <textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                className="w-full border border-gray-500 rounded-lg p-2"
+                rows={3}
+                onFocus={e => e.target.select()}
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                onClick={handleSave}
+                disabled={!selectedStatus}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+async function fetchDataFromAPI(queryId, filters) {
+  const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
+
+  const response = await fetch(apiUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    params: {
+      id: queryId,
+      leadDate: filters.leadDate || "",
+      status: filters.status || "",
+      followupDate: filters.followupDate || "",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch data");
+  }
+
+  const data = await response.json();
+
+  const today = new Date().toDateString();
+
+  const sortedRows = data.rows.sort((a, b) => {
+    const aFollowupDate = new Date(a.FollowupDate).toDateString();
+    const bFollowupDate = new Date(b.FollowupDate).toDateString();
+    const aLeadDate = new Date(a.LeadDate).toDateString();
+    const bLeadDate = new Date(b.LeadDate).toDateString();
+
+    // Define status priorities
+    const statusPriority = {
+      "Call Followup": 2,
+      New: 1,
+      Unreachable: 3,
+      Unqualified: 4,
+    };
+
+    // Check status priority
+    const aPriority = statusPriority[a.Status] || 5; // Default priority for unknown statuses
+    const bPriority = statusPriority[b.Status] || 5;
+
+    // Criteria 1: Followup leads with today's date
+    if (aFollowupDate === today && bFollowupDate !== today) return -1;
+    if (bFollowupDate === today && aFollowupDate !== today) return 1;
+
+    // Criteria 2: New leads from today
+    if (aLeadDate === today && bLeadDate !== today) return -1;
+    if (bLeadDate === today && aLeadDate !== today) return 1;
+
+    // Criteria 3: Sort by status priority
+    if (aPriority !== bPriority) return aPriority - bPriority;
+
+    // Criteria 4: Sort by lead date within same status
+    if (aPriority === 1 || aPriority === 2) {
+      // For "Call Followup" and "New", sort ascending by lead date
+      const aLeadTimestamp = new Date(a.LeadDate).getTime();
+      const bLeadTimestamp = new Date(b.LeadDate).getTime();
+      return aLeadTimestamp - bLeadTimestamp;
+    } else {
+      // For "Unreachable" and "Unqualified", sort descending by lead date
+      const aLeadTimestamp = new Date(a.LeadDate).getTime();
+      const bLeadTimestamp = new Date(b.LeadDate).getTime();
+      return bLeadTimestamp - aLeadTimestamp;
+    }
+  });
+
+  return sortedRows;
+}
+
+
+export default function Page({ params, searchParams }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const filters = {
+          leadDate: searchParams.leadDate || null,
+          status: searchParams.status || "",
+          followupDate: searchParams.followupDate || null,
+        };
+
+        const fetchedRows = await fetchDataFromAPI(params.id, filters);
+        setRows(fetchedRows);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [params.id, searchParams]);
+
+  if (loading) {
+    return (
+      <div className="font-poppins text-center">
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
+
+  if (!rows.length) {
+    return (
+      <div className="font-poppins text-center">
+        <h2>No Data Found</h2>
+      </div>
+    );
+  }
+
+  return (
+    <article>
+      <EventCards rows={rows} />
+    </article>
+  );
+}
