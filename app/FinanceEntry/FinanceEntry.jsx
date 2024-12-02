@@ -478,7 +478,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
 
     setRateWiseOrderNumber(newOrderNumber);
-    axios
+    {!billsOnly && axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumberTest.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
@@ -509,7 +509,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     // Clear validation errors
     if (errors.orderNumber) {
       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-    }
+    }}
   };
 
   useEffect(()=>{
@@ -526,12 +526,14 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const handleUploadBills = async () => {
     // Format bill date
+    var orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
+ 
     const formattedBillDate = billDate.format("YYYY-MM-DD");
-    const orderNumberArray = (parseInt(orderNumber))
-      ? orderNumber.split(",").map(num => parseFloat(num.trim())) 
+    const orderNumberArray = (parseInt(orderNumberToBeUploaded))
+      ? orderNumberToBeUploaded.split(",").map(num => parseFloat(num.trim())) 
       : null;
-  
-    // Function to create FormData
+
+    // // Function to create FormData
     const createFormData = (orderNum, isNotUploaded) => {
       const formData = new FormData();
       formData.append("JsonFile", bill);
@@ -546,23 +548,25 @@ const openChequeDate = Boolean(anchorElChequeDate);
       return formData;
     };
   
-    // Function to send data
+    // // Function to send data
     const uploadBill = async (formData) => {
       try {
         const response = await axios.post(
-          "https://orders.baleenmedia.com/API/Media/UploadExpenseBillsTest.php",
+          "https://orders.baleenmedia.com/API/Media/UploadExpenseBills.php",
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
+        // setSuccessMessage("Bills Uploaded Successfully!")
         
       } catch (error) {
         console.error("Error uploading record:", error);
       }
     };
   
-    // Handle upload logic
+    // // Handle upload logic
     if (!orderNumberArray) {
-      const formData = createFormData(orderNumber, true);
+      // console.log(orderNumberToBeUploaded);
+      const formData = createFormData(orderNumberToBeUploaded, true);
       await uploadBill(formData);
     } else {
       let isNotUploaded = true;
@@ -622,10 +626,12 @@ const openChequeDate = Boolean(anchorElChequeDate);
           : 0),  // Ensure paid is a number
       // Amount Due is the difference between total and paid amount
       amountDue: ((parseFloat(balanceAmount) || 0) - (parseFloat(orderAmount) || 0)), 
-      paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value ? `${previousPaymentMode}, ${paymentMode.value}` : paymentMode.value,
+      paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value
+      ? Array.from(new Set([...previousPaymentMode.split(',').map(item => item.trim()), paymentMode.value])).join(', ') 
+      : paymentMode.value,
     };
     
-    // Generate the PDF with the prepared data
+
     generateBillPdf(PDFData);
 };
 
@@ -633,6 +639,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const insertNewFinance = async (e) => {
     e.preventDefault();
+
+    var orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
 
     if(billsOnly){
       if(!bill){
@@ -643,6 +651,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setToast(false);
         }, 3000);
         return;
+      }else if(!expenseCategory){
+        setErrors((prevErrors) => ({...prevErrors, expenseCategory: "Select an Expense Category!"}));
+        return;
       }else if(orderAmount === 0 || orderAmount === ""){
         setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
         amountRef?.current.focus();
@@ -651,7 +662,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
         billNumberRef?.current.focus();
         return;
-      }else if((orderNumber === "" || parseInt(orderNumber) === 0) && expenseCategory?.value === 'Project'){
+      }else if((orderNumberToBeUploaded === "" || parseInt(orderNumberToBeUploaded) === 0) && expenseCategory?.value === 'Project'){
         setErrors((prevErrors) => ({...prevErrors, orderNumber: "Order Number is required for Project Category!"}));
         orderNumberRef?.current.focus();
         return;
@@ -664,6 +675,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setGSTAmount('');
         setOrderAmount('');
         setOrderNumber('');
+        setBillNumber("");
+        setBillDate(dayjs());
         setRateWiseOrderNumber('');
         setTaxType(taxTypeOptions[2]);
         setTransactionType(transactionOptions[0]);
@@ -1173,7 +1186,7 @@ useEffect(() => {
   )}
 
   <button
-    className="custom-button ml-2"
+    className="Add-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
   >
     
@@ -1250,7 +1263,7 @@ useEffect(() => {
     type="checkbox"
     className="ml-5 form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
     checked={billsOnly}
-    onChange={() => setBillsOnly(!billsOnly)}
+    onChange={() => {setBillsOnly(!billsOnly); setClientName('')}}
   />
   <span className="ml-2 text-sm font-medium">Add Bills Only </span>
 </label>
