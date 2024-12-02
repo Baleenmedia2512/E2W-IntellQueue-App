@@ -169,17 +169,28 @@ doc.setFontSize(12);
 doc.text(`Total:`, 130, finalY + 21, { align: "right" });
 doc.text(`Rs. ${data.total}`, 190, finalY + 21, { align: "right" });
 
+let nextY = finalY + 26; // Initial Y position for the next item
+
+if (data.previousAmountPaid > 0) {
+  doc.setFontSize(10);
+  doc.text(`Paid Earlier:`, 130, nextY, { align: "right" });
+  doc.text(`Rs. ${data.previousAmountPaid}`, 190, nextY, { align: "right" });
+  nextY += 5; // Adjust position for the next item
+}
+
 doc.setFontSize(10);
-doc.text(`Paid:`, 130, finalY + 26, { align: "right" });
-doc.text(`Rs. ${data.paid}`, 190, finalY + 26, { align: "right" });
+doc.text(`Paid:`, 130, nextY, { align: "right" });
+doc.text(`Rs. ${data.paid}`, 190, nextY, { align: "right" });
+nextY += 6;
 
 doc.setDrawColor(0); // Black color for the line
 doc.setLineWidth(0.2); // Line thickness
-doc.line(110, finalY + 32, 190, finalY + 32);
+doc.line(110, nextY, 190, nextY);
+nextY += 6;
 
 doc.setFontSize(12);
-doc.text(`Amount Due:`, 130, finalY + 41, { align: "right" });
-doc.text(`Rs. ${data.amountDue}`, 190, finalY + 41, { align: "right" });
+doc.text(`Amount Due:`, 130, nextY + 4, { align: "right" });
+doc.text(`Rs. ${data.amountDue}`, 190, nextY + 4, { align: "right" });
 
 doc.setFont("helvetica", "normal");
 doc.setFontSize(12);

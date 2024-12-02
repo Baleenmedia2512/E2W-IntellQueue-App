@@ -619,11 +619,15 @@ const openChequeDate = Boolean(anchorElChequeDate);
       // Discount can be negative (e.g., Rs. -1500) and it should be added to the total amount
       discount: (parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0), // Ensure valid numbers
       // Total is receivableAmount + discount, where discount can be negative
-      total: (parseFloat(receivableAmount) || 0) + ((parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0)),  
-      paid: (parseFloat(orderAmount) || 0) +
-      (previousAmountPaid !== null && previousAmountPaid !== undefined && previousAmountPaid !== ""
-          ? parseFloat(previousAmountPaid)
-          : 0),  // Ensure paid is a number
+      total: (parseFloat(receivableAmount) || 0) + ((parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0)),
+      previousAmountPaid: (previousAmountPaid !== null && previousAmountPaid !== undefined && previousAmountPaid !== ""
+        ? parseFloat(previousAmountPaid)
+        : 0),
+      paid: (parseFloat(orderAmount) || 0),    
+      // paid: (parseFloat(orderAmount) || 0) +
+      // (previousAmountPaid !== null && previousAmountPaid !== undefined && previousAmountPaid !== ""
+      //     ? parseFloat(previousAmountPaid)
+      //     : 0),  // Ensure paid is a number
       // Amount Due is the difference between total and paid amount
       amountDue: ((parseFloat(balanceAmount) || 0) - (parseFloat(orderAmount) || 0)), 
       paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value
