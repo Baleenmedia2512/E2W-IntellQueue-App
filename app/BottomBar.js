@@ -122,7 +122,10 @@ export default function BottomBarTest() {
           break;
         case '/Payment-Milestone':
           setSelected('paymentMilestone');
-          break;          
+          break;  
+        case '/LeadManager':
+          setSelected("LeadManager");
+          break;        
         default:
           break;
       }
@@ -140,7 +143,7 @@ export default function BottomBarTest() {
         router.push('/');
         break;
       case 2:
-        router.push('adDetails');
+        router.push('/adDetails');
         break;
       case 3:
         router.push('/Create-Order');
@@ -165,7 +168,10 @@ export default function BottomBarTest() {
         break;
       case 10:
         router.push('/Payment-Milestone');
-        break;          
+        break; 
+      case 11:
+        router.push('/LeadManager');
+        break;         
       default:
         break;
     }
@@ -279,6 +285,48 @@ export default function BottomBarTest() {
 
   );
 
+  const LeadManagerIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-5 w-5"
+    >
+      {/* Icon base */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Z"
+      />
+      {/* Lead avatar */}
+      <circle cx="8" cy="9" r="2.25" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10.75 15.25a4.5 4.5 0 0 0-5.5 0"
+      />
+      {/* Checklist */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15 8.25h4.5M15 12h4.5M15 15.75h4.5"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M13.5 8.25l-1.5 1.5-0.75-0.75"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M13.5 15.75l-1.5 1.5-0.75-0.75"
+      />
+    </svg>
+  );
+
+  
   const ConsultantManagerIcon = () => (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -503,6 +551,13 @@ export default function BottomBarTest() {
           dataTag=""
           /> */}
           <SubNavItem
+            icon={<LeadManagerIcon className="text-gray-600" />}
+            label="Lead Manager"
+            onClick={() => { setSelected('LeadManager'); setShowMoreOptions(false); {handleChange(null, 11)}; }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag="LeadManager"
+          />
+          <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
             label={<span className="text-red-600">Log Out</span>}
             onClick={() => { setSelected('logout'); setShowMoreOptions(false); {handleChange(null, 7)}; }}
@@ -565,5 +620,3 @@ function SubNavItem({ icon, label, onClick, additionalClasses, dataTag }) {
     </div>
   );
 }
-
-
