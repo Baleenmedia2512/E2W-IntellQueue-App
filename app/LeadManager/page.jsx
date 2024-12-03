@@ -351,8 +351,8 @@ const EventCards = ({params, searchParams}) => {
             </div>
             {/* Follow-Up Date */}
             {row.FollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
-              <div className="text-sm max-w-fit" onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
-                <p className="bg-red-500 hover:cursor-pointer text-white p-2 text-[14px] rounded-lg">
+              <div className="text-sm max-w-fit" >
+                <p className="bg-red-500 hover:cursor-pointer text-white p-2 text-[14px] rounded-lg" onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
