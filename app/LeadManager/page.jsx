@@ -241,6 +241,7 @@ const EventCards = ({params, searchParams}) => {
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
+              {row.Status === 'Call Followup' &&
             <span
               onClick={() => toggleQuoteSent(row.SNo, row.QuoteSent)} // Function to toggle the QuoteSent status
               className={`inline-block rounded-full p-1 ${
@@ -253,6 +254,7 @@ const EventCards = ({params, searchParams}) => {
               {/* Icon from React Icons */}
                 <FiCheckCircle className="text-white text-lg" /> 
             </span>
+            }
             <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
               </span>
@@ -450,47 +452,42 @@ async function fetchDataFromAPI(queryId, filters) {
   );
 
   const sortedRows = filteredData.sort((a, b) => {
-    const aFollowupDate = new Date(a.FollowupDate).toDateString();
-    const bFollowupDate = new Date(b.FollowupDate).toDateString();
-    const aLeadDate = new Date(a.LeadDate).toDateString();
-    const bLeadDate = new Date(b.LeadDate).toDateString();
-
+    const today = new Date().setHours(0, 0, 0, 0); // Normalize today's date
+  
+    const aFollowupDate = new Date(a.FollowupDate).setHours(0, 0, 0, 0);
+    const bFollowupDate = new Date(b.FollowupDate).setHours(0, 0, 0, 0);
+    const aLeadDate = new Date(a.LeadDate).setHours(0, 0, 0, 0);
+    const bLeadDate = new Date(b.LeadDate).setHours(0, 0, 0, 0);
+  
     // Define status priorities
     const statusPriority = {
-      "Call Followup": 2,
-      New: 1,
+      "Call Followup": 1,
+      New: 2,
       Unreachable: 3,
-      Unqualified: 4,
     };
-
-    // Check status priority
+  
+    // Determine the relevant date
+    const aRelevantDate =
+      aFollowupDate > today ? aLeadDate : aFollowupDate || aLeadDate;
+    const bRelevantDate =
+      bFollowupDate > today ? bLeadDate : bFollowupDate || bLeadDate;
+  
+    // Sort by the most relevant date (descending, most recent first)
+    if (aRelevantDate !== bRelevantDate) {
+      return bRelevantDate - aRelevantDate;
+    }
+  
+    // Sort by status priority if dates are the same
     const aPriority = statusPriority[a.Status] || 5; // Default priority for unknown statuses
     const bPriority = statusPriority[b.Status] || 5;
-
-    // Criteria 1: Followup leads with today's date
-    if (aFollowupDate === today && bFollowupDate !== today) return -1;
-    if (bFollowupDate === today && aFollowupDate !== today) return 1;
-
-    // Criteria 2: New leads from today
-    if (aLeadDate === today && bLeadDate !== today) return -1;
-    if (bLeadDate === today && aLeadDate !== today) return 1;
-
-    // Criteria 3: Sort by status priority
-    if (aPriority !== bPriority) return aPriority - bPriority;
-
-    // Criteria 4: Sort by lead date within same status
-    if (aPriority === 1 || aPriority === 2) {
-      // For "Call Followup" and "New", sort ascending by lead date
-      const aLeadTimestamp = new Date(a.LeadDate).getTime();
-      const bLeadTimestamp = new Date(b.LeadDate).getTime();
-      return bLeadTimestamp - aLeadTimestamp;
-    } else {
-      // For "Unreachable" and "Unqualified", sort descending by lead date
-      const aLeadTimestamp = new Date(a.LeadDate).getTime();
-      const bLeadTimestamp = new Date(b.LeadDate).getTime();
-      return bLeadTimestamp - aLeadTimestamp;
+  
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
     }
-  });
+  
+    // Sort by follow-up date as a tiebreaker if both have the same status priority
+    return bFollowupDate - aFollowupDate;
+  });  
 
   return sortedRows;
 }
