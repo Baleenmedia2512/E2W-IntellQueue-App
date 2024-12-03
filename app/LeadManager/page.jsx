@@ -6,6 +6,7 @@ import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
 import { AiOutlineClose } from "react-icons/ai";
+import { FaFileExcel } from "react-icons/fa";
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -50,7 +51,9 @@ const parseFollowupDate = (dateStr) => {
   return new Date(2000 + parseInt(year, 10), monthIndex, parseInt(day, 10));
 };
 
-const EventCards = ({ rows }) => {
+const EventCards = ({params, searchParams}) => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "" });
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -59,7 +62,29 @@ const EventCards = ({ rows }) => {
   const [followupDate, setFollowupDate] = useState("");
   const [followupTime, setFollowupTime] = useState("");
   const [hideOtherStatus, setHideOtherStatus] = useState(false);
+  const [followupOnly, setFollowpOnly] = useState(false);
 
+  const fetchData = async () => {
+    try {
+      const filters = {
+        leadDate: searchParams.leadDate || null,
+        status: searchParams.status || "",
+        followupDate: searchParams.followupDate || null,
+      };
+
+      const fetchedRows = await fetchDataFromAPI(params.id, filters);
+      setRows(fetchedRows);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [params.id, searchParams]);
+  
   const handleCallButtonClick = async (phone, name, sNo) => {
     setCurrentCall({phone, name, sNo });
 
@@ -72,12 +97,24 @@ const EventCards = ({ rows }) => {
     }, 3000);
   };
 
-  const handleSave = async (Sno) => {
-    const payload = {
-      sNo: currentCall.sNo,
-      status: selectedStatus,
-      remarks,
-    };
+  const handleSave = async (Sno, quoteSent, sendQuoteOnly) => {
+    var payload = {}
+    if(sendQuoteOnly){
+      payload = {
+        sNo: Sno,
+        quoteSent: quoteSent
+      };
+    }else{
+      payload = {
+        sNo: currentCall.sNo,
+        status: selectedStatus,
+        companyName,
+        followupDate,
+        followupTime,
+        quoteSent: quoteSent,
+        remarks,
+      };
+    }
 
     try {
       const response = await fetch("https://leads.baleenmedia.com/api/updateLeads", {
@@ -89,13 +126,15 @@ const EventCards = ({ rows }) => {
       });
 
       if (!response.ok) throw new Error("Failed to update lead");
-
-      alert("Lead updated successfully!");
+      fetchData();
+      !sendQuoteOnly && alert("Lead updated successfully!");
+      
     } catch (error) {
       console.error("Error updating lead:", error);
       alert("Failed to update lead. Please try again.");
     } finally {
       setShowModal(false);
+      setHideOtherStatus(false);
       setSelectedStatus("");
       setRemarks("");
     }
@@ -147,18 +186,40 @@ const EventCards = ({ rows }) => {
     setFollowupTime(formattedTime); // Set the followupTime to the current time
   }
 
+  if (loading) {
+    return (
+      <div className="font-poppins text-center">
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
+
+  if (!rows.length) {
+    return (
+      <div className="font-poppins text-center">
+        <h2>No Data Found</h2>
+      </div>
+    );
+  }
+
+  const toggleQuoteSent = async(sNo, status) => {
+    var setValue = status === 'Yes' ? 'No' : 'Yes';
+    await handleSave(sNo, setValue, true);
+    status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
+  }
+
   return (
     <div className="p-4 text-black">
       {/* Top Bar with Filter Button */}
       <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
         <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
-        {/* <button
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700"
-          onClick={() => console.log("Filter panel opened!")}
+        <button
+          className="flex items-center px-4 py-2 bg-transparent text-green-500 rounded-md border border-green-500"
+          onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
         >
-          <FiFilter className="mr-2 text-lg" />
-          Filter
-        </button> */}
+          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-500" />
+          Sheet 
+        </button>
       </div>
 
       {/* Lead Cards */}
@@ -172,7 +233,7 @@ const EventCards = ({ rows }) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setSelectedStatus(row.Status); setRemarks(row.Remarks)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '')}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -181,7 +242,7 @@ const EventCards = ({ rows }) => {
 
             <div className="absolute top-2 left-2 flex flex-row">
             <span
-              onClick={() => toggleQuoteSent(row.SNo)} // Function to toggle the QuoteSent status
+              onClick={() => toggleQuoteSent(row.SNo, row.QuoteSent)} // Function to toggle the QuoteSent status
               className={`inline-block rounded-full p-1 ${
                 row.QuoteSent === "Yes"
                   ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
@@ -190,11 +251,7 @@ const EventCards = ({ rows }) => {
               title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
             >
               {/* Icon from React Icons */}
-              {row.QuoteSent === "Yes" ? (
-                <FiCheckCircle className="text-white text-lg" /> // Icon for "Yes"
-              ) : (
-                <FiXCircle className="text-gray-400 text-lg" /> // Icon for "No"
-              )}
+                <FiCheckCircle className="text-white text-lg" /> 
             </span>
             <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
@@ -219,16 +276,16 @@ const EventCards = ({ rows }) => {
             {/* Core Details */}
             <div className="text-sm text-gray-700 mb-2">
               <p>
-                <strong>Arrival On:</strong> {row.LeadDate} {row.LeadTime}
+                Arrived at: <strong>{row.LeadDate} {row.LeadTime}</strong> 
               </p>
               <p className="flex items-center">
-                <strong>Phone:</strong>
+                Phone:
                 <a
                   // href={`tel:${row.Phone}`}
                   onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo)}
                   className="text-blue-600 hover:underline ml-1"
                 >
-                  {row.Phone}
+                  <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
@@ -239,15 +296,14 @@ const EventCards = ({ rows }) => {
                 </button>
               </p>
               <p>
-                <strong>Enquiry:</strong> {row.Enquiry || "N/A"}
+                Enquiry: {<strong>{row.Enquiry}</strong> || "N/A"}
               </p>
             </div>
             {/* Follow-Up Date */}
-            {row.FollowupDate !== "No Followup Date" ? (
+            {row.FollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
               <div className="text-sm max-w-fit" onClick={() => {
                 
             }}>
-        
                 <p className="bg-red-500 hover:cursor-pointer text-white p-2 text-[14px] rounded-lg">
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
@@ -275,7 +331,7 @@ const EventCards = ({ rows }) => {
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-[90%] max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Call Status</h3>
-              <button onClick={() => setShowModal(false)}>
+              <button onClick={() => {setShowModal(false); setHideOtherStatus(false)}}>
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
             </div>
@@ -284,8 +340,9 @@ const EventCards = ({ rows }) => {
             </p>
 
             {/* Floating Radio Buttons for Status */}
+            {!hideOtherStatus &&
             <div className="mb-4 flex flex-wrap gap-2 justify-center">
-              {!hideOtherStatus ? ["New", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
+              {["New", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
                 (status) => (
                   <label
                     key={status}
@@ -303,23 +360,9 @@ const EventCards = ({ rows }) => {
                     />
                     {status}
                   </label>
-                )
-              ): 
-              <label
-              className={`cursor-pointer border p-2 rounded-full px-4 bg-blue-500 text-white`}
-            >
-              <input
-                type="radio"
-                name="CallFollowup"
-                value={"Call Followup"}
-                checked={true}
-                onChange={() => setSelectedStatus("Call Followup")}
-                className="hidden"
-              />
-              Call Followup
-            </label>
-              }
+                ))}
             </div>
+            }
             { (selectedStatus === "Call Followup" || selectedStatus === "Unreachable") &&
              <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -402,7 +445,11 @@ async function fetchDataFromAPI(queryId, filters) {
 
   const today = new Date().toDateString();
 
-  const sortedRows = data.rows.sort((a, b) => {
+  const filteredData = data.rows.filter(
+    (lead) => lead.Status !== "Unqualified" && lead.Status !== "Won" && lead.Status !== "Lost"
+  );
+
+  const sortedRows = filteredData.sort((a, b) => {
     const aFollowupDate = new Date(a.FollowupDate).toDateString();
     const bFollowupDate = new Date(b.FollowupDate).toDateString();
     const aLeadDate = new Date(a.LeadDate).toDateString();
@@ -450,49 +497,49 @@ async function fetchDataFromAPI(queryId, filters) {
 
 
 export default function Page({ params, searchParams }) {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [rows, setRows] = useState([]);
+  // const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const filters = {
-          leadDate: searchParams.leadDate || null,
-          status: searchParams.status || "",
-          followupDate: searchParams.followupDate || null,
-        };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const filters = {
+  //         leadDate: searchParams.leadDate || null,
+  //         status: searchParams.status || "",
+  //         followupDate: searchParams.followupDate || null,
+  //       };
 
-        const fetchedRows = await fetchDataFromAPI(params.id, filters);
-        setRows(fetchedRows);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       const fetchedRows = await fetchDataFromAPI(params.id, filters);
+  //       setRows(fetchedRows);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchData();
-  }, [params.id, searchParams]);
+  //   fetchData();
+  // }, [params.id, searchParams]);
 
-  if (loading) {
-    return (
-      <div className="font-poppins text-center">
-        <h2>Loading...</h2>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="font-poppins text-center">
+  //       <h2>Loading...</h2>
+  //     </div>
+  //   );
+  // }
 
-  if (!rows.length) {
-    return (
-      <div className="font-poppins text-center">
-        <h2>No Data Found</h2>
-      </div>
-    );
-  }
+  // if (!rows.length) {
+  //   return (
+  //     <div className="font-poppins text-center">
+  //       <h2>No Data Found</h2>
+  //     </div>
+  //   );
+  // }
 
   return (
     <article>
-      <EventCards rows={rows} />
+      <EventCards params = {params} searchParams = {searchParams}/>
     </article>
   );
 }
