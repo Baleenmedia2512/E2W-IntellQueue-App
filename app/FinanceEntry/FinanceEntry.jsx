@@ -141,6 +141,7 @@ const FinanceData = () => {
   const [receivableAmount, setReceivableAmount] = useState(0);
   const [previousPaymentMode, setPreviousPaymentMode] = useState('');
   const [previousAmountPaid, setPreviousAmountPaid] = useState(0);
+  const [isDownloadInvoiceChecked, setIsDownloadInvoiceChecked] = useState(false);
 
   useEffect(() => {
     if(dbName){
@@ -736,7 +737,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
                   SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
               } else if (elementsToHide.includes("OrderNumberText")) {
                 SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
-                sendDataToPdf();
+                if (isDownloadInvoiceChecked) {
+                  sendDataToPdf();
+                }
               } else {
                 setToastMessage('SMS Not Sent! Reason: No Database Found.');
                 setSeverity('warning');
@@ -893,6 +896,7 @@ useEffect(() => {
           setPreviousPaymentMode('');
           setPreviousAmountPaid(0);
           setBalanceAmount(0);
+          setIsDownloadInvoiceChecked(false);
 
   };
   const handleFileChange = (e) => {
@@ -1403,6 +1407,20 @@ useEffect(() => {
             //   required
               /> 
                {errors.transactionType && <span className="text-red-500 text-sm">{errors.transactionType}</span>}
+               {transactionType && transactionType.value === 'Income' &&  (
+          <div className="flex items-center space-x-1 mt-1">
+            <input
+              type="checkbox"
+              id="consultantWaiver"
+              className={`h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 ${isUpdateMode ? 'border-yellow-500' : 'border-gray-300'} rounded`}
+              checked={isDownloadInvoiceChecked}
+              onChange={(e) => setIsDownloadInvoiceChecked(e.target.checked)}
+            />
+            <label htmlFor="consultantWaiver" className={`text-gray-500 font-medium text-sm ${isUpdateMode ? 'border-yellow-500' : 'border-gray-300'}`}>
+              Invoice Required
+            </label>
+          </div>
+          )}
                </div>
                <div>
                <div className='mt-4' >
