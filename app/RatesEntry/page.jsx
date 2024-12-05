@@ -34,9 +34,6 @@ import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualizatio
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const AdDetailsPage = () => {
-
-  // Check if localStorage contains a username
-  // const username = "GraceScans"
   const dispatch = useDispatch()
   const validityRef = useRef();
   const unitRef = useRef();
