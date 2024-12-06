@@ -138,7 +138,6 @@ const AdDetailsPage = () => {
   //   Package: ""
   // });
 
-  // Function to toggle the modal
   const toggleModal = () => {
       setModal((prevState) => !prevState);
   }
