@@ -124,6 +124,7 @@ const EventCards = ({params, searchParams}) => {
       };
     }
   
+    
     try {
       console.log("Payload before update:", payload); // Debug log
       const response = await fetch(
