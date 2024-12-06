@@ -170,7 +170,6 @@ const AdDetailsPage = () => {
   }
   useEffect(() => {
      
-     // If no username is found, redirect to the login page
      if (!username || dbName === "") {
       router.push('/login');
       } else{
@@ -899,9 +898,7 @@ var selectedRate = '';
         //   return
         // }
         // Update relevant fields for the dialogs
-        setNewRateName(data.rateName); // Update field in new rate dialog
-        setMinimumPrice(data.minimumCost); // Set for minimum cost dialog
-        setStartQty(data.startQty); // Example, update this if needed
+        
         // var locationValues = data.location;
         // var packageValues = data.package;
         // const colonIndex = data.adCategory.indexOf(':');
