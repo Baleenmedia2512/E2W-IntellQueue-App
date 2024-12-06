@@ -337,20 +337,28 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
-              {row.Status === 'Call Followup' &&
-            <span
-              onClick={() => toggleQuoteSent(row.SNo, row.QuoteSent)} // Function to toggle the QuoteSent status
-              className={`inline-block rounded-full p-1 ${
-                row.QuoteSent === "Yes"
-                  ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
-                  : "bg-gray-200"
-              } hover:cursor-pointer`}
-              title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
-            >
-              {/* Icon from React Icons */}
-                <FiCheckCircle className="text-white text-lg" /> 
-            </span>
-            }
+             {row.Status === 'Call Followup' &&
+  <span
+    onClick={() => {
+      if (!isLoading) {
+        toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
+      }
+    }}
+    className={`inline-block rounded-full p-1 ${
+      row.QuoteSent === "Yes"
+        ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
+        : "bg-gray-200"
+    } hover:cursor-pointer`}
+    title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
+  >
+    {isLoading ? (
+      <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
+    ) : (
+      <FiCheckCircle className="text-white text-lg" />
+    )}
+  </span>
+}
+
             {/* <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
               </span> */}
@@ -363,7 +371,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
                 ? "text-yellow-500 border-yellow-500 bg-yellow-100 "
                 : row.ProspectType === "Cold"
                 ? "text-blue-500 border-blue-500 bg-blue-100 "
-                : "text-gray-500 border-gray-500 bg-gray-100"
+                : "text-gray-500 border-gray-500 "
             }`}
           >
             {row.ProspectType === "Hot" && (
