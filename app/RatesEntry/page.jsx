@@ -170,7 +170,6 @@ const AdDetailsPage = () => {
   }
   useEffect(() => {
      
-     // If no username is found, redirect to the login page
      if (!username || dbName === "") {
       router.push('/login');
       } else{
