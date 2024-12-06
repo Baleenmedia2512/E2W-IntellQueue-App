@@ -74,6 +74,8 @@ const [initialRemarks, setInitialRemarks] = useState(remarks);
 const [initialLeadStatus, setInitialLeadStatus] = useState("");
 const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
 const [prospectType, setProspectType] = useState("");
+const [isLoading, setIsLoading] = useState(false); // State to track the loading status
+
 
 
   const fetchData = async () => {
@@ -124,19 +126,21 @@ const [prospectType, setProspectType] = useState("");
   };
 
   const handleSave = async (Sno, quoteSent, sendQuoteOnly) => {
-    // Check if changes were made before proceeding
-  const hasChanges =
-  selectedStatus !== initialSelectedStatus ||
-  followupDate !== initialFollowupDate ||
-  followupTime !== initialFollowupTime ||
-  companyName !== initialCompanyName ||
-  remarks !== initialRemarks||
-  selectedLeadStatus !== initialLeadStatus;
 
-if (!hasChanges) {
-  alert("No changes have been made.");
-  return;
-}
+      setIsLoading(true);
+        // Check if changes were made before proceeding
+      const hasChanges =
+      selectedStatus !== initialSelectedStatus ||
+      followupDate !== initialFollowupDate ||
+      followupTime !== initialFollowupTime ||
+      companyName !== initialCompanyName ||
+      remarks !== initialRemarks||
+      selectedLeadStatus !== initialLeadStatus;
+
+    if (!hasChanges) {
+      alert("No changes have been made.");
+      return;
+    }
 
 
     let payload = {};
@@ -186,6 +190,7 @@ if (!hasChanges) {
       console.error("Error updating lead:", error);
       alert("Failed to update lead. Please try again.");
     } finally {
+      setIsLoading(false);
       setShowModal(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
@@ -544,7 +549,7 @@ if (!hasChanges) {
                   key={label}
                   value={prospectType}
                   onClick={() => {
-                    setSelectedLeadStatus(label); // Update the selected status
+                    setSelectedLeadStatus(label); 
                     setProspectType(label); // Set the prospect type
                   }}
                   className={`flex items-center gap-1 px-3 py-1 border rounded-full transition-transform duration-300 text-sm ${
@@ -569,14 +574,21 @@ if (!hasChanges) {
 
 
             <div className="flex justify-end">
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                onClick={handleSave}
-                disabled={!selectedStatus}
-              >
-                Save
-              </button>
-            </div>
+            <button
+              className={`px-4 py-2 rounded-md text-white ${
+                isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
+              }`}
+              onClick={handleSave}
+              disabled={!selectedStatus || isLoading} // Disable button during loading
+            >
+              {isLoading ? (
+                <span>Loading...</span> // Change text when loading
+              ) : (
+                "Save"
+              )}
+            </button>
+          </div>
+
           </div>
         </div>
       )}
