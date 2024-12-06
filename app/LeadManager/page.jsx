@@ -72,6 +72,7 @@ const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
 const [initialCompanyName, setInitialCompanyName] = useState(companyName);
 const [initialRemarks, setInitialRemarks] = useState(remarks);
 const [initialLeadStatus, setInitialLeadStatus] = useState("");
+const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
 const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
 const [prospectType, setProspectType] = useState("");
 const [isLoading, setIsLoading] = useState(false); // State to track the loading status
@@ -135,7 +136,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
       followupTime !== initialFollowupTime ||
       companyName !== initialCompanyName ||
       remarks !== initialRemarks||
-      selectedLeadStatus !== initialLeadStatus;
+      selectedLeadStatus !== initialLeadStatus||
+      quoteSent !== initialQuoteStatus;
 
     if (!hasChanges) {
       alert("No changes have been made.");
@@ -338,26 +340,26 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
 
             <div className="absolute top-2 left-2 flex flex-row">
              {row.Status === 'Call Followup' &&
-  <span
-    onClick={() => {
-      if (!isLoading) {
-        toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
-      }
-    }}
-    className={`inline-block rounded-full p-1 ${
-      row.QuoteSent === "Yes"
-        ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
-        : "bg-gray-200"
-    } hover:cursor-pointer`}
-    title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
-  >
-    {isLoading ? (
-      <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
-    ) : (
-      <FiCheckCircle className="text-white text-lg" />
-    )}
-  </span>
-}
+            <span
+              onClick={() => {
+                if (!isLoading) {
+                  toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
+                }
+              }}
+              className={`inline-block rounded-full p-1 ${
+                row.QuoteSent === "Yes"
+                  ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
+                  : "bg-gray-200"
+              } hover:cursor-pointer`}
+              title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
+            >
+              {isLoading ? (
+                <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
+              ) : (
+                <FiCheckCircle className="text-white text-lg" />
+              )}
+            </span>
+          }
 
             {/* <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
