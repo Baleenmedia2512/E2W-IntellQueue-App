@@ -871,7 +871,6 @@ var selectedRate = '';
       setValidRatesData(valid);
       setInvalidRatesData(invalid);
       setRatesData(valid);
-      // console.log(data,'Rates',ratesData,'Invalid',invalid,'valid ', valid)
       // Cache the new rates data
       // localStorage.setItem('cachedRates', JSON.stringify(data));
     } catch (error) {
