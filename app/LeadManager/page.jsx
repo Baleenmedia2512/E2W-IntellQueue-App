@@ -7,6 +7,9 @@ import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
+import { GiCampfire } from "react-icons/gi";
+import { MdOutlineWbSunny } from "react-icons/md";
+import { FaRegSnowflake } from "react-icons/fa";
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -63,6 +66,15 @@ const EventCards = ({params, searchParams}) => {
   const [followupTime, setFollowupTime] = useState("");
   const [hideOtherStatus, setHideOtherStatus] = useState(false);
   const [followupOnly, setFollowpOnly] = useState(false);
+  const [initialSelectedStatus, setInitialSelectedStatus] = useState(selectedStatus);
+const [initialFollowupDate, setInitialFollowupDate] = useState(followupDate);
+const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
+const [initialCompanyName, setInitialCompanyName] = useState(companyName);
+const [initialRemarks, setInitialRemarks] = useState(remarks);
+const [initialLeadStatus, setInitialLeadStatus] = useState("");
+const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
+const [prospectType, setProspectType] = useState("");
+
 
   const fetchData = async () => {
     try {
@@ -84,6 +96,20 @@ const EventCards = ({params, searchParams}) => {
   useEffect(() => {
     fetchData();
   }, [params.id, searchParams]);
+
+
+  
+  useEffect(() => {
+    if (showModal) {
+      // Set initial values when the modal is opened
+      setInitialSelectedStatus(selectedStatus);
+      setInitialFollowupDate(followupDate);
+      setInitialFollowupTime(followupTime);
+      setInitialCompanyName(companyName);
+      setInitialRemarks(remarks);
+      setInitialLeadStatus(prospectType);
+    }
+  }, [showModal]); // Runs when the modal opens
   
   const handleCallButtonClick = async (phone, name, sNo) => {
     setCurrentCall({phone, name, sNo });
@@ -98,6 +124,21 @@ const EventCards = ({params, searchParams}) => {
   };
 
   const handleSave = async (Sno, quoteSent, sendQuoteOnly) => {
+    // Check if changes were made before proceeding
+  const hasChanges =
+  selectedStatus !== initialSelectedStatus ||
+  followupDate !== initialFollowupDate ||
+  followupTime !== initialFollowupTime ||
+  companyName !== initialCompanyName ||
+  remarks !== initialRemarks||
+  selectedLeadStatus !== initialLeadStatus;
+
+if (!hasChanges) {
+  alert("No changes have been made.");
+  return;
+}
+
+
     let payload = {};
   
     // Prepare payload based on context
@@ -121,6 +162,7 @@ const EventCards = ({params, searchParams}) => {
         followupTime: followupTime || "",
         quoteSent: quoteSent || "",
         remarks: remarks || "",
+        prospectType: prospectType || "",  // Include ProspectType
       };
     }
   
@@ -149,6 +191,7 @@ const EventCards = ({params, searchParams}) => {
       setFollowpOnly(false);
       setSelectedStatus("");
       setRemarks("");
+      setSelectedLeadStatus("");
     }
   };  
 
@@ -281,7 +324,7 @@ const EventCards = ({params, searchParams}) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '')}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -303,9 +346,33 @@ const EventCards = ({params, searchParams}) => {
                 <FiCheckCircle className="text-white text-lg" /> 
             </span>
             }
-            <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
+            {/* <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
-              </span>
+              </span> */}
+              {/* Platform and Selected Status */}
+              <span
+            className={`inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r border ${
+              row.ProspectType === "Hot"
+                ? "text-red-500 border-red-500 bg-red-100 "
+                : row.ProspectType === "Warm"
+                ? "text-yellow-500 border-yellow-500 bg-yellow-100 "
+                : row.ProspectType === "Cold"
+                ? "text-blue-500 border-blue-500 bg-blue-100 "
+                : "text-gray-500 border-gray-500 bg-gray-100"
+            }`}
+          >
+            {row.ProspectType === "Hot" && (
+              <GiCampfire className="inline-block text-red-500 mr-1 " />
+            )}
+            {row.ProspectType === "Warm" && (
+              <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1 " />
+            )}
+            {row.ProspectType === "Cold" && (
+              <FaRegSnowflake className="inline-block text-blue-500 mr-1 " />
+            )}
+            {row.Platform || "Unknown Platform"}
+          </span>
+
           </div>
 
             {/* Platform at Top Left */}
@@ -352,7 +419,7 @@ const EventCards = ({params, searchParams}) => {
             {/* Follow-Up Date */}
             {row.FollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
               <div className="text-sm max-w-fit" >
-                <p className="bg-red-500 hover:cursor-pointer text-white p-2 text-[14px] rounded-lg" onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
+                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
@@ -377,10 +444,10 @@ const EventCards = ({params, searchParams}) => {
       {/* Modal for Call Status */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-[90%] max-w-md">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-[90%] max-w-md mb-16">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Lead Status</h3>
-              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false)}}>
+              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(false); setFollowupTime(false)}}>
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
             </div>
@@ -390,12 +457,12 @@ const EventCards = ({params, searchParams}) => {
 
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
-            <div className="mb-4 flex flex-wrap gap-2 justify-center">
+            <div className="mb-4 flex flex-wrap gap-1 justify-center">
               {["New", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
                 (status) => (
                   <label
                     key={status}
-                    className={`cursor-pointer border p-2 rounded-full px-4 ${
+                    className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
                       selectedStatus === status ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
                     }`}
                   >
@@ -412,25 +479,33 @@ const EventCards = ({params, searchParams}) => {
                 ))}
             </div>
             }
-            {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") &&
-             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Date
-              </label>
-              <DatePicker
-                selected={followupDate ? new Date(`${followupDate} ${followupTime}`) : new Date()}
-                onChange={handleDateChange}
-                // onChange={handleDateChange}
-                showTimeSelect
-                timeFormat="h:mm aa" // Sets the format for time (24-hour format)
-                timeIntervals={15} // Time interval options (15 minutes in this case)
-                timeCaption="Time" // Caption for time section
-                dateFormat="dd MMM yyyy h:mm aa" // Displays date and time together
-                className="border border-gray-300 p-2 rounded-md w-full"
-                calendarClassName="bg-white border border-gray-200 rounded-md"
-              />
-            </div> 
-}         
+            {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Date
+                </label>
+                <DatePicker
+                  selected={
+                    followupDate
+                      ? new Date(`${followupDate} ${followupTime}`) // If a date is selected, use it
+                      : selectedStatus === "Unreachable" // Only for "Unreachable"
+                      ? new Date(new Date().getTime() + 60 * 60 * 1000) // Set time 1 hour ahead
+                      : selectedStatus === "Call Followup" // For "Call Followup", set the date to tomorrow
+                      ? new Date(new Date().setDate(new Date().getDate() + 1)) // Set to tomorrow
+                      : new Date() // For other statuses, default to the current date
+                  }
+                  onChange={handleDateChange}
+                  showTimeSelect
+                  timeFormat="h:mm aa" // Sets the format for time (12-hour format with AM/PM)
+                  timeIntervals={15} // Time interval options (15 minutes in this case)
+                  timeCaption="Time" // Caption for time section
+                  dateFormat="dd MMM yyyy h:mm aa" // Displays date and time together
+                  className="border border-gray-300 p-2 rounded-md w-full"
+                  calendarClassName="bg-white border border-gray-200 rounded-md"
+                />
+              </div>
+            )}
+
             {!followupOnly && 
               <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Company Name</label>
@@ -458,6 +533,41 @@ const EventCards = ({params, searchParams}) => {
               />
             </div>
             }
+            {/* Lead Status Buttons */}
+            <div className="mb-4 flex justify-center gap-4">
+              {[
+                { label: "Hot", icon: <GiCampfire />, color: "red" },
+                { label: "Warm", icon: <MdOutlineWbSunny />, color: "yellow" },
+                { label: "Cold", icon: <FaRegSnowflake />, color: "blue" },
+              ].map(({ label, icon, color }) => (
+                <button
+                  key={label}
+                  value={prospectType}
+                  onClick={() => {
+                    setSelectedLeadStatus(label); // Update the selected status
+                    setProspectType(label); // Set the prospect type
+                  }}
+                  className={`flex items-center gap-1 px-3 py-1 border rounded-full transition-transform duration-300 text-sm ${
+                    selectedLeadStatus === label
+                      ? `bg-${color}-500 text-white shadow-lg transform scale-105`
+                      : label === "Hot"
+                      ? "text-red-500 border-red-500 bg-red-100 inline-block mr-1 animate-flicker"
+                      : `bg-${color}-100 border-${color}-300 text-${color}-500 hover:bg-${color}-200`
+                  }`}
+                >
+                  <span
+                    className={`inline-block ${
+                      selectedLeadStatus === label ? `text-white` : `text-${color}-500`
+                    }`}
+                  >
+                    {icon}
+                  </span>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+
             <div className="flex justify-end">
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
