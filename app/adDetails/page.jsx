@@ -227,55 +227,59 @@ export const AdDetails = () => {
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
     const quoteNumber = await fetchNextQuoteNumber(companyName);
-  
+
+    const selectedCartItems = cartItems.some(item => item.isSelected)
+    ? cartItems.filter(item => item.isSelected) // Filter selected items
+    : cartItems;
+
     if (isGeneratingPdf) {
-      try {
-        const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
+      try{
+        const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
-        return;
-      } catch (error) {
-        alert("An unexpected error occurred while inserting Quote: " + error);
+        return; 
+      } catch(error) {
+        alert('An unexpected error occured while inserting Quote:', error);
         return;
       }
+      
     }
-  
+
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
-  
-    try {
-      const TnC = await getTnC();
-      let grandTotalAmount = calculateGrandTotal();
-      grandTotalAmount = grandTotalAmount.replace("₹", "");
-  
-      if (clientName !== "") {
-        try {
-          const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-          await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-  
-          const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
-          await Promise.all(promises);
-        } catch (error) {
-          alert("An unexpected error occurred during PDF generation or database insertion: " + error);
-          return;
-        }
-      } else {
-        if (clientName === "") {
-          setIsClientName(false);
-        } else if (clientContact === "") {
-          setIsClientContact(false);
-        }
+    
+    const TnC = await getTnC();
+    let grandTotalAmount = calculateGrandTotal();
+    grandTotalAmount = grandTotalAmount.replace('₹', '');
+    if(clientName !== ""){
+      try{
+        const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
+        await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
+        const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
+        await Promise.all(promises);
+      //   setTimeout(() => {
+      //   dispatch(resetCartItem());
+      //   dispatch(resetQuotesData());
+      //   dispatch(resetClientData());
+      // },3000)
+      } catch(error){
+        alert('An unexpected error occured while inserting Quote:' + error);
+        return;
       }
-    } finally {
-      isGeneratingPdf = false; // Reset flag regardless of success or error
+      
+    } else{
+      if(clientName === ""){
+        setIsClientName(false)
+      }else if(clientContact === ""){
+        setIsClientContact(false)
+      }
     }
   };
-  
   
   const handleUpdateAndDownloadQuote = async (e) => {
     e.preventDefault();
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
     
     const TnC = await getTnC();
-    const quoteNumber = cartItems[0].editQuoteNumber ?? await fetchNextQuoteNumber(companyName);
+    const quoteNumber = cartItems[0].editQuoteNumber;
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
@@ -287,16 +291,14 @@ export const AdDetails = () => {
         );
         // console.log(cart)
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-        const promises = cartItems.map(item => {cartItems[0].editQuoteNumber ? updateQuoteToDB(item) : addQuoteToDB(item)});
+        const promises = cartItems.map(item => updateQuoteToDB(item));
         await Promise.all(promises);
+        setTimeout(() => {
+        dispatch(resetCartItem());
         dispatch(resetQuotesData());
         dispatch(resetClientData());
         dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
-        if(cartItems[0].editQuoteNumber){ 
-          setTimeout(() => {
-            dispatch(resetCartItem());
-          },200)
-        }
+      },200)
       } catch(error){
         alert('An unexpected error occured while inserting Quote:' + error);
         return;
@@ -447,7 +449,7 @@ export const AdDetails = () => {
           {/* Shopping Cart Button */}
           {currentPage === "checkout" ? (
             <div className='flex flex-row justify-center items-center'>
-              {cartItems.length > 0 && cartItems[0].isEditMode && cartItems[0].editQuoteNumber ? (
+              {cartItems.length > 0 && cartItems[0].isEditMode ? (
                 <button
                   className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
                   disabled={cartItems.length > 0 ? false : true}
@@ -505,7 +507,7 @@ export const AdDetails = () => {
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
-          <form className='bg-white rounded-3xl shadow-lg   pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
+          <form className='bg-white rounded-3xl shadow-lg pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
           <h1 className='mb-4 font-semibold text-center text-blue-500 text-lg mt-4'>Client Details</h1>
 
           <table className='mb-6 ml-4'>

@@ -11,6 +11,8 @@ import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
 
+
+
 const statusColors = {
   New: "bg-green-200 text-green-800",
   Unreachable: "bg-red-200 text-red-800",
@@ -58,7 +60,7 @@ const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "" });
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "" });
   const [selectedStatus, setSelectedStatus] = useState("");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -76,7 +78,11 @@ const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
 const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
 const [prospectType, setProspectType] = useState("");
 const [isLoading, setIsLoading] = useState(false); // State to track the loading status
+const [hasSaved, setHasSaved] = useState(false); 
 
+const handleCheckboxChange = () => {
+  setHasSaved(true); // Set hasSaved to true when checkbox is checked
+};	
 
 
   const fetchData = async () => {
@@ -114,8 +120,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     }
   }, [showModal]); // Runs when the modal opens
   
-  const handleCallButtonClick = async (phone, name, sNo) => {
-    setCurrentCall({phone, name, sNo });
+  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime });
 
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
@@ -189,6 +195,14 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
       if (!response.ok) throw new Error("Failed to update lead");
       fetchData();
       if (!sendQuoteOnly) alert("Lead updated successfully!");
+      if (hasSaved) {
+        const contact = {
+          name: currentCall?.name,
+          phone: currentCall?.phone,
+          email: currentCall?.email || "",
+        };
+        downloadContact(contact); // Download the contact vCard
+      }
     } catch (error) {
       console.error("Error updating lead:", error);
       alert("Failed to update lead. Please try again.");
@@ -257,8 +271,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     setFollowupTime(time); // Set the time
   };
 
-  const addNewFollowup = (phone, name, sNo) => {
-    setCurrentCall({phone, name, sNo});
+  const addNewFollowup = (phone, name, sNo, Platform, Enquiry, LeadDateTime) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime});
 
     setHideOtherStatus(true);
     const now = new Date(); // Get the current date and time
@@ -307,6 +321,32 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
   }
 
+
+  const downloadContact  = (contact) => {
+    // Fallback: Generate and download a vCard file
+    const vcard =
+      "BEGIN:VCARD\nVERSION:4.0\nFN:" +
+      contact.name +
+      "\nTEL;TYPE=work,voice:" +
+      contact.phone +
+      (contact.email ? "\nEMAIL:" + contact.email : "") +
+      "\nEND:VCARD";
+  
+    const blob = new Blob([vcard], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
+  
+    // Create and click the download link
+    const newLink = document.createElement("a");
+    newLink.download = contact.name + ".vcf";
+    newLink.href = url;
+    document.body.appendChild(newLink);
+    newLink.click();
+    document.body.removeChild(newLink);
+  
+    //alert("vCard downloaded successfully!");
+  };
+  
+
   return (
     <div className="p-4 text-black">
       {/* Top Bar with Filter Button */}
@@ -332,7 +372,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -409,20 +449,20 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {/* Core Details */}
             <div className="text-sm text-gray-700 mb-2">
               <p>
-                Arrived at: <strong>{row.LeadDate} {row.LeadTime}</strong> 
+              Originated at: <strong>{row.LeadDate} {row.LeadTime}</strong> 
               </p>
               <p className="flex items-center">
                 Phone:
                 <a
                   // href={`tel:${row.Phone}`}
-                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo)}
+                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}
                   className="text-blue-600 hover:underline ml-1"
                 >
                   <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
                   title="Call"
                 >
                   <FiPhoneCall className="text-lg" />
@@ -435,14 +475,14 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {/* Follow-Up Date */}
             {row.FollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
               <div className="text-sm max-w-fit" >
-                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
+                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
               </div>
             ) : (
               <div className="text-sm max-w-fit mt-4">
-                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo)}}>+ Add Followup</button>
+                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}}>+ Add Followup</button>
               </div>
             )}
              {/* Remarks */}
@@ -467,10 +507,22 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
             </div>
-            <p className="mb-4">
-              <strong>Updating Lead for:</strong> {currentCall.name} ({currentCall.phone})
+            <p>Originated At: <strong>{currentCall.LeadDateTime}</strong></p>
+            <p className="mb-2">
+            Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
-
+            <div>
+            <label className=" mb-2 flex items-center space-x-2 ">
+              <input
+                className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
+                type="checkbox"
+                onChange={(e) => {
+                  if (e.target.checked) handleCheckboxChange();
+                }}
+              />
+              <span className="text-gray-800 font-medium">Save the contact</span>
+            </label>
+            </div>
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
@@ -498,7 +550,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Date
+                  Followup Date and Time
                 </label>
                 <DatePicker
                   selected={
