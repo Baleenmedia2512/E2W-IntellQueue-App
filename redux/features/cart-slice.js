@@ -39,9 +39,17 @@ const cartSlice = createSlice({
     },
     resetCartItem: (state) => {
       return initialState;
-    }
+    },
+    toggleItemSelection: (state, action) => {
+      const index = action.payload; // The index of the item to toggle
+      const existingIndex = state.cart.findIndex(item => item.index === index);
+      if (existingIndex !== -1) {
+        state.cart[existingIndex].isSelected = !state.cart[existingIndex].isSelected;
+      }
+    },
+    
   },
 });
 
-export const { addItemsToCart, removeItem, removeEditItem, resetCartItem } = cartSlice.actions;
+export const { addItemsToCart, removeItem, removeEditItem, resetCartItem, toggleItemSelection } = cartSlice.actions;
 export const cartReducer = cartSlice.reducer;

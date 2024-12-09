@@ -227,9 +227,14 @@ export const AdDetails = () => {
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
     const quoteNumber = await fetchNextQuoteNumber(companyName);
+
+    const selectedCartItems = cartItems.some(item => item.isSelected)
+    ? cartItems.filter(item => item.isSelected) // Filter selected items
+    : cartItems;
+
     if (isGeneratingPdf) {
       try{
-        const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
+        const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
         return; 
       } catch(error) {
@@ -246,9 +251,9 @@ export const AdDetails = () => {
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
       try{
-        const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
+        const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-        const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
+        const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
       //   setTimeout(() => {
       //   dispatch(resetCartItem());
@@ -502,7 +507,7 @@ export const AdDetails = () => {
           {showCurrentPage()}
         </form>
         {currentPage === "checkout" && (
-          <form className='bg-white rounded-3xl shadow-lg   pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
+          <form className='bg-white rounded-3xl shadow-lg pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
           <h1 className='mb-4 font-semibold text-center text-blue-500 text-lg mt-4'>Client Details</h1>
 
           <table className='mb-6 ml-4'>
