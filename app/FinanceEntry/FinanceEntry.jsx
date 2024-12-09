@@ -774,7 +774,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setTransactionType(transactionOptions[0]);
           dispatch(resetOrderData());
           dispatch(resetClientData());
-          // window.location.reload();
           cancelFinance();
           
     
