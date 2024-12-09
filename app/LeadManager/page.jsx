@@ -58,7 +58,7 @@ const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "" });
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "" });
   const [selectedStatus, setSelectedStatus] = useState("");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -114,8 +114,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     }
   }, [showModal]); // Runs when the modal opens
   
-  const handleCallButtonClick = async (phone, name, sNo) => {
-    setCurrentCall({phone, name, sNo });
+  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime });
 
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
@@ -257,8 +257,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     setFollowupTime(time); // Set the time
   };
 
-  const addNewFollowup = (phone, name, sNo) => {
-    setCurrentCall({phone, name, sNo});
+  const addNewFollowup = (phone, name, sNo, Platform, Enquiry, LeadDateTime) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime});
 
     setHideOtherStatus(true);
     const now = new Date(); // Get the current date and time
@@ -332,7 +332,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -409,20 +409,20 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {/* Core Details */}
             <div className="text-sm text-gray-700 mb-2">
               <p>
-                Arrived at: <strong>{row.LeadDate} {row.LeadTime}</strong> 
+              Originated at: <strong>{row.LeadDate} {row.LeadTime}</strong> 
               </p>
               <p className="flex items-center">
                 Phone:
                 <a
                   // href={`tel:${row.Phone}`}
-                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo)}
+                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}
                   className="text-blue-600 hover:underline ml-1"
                 >
                   <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
                   title="Call"
                 >
                   <FiPhoneCall className="text-lg" />
@@ -435,14 +435,14 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {/* Follow-Up Date */}
             {row.FollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
               <div className="text-sm max-w-fit" >
-                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
+                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
               </div>
             ) : (
               <div className="text-sm max-w-fit mt-4">
-                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo)}}>+ Add Followup</button>
+                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}}>+ Add Followup</button>
               </div>
             )}
              {/* Remarks */}
@@ -467,8 +467,9 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
             </div>
+            <p>Originated At: <strong>{currentCall.LeadDateTime}</strong></p>
             <p className="mb-4">
-              <strong>Updating Lead for:</strong> {currentCall.name} ({currentCall.phone})
+            Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
 
             {/* Floating Radio Buttons for Status */}
@@ -498,7 +499,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Date
+                  Followup Date and Time
                 </label>
                 <DatePicker
                   selected={
