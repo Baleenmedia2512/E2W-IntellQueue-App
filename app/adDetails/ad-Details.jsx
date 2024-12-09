@@ -384,9 +384,9 @@ const AdDetailsPage = () => {
           )
           .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
         setDatas(filterdata);
-        console.log(filterdata);
+
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-        formattedMargin(qty* width * filterdata[0]?.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
+        formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
         // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
         // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
         dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
@@ -796,67 +796,7 @@ const isValueChanged = (newValue, oldValue) => {
     
     <div className="text-black justify-center flex w-full">    
       <div className="justify-center w-full">
-            {/* <button onClick={() => {Cookies.remove('adcategory');Cookies.remove('adMediumSelected'); setShowAdCategoryPage(true);}}>Back</button> */}
-            {/* <div className="mb-8 flex items-center justify-between">
-              <button
-                 className="mr-4 hover:scale-110 text-blue-500 text-nowrap hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
-                onClick={() => {
-                  dispatch(setQuotesData({selectedEdition: "", currentPage: previousPage === "adDetails" ? position !== "" ? "remarks" : "edition" : previousPage}))
-                }}
-              >
-                <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
-              </button>
-                <span className='flex flex-row'>
-              <h2 className="font-semibold text-wrap mb-1">
-                {adMedium} 
-              </h2>
-              {adType !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""}
-              <h2 className='font-semibold text-wrap mb-1'>
-                 {adType} 
-              </h2>
-              {adCategory !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""} 
-              <h2 className='font-semibold text-wrap mb-1'>
-              {adCategory}
-              </h2>
-               {edition !== "" ? <>&nbsp;{greater}&nbsp;</>  : ""}
-               <h2 className='font-semibold text-wrap mb-1'>
-              {edition}
-              </h2>  
-              {position === "" ? "" : <>&nbsp;{greater}&nbsp;</>}
-              <h2 className='font-semibold text-wrap mb-1'>
-              {position}
-              </h2> &nbsp;{greater}&nbsp;
-              <h2 className='font-semibold text-wrap mb-1'>
-              {rateId}
-              </h2>
-              </span>
-              <IconButton aria-label="cart" className='rounded-none ml-4 text-center shadow-md ' onClick={() => dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))}> 
-                <StyledBadge badgeContent={cartItems.length} color="primary">
-                  <ShoppingCartIcon className='text-black' />
-                </StyledBadge>
-              </IconButton> */}
-              {/* <button
-            className=" px-2 py-1 rounded text-center"
-            onClick={() => {
-              dispatch(resetQuotesData());
-              // routers.push('/');
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-            </svg>
-          </button> */}
+           
             {/* </div> */}
             
               <div className='justify-center relative'>
@@ -970,14 +910,14 @@ const isValueChanged = (newValue, oldValue) => {
               let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
               if (result) {
                 const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true }]));
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
                 setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true }]));
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
             setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
@@ -1007,7 +947,7 @@ const isValueChanged = (newValue, oldValue) => {
       </StyledBadge>
       Go to Cart
     </button>
-  </div>
+</div>
 </span>
 
               {/* <span className='flex flex-row mb-2 justify-center'>

@@ -18,7 +18,7 @@ import { removeItem, resetCartItem, removeEditItem } from '@/redux/features/cart
 import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
-import { addItemsToCart } from '@/redux/features/cart-slice';
+import { addItemsToCart, toggleItemSelection } from '@/redux/features/cart-slice';
 
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -265,7 +265,7 @@ const CheckoutPage = () => {
   };
   
   return (
-    <div className="text-black w-screen items-center px-3">
+    <div className="text-black w-full items-center px-3">
       <h1 className='text-2xl font-bold text-center mb-4 text-blue-500'>Cart</h1>
     <div className='justify-center relative mb-4'>
     
@@ -376,7 +376,8 @@ const CheckoutPage = () => {
           {cartItems.map((item, index) => (
             <tr 
             key={index}
-            className={item.isCartRemoved ? 'opacity-50 bg-gray-100' : ''}
+            className={item.isCartRemoved ? 'opacity-50 bg-gray-100' : item.isSelected ? 'bg-blue-100' : ''}
+            onClick={() => dispatch(toggleItemSelection(item.index))}
             >
               <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
               <td className='p-1.5 border border-gray-200'>{!item.editQuoteNumber ? nextQuoteNumber : item.editQuoteNumber}</td>
