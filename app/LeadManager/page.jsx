@@ -10,9 +10,6 @@ import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
-import { GiCampfire } from "react-icons/gi";
-import { MdOutlineWbSunny } from "react-icons/md";
-import { FaRegSnowflake } from "react-icons/fa";
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -69,18 +66,6 @@ const EventCards = ({params, searchParams}) => {
   const [followupTime, setFollowupTime] = useState("");
   const [hideOtherStatus, setHideOtherStatus] = useState(false);
   const [followupOnly, setFollowpOnly] = useState(false);
-  const [initialSelectedStatus, setInitialSelectedStatus] = useState(selectedStatus);
-const [initialFollowupDate, setInitialFollowupDate] = useState(followupDate);
-const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
-const [initialCompanyName, setInitialCompanyName] = useState(companyName);
-const [initialRemarks, setInitialRemarks] = useState(remarks);
-const [initialLeadStatus, setInitialLeadStatus] = useState("");
-const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
-const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
-const [prospectType, setProspectType] = useState("");
-const [isLoading, setIsLoading] = useState(false); // State to track the loading status
-
-
   const [initialSelectedStatus, setInitialSelectedStatus] = useState(selectedStatus);
 const [initialFollowupDate, setInitialFollowupDate] = useState(followupDate);
 const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
@@ -160,24 +145,6 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     }
 
 
-
-      setIsLoading(true);
-        // Check if changes were made before proceeding
-      const hasChanges =
-      selectedStatus !== initialSelectedStatus ||
-      followupDate !== initialFollowupDate ||
-      followupTime !== initialFollowupTime ||
-      companyName !== initialCompanyName ||
-      remarks !== initialRemarks||
-      selectedLeadStatus !== initialLeadStatus||
-      quoteSent !== initialQuoteStatus;
-
-    if (!hasChanges) {
-      alert("No changes have been made.");
-      return;
-    }
-
-
     let payload = {};
   
     // Prepare payload based on context
@@ -201,7 +168,6 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
         followupTime: followupTime || "",
         quoteSent: quoteSent || "",
         remarks: remarks || "",
-        prospectType: prospectType || "",  // Include ProspectType
         prospectType: prospectType || "",  // Include ProspectType
       };
     }
@@ -228,13 +194,11 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
       alert("Failed to update lead. Please try again.");
     } finally {
       setIsLoading(false);
-      setIsLoading(false);
       setShowModal(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
       setRemarks("");
-      setSelectedLeadStatus("");
       setSelectedLeadStatus("");
     }
   };  
@@ -377,13 +341,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
 
             <div className="absolute top-2 left-2 flex flex-row">
              {row.Status === 'Call Followup' &&
-             {row.Status === 'Call Followup' &&
             <span
-              onClick={() => {
-                if (!isLoading) {
-                  toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
-                }
-              }}
               onClick={() => {
                 if (!isLoading) {
                   toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
@@ -401,41 +359,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
               ) : (
                 <FiCheckCircle className="text-white text-lg" />
               )}
-              {isLoading ? (
-                <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
-              ) : (
-                <FiCheckCircle className="text-white text-lg" />
-              )}
             </span>
-          }
-
-            {/* <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
-                {row.Platform || "Unknown Platform"}
-              </span> */}
-              {/* Platform and Selected Status */}
-              <span
-            className={`inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r border ${
-              row.ProspectType === "Hot"
-                ? "text-red-500 border-red-500 bg-red-100 "
-                : row.ProspectType === "Warm"
-                ? "text-yellow-500 border-yellow-500 bg-yellow-100 "
-                : row.ProspectType === "Cold"
-                ? "text-blue-500 border-blue-500 bg-blue-100 "
-                : "text-gray-500 border-gray-500 "
-            }`}
-          >
-            {row.ProspectType === "Hot" && (
-              <GiCampfire className="inline-block text-red-500 mr-1 " />
-            )}
-            {row.ProspectType === "Warm" && (
-              <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1 " />
-            )}
-            {row.ProspectType === "Cold" && (
-              <FaRegSnowflake className="inline-block text-blue-500 mr-1 " />
-            )}
-            {row.Platform || "Unknown Platform"}
-          </span>
-
           }
 
             {/* <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
@@ -537,10 +461,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
       {showModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-[90%] max-w-md mb-16">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-[90%] max-w-md mb-16">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Lead Status</h3>
-              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(false); setFollowupTime(false)}}>
               <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(false); setFollowupTime(false)}}>
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
@@ -553,12 +475,10 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
-            <div className="mb-4 flex flex-wrap gap-1 justify-center">
               {["New", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
                 (status) => (
                   <label
                     key={status}
-                    className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
                     className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
                       selectedStatus === status ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
                     }`}
@@ -665,57 +585,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             </div>
 
 
-            {/* Lead Status Buttons */}
-            <div className="mb-4 flex justify-center gap-4">
-              {[
-                { label: "Hot", icon: <GiCampfire />, color: "red" },
-                { label: "Warm", icon: <MdOutlineWbSunny />, color: "yellow" },
-                { label: "Cold", icon: <FaRegSnowflake />, color: "blue" },
-              ].map(({ label, icon, color }) => (
-                <button
-                  key={label}
-                  value={prospectType}
-                  onClick={() => {
-                    setSelectedLeadStatus(label); 
-                    setProspectType(label); // Set the prospect type
-                  }}
-                  className={`flex items-center gap-1 px-3 py-1 border rounded-full transition-transform duration-300 text-sm ${
-                    selectedLeadStatus === label
-                      ? `bg-${color}-500 text-white shadow-lg transform scale-105`
-                      : label === "Hot"
-                      ? "text-red-500 border-red-500 bg-red-100 inline-block mr-1 animate-flicker"
-                      : `bg-${color}-100 border-${color}-300 text-${color}-500 hover:bg-${color}-200`
-                  }`}
-                >
-                  <span
-                    className={`inline-block ${
-                      selectedLeadStatus === label ? `text-white` : `text-${color}-500`
-                    }`}
-                  >
-                    {icon}
-                  </span>
-                  {label}
-                </button>
-              ))}
-            </div>
-
-
             <div className="flex justify-end">
-            <button
-              className={`px-4 py-2 rounded-md text-white ${
-                isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
-              }`}
-              onClick={handleSave}
-              disabled={!selectedStatus || isLoading} // Disable button during loading
-            >
-              {isLoading ? (
-                <span>Loading...</span> // Change text when loading
-              ) : (
-                "Save"
-              )}
-            </button>
-          </div>
-
             <button
               className={`px-4 py-2 rounded-md text-white ${
                 isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
