@@ -189,8 +189,10 @@ doc.line(110, nextY, 190, nextY);
 nextY += 6;
 
 doc.setFontSize(12);
-doc.text(`Amount Due:`, 130, nextY + 4, { align: "right" });
-doc.text(`Rs. ${data.amountDue}`, 190, nextY + 4, { align: "right" });
+const label = data.amountDue < 0 ? "Credit:" : "Amount Due:";
+const displayAmount = Math.abs(data.amountDue); 
+doc.text(label, 130, nextY + 4, { align: "right" });
+doc.text(`Rs. ${displayAmount}`, 190, nextY + 4, { align: "right" });
 
 doc.setFont("helvetica", "normal");
 doc.setFontSize(12);

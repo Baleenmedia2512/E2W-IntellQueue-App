@@ -169,7 +169,7 @@ const handleLogin = (event) => {
                 {/* Sign-in form */}
                 <div className="w-full md:w-1/2">
                 <h2 className="text-2xl font-bold font-inter text-gray-800">WELCOME TO</h2>
-                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK</h2>
+                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK IBMS</h2>
                    <div className="border-2 w-10 inline-block mb-4 border-blue-500 "></div>
                     <form>
                         <div className="mb-4">

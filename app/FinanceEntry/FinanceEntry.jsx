@@ -1,7 +1,6 @@
 'use client';
 import './page.css';
 import React, { useState, useEffect, useRef } from 'react';
-import { createRoot } from 'react-dom/client';
 import { useRouter } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
 import { CircularProgress, TextField } from '@mui/material';
@@ -141,6 +140,7 @@ const FinanceData = () => {
   const [receivableAmount, setReceivableAmount] = useState(0);
   const [previousPaymentMode, setPreviousPaymentMode] = useState('');
   const [previousAmountPaid, setPreviousAmountPaid] = useState(0);
+  const [isDownloadInvoiceChecked, setIsDownloadInvoiceChecked] = useState(false);
 
   useEffect(() => {
     if(dbName){
@@ -305,7 +305,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const fetchClientDetails = (clientNumber, clientName) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTable.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data.length > 0) {
@@ -439,7 +439,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     
     {!billsOnly &&
     axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumberTest.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.length > 0) {
@@ -479,7 +479,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
     setRateWiseOrderNumber(newOrderNumber);
     {!billsOnly && axios
-    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumberTest.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
       if (data.length > 0) {
@@ -565,7 +565,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
   
     // // Handle upload logic
     if (!orderNumberArray) {
-      // console.log(orderNumberToBeUploaded);
       const formData = createFormData(orderNumberToBeUploaded, true);
       await uploadBill(formData);
     } else {
@@ -629,7 +628,12 @@ const openChequeDate = Boolean(anchorElChequeDate);
       //     ? parseFloat(previousAmountPaid)
       //     : 0),  // Ensure paid is a number
       // Amount Due is the difference between total and paid amount
-      amountDue: ((parseFloat(balanceAmount) || 0) - (parseFloat(orderAmount) || 0)), 
+      amountDue: isUpdateMode
+      ?  
+        (((parseFloat(receivableAmount) || 0) +
+          ((parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0))) - ((parseFloat(previousAmountPaid) || 0) +
+          (parseFloat(orderAmount) || 0)))
+      : (parseFloat(balanceAmount) || 0) - (parseFloat(orderAmount) || 0),
       paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value
       ? Array.from(new Set([...previousPaymentMode.split(',').map(item => item.trim()), paymentMode.value])).join(', ') 
       : paymentMode.value,
@@ -638,7 +642,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
     generateBillPdf(PDFData);
 };
-
   
 
   const insertNewFinance = async (e) => {
@@ -736,7 +739,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
                   SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
               } else if (elementsToHide.includes("OrderNumberText")) {
                 SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
-                sendDataToPdf();
+                if (isDownloadInvoiceChecked) {
+                  sendDataToPdf();
+                }
               } else {
                 setToastMessage('SMS Not Sent! Reason: No Database Found.');
                 setSeverity('warning');
@@ -893,6 +898,7 @@ useEffect(() => {
           setPreviousPaymentMode('');
           setPreviousAmountPaid(0);
           setBalanceAmount(0);
+          setIsDownloadInvoiceChecked(false);
 
   };
   const handleFileChange = (e) => {
@@ -941,6 +947,7 @@ useEffect(() => {
 
   const handleFinanceId = async (financeId, companyName) => {
     try {
+      let savedOrderAmount;
       const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategory.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
       
       const data = response.data;
@@ -985,6 +992,8 @@ useEffect(() => {
         setFinanceAmount(data.Amount);
         setGSTAmount(data.TaxAmount);
 
+        savedOrderAmount = parseFloat(data.Amount) || 0;
+
         if ( data.TransactionType === 'Project Expense') {
           setTransactionType({value: 'Operational Expense', label: 'Operational Expense'});
           setExpenseCategory({ value: 'Project', label: 'Project' });
@@ -995,7 +1004,7 @@ useEffect(() => {
       }
 
       try {
-        const clientResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumberTest.php?OrderNumber=${data.OrderNumber}&JsonDBName=${companyName}`);
+        const clientResponse = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${data.OrderNumber}&JsonDBName=${companyName}`);
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
         setDisplayClientName(clientData[0].clientName);
@@ -1005,7 +1014,8 @@ useEffect(() => {
         setWaiverAmount(clientData[0].waiverAmount);
         setReceivableAmount(clientData[0].receivableAmount);
         setPreviousPaymentMode(clientData[0].previousPaymentMode);
-        setBalanceAmount(((parseFloat(clientData[0].balanceAmount) || 0) + (parseFloat(clientData[0].previousAmountPaid) || 0)));
+        setBalanceAmount(((parseFloat(clientData[0].balanceAmount) || 0) + (parseFloat(clientData[0].previousAmountPaid) || 0)) - (savedOrderAmount || 0));
+        setPreviousAmountPaid((parseFloat(clientData[0].previousAmountPaid) || 0) - (savedOrderAmount || 0));
       } catch (clientError) {
         console.error("Error fetching client details:", clientError);
       }
@@ -1137,7 +1147,7 @@ useEffect(() => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
 
-        if (elementsToHide.includes("OrderNumberText")) {
+        if (elementsToHide.includes("OrderNumberText") && isDownloadInvoiceChecked) {
           sendDataToPdf();
         }
 
@@ -1190,7 +1200,7 @@ useEffect(() => {
   )}
 
   <button
-    className="Add-button ml-2"
+    className="custom-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
   >
     
@@ -1403,6 +1413,20 @@ useEffect(() => {
             //   required
               /> 
                {errors.transactionType && <span className="text-red-500 text-sm">{errors.transactionType}</span>}
+               {transactionType && transactionType.value === 'Income' &&  (
+          <div className="flex items-center space-x-1 mt-1">
+            <input
+              type="checkbox"
+              id="invoiceRequired"
+              className={`h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 ${isUpdateMode ? 'border-yellow-500' : 'border-gray-300'} rounded`}
+              checked={isDownloadInvoiceChecked}
+              onChange={(e) => setIsDownloadInvoiceChecked(e.target.checked)}
+            />
+            <label htmlFor="invoiceRequired" className={`text-gray-500 font-medium text-sm ${isUpdateMode ? 'border-yellow-500' : 'border-gray-300'}`}>
+              Invoice Required
+            </label>
+          </div>
+          )}
                </div>
                <div>
                <div className='mt-4' >
