@@ -262,6 +262,8 @@ export const AdDetails = () => {
       } catch(error){
         alert('An unexpected error occured while inserting Quote:' + error);
         return;
+      } finally {
+        isGeneratingPdf = false; // Reset flag regardless of success or error
       }
       
     } else{
@@ -270,9 +272,7 @@ export const AdDetails = () => {
       }else if(clientContact === ""){
         setIsClientContact(false)
       }
-    } finally {
-      isGeneratingPdf = false; // Reset flag regardless of success or error
-    }
+    } 
   };
   
   
