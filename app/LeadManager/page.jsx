@@ -10,8 +10,7 @@ import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
-import { Contacts } from '@capacitor-community/contacts';
-import { Platform } from '@capacitor/core';
+
 
 
 const statusColors = {
@@ -79,7 +78,11 @@ const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
 const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
 const [prospectType, setProspectType] = useState("");
 const [isLoading, setIsLoading] = useState(false); // State to track the loading status
+const [hasSaved, setHasSaved] = useState(false); 
 
+const handleCheckboxChange = () => {
+  setHasSaved(true); // Set hasSaved to true when checkbox is checked
+};	
 
 
   const fetchData = async () => {
@@ -192,6 +195,14 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
       if (!response.ok) throw new Error("Failed to update lead");
       fetchData();
       if (!sendQuoteOnly) alert("Lead updated successfully!");
+      if (hasSaved) {
+        const contact = {
+          name: currentCall?.name,
+          phone: currentCall?.phone,
+          email: currentCall?.email || "",
+        };
+        downloadContact(contact); // Download the contact vCard
+      }
     } catch (error) {
       console.error("Error updating lead:", error);
       alert("Failed to update lead. Please try again.");
@@ -311,79 +322,30 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
   }
 
 
-  const handleCheckboxChange = async () => {
-    const contact = {
-      name: currentCall?.name,
-      phone: currentCall?.phone,
-      email: currentCall?.email || "", // Use an empty string if email is not available
-    };
+  const downloadContact  = (contact) => {
+    // Fallback: Generate and download a vCard file
+    const vcard =
+      "BEGIN:VCARD\nVERSION:4.0\nFN:" +
+      contact.name +
+      "\nTEL;TYPE=work,voice:" +
+      contact.phone +
+      (contact.email ? "\nEMAIL:" + contact.email : "") +
+      "\nEND:VCARD";
   
-    if (!contact.name || !contact.phone) {
-      alert("Contact details are missing!");
-      return;
-    }
+    const blob = new Blob([vcard], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
   
-    // Check if the platform is mobile or web
-    if (typeof Platform !== 'undefined' && (Platform.is('android') || Platform.is('ios') || Platform.is('mobileweb'))) {
-      // Use Capacitor Contacts API for mobile platforms
-      const contactData = {
-        displayName: contact.name,
-        phoneNumbers: [{ label: 'mobile', number: contact.phone }],
-        ...(contact.email && { emails: [{ label: 'work', address: contact.email }] }),
-      };
+    // Create and click the download link
+    const newLink = document.createElement("a");
+    newLink.download = contact.name + ".vcf";
+    newLink.href = url;
+    document.body.appendChild(newLink);
+    newLink.click();
+    document.body.removeChild(newLink);
   
-      try {
-        const result = await Contacts.saveContact(contactData);
-        console.log("Contact saved successfully:", result);
-        alert("Contact added to your device!");
-      } catch (error) {
-        console.error("Failed to save contact:", error);
-        alert("Failed to save the contact.");
-      }
-    } else if (navigator.contacts && navigator.contacts.save) {
-      // Use Web Contacts Picker API for supported browsers
-      try {
-        const result = await navigator.contacts.save([
-          {
-            name: contact.name,
-            tel: [contact.phone],
-            ...(contact.email && { email: [contact.email] }),
-          },
-        ]);
-        console.log("Contact saved:", result);
-        alert("Contact saved successfully!");
-      } catch (error) {
-        console.error("Failed to save contact:", error);
-        alert("Failed to save the contact.");
-      }
-    } else {
-      // Fallback: Generate and download a vCard file
-      const vcard =
-        "BEGIN:VCARD\nVERSION:4.0\nFN:" +
-        contact.name +
-        "\nTEL;TYPE=work,voice:" +
-        contact.phone +
-        (contact.email ? "\nEMAIL:" + contact.email : "") +
-        "\nEND:VCARD";
+    //alert("vCard downloaded successfully!");
+  };
   
-      const blob = new Blob([vcard], { type: "text/vcard" });
-      const url = URL.createObjectURL(blob);
-  
-      // Create and click the download link
-      const newLink = document.createElement("a");
-      newLink.download = contact.name + ".vcf";
-      newLink.href = url;
-      document.body.appendChild(newLink);
-      newLink.click();
-      document.body.removeChild(newLink);
-  
-      console.log("vCard file created and ready for download.");
-      alert("vCard downloaded. Please import it manually.");
-    }
-  };  
-  
-  console.log(Platform);  // Log the Platform object
-
 
   return (
     <div className="p-4 text-black">
@@ -546,26 +508,21 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
               </button>
             </div>
             <p>Originated At: <strong>{currentCall.LeadDateTime}</strong></p>
-            <p className="mb-4">
+            <p className="mb-2">
             Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
             <div>
-      {/* <p className="mb-2">
-        <strong>Updating Lead for:</strong> {currentCall.name} ({currentCall.phone})
-      </p> */}
-
-      <label>
-        <input
-          className="mb-4"
-          type="checkbox"
-          onChange={(e) => {
-            if (e.target.checked) handleCheckboxChange();
-          }}
-        />
-        Save the contact
-      </label>
-    </div>
-
+            <label className=" mb-2 flex items-center space-x-2 ">
+              <input
+                className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
+                type="checkbox"
+                onChange={(e) => {
+                  if (e.target.checked) handleCheckboxChange();
+                }}
+              />
+              <span className="text-gray-800 font-medium">Save the contact</span>
+            </label>
+            </div>
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
