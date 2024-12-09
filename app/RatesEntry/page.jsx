@@ -129,14 +129,30 @@ const AdDetailsPage = () => {
     package: []
   });
 
-  // const [selectedValues, setSelectedValues] = useState({
-  //   rateName: "",
-  //   typeOfAd: "",
-  //   adType: "",
-  //   Location: "",
-  //   vendorName: "",
-  //   Package: ""
-  // });
+  useEffect(() => {
+    if (newRateModel) {
+      switch (newRateType) {
+        case 'Rate Card Name':
+          setNewRateName(selectedValues.rateName?.label || '');
+          break;
+        case 'Type':
+          setNewRateName(selectedValues.adType?.label || '');
+          break;
+        case 'Category':
+          setNewRateName(selectedValues.typeOfAd?.label || '');
+          break;
+        case 'Location':
+          setNewRateName(selectedValues.Location?.label || '');
+          break;
+        case 'Package':
+          setNewRateName(selectedValues.Package?.label || '');
+          break;
+        default:
+          setNewRateName('');
+      }
+    }
+  }, [newRateModel, newRateType, selectedValues]);
+  
 
   const toggleModal = () => {
       setModal((prevState) => !prevState);
@@ -1908,7 +1924,7 @@ const handleBlur = (e) => {
             <h3 className='normal-label mb-4 text-black'>{!isNewRate ? `Enter ${newRateType}` : `Enter new ${newRateType}`}</h3>
             <TextField 
               id="newRateType" 
-              defaultValue={newRateName} 
+              value={newRateName} 
               label={newRateType} 
               variant="outlined" 
               size='small' 
