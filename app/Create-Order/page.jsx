@@ -3,12 +3,9 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
-import IconButton from '@mui/material/IconButton';
-import { Padding, RemoveCircleOutline } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate, setClientName, setClientNumber} from '@/redux/features/order-slice';
-
-import Select from 'react-select';
+import { resetClientData } from '@/redux/features/client-slice';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
 // import { TextField } from '@mui/material';
 import { formattedMargin } from '../adDetails/ad-Details';
@@ -38,7 +35,6 @@ const CreateOrder = () => {
     const {orderNumber: orderNumberRP, receivable: receivableRP, clientName, clientNumber} = orderDetails;
     // const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
-    // const companyName = "Baleen Test";
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
     // const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
@@ -57,6 +53,7 @@ const CreateOrder = () => {
     const [address, setAddress] = useState('');
     const [clientID, setClientID] = useState(clientIDCR || '');
     const [consultantName, setConsultantName] = useState(consultantNameCR || '');
+    const [initialConsultantName, setInitialConsultantName] = useState(consultantNameCR || '');
     const [consultantNumber, setConsultantNumber] = useState('');
     const [consultantNameSuggestions, setConsultantNameSuggestions] = useState([]);
     const [clientContactPerson, setClientContactPerson] = useState("");
@@ -80,6 +77,8 @@ const CreateOrder = () => {
   // const [validityDays, setValidityDays] = useState(0)
   // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
+  const [waiverAmount, setWaiverAmount] = useState(0);
   
     
     const dispatch = useDispatch();
@@ -108,7 +107,6 @@ const CreateOrder = () => {
 
     const [orderDate, setOrderDate] = useState(new Date());
     const [displayOrderDate, setDisplayOrderDate] = useState(new Date());
-    //console.log(displayOrderDate)
     const [hasPreviousOrder, setHasPreviousOrder] = useState(false);
 
     const [isExpanded, setIsExpanded] = useState(false);
@@ -141,6 +139,7 @@ const CreateOrder = () => {
     useEffect(() => {
       dispatch(setClientName(clientNameCR || ''));
       setConsultantName(consultantNameCR || '');
+      setInitialConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
       setClientNumber(clientNumberCR || '');
       dispatch(setOrderData({ clientID: clientIDCR, consultantName: consultantNameCR }))
@@ -623,13 +622,15 @@ const fetchRates = async () => {
               dispatch(setOrderData({ clientGST: clientDetails.GST || "" }))
               dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
               
-              
+              dispatch(resetClientData());
+
               //MP-69-New Record are not fetching in GS
               setClientID(clientDetails.id);
               setClientEmail(clientDetails.email);
               setClientSource(clientDetails.source);
               setAddress(clientDetails.address || "");
               setConsultantName(clientDetails.consname || "");
+              setInitialConsultantName(clientDetails.consname || "");
               setClientGST(clientDetails.GST || "");
               setClientContactPerson(clientDetails.ClientContactPerson || "");
               
@@ -704,10 +705,15 @@ const fetchOrderDetailsByOrderNumber = () => {
           setHasOrderDetails(true);
           setClientID(data.clientID);
           setConsultantName(data.consultantName);
+          setInitialConsultantName(data.consultantName);
           setDiscountAmount(data.adjustedOrderAmount);
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
+          setWaiverAmount(data.waiverAmount);
+          if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
+            setIsConsultantWaiverChecked(true);
+          }
           // Store the fetched data in a state to compare later
           setPrevData({
             clientName: data.clientName,
@@ -718,7 +724,8 @@ const fetchOrderDetailsByOrderNumber = () => {
             clientID: data.clientID,
             consultantName: data.consultantName,
             discountAmount: data.adjustedOrderAmount,
-            marginAmount: data.margin
+            marginAmount: data.margin,
+            waiverAmount: data.waiverAmount
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -803,7 +810,7 @@ const CreateStages = async () => {
         if (validateFields()) {
           const formattedOrderDate = formatDateToSave(orderDate);
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 // dispatch(setIsOrderExist(true));
@@ -886,11 +893,10 @@ const updateNewOrder = async (event) => {
       JsonDBName: companyName,
       JsonClientAuthorizedPersons: clientEmail,
       JsonOrderDate: formattedOrderDate,
-      // JsonRateWiseOrderNumber: nextRateWiseOrderNumber
-       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
-       JsonAdjustedOrderAmount: discountAmount
+      JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
+      JsonAdjustedOrderAmount: discountAmount,
+      JsonWaiverAmount: waiverAmount
     });
-    //console.log(formattedOrderDate)
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
@@ -1055,6 +1061,12 @@ const updateNewOrder = async (event) => {
     if (elementsToHide.includes("OrderMarginPercentage") === false) {
       if (!marginPercentage || isNaN(marginPercentage)) errors.marginPercentage = 'Valid Margin % is required';
     }
+
+    if (isConsultantWaiverChecked) {
+      if (!waiverAmount) {
+        errors.waiverAmount = 'Consultant Waiver value is required';
+      }
+    }
     
 
     setErrors(errors);
@@ -1122,7 +1134,7 @@ const consultantDialog = () => {
 
 
 const handleCloseDialog = () => {
-  setConsultantName('');
+  setConsultantName(initialConsultantName);
   setConsultantDialogOpen(false);
 };
 
@@ -1203,6 +1215,7 @@ const fetchConsultantDetails = (Id) => {
   .then((response) => response.json())
   .then((data) => {
       setConsultantName(data.ConsultantName);
+      setInitialConsultantName(data.ConsultantName);
       setConsultantNumber( data.ConsultantNumber ? data.ConsultantNumber : '');
   })
   .catch((error) => {
@@ -1236,6 +1249,20 @@ const handleDiscountChange = (e) => {
   // }
 };
 
+const handleWaiverChange = (e) => {
+  const value = e.target.value;
+
+  if (value === '') {
+    setWaiverAmount(0);
+    setErrors((prevErrors) => ({ ...prevErrors, waiverAmount: undefined })); // Clear any existing error on Remarks
+    return;
+  }
+
+  const parsedValue = parseFloat(value);
+  const newWaiverAmount = parsedValue;
+  setWaiverAmount(newWaiverAmount);
+};
+
 
 const [dialogOpen, setDialogOpen] = useState(false);
   const [updateReason, setUpdateReason] = useState('');
@@ -1264,7 +1291,8 @@ const handleOpenDialog = () => {
     rateId !== prevData.rateId ||
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount ||
-    parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) 
+    parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
+    parseFloat(waiverAmount) !== parseFloat(prevData.waiverAmount)
 
   );
 
@@ -1295,10 +1323,13 @@ const handleOpenDialog = () => {
     dispatch(setRateId(''));
     setClientID('');
     setConsultantName('');
+    setInitialConsultantName('');
     setDiscountAmount(0);
     dispatch(resetOrderData());
     setOrderSearchTerm('');
     dispatch(setIsOrderUpdate(false));
+    setWaiverAmount(0);
+    setIsConsultantWaiverChecked(false);
     //window.location.reload(); // Reload the page
   };
 
@@ -1333,6 +1364,7 @@ const handleOrderSearch = async (e) => {
           dispatch(setRateId(''));
           setClientID('');
           setConsultantName('');
+          setInitialConsultantName('');
           setDiscountAmount(0);
           dispatch(resetOrderData());
           setOrderSearchTerm('');
@@ -1363,7 +1395,7 @@ const handleOrderSelection = (e) => {
   dispatch(setIsOrderUpdate(true));
   // Set the mode to "Update"
   //setIsUpdateMode(true);
-
+  dispatch(resetClientData());
 };
 
 
@@ -1533,7 +1565,7 @@ return (
     {/* Order Selection */}
     <div className="bg-white p-4 mt-2 rounded-lg shadow-lg">
 
-    {isOrderUpdate ? (
+    {isOrderUpdate  ? (
   <div className="w-full sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md sm:mr-4">
     <button
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
@@ -1605,7 +1637,7 @@ return (
     <label className='text-gray-500 text-sm hover:cursor-pointer'>
         New Client? 
         <span 
-            className='underline text-sky-500 hover:text-sky-600' 
+            className='underline text-sky-500 hover:text-sky-600 p-1' 
             onClick={() => router.push('/')}
         >
             Click Here
@@ -1669,34 +1701,42 @@ return (
         onChange={handleDiscountChange}
         onFocus={e => e.target.select()}
       />
+      {consultantName && (
+      <div className="flex items-center space-x-1 mt-1">
+        <input
+          type="checkbox"
+          id="consultantWaiver"
+          className={`h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'} rounded`}
+          checked={isConsultantWaiverChecked}
+          onChange={(e) => setIsConsultantWaiverChecked(e.target.checked)}
+        />
+        <label htmlFor="consultantWaiver" className={`text-gray-500 font-medium text-sm ${isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'}`}>
+          Consultant Waiver
+        </label>
+      </div>
+       )}
     </div>
+    
+  
   </div>
-  
-  
-        </div>
-        {/* ICR YTC*/}
-        {/* { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '') && (<div >
-                   <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
-                    <input 
-                        type='text' 
-                        className={`w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:shadow-outline
-                          ${errors.remarks ? 'border-red-400' : isOrderUpdate  ? 'border-yellow-500' : 'border-gray-300'}
-                          focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                        
-                        placeholder='Remarks'    
-                        value={remarks}
-                        onChange={e => {
-                          setRemarks(e.target.value);
-                          if (e.target.value === '' && discountAmount !== '0' && discountAmount !== 0) {
-                            setErrors((prevErrors) => ({ ...prevErrors, remarks: 'Remarks are required when adjusting the amount' }));
-                          } else {
-                            setErrors((prevErrors) => ({ ...prevErrors, remarks: undefined }));
-                          }
-                        }}
-                      />
-                      {errors.remarks && <p className="text-red-500 text-sm mt-2">{errors.remarks}</p>}
-                    </div>)
-} */}
+  {/* Consultant Waiver */}
+  {isConsultantWaiverChecked && (
+    <div>
+      <label className="block text-gray-700 font-semibold mb-2">Waiver Amount (+/-)</label>
+      <input
+        type="number"
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline ${
+          isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'
+        } focus:border-blue-300 focus:ring focus:ring-blue-300`}
+        placeholder="Enter Waiver Amount"
+        value={waiverAmount || ''}
+        onChange={handleWaiverChange}
+        onFocus={(e) => e.target.select()}
+      />
+      {errors.waiverAmount && <p className="text-red-500 text-sm mt-2">{errors.waiverAmount}</p>}
+    </div>
+  )}
+
 { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !isOrderUpdate) && (
   <div>
     <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
@@ -1719,10 +1759,9 @@ return (
     {errors.remarks && <p className="text-red-500 text-sm mt-2">{errors.remarks}</p>}
   </div>
 )}
+  
+        </div>
 
-   
-        
-        
         {/* Rate Card Name */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           

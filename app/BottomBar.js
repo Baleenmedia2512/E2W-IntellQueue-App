@@ -620,5 +620,3 @@ function SubNavItem({ icon, label, onClick, additionalClasses, dataTag }) {
     </div>
   );
 }
-
-

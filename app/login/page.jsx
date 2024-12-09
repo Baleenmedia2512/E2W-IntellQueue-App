@@ -11,6 +11,7 @@ import { resetOrderData } from '@/redux/features/order-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { resetDateRange } from "@/redux/features/report-slice";
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -66,7 +67,7 @@ const Login = () => {
     
   };
 
-  // Validate form fields
+
   const validateFields = () => {
     let errors = {};
     if (!userName.trim()) {
@@ -118,6 +119,7 @@ const handleLogin = (event) => {
                     dispatch(resetRatesData());
                     dispatch(resetQuotesData());
                     dispatch(resetOrderData());
+                    dispatch(resetDateRange());
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{
@@ -166,7 +168,7 @@ const handleLogin = (event) => {
                 {/* Sign-in form */}
                 <div className="w-full md:w-1/2">
                 <h2 className="text-2xl font-bold font-inter text-gray-800">WELCOME TO</h2>
-                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK</h2>
+                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK IBMS</h2>
                    <div className="border-2 w-10 inline-block mb-4 border-blue-500 "></div>
                     <form>
                         <div className="mb-4">
@@ -249,8 +251,8 @@ const handleLogin = (event) => {
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                             type="button"
                             onClick={handleLogin}
-                        >
-                            Sign In
+                            >
+                             Sign In
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
@@ -266,7 +268,6 @@ const handleLogin = (event) => {
                 </div>
                 </div>
             </div>
-            {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
         </div>

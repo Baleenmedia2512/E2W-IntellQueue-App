@@ -135,12 +135,11 @@ export default function GroupedRowsDemo() {
 
     const fetchConsultants = async () => {
         const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
-        const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
+        
         const groupedData = groupConsultants(data);
         setConsultants(groupedData);
     };
-
-
+    
     useEffect(() => {
         fetchConsultants();
     }, [startDate, endDate, showIcProcessedConsultantsOnly]);
@@ -191,8 +190,6 @@ export default function GroupedRowsDemo() {
         }
     }, [consultants]);
 
-
-    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -260,6 +257,7 @@ export default function GroupedRowsDemo() {
             )
         );
     }
+
         if (dataToSave) {
             try {
                 for (const data of dataToSave) {
@@ -405,9 +403,7 @@ const handleMarkAsUnprocessed = async () => {
         }
       };
 
-
-
-    const groupConsultants = (data) => {
+      const groupConsultants = (data) => {
         const groupedData = [];
     
         data.forEach((consultant) => {
@@ -418,7 +414,7 @@ const handleMarkAsUnprocessed = async () => {
                     name: consultant.name, 
                     rates: [], 
                     total: 0,
-                    orderNumbers: [] // Initialize as an empty array
+                    waiverAmount: 0, // Initialize waiverAmount
                 };
                 groupedData.push(existingName);
             }
@@ -429,7 +425,7 @@ const handleMarkAsUnprocessed = async () => {
                 existingRateCard = { 
                     rateCard: consultant.rateCard, 
                     rateTypes: [], 
-                    orderNumbers: [] // Initialize as an empty array
+                    waiverAmount: 0, // Initialize waiverAmount
                 };
                 existingName.rates.push(existingRateCard);
             }
@@ -440,30 +436,90 @@ const handleMarkAsUnprocessed = async () => {
                 existingRateType = { 
                     rateType: consultant.rateType, 
                     count: 0, 
-                    price: consultant.price 
+                    price: consultant.price,
+                    waiverAmount: 0 // Initialize waiverAmount
                 };
                 existingRateCard.rateTypes.push(existingRateType);
             }
     
+            // Update counts, totals, and waiverAmount
             existingRateType.count += consultant.count;
-            existingName.total += consultant.count * consultant.price; // Update total for the consultant
+            existingRateType.waiverAmount += consultant.waiverAmount;
     
-            // Add orderNumbers to the rate card if not already included
-            if (consultant.OrderNumbers) {
-                const orderNumbersArray = consultant.OrderNumbers.split(',').map(num => num.trim()); // Split and trim
-                orderNumbersArray.forEach(orderNumber => {
-                    if (!existingRateCard.orderNumbers.includes(orderNumber)) {
-                        existingRateCard.orderNumbers.push(orderNumber);
-                    }
-                    if (!existingName.orderNumbers.includes(orderNumber)) {
-                        existingName.orderNumbers.push(orderNumber);
-                    }
-                });
-            }
+            existingName.total += (consultant.count * consultant.price ) + consultant.waiverAmount; // Update total for the consultant
+            existingRateType.OrderNumbers = consultant.OrderNumbers;
+            // Add orderNumbers directly to the rateType
+            // if (consultant.OrderNumbers) {
+            //     const orderNumbersArray = consultant.OrderNumbers;
+            //     orderNumbersArray.forEach(orderNumber => {
+            //         if (!existingRateType.orderNumbers.includes(orderNumber)) {
+            //             existingRateType.orderNumbers.push(orderNumber);
+            //         }
+            //     });
+            // }
         });
     
         return groupedData;
     };
+
+
+    // const groupConsultants = (data) => {
+    //     const groupedData = [];
+    
+    //     data.forEach((consultant) => {
+    //         let existingName = groupedData.find(group => group.name === consultant.name);
+    
+    //         if (!existingName) {
+    //             existingName = { 
+    //                 name: consultant.name, 
+    //                 rates: [], 
+    //                 total: 0,
+    //                 orderNumbers: [] // Initialize as an empty array
+    //             };
+    //             groupedData.push(existingName);
+    //         }
+    
+    //         let existingRateCard = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
+    
+    //         if (!existingRateCard) {
+    //             existingRateCard = { 
+    //                 rateCard: consultant.rateCard, 
+    //                 rateTypes: [], 
+    //                 orderNumbers: [] // Initialize as an empty array
+    //             };
+    //             existingName.rates.push(existingRateCard);
+    //         }
+    
+    //         let existingRateType = existingRateCard.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
+    
+    //         if (!existingRateType) {
+    //             existingRateType = { 
+    //                 rateType: consultant.rateType, 
+    //                 count: 0, 
+    //                 price: consultant.price 
+    //             };
+    //             existingRateCard.rateTypes.push(existingRateType);
+    //         }
+    
+    //         existingRateType.count += consultant.count;
+    //         existingName.total += consultant.count * consultant.price; // Update total for the consultant
+    
+    //         // Add orderNumbers to the rate card if not already included
+    //         if (consultant.OrderNumbers) {
+    //             const orderNumbersArray = consultant.OrderNumbers.split(',').map(num => num.trim()); // Split and trim
+    //             orderNumbersArray.forEach(orderNumber => {
+    //                 if (!existingRateCard.orderNumbers.includes(orderNumber)) {
+    //                     existingRateCard.orderNumbers.push(orderNumber);
+    //                 }
+    //                 if (!existingName.orderNumbers.includes(orderNumber)) {
+    //                     existingName.orderNumbers.push(orderNumber);
+    //                 }
+    //             });
+    //         }
+    //     });
+    
+    //     return groupedData;
+    // };
 
     
     
@@ -559,9 +615,9 @@ const handleMarkAsUnprocessed = async () => {
                     
                     // // Add name if any of the filters apply
                     // const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
-                    // // Add name if any of the filters apply
-                    // const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
-                    
+                    const totalAmount = (rateType.count * rateType.price) + (rateType.waiverAmount);
+                    const orderNumbersArray = rateType.OrderNumbers ? rateType.OrderNumbers.split(',').map(num => num.trim()) : [];
+
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
                         name: group.name,  // Add name if filter applies
@@ -570,10 +626,11 @@ const handleMarkAsUnprocessed = async () => {
                         rateType: rateType.rateType,
                         count: rateType.count,
                         price: rateType.price,
-                        total: rateType.count * rateType.price,
+                        waiverAmount: rateType.waiverAmount,
+                        total: totalAmount,
                         isGroup: currentIndex === middleIndex,
                         isScanGroup: scanTypeIndex === 0,
-                        orderNumber: rateCard.orderNumbers,
+                        orderNumber: orderNumbersArray,
                         originalName: group.name
                     });
                     currentIndex++;
@@ -589,11 +646,11 @@ const handleMarkAsUnprocessed = async () => {
                 rateCard: 'Total',
                 count: '',
                 price: '',
+                waiverAmount: '',
                 total: `₹${Math.round(group.total)}`,
                 isGroup: true,
                 isScanGroup: false,
-                originalName: group.name,
-                orderNumber: group.orderNumbers
+                originalName: group.name
             });
         });
     
@@ -610,7 +667,6 @@ const handleMarkAsUnprocessed = async () => {
     
     
     
-    
 
     const handlePriceChange = (id, newPrice) => {
         setConsultants(prevConsultants => {
@@ -622,10 +678,10 @@ const handleMarkAsUnprocessed = async () => {
                     rateCard.rateTypes.forEach(rateType => {
                         if (`${group.name}-${rateCard.rateCard}-${rateType.rateType}` === id) {
                             rateType.price = newPrice;
-                            rateType.total = rateType.count * newPrice;
+                            rateType.total = (rateType.count * newPrice) + (rateType.waiverAmount);
                             group.total = group.rates.reduce((sum, rateCard) => 
                                 sum + rateCard.rateTypes.reduce((innerSum, rateType) => 
-                                    innerSum + (rateType.count * rateType.price), 0), 0);
+                                    innerSum + (rateType.count * rateType.price) + (rateType.waiverAmount), 0), 0);
                         }
                     });
                 });
@@ -638,7 +694,7 @@ const handleMarkAsUnprocessed = async () => {
                 row.id === id ? { 
                     ...row, 
                     price: newPrice, 
-                    total: newPrice * row.count  // Update total for the specific row
+                    total: (newPrice * row.count) + (row.waiverAmount)  // Update total for the specific row
                 } : row
             );
     
@@ -752,6 +808,10 @@ const handleMarkAsUnprocessed = async () => {
 
     const countBodyTemplate = (rowData) => {
         return rowData.count;
+    };
+
+    const waiverAmountBodyTemplate = (rowData) => {
+        return rowData.waiverAmount;
     };
 
     // const customRowClassName = (rowData) => {
@@ -882,6 +942,7 @@ const handleExport = () => {
         RateType: row.rateType,
         Count: row.count,
         Price: row.price,
+        WaiverAmount: row.waiverAmount,
         Total: row.total
     }));
 
@@ -966,9 +1027,6 @@ const filterHeaderTemplate = (column, filterField) => {
     
         // Apply filters based on each filter field
         for (const key in tempFilterValues) {
-            console.log(tempFilterValues[key])
-            // if (tempFilterValues[key] !== '') {
-            console.log(tempFilterValues[key])
             // if (tempFilterValues[key] !== '') {
                 newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
                 // Apply the filter on the combinedFilteredRows
@@ -1118,7 +1176,6 @@ const filterHeaderTemplate = (column, filterField) => {
 // };
 //Working filter
 
-// console.log(filteredConsultants)
 
 useEffect(() => {
     if (selectedRows.length > 0) {
@@ -1368,11 +1425,13 @@ const handleCheckboxChange = () => {
                             showApplyButton={false}
                             showClearButton={false}
                             ></Column>
-                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
+                            <Column field="count" header="Count (a)" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             ></Column>
-                            <Column field="price" header="Unit Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
+                            <Column field="price" header="Unit Price (b)" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
                             ></Column>
-                            <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="waiverAmount" header="Waiver Amount (c)" body={waiverAmountBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
+                            ></Column>
+                            <Column field="total" header="Total (a x b + c)" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
                         </DataTable>
                     </div>
