@@ -10,6 +10,9 @@ import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
+import { Contacts } from '@capacitor-community/contacts';
+import { Platform } from '@capacitor/core';
+
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -307,6 +310,34 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
   }
 
+
+  const handleCheckboxChange = async () => {
+    // Ensure Platform is defined and check if the app is running on a mobile platform
+    if (Platform && (Platform.is('android') || Platform.is('ios') || Platform.is('mobileweb'))) {
+      // Only attempt to save the contact on mobile platforms (Android or iOS)
+      if (currentCall?.phone && currentCall?.name) {
+        const contact = {
+          displayName: currentCall.name,
+          phoneNumbers: [{ label: 'mobile', number: currentCall.phone }],
+        };
+  
+        try {
+          const result = await Contacts.saveContact(contact);
+          console.log("Contact saved:", result);
+        } catch (error) {
+          console.error("Failed to save contact:", error);
+        }
+      } else {
+        alert("Contact details are missing!");
+      }
+    } else {
+      // Handle web scenario where the contacts API is not available
+      alert("Saving contacts is not supported on the web.");
+    }
+  };
+  console.log(Platform);  // Log the Platform object
+
+
   return (
     <div className="p-4 text-black">
       {/* Top Bar with Filter Button */}
@@ -471,6 +502,22 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
             <p className="mb-4">
             Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
+            <div>
+      {/* <p className="mb-2">
+        <strong>Updating Lead for:</strong> {currentCall.name} ({currentCall.phone})
+      </p> */}
+
+      <label>
+        <input
+          className="mb-4"
+          type="checkbox"
+          onChange={(e) => {
+            if (e.target.checked) handleCheckboxChange();
+          }}
+        />
+        Save the contact
+      </label>
+    </div>
 
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
