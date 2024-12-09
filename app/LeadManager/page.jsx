@@ -312,60 +312,73 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
 
 
   const handleCheckboxChange = async () => {
-    if (typeof Platform !== 'undefined' && (Platform.is('android') || Platform.is('ios') || Platform.is('mobileweb'))) {
-      // Mobile platform: Use Capacitor Contacts API
-      if (currentCall?.phone && currentCall?.name) {
-        const contact = {
-          displayName: currentCall.name,
-          phoneNumbers: [{ label: 'mobile', number: currentCall.phone }],
-        };
+    const contact = {
+      name: currentCall?.name,
+      phone: currentCall?.phone,
+      email: currentCall?.email || "", // Use an empty string if email is not available
+    };
   
-        try {
-          const result = await Contacts.saveContact(contact);
-          console.log("Contact saved:", result);
-        } catch (error) {
-          console.error("Failed to save contact:", error);
-        }
-      } else {
-        alert("Contact details are missing!");
+    if (!contact.name || !contact.phone) {
+      alert("Contact details are missing!");
+      return;
+    }
+  
+    // Check if the platform is mobile or web
+    if (typeof Platform !== 'undefined' && (Platform.is('android') || Platform.is('ios') || Platform.is('mobileweb'))) {
+      // Use Capacitor Contacts API for mobile platforms
+      const contactData = {
+        displayName: contact.name,
+        phoneNumbers: [{ label: 'mobile', number: contact.phone }],
+        ...(contact.email && { emails: [{ label: 'work', address: contact.email }] }),
+      };
+  
+      try {
+        const result = await Contacts.saveContact(contactData);
+        console.log("Contact saved successfully:", result);
+        alert("Contact added to your device!");
+      } catch (error) {
+        console.error("Failed to save contact:", error);
+        alert("Failed to save the contact.");
+      }
+    } else if (navigator.contacts && navigator.contacts.save) {
+      // Use Web Contacts Picker API for supported browsers
+      try {
+        const result = await navigator.contacts.save([
+          {
+            name: contact.name,
+            tel: [contact.phone],
+            ...(contact.email && { email: [contact.email] }),
+          },
+        ]);
+        console.log("Contact saved:", result);
+        alert("Contact saved successfully!");
+      } catch (error) {
+        console.error("Failed to save contact:", error);
+        alert("Failed to save the contact.");
       }
     } else {
-      // Web platform: Generate and prompt the download of a vCard
-      if (currentCall?.phone && currentCall?.name) {
-        const contact = {
-          name: currentCall.name,
-          phone: currentCall.phone,
-          email: currentCall.email || "",
-        };
+      // Fallback: Generate and download a vCard file
+      const vcard =
+        "BEGIN:VCARD\nVERSION:4.0\nFN:" +
+        contact.name +
+        "\nTEL;TYPE=work,voice:" +
+        contact.phone +
+        (contact.email ? "\nEMAIL:" + contact.email : "") +
+        "\nEND:VCARD";
   
-        const vcard =
-          "BEGIN:VCARD\nVERSION:4.0\nFN:" +
-          contact.name +
-          "\nTEL;TYPE=work,voice:" +
-          contact.phone +
-          (contact.email ? "\nEMAIL:" + contact.email : "") +
-          "\nEND:VCARD";
+      const blob = new Blob([vcard], { type: "text/vcard" });
+      const url = URL.createObjectURL(blob);
   
-        const blob = new Blob([vcard], { type: "text/vcard" });
-        const url = URL.createObjectURL(blob);
+      // Create and click the download link
+      const newLink = document.createElement("a");
+      newLink.download = contact.name + ".vcf";
+      newLink.href = url;
+      document.body.appendChild(newLink);
+      newLink.click();
+      document.body.removeChild(newLink);
   
-        // Create and click the link
-        const newLink = document.createElement("a");
-        newLink.download = contact.name + ".vcf";
-        newLink.href = url;
-        document.body.appendChild(newLink);
-        newLink.click();
-        document.body.removeChild(newLink);
-  
-        // Prompt user to open the file (browser-dependent behavior)
-        setTimeout(() => {
-          window.open(url);
-        }, 1000);
-  
-        console.log("vCard file created and ready for import.");
-      } else {
-        alert("Contact details are missing!");
-      }
+      console.log("vCard file created and ready for download.");
+      alert("vCard downloaded. Please import it manually.");
     }
   };  
   
