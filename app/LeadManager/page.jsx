@@ -312,9 +312,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
 
 
   const handleCheckboxChange = async () => {
-    // Ensure Platform is defined and check if the app is running on a mobile platform
-    if (Platform && (Platform.is('android') || Platform.is('ios') || Platform.is('mobileweb'))) {
-      // Only attempt to save the contact on mobile platforms (Android or iOS)
+    if (typeof Platform !== 'undefined' && (Platform.is('android') || Platform.is('ios') || Platform.is('mobileweb'))) {
+      // Mobile platform: Use Capacitor Contacts API
       if (currentCall?.phone && currentCall?.name) {
         const contact = {
           displayName: currentCall.name,
@@ -331,10 +330,45 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
         alert("Contact details are missing!");
       }
     } else {
-      // Handle web scenario where the contacts API is not available
-      alert("Saving contacts is not supported on the web.");
+      // Web platform: Generate and prompt the download of a vCard
+      if (currentCall?.phone && currentCall?.name) {
+        const contact = {
+          name: currentCall.name,
+          phone: currentCall.phone,
+          email: currentCall.email || "",
+        };
+  
+        const vcard =
+          "BEGIN:VCARD\nVERSION:4.0\nFN:" +
+          contact.name +
+          "\nTEL;TYPE=work,voice:" +
+          contact.phone +
+          (contact.email ? "\nEMAIL:" + contact.email : "") +
+          "\nEND:VCARD";
+  
+        const blob = new Blob([vcard], { type: "text/vcard" });
+        const url = URL.createObjectURL(blob);
+  
+        // Create and click the link
+        const newLink = document.createElement("a");
+        newLink.download = contact.name + ".vcf";
+        newLink.href = url;
+        document.body.appendChild(newLink);
+        newLink.click();
+        document.body.removeChild(newLink);
+  
+        // Prompt user to open the file (browser-dependent behavior)
+        setTimeout(() => {
+          window.open(url);
+        }, 1000);
+  
+        console.log("vCard file created and ready for import.");
+      } else {
+        alert("Contact details are missing!");
+      }
     }
-  };
+  };  
+  
   console.log(Platform);  // Log the Platform object
 
 
