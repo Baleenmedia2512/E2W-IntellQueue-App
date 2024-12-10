@@ -642,7 +642,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
     generateBillPdf(PDFData);
 };
-  
 
   const insertNewFinance = async (e) => {
     e.preventDefault();
@@ -702,7 +701,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       }, 3000);
       return;
     }
-    if (balanceAmount === 0 || balanceAmount < 0) {
+    if (balanceAmount <= 0 && orderNumber && orderNumber !== '' && orderNumber !== 0) {
       setToastMessage('Full payment has already been received!');
       setSeverity('error');
       setToast(true);
@@ -774,7 +773,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setTransactionType(transactionOptions[0]);
           dispatch(resetOrderData());
           dispatch(resetClientData());
-          // window.location.reload();
           cancelFinance();
           
     
@@ -1177,8 +1175,23 @@ useEffect(() => {
   return ''; // No error
 };
 
-  
-  
+const handleGSTChange = (e) => {
+  const gstPer = parseFloat(e); // GST percentage
+  const gst = (orderAmount * gstPer) / 100; // Calculate GST amount
+  setGSTAmount(gst); // Update GST amount
+};
+
+useEffect(() => {
+  if(parseFloat(gstPercentage) > 0 && parseInt(orderAmount) > 0){
+    handleGSTChange(gstPercentage)
+  }
+},[orderAmount, gstPercentage])
+
+const handleGSTAmountChange = (gst) => {
+  const amount = gst.target.value
+  const gstPer = (amount / orderAmount) * 100; // Calculate GST percentage
+  setGSTPercentage(gstPer); // Update GST percentage
+};
 
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1428,9 +1441,8 @@ useEffect(() => {
           </div>
           )}
                </div>
-               <div>
-               <div className='mt-4' >
                {transactionType && transactionType.value === 'Operational Expense' && (
+                <div className='mt-4' >
               <>
             <label className='mt-4 mb-2 text-gray-700 font-semibold'>Expense Category</label>
             <Dropdown
@@ -1454,16 +1466,18 @@ useEffect(() => {
               />
                {errors.expenseCategory && <span className="text-red-500 text-sm">{errors.expenseCategory}</span>}
                </>
+               </div>
             )}
-            </div>
+            
 
-            <div className='mt-2' >
+            
             {/* {transactionType && transactionType.value !== 'Operational Expense' && ( */}
 
             {(
   transactionType?.value === 'Income' || 
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
 ) ? (
+  <div className='mt-1' >
               <>
             <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1517,9 +1531,9 @@ useEffect(() => {
                 </ul>
             )}
 {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}</>
-) : null}
+</div>) : null}
  {/* )} */}
-</div></div>
+
     {(
   transactionType?.value === 'Income' || 
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
@@ -1723,37 +1737,39 @@ useEffect(() => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {taxType && taxType.value === 'GST' && (
+               {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && (
               <div>
-          {/*      <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
-          // <div className="w-full flex gap-3">
-          // <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
-          //     type="text"
-          //     placeholder="GST%" 
-          //     id='4'
-          //     name="GSTInput" 
-          //     value={gstPercentage}
-          //     onChange = {(e) => {setGSTPercentage(e.target.value)
-          //       if (errors.gstPercentage) {
-          //         setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
-          //       }
-          //     }}
-          //     onKeyDown={(e) => {
-          //     if (e.key === 'Enter') {
-          //         e.preventDefault();
-          //         const inputs = document.querySelectorAll('input, select, textarea');
-          //         const index = Array.from(inputs).findIndex(input => input === e.target);
-          //         if (index !== -1 && index < inputs.length - 1) {
-          //         inputs[index + 1].focus();
-          //         }
-          //     }
-          //     }}
-          //     />
-          // </div>
-          // {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
-          //      </div>
-               //      )} */}
-          
+               <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
+          <div className="w-full flex gap-3">
+          <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+              type="text"
+              placeholder="GST%" 
+              id='4'
+              name="GSTInput" 
+              value={gstPercentage}
+              onChange = {(e) => {setGSTPercentage(e.target.value)
+                if (errors.gstPercentage) {
+                  setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
+                }
+              }}
+              onFocus={e => e.target.select()}
+              onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const inputs = document.querySelectorAll('input, select, textarea');
+                  const index = Array.from(inputs).findIndex(input => input === e.target);
+                  if (index !== -1 && index < inputs.length - 1) {
+                  inputs[index + 1].focus();
+                  }
+              }
+              }}
+              />
+          </div>
+          {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+               </div>
+                    )}
+          {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && ( 
+          <div>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
@@ -1768,7 +1784,12 @@ useEffect(() => {
                     setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
                   }
                 }}
-                
+                onBlur={e => {
+                  if(parseFloat(gstAmount) > 0 && parseInt(orderAmount) > 0){
+                    handleGSTAmountChange(e);
+                  }
+                }}
+                onFocus={e => e.target.select()}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
