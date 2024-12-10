@@ -1183,7 +1183,7 @@ const handleGSTChange = (e) => {
 };
 
 useEffect(() => {
-  if(parseFloat(gstPercentage) > 0 ){
+  if(parseFloat(gstPercentage) > 0 && parseInt(orderAmount) > 0){
     handleGSTChange(gstPercentage)
   }
 },[orderAmount, gstPercentage])
@@ -1785,7 +1785,11 @@ const handleGSTAmountChange = (gst) => {
                     setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
                   }
                 }}
-                onBlur={handleGSTAmountChange}
+                onBlur={e => {
+                  if(parseFloat(gstAmount) > 0 && parseInt(orderAmount) > 0){
+                    handleGSTAmountChange(e);
+                  }
+                }}
                 onFocus={e => e.target.select()}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
