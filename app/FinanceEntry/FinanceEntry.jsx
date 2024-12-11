@@ -859,6 +859,14 @@ const insertNewFinance = async (e) => {
 
   // Proceed with insertion
   if (validateFields()) {
+          setToastMessage(
+            <span>
+                <CircularProgress size={20} style={{ marginRight: "8px" }} />
+                {`Processing`}
+            </span>
+        );
+        setSeverity('warning');
+        setToast(true);
       try {
           const response = await Promise.race([
               fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClientName=${clientName}`),
@@ -869,6 +877,7 @@ const insertNewFinance = async (e) => {
 
           if (data === "Inserted Successfully!") {
               setSuccessMessage("Finance Entry Added");
+              setToast(false)
               handlePostInsertActions();
           } else {
               throw new Error("Unexpected response from the server.");
@@ -1619,7 +1628,7 @@ const handleGSTAmountChange = (gst) => {
   transactionType?.value === 'Income' || 
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
 ) ? (
-  <div className='mt-2' >
+  <div className='mt-1' >
               <>
             <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
