@@ -2,12 +2,17 @@
 import { useEffect, useState } from "react";
 import { api } from "@/app/api/FetchAPI";
 import { FiPhoneCall } from "react-icons/fi";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { setStagesFromServer } from "@/redux/features/stage-slice";
 
-export default function LeadManager() {
+export default function manageQuotes() {
   const [data, setData] = useState([]); // Holds the fetched data
   const [loading, setLoading] = useState(true); // Loading state
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [filteredData, setFilteredData] = useState([]); // Holds the filtered data
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function fetchData() {
     if (loading && !hasMore) return;
@@ -51,6 +56,11 @@ export default function LeadManager() {
     fetchData(); // Fetch initial data
   }, [page]);
 
+  useEffect(() => {
+    if(searchQuery === ""){
+        setFilteredData(data);
+      }
+  },[searchQuery, data])
   const handleScroll = () => {
     if (
       window.innerHeight + document.documentElement.scrollTop + 1 >=
@@ -65,16 +75,52 @@ export default function LeadManager() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const filterData = (e) => {
+    var filterValue = e.target.value;
+    setSearchQuery(filterValue);
+    filterValue = filterValue.toLowerCase()
+
+    // Filter logic
+    const filtered = data.filter((item) =>
+      [
+        item.ClientContact?.toString() || "", // Client Number
+        item.QuoteID?.toString() || "", // Quote Number
+        item.ClientName?.toLowerCase() || "", // Client Name
+        item.Admedium?.toLowerCase() || "", // Medium
+        item.AdType?.toLowerCase() || "", // Type
+        item.Adcategory?.toLowerCase() || "", // Category
+      ].some((field) => field.includes(filterValue)) // Check if any field contains the filterValue
+    );
+
+    setFilteredData(filtered);
+  };
+
   return (
     <div className="p-4 text-black">
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-        <h2 className="text-xl font-semibold text-blue-500">Generate Order</h2>
+        <h2 className="text-xl font-semibold text-blue-500">Quote Manager</h2>
       </div>
 
+      <div className='mx-[8%] my-4'>
+                <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+              <input
+          className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
+          // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
+          type="text"
+          id="RateSearchInput"
+          // name='RateSearchInput'
+          placeholder="Ex: Saro 3 Months"
+          value={searchQuery}
+          onChange = {filterData}
+          onFocus={(e) => {e.target.select()}}
+        /><div className="px-3">
+        <FontAwesomeIcon icon={faSearch} className="text-blue-500 " />
+      </div></div></div>
+      
       {/* Lead Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map((row, index) => (
+        {filteredData.map((row, index) => (
           <div
             key={index}
             className="relative bg-white rounded-lg p-4 border-2 border-gray-200 hover:shadow-lg hover:-translate-y-2 hover:transition-all"
@@ -91,7 +137,7 @@ export default function LeadManager() {
             {/* Status */}
             <div className="absolute top-2 right-2">
               <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-700">
-                {row.Source || "Unknown"}
+                QNo: {row.QuoteID} - {row.Source || "Unknown"}
               </span>
             </div>
 
