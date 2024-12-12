@@ -10,6 +10,8 @@ import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
+import { FaFileAlt } from "react-icons/fa";
+
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -309,17 +311,31 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
 
   return (
     <div className="p-4 text-black">
-      {/* Top Bar with Filter Button */}
-      <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-        <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
-        <button
-          className="flex items-center px-4 py-2 bg-transparent text-green-500 rounded-md border border-green-500"
-          onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
-        >
-          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-500" />
-          Sheet 
-        </button>
-      </div>
+      {/* Top Bar with Filter and Report Buttons */}
+<div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
+  <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+  <div className="flex  space-x-4 ">
+    {/* Sheet Button */}
+    <button
+      className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
+      onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
+    >
+      <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-600" />
+      Sheet
+    </button>
+    
+    {/* Report Button */}
+    <a href="/LeadManager/Report">
+      <button
+        className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
+      >
+        <FaFileAlt className="mr-2 text-lg" />
+        Report
+      </button>
+    </a>
+  </div>
+
+</div>
 
       {/* Lead Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
