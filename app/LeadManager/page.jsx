@@ -10,6 +10,10 @@ import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
+import { useAppSelector } from "@/redux/store";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import LoadingComponent from "./progress";
 
 
 
@@ -59,6 +63,7 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const userName = useAppSelector(state => state.authSlice.userName);
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "" });
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -84,7 +89,6 @@ const handleCheckboxChange = () => {
   setHasSaved(true); // Set hasSaved to true when checkbox is checked
 };	
 
-
   const fetchData = async () => {
     try {
       const filters = {
@@ -103,11 +107,10 @@ const handleCheckboxChange = () => {
   };
 
   useEffect(() => {
+    if (!userName) return;
     fetchData();
   }, [params.id, searchParams]);
 
-
-  
   useEffect(() => {
     if (showModal) {
       // Set initial values when the modal is opened
@@ -152,18 +155,20 @@ const handleCheckboxChange = () => {
 
 
     let payload = {};
-  
+
     // Prepare payload based on context
     if (sendQuoteOnly) {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
+        handledBy: toTitleCase(userName)
       };
     } else if (followupOnly) {
       payload = {
         sNo: currentCall.sNo,
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
+        handledBy: toTitleCase(userName)
       };
     } else {
       payload = {
@@ -175,6 +180,7 @@ const handleCheckboxChange = () => {
         quoteSent: quoteSent || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
+        handledBy: toTitleCase(userName)
       };
     }
   
@@ -301,8 +307,8 @@ const handleCheckboxChange = () => {
 
   if (loading) {
     return (
-      <div className="font-poppins text-center">
-        <h2>Loading...</h2>
+      <div>
+        <LoadingComponent />
       </div>
     );
   }
@@ -377,6 +383,14 @@ const handleCheckboxChange = () => {
               >
                 {row.Status}
               </span>
+              {row.HandleBy && (
+              <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
+                <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
+                <p className="font-poppins">
+                  {row.HandleBy}
+                </p>
+              </div>
+            )}
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
@@ -493,8 +507,10 @@ const handleCheckboxChange = () => {
                 </p>
               </div>
             )}
+            
           </div>
         ))}
+        
       </div>
 
       {/* Modal for Call Status */}
