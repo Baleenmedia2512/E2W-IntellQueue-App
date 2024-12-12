@@ -10,7 +10,7 @@ import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCheckCircle, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
@@ -479,7 +479,19 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <div></div>
+            <div>
+              <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
+                dispatch(resetQuotesData());
+
+                // clear while on edit mode
+                if (cartItems.length > 0 && cartItems[0].isEditMode) {
+                dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+                }
+
+                }}>
+              <FontAwesomeIcon icon={faCheckCircle} className=' text-md' onClick={routers.push('/adDetails/generateOrder')}/> Generate Order
+            </button>
+            </div>
           )}
 
           {/* {currentPage === "checkout" ?(
