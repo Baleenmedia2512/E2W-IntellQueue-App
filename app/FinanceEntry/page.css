@@ -27,6 +27,12 @@
   .custom-button:active {
     transform: translateY(-1px);
   }
+
+  .custom-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
   /* Responsive styles */
   @media (max-width: 768px) {
     .custom-button {

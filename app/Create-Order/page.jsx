@@ -23,7 +23,7 @@ import { TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchOrderSeachTerm } from '../api/FetchAPI';
-
+import { CircularProgress } from '@mui/material';
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -64,20 +64,21 @@ const CreateOrder = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
-  const [vendors, setVendors] = useState([]);
-  const [ratesData, setRatesData] = useState([]);
-  // const [units, setUnits] = useState([])
-  const [isSlabAvailable, setIsSlabAvailable] = useState(false)
-  const [showCampaignDuration, setShowCampaignDuration] = useState(false)
-  const [leadDays, setLeadDays] = useState(0);
-  const [campaignDuration, setCampaignDuration] = useState("");
-  const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("");
-  const [campaignUnits, setCampaignUnits] = useState([]); 
-  // const [validityDays, setValidityDays] = useState(0)
-  // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
-  const [waiverAmount, setWaiverAmount] = useState(0);
+    const [vendors, setVendors] = useState([]);
+    const [ratesData, setRatesData] = useState([]);
+    // const [units, setUnits] = useState([])
+    const [isSlabAvailable, setIsSlabAvailable] = useState(false)
+    const [showCampaignDuration, setShowCampaignDuration] = useState(false)
+    const [leadDays, setLeadDays] = useState(0);
+    const [campaignDuration, setCampaignDuration] = useState("");
+    const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("");
+    const [campaignUnits, setCampaignUnits] = useState([]); 
+    // const [validityDays, setValidityDays] = useState(0)
+    // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
+    const [waiverAmount, setWaiverAmount] = useState(0);
+    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   
     
     const dispatch = useDispatch();
@@ -762,11 +763,13 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
 
   
       const createNewOrder = async() => {
+        setIsButtonDisabled(true);
         // If the discount amount has changed and remarks are not filled
         if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
           setToastMessage('Please provide a reason in the Remarks field.');
           setSeverity('warning');
           setToast(true);
+          setIsButtonDisabled(false);
           setTimeout(() => {
             setToast(false);
           }, 2000);
@@ -779,21 +782,31 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
 
         if (validateFields()) {
+          setToastMessage(
+            <span>
+                <CircularProgress size={20} style={{ marginRight: "8px" }} />
+                {`Processing`}
+            </span>
+        );
+        setSeverity('warning');
+        setToast(true);
           const formattedOrderDate = formatDateToSave(orderDate);
           const { nextOrderNumber, nextRateWiseOrderNumber } = await fetchMaxOrderNumber();
 
-          if (!nextOrderNumber || !nextRateWiseOrderNumber) {
-              setToastMessage('Order Number not Found!');
-              setSeverity('error');
-              setToast(true);
-              setTimeout(() => {
-                setToast(false);
-              }, 2000);
-          }
+        if (!nextOrderNumber || !nextRateWiseOrderNumber) {
+            setToastMessage('Order Number not Found!');
+            setSeverity('error');
+            setToast(true);
+            setIsButtonDisabled(false);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+        }
         try {
             const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
+                setToast(false);
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
@@ -806,24 +819,28 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
                 
                 setTimeout(() => {
                 setSuccessMessage('');
+                setIsButtonDisabled(false);
                 router.push('/FinanceEntry');
-              }, 3000);
+              }, 2000);
                 
               //setMessage(data.message);
             } else {
               alert(`The following error occurred while inserting data: ${data}`);
+              setIsButtonDisabled(false);
             }
           } catch (error) {
             console.error('Error updating rate:', error);
+            setIsButtonDisabled(false);
           }
         } else {
           // MP-101
           setToastMessage('Please fill all necessary fields.');
-    setSeverity('error');
-    setToast(true);
-    setTimeout(() => {
-      setToast(false);
-    }, 2000);
+          setSeverity('error');
+          setToast(true);
+          setIsButtonDisabled(false);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
       }
        }
 //update order-SK (02-08-2024)------------------------------------
@@ -1471,7 +1488,7 @@ return (
     {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
   </div>
 ) : (
-  <button className="custom-button" onClick={createNewOrder}>Place Order</button>
+  <button className="custom-button" onClick={createNewOrder} disabled={isButtonDisabled}>Place Order</button>
 )}
     
     <Dialog
@@ -2087,6 +2104,7 @@ return (
   {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
+  {toast && <ToastMessage message={toastMessage} type="warning"/>}
 </div>
 
 
@@ -2094,6 +2112,3 @@ return (
 };
 
 export default CreateOrder;
-
-
-
