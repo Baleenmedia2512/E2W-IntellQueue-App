@@ -13,6 +13,7 @@ import { FaRegSnowflake } from "react-icons/fa";
 import { useAppSelector } from "@/redux/store";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import LoadingComponent from "./progress";
 
 
 
@@ -306,8 +307,8 @@ const handleCheckboxChange = () => {
 
   if (loading) {
     return (
-      <div className="font-poppins text-center">
-        <h2>Loading...</h2>
+      <div>
+        <LoadingComponent />
       </div>
     );
   }
@@ -383,7 +384,7 @@ const handleCheckboxChange = () => {
                 {row.Status}
               </span>
               {row.HandleBy && (
-              <div className="text-xs mt-2 p-1 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
+              <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
                 <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
                 <p className="font-poppins">
                   {row.HandleBy}
