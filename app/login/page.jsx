@@ -120,6 +120,7 @@ const handleLogin = (event) => {
                     dispatch(resetQuotesData());
                     dispatch(resetOrderData());
                     dispatch(resetDateRange());
+                    sessionStorage.removeItem("unitPrices");
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{
