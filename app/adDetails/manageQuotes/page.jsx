@@ -4,7 +4,7 @@ import { api } from "@/app/api/FetchAPI";
 import { FiPhoneCall } from "react-icons/fi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { setStagesFromServer } from "@/redux/features/stage-slice";
+import { FiCheck, FiX, FiPhone, FiCalendar, FiUser, FiDatabase, FiTag } from "react-icons/fi";
 
 export default function manageQuotes() {
   const [data, setData] = useState([]); // Holds the fetched data
@@ -39,7 +39,8 @@ export default function manageQuotes() {
       if (result.length < 10) {
         setHasMore(false); // No more data to load
       }
-  
+      
+      console.log(result)
       setData((prevData) => [...prevData, ...result]); // Append new data
     } catch (error) {
       console.error("Error fetching data:", error); // Detailed error logging
@@ -119,81 +120,82 @@ export default function manageQuotes() {
       </div></div></div>
       
       {/* Lead Cards */}
+      
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredData.map((row, index) => (
-          <div
-            key={index}
-            className="relative bg-white rounded-lg p-4 border-2 border-gray-200 hover:shadow-lg hover:-translate-y-2 hover:transition-all"
-            style={{ minHeight: "240px" }}
-          >
-
-            {/* Admedium Label - Top Left */}
-            <div className="absolute top-2 left-2">
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 shadow-sm">
-                    {row.Admedium || "Admedium"}
-                </span>
+      {filteredData.map((row, index) => (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 min-h-max">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Client Details Section */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  {row.ClientName}
+                </h2>
+                
+                <div className="space-y-2">
+                { row.ClientContact !== 0 &&
+                  <a href={`tel:${row.ClientContact}`}>
+                  <p className="flex items-center gap-2 text-gray-600">
+                    <FiPhone className="text-blue-500" />
+                    {row.ClientContact}
+                  </p>
+                  </a>
+                }
+                  <p className="flex items-center gap-2 text-gray-600">
+                    <FiDatabase className="text-blue-500" />
+                    Source: {row.Source}
+                  </p>
+                  
+                  <p className="flex items-center gap-2 text-gray-600">
+                    <FiTag className="text-blue-500" />
+                    Leads Days: {row.LeadDays}
+                  </p>
+                  
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <FiCalendar className="text-blue-500" />
+                    <input
+                      type="date"
+                      value={row.NextFollowupDate}
+                      // onChange={handleDateChange}
+                      className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+  
+              {/* Quote Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-gray-800">Quote Details</h3>
+                <div className="space-y-2">
+                  <p className="text-gray-600">Quote No: <span className="font-medium">{row.QuoteID}</span></p>
+                  <p className="text-gray-600">Medium: <span className="font-medium">{row.Admedium}</span></p>
+                  <p className="text-gray-600">Type: <span className="font-medium">{row.AdType}</span></p>
+                  <p className="text-gray-600">Category: <span className="font-medium">{row.Adcategory}</span></p>
+                  <p className="text-gray-600">Amount: <span className="font-medium text-green-600">₹{row.Amount}</span></p>
+                </div>
+              </div>
             </div>
-
-            {/* Status */}
-            <div className="absolute top-2 right-2">
-              <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-700">
-                QNo: {row.QuoteID} - {row.Source || "Unknown"}
-              </span>
-            </div>
-
-            {/* Client Name and Ad Info */}
-            <div className="mb-2 mt-8 text-gray-700 text-sm">
-              <h3 className="text-lg font-bold text-gray-900">
-                {row.ClientName || "No Name"}
-              </h3>
-              <p className="text-sm text-gray-700">
-                <strong>Type:</strong> {row.AdType}
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Category:</strong> {row.Adcategory}
-              </p>
-              
-              <p>
-                <strong>Amount:</strong> ₹{row.Amount}
-              </p>
-              {row.ClientContact !== 0 && 
-              <p >
-                <strong>Phone:</strong> 
-                <a
-                  href={`tel:${row.Phone}`}
-                  className="text-blue-600 hover:underline ml-1"
-                >{row.ClientContact}</a>
-                <button
-                  className="text-blue-500 rounded-full hover:text-blue-700 p-1.5"
-                  onClick={() => window.location.href = `tel:${row.ClientContact}`}
-                  title="Call"
-                >
-                  <FiPhoneCall className="text-md " />
-                </button>
-              </p>}
-              <p className="text-sm text-gray-600">
-                <strong>Lead Days:</strong> {row.LeadDays || "N/A"}
-              </p>
-              <p className="bg-green-200 hover:bg-green-300 text-green-900 px-2 py-1 mt-2 text-[14px] rounded-lg cursor-pointer w-fit ">
-                <strong>Follow-Up On:</strong> {row.NextFollowupDate || "N/A"}
-              </p>
-            </div>
-            {/* Action Buttons - Bottom */}
-        <div className="absolute bottom-2 right-2 flex gap-2">
-        <button
-            className="bg-red-500 text-white px-4 py-2 rounded-full text-sm shadow-md hover:bg-red-600 transition-all"
-            onClick={() => console.log("Dropped clicked for:", row.ClientName)}
-          >
-            Dropped
-          </button>
-          <button
-            className="bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow-md hover:bg-green-600 transition-all"
-            onClick={() => console.log("Won clicked for:", row.ClientName)}
-          >
-            Won
-          </button>
-        </div>
           </div>
+          {/* Action Buttons */}
+          <div className="p-6 bg-gray-50 flex gap-4 justify-end">
+            <button
+              // onClick={handleWinQuote}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              <FiCheck className="text-lg" />
+              Win Quote
+            </button>
+            
+            <button
+              // onClick={handleDropQuote}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              <FiX className="text-lg" />
+              Drop Quote
+            </button>
+          </div>
+        </div>
+        
         ))}
       </div>
       {loading && <p>Loading...</p>}
