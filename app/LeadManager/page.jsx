@@ -10,6 +10,12 @@ import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
+import { useAppSelector } from "@/redux/store";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import LoadingComponent from "./progress";
+
+
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -57,6 +63,7 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const userName = useAppSelector(state => state.authSlice.userName);
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "" });
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -76,8 +83,11 @@ const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
 const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
 const [prospectType, setProspectType] = useState("");
 const [isLoading, setIsLoading] = useState(false); // State to track the loading status
+const [hasSaved, setHasSaved] = useState(false); 
 
-
+const handleCheckboxChange = () => {
+  setHasSaved(true); // Set hasSaved to true when checkbox is checked
+};	
 
   const fetchData = async () => {
     try {
@@ -97,11 +107,10 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
   };
 
   useEffect(() => {
+    if (!userName) return;
     fetchData();
   }, [params.id, searchParams]);
 
-
-  
   useEffect(() => {
     if (showModal) {
       // Set initial values when the modal is opened
@@ -146,18 +155,20 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
 
 
     let payload = {};
-  
+
     // Prepare payload based on context
     if (sendQuoteOnly) {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
+        handledBy: toTitleCase(userName)
       };
     } else if (followupOnly) {
       payload = {
         sNo: currentCall.sNo,
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
+        handledBy: toTitleCase(userName)
       };
     } else {
       payload = {
@@ -169,6 +180,7 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
         quoteSent: quoteSent || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
+        handledBy: toTitleCase(userName)
       };
     }
   
@@ -189,6 +201,14 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
       if (!response.ok) throw new Error("Failed to update lead");
       fetchData();
       if (!sendQuoteOnly) alert("Lead updated successfully!");
+      if (hasSaved) {
+        const contact = {
+          name: currentCall?.name,
+          phone: currentCall?.phone,
+          email: currentCall?.email || "",
+        };
+        downloadContact(contact); // Download the contact vCard
+      }
     } catch (error) {
       console.error("Error updating lead:", error);
       alert("Failed to update lead. Please try again.");
@@ -287,8 +307,8 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
 
   if (loading) {
     return (
-      <div className="font-poppins text-center">
-        <h2>Loading...</h2>
+      <div>
+        <LoadingComponent />
       </div>
     );
   }
@@ -306,6 +326,32 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
     await handleSave(sNo, setValue, true);
     status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
   }
+
+
+  const downloadContact  = (contact) => {
+    // Fallback: Generate and download a vCard file
+    const vcard =
+      "BEGIN:VCARD\nVERSION:4.0\nFN:" +
+      contact.name +
+      "\nTEL;TYPE=work,voice:" +
+      contact.phone +
+      (contact.email ? "\nEMAIL:" + contact.email : "") +
+      "\nEND:VCARD";
+  
+    const blob = new Blob([vcard], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
+  
+    // Create and click the download link
+    const newLink = document.createElement("a");
+    newLink.download = contact.name + ".vcf";
+    newLink.href = url;
+    document.body.appendChild(newLink);
+    newLink.click();
+    document.body.removeChild(newLink);
+  
+    //alert("vCard downloaded successfully!");
+  };
+  
 
   return (
     <div className="p-4 text-black">
@@ -337,6 +383,14 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
               >
                 {row.Status}
               </span>
+              {row.HandleBy && (
+              <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
+                <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
+                <p className="font-poppins">
+                  {row.HandleBy}
+                </p>
+              </div>
+            )}
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
@@ -453,8 +507,10 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
                 </p>
               </div>
             )}
+            
           </div>
         ))}
+        
       </div>
 
       {/* Modal for Call Status */}
@@ -468,10 +524,21 @@ const [isLoading, setIsLoading] = useState(false); // State to track the loading
               </button>
             </div>
             <p>Originated At: <strong>{currentCall.LeadDateTime}</strong></p>
-            <p className="mb-4">
+            <p className="mb-2">
             Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
-
+            <div>
+            <label className=" mb-2 flex items-center space-x-2 ">
+              <input
+                className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
+                type="checkbox"
+                onChange={(e) => {
+                  if (e.target.checked) handleCheckboxChange();
+                }}
+              />
+              <span className="text-gray-800 font-medium">Save the contact</span>
+            </label>
+            </div>
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
