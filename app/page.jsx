@@ -789,7 +789,7 @@ if (errors.consultantNumber) {
 
 
 
-const handleRemoveClient = () => {
+const handleRemoveClient = (event) => {
   event.preventDefault();
     // Check if client contact is empty
     if (!clientContact) {

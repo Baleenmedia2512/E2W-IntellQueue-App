@@ -10,7 +10,7 @@ import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCheckCircle, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
@@ -479,7 +479,19 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <div></div>
+            <div>
+              <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
+                dispatch(resetQuotesData());
+
+                // clear while on edit mode
+                if (cartItems.length > 0 && cartItems[0].isEditMode) {
+                dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+                }
+
+                }}>
+              <FontAwesomeIcon icon={faCheckCircle} className='text-md' onClick={() => routers.push('/adDetails/manageQuotes')}/> Manage Quotes
+            </button>
+            </div>
           )}
 
           {/* {currentPage === "checkout" ?(
@@ -517,7 +529,17 @@ export const AdDetails = () => {
           <table className='mb-6 ml-4'>
             <tr>
               <td className='py-1 text-blue-600 font-semibold'>Name</td>
-              <td>:</td><td> <input placeholder="Ex: Tony" ref={clientNameRef} onFocus={() => setIsClientNameFocus(true)} onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} className=' py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value = {clientName} onChange={handleSearchTermChange} ></input>
+              <td>:</td>
+              <td> 
+                <input 
+                  placeholder="Ex: Tony" 
+                  ref={clientNameRef} 
+                  onFocus={() => setIsClientNameFocus(true)} 
+                  onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} 
+                  className={`w-2/3 sm:w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${!isClientName ? 'border-red-400' : ''}`}
+                  value = {clientName} 
+                  onChange={handleSearchTermChange} 
+                ></input>
               {!isClientName && <label className='text-red-500'>Please enter client name</label>}
               {clientNameSuggestions.length > 0 && isClientNameFocus && (
                 <ul className="absolute z-10 mt-1 w-auto bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
