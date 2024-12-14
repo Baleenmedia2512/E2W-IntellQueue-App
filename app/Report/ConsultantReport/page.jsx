@@ -39,20 +39,26 @@ export default function GroupedRowsDemo() {
     // const [filteredConsultants, setFilteredConsultants] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const currentStartDate = startOfMonth(new Date());
-  const currentEndDate = endOfMonth(new Date());
+    const currentEndDate = endOfMonth(new Date());
+    const sessionStartDate = sessionStorage.getItem('startDate');
+    const sessionEndDate = sessionStorage.getItem('endDate');
     const [selectedRange, setSelectedRange] = useState({
         startDate: currentStartDate,
         endDate: currentEndDate,
       });
-      const [startDate, setStartDate] = useState(format(currentStartDate, 'yyyy-MM-dd'));
-      const [endDate, setEndDate] = useState(format(currentEndDate, 'yyyy-MM-dd'));
+      const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
+      const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
 
       const [filters, setFilters] = useState({
         originalName: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
     });
-    const [dates, setDates] = useState([currentStartDate, currentEndDate]);
+    const [dates, setDates] = useState(
+        sessionStartDate && sessionEndDate
+            ? [new Date(sessionStartDate), new Date(sessionEndDate)]
+            : [currentStartDate, currentEndDate]
+    );
     const [toast, setToast] = useState(false);
     const [severity, setSeverity] = useState('');
     const [toastMessage, setToastMessage] = useState('');
@@ -74,12 +80,22 @@ export default function GroupedRowsDemo() {
         if (!username || dbName === "") {
           router.push('/login');
           sessionStorage.removeItem("unitPrices");
+          sessionStorage.clear();
         }
       },[])
 
+      useEffect(() => {
+        // Retrieve and set dates on page load if not already set
+        const savedStartDate = sessionStorage.getItem('startDate');
+        const savedEndDate = sessionStorage.getItem('endDate');
+        if (savedStartDate && savedEndDate) {
+            setDates([new Date(savedStartDate), new Date(savedEndDate)]);
+        }
+    }, []);
+
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
@@ -319,6 +335,8 @@ const handleMarkAsUnprocessed = async () => {
             const formattedEndDate = format(end, 'yyyy-MM-dd');
             setStartDate(formattedStartDate);
             setEndDate(formattedEndDate);
+            sessionStorage.setItem('startDate', formattedStartDate);
+            sessionStorage.setItem('endDate', formattedEndDate);
             }
         }
       };
