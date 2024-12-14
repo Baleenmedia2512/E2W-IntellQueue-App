@@ -396,7 +396,7 @@ useEffect(() => {
                     ...transaction,
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
-                    OrderValue: `₹ ${transaction.OrderValue}`,
+                    OrderValue: `₹ ${transaction.OrderValue ?? 0}`,
                     markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
                     restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));

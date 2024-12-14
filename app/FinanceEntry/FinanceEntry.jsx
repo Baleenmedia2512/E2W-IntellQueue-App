@@ -854,11 +854,11 @@ const insertNewFinance = async (e) => {
           showToast("Order Number does not exist!", "error");
           return;
       }
-      if (balanceAmount <= 0 && orderNumber && orderNumber !== '' && orderNumber !== 0) {
+      if ((balanceAmount <= 0 && orderNumber && orderNumber !== '' && orderNumber !== 0) && transactionType?.value !== 'Operational Expense') {
           showToast("Full payment has already been received!", "error");
           return;
       }
-      if (!orderNumber || isNaN(orderNumber)) {
+      if ((!orderNumber || isNaN(orderNumber)) && transactionType?.value !== 'Operational Expense') {
           setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter a valid Order Number!" }));
           setIsButtonDisabled(false);
           return;
@@ -892,7 +892,7 @@ const insertNewFinance = async (e) => {
           ]);
 
           const data = await response.json();
-
+          
           if (data === "Inserted Successfully!") {
               setSuccessMessage("Finance Entry Added");
               setToast(false)
