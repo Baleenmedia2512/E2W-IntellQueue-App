@@ -38,6 +38,7 @@ const CreateOrder = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
+    const [contactNumber, setContactNumber] = useState("");
     // const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
     const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
@@ -711,6 +712,7 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
           setWaiverAmount(data.waiverAmount);
+          setContactNumber(data.clientContact);
           if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
             setIsConsultantWaiverChecked(true);
           }
@@ -878,7 +880,7 @@ const updateNewOrder = async (event) => {
 
     const params = new URLSearchParams({
       JsonUserName: loggedInUser,
-      JsonOrderNumber: orderNumber, // Assuming orderNumber is the order number to update
+      JsonOrderNumber: contactNumber, // Assuming orderNumber is the order number to update
       JsonRateId: rateId,
       JsonClientName: clientName,
       JsonClientContact: clientNumber,
