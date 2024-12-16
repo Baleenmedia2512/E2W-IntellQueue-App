@@ -1162,6 +1162,7 @@ useEffect(() => {
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
         setDisplayClientName(clientData[0].clientName);
+        setClientNumber(clientData[0].clientContact);
         setRateName(clientData[0].rateName);
         setRateType(clientData[0].rateType);
         setAdjustedOrderAmount(clientData[0].adjustedOrderAmount);
