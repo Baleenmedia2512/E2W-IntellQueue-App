@@ -261,7 +261,6 @@ const handleLogin = (event) => {
                         Version 1.8.7 {/*Commenting for release */}
                     </div>
                 </div>
-                {/* Additional space with curved edges for pictures (visible on larger screens) */}
                 <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">
                 <div className="flex flex-col items-center justify-center">
                 <h2 className="text-xl text-center font-bold text-yellow-300 mb-4">Streamline Your Customer Relationships with Ease</h2>
