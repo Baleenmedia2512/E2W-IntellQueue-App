@@ -704,6 +704,7 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
           //console.log(data)
           // Set all the necessary states
           setClientName(data.clientName);
+          setClientNumber(data.clientContact);
           setOrderDate(data.orderDate);
           setDisplayOrderDate(formattedDate);
           setUnitPrice(data.receivable);
@@ -718,6 +719,7 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
           setWaiverAmount(data.waiverAmount);
+          // dispatch(setOrderData({ clientNumber: data.clientContact }));
           if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
             setIsConsultantWaiverChecked(true);
           }
@@ -1339,6 +1341,7 @@ const handleOpenDialog = () => {
     dispatch(setIsOrderUpdate(false));
     setWaiverAmount(0);
     setIsConsultantWaiverChecked(false);
+    setClientNumber('');
     //window.location.reload(); // Reload the page
   };
 

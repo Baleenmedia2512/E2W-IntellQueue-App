@@ -1028,6 +1028,7 @@ useEffect(() => {
     dispatch(resetClientData());
     setChequeNumber('');
     setClientName('');
+    setClientNumber('');
     setExpenseCategory('');
     setGSTAmount('');
     setGSTPercentage('');
