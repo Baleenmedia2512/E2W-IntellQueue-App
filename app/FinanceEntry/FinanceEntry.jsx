@@ -829,7 +829,7 @@ const insertNewFinance = async (e) => {
 
       // Handle bill upload
       await handleUploadBills();
-      resetFinanceForm();
+      cancelFinance();
       return;
   }
 
@@ -899,23 +899,6 @@ const showToast = (message, severity) => {
   setSeverity(severity);
   setToast(true);
   setTimeout(() => setToast(false), 3000);
-};
-
-const resetFinanceForm = () => {
-  setBill(null);
-  setClientName("");
-  setErrors({});
-  setExpenseCategory("");
-  setGSTAmount("");
-  setOrderAmount("");
-  setOrderNumber("");
-  setBillNumber("");
-  setBillDate(dayjs());
-  setRateWiseOrderNumber("");
-  setTaxType(taxTypeOptions[2]);
-  setTransactionType(transactionOptions[0]);
-  dispatch(resetOrderData());
-  dispatch(resetClientData());
 };
 
 const handlePostInsertActions = () => {
@@ -1024,6 +1007,7 @@ useEffect(() => {
     dispatch(resetClientData());
     setChequeNumber('');
     setClientName('');
+    setClientNumber('');
     setExpenseCategory('');
     setGSTAmount('');
     setGSTPercentage('');
@@ -1074,6 +1058,7 @@ useEffect(() => {
     setIsUpdateMode(false); // Reset update mode
       setChequeNumber('');
           setClientName('');
+          setClientNumber('');
           setExpenseCategory('');
           setGSTAmount('');
           setGSTPercentage('');
