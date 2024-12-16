@@ -1097,7 +1097,7 @@ useEffect(() => {
   const handleFinanceId = async (financeId, companyName) => {
     try {
       let savedOrderAmount;
-      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategoryTest.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
+      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchFinanceCategory.php?JsonFinanceId=${financeId}&JsonDBName=${companyName}`);
       
       const data = response.data;
   
@@ -1140,7 +1140,6 @@ useEffect(() => {
         setFinanceClientID(data.ID);
         setFinanceAmount(data.Amount);
         setGSTAmount(data.TaxAmount);
-        setClientNumber(data.ClientContact);
 
         savedOrderAmount = parseFloat(data.Amount) || 0;
 
@@ -1158,6 +1157,7 @@ useEffect(() => {
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
         setDisplayClientName(clientData[0].clientName);
+        setClientNumber(clientData[0].clientContact);
         setRateName(clientData[0].rateName);
         setRateType(clientData[0].rateType);
         setAdjustedOrderAmount(clientData[0].adjustedOrderAmount);
