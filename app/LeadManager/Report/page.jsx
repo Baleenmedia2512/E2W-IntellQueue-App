@@ -3,28 +3,60 @@ import React from "react";
 // Reusable Card Component
 const LeadCard = ({ lead, index }) => {
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-lg p-4 flex flex-col gap-4 relative">
-      {/* Date and Time in the top-right corner */}
-      <div className="absolute top-2 right-2 text-sm md:text-base text-gray-500">
-        <div>{lead.date}</div>
-        <div>{lead.time}</div>
-      </div>
+    <div className="relative bg-white rounded-lg p-6 shadow-md border border-gray-200 overflow-hidden">
 
-      {/* Lead Title */}
-      <h2 className="text-md md:text-xl font-semibold text-blue-500">Lead #{index + 1}</h2>
+  
+  {/* Date and Time (Top Right Corner) */}
+  <div className="absolute top-3 flex right-3 text-xs md:text-sm text-white text-right  mb-7 gap-2">
+    <div className="bg-blue-500 p-3 border rounded-full ">{lead.date}</div>
+    <div className="bg-blue-500 p-3 border rounded-full">{lead.time}</div>
+  </div>
 
-      {/* Additional Lead Information */}
-      <div className="mt-2 text-gray-700 text-sm md:text-base">
-        <p><strong>Platform:</strong> {lead.platform}</p>
-        <p><strong>Name:</strong> {lead.name}</p>
-        <p><strong>Phone Number:</strong> {lead.phoneNumber}</p>
-        <p><strong>Status:</strong> {lead.status}</p>
-        <p><strong>Status Change Date:</strong> {lead.statusChangeDate}</p>
-        <p><strong>Previous Status:</strong> {lead.previousStatus}</p>
-        <p><strong>Status Changed Time:</strong> {lead.statusChangedTime}</p>
-        <p><strong>TAT:</strong> {lead.tat}</p>
-      </div>
+  {/* Lead Title */}
+  <h2 className="text-lg md:text-2xl font-bold text-blue-600  relative mb-7">
+    Lead #{index + 1}
+  </h2>
+  
+
+  {/* Information Grid */}
+  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 text-sm md:text-base text-gray-700 mt-2 relative ">
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">Platform:</span>
+      <span>{lead.platform}</span>
     </div>
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">Name:</span>
+      <span>{lead.name}</span>
+    </div>
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">Phone:</span>
+      <span>{lead.phoneNumber}</span>
+    </div>
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">Status:</span>
+      <span>{lead.status}</span>
+    </div>
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">Prev Status:</span>
+      <span>{lead.previousStatus}</span>
+    </div>
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">Status Changed:</span>
+      <span>{lead.statusChangedTime}</span>
+    </div>
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">Change Date:</span>
+      <span>{lead.statusChangeDate}</span>
+    </div>
+    <div className="flex items-center gap-2 bg-blue-100 p-2  rounded-md">
+      <span className="font-semibold text-gray-600">TAT:</span>
+      <span>{lead.tat}</span>
+    </div>
+  </div>
+
+  {/* Decorative Line */}
+  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+</div>
   );
 };
 

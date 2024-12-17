@@ -659,7 +659,7 @@ const AdDetailsPage = () => {
 
   // Function to handle dropdown selection
   const handleSelectChange = (selectedOption, filterKey) => {
-    dispatch(setRateId(""));
+    dispatch(setRateId(0));
     setIsNewRate(true);
     if (filterKey === 'rateName'){
       dispatch(setSelectedValues({
@@ -1723,7 +1723,7 @@ const handleBlur = (e) => {
       
       {/* Buttons on the far right */}
       <div className="flex space-x-2 sm:mt-20">
-      {isNewRate ? (
+      { isNewRate || rateId === 0 ? (
   <button 
     className="Add-button" 
     onClick={insertNewRate}
@@ -1731,7 +1731,7 @@ const handleBlur = (e) => {
     Add
   </button>
 ) : (
-  rateValidity ? (
+  rateValidity && rateId > 0 ? (
     <>
       <button 
         className="Update-button" 
