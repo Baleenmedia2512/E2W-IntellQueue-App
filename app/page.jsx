@@ -148,7 +148,7 @@ const ClientsData = () => {
     
     if (newName !== '') {
     try{
-      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
+      fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
         .then((response) => response.json())
         .then((data) => setClientNameSuggestions(data));
       
@@ -215,9 +215,19 @@ const ClientsData = () => {
   
   // const handleConsultantNameSelection = (event) => {
   //   const input = event.target.value;
-  //    const [id, rest] = input.split('-');
-  //    const name = rest.substring(0, rest.indexOf('(')).trim();
-  //    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
+  //     // Split by '-' to separate the ID and the rest of the input
+  //     const parts = input.split('-');
+
+  //     // Extract the rest after '-' (name and any parentheses)
+  //     const rest = parts.length > 1 ? parts.slice(1).join('-').trim() : parts[0].trim();
+  
+  //     // Use regex to match the phone number (if any) inside parentheses
+  //     const phoneMatch = rest.match(/\((\d{10,})\)$/); // Matches the number if it's in parentheses at the end
+  
+  //     // Extract the name, ignoring parentheses
+  //     const name = rest.replace(/\(.*?\)/g, '').trim(); // Remove anything in parentheses from the name
+  //     const number = phoneMatch ? phoneMatch[1] : '';
+
   
   //   setConsultantNameSuggestions([]);
   //   setConsultantName(name)
@@ -354,7 +364,6 @@ const ClientsData = () => {
     });
   }, [elementsToHide])
 
-
   const handleClientContactChange = (newValue) => {
     
     // Contact Validation
@@ -367,14 +376,16 @@ const ClientsData = () => {
 
         // Check if contact number already exists or not
         if (newValue !== '') {
-            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContactTest.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
                 .then((response) => response.json())
                 .then((data) => {
+                  console.log(data)
                     if (!data.isNewUser) {
                         // Contact number already exists
                         setIsNewClient(false);
                         setEditMode(true);
                         setContactWarning('Contact number already exists.');
+                        setErrors((prevErrors) => ({ ...prevErrors, clientContact: 'Contact number already exists' }));
 
                         // MP-95-As a user, I should able to restore a removed client.
                     if (data.warningMessage.includes('restore the client')) {
@@ -412,7 +423,7 @@ const ClientsData = () => {
     // Client Name Suggestions
     if (newValue !== '' ) {
         try {
-            fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesTest.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
+            fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newValue}&JsonDBName=${companyName}&type=contact`)
                 .then((response) => response.json())
                 .then((data) => setClientNumberSuggestions(data));
         } catch (error) {
@@ -483,8 +494,9 @@ const ClientsData = () => {
        }
       }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
+      
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
                 setTimeout(() => {
@@ -542,7 +554,7 @@ const ClientsData = () => {
       }
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -995,17 +1007,13 @@ const BMvalidateFields = () => {
       <div className='min-h-screen bg-gray-100 mb-14 p-2'>
         <div className="flex items-center justify-center">
           <div className="w-full max-w-6xl">
-          <div className="text-start">
-  <div className="flex justify-between items-center">
-    {/* Client Manager Heading */}
-    <div className='items-center justify-center'>
-      <h2 className="text-2xl mt-3 sm:mt-10 font-bold text-blue-500 mb-1">Client Manager</h2>
-      <div className="border-2 w-10 border-blue-500 mb-5"></div>   
-    </div>
-
-    {/* Buttons */}
-    <div className="text-center">
-      {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
+            <div className="text-start">
+              <h2 className="text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">Client Manager</h2>
+              <div className="border-2 w-10 mb-6 border-blue-500"></div>
+            </div>
+                {/* Buttons */}
+    {/* <div className="text-center">
+      
       {clientID === '' ? (
         <button
           className="add-button"
@@ -1031,8 +1039,7 @@ const BMvalidateFields = () => {
       )}
     </div>
   </div>
-</div>
-
+</div> */}
       </div></div>
         <div className="flex items-center justify-center ">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
@@ -1184,9 +1191,7 @@ const BMvalidateFields = () => {
               }}
             />
             {(clientNumberSuggestions.length > 0 && clientContact !== "") && (
-              <ul className={`list-none bg-white shadow-lg rounded-md mt-2 overflow-y-scroll ${
-                clientNumberSuggestions.length > 5 ? 'h-40' : 'h-fit'
-              }`}>
+              <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                 {clientNumberSuggestions.map((name, index) => (
                   <li key={index}>
                     <button
@@ -1201,7 +1206,7 @@ const BMvalidateFields = () => {
                 ))}
               </ul>
             )}
-            {contactWarning && <p className="text-red-500 text-xs">{contactWarning}</p>}
+            {/* {contactWarning && <p className="text-red-500 text-xs">{contactWarning}</p>} */}
             {errors.clientContact && <p className="text-red-500 text-xs">{errors.clientContact}</p>}
           </div>
               <div name="ClientEmailInput">
@@ -1249,7 +1254,7 @@ const BMvalidateFields = () => {
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate<span className="text-red-500">*</span></label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1271,18 +1276,18 @@ const BMvalidateFields = () => {
               ) : (
                 <div className="flex space-x-2 mt-3">
                   <div className="w-1/2" name="MonthsInput">
-                    <label className="block mb-1 text-black font-medium">Months</label>
+                    <label className="block mb-1 text-black font-medium">Months<span className="text-red-500">*</span></label>
                     <input
                       className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.ageAndDOB ? 'border-red-400' : ''}`}
                       type="number"
                       name="MonthsInput"
-                      placeholder="Months*"
+                      placeholder="Months"
                       value={months}
                       onChange={handleMonthsChange}
                     />
                   </div>
                   <div className="w-1/2">
-                    <label className="block mb-1 text-black font-medium">Birthdate</label>
+                    <label className="block mb-1 text-black font-medium">Birthdate<span className="text-red-500">*</span></label>
                     <div>
                   <div name="AgeDatePicker">
                     <Calendar
@@ -1336,7 +1341,7 @@ const BMvalidateFields = () => {
             {/* Right section */}
             <div className="space-y-4">
               <div name="ClientSourceSelect">
-                <label className="block mb-1 text-black font-medium">Source</label>
+                <label className="block mb-1 text-black font-medium">Source<span className="text-red-500">*</span></label>
                 <Dropdown
                   className={`w-full text-black border rounded-lg ${errors.clientSource ? 'border-red-400' : ''}`}
                   id="8"
@@ -1344,7 +1349,7 @@ const BMvalidateFields = () => {
                   options={sources}
                   value={clientSource}
                   defaultValue=""
-                  placeholder='Select Source'
+                  placeholder='Select a Source'
                   onChange={handleClientSourceChange}
                 />
               </div>
@@ -1417,11 +1422,11 @@ const BMvalidateFields = () => {
               )}
             </div>
           </div>
-          {/* <div className="text-center">
-           
+          <div className="text-center">
+            {/* MP-71-Rename “Submit” button to “Add” and “Update” based on client existence */}
             {clientID === '' ? (
               <button
-                className="add-button"
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg"
                 onClick={submitDetails}
               >
                 Add
@@ -1429,20 +1434,20 @@ const BMvalidateFields = () => {
             ) : (
               <div className="relative">
                 <button
-                  className="Update-button mr-2"
+                  className="px-6 py-2 mr-3 bg-blue-500 text-white rounded-lg w-fit"
                   onClick={submitDetails}
                 >
                   Update
                 </button>
                 <button
-                  className="remove-button"
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg w-fit"
                   onClick={handleRemoveClient}
                 >
                   Remove
                 </button>
               </div>
             )}
-          </div> */}
+          </div>
         </form>
       </div>
       </div>
