@@ -144,3 +144,68 @@ export const FetchQuoteData = async(DBName, QuoteId) => {
 
     return result;
 }
+
+export const getTnC = async() => {
+    const response = await fetch(`https://orders.baleenmedia.com/API/Media/GetTnC.php/?JsonDBName=${companyName}`);
+    const TnC = response.json();
+    return TnC;
+}
+
+export const fetchQuoteClientData = async(clientID, DBName) => {
+    let ClientData = [];
+    try{
+        const response = await api.get("FetchClientDetails.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                ClientID: clientID
+            }
+        });
+        ClientData = response.data;
+    }catch(error){
+        console.error(error)
+    }
+    
+    return ClientData;
+}
+
+export const ClientSearchSuggestions = async(ClientName, DBName, SearchType) => {
+    let ClientData = [];
+    try{
+        const response = await api.get("SuggestingClientNames.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                suggestion: ClientName,
+                JsonDBName: DBName,
+                type: SearchType
+            }
+        });
+        ClientData = response.data;
+    }catch(error){
+        console.error(error)
+    }
+    
+    return ClientData;
+}
+
+export const elementsToHideList = async(DBName) => {
+    let result = [];
+    try{
+        const response = await api.get("FetchNotVisibleElementName.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName
+            }
+        });
+        result = response.data;
+        return result
+    } catch(error){
+      console.error("Error showing element names: " + error)
+    }
+  }

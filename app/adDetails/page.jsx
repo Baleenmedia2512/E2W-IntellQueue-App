@@ -21,7 +21,7 @@ import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { resetCartItem } from '@/redux/features/cart-slice';
-import { FetchQuoteData } from '../api/FetchAPI';
+import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
 
 export const AdDetails = () => {
   const routers = useRouter();
@@ -36,6 +36,7 @@ export const AdDetails = () => {
   const [isClientContact, setIsClientContact] = useState(true);
   const [isClientName, setIsClientName] = useState(true)
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
+  const [isHidden, setIsHidden] = useState(false);
   const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
   const width = useAppSelector(state => state.quoteSlice.width);
   const username = useAppSelector(state => state.authSlice.userName);
@@ -52,9 +53,19 @@ export const AdDetails = () => {
 
   useEffect(() => {
     if (!username || dbName === "") {
-      router.push('/login');
+      routers.push('/login');
     }
-      
+    
+    async function fetchQuoteAccess(){
+      const hideList = await elementsToHideList(dbName);
+      console.log(hideList)
+      if(hideList.includes("QuoteSenderNavigation")){
+        setIsHidden(true)
+      }
+    }
+    
+    fetchQuoteAccess()
+    
   }, []);
 
   useEffect(()=>{
@@ -66,10 +77,14 @@ export const AdDetails = () => {
   },[isClientContact, isClientName])
 
   const fetchClientDetails = (clientID) => {
-    axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
-      .then((response) => {
-        const data = response.data;
+
+        var data = [];
+        try {
+          data = fetchQuoteClientData();
+        } catch (error) {
+          alert("Unable to fetch Client Data!");
+        }
+
         if (data && data.length > 0) {
           
           const clientDetails = data[0];
@@ -83,22 +98,17 @@ export const AdDetails = () => {
         } else {
           console.warn("No client details found for the given name and contact number.");
         }
-      })
-      .catch((error) => {
-        console.error("Error fetching client details:", error);
-      });
   };
 
-  const handleSearchTermChange = (event) => {
-    const newName = event.target.value
+  const handleSearchTermChange = async(event) => {
+    const newName = event.target.value;
+    var suggestedClients = [];
     // setIsNewClient(true);
     
     if (newName !== '') {
       try{
-        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}&type=name`)
-          .then((response) => response.json())
-          .then((data) => setClientNameSuggestions(data));
-        
+        suggestedClients = await ClientSearchSuggestions(newName, companyName, 'name');
+        setClientNameSuggestions(suggestedClients)
       } catch(error){
         console.error("Error Suggesting Client Names: " + error)
       }
@@ -106,10 +116,7 @@ export const AdDetails = () => {
       setClientNameSuggestions([]);
     }
       dispatch(setClientData({clientName: newName}));
-      setIsClientName(true)
-    //   if (errors.clientName) {
-    //     setErrors((prevErrors) => ({ ...prevErrors, clientName: undefined }));
-    // }
+      setIsClientName(true);
   };
 
   const handleClientNameSelection = (names) => {
@@ -218,12 +225,7 @@ export const AdDetails = () => {
     
   }
 
-  const getTnC = async() => {
-    const response = await fetch(`https://orders.baleenmedia.com/API/Media/GetTnC.php/?JsonDBName=${companyName}`);
-    const TnC = response.json();
-    return TnC;
-  }
-
+  
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
     const quoteNumber = await fetchNextQuoteNumber(companyName);
@@ -249,17 +251,15 @@ export const AdDetails = () => {
     const TnC = await getTnC();
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
+
     if(clientName !== ""){
       try{
+
         const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
         const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
-      //   setTimeout(() => {
-      //   dispatch(resetCartItem());
-      //   dispatch(resetQuotesData());
-      //   dispatch(resetClientData());
-      // },3000)
+
       } catch(error){
         alert('An unexpected error occured while inserting Quote:' + error);
         return;
@@ -311,67 +311,6 @@ export const AdDetails = () => {
         setIsClientContact(false)
       }
     }
-    // if (isGeneratingPdf) {
-      // try {
-      //   const updatePromises = cartItems.map(async (item) => {
-      //     // Compare each item property to check for any changes
-      //     const existingItem = await FetchQuoteData(companyName, item.editQuoteNumber); // Fetch current item in the DB
-      //     const hasChanges = Object.keys(item).some((key) => item[key] !== existingItem[key]);
-      //     console.log(item)
-      //     console.log(existingItem)
-      //     console.log(hasChanges)
-      //     // Only update if there’s a change
-      //     // if (hasChanges) {
-      //     //   await updateQuoteToDB(item);
-      //     // }
-      //     return hasChanges;
-      //   });
-  
-      //   const updateResults = await Promise.all(updatePromises);
-  
-      //   // Check if at least one item was updated
-      //   if (updateResults.some((wasUpdated) => wasUpdated)) {
-      //     console.log("Quote updated successfully.");
-      //   } else {
-      //     console.log("No changes detected. No updates were made.");
-      //   }
-  
-      //   return;
-      // } catch (error) {
-      //   alert("An unexpected error occurred while updating the Quote:", error);
-      //   return;
-      // }
-      
-    // }
-
-    // isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
-    
-    // const TnC = await getTnC();
-    // let grandTotalAmount = calculateGrandTotal();
-    // grandTotalAmount = grandTotalAmount.replace('₹', '');
-    // if(clientName !== ""){
-    //   try{
-    //     const cart = await Promise.all(cartItems.map(item => pdfGeneration(item)));
-    //     await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-    //     // const promises = cartItems.map(item => addQuoteToDB(item, quoteNumber));
-    //     // await Promise.all(promises);
-    //   //   setTimeout(() => {
-    //   //   dispatch(resetCartItem());
-    //   //   dispatch(resetQuotesData());
-    //   //   dispatch(resetClientData());
-    //   // },3000)
-    //   } catch(error){
-    //     alert('An unexpected error occured while inserting Quote:' + error);
-    //     return;
-    //   }
-      
-    // } else{
-    //   if(clientName === ""){
-    //     setIsClientName(false)
-    //   }else if(clientContact === ""){
-    //     setIsClientContact(false)
-    //   }
-    // }
   };
 
   function showCurrentPage(){
@@ -407,7 +346,12 @@ export const AdDetails = () => {
   
 
   return (
+    
     <div className='bg-gray-100 w-full'>
+      {isHidden ? <div className='flex items-center justify-center h-screen'>
+      <h2 className='text-center'>Oops! It looks like you might be on the wrong link. Please double-check and try again!</h2>
+    </div>:
+
       <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : 'h-[100vh]'} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
       <div className="border-2 ml-3 w-10 inline-block mb-6 border-blue-500 "></div>
@@ -555,6 +499,7 @@ export const AdDetails = () => {
         )}
         </div>
       </div>
+}
     </div>
     
   );
