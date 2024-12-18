@@ -11,7 +11,7 @@ import { TextField } from '@mui/material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FetchRateSeachTerm } from '../api/FetchAPI';
-import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll} from "react-icons/md";
+import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll, MdModeEditOutline } from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
@@ -34,9 +34,6 @@ import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualizatio
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const AdDetailsPage = () => {
-
-  // Check if localStorage contains a username
-  // const username = "GraceScans"
   const dispatch = useDispatch()
   const validityRef = useRef();
   const unitRef = useRef();
@@ -92,6 +89,7 @@ const AdDetailsPage = () => {
   const [validRatesData, setValidRatesData] = useState([]);
   const [newRateModel, setNewRateModel] = useState(false);
   const [isNewRate, setIsNewRate] = useState(true);
+  const [isUpdateRateName, setIsUpdateRateName] = useState(false);
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
   const [minimumPrice, setMinimumPrice] = useState("");
@@ -131,16 +129,31 @@ const AdDetailsPage = () => {
     package: []
   });
 
-  // const [selectedValues, setSelectedValues] = useState({
-  //   rateName: "",
-  //   typeOfAd: "",
-  //   adType: "",
-  //   Location: "",
-  //   vendorName: "",
-  //   Package: ""
-  // });
+  useEffect(() => {
+    if (newRateModel) {
+      switch (newRateType) {
+        case 'Rate Card Name':
+          setNewRateName(selectedValues.rateName?.label || '');
+          break;
+        case 'Type':
+          setNewRateName(selectedValues.adType?.label || '');
+          break;
+        case 'Category':
+          setNewRateName(selectedValues.typeOfAd?.label || '');
+          break;
+        case 'Location':
+          setNewRateName(selectedValues.Location?.label || '');
+          break;
+        case 'Package':
+          setNewRateName(selectedValues.Package?.label || '');
+          break;
+        default:
+          setNewRateName('');
+      }
+    }
+  }, [newRateModel, newRateType, selectedValues]);
+  
 
-  // Function to toggle the modal
   const toggleModal = () => {
       setModal((prevState) => !prevState);
   }
@@ -158,6 +171,12 @@ const AdDetailsPage = () => {
    
   }, [validityDays, rateGST, initialState]);
   
+  useEffect(() => {
+    if (isNewRate) {
+      setRateSearchTerm("");
+    }
+  }, [isNewRate]);
+
   const GSTOptions = ['0','5', '18'].map(option => ({value: option, label: option}))
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
@@ -167,7 +186,6 @@ const AdDetailsPage = () => {
   }
   useEffect(() => {
      
-     // If no username is found, redirect to the login page
      if (!username || dbName === "") {
       router.push('/login');
       } else{
@@ -568,68 +586,120 @@ const AdDetailsPage = () => {
   // };
 
   //filtering the options based on previous values
-  const getOptions = (filterKey, previousKey) => {
-    var filteredData = []; 
-    if(selectedValues["rateName"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "typeOfAd"){ //Check whether the selected key is valid or not
-      filteredData = ratesData.filter(item => 
-        !selectedValues["rateName"]['value'] || item["rateName"] === selectedValues["rateName"]['value']
-        );
+
+  //before update rename value
+  // const getOptions = (filterKey, previousKey) => {
+  //   if(isUpdateRateName){
+  //     return;
+  //   }
+  //   var filteredData = []; 
+  //   if(selectedValues["rateName"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "typeOfAd"){ //Check whether the selected key is valid or not
+  //     filteredData = ratesData.filter(item => 
+  //       !selectedValues["rateName"]['value'] || item["rateName"] === selectedValues["rateName"]['value']
+  //       );
       
-      // Extract distinct values of the specified filterKey from the filtered data
-      const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //     // Extract distinct values of the specified filterKey from the filtered data
+  //     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
     
-      // Return the distinct values sorted and mapped to objects with value and label properties
-      return distinctValues.sort().map(value => ({ value, label: value }));
-    } else if(selectedValues["typeOfAd"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "adType"){ //Check whether the selected key is valid or not
-      filteredData = ratesData.filter(item => 
-        (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
-        (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value)
-      );
+  //     // Return the distinct values sorted and mapped to objects with value and label properties
+  //     return distinctValues.sort().map(value => ({ value, label: value }));
+  //   } else if(selectedValues["typeOfAd"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "adType"){ //Check whether the selected key is valid or not
+  //     filteredData = ratesData.filter(item => 
+  //       (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
+  //       (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value)
+  //     );
     
-      // Extract distinct values of the specified filterKey from the filtered data
-      const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //     // Extract distinct values of the specified filterKey from the filtered data
+  //     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
   
-      // Return the distinct values sorted and mapped to objects with value and label properties
-      return distinctValues.sort().map(value => ({ value, label: value }));
-    } else if(selectedValues["adType"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Location"){ //Check whether the selected key is valid or not
-      filteredData = ratesData.filter(item => 
-        (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
-        (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
-        (!selectedValues.adType.value || item.adType === selectedValues.adType.value) 
-      );
+  //     // Return the distinct values sorted and mapped to objects with value and label properties
+  //     return distinctValues.sort().map(value => ({ value, label: value }));
+  //   } else if(selectedValues["adType"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Location"){ //Check whether the selected key is valid or not
+  //     filteredData = ratesData.filter(item => 
+  //       (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
+  //       (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
+  //       (!selectedValues.adType.value || item.adType === selectedValues.adType.value) 
+  //     );
     
-      // Extract distinct values of the specified filterKey from the filtered data
-      const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //     // Extract distinct values of the specified filterKey from the filtered data
+  //     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
   
-      // Return the distinct values sorted and mapped to objects with value and label properties
-      return distinctValues.sort().map(value => ({ value, label: value }));
-    } else if(selectedValues["Location"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Package"){ //Check whether the selected key is valid or not
-      filteredData = ratesData.filter(item => 
-        (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
-        (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
-        (!selectedValues.adType.value || item.adType === selectedValues.adType.value) &&
-        (!selectedValues.Location.value || item.Location === selectedValues.Location.value) 
-      );
+  //     // Return the distinct values sorted and mapped to objects with value and label properties
+  //     return distinctValues.sort().map(value => ({ value, label: value }));
+  //   } else if(selectedValues["Location"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Package"){ //Check whether the selected key is valid or not
+  //     filteredData = ratesData.filter(item => 
+  //       (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
+  //       (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
+  //       (!selectedValues.adType.value || item.adType === selectedValues.adType.value) &&
+  //       (!selectedValues.Location.value || item.Location === selectedValues.Location.value) 
+  //     );
     
-      // Extract distinct values of the specified filterKey from the filtered data
-      const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //     // Extract distinct values of the specified filterKey from the filtered data
+  //     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
   
-      // Return the distinct values sorted and mapped to objects with value and label properties
-      return distinctValues.sort().map(value => ({ value, label: value }));
-    } else if(elementsToHide.includes("RatesCategorySelect")){
+  //     // Return the distinct values sorted and mapped to objects with value and label properties
+  //     return distinctValues.sort().map(value => ({ value, label: value }));
+  //   } else if(elementsToHide.includes("RatesCategorySelect")){
       
-      const filteredData = ratesData.filter(item => 
-        !selectedValues.rateName.value || item.rateName === selectedValues.rateName.value //filter based on the previous key value
-        );
-         // Extract distinct values of the specified filterKey from the filtered data
-      const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  //     const filteredData = ratesData.filter(item => 
+  //       !selectedValues.rateName.value || item.rateName === selectedValues.rateName.value //filter based on the previous key value
+  //       );
+  //        // Extract distinct values of the specified filterKey from the filtered data
+  //     const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
     
-      // Return the distinct values sorted and mapped to objects with value and label properties
-      return distinctValues.sort().map(value => ({ value, label: value }));
-    }else{
-      return;
-    }
-  };
+  //     // Return the distinct values sorted and mapped to objects with value and label properties
+  //     return distinctValues.sort().map(value => ({ value, label: value }));
+  //   }else{
+  //     return;
+  //   }
+  // };
+
+  //after rename getoptions newly
+
+const getOptions = (filterKey) => {
+  // If updating, ensure all existing options are shown
+  if (isUpdateRateName) {
+    const distinctValues = [...new Set(ratesData.map(item => item[filterKey]))];
+    return distinctValues.sort().map(value => ({ value, label: value }));
+  }
+
+  let filteredData = [];
+  if (selectedValues["rateName"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "typeOfAd") {
+    filteredData = ratesData.filter(item =>
+      !selectedValues["rateName"]['value'] || item["rateName"] === selectedValues["rateName"]['value']
+    );
+  } else if (selectedValues["typeOfAd"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "adType") {
+    filteredData = ratesData.filter(item =>
+      (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) &&
+      (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value)
+    );
+  } else if (selectedValues["adType"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Location") {
+    filteredData = ratesData.filter(item =>
+      (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) &&
+      (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
+      (!selectedValues.adType.value || item.adType === selectedValues.adType.value)
+    );
+  } else if (selectedValues["Location"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Package") {
+    filteredData = ratesData.filter(item =>
+      (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) &&
+      (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
+      (!selectedValues.adType.value || item.adType === selectedValues.adType.value) &&
+      (!selectedValues.Location.value || item.Location === selectedValues.Location.value)
+    );
+  } else if (elementsToHide.includes("RatesCategorySelect")) {
+    filteredData = ratesData.filter(item =>
+      !selectedValues.rateName.value || item.rateName === selectedValues.rateName.value
+    );
+  } else {
+    return [];
+  }
+
+  const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+  return distinctValues.sort().map(value => ({ value, label: value }));
+};
+
+
+  //after rename getoptions newly
 
   // useEffect to update filters whenever selectedValues change
   // useEffect(() => {
@@ -770,9 +840,9 @@ var selectedRate = '';
       setMarginPercentage(selectedRate.AgencyCommission);
     }
   
-  if (filterKey !== 'vendorName'){
+  // if (filterKey !== 'vendorName'){
     setIsNewRate(false)
-  }
+  // }
   }
   useEffect(() => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
@@ -817,7 +887,6 @@ var selectedRate = '';
       setValidRatesData(valid);
       setInvalidRatesData(invalid);
       setRatesData(valid);
-      // console.log(data,'Rates',ratesData,'Invalid',invalid,'valid ', valid)
       // Cache the new rates data
       // localStorage.setItem('cachedRates', JSON.stringify(data));
     } catch (error) {
@@ -843,6 +912,8 @@ var selectedRate = '';
         // if (validityDate < currentDate){
         //   return
         // }
+        // Update relevant fields for the dialogs
+        
         // var locationValues = data.location;
         // var packageValues = data.package;
         // const colonIndex = data.adCategory.indexOf(':');
@@ -885,6 +956,8 @@ var selectedRate = '';
         setShowCampaignDuration(false)
       }
       setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
+
+      
       // setRateGST({label: data.rategst, value: data.rategst})
       dispatch(setRateGST({label: data.rategst, value: data.rategst}));
       setLeadDays(data.LeadDays);
@@ -935,102 +1008,183 @@ var selectedRate = '';
     setValidityDays(differenceInDays);
   };
 
-  const updateRates = async (e) => {
-    e.preventDefault()
-    if(editMode){
-      if (selectedUnit.value === "SCM") {
-        const existingSlab = combinedSlabData.find(
-            slab => slab.StartQty === slabData.StartQty && slab.Width === slabData.Width
-        );
-        if (existingSlab) {
-            updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
-        } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
-            // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
-        }
-    } else {
-        const existingSlab = combinedSlabData.find(
-            slab => slab.StartQty === slabData.StartQty
-        );
-        if (existingSlab) {
-            updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
-        } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
-            // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
-        }
-    }
+  // const updateRates = async (e) => {
+  //   e.preventDefault()
+  //   if(editMode){
+  //     if (selectedUnit.value === "SCM") {
+  //       const existingSlab = combinedSlabData.find(
+  //           slab => slab.StartQty === slabData.StartQty && slab.Width === slabData.Width
+  //       );
+  //       if (existingSlab) {
+  //           updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
+  //       } else {
+  //         combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
+  //           // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
+  //       }
+  //   } else {
+  //       const existingSlab = combinedSlabData.find(
+  //           slab => slab.StartQty === slabData.StartQty
+  //       );
+  //       if (existingSlab) {
+  //           updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
+  //       } else {
+  //         combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
+  //           // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
+  //       }
+  //   }
 
-      if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
-        setIsLeadDays(true)
-      } else if(selectedUnit === ""){
-        setIsUnitsSelected(true)
-      } else if(combinedSlabData.length === 0){
-        setIsQtySlab(true)
-      }else if(validityDays <= 0) {
-        setIsValidityDays(true);
-      }else{
-      if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
-        const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
-      try {
+  //     if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
+  //       setIsLeadDays(true)
+  //     } else if(selectedUnit === ""){
+  //       setIsUnitsSelected(true)
+  //     } else if(combinedSlabData.length === 0){
+  //       setIsQtySlab(true)
+  //     }else if(validityDays <= 0) {
+  //       setIsValidityDays(true);
+  //     }else{
+  //     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
+  //       const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
+  //     try {
 
-        const minSlab = combinedSlabData.reduce((min, current) => {
-          return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
-      }, combinedSlabData[0]);
+  //       const minSlab = combinedSlabData.reduce((min, current) => {
+  //         return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
+  //     }, combinedSlabData[0]);
 
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}&JsonWidth=${minSlab.Width}`);
+  //       // const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}&JsonWidth=${minSlab.Width}`);
+  //       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?JsonRateId=${rateId}&JsonRateGST=${rateGST ? rateGST.value : ''}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits?.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location.value}${selectedValues.Package.value}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}&JsonStartQty=${minSlab.StartQty}`);
         
-        // Check if the response is ok (status in the range 200-299)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+  //       // Check if the response is ok (status in the range 200-299)
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //       }
     
+  //       const data = await response.json();
+  //       // console.log(minSlab.StartQty, data)
+  //       if (data.error) {
+  //         throw new Error(data.error);
+  //       }
+  //       setEditMode(false);
+  //       // showToastMessage('success', 'Updated Successfully!');
+  //       setSuccessMessage('Updated Successfully! ');
+  //         setTimeout(() => {
+  //       setSuccessMessage('');
+  //     }, 2000);
+      
+  //     // window.location.reload();
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     // showToastMessage('error', error.message);
+  //     setToastMessage(error.message);
+  //     setSeverity('error');
+  //     setToast(true);
+      
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
+  // } else{
+  //   if(validityDays < 1){
+  //     setIsValidityDays(true)
+  //   }else{
+  //     // showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+  //     setToastMessage('Please fill the necessary fields to Update!.');
+  //     setSeverity('error');
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
+  // }}}else{
+  //     setToastMessage("No changes to update!")
+  //     setSeverity('warning')
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  // }
+  // };
+//new update rates----------------------------------------------------    
+  const updateRates = async (e) => {
+    e.preventDefault();
+  
+    if (editMode) {
+      // Validation checks
+      if (!selectedValues.rateName || !selectedValues.adType) {
+        setToastMessage('Rate Name and Ad Type are required.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      if (combinedSlabData.length === 0) {
+        setIsQtySlab(true);
+        setToastMessage('Quantity Slab Data is required.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      if (validityDays <= 0) {
+        setIsValidityDays(true);
+        setToastMessage('Validity Days must be greater than 0.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      try {
+        const campaignDurationVisibility = showCampaignDuration ? 1 : 0;
+  
+        // Find the minimum slab for pricing
+        const minSlab = combinedSlabData.reduce((min, current) => {
+          return selectedUnit.label === "SCM"
+            ? current.StartQty * current.Width < min.StartQty * min.Width
+              ? current
+              : min
+            : current.StartQty < min.StartQty
+            ? current
+            : min;
+        }, combinedSlabData[0]);
+  
+        // Construct the API URL
+        const response = await fetch(
+          `https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?JsonRateId=${rateId}&JsonRateGST=${rateGST?.value || ''}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits?.value || ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit?.value || ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location.value}${selectedValues.Package.value}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location?.value || ''}&JsonPackage=${selectedValues.Package?.value || ''}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}&JsonStartQty=${minSlab.StartQty}`
+        );
+  
+        // Check response
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
         const data = await response.json();
-        // console.log(minSlab.StartQty, data)
         if (data.error) {
           throw new Error(data.error);
         }
-        setEditMode(false);
-        // showToastMessage('success', 'Updated Successfully!');
-        setSuccessMessage('Updated Successfully! ');
-          setTimeout(() => {
-        setSuccessMessage('');
-      }, 2000);
-      
-      // window.location.reload();
-    } catch (error) {
-      console.error('Error:', error);
-      // showToastMessage('error', error.message);
-      setToastMessage(error.message);
-      setSeverity('error');
-      setToast(true);
-      
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
-  } else{
-    if(validityDays < 1){
-      setIsValidityDays(true)
-    }else{
-      // showToastMessage('warning', 'Please fill all the necessary fields to Update!')
-      setToastMessage('Please fill the necessary fields to Update!.');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
-  }}}else{
-      setToastMessage("No changes to update!")
-      setSeverity('warning')
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-  }
-  };
   
+        // Success message
+        setEditMode(false);
+        setSuccessMessage('Updated Successfully!');
+        setTimeout(() => setSuccessMessage(''), 2000);
+        setIsNewRate(true);
+        handleEditMode();
+      } catch (error) {
+        console.error('Error:', error);
+        setToastMessage(error.message);
+        setSeverity('error');
+        setToast(true);
+      }
+    } else {
+      setToastMessage('No changes to update!');
+      setSeverity('warning');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+    }
+  };
 
+//new update rates----------------------------------------------------  
   const rejectRates = async(e, rateID) => {
     e.preventDefault()
     try{
@@ -1220,6 +1374,109 @@ var selectedRate = '';
     elementsToShowList("Show")
     setNewRateModel(false);
   };  
+
+
+  const handleUpdateNewRateName = () => {
+    let updatedOptions = [];
+    let changedRate = "";
+  
+    switch (newRateType) {
+      case 'Rate Card Name':
+        if (getDistinctValues('rateName').map(value => value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          showToastMessage('Rate Name already exists', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('rateName').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "rateName";
+        break;
+  
+      case 'Type':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        if (getOptions('adType').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          showToastMessage('Ad Type already exists', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('adType').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "adType";
+        break;
+  
+      case 'Category':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        if (getOptions('typeOfAd').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          showToastMessage('Category already exists', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('typeOfAd').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "typeOfAd";
+        break;
+  
+      case 'Location':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        if (getOptions('Location').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          showToastMessage('Location already exists', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('Location').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "Location";
+        break;
+  
+      case 'Package':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        if (getOptions('Package').map(value => value.value.toLowerCase()).includes(newRateName.toLowerCase())) {
+          showToastMessage('Package already exists', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('Package').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "Package";
+        break;
+  
+      default:
+        return;
+    }
+  
+    setFilters({
+      ...filters,
+      [changedRate]: newRateName,
+    });
+  
+    dispatch(setSelectedValues({
+      ...selectedValues,
+      [changedRate]: { label: newRateName, value: newRateName },
+    }));
+  
+    setIsUpdateRateName(true); // Enable update mode
+    setNewRateModel(false); // Close modal
+    setNewRateName(""); // Reset newRateName directly
+  };
+  
+  
 
   useEffect(() => {
     const setVendor = () => {
@@ -1570,7 +1827,8 @@ const handleMouseLeave = () => {
   clearTimeout(pressTimer);
 };
 
-const handleFocus = () => {
+const handleFocus = (e) => {
+  e.target.select();
   setIsFocused(true);
 };
 
@@ -1660,13 +1918,13 @@ const handleBlur = (e) => {
           </DialogActions>
       </Dialog>
       <Dialog open={newRateModel} onClose={() => setNewRateModel(!newRateModel)} fullWidth={true} maxWidth='sm'>
-        <DialogTitle>Add New Rate</DialogTitle>
+        <DialogTitle>{!isNewRate ? "Add Rate" : "Add New Rate"}</DialogTitle>
         <DialogContent>
           <div className="relative">
-            <h3 className='normal-label mb-4 text-black'>Enter new {newRateType}</h3>
+            <h3 className='normal-label mb-4 text-black'>{!isNewRate ? `Enter ${newRateType}` : `Enter new ${newRateType}`}</h3>
             <TextField 
               id="newRateType" 
-              defaultValue={newRateName} 
+              value={newRateName} 
               label={newRateType} 
               variant="outlined" 
               size='small' 
@@ -1677,7 +1935,14 @@ const handleBlur = (e) => {
             </div>
             </DialogContent>
             <DialogActions className='mb-4'>
+            {isNewRate ? (
               <Button color = 'primary' variant="contained" onClick={() => handleSetNewRateName()}>Submit</Button>
+            ) : (
+              <>
+              <Button color='primary' variant="contained" onClick={() => handleSetNewRateName()}>Add</Button>
+              <Button color='secondary' variant="contained" onClick={() => handleUpdateNewRateName()}>Update</Button>
+            </>
+          )}
             </DialogActions>
       </Dialog>
       <Dialog open={openSCMModel} onClose={() => setSCMModel(!openSCMModel)} fullWidth={true} maxWidth='sm'>
@@ -1698,7 +1963,14 @@ const handleBlur = (e) => {
             </div>
             </DialogContent>
             <DialogActions className='mb-4'>
-              <Button color = 'primary' variant="contained" onClick={handleMinimumPrice}>Submit</Button>
+            {isNewRate ? (
+              <Button color = 'primary' variant="contained" onClick={() => handleSetNewRateName()}>Submit</Button>
+            ) : (
+              <>
+              <Button color='primary' variant="contained" onClick={() => handleSetNewRateName()}>Add</Button>
+              <Button color='secondary' variant="contained" onClick={() => handleSetNewRateName()}>Update</Button>
+            </>
+          )}
             </DialogActions>
       </Dialog>
             <div className="w-full max-w-6xl">
@@ -1738,7 +2010,7 @@ const handleBlur = (e) => {
         onClick={(e) => rejectRates(e, rateId)}
       >
         Remove
-      </button>
+      </button>     
     </>
   ) : (
     <button 
@@ -1773,7 +2045,7 @@ const handleBlur = (e) => {
         <input
           className="w-full px-4 py-2 text-black focus:outline-none"
           type="text"
-          placeholder="Ex: RateName Type"
+          placeholdeyr="Ex: RateName Type"
           value={rateSearchTerm}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -1793,7 +2065,7 @@ const handleBlur = (e) => {
               const isInvalid = name.ApprovedStatus === "Rejected";
               return (
                 <li key={index}>
-                  <button
+                  <button 
                     type="button"
                     className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
                     onClick={handleRateSelection}
@@ -1865,7 +2137,7 @@ const handleBlur = (e) => {
       <form className="space-y-4">
       {/* <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3> */}
       {/* { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>}  */}
-      {rateId > 0 && rateValidity && (
+      {!isNewRate && rateId > 0 && rateValidity && (
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
@@ -1913,7 +2185,11 @@ const handleBlur = (e) => {
                           name='AddRateNameButton'
                           disabled={!rateValidity}
                         >
-                          <MdAddCircle size={28}/>
+                          {isNewRate ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1940,7 +2216,11 @@ const handleBlur = (e) => {
                       />
                       <button className='justify-center text-blue-500 ml-6' onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Category");}}
                         disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                         {isNewRate ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -1971,7 +2251,11 @@ const handleBlur = (e) => {
                       name='AddAdCategoryButton'
                       onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Type");}}
                       disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                         {isNewRate ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -2003,7 +2287,11 @@ const handleBlur = (e) => {
                       name='AddLocationButton'
                       onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Location");}}
                       disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                         {isNewRate ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -2036,7 +2324,11 @@ const handleBlur = (e) => {
                     name='AddPackageButton'
                     onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Package");}}
                     disabled={!rateValidity}>
-                      <MdAddCircle size={28}/>
+                       {isNewRate ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                     </button>
                   </div>
                 </div>
@@ -2168,7 +2460,11 @@ const handleBlur = (e) => {
                         name='AddQuantityButton'  
                         disabled={!rateValidity}
                       >
-                        <MdAddCircle size={28}/>
+                         {isNewRate ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button> 
                       {isQty && <p className='text-red-500 mt-2 font-medium'>Please select a valid Quantity</p>}
                       {isQtySlab && <p className='text-red-500 mt-2 font-medium'>Please enter a valid Slab Rate</p>}
@@ -2201,7 +2497,11 @@ const handleBlur = (e) => {
                         name='AddQuantityButton'  
                         disabled={!rateValidity}
                       >
-                        <MdAddCircle size={28}/>
+                         {isNewRate ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button> 
                     </div>
                     {isQty && <p className='text-red-500 mt-2 font-medium'>Please select a valid Quantity</p>}
@@ -2375,7 +2675,7 @@ const handleBlur = (e) => {
                   />
 </div>
                 </div>
-                
+                {isNewRate && (
                <div className="flex items-center justify-center mb-8 mt-11 sm:mt-5 sm:mr-0">
                  <button 
                   className="Createorder-button flex items-center justify-center space-x-2 sm:flex-col sm:space-x-0 sm:space-y-2"
@@ -2412,6 +2712,7 @@ const handleBlur = (e) => {
                   }}>
                  <ControlPointRoundedIcon className="mr-2" />Create Order</button>
                  </div> 
+                )}
                 </form>
               </div>
               </div>
