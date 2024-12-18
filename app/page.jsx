@@ -431,10 +431,9 @@ const ClientsData = () => {
 
         // Check if contact number already exists or not
         if (newValue !== '') {
-            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContactTest.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
+            fetch(`https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${newValue}&ClientName=${clientName}&JsonDBName=${companyName}`)
                 .then((response) => response.json())
                 .then((data) => {
-                  console.log(data)
                     if (!data.isNewUser) {
                         // Contact number already exists
                         setIsNewClient(false);
@@ -1035,6 +1034,7 @@ const BMvalidateFields = () => {
     // Reset other client-related fields
     setClientAge("");
     setDOB("");
+    setDisplayDOB("");
     setAddress("");
     setConsultantName("");
     setConsultantNumber("");
