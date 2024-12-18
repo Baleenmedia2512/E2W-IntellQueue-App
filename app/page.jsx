@@ -332,6 +332,61 @@ const ClientsData = () => {
       });
   };
 
+  const FetchClientDetailsByContact = (clientNumber) => {
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContact.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .then((response) => {
+        const data = response.data;
+        if (data && data.length > 0) {
+          setErrors({});
+          setClientNumberSuggestions([]);
+          const clientDetails = data[0];
+
+          // Update client data in state
+          dispatch(setClientData({
+            clientContact: clientNumber,
+            clientID: clientDetails.id || "",
+            clientName: clientDetails.name || "",
+            clientEmail: clientDetails.email || "",
+            clientSource: clientDetails.source || "",
+            clientTitle: clientDetails.gender || "",
+            consultantName: clientDetails.consname || "",
+          }));
+
+          // Update client information locally
+          setDisplayClientNumber(clientNumber);
+          setDisplayClientID(clientDetails.id);
+          setDisplayClientName(clientDetails.name);
+          setAddress(clientDetails.address || "");
+          setSelectedOption(clientDetails.gender || "");
+          setTitle(clientDetails.gender || "");
+          setConsultantName(clientDetails.consname || "");
+          setConsultantNumber(clientDetails.consnumber || "");
+          setClientGST(clientDetails.GST || "");
+          setClientContactPerson(clientDetails.clientContactPerson || "");
+          setMonths(clientDetails.Age || "");
+
+          // Handle DOB and Age
+          const formattedDOB = parseDateFromDB(clientDetails.DOB);
+          setDOB(clientDetails.DOB);
+          setDisplayDOB(formattedDOB);
+          setClientAge(calculateAge(clientDetails.DOB));
+
+          // Handle PAN extraction from GST if applicable
+          const pan = clientDetails.GST?.length >= 15 && !clientDetails.PAN
+            ? clientDetails.GST.slice(2, 12)
+            : clientDetails.PAN;
+          setClientPAN(pan);
+      
+        } else {
+          console.warn("No client details found for the given name and contact number.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching client details:", error);
+      });
+  };
+
   useEffect(() => {    
         if (!loggedInUser || dbName === "") {
           router.push('/login');
@@ -859,7 +914,7 @@ const handleRestoreClient = () => {
             setTimeout(() => {
             setSuccessMessage('');
           }, 3000);
-          fetchClientDetails(clientID);
+          FetchClientDetailsByContact(clientContactToRestore);
           } else {
             setToastMessage("Failed to restore client: " + data.message);
             setSeverity('error');
@@ -1183,7 +1238,7 @@ const BMvalidateFields = () => {
                   setClientNameSuggestions([]);
                   setContactWarning('');
                   if (clientContact.length === 10 && !isNewClient) {
-                    fetchClientDetails(clientID);
+                    FetchClientDetailsByContact(clientContact);
                   } else{
                     setClientNumberSuggestions([]);
                   }
