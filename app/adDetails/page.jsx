@@ -1,20 +1,11 @@
 'use client'
 import {useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AdTypePage from './adType';
-import axios from 'axios';
-import AdMediumPage from './adMedium';
 import { useAppSelector } from '@/redux/store';
-import AdCategoryPage from './adCategory';
-import EditionPage from './Edition';
-import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
 import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { styled } from '@mui/material/styles';
-import Badge from '@mui/material/Badge';
 import { goBack, resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
@@ -28,7 +19,7 @@ export const AdDetails = () => {
   const dispatch = useDispatch();
   const clientNameRef = useRef(null);
   const clientContactRef = useRef(null);
-  // const companyName = 'Baleen Test';
+  
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice);

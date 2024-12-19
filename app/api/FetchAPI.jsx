@@ -209,3 +209,18 @@ export const elementsToHideList = async(DBName) => {
       console.error("Error showing element names: " + error)
     }
   }
+
+  export const FetchSpecificRateData = async(DBName, RateId) => {
+    let rates = [];
+    const response = await api.get("SearchRatesTest.php/get",{
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
+        params:{
+            JsonDBName: DBName,
+            JsonRateId: RateId
+        }
+    });
+    rates = response.data;
+    return rates;
+  }

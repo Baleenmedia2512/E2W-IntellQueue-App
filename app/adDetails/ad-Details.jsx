@@ -3,12 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
-import Snackbar from '@mui/material/Snackbar';
 import { useRouter } from 'next/navigation';
 import { Dropdown } from 'primereact/dropdown';
 import MuiAlert from '@mui/material/Alert';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { Carousel } from 'primereact/carousel';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
@@ -20,13 +18,11 @@ import { AddShoppingCart, AddShoppingCartOutlined, ShoppingCartCheckout } from '
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { addItemsToCart } from '@/redux/features/cart-slice';
-import CreatableSelect from 'react-select/creatable';
-// import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
-//const minimumUnit = Cookies.get('minimumunit');
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
-import { FetchRateSeachTerm } from '../api/FetchAPI';
+import { FetchRateSeachTerm, FetchSpecificRateData } from '../api/FetchAPI';
 import './page.css';
+import { calculateMarginAmount, calculateMarginPercentage } from '../utils/commonFunctions';
 
 export const formattedMargin = (number) => {
   const roundedNumber = (number / 1).toFixed(0);
@@ -34,76 +30,53 @@ export const formattedMargin = (number) => {
 };
 
 const AdDetailsPage = () => {
+
+  //Redux date from quote-slice
+  const {companyName, userName} = useAppSelector(state => state.authSlice);
+  const { selectedAdMedium: adMedium, selectedAdType: adType, selectedAdCategory: adCategory, rateId, selectedEdition: edition, 
+    selectedPosition: position, selectedVendor, quantity: qty, unit, ratePerUnit: unitPrice, campaignDuration, marginAmount: margin,
+    remarks, rateGST, width, isEditMode: isQuoteEditMode, editIndex, editQuoteNumber, isNewCartOnEdit} = useAppSelector(state => state.quoteSlice);
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
+
+  //Declaring state variables
   const [errors, setErrors] = useState({});
+  const [datas, setDatas] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [rateSearchTerm,setRateSearchTerm] = useState("");
   const [ratesSearchSuggestion, setRatesSearchSuggestion] = useState([]);
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
-  const [searchInput, setSearchInput] = useState('');
   const [slabData, setSlabData] = useState([])
-  const [qtySlab, setQtySlab] = useState({
-    Qty: 1,
-    Width: 1
-  })
-  //const [unitPrice, setUnitPrice] = useState('')
-  // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
-  //const [qty, setQty] = useState(qtySlab)
+  const [qtySlab, setQtySlab] = useState({Qty: 1, Width: 1})
   const [selectedDayRange, setSelectedDayRange] = useState('Day');
-  //const [unit, setUnit] = useState('')
-  const [marginPercentage, setMarginPercentage] = useState(0)
-  //const [extraDiscount, setExtraDiscount] = useState(0)
-  //const [remarks, setRemarks] = useState('');
+  const [marginPercentage, setMarginPercentage] = useState();
   const [remarksSuggestion, setRemarksSuggestion] = useState([]);
-
-  const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
-  const [datas, setDatas] = useState([]);
-  const marginAmountRef = useRef(null);
-  const companyName = useAppSelector(state => state.authSlice.companyName);
-  const username = useAppSelector(state => state.authSlice.userName);
-  const clientDetails = useAppSelector(state => state.clientSlice);
-  const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
-  const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
-  const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
-  const rateId = useAppSelector(state => state.quoteSlice.rateId)
-  const edition = useAppSelector(state => state.quoteSlice.selectedEdition)
-  const position = useAppSelector(state => state.quoteSlice.selectedPosition);
-  const selectedVendor = useAppSelector(state => state.quoteSlice.selectedVendor);
-  const qty = useAppSelector(state => state.quoteSlice.quantity);
-  const unit = useAppSelector(state => state.quoteSlice.unit);
-  const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
-  const campaignDuration = useAppSelector(state => state.quoteSlice.campaignDuration);
-  const margin = useAppSelector(state => state.quoteSlice.marginAmount);
-  // const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
-  const remarks = useAppSelector(state => state.quoteSlice.remarks);
-  const currentPage = useAppSelector(state => state.quoteSlice.currentPage);
-  const previousPage = useAppSelector(state => state.quoteSlice.previousPage);
-  const rateGST = useAppSelector(state => state.quoteSlice.rateGST);
-  const width = useAppSelector(state => state.quoteSlice.width);
-  const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
-  const leadDay = newData[0];
-  const minimumCampaignDuration = (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1
-  const routers = useRouter();
-  const campaignDurationVisibility = (leadDay) ? leadDay.campaignDurationVisibility : 0;
-  const cartItems = useAppSelector(state => state.cartSlice.cart);
-  const isQuoteEditMode = useAppSelector(state => state.quoteSlice.isEditMode);
-  const editIndex = useAppSelector(state => state.quoteSlice.editIndex);
-  const editQuoteNumber = useAppSelector(state => state.quoteSlice.editQuoteNumber);
-  const isNewCartOnEdit = useAppSelector(state => state.quoteSlice.isNewCartOnEdit);
-  // console.log((leadDay) ? leadDay.campaignDurationVisibility : 50)
-  //const [campaignDuration, setCampaignDuration] = useState((leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1);
-  //const [margin, setMargin] = useState(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * 15) / 100).toFixed(2));
-  const ValidityDate = (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate');
   const [changing, setChanging] = useState(false);
+
+  //Declaring refs
+  const marginAmountRef = useRef(null);
+  const textAreaRef = useRef(null);
+
+  //Declaring functionalities
+  const routers = useRouter();
+  const dispatch = useDispatch();
+
+  // Declare constants and utilities
+  const dayRange = ['Month(s)', 'Day(s)', 'Week(s)'];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  const inputDate = new Date(ValidityDate);
-  const day = ('0' + inputDate.getDate()).slice(-2); // Ensure two digits for day
-  const month = months[inputDate.getMonth()]; // Get month abbreviation from the array
-  const year = inputDate.getFullYear();
+  // Filter data and extract relevant item
+  const leadDay = datas.find(item => Number(item.rateId) === Number(rateId)) || {};
 
-  const formattedDate = `${day}-${month}-${year}`;
+  // Extract or default values from leadDay
+  const minimumCampaignDuration = leadDay['CampaignDuration(in Days)'] || 1;
+  const campaignDurationVisibility = leadDay.campaignDurationVisibility || 0;
+  const ValidityDate = leadDay.ValidityDate || 0;
+
+  // Format ValidityDate
+  const inputDate = new Date(ValidityDate);
+  const formattedDate = `${('0' + inputDate.getDate()).slice(-2)}-${months[inputDate.getMonth()]}-${inputDate.getFullYear()}`;
 
   const handleRateSearch = async(e) =>{
     setRateSearchTerm(e.target.value);
@@ -111,13 +84,11 @@ const AdDetailsPage = () => {
     setRatesSearchSuggestion(searchSuggestions);
   }
 
+  //fetching rate and setting the values in each variable
   const fetchRate = async(rateId) => {
+
     try {
-      const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchGivenRate.php/?JsonDBName=${companyName}&JsonRateId=${rateId}`);
-      if(!response.ok){
-        throw new Error(`HTTP error! Error In fetching Rates: ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await FetchSpecificRateData(companyName, rateId)
       const firstData = data[0];
       dispatch(setQuotesData({selectedAdMedium: firstData.rateName, selectedAdType: firstData.typeOfAd, selectedAdCategory: firstData.adType, selectedEdition: firstData.Location, selectedPosition: firstData.Package, selectedVendor: firstData.vendorName, validityDate: firstData.ValidityDate, leadDays: firstData.LeadDays, ratePerUnit: firstData.ratePerUnit, minimumUnit: firstData.minimumUnit, unit: firstData.Units, isDetails: true, rateGST: firstData.rategst}))
 
@@ -128,7 +99,7 @@ const AdDetailsPage = () => {
       if(qty === 1){
         dispatch(setQuotesData({quantity: firstData.minimumUnit}))
       }
-      // console.log("Fetch Rate: " + firstData.minimumUnit)
+      
     } catch (error) {
       console.error("Error while fetching rates: " + error)
     }
@@ -139,35 +110,20 @@ const AdDetailsPage = () => {
     const selectedRateId = selectedRate.split('-')[0];
     setRatesSearchSuggestion([]);
     setRateSearchTerm(selectedRate);
-
     fetchRate(selectedRateId);
     dispatch(setQuotesData({rateId: selectedRateId}));
     dispatch(updateCurrentPage("adDetails"));
   }
+
   // useEffect(() => {
-  //   if (isQuoteEditMode) {
-
-  //   const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
-  //   const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
-    
-  //   setMarginPercentage(newMarginPercentage);
-  //   }
-  // }, [isQuoteEditMode])
-
+  //   dispatch(setQuotesData({campaignDuration: (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1, validityDate: (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate'), leadDays: (leadDay) ? leadDay.LeadDays: ""}));
+  // }, [leadDay, minimumCampaignDuration])
 
   useEffect(() => {
-    // if (!isQuoteEditMode) {
-    dispatch(setQuotesData({campaignDuration: (leadDay && leadDay['CampaignDuration(in Days)']) ? leadDay['CampaignDuration(in Days)'] : 1, validityDate: (leadDay) ? leadDay.ValidityDate : Cookies.get('validitydate'), leadDays: (leadDay) ? leadDay.LeadDays: ""}));
-    // }
-  }, [leadDay, minimumCampaignDuration])
-
-  useEffect(() => {
-    // if (!isQuoteEditMode) {
         if (selectedDayRange === "") {
           setSelectedDayRange(dayRange[1]);
         }
         if(!rateId && !isQuoteEditMode){
-          //dispatch(setQuotesData({currentPage: "adMedium"}));
           dispatch(resetQuotesData())
         }
         dispatch(setQuotesData({
@@ -175,24 +131,7 @@ const AdDetailsPage = () => {
           label: selectedVendor,
           value: selectedVendor
         }}))
-        // if (adMedium === '') {
-        //   dispatch(setQuotesData({currentPage: 'adMedium'}));
-        // } else if (adType === '') {
-        //   dispatch(setQuotesData({currentPage: 'adType'}));
-        // } else if (adCategory === '') {
-        //   dispatch(setQuotesData({currentPage: 'adCategory'}));
-        // } else if (edition === '') {
-        //   dispatch(setQuotesData({currentPage: 'edition'}));
-        // }
-  // }
   },[])
-
-  // useEffect(() => {
-  //   if(extraDiscount > 0){
-  //     dispatch(setQuotesData({marginAmount: (((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)) - extraDiscount).toFixed(0)}))
-  //   }
-    
-  // },[extraDiscount])
 
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -203,13 +142,6 @@ const AdDetailsPage = () => {
       padding: '0 4px',
     },
   }));
-
-  // useEffect(() => {
-  //   const changeMarginPercentage = () =>{
-  //     dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- marginPercentage)) * 100)  * (marginPercentage/100)}))
-  //   }
-  //   changeMarginPercentage()
-  // },[marginPercentage])
 
   useEffect(() => {
     // if (!isQuoteEditMode) {
@@ -225,17 +157,12 @@ const AdDetailsPage = () => {
           }
       
           const data = await response.json();
-          // console.log(data)
-          // Sort the data by StartQty
           const sortedData = [...data].sort((a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width));
-          // console.log(sortedData)
-          // Set sorted data in state
           setSlabData(sortedData);
       
           // Handle the first selected slab if data exists
           if (sortedData.length > 0) {
             const firstSelectedSlab = sortedData[0];
-            // console.log(firstSelectedSlab)
             setQtySlab({
               Qty: firstSelectedSlab.StartQty,
               Width: firstSelectedSlab.Width
@@ -254,9 +181,6 @@ const AdDetailsPage = () => {
               ratePerUnit: firstSelectedSlab.UnitPrice,
               unit: firstSelectedSlab.Unit            
             }));
-            // console.log("Fetch Slab: " + firstSelectedSlab.StartQty)
-          } else {
-            // Handle case where there's no data, set default values, etc.
           }
         } catch (error) {
           console.error('Error fetching and processing data:', error);
@@ -288,35 +212,13 @@ const AdDetailsPage = () => {
       fetchData();
       
       fetchRateData();
-    // }
   }, [rateId]);
 
   useEffect(() => {
-    // if (!isQuoteEditMode) {
     fetchRateData();
-    // }
   }, [adMedium, rateId])
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchRateId.php/?JsonRateName=${rateName}&JsonAdType=${adType}&JsonAdCategory=${adCategory}&JsonVendorName=${selectedVendor}&JsonDBName=${companyName}`);
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! Status: ${response.status}`);
-  //       }
-  //       const data = await response.json();
-  //       dispatch(setQuotesData({rateId: data}));
-  //     }
-  //     catch (error) {
-  //       console.error(error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [selectedVendor]);
 
   const handleQtySlabChange = () => {
-    // const qtySlabNumber = parseInt(qtySlab); // Convert the value to a number
-    // Find the corresponding slabData for the selected QtySlab
     const selectedSlab = sortedSlabData.find(item => item.StartQty === qtySlab.Qty);
     const widthSelectedSlab = sortedSlabData.find(item => item.Width === qtySlab.Width);
   
@@ -332,36 +234,16 @@ const AdDetailsPage = () => {
   
     if (!changing) {
       dispatch(setQuotesData({ quantity: qtySlab.Qty, width: qtySlab.Width}));
-      // console.log("Handle Qty Slab Change: " + qtySlab)
     } else {
       setChanging(false);
     }
   
-    // const marginAmount = formattedMargin((((qty* width * selectedSlab.UnitPrice * (campaignDuration / minimumCampaignDuration)) /(100- marginPercentage)) * 100)  * (marginPercentage/100)).toFixed(0);
     const marginAmount = formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
     dispatch(setQuotesData({ marginAmount }));
     
     // Update UnitPrice based on the selected QtySlab
     dispatch(setQuotesData({ ratePerUnit: selectedSlab.UnitPrice, unit: selectedSlab.Unit }));
   };
-
-  // const handleQtySlabChange = () => {
-  //   const qtySlabNumber = parseInt(qtySlab)
-  //   // Find the corresponding slabData for the selected QtySlab
-  //   const selectedSlab = sortedSlabData.filter(item => item.StartQty === qtySlabNumber);
-
-  //   { !changing && dispatch(setQuotesData({quantity: qtySlab.value})); }
-  //   { changing && setChanging(false) }
-  //   dispatch(setQuotesData({marginAmount: formattedMargin((qtySlab.value * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100)}))
-  //   //setMargin(formattedMargin((qtySlab * unitPrice * (campaignDuration / minimumCampaignDuration) * marginPercentage) / 100));
-  //   // Update UnitPrice based on the selected QtySlab
-  //   if (selectedSlab) {
-  //     const firstSelectedSlab = selectedSlab[0];
-  //     dispatch(setQuotesData({ratePerUnit: firstSelectedSlab.UnitPrice, unit: firstSelectedSlab.Unit}));
-  //     // setUnitPrice(firstSelectedSlab.UnitPrice);
-  //     // setUnit(firstSelectedSlab.Unit)
-  //   }
-  // };
 
   useEffect(() => {
     if (!isQuoteEditMode && qtySlab) {
@@ -371,7 +253,7 @@ const AdDetailsPage = () => {
 
   const fetchRateData = async () => {
     try {
-      if (!username) {
+      if (!userName) {
         routers.push('/login');
       } else {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
@@ -386,11 +268,8 @@ const AdDetailsPage = () => {
         setDatas(filterdata);
 
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
-        formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
-        // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
-        // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
+        formattedMargin(qty* width * filteredData[0].UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
         dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
-        // console.log(unit)
         setMarginPercentage(filterdata[0].AgencyCommission);
         
       }
@@ -402,139 +281,55 @@ const AdDetailsPage = () => {
   const validateFields = () => {
     let errors = {};
     if (margin === "0") errors.marginAmount = 'Margin Amount is required';
-    // marginAmountRef.current.focus()
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
- 
- 
-  const dispatch = useDispatch();
+
   const handleSubmit = () => {
     dispatch(updateCurrentPage("checkout"))
-  //   const isValid = validateFields();
-  //   if (isValid) {
-  //     const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
-  //   if (isDuplicate) {
-      
-  //     let result = window.confirm("The item is already in the cart! Do you still want to Proceed?");
-  //     // Display an error message or handle the duplicate case
-  //     //dispatch(updateCurrentPage("checkout"));
-  //     if(!result){
-  //       return;
-  //     }
-  //   }
-
-  //   if (qty === '' || campaignDuration === '' || margin === '') {
-  //     setSeverity('warning');
-  //     setToastMessage('Please fill all the Client Details!');
-  //     setToast(true);
-  //   }
-  //   else if (qty < qtySlab) {
-  //     setSeverity('warning');
-  //     setToastMessage('Minimum Quantity should be ' + qtySlab);
-  //     setToast(true);
-  //   }
-  //   else if(minimumCampaignDuration > campaignDuration){
-  //     setSeverity('warning');
-  //     setToastMessage('Minimum Duration should be ' + minimumCampaignDuration);
-  //     setToast(true);
-  //   }
-  //   else {
-  //     Cookies.set('isAdDetails', true);
-  //     const index = cartItems.length
-  //     console.log(index)
-  //     dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility, rateGST, width}]))
-  //     dispatch(setQuotesData({isDetails: true}))
-  //     dispatch(updateCurrentPage("checkout"))
-  //     //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
-  //   }
-  // } else {
-  //   setToastMessage('Please fill the necessary details in the form.');
-  //   setSeverity('error');
-  //   setToast(true);
-  //   setTimeout(() => {
-  //     setToast(false);
-  //   }, 2000);
-  // }
   };
 
-  // const handleMarginChange = (event) => {
-  //   const newValue = parseInt(event.target.value);
-  //   //setMargin(event.target.value);
-  //   dispatch(setQuotesData({marginAmount: event.target.value}))
+  const handleMarginChange = (marginValue) => {
+    const newMarginAmount = parseInt(marginValue);
 
-  //   if (newValue > 0) {
-  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
-  //   }
-  // };
-
-  // const marginLostFocus = () => {
-  //   const cost = parseInt((unit === "SCM" ? (qty * width) : (qty)) * unitPrice * (campaignDuration / minimumCampaignDuration))
-  //   const price = cost + parseInt(margin)
-  //   setMarginPercentage(((margin/price)*100).toFixed(1))
-  //   //dispatch(setQuotesData({marginAmount: event.target.value}))
-  // }
-
-  // const handleMarginPercentageChange = (event) => {
-  //   const newPercentage = parseFloat(event.target.value);
-  //   setMarginPercentage(event.target.value);
-  //   dispatch(setQuotesData({marginAmount: formattedMargin(
-  //     ((unit === "SCM" ? qty * width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)
-  //   ).toFixed(0)}));
-  //   //old margin formula formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)})
-  //   //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
-  //   if (newPercentage > 0) {
-  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
-  //   }
-  // };
-
-  const handleMarginChange = (event) => {
-    const newMarginAmount = parseInt(event.target.value);
-    // setMargin(newMarginAmount);
-
-    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
-    const newMarginPercentage = ((newMarginAmount / (cost + newMarginAmount)) * 100).toFixed(1);
+    // calculate margin percentage
+    const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount);
     
-    // Update both marginAmount and marginPercentage consistently
-    dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newMarginPercentage }));
+    // Update both marginAmount and marginPercentage
+    dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
     setMarginPercentage(newMarginPercentage);
 
     if (newMarginAmount > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
-};
+  };
 
-const handleMarginPercentageChange = (event) => {
+  const handleMarginPercentageChange = (event) => {
     const newPercentage = parseFloat(event.target.value);
     setMarginPercentage(newPercentage);
-
-    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
-    const newMarginAmount = ((cost * newPercentage) / (100 - newPercentage)).toFixed(0);
-
-    // Update both marginAmount and marginPercentage consistently
+  
+    // calculate margin amount
+    const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage);
+  
+    // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
-    // setMargin(newMarginAmount);
-
+  
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
-};
+  };
 
-const marginLostFocus = () => {
+  const marginLostFocus = () => {
     const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
     const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
 
     // Ensure consistent update when margin field loses focus
     dispatch(setQuotesData({ marginPercentage: newMarginPercentage }));
     setMarginPercentage(newMarginPercentage);
-};
+  };
 
+  
 
-  // const marginPercentageLostFocus = () => {
-  //   dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)}))
-  // }
-
-  const textAreaRef = useRef(null);
 
   const handleRemarks = (e) => {
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingRemarks.php/get?suggestion=${e.target.value}`)
@@ -574,45 +369,11 @@ const marginLostFocus = () => {
     return matchingValue;
   };
 
-//   const minSlabData = sortedSlabData.reduce((min, current) => {
-//     return unit === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
-// }, sortedSlabData[0]);
-
   const formattedRupees = (number) => {
     const roundedNumber = (number / 1).toFixed(0);
     const totalAmount = Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
     return totalAmount.toLocaleString('en-IN');
   };
-  
-  // const items = [
-  //   content: {
-  //     {
-  //     label: 'Customer Price(incl. GST 18%)',
-  //     value: `₹${formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)) * 1.18))}`
-  //     },{      
-  //     label: 'Customer Price(excl. GST)',
-  //     value: `₹${formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) + (margin - extraDiscount)))}`
-  //     }
-  //   },
-  //   {
-  //     content: (
-  //       <div className="mb-4 border-gray-300 rounded-lg p-2 w-full mx-4 border text-black">
-  //         <p className="font-bold text-sm mb-1">
-  //           *Vendor Cost(incl. GST 18%): ₹{formattedRupees((((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (1.18)))}
-  //         </p>
-  //         <p className="font-semibold text-sm mb-1">
-  //           *Vendor Cost(excl. GST): ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)))}
-  //         </p>
-  //         {/* <p className="text-sm text-gray-300">
-  //           ₹{formattedRupees(qty * (unitPrice) * (campaignDuration / minimumCampaignDuration))}({qty} {unit} x ₹{formattedRupees(unitPrice/ (campaignDuration === 0 ? 1 : campaignDuration))}{campaignDurationVisibility === 1 && (' x ' + ((campaignDuration === 0) ? 1 : campaignDuration) + ' ' + (leadDay && (leadDay.CampaignDurationUnit) ? leadDay.CampaignDurationUnit : 'Day'))})</p>
-  //         <p className="text-sm text-gray-300 mb-1">- ₹{formattedRupees(extraDiscount / 1)} Discount</p>
-  //         <p className="font-semibold text-sm">
-  //           * GST Amount(net) : ₹{formattedRupees(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) - (extraDiscount)) * (0.18))}
-  //         </p> */}
-  //       </div>
-  //     )
-  //   }
-  // ];
 
   const items = [
     {
@@ -641,47 +402,6 @@ const marginLostFocus = () => {
     }
   ];  
 
-  const itemTemplate = (item) => {
-    return (
-      <div className="p-2 justify-center flex">
-        <div className="mb-4 border-gray-500 bg-gradient-to-br from-gray-100 to-white sm:w-full rounded-lg justify-center shadow-md shadow-gray-500 p-2 text-xl text-left mx-2 py-3 border text-black">
-          {item.content.map((entry, i) => (
-            <div key={i}  className='flex flex-row font-inter'>
-            <p 
-            className={`font-${i === 0 ? 'bold' : 'normal'} text-nowrap text-[16px] mb-2 text-gray-800`}
-            //className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 "
-            >
-              {entry.label}: 
-            </p>
-            <p 
-            className={`font-${i === 0 ? 'bold' : 'semibold'} text-[16px] mb-1`}
-            //className="text-lg md:text-lg lg:text-xl font-bold text-blue-500 "
-            >&nbsp;&nbsp;&nbsp;{entry.value}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const responsiveOptions = [
-    {
-        breakpoint: '1024px',
-        numVisible: 2,
-        numScroll: 2
-    },
-    {
-        breakpoint: '768px',
-        numVisible: 1,
-        numScroll: 1
-    },
-    {
-        breakpoint: '560px',
-        numVisible: 1,
-        numScroll: 1
-    }
-];
-
   const vendorOptions = datas.map(option => ({
     value: option.VendorName,
     label: option.VendorName === '' && filteredData.length === 1 ? 'No Vendors' : option.VendorName,
@@ -694,9 +414,6 @@ const marginLostFocus = () => {
     }),
     label: `${unit !== "SCM" ? opt.StartQty + "+" : (opt.StartQty * opt.Width) + "+"} ${unit} : ₹${(Number(opt.UnitPrice))} per ${campaignDurationVisibility === 1 ? (leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day' : "Campaign"}`
   }))
-// console.log(adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
-//   campaignDuration, margin, remarks, rateId, minimumCampaignDuration, formattedDate, rateGST, width, 
-//   campaignDurationVisibility)
 
 const handleCompleteEdit = () => {
   if (validateFields()) {
@@ -1169,7 +886,7 @@ const isValueChanged = (newValue, oldValue) => {
                     placeholder="Ex: 4000"
                     value={margin}
                     ref={marginAmountRef}
-                    onChange={handleMarginChange}
+                    onChange={e => handleMarginChange(e.target.value)}
                     onBlur={marginLostFocus}
                     onFocus={(e) => e.target.select()}
                   />
@@ -1282,7 +999,7 @@ const isValueChanged = (newValue, oldValue) => {
                 </div> */}
                 <div className="flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white items-center mx-4 px-4 py-3 mt-4 mb-8 rounded-xl shadow-lg shadow-gray-300 border border-gray-300">
   <p className="font-semibold text-lg text-gray-800 mt-1">
-    Quote Valid till {month ? formattedDate : "0000-00-00"}
+    Quote Valid till {formattedDate ? formattedDate : "0000-00-00"}
   </p>
   <p className="font-medium text-gray-600 text-base mt-2 text-center">
     Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher.
