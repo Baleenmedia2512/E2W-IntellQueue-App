@@ -49,8 +49,8 @@ export const AdDetails = () => {
     
     async function fetchQuoteAccess(){
       const hideList = await elementsToHideList(dbName);
-      console.log(hideList)
-      if(hideList.includes("QuoteSenderNavigation")){
+      
+      if(hideList && hideList.includes("QuoteSenderNavigation")){
         setIsHidden(true)
       }
     }
