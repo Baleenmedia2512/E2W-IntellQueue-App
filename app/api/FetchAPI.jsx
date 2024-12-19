@@ -73,6 +73,25 @@ export const FetchOrderSeachTerm = async(DBName, SearchTerm) => {
     return SearchTerms;
 }
 
+export const FetchQtySlab = async(DBName, RateId) => {
+    let QtySlab = [];
+    try {
+        const response = await api.get("FetchQtySlab.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                JsonRateId: RateId
+            }
+        });
+        QtySlab = response.data;
+    } catch (error) {
+        alert("Error while fetching Qty Slab: " + error);
+    }
+
+    return QtySlab;
+}
 
 export const FetchQuoteSearchTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
@@ -212,15 +231,62 @@ export const elementsToHideList = async(DBName) => {
 
   export const FetchSpecificRateData = async(DBName, RateId) => {
     let rates = [];
-    const response = await api.get("SearchRatesTest.php/get",{
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8'
-        },
-        params:{
-            JsonDBName: DBName,
-            JsonRateId: RateId
-        }
-    });
-    rates = response.data;
+    try {
+        const response = await api.get("FetchGivenRate.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                JsonRateId: RateId
+            }
+        });
+        rates = response.data;
+    } catch (error) {
+        alert("Error while Searching Rate!");
+    }
+    
     return rates;
+  }
+
+  export const FetchAllValidRates = async(DBName) => {
+    let rates = [];
+
+    try {
+        const response = await api.get("FetchValidRates.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName
+            }
+        });
+
+        rates = response.data;
+    } catch (error) {
+        alert("Unable to Fetch Rates!")
+    }
+
+    return rates;
+  }
+
+  export const FetchQuoteRemarks = async(value) => {
+    let suggestions = [];
+
+    try {
+        const response = await api.get("SuggestingRemarks.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                suggestion: value
+            }
+        });
+
+        suggestions = response.data;
+    } catch (error) {
+        alert("Unable to Fetch Rates!")
+    }
+
+    return suggestions;
   }
