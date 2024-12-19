@@ -96,8 +96,12 @@ export default function manageQuotes() {
     setFilteredData(filtered);
   };
 
+  const winQuote = async(QuoteData) => {
+    
+  }
+
   return (
-    <div className="p-4 text-black">
+    <div className="p-4 text-black font-montserrat ">
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
         <h2 className="text-xl font-semibold text-blue-500">Quote Manager</h2>
@@ -121,83 +125,87 @@ export default function manageQuotes() {
       
       {/* Lead Cards */}
       
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {filteredData.map((row, index) => (
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 min-h-max">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Client Details Section */}
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  {row.ClientName}
-                </h2>
-                
-                <div className="space-y-2">
-                { row.ClientContact !== 0 &&
-                  <a href={`tel:${row.ClientContact}`}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 3xl:grid-cols-3 auto-rows-fr">
+  {filteredData.map((row, index) => (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-200 flex flex-col">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 flex-grow">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          {/* Client Details Section */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              {row.ClientName}
+            </h2>
+            <div className="space-y-2">
+              {row.ClientContact !== 0 && (
+                <a href={`tel:${row.ClientContact}`}>
                   <p className="flex items-center gap-2 text-gray-600">
                     <FiPhone className="text-blue-500" />
                     {row.ClientContact}
                   </p>
-                  </a>
-                }
-                  <p className="flex items-center gap-2 text-gray-600">
-                    <FiDatabase className="text-blue-500" />
-                    Source: {row.Source}
-                  </p>
-                  
-                  <p className="flex items-center gap-2 text-gray-600">
-                    <FiTag className="text-blue-500" />
-                    Leads Days: {row.LeadDays}
-                  </p>
-                  
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <FiCalendar className="text-blue-500" />
-                    <input
-                      type="date"
-                      value={row.NextFollowupDate}
-                      // onChange={handleDateChange}
-                      className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-  
-              {/* Quote Details Section */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800">Quote Details</h3>
-                <div className="space-y-2">
-                  <p className="text-gray-600">Quote No: <span className="font-medium">{row.QuoteID}</span></p>
-                  <p className="text-gray-600">Medium: <span className="font-medium">{row.Admedium}</span></p>
-                  <p className="text-gray-600">Type: <span className="font-medium">{row.AdType}</span></p>
-                  <p className="text-gray-600">Category: <span className="font-medium">{row.Adcategory}</span></p>
-                  <p className="text-gray-600">Amount: <span className="font-medium text-green-600">₹{row.Amount}</span></p>
-                </div>
+                </a>
+              )}
+              <p className="flex items-center gap-2 text-gray-600">
+                <FiDatabase className="text-blue-500" />
+                Source: {row.Source}
+              </p>
+              <p className="flex items-center gap-2 text-gray-600">
+                <FiTag className="text-blue-500" />
+                Leads Days: {row.LeadDays}
+              </p>
+              <div className="flex items-center gap-2 text-gray-600">
+                <FiCalendar className="text-blue-500" />
+                <input
+                  type="date"
+                  value={row.NextFollowupDate}
+                  className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
           </div>
-          {/* Action Buttons */}
-          <div className="p-6 bg-gray-50 flex gap-4 justify-end">
-            <button
-              // onClick={handleWinQuote}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-            >
-              <FiCheck className="text-lg" />
-              Win Quote
-            </button>
-            
-            <button
-              // onClick={handleDropQuote}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              <FiX className="text-lg" />
-              Drop Quote
-            </button>
+
+          {/* Divider */}
+          <div className="hidden border-l border-gray-300"></div>
+
+          {/* Quote Details Section */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-800">Quote Details</h3>
+            <div className="space-y-2">
+              <p className="text-gray-600">
+                Quote No: <span className="font-medium">{row.QuoteID}</span>
+              </p>
+              <p className="text-gray-600">
+                Medium: <span className="font-medium">{row.Admedium}</span>
+              </p>
+              <p className="text-gray-600">
+                Type: <span className="font-medium">{row.AdType}</span>
+              </p>
+              <p className="text-gray-600">
+                Category: <span className="font-medium">{row.Adcategory}</span>
+              </p>
+              <p className="text-gray-600">
+                Amount:{" "}
+                <span className="font-medium text-green-600">
+                  ₹{row.Amount}
+                </span>
+              </p>
+            </div>
           </div>
         </div>
-        
-        ))}
       </div>
+      {/* Action Buttons */}
+      <div className="p-4 bg-gray-50 flex gap-4 justify-end mt-auto">
+        <button className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+          <FiCheck className="text-lg" />
+          Win Quote
+        </button>
+        <button className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+          <FiX className="text-lg" />
+          Drop Quote
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
       {loading && <p>Loading...</p>}
       {!hasMore && <p>No more data to load</p>}
     </div>
