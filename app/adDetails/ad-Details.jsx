@@ -122,17 +122,18 @@ const AdDetailsPage = () => {
           minimumUnit: firstRate.minimumUnit,
           unit: firstRate.Units,
           isDetails: true,
-          rateGST: firstRate.rategst
+          rateGST: firstRate.rategst,
         })
       );
 
       //set Margin Percentage and Margin
-      console.log(parseInt(margin) !== NaN || parseInt(margin) === 0)
       if (parseInt(margin) !== NaN || parseInt(margin) === 0) handleMarginPercentageChange(firstRate.AgencyCommission);
 
       // Set width and quantity defaults if necessary
       if (width === 1) dispatch(setQuotesData({ width: firstRate.width }));
       if (qty === 1) dispatch(setQuotesData({ quantity: firstRate.minimumUnit }));
+      setQtySlab({Qty: firstRate.minimumUnit, Width: firstRate.width})
+
     } catch (error) {
       console.error("Error fetching rate data:", error);
     }
@@ -209,6 +210,30 @@ const AdDetailsPage = () => {
     }
   };
 
+  const handleQtySlabChange = () => {
+    const selectedSlab = datas.slabData?.find(item => item.StartQty === qtySlab.Qty);
+    const widthSelectedSlab = datas.slabData?.find(item => item.Width === qtySlab.Width);
+  
+    if (!selectedSlab) {
+      console.error("No matching slab data found.");
+      return;
+    }
+
+    if(selectedSlab.Unit === "SCM" && !widthSelectedSlab){
+      console.error("No Matching Width and Height slab data found");
+      return;
+    }
+  
+    if (!changing) {
+      dispatch(setQuotesData({ quantity: qtySlab.Qty, width: qtySlab.Width}));
+    } else {
+      setChanging(false);
+    }
+    
+    // Update UnitPrice based on the selected QtySlab
+    dispatch(setQuotesData({ ratePerUnit: selectedSlab.UnitPrice, unit: selectedSlab.Unit }));
+  };
+
   useEffect(() => {
         if (selectedDayRange === "") {
           setSelectedDayRange(dayRange[1]);
@@ -231,31 +256,36 @@ const AdDetailsPage = () => {
   }, [rateId, adMedium]);
 
   useEffect(() => {
-    
     if((isNaN(margin) || parseFloat(margin) === 0) && marginPercentage > 0){
-      handleMarginPercentageChange(marginPercentage); 
+      handleMarginPercentageChange(marginPercentage); //setting margin amount if there is no margin amount
     };
 
     if((isNaN(marginPercentage) || parseFloat(marginPercentage) === 0) && margin > 0){
-      handleMarginChange(margin)
+      handleMarginChange(margin) // setting margin percent if there is no margin percent
     }
   },[margin, marginPercentage]);
 
+  useEffect(() => {
+    if (!isQuoteEditMode && qtySlab) {
+      handleQtySlabChange();
+    }
+  }, [qtySlab]);
+
   // Validate fields
-  const validateFields = () => {
-    const validationErrors = {};
-    if (!margin || margin === "0") validationErrors.marginAmount = "Margin Amount is required";
-    setErrors(validationErrors);
-    return Object.keys(validationErrors).length === 0;
-  };
+  // const validateFields = () => {
+  //   const validationErrors = {};
+  //   if (!margin || margin === "0") validationErrors.marginAmount = "Margin Amount is required";
+  //   setErrors(validationErrors);
+  //   return Object.keys(validationErrors).length === 0;
+  // };
 
   // Handle form submission
   const handleSubmit = () => {
-    if (validateFields()) {
+    // if (validateFields()) {
       dispatch(updateCurrentPage("checkout"));
-    } else {
-      console.error("Validation failed:", errors);
-    }
+    // } else {
+    //   console.error("Validation failed:", errors);
+    // }
   };
 
   const handleMarginChange = (marginValue) => {
@@ -294,10 +324,10 @@ const AdDetailsPage = () => {
     dispatch(setQuotesData({ marginPercentage: newMarginPercentage }));
   };
 
-  const handleRemarks = (e) => {
-    const suggestions = FetchQuoteRemarks(e.target.value);
-    setDatas({remarksSuggestion: suggestions});
+  const handleRemarks = async(e) => {
     dispatch(setQuotesData({remarks: e.target.value}));
+    const suggestions = await FetchQuoteRemarks(e.target.value);
+    setDatas({...datas, remarksSuggestion: suggestions});
   } 
 
   const vendorOptions = datas.ratesData?.map(option => ({
@@ -343,7 +373,7 @@ const AdDetailsPage = () => {
       content: [
         {
           label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)) + isNaN(parseInt(margin)) ? 0 : parseInt(margin) )}`
+          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)) + formattedMargin(margin) )}`
         },
         {
           label: 'Cost',
@@ -355,7 +385,7 @@ const AdDetailsPage = () => {
       content: [
         {
           label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (minimumCampaignDuration)+ isNaN(parseInt(margin)) ? 0 : parseInt(margin)) * ((rateGST/100) + 1)) }`
+          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)+ formattedMargin(margin)) * ((rateGST/100) + 1)) }`
         },
         {
           label: 'Cost',
@@ -376,7 +406,7 @@ const AdDetailsPage = () => {
   }));
 
   const handleCompleteEdit = () => {
-    if (validateFields()) {
+    // if (validateFields()) {
       // Prepare the updated item
       const updatedItem = {
         index: editIndex,
@@ -384,7 +414,7 @@ const AdDetailsPage = () => {
         campaignDuration, margin, remarks, rateId, 
         CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
         leadDay: leadDay ? leadDay.LeadDays : "", 
-        minimumCampaignDuration, formattedDate, rateGST, width, 
+        minimumCampaignDuration, ValidityDate, rateGST, width, 
         campaignDurationVisibility, editQuoteNumber, isEditMode: true
       };
   
@@ -404,9 +434,9 @@ const AdDetailsPage = () => {
           updatedCartItems = cartItems.map(item =>
             item.index === editIndex ? { ...item, ...updatedItem } : item
           );
-          setSuccessMessage("Item edited successfully.");
+          // setSuccessMessage("Item edited successfully.");
         } else {
-          setToastMessage("No Changes Detected.");
+          // setToastMessage("No Changes Detected.");
           setSeverity("error");
           setToast(true);
           setTimeout(() => {
@@ -418,7 +448,7 @@ const AdDetailsPage = () => {
         const newItem = { ...updatedItem, index: cartItems.length, isNewCart: true}; // Ensure unique index
         updatedCartItems = [...cartItems, newItem];
         isItemUpdated = true; // Treat as updated since it's a new addition
-        setSuccessMessage("Item added to Cart");
+        // setSuccessMessage("Item added to Cart");
       }
   
       // Dispatch only if there is a change
@@ -426,21 +456,18 @@ const AdDetailsPage = () => {
         dispatch(addItemsToCart(updatedCartItems));
   
         // Reset messages after a delay
-        setTimeout(() => {
-          setSuccessMessage("");
-          dispatch(resetQuotesData());
-          dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails", isEditMode: true }));
-        }, 2000);
+        dispatch(resetQuotesData());
+        dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
       }
-    } else {
-      // Show error if validation fails
-      setToastMessage("Please fill the necessary details in the form.");
-      setSeverity("error");
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
+    // } else {
+    //   // Show error if validation fails
+    //   setToastMessage("Please fill the necessary details in the form.");
+    //   setSeverity("error");
+    //   setToast(true);
+    //   setTimeout(() => {
+    //     setToast(false);
+    //   }, 2000);
+    // }
   };
   
   // Function to compare values and detect changes
@@ -567,14 +594,14 @@ const AdDetailsPage = () => {
               let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
               if (result) {
                 const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
                 setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, formattedDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
             setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
@@ -613,7 +640,6 @@ const AdDetailsPage = () => {
                     <div className="flex w-[80%] border ml-2 border-gray-400 rounded-lg">
                     <input
                       className={`w-[70%] px-4 py-2 border-y-0 border-l-0 border border-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
-                      //className=" w-4/5 border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
                       type="number"
                       placeholder="Ex: 15"
                       min={qtySlab.Qty}
@@ -729,18 +755,6 @@ const AdDetailsPage = () => {
                     <p className="mt-1 font-bold ml-2">%</p></span>
                   </div>
                   </div>
-                {/* <div className="mb-4 flex flex-col">
-                  <label className="font-bold ml-2 mb-1">Extra Discount(₹)</label>
-                  <input
-                  className={`w-[80%] ml-2 px-4 py-2 border bg-gradient-to-br from-gray-100 to-white border-gray-400 shadow-md shadow-gray-400 text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
-                    //className="w-full border border-gray-300 bg-blue-300 text-black p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200"
-                    type="number"
-                    placeholder="Ex: 1000"
-                    value={extraDiscount}
-                    onChange={(e) => dispatch(setQuotesData({extraDiscount: e.target.value}))}
-                    onFocus={(e) => e.target.select()}
-                  />
-                </div> */}
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold ml-2 mb-1">Remarks</label>
                   <InputTextarea
@@ -755,11 +769,11 @@ const AdDetailsPage = () => {
                   />
 
                   {datas.remarksSuggestion?.length > 0 && (
-                    <ul className="list-none">
+                    <ul className="mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
                       {datas.remarksSuggestion.map((name, index) => (
-                        <li key={index}>
+                        <li key={index} >
                           <button
-                          className='text-purple-500 hover:text-purple-700'
+                           className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
                           value={name}
                           onClick={() => {
                              dispatch(setQuotesData({remarks: name}))
@@ -800,7 +814,7 @@ const AdDetailsPage = () => {
                 </div>
                 <div className="flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white items-center   mx-4 px-4 py-3 mt-4 mb-8 rounded-xl shadow-lg shadow-gray-300 border border-gray-300">
                   <p className="font-semibold text-lg text-gray-800 mt-1">
-                    Quote Valid till {formattedDate ? formattedDate : "0000-00-00"}
+                    Quote Valid till {ValidityDate ? formattedDate(ValidityDate) : "0000-00-00"}
                   </p>
                   <p className="font-medium text-gray-600 text-base mt-2 text-center">
                     Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher.

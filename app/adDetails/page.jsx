@@ -271,7 +271,7 @@ export const AdDetails = () => {
 
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
     
-    const TnC = await getTnC();
+    const TnC = await getTnC(companyName);
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
 
@@ -301,7 +301,7 @@ export const AdDetails = () => {
     e.preventDefault();
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
     
-    const TnC = await getTnC();
+    const TnC = await getTnC(companyName);
     const quoteNumber = cartItems[0].editQuoteNumber;
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
