@@ -363,7 +363,7 @@ export const AdDetails = () => {
 
           // clear while on edit mode
           if (cartItems.length > 0 && cartItems[0].isEditMode) {
-          dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+            dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
           }
 
           }}>

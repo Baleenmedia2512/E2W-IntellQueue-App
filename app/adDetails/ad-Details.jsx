@@ -239,8 +239,9 @@ const AdDetailsPage = () => {
     }
   
     const marginAmount = formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
-    dispatch(setQuotesData({ marginAmount }));
-    
+    !margin && dispatch(setQuotesData({ marginAmount }));
+    margin && handleMarginChange(margin)
+
     // Update UnitPrice based on the selected QtySlab
     dispatch(setQuotesData({ ratePerUnit: selectedSlab.UnitPrice, unit: selectedSlab.Unit }));
   };
@@ -259,7 +260,6 @@ const AdDetailsPage = () => {
         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchValidRates.php/?JsonDBName=${companyName}`);
         const data = await response.json();
        
-       
         const filterdata = data.filter(item => (item.rateId === parseInt(rateId)))
           .filter((value, index, self) =>
             self.findIndex(obj => obj.VendorName === value.VendorName) === index
@@ -267,10 +267,9 @@ const AdDetailsPage = () => {
           .sort((a, b) => a.VendorName.localeCompare(b.VendorName));
         setDatas(filterdata);
 
-        //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
         formattedMargin(qty* width * filteredData[0].UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
-        dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
-        setMarginPercentage(filterdata[0].AgencyCommission);
+        !margin && dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
+        !margin && setMarginPercentage(filterdata[0].AgencyCommission);
         
       }
     } catch (error) {
