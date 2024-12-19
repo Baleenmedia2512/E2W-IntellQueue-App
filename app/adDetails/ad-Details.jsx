@@ -47,6 +47,7 @@ const AdDetailsPage = () => {
     Qty: 1,
     Width: 1
   })
+  const textAreaRef = useRef(null);
   //const [unitPrice, setUnitPrice] = useState('')
   // const [minimumUnit, setMinimumUnit] = useState(qtySlab)
   //const [qty, setQty] = useState(qtySlab)
@@ -387,11 +388,9 @@ const AdDetailsPage = () => {
 
         //dispatch(setQuotesData({rateId: filterdata[0].rateId}));
         formattedMargin(qty* width * selectedSlab.UnitPrice / minimumCampaignDuration * campaignDuration / (100 - marginPercentage) * marginPercentage)
-        // console.log("qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission", qty, unitPrice, campaignDuration, minimumCampaignDuration, filterdata[0].AgencyCommission)
-        // console.log("(((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2)", (((qty * unitPrice * (campaignDuration / minimumCampaignDuration))/(100- filterdata[0].AgencyCommission)) * 100).toFixed(2))
-        dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
-        // console.log(unit)
-        setMarginPercentage(filterdata[0].AgencyCommission);
+        
+        parseInt(margin) === 0 && dispatch(setQuotesData({marginAmount: ((filterdata[0].Units === "SCM" ? qty * filterdata[0].width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (filterdata[0].AgencyCommission / 100)}))
+        parseInt(marginPercentage) === 0 && setMarginPercentage(filterdata[0].AgencyCommission);
         
       }
     } catch (error) {
@@ -411,82 +410,7 @@ const AdDetailsPage = () => {
   const dispatch = useDispatch();
   const handleSubmit = () => {
     dispatch(updateCurrentPage("checkout"))
-  //   const isValid = validateFields();
-  //   if (isValid) {
-  //     const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
-  //   if (isDuplicate) {
-      
-  //     let result = window.confirm("The item is already in the cart! Do you still want to Proceed?");
-  //     // Display an error message or handle the duplicate case
-  //     //dispatch(updateCurrentPage("checkout"));
-  //     if(!result){
-  //       return;
-  //     }
-  //   }
-
-  //   if (qty === '' || campaignDuration === '' || margin === '') {
-  //     setSeverity('warning');
-  //     setToastMessage('Please fill all the Client Details!');
-  //     setToast(true);
-  //   }
-  //   else if (qty < qtySlab) {
-  //     setSeverity('warning');
-  //     setToastMessage('Minimum Quantity should be ' + qtySlab);
-  //     setToast(true);
-  //   }
-  //   else if(minimumCampaignDuration > campaignDuration){
-  //     setSeverity('warning');
-  //     setToastMessage('Minimum Duration should be ' + minimumCampaignDuration);
-  //     setToast(true);
-  //   }
-  //   else {
-  //     Cookies.set('isAdDetails', true);
-  //     const index = cartItems.length
-  //     console.log(index)
-  //     dispatch(addItemsToCart([{index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "Day", leadDay: leadDay ? leadDay.LeadDays : 1, minimumCampaignDuration, formattedDate, campaignDurationVisibility, rateGST, width}]))
-  //     dispatch(setQuotesData({isDetails: true}))
-  //     dispatch(updateCurrentPage("checkout"))
-  //     //dispatch(setQuotesData({currentPage: "checkout", previousPage: "adDetails"}))
-  //   }
-  // } else {
-  //   setToastMessage('Please fill the necessary details in the form.');
-  //   setSeverity('error');
-  //   setToast(true);
-  //   setTimeout(() => {
-  //     setToast(false);
-  //   }, 2000);
-  // }
-  };
-
-  // const handleMarginChange = (event) => {
-  //   const newValue = parseInt(event.target.value);
-  //   //setMargin(event.target.value);
-  //   dispatch(setQuotesData({marginAmount: event.target.value}))
-
-  //   if (newValue > 0) {
-  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
-  //   }
-  // };
-
-  // const marginLostFocus = () => {
-  //   const cost = parseInt((unit === "SCM" ? (qty * width) : (qty)) * unitPrice * (campaignDuration / minimumCampaignDuration))
-  //   const price = cost + parseInt(margin)
-  //   setMarginPercentage(((margin/price)*100).toFixed(1))
-  //   //dispatch(setQuotesData({marginAmount: event.target.value}))
-  // }
-
-  // const handleMarginPercentageChange = (event) => {
-  //   const newPercentage = parseFloat(event.target.value);
-  //   setMarginPercentage(event.target.value);
-  //   dispatch(setQuotesData({marginAmount: formattedMargin(
-  //     ((unit === "SCM" ? qty * width : qty) * unitPrice * campaignDuration / minimumCampaignDuration) * (newPercentage / 100)
-  //   ).toFixed(0)}));
-  //   //old margin formula formattedMargin(((((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - newPercentage)) * 100) * (newPercentage/100)).toFixed(0)})
-  //   //setMargin(formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration) * event.target.value) / 100)));
-  //   if (newPercentage > 0) {
-  //     setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
-  //   }
-  // };
+   };
 
   const handleMarginChange = (event) => {
     const newMarginAmount = parseInt(event.target.value);
@@ -528,13 +452,6 @@ const marginLostFocus = () => {
     dispatch(setQuotesData({ marginPercentage: newMarginPercentage }));
     setMarginPercentage(newMarginPercentage);
 };
-
-
-  // const marginPercentageLostFocus = () => {
-  //   dispatch(setQuotesData({marginAmount: formattedMargin(((qty * unitPrice * (campaignDuration / minimumCampaignDuration)) /(100 - marginPercentage)) * 100) * (marginPercentage/100)}))
-  // }
-
-  const textAreaRef = useRef(null);
 
   const handleRemarks = (e) => {
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingRemarks.php/get?suggestion=${e.target.value}`)
