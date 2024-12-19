@@ -1802,30 +1802,65 @@ const handleEditMode = () => {
   // }, 150);  
 };
 
+let touchStartY = 0;
+
 const handleLongPress = (rate, isInvalid) => {
-  console.log(rate)
   pressTimer = setTimeout(() => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
     setOpenDialog(true);
-  }, 600); 
+  }, 600);
 };
 
-const handleTouchEnd = () => {
+const handleTouchStart = (rate, isInvalid, e) => {
+  touchStartY = e.touches[0].clientY; // Record the starting Y position
+  handleLongPress(rate, isInvalid);
+};
+
+const handleTouchEnd = (e) => {
   clearTimeout(pressTimer);
-};
 
-const handleTouchStart = (rate, isInvalid) => {
-  handleLongPress(rate, isInvalid); 
+  // Detect scrolling and cancel the popup
+  const touchEndY = e.changedTouches[0].clientY;
+  if (Math.abs(touchStartY - touchEndY) > 10) {
+    // If the user scrolled, prevent the dialog
+    setLongPressRateId(null);
+    setOpenDialog(false);
+  }
 };
 
 const handleMouseDown = (rate, isInvalid) => {
-  handleLongPress(rate, isInvalid); 
+  handleLongPress(rate, isInvalid);
 };
 
 const handleMouseLeave = () => {
   clearTimeout(pressTimer);
 };
+
+// const handleLongPress = (rate, isInvalid) => {
+//   console.log(rate)
+//   pressTimer = setTimeout(() => {
+//     setLongPressRateId(rate);
+//     setDialogAction(isInvalid ? 'restore' : 'remove');
+//     setOpenDialog(true);
+//   }, 600); 
+// };
+
+// const handleTouchEnd = () => {
+//   clearTimeout(pressTimer);
+// };
+
+// const handleTouchStart = (rate, isInvalid) => {
+//   handleLongPress(rate, isInvalid); 
+// };
+
+// const handleMouseDown = (rate, isInvalid) => {
+//   handleLongPress(rate, isInvalid); 
+// };
+
+// const handleMouseLeave = () => {
+//   clearTimeout(pressTimer);
+// };
 
 const handleFocus = (e) => {
   e.target.select();
