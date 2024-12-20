@@ -1556,7 +1556,7 @@ const handleLongPress = (rate, isInvalid) => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
     setOpenDialog(true);
-  }, 600); 
+  }, 1000); 
 };
 
 const handleTouchEnd = () => {
