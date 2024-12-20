@@ -240,18 +240,6 @@ const CheckoutPage = () => {
     }
   };
 
-
-  // const calculateGrandTotal = () => {
-  //   let grandTotal = [];
-  //   cartItems.map((item, index) => {
-  //     const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * ((rateGST/100) + 1)
-  //     grandTotal.push(priceOfAd);
-  // })
-  // let grandTotalAmount = grandTotal.reduce((total, amount) => total + amount, 0);
-  // grandTotalAmount = `₹ ${formattedRupees(Math.round(grandTotalAmount))}`
-  // return grandTotalAmount;
-  // }
-
   const hasRemarks = cartItems.some(item => item.remarks);
   const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
 
@@ -329,24 +317,6 @@ const CheckoutPage = () => {
             <p className="text-xs text-gray-400 italic mt-1">Q.No - Client Name</p>
             </div> 
           ) : ''}
-          {/* <div className="flex flex-row justify-between mt-8">
-          
-          <div className="mb-8 flex items-center">
-
-              <button
-                className=" hover:scale-110 text-blue-500 hover:animate-pulse border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
-                onClick={() => {
-                   dispatch(setQuotesData({currentPage: previousPage}))
-                }}
-              >
-                <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
-              </button>
-              </div>
-              <> <h1 className='text-2xl font-bold text-center mb-4'>Cart</h1>
-              <button className='border px-2 py-1 h-fit bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
-              </>
-          </div> */}
-          {/* <h1 className="text-lg font-medium text-blue-500 mb-4">Verify before sending Quote</h1> */}
           <div className='flex flex-col justify-center w-full'>
             
             <div>
@@ -391,14 +361,12 @@ const CheckoutPage = () => {
               {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap'>{item.remarks}</td>}
               <td className='p-1.5 border border-gray-200 w-fit text-nowrap'>
                 ₹ {formattedRupees(
-                  Math.round(
                     (
                       (item.unit === "SCM" ? item.qty * item.width : item.qty) *
                       item.unitPrice *
                       (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
                       parseInt(item.margin)
                     ) / item.qty
-                  )
                 )} per {item.unit}
               </td>
               <td className='p-1.5 border border-gray-200 text-nowrap'>

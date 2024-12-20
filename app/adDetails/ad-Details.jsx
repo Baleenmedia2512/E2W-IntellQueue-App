@@ -123,11 +123,15 @@ const AdDetailsPage = () => {
           unit: firstRate.Units,
           isDetails: true,
           rateGST: firstRate.rategst,
+          campaignDuration: firstRate['CampaignDuration(in Days)'] || 1
         })
       );
 
       //set Margin Percentage and Margin
-      if (parseInt(margin) !== NaN || parseInt(margin) === 0) handleMarginPercentageChange(firstRate.AgencyCommission);
+      if (
+        isNaN(parseInt(margin)) || parseInt(margin) === 0) {
+        handleMarginPercentageChange(firstRate.AgencyCommission);
+      }
 
       // Set width and quantity defaults if necessary
       if (width === 1) dispatch(setQuotesData({ width: firstRate.width }));
@@ -158,7 +162,7 @@ const AdDetailsPage = () => {
   
     try {
       // Reuse fetchRate and ensure data is properly set
-      dispatch(setQuotesData({ rateId: selectedRateId, marginAmount: "" }));
+      dispatch(setQuotesData({ rateId: selectedRateId}));
       dispatch(updateCurrentPage("adDetails"));
     } catch (error) {
       console.error("Error during rate selection:", error);
@@ -250,6 +254,7 @@ const AdDetailsPage = () => {
   },[])
 
   useEffect(() => {
+    // dispatch(setQuotesData({marginAmount: 0}));
     if (rateId && adMedium) {
       LoadFormData();
     }
@@ -295,7 +300,7 @@ const AdDetailsPage = () => {
     const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount);
     
     // Update both marginAmount and marginPercentage
-    dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
+    // dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
 
     if (newMarginAmount > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
@@ -309,7 +314,7 @@ const AdDetailsPage = () => {
     const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage);
   
     // Update both marginAmount and marginPercentage
-    dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
+    // dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
   
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
@@ -367,6 +372,7 @@ const AdDetailsPage = () => {
     const matchingValue = {Qty: matchingStartQty, Width: matchingWidth}
     return matchingValue;
   };
+
 
   const items = [
     {

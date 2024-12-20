@@ -317,7 +317,7 @@ export const AdDetails = () => {
         const promises = cartItems.map(item => updateQuoteToDB(item));
         await Promise.all(promises);
         setTimeout(() => {
-        dispatch(resetCartItem());
+        //dispatch(resetCartItem());
         dispatch(resetQuotesData());
         dispatch(resetClientData());
         dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
@@ -363,9 +363,7 @@ export const AdDetails = () => {
   return grandTotalAmount;
   }
 
-
   const greater = ">>";
-
   
 
   return (
