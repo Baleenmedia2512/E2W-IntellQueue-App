@@ -661,6 +661,7 @@ const AdDetailsPage = () => {
   const handleSelectChange = (selectedOption, filterKey) => {
     dispatch(setRateId(0));
     setIsNewRate(true);
+    
     if (filterKey === 'rateName'){
       dispatch(setSelectedValues({
         [filterKey]: selectedOption,
@@ -757,6 +758,13 @@ var selectedRate = '';
           item.Package === selectedOption.value 
         );}
 
+        if (filterKey === 'vendorName' && selectedOption) {
+          selectedRate = ratesData.find(item =>
+            
+          item.vendorName === selectedOption.value 
+        );}
+
+
     if (selectedRate) {
       dispatch(setRateId(selectedRate.RateID));
       setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
@@ -772,9 +780,9 @@ var selectedRate = '';
       setMarginPercentage(selectedRate.AgencyCommission);
     }
   
-  if (filterKey !== 'vendorName'){
-    setIsNewRate(false)
-  }
+  // if (filterKey !== 'vendorName'){
+    setIsNewRate(false);
+  // }
   }
   useEffect(() => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
@@ -1216,7 +1224,8 @@ var selectedRate = '';
     }));
     // Close the newRateModel modal
     setIsNewRate(true);
-    // dispatch(setRateId(""));
+
+    // dispatch(setRateId(0));
     setNewRateName("");
     setIsQtySlab(false);
     elementsToShowList("Show")
@@ -1731,7 +1740,7 @@ const handleBlur = (e) => {
     Add
   </button>
 ) : (
-  rateValidity && rateId > 0 ? (
+  rateValidity  && rateId > 0 ? (
     <>
       <button 
         className="Update-button" 

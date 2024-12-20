@@ -96,8 +96,12 @@ export default function manageQuotes() {
     setFilteredData(filtered);
   };
 
+  const winQuote = async(QuoteData) => {
+    
+  }
+
   return (
-    <div className="p-4 text-black">
+    <div className="p-4 text-black font-montserrat ">
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
         <h2 className="text-xl font-semibold text-blue-500">Quote Manager</h2>
