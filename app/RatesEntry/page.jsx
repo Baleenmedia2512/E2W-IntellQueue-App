@@ -1802,65 +1802,30 @@ const handleEditMode = () => {
   // }, 150);  
 };
 
-let touchStartY = 0;
 
 const handleLongPress = (rate, isInvalid) => {
   pressTimer = setTimeout(() => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
     setOpenDialog(true);
-  }, 600);
+  }, 1000); 
 };
 
-const handleTouchStart = (rate, isInvalid, e) => {
-  touchStartY = e.touches[0].clientY; // Record the starting Y position
-  handleLongPress(rate, isInvalid);
-};
-
-const handleTouchEnd = (e) => {
+const handleTouchEnd = () => {
   clearTimeout(pressTimer);
+};
 
-  // Detect scrolling and cancel the popup
-  const touchEndY = e.changedTouches[0].clientY;
-  if (Math.abs(touchStartY - touchEndY) > 10) {
-    // If the user scrolled, prevent the dialog
-    setLongPressRateId(null);
-    setOpenDialog(false);
-  }
+const handleTouchStart = (rate, isInvalid) => {
+  handleLongPress(rate, isInvalid); 
 };
 
 const handleMouseDown = (rate, isInvalid) => {
-  handleLongPress(rate, isInvalid);
+  handleLongPress(rate, isInvalid); 
 };
 
 const handleMouseLeave = () => {
   clearTimeout(pressTimer);
 };
-
-// const handleLongPress = (rate, isInvalid) => {
-//   console.log(rate)
-//   pressTimer = setTimeout(() => {
-//     setLongPressRateId(rate);
-//     setDialogAction(isInvalid ? 'restore' : 'remove');
-//     setOpenDialog(true);
-//   }, 600); 
-// };
-
-// const handleTouchEnd = () => {
-//   clearTimeout(pressTimer);
-// };
-
-// const handleTouchStart = (rate, isInvalid) => {
-//   handleLongPress(rate, isInvalid); 
-// };
-
-// const handleMouseDown = (rate, isInvalid) => {
-//   handleLongPress(rate, isInvalid); 
-// };
-
-// const handleMouseLeave = () => {
-//   clearTimeout(pressTimer);
-// };
 
 const handleFocus = (e) => {
   e.target.select();
@@ -2104,7 +2069,7 @@ const handleBlur = (e) => {
                     type="button"
                     className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
                     onClick={handleRateSelection}
-                    onTouchStart={() => handleTouchStart(name.RateID, isInvalid)}
+                    onTouchStart={(e) => handleTouchStart(name.RateID, isInvalid, e)}
                     onTouchEnd={handleTouchEnd} 
                     onMouseDown={() => handleMouseDown(name.RateID, isInvalid)} 
                     onMouseUp={handleTouchEnd}
