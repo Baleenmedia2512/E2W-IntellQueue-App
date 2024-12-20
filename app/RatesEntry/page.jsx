@@ -1718,62 +1718,56 @@ const handleBlur = (e) => {
             </DialogActions>
       </Dialog>
             <div className="w-full max-w-6xl">
-            <div className="flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center   ">
   <div className="w-full max-w-6xl relative">
-    {/* Flex container for heading and buttons */}
-    <div className="flex justify-between items-center relative z-10 px-2">
-      {/* Heading on the far left */}
+    {/* Header Section */}
+    <div className="flex justify-between items-center relative z-10 space-y-4  ">
+      {/* Heading Section */}
       <div>
-        <h2 className="text-xl w-24 sm:w-full sm:text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">
-          Rates Manager
-        </h2>
-        <div className="border-2 w-10 mt-1 pl-2 border-blue-500"></div>
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-500">Rates Manager</h2>
+        <div className="border-2 w-10 mt-1 border-blue-500"></div>
       </div>
-      
-      {/* Buttons on the far right */}
-      <div className="flex space-x-2 sm:mt-20">
-      { isNewRate || rateId === 0 ? (
-  <button 
-    className="Add-button" 
-    onClick={insertNewRate}
-  >
-    Add
-  </button>
-) : (
-  rateValidity  && rateId > 0 ? (
-    <>
-      <button 
-        className="Update-button" 
-        onClick={updateRates}
-        disabled={!isFormChanged}
-      >
-        Update
-      </button>
-      <button 
-        className="Delete-button" 
-        onClick={(e) => rejectRates(e, rateId)}
-      >
-        Remove
-      </button>
-    </>
-  ) : (
-    <button 
-      className="Add-button" 
-      onClick={(e) => restoreRates(e, rateId)}
-    >
-      Restore
-    </button>
-  )
-)}
 
-
-
+      {/* Buttons Section */}
+      <div className="flex gap-2 justify-center sm:justify-end">
+        {isNewRate || rateId === 0 ? (
+          <button 
+            className="Add-button px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            onClick={insertNewRate}
+          >
+            Add
+          </button>
+        ) : rateValidity && rateId > 0 ? (
+          <>
+            <button 
+              className="Update-button px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              onClick={updateRates}
+              disabled={!isFormChanged}
+            >
+              Update
+            </button>
+            <button 
+              className="Delete-button px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              onClick={(e) => rejectRates(e, rateId)}
+            >
+              Remove
+            </button>
+          </>
+        ) : (
+          <button 
+            className="Add-button px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            onClick={(e) => restoreRates(e, rateId)}
+          >
+            Restore
+          </button>
+        )}
       </div>
     </div>
-    
-    {/* Search bar positioned on top of heading and buttons section */}
-    <div className="absolute top-4 sm:-top-8 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
-      <div className="mb-2 flex items-center text-black">
+
+    {/* Search Bar and Checkbox Section */}
+    <div className=" mt-6 flex flex-col gap-4">
+      {/* Checkbox */}
+      <div className="flex items-center justify-start text-black">
         <label className="flex items-center cursor-pointer">
           <input
             ref={checkboxRef}
@@ -1786,7 +1780,8 @@ const handleBlur = (e) => {
         </label>
       </div>
 
-      <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
+      {/* Search Input */}
+      <div className="flex-grow flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
         <input
           className="w-full px-4 py-2 text-black focus:outline-none"
           type="text"
@@ -1794,44 +1789,45 @@ const handleBlur = (e) => {
           value={rateSearchTerm}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          // onFocus={(e) => { e.target.select(); }}
           onChange={handleRateSearch}
         />
         <div className="px-3">
           <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div>
       </div>
-      
-      {/* Search Suggestions */}
-      <div className="relative" ref={suggestionsRef}>
-        {isFocused && Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
-          <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
-            {ratesSearchSuggestion.map((name, index) => {
-              const isInvalid = name.ApprovedStatus === "Rejected";
-              return (
-                <li key={index}>
-                  <button
-                    type="button"
-                    className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
-                    onClick={handleRateSelection}
-                    onTouchStart={() => handleTouchStart(name.RateID, isInvalid)}
-                    onTouchEnd={handleTouchEnd} 
-                    onMouseDown={() => handleMouseDown(name.RateID, isInvalid)} 
-                    onMouseUp={handleTouchEnd}
-                    onMouseLeave={handleMouseLeave}
-                    value={name.SearchTerm}
-                  >
-                    {name.SearchTerm}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+    </div>
+
+    {/* Search Suggestions */}
+    <div className="relative mt-4" ref={suggestionsRef}>
+      {isFocused && Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
+        <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+          {ratesSearchSuggestion.map((name, index) => {
+            const isInvalid = name.ApprovedStatus === "Rejected";
+            return (
+              <li key={index}>
+                <button
+                  type="button"
+                  className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
+                  onClick={handleRateSelection}
+                  onTouchStart={() => handleTouchStart(name.RateID, isInvalid)}
+                  onTouchEnd={handleTouchEnd}
+                  onMouseDown={() => handleMouseDown(name.RateID, isInvalid)}
+                  onMouseUp={handleTouchEnd}
+                  onMouseLeave={handleMouseLeave}
+                  value={name.SearchTerm}
+                >
+                  {name.SearchTerm}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   </div>
 </div>
+
+
 
     {/* MUI Dialog for long press actions */}
     <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
@@ -1876,7 +1872,7 @@ const handleBlur = (e) => {
             </div>
           </div>
       )} */}
-      <div className="flex items-center justify-center mt-24 sm:mt-6">
+      <div className="flex items-center justify-center md:mt-6 mt-4">
         
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
       <form className="space-y-4">
