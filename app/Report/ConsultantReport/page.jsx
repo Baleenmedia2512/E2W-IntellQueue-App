@@ -46,14 +46,17 @@ export default function GroupedRowsDemo() {
         startDate: currentStartDate,
         endDate: currentEndDate,
       });
-      const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
-      const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
-
-      const [filters, setFilters] = useState({
+    const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
+    const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
+    const defaultFilters = {
         originalName: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
-    });
+    };
+    const sessionFilters = sessionStorage.getItem('filters')
+    ? JSON.parse(sessionStorage.getItem('filters'))
+    : null;
+    const [filters, setFilters] = useState(sessionFilters || defaultFilters);
     const [dates, setDates] = useState(
         sessionStartDate && sessionEndDate
             ? [new Date(sessionStartDate), new Date(sessionEndDate)]
@@ -69,6 +72,14 @@ export default function GroupedRowsDemo() {
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     const [matchMode, setMatchMode] = useState('contains');
     const [showIcProcessedConsultantsOnly, setShowIcProcessedConsultantsOnly] = useState(false);
+    const sessionFilterValues = sessionStorage.getItem('filterValues')
+    ? JSON.parse(sessionStorage.getItem('filterValues'))
+    : null;
+    const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
+        originalName: '',
+        rateCard: '',
+        rateType: '',
+    });
 
     const activeFilters = {
         rateCard: filters.rateCard ? filters.rateCard.value : '',
@@ -264,11 +275,9 @@ export default function GroupedRowsDemo() {
                 }
                 setOpen(false);
                 setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
+                fetchConsultants();
                 setTimeout(() => {
                 setSuccessMessage('');
-                fetchConsultants();
-                // setFilteredConsultants([]);
-                resetFilters();
               }, 3000);
             } catch (error) {
                 console.error('Error saving consultant:', error);
@@ -759,19 +768,8 @@ const handleSelectionChange = (e) => {
 
 
 const resetFilters = () => {
-    setFilters({
-        originalName: { value: null, matchMode: 'contains' },
-        rateCard: { value: null, matchMode: 'contains' },
-        rateType: { value: null, matchMode: 'contains' },
-    });
+    setFilters(defaultFilters);
 };
-
-const [tempFilterValues, setTempFilterValues] = useState({
-    originalName: '',
-    rateCard: '',
-    rateType: '',
-});
-
 
 const filterHeaderTemplate = (column, filterField) => {
     const handleApplyFilter = () => {
@@ -799,7 +797,8 @@ const filterHeaderTemplate = (column, filterField) => {
                 });
             // }
         }
-    
+
+        sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters);
         setSelectedRows(combinedFilteredRows); // Automatically select the filtered rows
     };
@@ -810,6 +809,7 @@ const filterHeaderTemplate = (column, filterField) => {
     
         // Clear the temporary filter value for the specific filter
         setTempFilterValues({ ...tempFilterValues, [filterField]: '' });
+        sessionStorage.setItem('filterValues', JSON.stringify({ ...tempFilterValues, [filterField]: '' }));
     
         // Reset combined filtered rows to the original dataset
         let combinedFilteredRows = [...groupedData]; 
@@ -833,7 +833,8 @@ const filterHeaderTemplate = (column, filterField) => {
                 });
             }
         }
-    
+
+        sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters); // Update filters without the cleared filter
     
         // Reset selectedRows when all filters are cleared
@@ -854,7 +855,7 @@ const filterHeaderTemplate = (column, filterField) => {
             <input
                 type="text"
                 value={tempFilterValues[filterField]}
-                onChange={(e) => setTempFilterValues({ ...tempFilterValues, [filterField]: e.target.value })}
+                onChange={(e) => {setTempFilterValues({ ...tempFilterValues, [filterField]: e.target.value }); sessionStorage.setItem('filterValues', JSON.stringify({ ...tempFilterValues, [filterField]: e.target.value })); }}
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
@@ -897,6 +898,12 @@ useEffect(() => {
             )
         );
         setConsultantsWithZeroPrice(zeroPriceConsultants);
+    }
+    if (sessionFilters) {
+        setFilters(sessionFilters);
+    }
+    if (sessionFilterValues) {
+        setTempFilterValues(sessionFilterValues);
     }
 }, [consultants, selectedRows]);
 
