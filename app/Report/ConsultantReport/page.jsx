@@ -46,14 +46,17 @@ export default function GroupedRowsDemo() {
         startDate: currentStartDate,
         endDate: currentEndDate,
       });
-      const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
-      const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
-
-      const [filters, setFilters] = useState({
+    const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
+    const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
+    const defaultFilters = {
         originalName: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
-    });
+    };
+    const sessionFilters = sessionStorage.getItem('filters')
+    ? JSON.parse(sessionStorage.getItem('filters'))
+    : null;
+    const [filters, setFilters] = useState(sessionFilters || defaultFilters);
     const [dates, setDates] = useState(
         sessionStartDate && sessionEndDate
             ? [new Date(sessionStartDate), new Date(sessionEndDate)]
@@ -69,6 +72,14 @@ export default function GroupedRowsDemo() {
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     const [matchMode, setMatchMode] = useState('contains');
     const [showIcProcessedConsultantsOnly, setShowIcProcessedConsultantsOnly] = useState(false);
+    const sessionFilterValues = sessionStorage.getItem('filterValues')
+    ? JSON.parse(sessionStorage.getItem('filterValues'))
+    : null;
+    const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
+        originalName: '',
+        rateCard: '',
+        rateType: '',
+    });
 
     const activeFilters = {
         rateCard: filters.rateCard ? filters.rateCard.value : '',
@@ -264,11 +275,9 @@ export default function GroupedRowsDemo() {
                 }
                 setOpen(false);
                 setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
+                fetchConsultants();
                 setTimeout(() => {
                 setSuccessMessage('');
-                fetchConsultants();
-                // setFilteredConsultants([]);
-                resetFilters();
               }, 3000);
             } catch (error) {
                 console.error('Error saving consultant:', error);
@@ -403,7 +412,7 @@ const handleMarkAsUnprocessed = async () => {
         return groupedData;
     };
     
-
+    //OLD CODE
     //   const groupConsultants = (data) => {
     //     const groupedData = [];
     
@@ -462,8 +471,9 @@ const handleMarkAsUnprocessed = async () => {
     
     //     return groupedData;
     // };
+    //OLD CODE
 
-
+    //OLD CODE
     // const renderGroupedData = (groupedData) => {
     //     const rows = [];
     
@@ -514,6 +524,7 @@ const handleMarkAsUnprocessed = async () => {
     
     //     return rows;
     // };
+    //OLD CODE
 
     const renderGroupedData = (groupedData, activeFilters = {}) => {
         const rows = [];
@@ -527,24 +538,7 @@ const handleMarkAsUnprocessed = async () => {
     
             group.rates.forEach((rateCard, scanIndex) => {
                 rateCardNames.push(rateCard.rateCard);
-                
-                // rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                //     const isFilteredByRateCard = activeFilters.rateCard ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase()) : false;
-
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                    // // Filter conditions for name, rateCard, and rateType
-                    // const isFilteredByRateCard = activeFilters.rateCard
-                    //     ? rateCard.rateCard.toLowerCase().includes(activeFilters.rateCard.toLowerCase())
-                    //     : false;
-                    // const isFilteredByRateType = activeFilters.rateType
-                    //     ? rateType.rateType.toLowerCase().includes(activeFilters.rateType.toLowerCase())
-                    //     : false;
-                    // const isFilteredByName = activeFilters.name
-                    //     ? group.name.toLowerCase().includes(activeFilters.name.toLowerCase())
-                    //     : false;
-                    
-                    // // Add name if any of the filters apply
-                    // const shouldAddName = currentIndex === middleIndex || isFilteredByRateCard || isFilteredByRateType || isFilteredByName;
                     const totalAmount = (rateType.count * rateType.price) + (rateType.waiverAmount);
                     const orderNumbersArray = rateType.OrderNumbers ? rateType.OrderNumbers.split(',').map(num => num.trim()) : [];
 
@@ -568,7 +562,6 @@ const handleMarkAsUnprocessed = async () => {
             
             const rateCardString = rateCardNames.join('-');
             
-            // Add a row for the total of each consultant
             rows.push({
                 id: `${group.name}-${rateCardString}-total`,
                 name: '',
@@ -650,7 +643,7 @@ const handleMarkAsUnprocessed = async () => {
         });
     };
     
-
+    //OLD CODE
     // const handlePriceChange = (id, newPrice) => {
     //     setConsultants(prevConsultants => {
     //         const updatedConsultants = [...prevConsultants];
@@ -728,7 +721,7 @@ const handleMarkAsUnprocessed = async () => {
     //     //     return updatedFilteredConsultants;
     //     // });
     // };
-
+    //OLD CODE
 
     const priceBodyTemplate = (rowData) => {
 
@@ -796,30 +789,18 @@ const handleMarkAsUnprocessed = async () => {
         return rowData.waiverAmount;
     };
 
-    // const customRowClassName = (rowData) => {
-    //     if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
-    //         const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
-    //         return `${baseClass} border-b-2 border-gray-300`; // Add bottom border class here
-    //     }   
-        
-    // };
     const customRowClassName = (rowData) => {
-        // Check if the row is a "Total" row
         const isTotalRow = typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total');
     
-        // Base class logic
         const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
     
-        // Add the border and conditional class for hiding the checkbox
         const additionalClass = isTotalRow ? 'hide-checkbox border-b-2 border-gray-300' : '';
     
-        // Return the combined class string
         return `${baseClass} ${additionalClass}`;
     };
     
 
     const selectionBodyTemplate = (rowData) => {
-        // Check if the rowData contains a consultant name
         if (rowData.name) {
             return <input type="checkbox" checked={selectedRows.includes(rowData)} readOnly />;
         }
@@ -979,24 +960,9 @@ const handleSelectionChange = (e) => {
 };
 
 
-
-
-
-
 const resetFilters = () => {
-    setFilters({
-        originalName: { value: null, matchMode: 'contains' },
-        rateCard: { value: null, matchMode: 'contains' },
-        rateType: { value: null, matchMode: 'contains' },
-    });
+    setFilters(defaultFilters);
 };
-
-const [tempFilterValues, setTempFilterValues] = useState({
-    originalName: '',
-    rateCard: '',
-    rateType: '',
-});
-
 
 const filterHeaderTemplate = (column, filterField) => {
     const handleApplyFilter = () => {
@@ -1024,7 +990,8 @@ const filterHeaderTemplate = (column, filterField) => {
                 });
             // }
         }
-    
+
+        sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters);
         setSelectedRows(combinedFilteredRows); // Automatically select the filtered rows
     };
@@ -1035,6 +1002,7 @@ const filterHeaderTemplate = (column, filterField) => {
     
         // Clear the temporary filter value for the specific filter
         setTempFilterValues({ ...tempFilterValues, [filterField]: '' });
+        sessionStorage.setItem('filterValues', JSON.stringify({ ...tempFilterValues, [filterField]: '' }));
     
         // Reset combined filtered rows to the original dataset
         let combinedFilteredRows = [...groupedData]; 
@@ -1058,7 +1026,8 @@ const filterHeaderTemplate = (column, filterField) => {
                 });
             }
         }
-    
+
+        sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters); // Update filters without the cleared filter
     
         // Reset selectedRows when all filters are cleared
@@ -1068,8 +1037,6 @@ const filterHeaderTemplate = (column, filterField) => {
             setSelectedRows(combinedFilteredRows); // Update selected rows based on remaining active filters
         }
     };
-
-    
 
 
     return (
@@ -1081,7 +1048,7 @@ const filterHeaderTemplate = (column, filterField) => {
             <input
                 type="text"
                 value={tempFilterValues[filterField]}
-                onChange={(e) => setTempFilterValues({ ...tempFilterValues, [filterField]: e.target.value })}
+                onChange={(e) => {setTempFilterValues({ ...tempFilterValues, [filterField]: e.target.value }); sessionStorage.setItem('filterValues', JSON.stringify({ ...tempFilterValues, [filterField]: e.target.value })); }}
                 placeholder={`Search ${column.header}`}
                 className="p-inputtext-custom"
                 style={{ width: '100%' }}
@@ -1111,50 +1078,6 @@ const filterHeaderTemplate = (column, filterField) => {
 };
 
 
-
-//Working filter
-// const filterHeaderTemplate = (column, filterField) => {
-//     return (
-//         <div>
-//             <div className="border-b-2 border-sky-500 mb-2 pb-1 text-center">
-//                 <span className="font-bold text-sky-500">Contains</span>
-//             </div>
-//             <span className="p-column-title">{column.header}</span>
-//             <input
-//                 type="text"
-//                 value={filters[filterField] ? filters[filterField].value : ''}
-//                 onChange={(e) => {
-//                     const searchTerm = e.target.value.toLowerCase();
-//                     let newFilters = { ...filters };
-//                     newFilters[filterField] = { value: searchTerm, matchMode: 'contains' };
-//                     setFilters(newFilters);
-//                     setSelectedRows([]);
-//              }
-//              }
-//                 placeholder={`Search ${column.header}`}
-//                 className="p-inputtext-custom"
-//                 style={{ width: '100%' }}
-                
-//             />
-//             <button
-//     onClick={() => {
-//         let newFilters = { ...filters };
-//         newFilters[filterField] = { value: '', matchMode: 'contains' };
-//         setFilters(newFilters);
-//         // setFilteredConsultants([]); 
-//         setSelectedRows([]);
-//     }}
-//     className="mt-2 px-4 py-2 text-gray-700 font-base hover:text-white border border-red-200 font-semibold rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-opacity-50 transition duration-150 ease-in-out"
-// >
-//     Clear
-// </button>
-
-//         </div>
-//     );
-// };
-//Working filter
-
-
 useEffect(() => {
     if (selectedRows.length > 0) {
         const zeroPriceConsultants = selectedRows.filter(
@@ -1168,6 +1091,12 @@ useEffect(() => {
             )
         );
         setConsultantsWithZeroPrice(zeroPriceConsultants);
+    }
+    if (sessionFilters) {
+        setFilters(sessionFilters);
+    }
+    if (sessionFilterValues) {
+        setTempFilterValues(sessionFilterValues);
     }
 }, [consultants, selectedRows]);
 
@@ -1233,20 +1162,20 @@ const handleCheckboxChange = () => {
                 <div className="mt-8 p-4">
                 <div className="flex justify-end mb-4 gap-2 flex-wrap">
                 <div className="flex flex-col justify-end w-fit sm:w-auto">
-  <label className="text-white font-semibold items-center text-sm sm:text-base md:text-sm lg:text-base">Select Date Range</label>
-  <Calendar 
-    value={dates} 
-    onChange={(e) => handleDateChange(e.value)} 
-    selectionMode="range" 
-    dateFormat='dd-M-yy' 
-    readOnlyInput 
-    hideOnRangeSelection 
-    className="w-56 text-sm sm:text-base md:text-sm lg:text-base"
-    inputClassName="w-full border border-sky-300 rounded-lg pl-2 py-1 bg-white text-gray-900"
-  />
-</div>
+                <label className="text-white font-semibold items-center text-sm sm:text-base md:text-sm lg:text-base">Select Date Range</label>
+                <Calendar 
+                    value={dates} 
+                    onChange={(e) => handleDateChange(e.value)} 
+                    selectionMode="range" 
+                    dateFormat='dd-M-yy' 
+                    readOnlyInput 
+                    hideOnRangeSelection 
+                    className="w-56 text-sm sm:text-base md:text-sm lg:text-base"
+                    inputClassName="w-full border border-sky-300 rounded-lg pl-2 py-1 bg-white text-gray-900"
+                />
+                </div>
 
-            <div className="mt-auto flex justify-end gap-2 flex-wrap">
+        <div className="mt-auto flex justify-end gap-2 flex-wrap">
         <button
           onClick={handleExport}
           className="bg-green-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
@@ -1312,17 +1241,17 @@ const handleCheckboxChange = () => {
       </div>
         </div>
         <div className="mb-2 flex items-center justify-end text-black">
-  <label className="flex items-center cursor-pointer">
-    <input
-      type="checkbox"
-      color='green'
-      className="h-5 w-5 text-green-600 border-gray-300 rounded-lg focus:ring-green-500 cursor-pointer"
-      checked={showIcProcessedConsultantsOnly}
-      onChange={handleCheckboxChange} // Handle checkbox change
-    />
-    <span className="ml-2 text-sm text-white font-medium">Show Processed ICs Only</span>
-  </label>
-</div>
+        <label className="flex items-center cursor-pointer">
+            <input
+            type="checkbox"
+            color='green'
+            className="h-5 w-5 text-green-600 border-gray-300 rounded-lg focus:ring-green-500 cursor-pointer"
+            checked={showIcProcessedConsultantsOnly}
+            onChange={handleCheckboxChange} // Handle checkbox change
+            />
+            <span className="ml-2 text-sm text-white font-medium">Show Processed ICs Only</span>
+        </label>
+        </div>
         
     <div className="overflow-x-auto border rounded-md shadow-[0_8px_16px_rgba(0,0,0,0.2)]">
                         <DataTable
@@ -1378,8 +1307,8 @@ const handleCheckboxChange = () => {
                     </div>
                 </div>
                 {/* ToastMessage component */}
-  {successMessage && <SuccessToast message={successMessage} />}
-  {toast && <ToastMessage message={toastMessage} type="error"/>}
+                {successMessage && <SuccessToast message={successMessage} />}
+                {toast && <ToastMessage message={toastMessage} type="error"/>}
             </div>
             
         </div>

@@ -141,6 +141,7 @@ const FinanceData = () => {
   const [previousPaymentMode, setPreviousPaymentMode] = useState('');
   const [previousAmountPaid, setPreviousAmountPaid] = useState(0);
   const [isDownloadInvoiceChecked, setIsDownloadInvoiceChecked] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
     if(dbName){
@@ -324,6 +325,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setReceivableAmount(clientDetails.receivableAmount);
           setPreviousPaymentMode(clientDetails.previousPaymentMode);
           setPreviousAmountPaid(clientDetails.previousAmountPaid);
+
+          setErrors({});
         }
       })
       .catch((error) => {
@@ -459,6 +462,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
+
+        setErrors({});
       } else {
         dispatch(setIsOrderExist(false));
       }
@@ -499,6 +504,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
+
+        setErrors({});
       } else {
         dispatch(setIsOrderExist(false));
       }
@@ -795,6 +802,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
 const insertNewFinance = async (e) => {
   e.preventDefault();
+  setIsButtonDisabled(true);
 
   const orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber;
 
@@ -804,61 +812,71 @@ const insertNewFinance = async (e) => {
           setToastMessage("Please upload a Bill!");
           setSeverity("error");
           setToast(true);
+          setIsButtonDisabled(false);
           setTimeout(() => setToast(false), 3000);
           return;
       }
       if (!expenseCategory) {
           setErrors((prevErrors) => ({ ...prevErrors, expenseCategory: "Select an Expense Category!" }));
+          setIsButtonDisabled(false);
           return;
       }
       if (orderAmount === 0 || orderAmount === "") {
           setErrors((prevErrors) => ({ ...prevErrors, orderAmount: "Enter a valid Order Amount" }));
+          amountRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+      if (bill && billNumber === "") {
+          setErrors((prevErrors) => ({ ...prevErrors, billNumber: "Enter a valid bill number" }));
+          billNumberRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+      if ((orderNumberToBeUploaded === "" || parseInt(orderNumberToBeUploaded) === 0) && expenseCategory?.value === "Project") {
+          setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Order Number is required for Project Category!" }));
+          orderNumberRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+
+      // Handle bill upload
+      await handleUploadBills();
+      cancelFinance();
+      setIsButtonDisabled(false);
+      return;
+  }
+
+  if (validateFields()) {
+
+      // Validate other fields
+      if (!isOrderExist && !expenseCategory) {
+          showToast("Order Number does not exist!", "error");
+          return;
+      }
+      if ((balanceAmount <= 0 && orderNumber && orderNumber !== '' && orderNumber !== 0) && transactionType?.value !== 'Operational Expense') {
+          showToast("Full payment has already been received!", "error");
+          return;
+      }
+      if ((!orderNumber || isNaN(orderNumber)) && transactionType?.value !== 'Operational Expense') {
+          setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter a valid Order Number!" }));
+          setIsButtonDisabled(false);
+          return;
+      }
+      if (orderAmount === 0 || orderAmount === ""){
+          setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
           amountRef?.current.focus();
           return;
       }
       if (bill && billNumber === "") {
           setErrors((prevErrors) => ({ ...prevErrors, billNumber: "Enter a valid bill number" }));
           billNumberRef?.current.focus();
-          return;
-      }
-      if ((orderNumberToBeUploaded === "" || parseInt(orderNumberToBeUploaded) === 0) && expenseCategory?.value === "Project") {
-          setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Order Number is required for Project Category!" }));
-          orderNumberRef?.current.focus();
+          setIsButtonDisabled(false);
           return;
       }
 
-      // Handle bill upload
-      await handleUploadBills();
-      resetFinanceForm();
-      return;
-  }
+      // Proceed with insertion
 
-  // Validate other fields
-  if (!isOrderExist && !expenseCategory) {
-      showToast("Order Number does not exist!", "error");
-      return;
-  }
-  if (balanceAmount === 0 || balanceAmount < 0) {
-      showToast("Full payment has already been received!", "error");
-      return;
-  }
-  if (!orderNumber || isNaN(orderNumber)) {
-      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter a valid Order Number!" }));
-      return;
-  }
-  if (isNaN(parseInt(orderAmount)) || orderAmount === "0") {
-      setErrors((prevErrors) => ({ ...prevErrors, orderAmount: "Please enter a valid Order Amount!" }));
-      amountRef?.current.focus();
-      return;
-  }
-  if (bill && billNumber === "") {
-      setErrors((prevErrors) => ({ ...prevErrors, billNumber: "Enter a valid bill number" }));
-      billNumberRef?.current.focus();
-      return;
-  }
-
-  // Proceed with insertion
-  if (validateFields()) {
           setToastMessage(
             <span>
                 <CircularProgress size={20} style={{ marginRight: "8px" }} />
@@ -874,12 +892,13 @@ const insertNewFinance = async (e) => {
           ]);
 
           const data = await response.json();
-
+          
           if (data === "Inserted Successfully!") {
               setSuccessMessage("Finance Entry Added");
               setToast(false)
               handlePostInsertActions();
           } else {
+              setIsButtonDisabled(false);
               throw new Error("Unexpected response from the server.");
           }
       } catch (error) {
@@ -887,6 +906,7 @@ const insertNewFinance = async (e) => {
           setToastMessage(error.message || "An error occurred while adding the finance entry.");
           setSeverity("error");
           setToast(true);
+          setIsButtonDisabled(false);
           setTimeout(() => setToast(false), 3000);
       }
   } else {
@@ -898,42 +918,28 @@ const showToast = (message, severity) => {
   setToastMessage(message);
   setSeverity(severity);
   setToast(true);
+  setIsButtonDisabled(false);
   setTimeout(() => setToast(false), 3000);
-};
-
-const resetFinanceForm = () => {
-  setBill(null);
-  setClientName("");
-  setErrors({});
-  setExpenseCategory("");
-  setGSTAmount("");
-  setOrderAmount("");
-  setOrderNumber("");
-  setBillNumber("");
-  setBillDate(dayjs());
-  setRateWiseOrderNumber("");
-  setTaxType(taxTypeOptions[2]);
-  setTransactionType(transactionOptions[0]);
-  dispatch(resetOrderData());
-  dispatch(resetClientData());
 };
 
 const handlePostInsertActions = () => {
   setTimeout(() => {
       setSuccessMessage("");
+      setIsButtonDisabled(false);
       if (transactionType?.value === "Income") {
           if (elementsToHide.includes("RateWiseOrderNumberText")) {
               SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+              if (isDownloadInvoiceChecked) sendDataToPdf(); //DO NOT INCLUDE THIS LINE IN MASTER ---Logesh
           } else if (elementsToHide.includes("OrderNumberText")) {
               SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
               if (isDownloadInvoiceChecked) sendDataToPdf();
           } else {
               showToast("SMS Not Sent! Reason: No Database Found.", "warning");
+              if (isDownloadInvoiceChecked) sendDataToPdf(); //DO NOT INCLUDE THIS LINE IN MASTER ---Logesh
           }
       }
   }, 1000);
 
-  // resetFinanceForm();
   cancelFinance();
 };
 
@@ -1024,6 +1030,7 @@ useEffect(() => {
     dispatch(resetClientData());
     setChequeNumber('');
     setClientName('');
+    setClientNumber('');
     setExpenseCategory('');
     setGSTAmount('');
     setGSTPercentage('');
@@ -1071,22 +1078,7 @@ useEffect(() => {
 
   // If search term is cleared, reset the update mode
   if (searchTerm.trim() === "") {
-    setIsUpdateMode(false); // Reset update mode
-      setChequeNumber('');
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setRateWiseOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          setFinanceSearchTerm('');
-    setFinanceSearchSuggestion([]); // Clear suggestions
+    cancelFinance();
     return; // Exit early
   }
 
@@ -1157,6 +1149,7 @@ useEffect(() => {
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
         setDisplayClientName(clientData[0].clientName);
+        setClientNumber(clientData[0].clientContact);
         setRateName(clientData[0].rateName);
         setRateType(clientData[0].rateType);
         setAdjustedOrderAmount(clientData[0].adjustedOrderAmount);
@@ -1364,8 +1357,9 @@ const handleGSTAmountChange = (gst) => {
   )}
 
   <button
-    className="Add-button ml-2"
+    className="custom-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
+    disabled={isButtonDisabled}
   >
     
     {isUpdateMode ? 'Update' : 'Add'} 
@@ -1644,10 +1638,10 @@ const handleGSTAmountChange = (gst) => {
                 disabled={isUpdateMode || billsOnly}
                 onFocus={e => e.target.select()}
                 onBlur={() => {
-            setTimeout(() => {
-              setClientNameSuggestions([]);
-            }, 200); // Adjust the delay time according to your preference
-          }}
+                  setTimeout(() => {
+                    setClientNameSuggestions([]);
+                  }, 200); // Adjust the delay time according to your preference
+                }}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();

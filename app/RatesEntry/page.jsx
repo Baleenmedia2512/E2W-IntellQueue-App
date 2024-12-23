@@ -1802,13 +1802,13 @@ const handleEditMode = () => {
   // }, 150);  
 };
 
+
 const handleLongPress = (rate, isInvalid) => {
-  console.log(rate)
   pressTimer = setTimeout(() => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
     setOpenDialog(true);
-  }, 600); 
+  }, 1000); 
 };
 
 const handleTouchEnd = () => {

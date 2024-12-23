@@ -4,7 +4,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
-import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate, setClientName, setClientNumber} from '@/redux/features/order-slice';
+import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} from '@/redux/features/order-slice';
 import { resetClientData } from '@/redux/features/client-slice';
 import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
 // import { TextField } from '@mui/material';
@@ -33,12 +33,12 @@ const CreateOrder = () => {
     const stages = useAppSelector(state => state.stageSlice.stages);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
     const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
-    const {orderNumber: orderNumberRP, receivable: receivableRP, clientName, clientNumber} = orderDetails;
-    // const [clientName, setClientName] = useState(clientNameCR || "");
+    const {orderNumber: orderNumberRP, receivable: receivableRP, clientName: clientNameRP, clientContact: clientNumberRP} = orderDetails;
+    const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const [clientNameSuggestions, setClientNameSuggestions] = useState([])
-    // const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
+    const [clientNumber, setClientNumber] = useState(clientNumberCR || "");
     const [maxOrderNumber, setMaxOrderNumber] = useState("");
     const [nextRateWiseOrderNumber, setNextRateWiseOrderNumber] = useState("");
     const [UpdateRateWiseOrderNumber, setUpdateRateWiseOrderNumber] = useState("");
@@ -66,20 +66,21 @@ const CreateOrder = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
-  const [vendors, setVendors] = useState([]);
-  const [ratesData, setRatesData] = useState([]);
-  // const [units, setUnits] = useState([])
-  const [isSlabAvailable, setIsSlabAvailable] = useState(false)
-  const [showCampaignDuration, setShowCampaignDuration] = useState(false)
-  const [leadDays, setLeadDays] = useState(0);
-  const [campaignDuration, setCampaignDuration] = useState("");
-  const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("");
-  const [campaignUnits, setCampaignUnits] = useState([]); 
-  // const [validityDays, setValidityDays] = useState(0)
-  // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
-  const [waiverAmount, setWaiverAmount] = useState(0);
+    const [vendors, setVendors] = useState([]);
+    const [ratesData, setRatesData] = useState([]);
+    // const [units, setUnits] = useState([])
+    const [isSlabAvailable, setIsSlabAvailable] = useState(false)
+    const [showCampaignDuration, setShowCampaignDuration] = useState(false)
+    const [leadDays, setLeadDays] = useState(0);
+    const [campaignDuration, setCampaignDuration] = useState("");
+    const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("");
+    const [campaignUnits, setCampaignUnits] = useState([]); 
+    // const [validityDays, setValidityDays] = useState(0)
+    // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
+    const [waiverAmount, setWaiverAmount] = useState(0);
+    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   
     
     const dispatch = useDispatch();
@@ -115,16 +116,10 @@ const CreateOrder = () => {
     const [hasOrderDetails, setHasOrderDetails] = useState(false);
     const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
     const [orderSearchTerm,setOrderSearchTerm] = useState("");
-    const [ordereId, setOrderId] = useState(null);
     const [displayClientName, setDisplayClientName] = useState(clientName);
-    const [orderNumber, setOrderNumber] = useState(orderNumberRP);
+    const [orderNumber, setOrderNumber] = useState(orderNumberRP || "");
     const [orderAmount, setorderAmount] = useState('');
    
-
-     // Function to toggle expand/collapse
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
     
     useEffect(() => {
       if (!loggedInUser || dbName === "" ) {
@@ -138,19 +133,30 @@ const CreateOrder = () => {
     },[])
 
     useEffect(() => {
-      dispatch(setClientName(clientNameCR || ''));
       setConsultantName(consultantNameCR || '');
       setInitialConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
+      setClientName(clientNameCR || '');
+      setDisplayClientName(clientNameCR || '');
       setClientNumber(clientNumberCR || '');
-      dispatch(setOrderData({ clientID: clientIDCR, consultantName: consultantNameCR }))
+      dispatch(setOrderData({ clientName: clientNameCR, clientNumber: clientNumberCR, clientID: clientIDCR, consultantName: consultantNameCR }))
       fetchPreviousOrderDetails(clientNumberCR, clientNameCR);
-    }, [clientNameCR, clientIDCR]);
+    }, [clientIDCR]);
+
+    useEffect(() => {
+      if ( orderNumberRP > 0 ) {
+        setClientName(clientNameRP || '');
+        setDisplayClientName(clientNameRP || '');
+        setClientNumber(clientNumberRP|| '');
+        fetchOrderDetailsByOrderNumber(orderNumberRP);
+        setIsOrderUpdate(true);
+        setDisplayUnitPrice(receivableRP);
+      }
+    }, [orderNumberRP]);
 
     useEffect(() => {
       calculateReceivable();
     },[unitPrice, marginAmount])
-
 
     // MP-99    
 //rate cards
@@ -584,8 +590,8 @@ const fetchRates = async () => {
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value;
-        dispatch(setClientName(newName));
-        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+        setClientName(newName);
+        fetch(`https://orders.baleenmedia.com/API/Media/SuggestingClientNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
           .then((response) => response.json())
           .then((data) => setClientNameSuggestions(data));
         // dispatch(setOrderData({ clientName: clientName }))
@@ -597,15 +603,15 @@ const fetchRates = async () => {
       const handleClientNameSelection = (event) => {
         const input = event.target.value;
         const splitInput = input.split('-');
-    const ID = splitInput[0].trim();
-    const rest = splitInput[1];
-    const name = rest.substring(0, rest.indexOf('(')).trim();
-    const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
+        const ID = splitInput[0].trim();
+        const rest = splitInput[1];
+        const name = rest.substring(0, rest.indexOf('(')).trim();
+        const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
-        dispatch(setClientName(name));
+        setClientName(name);
         setDisplayClientName(name);
         setClientNumber(number);
-        dispatch(setOrderData({ clientName: name, clientNumber: number  }))
+        dispatch(setOrderData({ clientName: name, clientNumber: number }))
         fetchClientDetails(ID);
         fetchPreviousOrderDetails(number, name);
         setClientNameSuggestions([]);
@@ -686,9 +692,6 @@ const fetchRates = async () => {
           });
       };
 
-      
-//report oderenumber data fetch --SK--
-
 const fetchOrderDetailsByOrderNumber = (orderNum) => {
     axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`)
@@ -697,8 +700,10 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
         if (data) {
           // Parse the date
           const formattedDate = parseDateFromDB(data.orderDate);
+          //console.log(data)
           // Set all the necessary states
-          dispatch(setClientName(data.clientName));
+          setClientName(data.clientName);
+          setClientNumber(data.clientContact);
           setOrderDate(data.orderDate);
           setDisplayOrderDate(formattedDate);
           setUnitPrice(data.receivable);
@@ -713,7 +718,7 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
           setWaiverAmount(data.waiverAmount);
-          dispatch(setOrderData({ clientNumber: data.clientContact }));
+          // dispatch(setOrderData({ clientNumber: data.clientContact }));
           if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
             setIsConsultantWaiverChecked(true);
           }
@@ -730,6 +735,7 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
             marginAmount: data.margin,
             waiverAmount: data.waiverAmount
           });
+          
         } else {
           setHasOrderDetails(false); // Set to false if no details
         }
@@ -743,20 +749,20 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
   //   fetchOrderDetailsByOrderNumber();
   //   setDisplayUnitPrice(receivableRP);
   // }, [orderNumber]); // Re-fetch when orderNumber changes
-  useEffect(() => {
-    if (orderNumber) {
-      fetchOrderDetailsByOrderNumber(orderNumber);
-      setIsOrderUpdate(true); // Set the update flag if orderNumber exists
-      setDisplayUnitPrice(receivableRP);
-    }
-  }, [orderNumber]);
+  // useEffect(() => {
+  //   if (orderNumber) {
+  //     fetchOrderDetailsByOrderNumber(orderNumber);
+  //     setIsOrderUpdate(true); // Set the update flag if orderNumber exists
+  //     setDisplayUnitPrice(receivableRP);
+  //   }
+  // }, [orderNumber]);
   
 
-//creating stages ----
-const PlaceOrder = () =>{
-  CreateStages();
-  createNewOrder();
-}
+//MAKE SURE THIS FUNCTION IS REQUIRED @SIVA @KUMARAVEL ---Logesh
+// const PlaceOrder = () =>{
+//   CreateStages();
+//   createNewOrder();
+// }
 
 
 const CreateStages = async () => {
@@ -793,11 +799,13 @@ const CreateStages = async () => {
 
   
       const createNewOrder = async() => {
+        setIsButtonDisabled(true);
         // If the discount amount has changed and remarks are not filled
         if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
           setToastMessage('For adjusting the amount, please provide remarks.');
           setSeverity('warning');
           setToast(true);
+          setIsButtonDisabled(false);
           setTimeout(() => {
             setToast(false);
           }, 2000);
@@ -825,43 +833,47 @@ const CreateStages = async () => {
             setToastMessage('Order Number not Found!');
             setSeverity('error');
             setToast(true);
+            setIsButtonDisabled(false);
             setTimeout(() => {
               setToast(false);
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
-                //CreateStages()
                 if (elementsToHide.includes('OrderNumberText')) {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
-                  setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
+                  setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
                 }
                 dispatch(setIsOrderExist(true));
                 
                 setTimeout(() => {
                 setSuccessMessage('');
+                setIsButtonDisabled(false);
                 router.push('/FinanceEntry');
-              }, 3000);
+              }, 2000);
                 
               //setMessage(data.message);
             } else {
               alert(`The following error occurred while inserting data: ${data}`);
+              setIsButtonDisabled(false);
             }
           } catch (error) {
             console.error('Error updating rate:', error);
+            setIsButtonDisabled(false);
           }
         } else {
           // MP-101
           setToastMessage('Please fill all necessary fields.');
           setSeverity('error');
           setToast(true);
+          setIsButtonDisabled(false);
           setTimeout(() => {
             setToast(false);
           }, 2000);
@@ -932,7 +944,7 @@ const updateNewOrder = async (event) => {
         dispatch(setIsOrderExist(true));
         // dispatch(setIsOrderUpdate(false));
         // dispatch(resetOrderData());
-        // dispatch(setClientName(''));
+        // setClientName('');
         // setOrderDate(new Date());
         // setDisplayOrderDate(new Date())
         // setUpdateRateWiseOrderNumber('');
@@ -979,9 +991,7 @@ const updateNewOrder = async (event) => {
           const data = await response.json();
           setMaxOrderNumber(data.nextOrderNumber);
           setNextRateWiseOrderNumber(data.nextRateWiseOrderNumber);
-        dispatch(setOrderData({ maxOrderNumber: data }))
-        dispatch(setOrderData({ nextRateWiseOrderNumber: data }))
-        return data;
+          return data;
         } catch (error) {
           console.error(error);
         }
@@ -1339,10 +1349,20 @@ const handleOpenDialog = () => {
   // };
 
   const handleCancelUpdate = () => {
-    dispatch(setClientName(''));
+    setClientName('');
     setDisplayClientName('');
     setOrderDate(new Date());
-    setDisplayOrderDate(new Date())
+    setDisplayOrderDate(new Date());
+
+    setHasPreviousOrder(false);
+    setPreviousAdType("");
+    setPreviousConsultantName("");
+    setPreviousOrderAmount("");
+    setPreviousOrderNumber("");
+    setPreviousRateName("");
+    setPreviousRateWiseOrderNumber("");
+    setPreviousOrderDate("");
+
     setUpdateRateWiseOrderNumber('');
     dispatch(setRateId(''));
     setClientID('');
@@ -1354,6 +1374,7 @@ const handleOpenDialog = () => {
     dispatch(setIsOrderUpdate(false));
     setWaiverAmount(0);
     setIsConsultantWaiverChecked(false);
+    setClientNumber('');
     //window.location.reload(); // Reload the page
   };
 
@@ -1380,18 +1401,7 @@ const handleOrderSearch = async (e) => {
 
   // If search term is cleared, reset the update mode
   if (searchTerm.trim() === "") {
-    dispatch(setIsOrderUpdate(false));
-          dispatch(setClientName(''));
-          setOrderDate(new Date());
-          setDisplayOrderDate(new Date())
-          setUpdateRateWiseOrderNumber('');
-          dispatch(setRateId(''));
-          setClientID('');
-          setConsultantName('');
-          setInitialConsultantName('');
-          setDiscountAmount(0);
-          dispatch(resetOrderData());
-          setOrderSearchTerm('');
+    handleCancelUpdate();
     setOrderSearchSuggestion([]); // Clear suggestions
     return; // Exit early
   }
@@ -1417,6 +1427,7 @@ const handleOrderSelection = (e) => {
   setOrderNumber(selectedOrderId);
   
   dispatch(setIsOrderUpdate(true));
+  setHasPreviousOrder(false);
   // Set the mode to "Update"
   //setIsUpdateMode(true);
   dispatch(resetClientData());
@@ -1502,7 +1513,7 @@ return (
     {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
   </div>
 ) : (
-  <button className="placeorder-button" onClick={PlaceOrder}>Place Order</button>
+  <button className="custom-button" onClick={createNewOrder} disabled={isButtonDisabled}>Place Order</button>
 )}
     
     <Dialog

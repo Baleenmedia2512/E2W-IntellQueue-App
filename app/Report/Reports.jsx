@@ -379,11 +379,10 @@ useEffect(() => {
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
+                    WaiverAmount: `₹ ${order.WaiverAmount}`,
                     invoiceDisabled: order.TotalAmountReceived === undefined || order.TotalAmountReceived === null || order.TotalAmountReceived === '',
                 }));
-                const displayData = response.data
                 setOrderDetails(data);
-                setDisplayOrderDetails(displayData)
             })
             .catch((error) => {
                 console.error(error);
@@ -397,13 +396,12 @@ useEffect(() => {
                     ...transaction,
                     id: transaction.ID, // Generate a unique identifier based on the index
                     Amount: `₹ ${transaction.Amount}`,
-                    OrderValue: `₹ ${transaction.OrderValue}`,
+                    OrderValue: `₹ ${transaction.OrderValue ?? 0}`,
                     markInvalidFinanceDisabled: transaction.ValidStatus === 'Invalid',
                     restoreFinanceDisabled: transaction.ValidStatus === 'Valid'
                 }));
-                //const displayData = response.data
                 setFinanceDetails(financeDetails);
-                //setDisplayFinanceDetails(displayData)
+                
             })
             .catch((error) => {
                 console.error(error);
@@ -658,7 +656,6 @@ const FetchCurrentBalanceAmount = () => {
 };
 
 const handleDownloadInvoiceIconClick = (row) => {
-  console.log(row)
   const PDFData = {
     companyName: invoiceData.SubscriberName,
     companyLogoPath: invoiceData.SubscriberLogoPath,
@@ -756,17 +753,17 @@ const orderColumns = [
     { field: 'ClientName', headerName: 'Client Name', width: isMobile ? 150 : 120 },
     { field: 'ClientContact', headerName: 'Client Contact', width: isMobile ? 160 : 120 },
     { field: 'ClientAge', headerName: 'Client Age', width: isMobile ? 120 : 90 },
+    { field: 'Card', headerName: 'Rate Name', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
+    { field: 'AdType', headerName: 'Rate Type', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
     { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },
     { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
-    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 230 : 170 },
+    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 200 : 150 },
     { field: 'WaiverAmount', headerName: 'Waiver Amount(₹)', width: 100 },
-  { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
+    { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
     { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100 },
     { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 120 },
     { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: isMobile ? 190 : 130 },
     { field: 'Remarks', headerName: 'Order Remarks', width: isMobile ? 180 : 160 },
-    { field: 'Card', headerName: 'Rate Name', width: isMobile ? 140 : 150, renderCell: (params) => <div>{params.value}</div> },
-    { field: 'AdType', headerName: 'Rate Type', width: isMobile ? 140 : 150, renderCell: (params) => <div>{params.value}</div> },
     { field: 'ConsultantName', headerName: 'Consultant Name', width: isMobile ? 180 : 150 },
     {
       field: 'actions',
@@ -864,22 +861,22 @@ const financeColumns = [
   {
     field: 'actions',
     headerName: 'Actions',
-    width: isMobile ? 210 : 220,
+    width: 220,
     renderCell: (params) => (
       <div>
-        <button
-          className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
-          disabled={params.row.markInvalidFinanceDisabled }
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          disabled={params.row.markInvalidFinanceDisabled}
           onClick={() => handleOpenConfirmDialog(params.row.ID, params.row.RateWiseOrderNumber)}
-          style={{  backgroundColor: '#fa594d',
-            color: 'white',
-            fontWeight: 'bold', 
-            opacity: params.row.markInvalidFinanceDisabled ? 0.2 : 1,
-            pointerEvents: params.row.markInvalidFinanceDisabled ? 'none' : 'auto'
-           }}
+          style={{
+            backgroundColor: '#ff5252', color: 'white', fontWeight: 'bold',
+            opacity: params.row.markInvalidFinanceDisabled ? 0.5 : 1,
+            pointerEvents: params.row.markInvalidFinanceDisabled ? 'none' : 'auto' }}
         >
           Delete
-        </button> 
+        </Button> 
         {/* <button
           className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
           onClick={(e) => e.preventDefault()} // Prevent any action on click
@@ -888,10 +885,25 @@ const financeColumns = [
         >
           Delete
         </button> */}
-        <button
+        <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                disabled={!params.row.markInvalidFinanceDisabled}
+                onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
+                style={{ backgroundColor: '#1976d2',
+                  marginLeft: '12px',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: !params.row.markInvalidFinanceDisabled ? 0.5 : 1,
+                  pointerEvents: !params.row.markInvalidFinanceDisabled ? 'none' : 'auto' }}
+            >
+                Restore
+            </Button>
+        {/* <button
           className="Restore-button py-1 px-2 rounded-md text-sm sm:text-xs "
           disabled={params.row.restoreFinanceDisabled} // Conditional disabling
-          onClick={() => handleFinanceRestore(params.row.ID, params.row.RateWiseOrderNumber)}
+          onClick={() => handleFinanceRestore(params.row.ID)}
           style={{ backgroundColor: '#1976d2',
             color: 'white',
             fontWeight: 'bold',
@@ -899,7 +911,7 @@ const financeColumns = [
             pointerEvents: params.row.restoreFinanceDisabled ? 'none' : 'auto' }}
         >
           Restore
-        </button>
+        </button> */}
       </div>
     ),
   },
@@ -1377,32 +1389,6 @@ const calculateRateStats = () => {
   useEffect(() => {
     calculateRateStats();
   }, [filteredData]); // Recalculate when filteredData changes
-// const calculateRateStats = () => {
-//   const rateStats = {};
-
-//   displayOrderDetails.forEach(order => {
-//     const rateName = order.Card;
-//     const orderValue = Number(order.Receivable) || 0;  // Ensure Receivable (Order Value) is a number
-//     const income = Number(order.TotalAmountReceived) || 0;  // Ensure TotalAmountReceived (Income) is a number
-
-//     if (rateStats[rateName]) {
-//       rateStats[rateName].orderCount += 1;
-//       rateStats[rateName].totalOrderValue += orderValue;
-//       rateStats[rateName].totalIncome += income;
-//     } else {
-//       rateStats[rateName] = {
-//         orderCount: 1,
-//         totalOrderValue: orderValue,
-//         totalIncome: income,
-//       };
-//     }
-//   });
-
-//   return rateStats;
-// };
-
-// const rateStats = calculateRateStats();
-
 
     return (
       
