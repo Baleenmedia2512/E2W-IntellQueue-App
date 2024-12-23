@@ -1925,7 +1925,7 @@ return (
               placeholder="Select Vendor"
               value={selectedValues.vendorName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
-              options={getOptions('Location', 'vendorName')}
+              options={getOptions('vendorName', 'Package')}
               disabled={isOrderUpdate} 
             />
             {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
