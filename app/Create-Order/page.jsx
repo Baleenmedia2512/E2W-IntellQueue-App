@@ -456,11 +456,10 @@ const handleSelectChange = (selectedOption, filterKey) => {
       [filterKey]: selectedOption,
       vendorName: ""
     }))
-  } else if(filterKey === 'vendorName'){
+  }else if (filterKey === 'vendorName') { // New case for vendorName
     dispatch(setSelectedValues({
       ...selectedValues,
-      [filterKey]: selectedOption,
-      vendorName: ""
+      [filterKey]: selectedOption
     }))
   } else {
     // Update the selected values
