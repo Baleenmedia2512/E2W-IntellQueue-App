@@ -29,7 +29,7 @@ export default function manageQuotes() {
           "Content-Type": "application/json; charset=utf-8",
         },
         params: {
-          JsonDBName: "Baleen Test",
+          JsonDBName: companyName,
           page,
           limit: 10, // Set the limit explicitly for pagination
         },
@@ -149,6 +149,8 @@ export default function manageQuotes() {
         // Check if both responses are successful
         if (data.quoteResponse.success && data.orderResponse.success) {
             alert("Updated data successfully");
+            setData([]);
+            fetchData();
         } else {
             alert(data.quoteResponse.message || data.orderResponse.message || "Failed to update status.");
         }
@@ -262,6 +264,7 @@ export default function manageQuotes() {
                 onClick={() => handleStatusChange( "Won" ,row)}
                 className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
+        
                 <FiCheck className="text-lg" />
                 Won
               </button>
