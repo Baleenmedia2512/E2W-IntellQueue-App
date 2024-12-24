@@ -680,16 +680,19 @@ const fetchRates = async () => {
               setClientPAN(clientDetails.ClientPAN || "");
               dispatch(setOrderData({ clientPAN: clientDetails.ClientPAN || "" }));
             }
-      
-            // Fetch commission data
-            const commission = await FetchCommissionData(
-              companyName,
-              clientDetails.consname,
-              selectedValues.rateName.value,
-              selectedValues.adType.value
-            );
-            setCommissionAmount(commission);
-            console.log('client details...')
+            
+            if (clientDetails.consname) {
+
+              // Fetch commission data
+              const commission = await FetchCommissionData(
+                companyName,
+                clientDetails.consname,
+                selectedValues.rateName.value,
+                selectedValues.adType.value
+              );
+              setCommissionAmount(commission);
+              console.log('client details...')
+            }
           } else {
             console.warn("No client details found for the given ID.");
           }
@@ -734,7 +737,7 @@ const fetchRates = async () => {
     const fetchOrderDetailsByOrderNumber = async (orderNum) => {
       try {
         const response = await axios.get(
-          `https://orders.baleenmedia.com/API/Media/FetchOrderDataTest.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`
+          `https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`
         );
     
         const data = response.data;
@@ -758,18 +761,7 @@ const fetchRates = async () => {
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
-          setCommissionAmount(data.commission);
-    
-          // Fetch commission data
-          const commission = await FetchCommissionData(
-            companyName,
-            data.consultantName,
-            selectedValues.rateName.value,
-            selectedValues.adType.value
-          );
-          console.log('order table..')
-          setCommissionAmount(commission);
-    
+
           // Store the fetched data in a state to compare later
           setPrevData({
             clientName: data.clientName,
@@ -781,7 +773,6 @@ const fetchRates = async () => {
             consultantName: data.consultantName,
             discountAmount: data.adjustedOrderAmount,
             marginAmount: data.margin,
-            commissionAmount: commission,
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -1839,6 +1830,7 @@ return (
       {errors.waiverAmount && <p className="text-red-500 text-sm mt-2">{errors.waiverAmount}</p>}
     </div>
   )} */}
+  {consultantName && (
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Commission Amount</label>
       <input
@@ -1854,6 +1846,7 @@ return (
       />
       {errors.commissionAmount && <p className="text-red-500 text-sm mt-2">{errors.commissionAmount}</p>}
     </div>
+    )}
 { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !isOrderUpdate) && (
   <div>
     <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
