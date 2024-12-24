@@ -14,7 +14,8 @@ import { useAppSelector } from "@/redux/store";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import LoadingComponent from "./progress";
-
+import { motion } from 'framer-motion';
+import { FaFilter, FaTimes } from "react-icons/fa";
 
 
 const statusColors = {
@@ -83,7 +84,75 @@ const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
 const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
 const [prospectType, setProspectType] = useState("");
 const [isLoading, setIsLoading] = useState(false); // State to track the loading status
-const [hasSaved, setHasSaved] = useState(false); 
+const [hasSaved, setHasSaved] = useState(false);
+const [statusFilter, setStatusFilter] = useState("All");
+const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+const [searchQuery, setSearchQuery] = useState('');
+const [filtersVisible, setFiltersVisible] = useState(false);
+const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+const [toDate, setToDate] = useState(null); // Use null for default empty date 
+
+const toggleFilters = () => {
+  setFiltersVisible((prev) => !prev);
+};
+
+const handleSearch = (query) => {
+  setSearchQuery(query.toLowerCase());
+};
+
+const handleFocus = (e) => {
+  e.target.select();
+};
+
+const clearFilters = () => {
+  setStatusFilter('All');
+  setProspectTypeFilter('All');
+  setFromDate(null);
+  setToDate(null);
+  setSearchQuery('');
+};
+
+const prospectTypes = [
+  { type: "All", icon: null },  // No icon for "All"
+  { type: "Hot", icon: <GiCampfire className="inline-block text-red-500 mr-1" size={20}/> },
+  { type: "Warm", icon: <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1" size={20}/> },
+  { type: "Cold", icon: <FaRegSnowflake className="inline-block text-blue-500 mr-1" size={20}/> },
+];
+
+const filteredRows = rows
+.filter((row) =>
+  statusFilter === 'All' || row.Status === statusFilter
+)
+.filter((row) =>
+  prospectTypeFilter === 'All' || row.ProspectType === prospectTypeFilter
+)
+.filter((row) =>
+  [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
+    .filter(Boolean)
+    .some((field) =>
+      field.toLowerCase().includes(searchQuery)
+    )
+)
+.filter((row) => {
+  const followUpDate = new Date(row.FollowupDate);
+  const leadDate = new Date(row.LeadDate);
+
+  // Convert 'fromDate' and 'toDate' into Date objects for comparison
+  const fromDateObj = fromDate ? new Date(fromDate) : null;
+  const toDateObj = toDate ? new Date(toDate) : null;
+
+  // Ensure both fromDateObj and toDateObj are defined
+  if (!fromDateObj || !toDateObj) return true; 
+
+  if (
+    (followUpDate >= fromDateObj && followUpDate <= toDateObj) ||
+    (leadDate >= fromDateObj && leadDate <= toDateObj)
+  ) {
+    return true; 
+  }
+  return false; 
+});
+
 
 const handleCheckboxChange = () => {
   setHasSaved(true); // Set hasSaved to true when checkbox is checked
@@ -367,9 +436,107 @@ const handleCheckboxChange = () => {
         </button>
       </div>
 
+          {/* Search Bar */}
+          <div className="p-4">
+      {/* Search Bar and Filter Icon */}
+      <div className="flex items-center justify-between mb-2">
+        <input
+          type="text"
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Search by Phone No, Email Address, Ad Enquiry, Company Name, Remarks..."
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          onFocus={handleFocus}
+          onClick={handleFocus}
+        />
+       <button
+        onClick={() => {
+          if (searchQuery || statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
+            clearFilters(); // If any filters or search query is active, clear them
+          } else {
+            toggleFilters(); // Otherwise, toggle filter visibility
+          }
+        }}
+        className="ml-2 p-2 sm:p-3 bg-blue-500 text-white rounded-lg focus:outline-none hover:bg-blue-600"
+      >
+        {searchQuery || statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
+          <FaTimes size={20} /> // Clear icon if any filter or search query is active
+        ) : (
+          <FaFilter size={20} /> // Filter icon if no filter or search query is active
+        )}
+      </button>
+
+      </div>
+
+       {/* Filters */}
+       {filtersVisible && (
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          {/* Status Filter Buttons */}
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {["All", "New", "Call Followup", "Unreachable"].map((status, index) => (
+              <motion.button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  statusFilter === status
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {status}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Prospect Type Filter */}
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {prospectTypes.map((item, index) => (
+              <motion.button
+                key={item.type}
+                onClick={() => setProspectTypeFilter(item.type)}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  prospectTypeFilter === item.type
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {item.icon ? item.icon : item.type}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Date Range Filters */}
+          <div className="flex flex-row gap-2 sm:gap-4">
+            {/* From Date Picker */}
+            <DatePicker
+              selected={fromDate}
+              onChange={(date) => setFromDate(date)}
+              className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholderText="From Date"
+              dateFormat="dd-MMM-yyyy"
+            />
+            {/* To Date Picker */}
+            <DatePicker
+              selected={toDate}
+              onChange={(date) => setToDate(date)}
+              className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholderText="To Date"
+              dateFormat="dd-MMM-yyyy"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+
       {/* Lead Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((row) => (
+        {filteredRows.map((row) => (
           <div
             key={row.SNo}
             className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
