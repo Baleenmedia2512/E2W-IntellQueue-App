@@ -188,7 +188,6 @@ export default function GroupedRowsDemo() {
         // Function to filter out rows where id contains "total"
         const filterRows = (rows) => rows.filter(row => !row.id.includes("total"));
 
-        // Helper function to extract data from id
         const extractDataFromId = (id) => {
             const parts = id.split('-');
             let name, rateCard, rateType;
