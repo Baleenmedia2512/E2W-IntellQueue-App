@@ -507,7 +507,19 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <div></div>
+            <div>
+              <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
+                dispatch(resetQuotesData());
+
+                // clear while on edit mode
+                if (cartItems.length > 0 && cartItems[0].isEditMode) {
+                dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+                }
+
+                }}>
+              <FontAwesomeIcon icon={faCheckCircle} className='text-md' onClick={() => routers.push('/adDetails/manageQuotes')}/> Manage Quotes
+            </button>
+            </div>
           )}
 
           {/* {currentPage === "checkout" ?(
