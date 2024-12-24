@@ -1287,8 +1287,7 @@ const handleWaiverChange = (e) => {
 
   if (value === '') {
     setWaiverAmount(0);
-    setErrors((prevErrors) => ({ ...prevErrors, waiverAmount: undefined })); // Clear any existing error on Remarks
-    return;
+    setErrors((prevErrors) => ({ ...prevErrors, waiverAmount: undefined })); 
   }
 
   const parsedValue = parseFloat(value);
