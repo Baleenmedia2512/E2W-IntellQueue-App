@@ -10,7 +10,7 @@ import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCheckCircle, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
