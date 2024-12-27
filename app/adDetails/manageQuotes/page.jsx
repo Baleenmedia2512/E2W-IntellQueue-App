@@ -19,6 +19,7 @@ export default function manageQuotes() {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const nextOrderNumber = maxOrderNumber?.nextOrderNumber;
 
+  
   async function fetchData() {
     if (loading && !hasMore) return;
   
