@@ -1,4 +1,5 @@
 "use client"
+import React from "react";
 import { useEffect, useState } from "react";
 import { api } from "@/app/api/FetchAPI";
 import { FiPhoneCall } from "react-icons/fi";
@@ -19,7 +20,7 @@ export default function manageQuotes() {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const nextOrderNumber = maxOrderNumber?.nextOrderNumber;
 
-  
+
   async function fetchData() {
     if (loading && !hasMore) return;
   
