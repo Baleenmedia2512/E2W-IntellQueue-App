@@ -2,13 +2,12 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { api } from "@/app/api/FetchAPI";
-import { FiPhoneCall } from "react-icons/fi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FiCheck, FiX, FiPhone, FiCalendar, FiFileText, FiDatabase, FiTag } from "react-icons/fi";
 import { useAppSelector } from '@/redux/store';
 
-export default function manageQuotes() {
+export default function ManageQuotes() {
   const [data, setData] = useState([]); // Holds the fetched data
   const [loading, setLoading] = useState(true); // Loading state
   const [page, setPage] = useState(1);
