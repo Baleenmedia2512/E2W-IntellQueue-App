@@ -159,8 +159,7 @@ export const FetchCommissionData = async(DBName, ConsultantName, rateName, rateT
                 JsonRateType: rateType
             }
         }); 
-        result = response.data.UnitPrice;
-        console.log(result)
+        result = response.data.Commission;
 
     }catch(error){
         console.error(error);

@@ -82,7 +82,7 @@ const CreateOrder = () => {
     // const [waiverAmount, setWaiverAmount] = useState(0);
     const [commissionAmount, setCommissionAmount] = useState(0);
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  
+    const [isCommissionSingleUse, setIsCommissionSingleUse] = useState(false);
     
     const dispatch = useDispatch();
     const router = useRouter();
@@ -854,6 +854,7 @@ const CreateStages = async () => {
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
+        const IsCommissionForSingleUse = isCommissionSingleUse ? 1 : 0;
 
         if (validateFields()) {
           setToastMessage(
@@ -877,7 +878,7 @@ const CreateStages = async () => {
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${encodeURIComponent(selectedValues.Location.value + " : " + selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
@@ -925,6 +926,7 @@ const updateNewOrder = async (event) => {
   const receivable = (unitPrice * qty) + marginAmount;
   const payable = unitPrice * qty;
   const orderOwner = companyName === 'Baleen Media' ? (clientSource === '6.Own' ? loggedInUser : 'leenah_cse') : loggedInUser;
+  const IsCommissionForSingleUse = isCommissionSingleUse ? 1 : 0;
 
   if (validateFields()) {
     const formattedOrderDate = formatDateToSave(orderDate);
@@ -943,14 +945,14 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: selectedValues.rateName.value,
+      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
       JsonVendorName: selectedValues.vendorName.value,
-      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
-      JsonType: selectedValues.adType.value,
+      JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
+      JsonType: encodeURIComponent(selectedValues.adType.value),
       JsonHeight: qty.toString(),
       JsonWidth: '1',
-      JsonLocation: selectedValues.Location.value,
-      JsonPackage: selectedValues.Package.value,
+      JsonLocation: encodeURIComponent(selectedValues.Location.value),
+      JsonPackage: encodeURIComponent(selectedValues.Package.value),
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -966,7 +968,8 @@ const updateNewOrder = async (event) => {
       JsonOrderDate: formattedOrderDate,
       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
       JsonAdjustedOrderAmount: discountAmount,
-      JsonCommission: commissionAmount
+      JsonCommission: commissionAmount,
+      JsonIsCommissionSingleUse: IsCommissionForSingleUse,
     });
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrderTest.php?${params.toString()}`, {
@@ -1844,6 +1847,27 @@ return (
         onChange={handleCommissionChange}
         onFocus={(e) => e.target.select()}
       />
+      <div className="flex items-center space-x-1 mt-1">
+      <input
+        type="checkbox"
+        id="forOneTimeOnly"
+        className={`h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 ${
+          isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'
+        } rounded`}
+        checked={isCommissionSingleUse}
+        onChange={(e) => setIsCommissionSingleUse(e.target.checked)}
+      />
+      <label
+        htmlFor="forOneTimeOnly"
+        className={`text-gray-500 font-medium text-sm ${
+          isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'
+        }`}
+      >
+        For One Time Only
+      </label>
+    </div>
+
+      
       {errors.commissionAmount && <p className="text-red-500 text-sm mt-2">{errors.commissionAmount}</p>}
     </div>
     )}
