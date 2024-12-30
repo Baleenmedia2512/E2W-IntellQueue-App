@@ -91,6 +91,7 @@ const [searchQuery, setSearchQuery] = useState('');
 const [filtersVisible, setFiltersVisible] = useState(false);
 const [fromDate, setFromDate] = useState(null); // Use null for default empty date
 const [toDate, setToDate] = useState(null); // Use null for default empty date 
+const [timers, setTimers] = useState("");
 
 const toggleFilters = () => {
   setFiltersVisible((prev) => !prev);
@@ -153,6 +154,63 @@ const filteredRows = rows
   return false; 
 });
 
+useEffect(() => {
+  const intervals = {};
+
+  rows.forEach((row) => {
+    if (row.Status === "New") {
+      const leadDateTime = new Date(`${row.LeadDate} ${row.LeadTime}`);
+      const currentTime = new Date();
+      const initialSeconds = Math.floor((currentTime - leadDateTime) / 1000);
+
+      // Start or continue the timer
+      if (!intervals[row.SNo]) {
+        setTimers((prevTimers) => ({
+          ...prevTimers,
+          [row.SNo]: initialSeconds > 0 ? initialSeconds : 0,
+        }));
+        intervals[row.SNo] = setInterval(() => {
+          setTimers((prevTimers) => {
+            const updatedTimers = {
+              ...prevTimers,
+              [row.SNo]: (prevTimers[row.SNo] || initialSeconds || 0) + 1,
+            };
+            localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
+            return updatedTimers;
+          });
+        }, 1000);
+      }
+    } else {
+      // Clear the timer if status changes
+      clearInterval(intervals[row.SNo]);
+      setTimers((prevTimers) => {
+        const updatedTimers = { ...prevTimers, [row.SNo]: 0 };
+        localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
+        return updatedTimers;
+      });
+    }
+  });
+
+  // Cleanup intervals on unmount or when rows change
+  return () => {
+    Object.values(intervals).forEach(clearInterval);
+  };
+}, [rows]);
+
+
+const formatTime = (seconds) => {
+  const days = Math.floor(seconds / 86400); // 86400 seconds in a day
+  const remainingSeconds = seconds % 86400;
+  const hrs = Math.floor(remainingSeconds / 3600).toString().padStart(2, "0");
+  const mins = Math.floor((remainingSeconds % 3600) / 60).toString().padStart(2, "0");
+  const secs = (remainingSeconds % 60).toString().padStart(2, "0");
+
+  if (days > 0) {
+    return `${days}d ${hrs}:${mins}:${secs}`;
+  }
+
+  return `${hrs}:${mins}:${secs}`;
+};
 
 const handleCheckboxChange = () => {
   setHasSaved(true); // Set hasSaved to true when checkbox is checked
@@ -534,9 +592,16 @@ const handleCheckboxChange = () => {
       )}
     </div>
 
-      {/* Lead Cards */}
+{/* Lead Cards */}
+{filteredRows.length === 0 ? (
+    <div className="flex items-start justify-center h-screen">
+    <div className="text-center pt-20">No data found.</div>
+  </div>
+  
+  ) : (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredRows.map((row) => (
+      {filteredRows.map((row) => (
+
           <div
             key={row.SNo}
             className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
@@ -545,19 +610,11 @@ const handleCheckboxChange = () => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
               </span>
-              {row.HandleBy && (
-              <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
-                <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
-                <p className="font-poppins">
-                  {row.HandleBy}
-                </p>
-              </div>
-            )}
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
@@ -582,39 +639,43 @@ const handleCheckboxChange = () => {
               )}
             </span>
           }
-
-            {/* <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
+            
+            <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
-              </span> */}
+              </span>
               {/* Platform and Selected Status */}
+              {row.ProspectType && (
               <span
-            className={`inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r border ${
-              row.ProspectType === "Hot"
-                ? "text-red-500 border-red-500 bg-red-100 "
-                : row.ProspectType === "Warm"
-                ? "text-yellow-500 border-yellow-500 bg-yellow-100 "
-                : row.ProspectType === "Cold"
-                ? "text-blue-500 border-blue-500 bg-blue-100 "
-                : "text-gray-500 border-gray-500 "
-            }`}
-          >
-            {row.ProspectType === "Hot" && (
-              <GiCampfire className="inline-block text-red-500 mr-1 " />
+                className={`inline-block ml-2 px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r border ${
+                  row.ProspectType === "Hot"
+                    ? "text-red-500 border-red-500 bg-red-100"
+                    : row.ProspectType === "Warm"
+                    ? "text-yellow-500 border-yellow-500 bg-yellow-100"
+                    : row.ProspectType === "Cold"
+                    ? "text-blue-500 border-blue-500 bg-blue-100"
+                    : "border-white"
+                }`}
+              >
+                {row.ProspectType === "Hot" && (
+                  <GiCampfire className="inline-block text-red-500 " size={15} />
+                )}
+                {row.ProspectType === "Warm" && (
+                  <MdOutlineWbSunny className="inline-block text-yellow-500 " size={15} />
+                )}
+                {row.ProspectType === "Cold" && (
+                  <FaRegSnowflake className="inline-block text-blue-500 " size={15} />
+                )}
+              </span>
             )}
-            {row.ProspectType === "Warm" && (
-              <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1 " />
-            )}
-            {row.ProspectType === "Cold" && (
-              <FaRegSnowflake className="inline-block text-blue-500 mr-1 " />
-            )}
-            {row.Platform || "Unknown Platform"}
-          </span>
-
           </div>
 
             {/* Platform at Top Left */}
-            <div className="absolute top-2 left-2">
-              
+            <div className="absolute top-40 right-3">
+            {row.Status === "New" && (
+            <div className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full">
+              {formatTime(timers[row.SNo] || 0)}
+            </div>
+          )}
             </div>
 
             {/* Name and Company */}
@@ -629,6 +690,7 @@ const handleCheckboxChange = () => {
 
             {/* Core Details */}
             <div className="text-sm text-gray-700 mb-2">
+              
               <p>
               Originated at: <strong>{row.LeadDate} {row.LeadTime}</strong> 
               </p>
@@ -636,14 +698,14 @@ const handleCheckboxChange = () => {
                 Phone:
                 <a
                   // href={`tel:${row.Phone}`}
-                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}
+                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}
                   className="text-blue-600 hover:underline ml-1"
                 >
                   <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
                   title="Call"
                 >
                   <FiPhoneCall className="text-lg" />
@@ -656,14 +718,15 @@ const handleCheckboxChange = () => {
             {/* Follow-Up Date */}
             {row.FollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
               <div className="text-sm max-w-fit" >
-                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
+              <p className="text-sm text-gray-700 mb-1">Followup Date:</p>
+                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
               </div>
             ) : (
               <div className="text-sm max-w-fit mt-4">
-                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}}>+ Add Followup</button>
+                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
               </div>
             )}
              {/* Remarks */}
@@ -674,11 +737,11 @@ const handleCheckboxChange = () => {
                 </p>
               </div>
             )}
-            
           </div>
         ))}
-        
       </div>
+      )}
+
 
       {/* Modal for Call Status */}
       {showModal && (
