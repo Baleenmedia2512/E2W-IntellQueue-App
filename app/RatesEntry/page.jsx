@@ -894,6 +894,15 @@ var selectedRate = '';
     }
   };
 
+  const [initialValues, setInitialValues] = useState({
+    rateName: '',
+    adType: '',
+    typeOfAd: '',
+    Location: '',
+    Package: '',
+    vendorName: ''
+  });
+
   const handleRateId = async (selectedRateId) => {
     console.log(selectedRateId)
     if(selectedRateId > 0){
@@ -921,6 +930,15 @@ var selectedRate = '';
         //   locationValues = data.location.split(':')[0].trim()
         //   packageValues = data.packages.split(':')[1].trim()
         // } 
+        setInitialValues({
+          rateName: data.rateName,
+          adType: data.adType,
+          typeOfAd: data.typeOfAd,
+          Location: data.Location,
+          Package: data.Package,
+          vendorName: data.vendorName
+        });
+        
         dispatch(setSelectedValues({
           rateName: {
             label:  data.rateName ,
