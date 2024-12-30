@@ -509,7 +509,7 @@ const handleCheckboxChange = () => {
         />
        <button
         onClick={() => {
-          if (searchQuery || statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
+          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
             clearFilters(); // If any filters or search query is active, clear them
           } else {
             toggleFilters(); // Otherwise, toggle filter visibility
@@ -517,7 +517,7 @@ const handleCheckboxChange = () => {
         }}
         className="ml-2 p-2 sm:p-3 bg-blue-500 text-white rounded-lg focus:outline-none hover:bg-blue-600"
       >
-        {searchQuery || statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
+        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
           <FaTimes size={20} /> // Clear icon if any filter or search query is active
         ) : (
           <FaFilter size={20} /> // Filter icon if no filter or search query is active
