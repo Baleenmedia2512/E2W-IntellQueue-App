@@ -34,6 +34,9 @@ import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualizatio
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const AdDetailsPage = () => {
+
+  // Check if localStorage contains a username
+  // const username = "GraceScans"
   const dispatch = useDispatch()
   const validityRef = useRef();
   const unitRef = useRef();
@@ -153,7 +156,6 @@ const AdDetailsPage = () => {
     }
   }, [newRateModel, newRateType, selectedValues]);
   
-
   const toggleModal = () => {
       setModal((prevState) => !prevState);
   }
@@ -186,6 +188,7 @@ const AdDetailsPage = () => {
   }
   useEffect(() => {
      
+     // If no username is found, redirect to the login page
      if (!username || dbName === "") {
       router.push('/login');
       } else{
@@ -887,13 +890,14 @@ var selectedRate = '';
       setValidRatesData(valid);
       setInvalidRatesData(invalid);
       setRatesData(valid);
+      // console.log(data,'Rates',ratesData,'Invalid',invalid,'valid ', valid)
       // Cache the new rates data
       // localStorage.setItem('cachedRates', JSON.stringify(data));
     } catch (error) {
       console.error('Error fetching rates:', error);
     }
   };
-
+  
   const [initialValues, setInitialValues] = useState({
     rateName: '',
     adType: '',
@@ -902,7 +906,6 @@ var selectedRate = '';
     Package: '',
     vendorName: ''
   });
-
   const handleRateId = async (selectedRateId) => {
     console.log(selectedRateId)
     if(selectedRateId > 0){
@@ -922,7 +925,9 @@ var selectedRate = '';
         //   return
         // }
         // Update relevant fields for the dialogs
-        
+        // setNewRateName(data.rateName); // Update field in new rate dialog
+        // setMinimumPrice(data.minimumCost); // Set for minimum cost dialog
+        // setStartQty(data.startQty); // Example, update this if needed
         // var locationValues = data.location;
         // var packageValues = data.package;
         // const colonIndex = data.adCategory.indexOf(':');
@@ -930,7 +935,8 @@ var selectedRate = '';
         //   locationValues = data.location.split(':')[0].trim()
         //   packageValues = data.packages.split(':')[1].trim()
         // } 
-        setInitialValues({
+         // Set initial values for comparison later
+         setInitialValues({
           rateName: data.rateName,
           adType: data.adType,
           typeOfAd: data.typeOfAd,
@@ -938,7 +944,7 @@ var selectedRate = '';
           Package: data.Package,
           vendorName: data.vendorName
         });
-        
+
         dispatch(setSelectedValues({
           rateName: {
             label:  data.rateName ,
@@ -1504,7 +1510,7 @@ const updateRates = async (e) => {
       ...selectedValues,
       [changedRate]: { label: newRateName, value: newRateName },
     }));
-  
+    setEditMode(true);
     setIsUpdateRateName(true); // Enable update mode
     setNewRateModel(false); // Close modal
     setNewRateName(""); // Reset newRateName directly
@@ -1836,13 +1842,13 @@ const handleEditMode = () => {
   // }, 150);  
 };
 
-
 const handleLongPress = (rate, isInvalid) => {
+  console.log(rate)
   pressTimer = setTimeout(() => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
     setOpenDialog(true);
-  }, 1000); 
+  }, 600); 
 };
 
 const handleTouchEnd = () => {
