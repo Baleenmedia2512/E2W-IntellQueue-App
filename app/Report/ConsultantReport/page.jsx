@@ -106,7 +106,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
