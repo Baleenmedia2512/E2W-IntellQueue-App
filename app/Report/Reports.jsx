@@ -379,7 +379,7 @@ useEffect(() => {
                     restoreDisabled: order.RateWiseOrderNumber > 0,
                     Margin: `₹ ${order.Margin}`,
                     editDisabled: order.RateWiseOrderNumber < 0,
-                    WaiverAmount: `₹ ${order.WaiverAmount}`,
+                    Commission: `₹ ${order.Commission}`,
                     invoiceDisabled: order.TotalAmountReceived === undefined || order.TotalAmountReceived === null || order.TotalAmountReceived === '',
                 }));
                 setOrderDetails(data);
@@ -684,9 +684,9 @@ const handleDownloadInvoiceIconClick = (row) => {
     ],
     subtotal: row.Receivable.replace(/[^\d.-]/g, '') || 0,  // Ensure subtotal is always a number
     // Discount can be negative (e.g., Rs. -1500) and it should be added to the total amount
-    discount: (parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) + (parseFloat(row.WaiverAmount.replace(/[^\d.-]/g, '')) || 0), // Ensure valid numbers
+    discount: (parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) - (parseFloat(row.Commission.replace(/[^\d.-]/g, '')) || 0), // Ensure valid numbers
     // Total is receivableAmount + discount, where discount can be negative
-    total: (parseFloat(row.Receivable.replace(/[^\d.-]/g, '')) || 0) + ((parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) + (parseFloat(row.WaiverAmount.replace(/[^\d.-]/g, '')) || 0)),  
+    total: (parseFloat(row.Receivable.replace(/[^\d.-]/g, '')) || 0) + ((parseFloat(row.AdjustedOrderAmount.replace(/[^\d.-]/g, '')) || 0) - (parseFloat(row.Commission.replace(/[^\d.-]/g, '')) || 0)),  
     paid: (parseFloat(row.TotalAmountReceived.replace(/[^\d.-]/g, '')) || 0),  // Ensure paid is a number
     // Amount Due is the difference between total and paid amount
     amountDue: (parseFloat(row.AmountDifference.replace(/[^\d.-]/g, '')) || 0), 
@@ -758,7 +758,7 @@ const orderColumns = [
     { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },
     { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
     { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 200 : 150 },
-    { field: 'WaiverAmount', headerName: 'Waiver Amount(₹)', width: 100 },
+    { field: 'Commission', headerName: 'Commission Amount(₹)', width: 100 },
     { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
     { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100 },
     { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 120 },
@@ -1287,7 +1287,7 @@ const [rateStats, setRateStats] = useState({});
         const receivableAmount = parseFloat(row.Receivable.replace(/[₹,]/g, '').trim()) || 0;
       
         const adjustedOrderAmount = parseFloat(row.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
-        const waiverAmount = parseFloat(row.WaiverAmount?.replace(/[₹,]/g, '').trim()) || 0;
+        const Commission = parseFloat(row.Commission?.replace(/[₹,]/g, '').trim()) || 0;
       
         // Adjust the receivable amount based on AdjustedOrderAmount
         const adjustedValue = 
@@ -1295,11 +1295,13 @@ const [rateStats, setRateStats] = useState({});
             ? receivableAmount + adjustedOrderAmount 
             : receivableAmount - Math.abs(adjustedOrderAmount);
       
+        // // Further adjust the amount based on WaiverAmount
+        // const finalAmount = 
+        //   waiverAmount >= 0 
+        //     ? adjustedValue + waiverAmount 
+        //     : adjustedValue - Math.abs(waiverAmount);
         // Further adjust the amount based on WaiverAmount
-        const finalAmount = 
-          waiverAmount >= 0 
-            ? adjustedValue + waiverAmount 
-            : adjustedValue - Math.abs(waiverAmount);
+        const finalAmount = adjustedValue - Commission;
       
         return sum + finalAmount;
       }, 0);
@@ -1330,7 +1332,7 @@ const calculateRateStats = () => {
     const rateName = order.Card;
     const orderValue = Math.round(Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0);
     const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
-    const waiverAmount = Number(order.WaiverAmount?.replace(/[₹,]/g, '').trim()) || 0;
+    const Commission = Number(order.Commission?.replace(/[₹,]/g, '').trim()) || 0;
 
     // Adjust the order value based on AdjustedOrderAmount and WaiverAmount
     const adjustedValue = 
@@ -1338,10 +1340,12 @@ const calculateRateStats = () => {
         ? orderValue + adjustedOrderAmount 
         : orderValue - Math.abs(adjustedOrderAmount);
 
-    const finalOrderValue = 
-      waiverAmount >= 0 
-        ? adjustedValue + waiverAmount 
-        : adjustedValue - Math.abs(waiverAmount);
+    const finalOrderValue = adjustedValue + Commission;
+    
+    // const finalOrderValue = 
+    //   waiverAmount >= 0 
+    //     ? adjustedValue + waiverAmount 
+    //     : adjustedValue - Math.abs(waiverAmount);
 
     const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0); // Ensure it's a number
 

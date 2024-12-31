@@ -143,4 +143,27 @@ export const FetchQuoteData = async(DBName, QuoteId) => {
     }
 
     return result;
-}
+};
+
+export const FetchCommissionData = async(DBName, ConsultantName, rateName, rateType) => {
+    let result = [];
+    try{
+        const response = await api.get("FetchCommissionData.php/?",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params: {
+                JsonDBName: DBName,
+                JsonConsultantName: ConsultantName,
+                JsonRateName: rateName,
+                JsonRateType: rateType
+            }
+        }); 
+        result = response.data.Commission;
+
+    }catch(error){
+        console.error(error);
+    }
+
+    return result;
+};
