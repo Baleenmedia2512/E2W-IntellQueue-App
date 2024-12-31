@@ -1359,7 +1359,7 @@ const handleGSTAmountChange = (gst) => {
   )}
 
   <button
-    className="Add-button ml-2"
+    className="custom-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
     disabled={isButtonDisabled}
   >

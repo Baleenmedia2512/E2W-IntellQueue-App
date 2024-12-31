@@ -1434,6 +1434,7 @@ const handleOpenDialog = () => {
     setOrderSearchTerm('');
     dispatch(setIsOrderUpdate(false));
     setCommissionAmount(0);
+    setIsCommissionSingleUse(false);
     // setWaiverAmount(0);
     // setIsConsultantWaiverChecked(false);
     setClientNumber('');
