@@ -138,6 +138,7 @@ const FinanceData = () => {
   const [rateType, setRateType] = useState('');
   const [adjustedOrderAmount, setAdjustedOrderAmount] = useState(0);
   const [waiverAmount, setWaiverAmount] = useState(0);
+  const [commissionAmount, setCommissionAmount] = useState(0);
   const [receivableAmount, setReceivableAmount] = useState(0);
   const [previousPaymentMode, setPreviousPaymentMode] = useState('');
   const [previousAmountPaid, setPreviousAmountPaid] = useState(0);
@@ -322,7 +323,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setRateName(clientDetails.rateName);
           setRateType(clientDetails.rateType);
           setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
-          setWaiverAmount(clientDetails.waiverAmount);
+          setCommissionAmount(clientDetails.commission);
           setReceivableAmount(clientDetails.receivableAmount);
           setPreviousPaymentMode(clientDetails.previousPaymentMode);
           setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -459,7 +460,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setRateName(clientDetails.rateName);
         setRateType(clientDetails.rateType);
         setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
-        setWaiverAmount(clientDetails.waiverAmount);
+        setCommissionAmount(clientDetails.commission);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -501,7 +502,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setRateName(clientDetails.rateName);
         setRateType(clientDetails.rateType);
         setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
-        setWaiverAmount(clientDetails.waiverAmount);
+        setCommissionAmount(clientDetails.commission);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -624,9 +625,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
       ],
       subtotal: receivableAmount || 0,  // Ensure subtotal is always a number
       // Discount can be negative (e.g., Rs. -1500) and it should be added to the total amount
-      discount: (parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0), // Ensure valid numbers
+      discount: (parseFloat(adjustedOrderAmount) || 0) - (parseFloat(commissionAmount) || 0), // Ensure valid numbers
       // Total is receivableAmount + discount, where discount can be negative
-      total: (parseFloat(receivableAmount) || 0) + ((parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0)),
+      total: (parseFloat(receivableAmount) || 0) + ((parseFloat(adjustedOrderAmount) || 0) - (parseFloat(commissionAmount) || 0)),
       previousAmountPaid: (previousAmountPaid !== null && previousAmountPaid !== undefined && previousAmountPaid !== ""
         ? parseFloat(previousAmountPaid)
         : 0),
@@ -639,7 +640,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       amountDue: isUpdateMode
       ?  
         (((parseFloat(receivableAmount) || 0) +
-          ((parseFloat(adjustedOrderAmount) || 0) + (parseFloat(waiverAmount) || 0))) - ((parseFloat(previousAmountPaid) || 0) +
+          ((parseFloat(adjustedOrderAmount) || 0) - (parseFloat(commissionAmount) || 0))) - ((parseFloat(previousAmountPaid) || 0) +
           (parseFloat(orderAmount) || 0)))
       : (parseFloat(balanceAmount) || 0) - (parseFloat(orderAmount) || 0),
       paymentMethod: previousPaymentMode && previousPaymentMode !== paymentMode.value
@@ -1050,7 +1051,7 @@ useEffect(() => {
     setRateName('');
     setRateType('');
     setAdjustedOrderAmount(0);
-    setWaiverAmount(0);
+    setCommissionAmount(0);
     setReceivableAmount(0);
     setPreviousPaymentMode('');
     setPreviousAmountPaid(0);
@@ -1154,7 +1155,7 @@ useEffect(() => {
         setRateName(clientData[0].rateName);
         setRateType(clientData[0].rateType);
         setAdjustedOrderAmount(clientData[0].adjustedOrderAmount);
-        setWaiverAmount(clientData[0].waiverAmount);
+        setCommissionAmount(clientData[0].commission);
         setReceivableAmount(clientData[0].receivableAmount);
         setPreviousPaymentMode(clientData[0].previousPaymentMode);
         setBalanceAmount(((parseFloat(clientData[0].balanceAmount) || 0) + (parseFloat(clientData[0].previousAmountPaid) || 0)) - (savedOrderAmount || 0));
@@ -1167,7 +1168,7 @@ useEffect(() => {
       console.error("Error fetching finance details:", error);
     }
 };
-  
+  console.log(commissionAmount)
   
   const handleFinanceSelection = (e) => {
     const selectedFinance = e.target.value;
