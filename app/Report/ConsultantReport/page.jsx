@@ -96,7 +96,6 @@ export default function GroupedRowsDemo() {
       },[])
 
       useEffect(() => {
-        // Retrieve and set dates on page load if not already set
         const savedStartDate = sessionStorage.getItem('startDate');
         const savedEndDate = sessionStorage.getItem('endDate');
         if (savedStartDate && savedEndDate) {
