@@ -1846,7 +1846,12 @@ return (
         placeholder="Enter Commission Amount"
         value={commissionAmount || ''}
         min={0}
-        onChange={handleCommissionChange}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || Number(value) >= 0) {
+            handleCommissionChange(e); // Call your handler only for valid positive numbers
+          }
+        }}
         onFocus={(e) => e.target.select()}
       />
       <div className="flex items-center space-x-1 mt-1">
