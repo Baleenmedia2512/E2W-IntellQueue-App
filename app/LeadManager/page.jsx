@@ -615,6 +615,14 @@ const handleCheckboxChange = () => {
               >
                 {row.Status}
               </span>
+              {row.HandleBy && (
+              <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
+                <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
+                <p className="font-poppins">
+                  {row.HandleBy}
+                </p>
+              </div>
+            )}
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
