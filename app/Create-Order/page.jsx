@@ -275,7 +275,6 @@ useEffect(() => {
           selectedValues.adType.value
         );
         setCommissionAmount(commission);
-        console.log('use effect...')
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -283,8 +282,7 @@ useEffect(() => {
   };
 
   fetchInitialData();
-}, [selectedValues.adType, selectedValues.rateName]); // Dependency array
-// console.log(commissionAmount)
+}, [selectedValues.adType, selectedValues.rateName]);
 
 const handleRateId = async () => {
   if(rateId > 0){
@@ -692,7 +690,6 @@ const fetchRates = async () => {
                 selectedValues.adType.value
               );
               setCommissionAmount(commission);
-              console.log('client details...')
             }
           } else {
             console.warn("No client details found for the given ID.");
@@ -707,7 +704,7 @@ const fetchRates = async () => {
 
       const fetchPreviousOrderDetails = (clientNumber, clientName) => {
         axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetailsTest.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
+          .get(`https://orders.baleenmedia.com/API/Media/FetchPreviousOrderDetails.php?ClientContact=${clientNumber}&ClientName=${clientName}&JsonDBName=${companyName}`)
           .then((response) => {
             const data = response.data;
             if (data.length > 0) {
@@ -1309,7 +1306,6 @@ const fetchConsultantDetails = async (Id) => {
       selectedValues.rateName.value,
       selectedValues.adType.value
     );
-    console.log('consultant...')
     setCommissionAmount(commission);
   } catch (error) {
     console.error('Error fetching consultant details:', error);

@@ -571,7 +571,6 @@ const handleMarkAsUnprocessed = async () => {
     //     return rows;
     // };
     //OLD CODE
-    console.log(selectedRows)
 
     const renderGroupedData = (groupedData, activeFilters = {}) => {
         const rows = [];
@@ -947,8 +946,6 @@ const handleExport = () => {
         RateCard: extractRateCardFromId(row.id),
         RateType: row.rateType,
         Count: row.count,
-        Price: row.price,
-        WaiverAmount: row.waiverAmount,
         Total: row.total
     }));
 
