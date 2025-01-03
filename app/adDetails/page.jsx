@@ -10,7 +10,7 @@ import EditionPage from './Edition';
 import RemarksPage from './Remarks';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCheckCircle, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { styled } from '@mui/material/styles';
@@ -158,7 +158,23 @@ export const AdDetails = () => {
   let isGeneratingPdf = false;
 
   const addQuoteToDB = async(item, quoteNumber) => {
-    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let qty = item.qty || 0; // Default to 0 if undefined
+    let unitPrice = item.unitPrice || 0; // Default to 0 if undefined
+    let width = item.width || 1; // Default width to 1
+    let campaignDuration = item.campaignDuration || 1; // Default to 1
+    let minimumCampaignDuration = item.minimumCampaignDuration || 1; // Default to 1
+    let margin = item.margin || 0; // Default to 0
+    let extraDiscount = item.extraDiscount || 0; // Default to 0
+
+    let AmountExclGST = Math.round(
+      (
+        ((item.unit === "SCM" ? qty * width : qty)
+          * unitPrice
+          * (campaignDuration / minimumCampaignDuration)) 
+        + (margin - extraDiscount)
+      )
+    );
+
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonNextQuoteId=${quoteNumber}`)
@@ -175,7 +191,23 @@ export const AdDetails = () => {
   }
 
   const updateQuoteToDB = async(item) => {
-    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * ( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)) + (item.margin - item.extraDiscount))));
+    let qty = item.qty || 0; // Default to 0 if undefined
+    let unitPrice = item.unitPrice || 0; // Default to 0 if undefined
+    let width = item.width || 1; // Default width to 1
+    let campaignDuration = item.campaignDuration || 1; // Default to 1
+    let minimumCampaignDuration = item.minimumCampaignDuration || 1; // Default to 1
+    let margin = item.margin || 0; // Default to 0
+    let extraDiscount = item.extraDiscount || 0; // Default to 0
+
+    let AmountExclGST = Math.round(
+      (
+        ((item.unit === "SCM" ? qty * width : qty)
+          * unitPrice
+          * (campaignDuration / minimumCampaignDuration)) 
+        + (margin - extraDiscount)
+      )
+    );
+
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     // console.log(item)
     if (item.isCartRemoved) {
@@ -475,7 +507,19 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <div></div>
+            <div>
+              <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
+                dispatch(resetQuotesData());
+
+                // clear while on edit mode
+                if (cartItems.length > 0 && cartItems[0].isEditMode) {
+                dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+                }
+
+                }}>
+              <FontAwesomeIcon icon={faCheckCircle} className='text-md' onClick={() => routers.push('/adDetails/manageQuotes')}/> Manage Quotes
+            </button>
+            </div>
           )}
 
           {/* {currentPage === "checkout" ?(

@@ -228,7 +228,7 @@ const AdDetailsPage = () => {
           // console.log(data)
           // Sort the data by StartQty
           const sortedData = [...data].sort((a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width));
-          // console.log(sortedData)
+      
           // Set sorted data in state
           setSlabData(sortedData);
       

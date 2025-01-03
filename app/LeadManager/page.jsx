@@ -14,7 +14,8 @@ import { useAppSelector } from "@/redux/store";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import LoadingComponent from "./progress";
-
+import { motion } from 'framer-motion';
+import { FaFilter, FaTimes } from "react-icons/fa";
 
 
 const statusColors = {
@@ -83,7 +84,133 @@ const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
 const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
 const [prospectType, setProspectType] = useState("");
 const [isLoading, setIsLoading] = useState(false); // State to track the loading status
-const [hasSaved, setHasSaved] = useState(false); 
+const [hasSaved, setHasSaved] = useState(false);
+const [statusFilter, setStatusFilter] = useState("All");
+const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+const [searchQuery, setSearchQuery] = useState('');
+const [filtersVisible, setFiltersVisible] = useState(false);
+const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+const [toDate, setToDate] = useState(null); // Use null for default empty date 
+const [timers, setTimers] = useState("");
+
+const toggleFilters = () => {
+  setFiltersVisible((prev) => !prev);
+};
+
+const handleSearch = (query) => {
+  setSearchQuery(query.toLowerCase());
+};
+
+const handleFocus = (e) => {
+  e.target.select();
+};
+
+const clearFilters = () => {
+  setStatusFilter('All');
+  setProspectTypeFilter('All');
+  setFromDate(null);
+  setToDate(null);
+  setSearchQuery('');
+};
+
+const prospectTypes = [
+  { type: "All", icon: null },  // No icon for "All"
+  { type: "Hot", icon: <GiCampfire className="inline-block text-red-500 mr-1" size={20}/> },
+  { type: "Warm", icon: <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1" size={20}/> },
+  { type: "Cold", icon: <FaRegSnowflake className="inline-block text-blue-500 mr-1" size={20}/> },
+];
+
+const filteredRows = rows
+.filter((row) =>
+  statusFilter === 'All' || row.Status === statusFilter
+)
+.filter((row) =>
+  prospectTypeFilter === 'All' || row.ProspectType === prospectTypeFilter
+)
+.filter((row) =>
+  [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
+    .filter(Boolean)
+    .some((field) =>
+      field.toLowerCase().includes(searchQuery)
+    )
+)
+.filter((row) => {
+  const followUpDate = new Date(row.FollowupDate);
+  const leadDate = new Date(row.LeadDate);
+
+  // Convert 'fromDate' and 'toDate' into Date objects for comparison
+  const fromDateObj = fromDate ? new Date(fromDate) : null;
+  const toDateObj = toDate ? new Date(toDate) : null;
+
+  // Ensure both fromDateObj and toDateObj are defined
+  if (!fromDateObj || !toDateObj) return true; 
+
+  if (
+    (followUpDate >= fromDateObj && followUpDate <= toDateObj) ||
+    (leadDate >= fromDateObj && leadDate <= toDateObj)
+  ) {
+    return true; 
+  }
+  return false; 
+});
+
+useEffect(() => {
+  const intervals = {};
+
+  rows.forEach((row) => {
+    if (row.Status === "New") {
+      const leadDateTime = new Date(`${row.LeadDate} ${row.LeadTime}`);
+      const currentTime = new Date();
+      const initialSeconds = Math.floor((currentTime - leadDateTime) / 1000);
+
+      // Start or continue the timer
+      if (!intervals[row.SNo]) {
+        setTimers((prevTimers) => ({
+          ...prevTimers,
+          [row.SNo]: initialSeconds > 0 ? initialSeconds : 0,
+        }));
+        intervals[row.SNo] = setInterval(() => {
+          setTimers((prevTimers) => {
+            const updatedTimers = {
+              ...prevTimers,
+              [row.SNo]: (prevTimers[row.SNo] || initialSeconds || 0) + 1,
+            };
+            localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
+            return updatedTimers;
+          });
+        }, 1000);
+      }
+    } else {
+      // Clear the timer if status changes
+      clearInterval(intervals[row.SNo]);
+      setTimers((prevTimers) => {
+        const updatedTimers = { ...prevTimers, [row.SNo]: 0 };
+        localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
+        return updatedTimers;
+      });
+    }
+  });
+
+  // Cleanup intervals on unmount or when rows change
+  return () => {
+    Object.values(intervals).forEach(clearInterval);
+  };
+}, [rows]);
+
+
+const formatTime = (seconds) => {
+  const days = Math.floor(seconds / 86400); // 86400 seconds in a day
+  const remainingSeconds = seconds % 86400;
+  const hrs = Math.floor(remainingSeconds / 3600).toString().padStart(2, "0");
+  const mins = Math.floor((remainingSeconds % 3600) / 60).toString().padStart(2, "0");
+  const secs = (remainingSeconds % 60).toString().padStart(2, "0");
+
+  if (days > 0) {
+    return `${days}d ${hrs}:${mins}:${secs}`;
+  }
+
+  return `${hrs}:${mins}:${secs}`;
+};
 
 const handleCheckboxChange = () => {
   setHasSaved(true); // Set hasSaved to true when checkbox is checked
@@ -367,9 +494,114 @@ const handleCheckboxChange = () => {
         </button>
       </div>
 
-      {/* Lead Cards */}
+          {/* Search Bar */}
+          <div className="p-4">
+      {/* Search Bar and Filter Icon */}
+      <div className="flex items-center justify-between mb-2">
+        <input
+          type="text"
+          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Search by Phone No, Email Address, Ad Enquiry, Company Name, Remarks..."
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          onFocus={handleFocus}
+          onClick={handleFocus}
+        />
+       <button
+        onClick={() => {
+          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
+            clearFilters(); // If any filters or search query is active, clear them
+          } else {
+            toggleFilters(); // Otherwise, toggle filter visibility
+          }
+        }}
+        className="ml-2 p-2 sm:p-3 bg-blue-500 text-white rounded-lg focus:outline-none hover:bg-blue-600"
+      >
+        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
+          <FaTimes size={20} /> // Clear icon if any filter or search query is active
+        ) : (
+          <FaFilter size={20} /> // Filter icon if no filter or search query is active
+        )}
+      </button>
+
+      </div>
+
+       {/* Filters */}
+       {filtersVisible && (
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          {/* Status Filter Buttons */}
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {["All", "New", "Call Followup", "Unreachable"].map((status, index) => (
+              <motion.button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  statusFilter === status
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {status}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Prospect Type Filter */}
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {prospectTypes.map((item, index) => (
+              <motion.button
+                key={item.type}
+                onClick={() => setProspectTypeFilter(item.type)}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  prospectTypeFilter === item.type
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {item.icon ? item.icon : item.type}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Date Range Filters */}
+          <div className="flex flex-row gap-2 sm:gap-4">
+            {/* From Date Picker */}
+            <DatePicker
+              selected={fromDate}
+              onChange={(date) => setFromDate(date)}
+              className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholderText="From Date"
+              dateFormat="dd-MMM-yyyy"
+            />
+            {/* To Date Picker */}
+            <DatePicker
+              selected={toDate}
+              onChange={(date) => setToDate(date)}
+              className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholderText="To Date"
+              dateFormat="dd-MMM-yyyy"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+
+{/* Lead Cards */}
+{filteredRows.length === 0 ? (
+    <div className="flex items-start justify-center h-screen">
+    <div className="text-center pt-20">No data found.</div>
+  </div>
+  
+  ) : (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((row) => (
+      {filteredRows.map((row) => (
+
           <div
             key={row.SNo}
             className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
@@ -378,7 +610,7 @@ const handleCheckboxChange = () => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -415,39 +647,43 @@ const handleCheckboxChange = () => {
               )}
             </span>
           }
-
-            {/* <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
+            
+            <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
-              </span> */}
+              </span>
               {/* Platform and Selected Status */}
+              {row.ProspectType && (
               <span
-            className={`inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r border ${
-              row.ProspectType === "Hot"
-                ? "text-red-500 border-red-500 bg-red-100 "
-                : row.ProspectType === "Warm"
-                ? "text-yellow-500 border-yellow-500 bg-yellow-100 "
-                : row.ProspectType === "Cold"
-                ? "text-blue-500 border-blue-500 bg-blue-100 "
-                : "text-gray-500 border-gray-500 "
-            }`}
-          >
-            {row.ProspectType === "Hot" && (
-              <GiCampfire className="inline-block text-red-500 mr-1 " />
+                className={`inline-block ml-2 px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r border ${
+                  row.ProspectType === "Hot"
+                    ? "text-red-500 border-red-500 bg-red-100"
+                    : row.ProspectType === "Warm"
+                    ? "text-yellow-500 border-yellow-500 bg-yellow-100"
+                    : row.ProspectType === "Cold"
+                    ? "text-blue-500 border-blue-500 bg-blue-100"
+                    : "border-white"
+                }`}
+              >
+                {row.ProspectType === "Hot" && (
+                  <GiCampfire className="inline-block text-red-500 " size={15} />
+                )}
+                {row.ProspectType === "Warm" && (
+                  <MdOutlineWbSunny className="inline-block text-yellow-500 " size={15} />
+                )}
+                {row.ProspectType === "Cold" && (
+                  <FaRegSnowflake className="inline-block text-blue-500 " size={15} />
+                )}
+              </span>
             )}
-            {row.ProspectType === "Warm" && (
-              <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1 " />
-            )}
-            {row.ProspectType === "Cold" && (
-              <FaRegSnowflake className="inline-block text-blue-500 mr-1 " />
-            )}
-            {row.Platform || "Unknown Platform"}
-          </span>
-
           </div>
 
             {/* Platform at Top Left */}
-            <div className="absolute top-2 left-2">
-              
+            <div className="absolute top-40 right-3">
+            {row.Status === "New" && (
+            <div className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full">
+              {formatTime(timers[row.SNo] || 0)}
+            </div>
+          )}
             </div>
 
             {/* Name and Company */}
@@ -462,6 +698,7 @@ const handleCheckboxChange = () => {
 
             {/* Core Details */}
             <div className="text-sm text-gray-700 mb-2">
+              
               <p>
               Originated at: <strong>{row.LeadDate} {row.LeadTime}</strong> 
               </p>
@@ -469,14 +706,14 @@ const handleCheckboxChange = () => {
                 Phone:
                 <a
                   // href={`tel:${row.Phone}`}
-                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}
+                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}
                   className="text-blue-600 hover:underline ml-1"
                 >
                   <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
                   title="Call"
                 >
                   <FiPhoneCall className="text-lg" />
@@ -489,14 +726,15 @@ const handleCheckboxChange = () => {
             {/* Follow-Up Date */}
             {row.FollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
               <div className="text-sm max-w-fit" >
-                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
+              <p className="text-sm text-gray-700 mb-1">Followup Date:</p>
+                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
               </div>
             ) : (
               <div className="text-sm max-w-fit mt-4">
-                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime)}}>+ Add Followup</button>
+                <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
               </div>
             )}
              {/* Remarks */}
@@ -507,11 +745,11 @@ const handleCheckboxChange = () => {
                 </p>
               </div>
             )}
-            
           </div>
         ))}
-        
       </div>
+      )}
+
 
       {/* Modal for Call Status */}
       {showModal && (
