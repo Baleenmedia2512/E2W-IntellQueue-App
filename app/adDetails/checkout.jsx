@@ -30,9 +30,7 @@ export const formattedMargin = (number) => {
 
 const CheckoutPage = () => {
   const dispatch = useDispatch()
-  const [toastMessage, setToastMessage] = useState('');
-  const [toast, setToast] = useState(false);
-  const [severity, setSeverity] = useState('');
+
   const [datas, setDatas] = useState([]);
   const [nextQuoteNumber, setNextQuoteNumber] = useState([]);
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -493,11 +491,7 @@ const CheckoutPage = () => {
         
         </div>       
       <div className="bg-surface-card p-8 rounded-2xl mb-4">
-                <Snackbar open={toast} autoHideDuration={6000} onClose={() => setToast(false)}>
-                  <MuiAlert severity={severity} onClose={() => setToast(false)}>
-                    {toastMessage}
-                  </MuiAlert>
-                </Snackbar>
+                
               </div>
               
     </div>

@@ -3,6 +3,7 @@ import {useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/redux/store';
 import AdDetailsPage from './ad-Details';
+import MuiAlert from '@mui/material/Alert';
 import CheckoutPage from './checkout';
 import { faArrowLeft, faCheckCircle, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,6 +14,8 @@ import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { removeEditModeItems, resetCartItem } from '@/redux/features/cart-slice';
 import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
+import { Snackbar } from '@mui/material';
+import ToastMessage from '../components/ToastMessage';
 
 export const AdDetails = () => {
   const routers = useRouter();
@@ -24,6 +27,9 @@ export const AdDetails = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
   const [isClientContact, setIsClientContact] = useState(true);
   const [isClientName, setIsClientName] = useState(true)
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
@@ -291,6 +297,10 @@ export const AdDetails = () => {
       
     } else{
       if(clientName === ""){
+        setToastMessage("Please enter a client name");
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => { setToast(false); }, 2000);
         setIsClientName(false)
       }else if(clientContact === ""){
         setIsClientContact(false)
@@ -330,6 +340,10 @@ export const AdDetails = () => {
       
     } else{
       if(clientName === ""){
+        setToastMessage("Please enter a client name");
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => { setToast(false); }, 2000);
         setIsClientName(false)
       }else if(clientContact === ""){
         setIsClientContact(false)
@@ -363,7 +377,7 @@ export const AdDetails = () => {
   grandTotalAmount = `₹ ${formattedRupees(Math.round(grandTotalAmount))}`
   return grandTotalAmount;
   }
-
+  
   const greater = ">>";
 
   return (
@@ -530,6 +544,7 @@ export const AdDetails = () => {
           </form>
           
         )}
+        {toast && <ToastMessage message={toastMessage} type="error"/>}
         </div>
       </div>
 }

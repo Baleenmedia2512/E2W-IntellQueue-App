@@ -67,6 +67,10 @@ const AdDetailsPage = () => {
   const [qtySlab, setQtySlab] = useState({ Qty: 1, Width: 1 });
   const [rateSearchTerm, setRateSearchTerm] = useState("");
   const [selectedDayRange, setSelectedDayRange] = useState("Day");
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [changing, setChanging] = useState(false);
 
   // Refs
@@ -284,7 +288,7 @@ const AdDetailsPage = () => {
   // Validate fields
   const validateFields = () => {
     const validationErrors = {};
-    if (qty < qtySlab.Qty) validationErrors.quantity = "Margin Amount is required";
+    if (qty < qtySlab.Qty) return false;
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
   };
@@ -294,7 +298,12 @@ const AdDetailsPage = () => {
     if (validateFields()) {
       dispatch(updateCurrentPage("checkout"));
     } else {
-      alert(errors);
+      setToastMessage("Quantity should not be less than " + qtySlab.Qty);
+      setSeverity("error");
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
     }
   };
 
@@ -417,7 +426,7 @@ const AdDetailsPage = () => {
   }));
 
   const handleCompleteEdit = () => {
-    // if (validateFields()) {
+    if (validateFields()) {
       // Prepare the updated item
       const updatedItem = {
         index: editIndex,
@@ -445,9 +454,9 @@ const AdDetailsPage = () => {
           updatedCartItems = cartItems.map(item =>
             item.index === editIndex ? { ...item, ...updatedItem } : item
           );
-          // setSuccessMessage("Item edited successfully.");
+          setSuccessMessage("Item edited successfully.");
         } else {
-          // setToastMessage("No Changes Detected.");
+          setToastMessage("No Changes Detected.");
           setSeverity("error");
           setToast(true);
           setTimeout(() => {
@@ -470,15 +479,15 @@ const AdDetailsPage = () => {
         dispatch(resetQuotesData());
         dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
       }
-    // } else {
-    //   // Show error if validation fails
-    //   setToastMessage("Please fill the necessary details in the form.");
-    //   setSeverity("error");
-    //   setToast(true);
-    //   setTimeout(() => {
-    //     setToast(false);
-    //   }, 2000);
-    // }
+    } else {
+      // Show error if validation fails
+      setToastMessage("Quantity should not be less than " + qtySlab.Qty);
+      setSeverity("error");
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    }
   };
   
   // Function to compare values and detect changes
@@ -613,12 +622,12 @@ const AdDetailsPage = () => {
             }
             const index = cartItems.length;
             dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
-            // setSuccessMessage("Item added to Cart");
-            // setTimeout(() => { setSuccessMessage(''); }, 2000);
+            setSuccessMessage("Item added to Cart");
+            setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
-            // setToastMessage('Please fill the necessary details in the form.');
-            // setSeverity('error');
-            // setToast(true);
+            setToastMessage("Quantity should not be less than " + qtySlab.Qty);
+            setSeverity('error');
+            setToast(true);
             setTimeout(() => { setToast(false); }, 2000);
           }
         }
@@ -833,7 +842,9 @@ const AdDetailsPage = () => {
                 </div>
 
               </div>
-              
+              {successMessage && <SuccessToast message={successMessage} />}
+              {toast && <ToastMessage message={toastMessage} type="error"/>}
+              {toast && <ToastMessage message={toastMessage} type="warning"/>}
               </div>
             </div>
           </div>
