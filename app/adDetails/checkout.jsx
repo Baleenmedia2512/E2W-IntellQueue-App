@@ -18,7 +18,7 @@ import { removeItem, resetCartItem, removeEditItem } from '@/redux/features/cart
 import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
-import { addItemsToCart, toggleItemSelection } from '@/redux/features/cart-slice';
+import { addItemsToCart, toggleItemSelection, removeEditModeItems } from '@/redux/features/cart-slice';
 
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
@@ -189,14 +189,14 @@ const CheckoutPage = () => {
       setIsEditMode(true)
 
       // Update existing items in cart to isEditMode: true
-      const updatedCartItems = cartItems.map(item => ({
-        ...item,
-        isEditMode: true,
-        editQuoteNumber: data[0].QuoteID || ''
-      }));
+      // const updatedCartItems = cartItems.map(item => ({
+      //   ...item,
+      //   isEditMode: true,
+      //   editQuoteNumber: data[0].QuoteID || ''
+      // }));
 
-      // Update the cart with the modified existing items
-      dispatch(addItemsToCart(updatedCartItems));
+      // // Update the cart with the modified existing items
+      // dispatch(addItemsToCart(updatedCartItems));
       
       data.forEach((item, index) => {
         // Use cartItems.length + index to calculate unique index for each item
@@ -240,21 +240,9 @@ const CheckoutPage = () => {
     }
   };
 
-
-  // const calculateGrandTotal = () => {
-  //   let grandTotal = [];
-  //   cartItems.map((item, index) => {
-  //     const priceOfAd = (item.qty * item.unitPrice *( item.campaignDuration  ? (item.campaignDuration ? 1: item.campaignDuration / item.minimumCampaignDuration): 1)+ (item.margin - item.extraDiscount)) * ((rateGST/100) + 1)
-  //     grandTotal.push(priceOfAd);
-  // })
-  // let grandTotalAmount = grandTotal.reduce((total, amount) => total + amount, 0);
-  // grandTotalAmount = `₹ ${formattedRupees(Math.round(grandTotalAmount))}`
-  // return grandTotalAmount;
-  // }
-
   const hasRemarks = cartItems.some(item => item.remarks);
   const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
-
+  const editQuoteItem = cartItems.find(item => item.editQuoteNumber);
   const ratesSearchSuggestion = [];
 
   const handleUndoRemove = (index) => {
@@ -304,22 +292,24 @@ const CheckoutPage = () => {
         {cartItems.length >= 1 ? (
           <div>
             
-            {cartItems[0].isEditMode && cartItems[0].editQuoteNumber ? (
+            {editQuoteItem ? (
             <div className='mb-4'>
             <div className="w-fit sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-1 flex items-center shadow-md sm:mr-4">
               <button
                 className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-                onClick={() => {
-                  dispatch(resetCartItem());
+                onClick={(e) => {
+                  e.preventDefault()
+                  setQuoteSearchTerm("");
+                  dispatch(removeEditModeItems());
                   dispatch(resetClientData());
-                  dispatch(resetQuotesData());
-                  dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails'}));
+                  // dispatch(resetQuotesData());
+                  // dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails'}));
                 }}
               >
                 Exit Edit
               </button>
               <div className="flex flex-row text-left text-sm md:text-base pr-2">
-                <p className="text-gray-600 font-semibold">#{cartItems[0].editQuoteNumber}</p>
+                <p className="text-gray-600 font-semibold">#{editQuoteItem.editQuoteNumber}</p>
                 <p className="text-gray-600 font-semibold mx-1">-</p>
                 <p className="text-gray-600 font-semibold">{clientName}</p>
                 {/* <p className="text-gray-600 font-semibold mx-1">-</p>
@@ -329,24 +319,6 @@ const CheckoutPage = () => {
             <p className="text-xs text-gray-400 italic mt-1">Q.No - Client Name</p>
             </div> 
           ) : ''}
-          {/* <div className="flex flex-row justify-between mt-8">
-          
-          <div className="mb-8 flex items-center">
-
-              <button
-                className=" hover:scale-110 text-blue-500 hover:animate-pulse border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
-                onClick={() => {
-                   dispatch(setQuotesData({currentPage: previousPage}))
-                }}
-              >
-                <FontAwesomeIcon icon={faArrowLeft} className=' text-md' /> Back
-              </button>
-              </div>
-              <> <h1 className='text-2xl font-bold text-center mb-4'>Cart</h1>
-              <button className='border px-2 py-1 h-fit bg-blue-500 text-white rounded-lg hover:bg-blue-200 hover:text-black hover:animate-pulse' onClick={() => dispatch(resetCartItem())}>Clear All</button>
-              </>
-          </div> */}
-          {/* <h1 className="text-lg font-medium text-blue-500 mb-4">Verify before sending Quote</h1> */}
           <div className='flex flex-col justify-center w-full'>
             
             <div>
@@ -380,7 +352,7 @@ const CheckoutPage = () => {
             onClick={() => dispatch(toggleItemSelection(item.index))}
             >
               <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
-              <td className='p-1.5 border border-gray-200'>{!item.editQuoteNumber ? nextQuoteNumber : item.editQuoteNumber}</td>
+              <td className='p-1.5 border border-gray-200'>{!editQuoteItem ? nextQuoteNumber : editQuoteItem.editQuoteNumber}</td>
               <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
               <td className='p-1.5 border border-gray-200'>{item.adType}</td>
               <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
@@ -391,14 +363,12 @@ const CheckoutPage = () => {
               {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap'>{item.remarks}</td>}
               <td className='p-1.5 border border-gray-200 w-fit text-nowrap'>
                 ₹ {formattedRupees(
-                  Math.round(
                     (
                       (item.unit === "SCM" ? item.qty * item.width : item.qty) *
                       item.unitPrice *
                       (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
                       parseInt(item.margin)
-                    ) / item.qty
-                  )
+                    ) / (item.unit === "SCM" ? item.qty * item.width : item.qty)
                 )} per {item.unit}
               </td>
               <td className='p-1.5 border border-gray-200 text-nowrap'>

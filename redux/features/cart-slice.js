@@ -47,9 +47,11 @@ const cartSlice = createSlice({
         state.cart[existingIndex].isSelected = !state.cart[existingIndex].isSelected;
       }
     },
-    
+    removeEditModeItems: (state) => {
+      state.cart = state.cart.filter(item => !(item.isEditMode && item.editQuoteNumber));
+    },
   },
 });
 
-export const { addItemsToCart, removeItem, removeEditItem, resetCartItem, toggleItemSelection } = cartSlice.actions;
+export const { addItemsToCart, removeItem, removeEditItem, resetCartItem, toggleItemSelection, removeEditModeItems } = cartSlice.actions;
 export const cartReducer = cartSlice.reducer;

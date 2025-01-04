@@ -18,6 +18,7 @@ const initialState = {
   minimumUnit: 0,
   campaignDuration: "",
   marginAmount: 0,
+  marginPercentage: 0,
   extraDiscount: 0,
   remarks: "",
   currentPage: "adDetails",
