@@ -229,7 +229,12 @@ const AdDetailsPage = () => {
     }
   
     if (!changing) {
-      dispatch(setQuotesData({ quantity: qtySlab.Qty, width: qtySlab.Width}));
+      if (qty <= qtySlab.Qty && width <= qtySlab.Width) {
+        dispatch(
+          setQuotesData({ quantity: qtySlab.Qty, width: qtySlab.Width })
+        );
+        handleMarginPercentageChange(marginPercentage)
+      }
     } else {
       setChanging(false);
     }
@@ -277,20 +282,20 @@ const AdDetailsPage = () => {
   }, [qtySlab]);
 
   // Validate fields
-  // const validateFields = () => {
-  //   const validationErrors = {};
-  //   if (!margin || margin === "0") validationErrors.marginAmount = "Margin Amount is required";
-  //   setErrors(validationErrors);
-  //   return Object.keys(validationErrors).length === 0;
-  // };
+  const validateFields = () => {
+    const validationErrors = {};
+    if (qty < qtySlab.Qty) validationErrors.quantity = "Margin Amount is required";
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
+  };
 
   // Handle form submission
   const handleSubmit = () => {
-    // if (validateFields()) {
+    if (validateFields()) {
       dispatch(updateCurrentPage("checkout"));
-    // } else {
-    //   console.error("Validation failed:", errors);
-    // }
+    } else {
+      alert(errors);
+    }
   };
 
   const handleMarginChange = (marginValue) => {
@@ -300,7 +305,7 @@ const AdDetailsPage = () => {
     const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount);
     
     // Update both marginAmount and marginPercentage
-    // dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
+    dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
 
     if (newMarginAmount > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
@@ -314,7 +319,7 @@ const AdDetailsPage = () => {
     const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage);
   
     // Update both marginAmount and marginPercentage
-    // dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
+    dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
   
     if (newPercentage > 0) {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
@@ -601,19 +606,19 @@ const AdDetailsPage = () => {
               if (result) {
                 const index = cartItems.length;
                 dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
-                setSuccessMessage("Item added to Cart");
+                // setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
             dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
-            setSuccessMessage("Item added to Cart");
+            // setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
-            setToastMessage('Please fill the necessary details in the form.');
-            setSeverity('error');
-            setToast(true);
+            // setToastMessage('Please fill the necessary details in the form.');
+            // setSeverity('error');
+            // setToast(true);
             setTimeout(() => { setToast(false); }, 2000);
           }
         }
