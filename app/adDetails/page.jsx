@@ -11,7 +11,7 @@ import { useDispatch } from 'react-redux';
 import { fetchNextQuoteNumber } from '../api/fetchNextQuoteNumber';
 import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
-import { resetCartItem } from '@/redux/features/cart-slice';
+import { removeEditModeItems, resetCartItem } from '@/redux/features/cart-slice';
 import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
 
 export const AdDetails = () => {
@@ -41,6 +41,7 @@ export const AdDetails = () => {
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
   //const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
+  const editQuoteItem = cartItems.find(item => item.editQuoteNumber);
 
   useEffect(() => {
     if (!username || dbName === "") {
@@ -225,14 +226,14 @@ export const AdDetails = () => {
       try {
         if (item.isNewCart) {
           try {
-            const response = await addQuoteToDB(item, item.editQuoteNumber);
+            const response = await addQuoteToDB(item, editQuoteItem.editQuoteNumber);
           
           } catch (error) {
             console.error('An unexpected error occured while inserting Quote:', error);
             return;
           }
         } else {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonScheme=&JsonBold=&JsonSemiBold=&JsonTick=&JsonColor=&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonCartId=${item.cartId}&JsonQuoteId=${item.editQuoteNumber}`)
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonScheme=&JsonBold=&JsonSemiBold=&JsonTick=&JsonColor=&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonCartId=${item.cartId}&JsonQuoteId=${editQuoteItem.editQuoteNumber}`)
         
           const data = await response.json();
           if (!response.ok) {
@@ -302,7 +303,7 @@ export const AdDetails = () => {
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
     
     const TnC = await getTnC(companyName);
-    const quoteNumber = cartItems[0].editQuoteNumber;
+    const quoteNumber = editQuoteItem.editQuoteNumber;
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
@@ -317,10 +318,10 @@ export const AdDetails = () => {
         const promises = cartItems.map(item => updateQuoteToDB(item));
         await Promise.all(promises);
         setTimeout(() => {
-        //dispatch(resetCartItem());
-        dispatch(resetQuotesData());
+        dispatch(removeEditModeItems());
+        // dispatch(resetQuotesData());
         dispatch(resetClientData());
-        dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
+        // dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
       },200)
       } catch(error){
         alert('An unexpected error occured while inserting Quote:' + error);
@@ -364,7 +365,6 @@ export const AdDetails = () => {
   }
 
   const greater = ">>";
-  
 
   return (
     
@@ -414,7 +414,7 @@ export const AdDetails = () => {
           {/* Shopping Cart Button */}
           {currentPage === "checkout" ? (
             <div className='flex flex-row justify-center items-center'>
-              {cartItems.length > 0 && cartItems[0].isEditMode ? (
+              {cartItems.length > 0 && editQuoteItem ? (
                 <button
                   className={cartItems.length > 0 ? 'Addtocartafter-button' : 'Addtocart-button'}
                   disabled={cartItems.length > 0 ? false : true}

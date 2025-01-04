@@ -210,7 +210,7 @@ const AdDetailsPage = () => {
         dispatch(setQuotesData({ quantity: firstSelectedSlab.StartQty }));
       }
     } catch (error) {
-      console.error("Error in LoadFormData:", error);
+      console.error("Error in Loding form data: ", error);
     }
   };
 
@@ -260,7 +260,7 @@ const AdDetailsPage = () => {
 
   useEffect(() => {
     // dispatch(setQuotesData({marginAmount: 0}));
-    if (rateId && adMedium) {
+    if (rateId) {
       LoadFormData();
     }
   }, [rateId, adMedium]);
@@ -426,7 +426,7 @@ const AdDetailsPage = () => {
         CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
         leadDay: leadDay ? leadDay.LeadDays : "", 
         minimumCampaignDuration, ValidityDate, rateGST, width, 
-        campaignDurationVisibility, editQuoteNumber, isEditMode: true
+        campaignDurationVisibility, editQuoteNumber, isEditMode: false
       };
   
       // Find the existing item with the same editIndex
@@ -614,7 +614,7 @@ const AdDetailsPage = () => {
             const index = cartItems.length;
             dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
             // setSuccessMessage("Item added to Cart");
-            setTimeout(() => { setSuccessMessage(''); }, 2000);
+            // setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
             // setToastMessage('Please fill the necessary details in the form.');
             // setSeverity('error');
@@ -664,7 +664,7 @@ const AdDetailsPage = () => {
                     />
                     <label className="justify-center mt-2 ml-2 ">{unit ? unit : 'Unit'}</label>
                   </div>
-                  <p className="text-red-700">{qty < qtySlab.Qty ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
+                  <p className="text-red-700">{(rateId > 0 && qty < qtySlab.Qty) ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
                 </div>
                    ) : (
                     <div className="mb-4 flex flex-row">
