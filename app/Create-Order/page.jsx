@@ -919,8 +919,6 @@ const CreateStages = async () => {
 //update order-SK (02-08-2024)------------------------------------
 const updateNewOrder = async (event) => {
   if (event) event.preventDefault();
-  // Now you can use the updateReason for your logic
-
   const receivable = (unitPrice * qty) + marginAmount;
   const payable = unitPrice * qty;
   const orderOwner = companyName === 'Baleen Media' ? (clientSource === '6.Own' ? loggedInUser : 'leenah_cse') : loggedInUser;
