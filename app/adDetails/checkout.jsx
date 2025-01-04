@@ -347,19 +347,19 @@ const CheckoutPage = () => {
             <tr 
             key={index}
             className={item.isCartRemoved ? 'opacity-50 bg-gray-100' : item.isSelected ? 'bg-blue-100' : ''}
-            onClick={() => dispatch(toggleItemSelection(item.index))}
+            
             >
-              <td className='p-1.5 border border-gray-200'>{item.rateId}</td>
-              <td className='p-1.5 border border-gray-200'>{!editQuoteItem ? nextQuoteNumber : editQuoteItem.editQuoteNumber}</td>
-              <td className='p-1.5 border border-gray-200'>{item.adMedium}</td>
-              <td className='p-1.5 border border-gray-200'>{item.adType}</td>
-              <td className='p-1.5 border border-gray-200'>{item.adCategory}</td>
-              <td className='p-1.5 border border-gray-200'>{item.edition}</td>
-              <td className='p-1.5 border border-gray-200'>{item.position}</td>
-              <td className='p-1.5 border border-gray-200'>{item.unit === "SCM" ? item.width + "W" + " x " + item.qty + "H" : item.qty} {item.unit}</td>
-              {hasCampaignDuration && <td className='p-1.5 border border-gray-200'>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>}
-              {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap'>{item.remarks}</td>}
-              <td className='p-1.5 border border-gray-200 w-fit text-nowrap'>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.rateId}</td>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{!editQuoteItem ? nextQuoteNumber : editQuoteItem.editQuoteNumber}</td>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.adMedium}</td>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.adType}</td>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.adCategory}</td>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.edition}</td>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.position}</td>
+              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.unit === "SCM" ? item.width + "W" + " x " + item.qty + "H" : item.qty} {item.unit}</td>
+              {hasCampaignDuration && <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>}
+              {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.remarks}</td>}
+              <td className='p-1.5 border border-gray-200 w-fit text-nowrap' onClick={() => dispatch(toggleItemSelection(item.index))}>
                 ₹ {formattedRupees(
                     (
                       (item.unit === "SCM" ? item.qty * item.width : item.qty) *
@@ -369,7 +369,7 @@ const CheckoutPage = () => {
                     ) / (item.unit === "SCM" ? item.qty * item.width : item.qty)
                 )} per {item.unit}
               </td>
-              <td className='p-1.5 border border-gray-200 text-nowrap'>
+              <td className='p-1.5 border border-gray-200 text-nowrap' onClick={() => dispatch(toggleItemSelection(item.index))}>
                 ₹ {formattedRupees(
                   Math.round(
                     (item.unit === "SCM" ? item.qty * item.width : item.qty) *
