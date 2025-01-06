@@ -140,7 +140,7 @@ export const UpdatePaymentMilestone = async(Stages, DBName) => {
         }
     }
 
-    return result; // Return full result object
+    return result;
 };
 
 export const FetchQuoteData = async(DBName, QuoteId) => {
