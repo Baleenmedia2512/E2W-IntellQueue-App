@@ -125,6 +125,7 @@ const CheckoutPage = () => {
     editIndex: item.index,
     editQuoteNumber: item.editQuoteNumber
   }));
+  console.log(item);
   };
   
 
@@ -264,6 +265,7 @@ const CheckoutPage = () => {
           name='QuoteSearchInput'
           placeholder="Ex: 2540 Tony Bus"
           value={quoteSearchTerm}
+          disabled = {editQuoteItem?.editQuoteNumber ? true : false}
           onChange = {handleQuoteSearch}
           onFocus={(e) => {e.target.select()}}
         /><div className="px-3">

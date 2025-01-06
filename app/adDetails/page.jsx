@@ -3,9 +3,8 @@ import {useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/redux/store';
 import AdDetailsPage from './ad-Details';
-import MuiAlert from '@mui/material/Alert';
 import CheckoutPage from './checkout';
-import { faArrowLeft, faCheckCircle, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { goBack, resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
@@ -14,8 +13,6 @@ import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { removeEditModeItems, resetCartItem } from '@/redux/features/cart-slice';
 import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
-import { Snackbar } from '@mui/material';
-import ToastMessage from '../components/ToastMessage';
 
 export const AdDetails = () => {
   const routers = useRouter();
@@ -27,9 +24,6 @@ export const AdDetails = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toast, setToast] = useState(false);
-  const [severity, setSeverity] = useState('');
   const [isClientContact, setIsClientContact] = useState(true);
   const [isClientName, setIsClientName] = useState(true)
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
@@ -297,10 +291,6 @@ export const AdDetails = () => {
       
     } else{
       if(clientName === ""){
-        setToastMessage("Please enter a client name");
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => { setToast(false); }, 2000);
         setIsClientName(false)
       }else if(clientContact === ""){
         setIsClientContact(false)
@@ -340,10 +330,6 @@ export const AdDetails = () => {
       
     } else{
       if(clientName === ""){
-        setToastMessage("Please enter a client name");
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => { setToast(false); }, 2000);
         setIsClientName(false)
       }else if(clientContact === ""){
         setIsClientContact(false)
@@ -377,7 +363,7 @@ export const AdDetails = () => {
   grandTotalAmount = `₹ ${formattedRupees(Math.round(grandTotalAmount))}`
   return grandTotalAmount;
   }
-  
+
   const greater = ">>";
 
   return (
@@ -454,19 +440,7 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <div>
-              <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
-                dispatch(resetQuotesData());
-
-                // clear while on edit mode
-                if (cartItems.length > 0 && cartItems[0].isEditMode) {
-                dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
-                }
-
-                }}>
-              <FontAwesomeIcon icon={faCheckCircle} className='text-md' onClick={() => routers.push('/adDetails/manageQuotes')}/> Manage Quotes
-            </button>
-            </div>
+            <div></div>
           )}
 
           {/* {currentPage === "checkout" ?(
@@ -544,7 +518,6 @@ export const AdDetails = () => {
           </form>
           
         )}
-        {toast && <ToastMessage message={toastMessage} type="error"/>}
         </div>
       </div>
 }

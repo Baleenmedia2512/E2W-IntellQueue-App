@@ -435,9 +435,10 @@ const AdDetailsPage = () => {
         CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
         leadDay: leadDay ? leadDay.LeadDays : "", 
         minimumCampaignDuration, ValidityDate, rateGST, width, 
-        campaignDurationVisibility, editQuoteNumber, isEditMode: false
+        campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false
       };
   
+      console.log(editQuoteNumber)
       // Find the existing item with the same editIndex
       const existingItem = cartItems.find(item => item.index === editIndex);
   
@@ -529,7 +530,7 @@ const AdDetailsPage = () => {
           className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
           type="text"
           id="RateSearchInput"
-          placeholder="Ex: RateName Type"
+          placeholder="Ex: Full Bus Chennai"
           value={rateSearchTerm}
           onChange = {handleRateSearch}
           onFocus={(e) => {e.target.select()}}
