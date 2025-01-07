@@ -247,7 +247,7 @@ export default function GroupedRowsDemo() {
         if (dataToSave) {
             try {
                 for (const data of dataToSave) {
-                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
+                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${encodeURIComponent(data.rateCard)}&JsonRateType=${encodeURIComponent(data.rateType)}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
                     const result = await response.json();
     
                     if (result !== "Values Inserted Successfully!") {
