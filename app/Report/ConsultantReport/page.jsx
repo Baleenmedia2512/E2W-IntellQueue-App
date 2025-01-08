@@ -247,7 +247,7 @@ export default function GroupedRowsDemo() {
         if (dataToSave) {
             try {
                 for (const data of dataToSave) {
-                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${data.rateCard}&JsonRateType=${data.rateType}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
+                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/SaveConsultantIncentives.php/?JsonCID=&JsonConsultantName=${data.consultantName}&JsonRateCard=${encodeURIComponent(data.rateCard)}&JsonRateType=${encodeURIComponent(data.rateType)}&JsonUnitPrice=${data.unitPrice}&JsonDBName=${companyName}`);
                     const result = await response.json();
     
                     if (result !== "Values Inserted Successfully!") {
@@ -331,8 +331,6 @@ const handleMarkAsUnprocessed = async () => {
     }
 };
 
-    
-
     const handleDateChange = (range) => {
         if (range && range.length === 2) {
           const [start, end] = range;
@@ -355,13 +353,12 @@ const handleMarkAsUnprocessed = async () => {
     
         data.forEach((consultant) => {
             let existingName = groupedData.find(group => group.name === consultant.name);
-    
             if (!existingName) {
                 existingName = { 
                     name: consultant.name, 
-                    rates: [], 
+                    rates: [],
+                    count: 0,
                     total: 0,
-                    waiverAmount: 0, // Initialize waiverAmount
                 };
                 groupedData.push(existingName);
             }
@@ -371,8 +368,7 @@ const handleMarkAsUnprocessed = async () => {
             if (!existingRateCard) {
                 existingRateCard = { 
                     rateCard: consultant.rateCard, 
-                    rateTypes: [], 
-                    waiverAmount: 0, // Initialize waiverAmount
+                    rateTypes: [],
                 };
                 existingName.rates.push(existingRateCard);
             }
@@ -380,36 +376,87 @@ const handleMarkAsUnprocessed = async () => {
             let existingRateType = existingRateCard.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
     
             if (!existingRateType) {
-                const id = `${consultant.name}-${consultant.rateCard}-${consultant.rateType}`;
-                const storedPrice = storedPrices[id] !== undefined ? storedPrices[id] : consultant.price; // Check stored prices
-    
+
                 existingRateType = { 
                     rateType: consultant.rateType, 
-                    count: 0, 
-                    price: storedPrice, // Use stored price if available
-                    waiverAmount: 0, // Initialize waiverAmount
-                    total: 0, // Initialize total
+                    count: consultant.count,
+                    price: consultant.price,
                 };
                 existingRateCard.rateTypes.push(existingRateType);
             }
     
             // Update counts, totals, and waiverAmount
-            existingRateType.count += consultant.count;
-            existingRateType.waiverAmount += consultant.waiverAmount;
-    
-            // Recalculate price and total if stored price is available
-            const id = `${consultant.name}-${consultant.rateCard}-${consultant.rateType}`;
-            const storedPrice = storedPrices[id] !== undefined ? storedPrices[id] : existingRateType.price;
-            existingRateType.price = storedPrice; // Update price based on storedPrices
-            existingRateType.total = (existingRateType.count * storedPrice) + existingRateType.waiverAmount; // Update total
-    
-            // Update the total for the consultant group
-            existingName.total += (consultant.count * storedPrice) + consultant.waiverAmount;
+            existingName.count += consultant.count;
+
             existingRateType.OrderNumbers = consultant.OrderNumbers;
+
+            existingName.total += existingRateType.price;
         });
     
         return groupedData;
     };
+
+    //   const groupConsultants = (data) => {
+    //     const groupedData = [];
+    //     const storedPrices = JSON.parse(sessionStorage.getItem("unitPrices")) || {}; // Retrieve stored prices
+    
+    //     data.forEach((consultant) => {
+    //         let existingName = groupedData.find(group => group.name === consultant.name);
+    
+    //         if (!existingName) {
+    //             existingName = { 
+    //                 name: consultant.name, 
+    //                 rates: [], 
+    //                 total: 0,
+    //                 waiverAmount: 0, // Initialize waiverAmount
+    //             };
+    //             groupedData.push(existingName);
+    //         }
+    
+    //         let existingRateCard = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
+    
+    //         if (!existingRateCard) {
+    //             existingRateCard = { 
+    //                 rateCard: consultant.rateCard, 
+    //                 rateTypes: [], 
+    //                 waiverAmount: 0, // Initialize waiverAmount
+    //             };
+    //             existingName.rates.push(existingRateCard);
+    //         }
+    
+    //         let existingRateType = existingRateCard.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
+    
+    //         if (!existingRateType) {
+    //             const id = `${consultant.name}-${consultant.rateCard}-${consultant.rateType}`;
+    //             const storedPrice = storedPrices[id] !== undefined ? storedPrices[id] : consultant.price; // Check stored prices
+    
+    //             existingRateType = { 
+    //                 rateType: consultant.rateType, 
+    //                 count: 0, 
+    //                 price: storedPrice, // Use stored price if available
+    //                 waiverAmount: 0, // Initialize waiverAmount
+    //                 total: 0, // Initialize total
+    //             };
+    //             existingRateCard.rateTypes.push(existingRateType);
+    //         }
+    
+    //         // Update counts, totals, and waiverAmount
+    //         existingRateType.count += consultant.count;
+    //         existingRateType.waiverAmount += consultant.waiverAmount;
+    
+    //         // Recalculate price and total if stored price is available
+    //         const id = `${consultant.name}-${consultant.rateCard}-${consultant.rateType}`;
+    //         const storedPrice = storedPrices[id] !== undefined ? storedPrices[id] : existingRateType.price;
+    //         existingRateType.price = storedPrice; // Update price based on storedPrices
+    //         existingRateType.total = (existingRateType.count * storedPrice) + existingRateType.waiverAmount; // Update total
+    
+    //         // Update the total for the consultant group
+    //         existingName.total += (consultant.count * storedPrice) + consultant.waiverAmount;
+    //         existingRateType.OrderNumbers = consultant.OrderNumbers;
+    //     });
+    
+    //     return groupedData;
+    // };
     
     //OLD CODE
     //   const groupConsultants = (data) => {
@@ -538,18 +585,15 @@ const handleMarkAsUnprocessed = async () => {
             group.rates.forEach((rateCard, scanIndex) => {
                 rateCardNames.push(rateCard.rateCard);
                 rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                    const totalAmount = (rateType.count * rateType.price) + (rateType.waiverAmount);
                     const orderNumbersArray = rateType.OrderNumbers ? rateType.OrderNumbers.split(',').map(num => num.trim()) : [];
-
+                    
                     rows.push({
                         id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
                         name: group.name,  // Add name if filter applies
                         rateCard: rateCard.rateCard,
                         rateType: rateType.rateType,
                         count: rateType.count,
-                        price: rateType.price,
-                        waiverAmount: rateType.waiverAmount,
-                        total: totalAmount,
+                        total: rateType.price,
                         isGroup: currentIndex === middleIndex,
                         isScanGroup: scanTypeIndex === 0,
                         orderNumber: orderNumbersArray,
@@ -560,14 +604,11 @@ const handleMarkAsUnprocessed = async () => {
             });
             
             const rateCardString = rateCardNames.join('-');
-            
             rows.push({
                 id: `${group.name}-${rateCardString}-total`,
                 name: '',
                 rateCard: 'Total',
-                count: '',
-                price: '',
-                waiverAmount: '',
+                count: group.count,
                 total: `₹${Math.round(group.total)}`,
                 isGroup: true,
                 isScanGroup: false,
@@ -781,7 +822,12 @@ const handleMarkAsUnprocessed = async () => {
     };
 
     const countBodyTemplate = (rowData) => {
-        return rowData.count;
+        if (rowData.rateCard === 'Total') {
+            return <span className="font-bold text-blue-500">{rowData.count}</span>;
+        } else if (rowData.rateCard) {
+            return rowData.count;
+        }
+        return null;
     };
 
     const waiverAmountBodyTemplate = (rowData) => {
@@ -878,12 +924,12 @@ const extractRateCardFromId = (id) => {
     return id.split('-')[1];
 };
 
-// Calculate number of rates
-// Get the sum of values from the count column
 const totalCount = selectedRows.reduce((accumulator, row) => {
-  // Add the value of count column to the accumulator if it exists and is a number
-  return accumulator + (row.count || 0);
-}, 0);
+    if (!row.rateCard.startsWith('Total')) {
+      return accumulator + (row.count || 0);
+    }
+    return accumulator; // Skip the row if it starts with 'Total'
+  }, 0);
 
 const numberOfScans = totalCount;
 
@@ -900,8 +946,6 @@ const handleExport = () => {
         RateCard: extractRateCardFromId(row.id),
         RateType: row.rateType,
         Count: row.count,
-        Price: row.price,
-        WaiverAmount: row.waiverAmount,
         Total: row.total
     }));
 
@@ -1294,13 +1338,9 @@ const handleCheckboxChange = () => {
                             showApplyButton={false}
                             showClearButton={false}
                             ></Column>
-                            <Column field="count" header="Count (a)" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
+                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
                             ></Column>
-                            <Column field="price" header="Unit Price (b)" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
-                            ></Column>
-                            <Column field="waiverAmount" header="Waiver Amount (c)" body={waiverAmountBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-full sm:w-1/2 md:w-1/4 lg:w-1/6 p-2 text-nowrap"
-                            ></Column>
-                            <Column field="total" header="Total (a x b + c)" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
                         </DataTable>
                     </div>

@@ -20,10 +20,7 @@ import { useAppSelector } from '@/redux/store';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { FetchOrderSeachTerm, FetchQuoteSearchTerm } from '../api/FetchAPI';
-import 'primereact/resources/themes/saga-blue/theme.css';
-import 'primereact/resources/primereact.min.css';
-import 'primeicons/primeicons.css';
+
 
 const initialRows = [
     // Initial rows can be loaded from your API or kept empty for now
@@ -69,56 +66,6 @@ export default function TimeSheetModule() {
     const [successMessage, setSuccessMessage] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [currentRowId, setCurrentRowId] = useState(null);
-    const [orderSuggestions, setOrderSuggestions] = useState([]);
-    const [quoteSuggestions, setQuoteSuggestions] = useState([]);
-
-    // Handle fetching order suggestions
-    const handleOrderNumberChange = async (event) => {
-        const value = event.target.value;
-        // Optionally check if value is not empty
-        if (value) {
-            const suggestions = await FetchOrderSeachTerm(companyName, value);
-            setOrderSuggestions(suggestions);
-        } else {
-            setOrderSuggestions([]);
-        }
-    };
-
-    // Handle fetching quote suggestions
-    const handleQuoteNumberChange = async (event) => {
-        const value = event.target.value;
-        // Optionally check if value is not empty
-        if (value) {
-            const suggestions = await FetchQuoteSearchTerm(companyName, value);
-            setQuoteSuggestions(suggestions);
-        } else {
-            setQuoteSuggestions([]);
-        }
-    };
-
-    // Handle selecting an order number suggestion
-    const handleOrderSelect = (suggestion) => {
-        const updatedRows = rows.map(row => {
-            if (row.id === currentRowId) {
-                return { ...row, orderNumber: suggestion }; // Update the selected row
-            }
-            return row;
-        });
-        setRows(updatedRows);
-        setOrderSuggestions([]); // Clear suggestions
-    };
-
-    // Handle selecting a quote number suggestion
-    const handleQuoteSelect = (suggestion) => {
-        const updatedRows = rows.map(row => {
-            if (row.id === currentRowId) {
-                return { ...row, quoteNumber: suggestion }; // Update the selected row
-            }
-            return row;
-        });
-        setRows(updatedRows);
-        setQuoteSuggestions([]); // Clear suggestions
-    };
 
     const fetchTimeSheetData = async () => {
         const workDate = formatDateForDB(selectedDate);
@@ -277,57 +224,8 @@ console.log(successMessage)
     };
 
     const columns = [
-        {
-            field: 'orderNumber',
-            headerName: 'Order Number',
-            width: 200,
-            editable: true,
-            renderEditCell: (params) => (
-                <div>
-                    <input
-                        value={params.value}
-                        onChange={handleOrderNumberChange}
-                        onBlur={() => setOrderSuggestions([])} // Clear suggestions on blur
-                    />
-                    {/* Render suggestions */}
-                    {orderSuggestions.length > 0 && (
-                        <ul>
-                            {orderSuggestions.map((suggestion, index) => (
-                                <li key={index} onClick={() => handleOrderSelect(suggestion)}>
-                                    {suggestion}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            ),
-        },
-        {
-            field: 'quoteNumber',
-            headerName: 'Quote Number',
-            width: 200,
-            editable: true,
-            renderEditCell: (params) => (
-                <div>
-                    <input
-                        value={params.value}
-                        onChange={handleQuoteNumberChange}
-                        onBlur={() => setQuoteSuggestions([])} // Clear suggestions on blur
-                    />
-                    {/* Render suggestions */}
-                    {quoteSuggestions.length > 0 && (
-                        <ul>
-                            {quoteSuggestions.map((suggestion, index) => (
-                                <li key={index} onClick={() => handleQuoteSelect(suggestion)}>
-                                    {suggestion}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            ),
-        },
-
+        { field: 'orderNumber', headerName: 'Order Number', width: 200, editable: true },
+        { field: 'quoteNumber', headerName: 'Quote Number', width: 200, editable: true },
         {
             field: 'activity',
             headerName: 'Activity',
@@ -377,7 +275,7 @@ console.log(successMessage)
                       onClick={handleEditClick(id)}
                   />,
                   <GridActionsCellItem
-                      key="save"
+                      key="delete"
                       icon={<DeleteIcon className="text-red-500" />} // Delete icon in red
                       label="Delete"
                       onClick={handleDeleteClick(id)}

@@ -34,6 +34,9 @@ import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualizatio
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const AdDetailsPage = () => {
+
+  // Check if localStorage contains a username
+  // const username = "GraceScans"
   const dispatch = useDispatch()
   const validityRef = useRef();
   const unitRef = useRef();
@@ -153,7 +156,6 @@ const AdDetailsPage = () => {
     }
   }, [newRateModel, newRateType, selectedValues]);
   
-
   const toggleModal = () => {
       setModal((prevState) => !prevState);
   }
@@ -186,6 +188,7 @@ const AdDetailsPage = () => {
   }
   useEffect(() => {
      
+     // If no username is found, redirect to the login page
      if (!username || dbName === "") {
       router.push('/login');
       } else{
@@ -887,13 +890,22 @@ var selectedRate = '';
       setValidRatesData(valid);
       setInvalidRatesData(invalid);
       setRatesData(valid);
+      // console.log(data,'Rates',ratesData,'Invalid',invalid,'valid ', valid)
       // Cache the new rates data
       // localStorage.setItem('cachedRates', JSON.stringify(data));
     } catch (error) {
       console.error('Error fetching rates:', error);
     }
   };
-
+  
+  const [initialValues, setInitialValues] = useState({
+    rateName: '',
+    adType: '',
+    typeOfAd: '',
+    Location: '',
+    Package: '',
+    vendorName: ''
+  });
   const handleRateId = async (selectedRateId) => {
     console.log(selectedRateId)
     if(selectedRateId > 0){
@@ -913,7 +925,9 @@ var selectedRate = '';
         //   return
         // }
         // Update relevant fields for the dialogs
-        
+        // setNewRateName(data.rateName); // Update field in new rate dialog
+        // setMinimumPrice(data.minimumCost); // Set for minimum cost dialog
+        // setStartQty(data.startQty); // Example, update this if needed
         // var locationValues = data.location;
         // var packageValues = data.package;
         // const colonIndex = data.adCategory.indexOf(':');
@@ -921,6 +935,16 @@ var selectedRate = '';
         //   locationValues = data.location.split(':')[0].trim()
         //   packageValues = data.packages.split(':')[1].trim()
         // } 
+         // Set initial values for comparison later
+         setInitialValues({
+          rateName: data.rateName,
+          adType: data.adType,
+          typeOfAd: data.typeOfAd,
+          Location: data.Location,
+          Package: data.Package,
+          vendorName: data.vendorName
+        });
+
         dispatch(setSelectedValues({
           rateName: {
             label:  data.rateName ,
@@ -1104,85 +1128,101 @@ var selectedRate = '';
   // }
   // };
 //new update rates----------------------------------------------------    
-  const updateRates = async (e) => {
-    e.preventDefault();
-  
-    if (editMode) {
-      // Validation checks
-      if (!selectedValues.rateName || !selectedValues.adType) {
-        setToastMessage('Rate Name and Ad Type are required.');
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => setToast(false), 2000);
-        return;
-      }
-  
-      if (combinedSlabData.length === 0) {
-        setIsQtySlab(true);
-        setToastMessage('Quantity Slab Data is required.');
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => setToast(false), 2000);
-        return;
-      }
-  
-      if (validityDays <= 0) {
-        setIsValidityDays(true);
-        setToastMessage('Validity Days must be greater than 0.');
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => setToast(false), 2000);
-        return;
-      }
-  
-      try {
-        const campaignDurationVisibility = showCampaignDuration ? 1 : 0;
-  
-        // Find the minimum slab for pricing
-        const minSlab = combinedSlabData.reduce((min, current) => {
-          return selectedUnit.label === "SCM"
-            ? current.StartQty * current.Width < min.StartQty * min.Width
-              ? current
-              : min
-            : current.StartQty < min.StartQty
+const updateRates = async (e) => {
+  e.preventDefault();
+
+  if (editMode) {
+    // Validation checks
+    if (!selectedValues.rateName || !selectedValues.adType) {
+      setToastMessage('Rate Name and Ad Type are required.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+      return;
+    }
+
+    if (combinedSlabData.length === 0) {
+      setIsQtySlab(true);
+      setToastMessage('Quantity Slab Data is required.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+      return;
+    }
+
+    if (validityDays <= 0) {
+      setIsValidityDays(true);
+      setToastMessage('Validity Days must be greater than 0.');
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+      return;
+    }
+
+    try {
+      const campaignDurationVisibility = showCampaignDuration ? 1 : 0;
+
+      // Find the minimum slab for pricing
+      const minSlab = combinedSlabData.reduce((min, current) => {
+        return selectedUnit.label === "SCM"
+          ? current.StartQty * current.Width < min.StartQty * min.Width
             ? current
-            : min;
-        }, combinedSlabData[0]);
-  
-        // Construct the API URL
+            : min
+          : current.StartQty < min.StartQty
+          ? current
+          : min;
+      }, combinedSlabData[0]);
+
+      console.log('Selected Values before API Call:', selectedValues);
+
+      // Check if there were any changes made by comparing current selectedValues with initialValues
+      const isChanged = Object.keys(selectedValues).some((key) => {
+        return selectedValues[key].value !== initialValues[key]; // Compare selected values with initial values
+      });
+
+      if (!isChanged) {
+        setToastMessage('No changes have been made!');
+        setSeverity('warning');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        
+      } else {
+        // If there are changes, proceed with the API call
         const response = await fetch(
           `https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?JsonRateId=${rateId}&JsonRateGST=${rateGST?.value || ''}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits?.value || ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit?.value || ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location.value}${selectedValues.Package.value}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location?.value || ''}&JsonPackage=${selectedValues.Package?.value || ''}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}&JsonStartQty=${minSlab.StartQty}`
         );
-  
+
         // Check response
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-  
+
         const data = await response.json();
         if (data.error) {
           throw new Error(data.error);
         }
-  
+
         // Success message
         setEditMode(false);
         setSuccessMessage('Updated Successfully!');
         setTimeout(() => setSuccessMessage(''), 2000);
         setIsNewRate(true);
         handleEditMode();
-      } catch (error) {
-        console.error('Error:', error);
-        setToastMessage(error.message);
-        setSeverity('error');
-        setToast(true);
       }
-    } else {
-      setToastMessage('No changes to update!');
-      setSeverity('warning');
+    } catch (error) {
+      console.error('Error:', error);
+      setToastMessage(error.message);
+      setSeverity('error');
       setToast(true);
-      setTimeout(() => setToast(false), 2000);
     }
-  };
+  } else {
+    setToastMessage('No changes to update!');
+    setSeverity('warning');
+    setToast(true);
+    setTimeout(() => setToast(false), 2000);
+  }
+};
+
 
 //new update rates----------------------------------------------------  
   const rejectRates = async(e, rateID) => {
@@ -1470,7 +1510,7 @@ var selectedRate = '';
       ...selectedValues,
       [changedRate]: { label: newRateName, value: newRateName },
     }));
-  
+    setEditMode(true);
     setIsUpdateRateName(true); // Enable update mode
     setNewRateModel(false); // Close modal
     setNewRateName(""); // Reset newRateName directly
@@ -1802,13 +1842,13 @@ const handleEditMode = () => {
   // }, 150);  
 };
 
-
 const handleLongPress = (rate, isInvalid) => {
+  console.log(rate)
   pressTimer = setTimeout(() => {
     setLongPressRateId(rate);
     setDialogAction(isInvalid ? 'restore' : 'remove');
     setOpenDialog(true);
-  }, 1000); 
+  }, 600); 
 };
 
 const handleTouchEnd = () => {
@@ -2069,7 +2109,7 @@ const handleBlur = (e) => {
                     type="button"
                     className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
                     onClick={handleRateSelection}
-                    onTouchStart={() => handleTouchStart(name.RateID, isInvalid)}
+                    onTouchStart={(e) => handleTouchStart(name.RateID, isInvalid, e)}
                     onTouchEnd={handleTouchEnd} 
                     onMouseDown={() => handleMouseDown(name.RateID, isInvalid)} 
                     onMouseUp={handleTouchEnd}

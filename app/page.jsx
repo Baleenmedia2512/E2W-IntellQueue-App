@@ -76,6 +76,8 @@ const ClientsData = () => {
   const [displayClientNumber, setDisplayClientNumber] = useState('');
   const [displayClientID, setDisplayClientID] = useState(clientID);
   const nameInputRef = useRef(null);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [proceed, setProceed] = useState(false);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -531,6 +533,11 @@ const ClientsData = () => {
     }
   };
 
+  const handleDialogClose = (result) => {
+    setProceed(result);
+    setContactDialogOpen(false);
+  };
+console.log(proceed)
 
   const submitDetails = async(event) => {
     event.preventDefault()
@@ -542,8 +549,8 @@ const ClientsData = () => {
     const isValid = BMvalidateFields();
     if (isValid) {
       if(clientContact === '' || clientContact === 0 ){
-        const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
-       if (!result){
+        setContactDialogOpen(true);
+       if (!proceed){
         return
        }
       }
@@ -600,12 +607,11 @@ const ClientsData = () => {
   else{
     const isValid = GSvalidateFields();
     if (isValid) {
-      if(clientContact === '' || clientContact === 0 ){
-        const result = window.confirm("Client Contact is not entered. Do you want to Proceed?")
-       if (!result){
-        return
-       }
+      if (clientContact === '' || clientContact === 0) {
+        setContactDialogOpen(true);
+      if (!proceed) return;
       }
+      
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
@@ -1133,6 +1139,23 @@ const BMvalidateFields = () => {
                 No
               </Button>
               <Button onClick={handleRestoreClient} color="primary" autoFocus>
+                Yes
+              </Button>
+            </DialogActions>
+          </Dialog>
+          {/* Contact dialog */}
+          <Dialog open={contactDialogOpen} onClose={() => handleDialogClose(false)}>
+            <DialogTitle>No Contact Number Detected</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Client Contact is not entered. Do you want to proceed?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => handleDialogClose(false)} color="primary">
+                No
+              </Button>
+              <Button onClick={() => handleDialogClose(true)} color="primary">
                 Yes
               </Button>
             </DialogActions>

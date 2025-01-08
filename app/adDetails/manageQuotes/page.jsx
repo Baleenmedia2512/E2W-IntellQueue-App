@@ -2,13 +2,12 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { api } from "@/app/api/FetchAPI";
-import { FiPhoneCall } from "react-icons/fi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FiCheck, FiX, FiPhone, FiCalendar, FiFileText, FiDatabase, FiTag } from "react-icons/fi";
 import { useAppSelector } from '@/redux/store';
 
-export default function manageQuotes() {
+export default function ManageQuotes() {
   const [data, setData] = useState([]); // Holds the fetched data
   const [loading, setLoading] = useState(true); // Loading state
   const [page, setPage] = useState(1);
@@ -194,7 +193,9 @@ export default function manageQuotes() {
       
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {filteredData.map((row, index) => (
-          <div className="rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+          <div 
+            key={index}
+            className="rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
           <div className="bg-gradient-to-r p-6 min-h-max">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center my-2">
                   {row.ClientName}

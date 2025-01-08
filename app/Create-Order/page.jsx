@@ -22,7 +22,7 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 import { TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FetchOrderSeachTerm } from '../api/FetchAPI';
+import { FetchOrderSeachTerm, FetchCommissionData } from '../api/FetchAPI';
 import { resetStageItem } from '@/redux/features/stage-slice';
 import { CircularProgress } from '@mui/material';
 
@@ -78,10 +78,11 @@ const CreateOrder = () => {
     // const [validityDays, setValidityDays] = useState(0)
     // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
     const [discountAmount, setDiscountAmount] = useState(0);
-    const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
-    const [waiverAmount, setWaiverAmount] = useState(0);
+    // const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
+    // const [waiverAmount, setWaiverAmount] = useState(0);
+    const [commissionAmount, setCommissionAmount] = useState(0);
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  
+    const [isCommissionSingleUse, setIsCommissionSingleUse] = useState(false);
     
     const dispatch = useDispatch();
     const router = useRouter();
@@ -257,14 +258,31 @@ const fetchCampaignUnits = async() => {
 }
 
 useEffect(() => {
-  // if(!isOrderUpdate) {
-  fetchMaxOrderNumber();
-  fetchUnits();
-  // fetchAllVendor();
-  fetchQtySlab();
-  // setDiscountAmount(0);
-  // }
-},[selectedValues.adType, selectedValues.rateName])
+  // Fetch necessary data when the component loads or dependencies change
+  const fetchInitialData = async () => {
+    try {
+      // Initial data fetching
+      fetchMaxOrderNumber();
+      fetchUnits();
+      fetchQtySlab();
+
+      // Fetch commission only if consultantName exists
+      if (consultantName) {
+        const commission = await FetchCommissionData(
+          companyName,
+          consultantName,
+          selectedValues.rateName.value,
+          selectedValues.adType.value
+        );
+        setCommissionAmount(commission);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchInitialData();
+}, [selectedValues.adType, selectedValues.rateName]);
 
 const handleRateId = async () => {
   if(rateId > 0){
@@ -616,48 +634,71 @@ const fetchRates = async () => {
         setClientNameSuggestions([]);
       };
 
-      const fetchClientDetails = (clientID) => {
-        axios
-          .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
-          .then((response) => {
-            const data = response.data;
-            if (data && data.length > 0) {
-              const clientDetails = data[0];
-              dispatch(setOrderData({ clientEmail: clientDetails.email }))
-              dispatch(setOrderData({ clientSource: clientDetails.source }))
-              dispatch(setOrderData({ address: clientDetails.address || "" }))
-              dispatch(setOrderData({ consultantName: clientDetails.consname || "" }))
-              dispatch(setOrderData({ clientGST: clientDetails.GST || "" }))
-              dispatch(setOrderData({ clientContactPerson: clientDetails.ClientContactPerson || "" }))
-              
-              dispatch(resetClientData());
-
-              //MP-69-New Record are not fetching in GS
-              setClientID(clientDetails.id);
-              setClientEmail(clientDetails.email);
-              setClientSource(clientDetails.source);
-              setAddress(clientDetails.address || "");
-              setConsultantName(clientDetails.consname || "");
-              setInitialConsultantName(clientDetails.consname || "");
-              setClientGST(clientDetails.GST || "");
-              setClientContactPerson(clientDetails.ClientContactPerson || "");
-              
-            if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")) {
-              const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
+      const fetchClientDetails = async (clientID) => {
+        try {
+          const response = await axios.get(
+            `https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`
+          );
+      
+          const data = response.data;
+          if (data && data.length > 0) {
+            const clientDetails = data[0];
+      
+            // Batch dispatch calls
+            dispatch(
+              setOrderData({
+                clientEmail: clientDetails.email || "",
+                clientSource: clientDetails.source || "",
+                address: clientDetails.address || "",
+                consultantName: clientDetails.consname || "",
+                clientGST: clientDetails.GST || "",
+                clientContactPerson: clientDetails.ClientContactPerson || "",
+              })
+            );
+      
+            // Update local states
+            setClientID(clientDetails.id);
+            setClientEmail(clientDetails.email || "");
+            setClientSource(clientDetails.source || "");
+            setAddress(clientDetails.address || "");
+            setConsultantName(clientDetails.consname || "");
+            setInitialConsultantName(clientDetails.consname || "");
+            setClientGST(clientDetails.GST || "");
+            setClientContactPerson(clientDetails.ClientContactPerson || "");
+      
+            // Handle PAN extraction from GST
+            if (
+              clientDetails.GST &&
+              clientDetails.GST.length >= 15 &&
+              (!clientDetails.ClientPAN || clientDetails.ClientPAN === "")
+            ) {
+              const pan = clientDetails.GST.slice(2, 12);
               setClientPAN(pan || "");
-        dispatch(setOrderData({ clientPAN: pan || "" }))
+              dispatch(setOrderData({ clientPAN: pan || "" }));
             } else {
               setClientPAN(clientDetails.ClientPAN || "");
-        dispatch(setOrderData({ clientPAN: clientDetails.ClientPAN || "" }))
+              dispatch(setOrderData({ clientPAN: clientDetails.ClientPAN || "" }));
             }
-            } else {
-              console.warn("No client details found for the given name and contact number.");
+            
+            if (clientDetails.consname) {
+
+              // Fetch commission data
+              const commission = await FetchCommissionData(
+                companyName,
+                clientDetails.consname,
+                selectedValues.rateName.value,
+                selectedValues.adType.value
+              );
+              setCommissionAmount(commission);
             }
-          })
-          .catch((error) => {
-            console.error("Error fetching client details:", error);
-          });
+          } else {
+            console.warn("No client details found for the given ID.");
+          }
+        } catch (error) {
+          console.error("Error fetching client details:", error);
+        }
       };
+      
 
 
 
@@ -691,15 +732,17 @@ const fetchRates = async () => {
           });
       };
 
-const fetchOrderDetailsByOrderNumber = (orderNum) => {
-    axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`)
-      .then((response) => {
+    const fetchOrderDetailsByOrderNumber = async (orderNum) => {
+      try {
+        const response = await axios.get(
+          `https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`
+        );
+    
         const data = response.data;
         if (data) {
           // Parse the date
           const formattedDate = parseDateFromDB(data.orderDate);
-          //console.log(data)
+    
           // Set all the necessary states
           setClientName(data.clientName);
           setClientNumber(data.clientContact);
@@ -716,11 +759,7 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
-          setWaiverAmount(data.waiverAmount);
-          // dispatch(setOrderData({ clientNumber: data.clientContact }));
-          if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
-            setIsConsultantWaiverChecked(true);
-          }
+
           // Store the fetched data in a state to compare later
           setPrevData({
             clientName: data.clientName,
@@ -732,17 +771,15 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
             consultantName: data.consultantName,
             discountAmount: data.adjustedOrderAmount,
             marginAmount: data.margin,
-            waiverAmount: data.waiverAmount
           });
-          
         } else {
           setHasOrderDetails(false); // Set to false if no details
         }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
+      } catch (error) {
+        console.error('Error fetching order details:', error);
+      }
+    };
+    
 
   // useEffect(() => {
   //   fetchOrderDetailsByOrderNumber();
@@ -815,6 +852,7 @@ const CreateStages = async () => {
         var receivable = (unitPrice * qty) + marginAmount
         var payable = unitPrice * qty
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
+        const IsCommissionForSingleUse = isCommissionSingleUse ? 1 : 0;
 
         if (validateFields()) {
           setToastMessage(
@@ -838,7 +876,7 @@ const CreateStages = async () => {
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${encodeURIComponent(selectedValues.Location.value + " : " + selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
@@ -881,11 +919,10 @@ const CreateStages = async () => {
 //update order-SK (02-08-2024)------------------------------------
 const updateNewOrder = async (event) => {
   if (event) event.preventDefault();
-  // Now you can use the updateReason for your logic
-
   const receivable = (unitPrice * qty) + marginAmount;
   const payable = unitPrice * qty;
   const orderOwner = companyName === 'Baleen Media' ? (clientSource === '6.Own' ? loggedInUser : 'leenah_cse') : loggedInUser;
+  const IsCommissionForSingleUse = isCommissionSingleUse ? 1 : 0;
 
   if (validateFields()) {
     const formattedOrderDate = formatDateToSave(orderDate);
@@ -904,14 +941,14 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: selectedValues.rateName.value,
+      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
       JsonVendorName: selectedValues.vendorName.value,
-      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
-      JsonType: selectedValues.adType.value,
+      JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
+      JsonType: encodeURIComponent(selectedValues.adType.value),
       JsonHeight: qty.toString(),
       JsonWidth: '1',
-      JsonLocation: selectedValues.Location.value,
-      JsonPackage: selectedValues.Package.value,
+      JsonLocation: encodeURIComponent(selectedValues.Location.value),
+      JsonPackage: encodeURIComponent(selectedValues.Package.value),
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -927,10 +964,11 @@ const updateNewOrder = async (event) => {
       JsonOrderDate: formattedOrderDate,
       JsonRateWiseOrderNumber: UpdateRateWiseOrderNumber,
       JsonAdjustedOrderAmount: discountAmount,
-      JsonWaiverAmount: waiverAmount
+      JsonCommission: commissionAmount,
+      JsonIsCommissionSingleUse: IsCommissionForSingleUse,
     });
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrderTest.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
         headers: {
           'Content-Type': 'application/json'
@@ -1095,11 +1133,11 @@ const updateNewOrder = async (event) => {
       if (!marginPercentage || isNaN(marginPercentage)) errors.marginPercentage = 'Valid Margin % is required';
     }
 
-    if (isConsultantWaiverChecked) {
-      if (!waiverAmount) {
-        errors.waiverAmount = 'Consultant Waiver value is required';
-      }
-    }
+    // if (isConsultantWaiverChecked) {
+    //   if (!waiverAmount) {
+    //     errors.waiverAmount = 'Consultant Waiver value is required';
+    //   }
+    // }
     
 
     setErrors(errors);
@@ -1243,17 +1281,35 @@ const handleConsultantNameSelection = (event) => {
   fetchConsultantDetails(id);
 };
 
-const fetchConsultantDetails = (Id) => {
-  fetch(`https://orders.baleenmedia.com/API/Media/FetchConsultantDetails.php?JsonConsultantID=${Id}&JsonDBName=${companyName}`)
-  .then((response) => response.json())
-  .then((data) => {
-      setConsultantName(data.ConsultantName);
-      setInitialConsultantName(data.ConsultantName);
-      setConsultantNumber( data.ConsultantNumber ? data.ConsultantNumber : '');
-  })
-  .catch((error) => {
-  });
-}
+const fetchConsultantDetails = async (Id) => {
+  try {
+    // Fetch consultant details
+    const response = await fetch(
+      `https://orders.baleenmedia.com/API/Media/FetchConsultantDetails.php?JsonConsultantID=${Id}&JsonDBName=${companyName}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    setConsultantName(data.ConsultantName);
+    setInitialConsultantName(data.ConsultantName);
+    setConsultantNumber(data.ConsultantNumber || '');
+
+    const commission = await FetchCommissionData(
+      companyName,
+      data.ConsultantName,
+      selectedValues.rateName.value,
+      selectedValues.adType.value
+    );
+    setCommissionAmount(commission);
+  } catch (error) {
+    console.error('Error fetching consultant details:', error);
+  }
+};
+
 
 const handleDiscountChange = (e) => {
   const value = e.target.value;
@@ -1282,17 +1338,18 @@ const handleDiscountChange = (e) => {
   // }
 };
 
-const handleWaiverChange = (e) => {
+const handleCommissionChange = (e) => {
   const value = e.target.value;
 
   if (value === '') {
-    setWaiverAmount(0);
-    setErrors((prevErrors) => ({ ...prevErrors, waiverAmount: undefined })); 
+    setCommissionAmount(0);
+    setErrors((prevErrors) => ({ ...prevErrors, commissionAmount: undefined })); // Clear any existing error on Remarks
+    return;
   }
 
   const parsedValue = parseFloat(value);
-  const newWaiverAmount = parsedValue;
-  setWaiverAmount(newWaiverAmount);
+  const newCommissionAmount = parsedValue;
+  setCommissionAmount(newCommissionAmount);
 };
 
 
@@ -1324,7 +1381,7 @@ const handleOpenDialog = () => {
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount ||
     parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
-    parseFloat(waiverAmount) !== parseFloat(prevData.waiverAmount)
+    parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount)
 
   );
 
@@ -1370,8 +1427,10 @@ const handleOpenDialog = () => {
     dispatch(resetOrderData());
     setOrderSearchTerm('');
     dispatch(setIsOrderUpdate(false));
-    setWaiverAmount(0);
-    setIsConsultantWaiverChecked(false);
+    setCommissionAmount(0);
+    setIsCommissionSingleUse(false);
+    // setWaiverAmount(0);
+    // setIsConsultantWaiverChecked(false);
     setClientNumber('');
     //window.location.reload(); // Reload the page
   };
@@ -1734,7 +1793,8 @@ return (
         onChange={handleDiscountChange}
         onFocus={e => e.target.select()}
       />
-      {consultantName && (
+      
+      {/* {consultantName && (
       <div className="flex items-center space-x-1 mt-1">
         <input
           type="checkbox"
@@ -1747,13 +1807,13 @@ return (
           Consultant Waiver
         </label>
       </div>
-       )}
+       )} */}
     </div>
     
   
   </div>
   {/* Consultant Waiver */}
-  {isConsultantWaiverChecked && (
+  {/* {isConsultantWaiverChecked && (
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Waiver Amount (+/-)</label>
       <input
@@ -1768,8 +1828,50 @@ return (
       />
       {errors.waiverAmount && <p className="text-red-500 text-sm mt-2">{errors.waiverAmount}</p>}
     </div>
-  )}
+  )} */}
+  {consultantName && (
+    <div>
+      <label className="block text-gray-700 font-semibold mb-2">Commission Amount</label>
+      <input
+        type="number"
+        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline ${
+          isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'
+        } focus:border-blue-300 focus:ring focus:ring-blue-300`}
+        placeholder="Enter Commission Amount"
+        value={commissionAmount || ''}
+        min={0}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || Number(value) >= 0) {
+            handleCommissionChange(e); // Call your handler only for valid positive numbers
+          }
+        }}
+        onFocus={(e) => e.target.select()}
+      />
+      <div className="flex items-center space-x-1 mt-1">
+      <input
+        type="checkbox"
+        id="forOneTimeOnly"
+        className={`h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 ${
+          isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'
+        } rounded`}
+        checked={isCommissionSingleUse}
+        onChange={(e) => setIsCommissionSingleUse(e.target.checked)}
+      />
+      <label
+        htmlFor="forOneTimeOnly"
+        className={`text-gray-500 font-medium text-sm ${
+          isOrderUpdate ? 'border-yellow-500' : 'border-gray-300'
+        }`}
+      >
+        For One Time Only
+      </label>
+    </div>
 
+      
+      {errors.commissionAmount && <p className="text-red-500 text-sm mt-2">{errors.commissionAmount}</p>}
+    </div>
+    )}
 { (discountAmount !== '0' && discountAmount !== 0 && discountAmount !== '' && !isOrderUpdate) && (
   <div>
     <label className="block text-gray-700 font-semibold mb-2">Remarks</label>
