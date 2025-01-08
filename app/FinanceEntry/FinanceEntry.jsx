@@ -1076,22 +1076,7 @@ useEffect(() => {
 
   // If search term is cleared, reset the update mode
   if (searchTerm.trim() === "") {
-    setIsUpdateMode(false); // Reset update mode
-      setChequeNumber('');
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setRateWiseOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          setFinanceSearchTerm('');
-    setFinanceSearchSuggestion([]); // Clear suggestions
+    cancelFinance();
     return; // Exit early
   }
 
@@ -1162,6 +1147,7 @@ useEffect(() => {
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
         setDisplayClientName(clientData[0].clientName);
+        setClientNumber(clientData[0].clientContact);
         setRateName(clientData[0].rateName);
         setRateType(clientData[0].rateType);
         setAdjustedOrderAmount(clientData[0].adjustedOrderAmount);

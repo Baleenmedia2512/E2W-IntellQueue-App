@@ -114,16 +114,10 @@ const CreateOrder = () => {
     const [hasOrderDetails, setHasOrderDetails] = useState(false);
     const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
     const [orderSearchTerm,setOrderSearchTerm] = useState("");
-    const [ordereId, setOrderId] = useState(null);
     const [displayClientName, setDisplayClientName] = useState(clientName);
     const [orderNumber, setOrderNumber] = useState(orderNumberRP || "");
     const [orderAmount, setorderAmount] = useState('');
    
-
-     // Function to toggle expand/collapse
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
     
     useEffect(() => {
       if (!loggedInUser || dbName === "" ) {
@@ -141,6 +135,7 @@ const CreateOrder = () => {
       setInitialConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
       setClientName(clientNameCR || '');
+      setDisplayClientName(clientNameCR || '');
       setClientNumber(clientNumberCR || '');
       dispatch(setOrderData({ clientName: clientNameCR, clientNumber: clientNumberCR, clientID: clientIDCR, consultantName: consultantNameCR }))
       fetchPreviousOrderDetails(clientNumberCR, clientNameCR);
@@ -149,6 +144,7 @@ const CreateOrder = () => {
     useEffect(() => {
       if ( orderNumberRP > 0 ) {
         setClientName(clientNameRP || '');
+        setDisplayClientName(clientNameRP || '');
         setClientNumber(clientNumberRP|| '');
         fetchOrderDetailsByOrderNumber(orderNumberRP);
         setIsOrderUpdate(true);
@@ -609,6 +605,7 @@ const fetchRates = async () => {
         const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
         setClientName(name);
+        setDisplayClientName(name);
         setClientNumber(number);
         dispatch(setOrderData({ clientName: name, clientNumber: number }))
         fetchClientDetails(ID);
@@ -691,8 +688,6 @@ const fetchRates = async () => {
           });
       };
 
-//report oderenumber data fetch --SK--
-
 const fetchOrderDetailsByOrderNumber = (orderNum) => {
     axios
       .get(`https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`)
@@ -752,18 +747,13 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
   // }, [orderNumber]); // Re-fetch when orderNumber changes
   // useEffect(() => {
   //   if (orderNumber) {
-  //     fetchOrderDetailsByOrderNumber();
+  //     fetchOrderDetailsByOrderNumber(orderNumber);
   //     setIsOrderUpdate(true); // Set the update flag if orderNumber exists
   //     setDisplayUnitPrice(receivableRP);
   //   }
   // }, [orderNumber]);
   
 
-
-
-
-
-  
       const createNewOrder = async() => {
         setIsButtonDisabled(true);
         // If the discount amount has changed and remarks are not filled
@@ -805,7 +795,7 @@ const fetchOrderDetailsByOrderNumber = (orderNum) => {
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${encodeURIComponent(selectedValues.vendorName.value)}&JsonCategory=${encodeURIComponent(selectedValues.Location.value + " : " + selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
@@ -871,14 +861,14 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: selectedValues.rateName.value,
-      JsonVendorName: selectedValues.vendorName.value,
-      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
-      JsonType: selectedValues.adType.value,
+      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
+      JsonVendorName: encodeURIComponent(selectedValues.vendorName.value),
+      JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
+      JsonType: encodeURIComponent(selectedValues.adType.value),
       JsonHeight: qty.toString(),
       JsonWidth: '1',
-      JsonLocation: selectedValues.Location.value,
-      JsonPackage: selectedValues.Package.value,
+      JsonLocation: encodeURIComponent(selectedValues.Location.value),
+      JsonPackage: encodeURIComponent(selectedValues.Package.value),
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -957,8 +947,6 @@ const updateNewOrder = async (event) => {
           const data = await response.json();
           setMaxOrderNumber(data.nextOrderNumber);
           setNextRateWiseOrderNumber(data.nextRateWiseOrderNumber);
-          dispatch(setOrderData({ maxOrderNumber: data }))
-          dispatch(setOrderData({ nextRateWiseOrderNumber: data }))
           return data;
         } catch (error) {
           console.error(error);
@@ -1318,6 +1306,7 @@ const handleOpenDialog = () => {
 
   const handleCancelUpdate = () => {
     setClientName('');
+    setDisplayClientName('');
     setOrderDate(new Date());
     setDisplayOrderDate(new Date());
 
@@ -1368,18 +1357,7 @@ const handleOrderSearch = async (e) => {
 
   // If search term is cleared, reset the update mode
   if (searchTerm.trim() === "") {
-    dispatch(setIsOrderUpdate(false));
-          setClientName('');
-          setOrderDate(new Date());
-          setDisplayOrderDate(new Date())
-          setUpdateRateWiseOrderNumber('');
-          dispatch(setRateId(''));
-          setClientID('');
-          setConsultantName('');
-          setInitialConsultantName('');
-          setDiscountAmount(0);
-          dispatch(resetOrderData());
-          setOrderSearchTerm('');
+    handleCancelUpdate();
     setOrderSearchSuggestion([]); // Clear suggestions
     return; // Exit early
   }
@@ -2003,7 +1981,7 @@ return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-1">
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Name</p>
-        <p className="truncate text-black">{clientName}</p>
+        <p className="truncate text-black">{displayClientName}</p>
       </div>
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Consultant</p>

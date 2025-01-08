@@ -649,7 +649,7 @@ const EventCards = ({params, searchParams}) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -788,7 +788,6 @@ const EventCards = ({params, searchParams}) => {
           </div>
         ))}
       </div>
-      )}
 
       {/* Modal for Call Status */}
       {showModal && (
