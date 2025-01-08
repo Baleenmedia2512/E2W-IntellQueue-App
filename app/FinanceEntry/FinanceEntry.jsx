@@ -2008,14 +2008,14 @@ const handleGSTAmountChange = (gst) => {
                 setTransactionDate(newValue);
                 validateTransactionDate(newValue);  // Call validation after setting the new date
                 // Validate the new transaction date and set errors
-    const errorMsg = validateTransactionDate(newValue);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      transactionDate: errorMsg, // Set the error message if any
-    }));
+                const errorMsg = validateTransactionDate(newValue);
+                setErrors((prevErrors) => ({
+                  ...prevErrors,
+                  transactionDate: errorMsg, // Set the error message if any
+                }));
                 handleDateClose();
               }}
-              
+              maxDate={dayjs()}
             />
           </Popover>
         </Box>
