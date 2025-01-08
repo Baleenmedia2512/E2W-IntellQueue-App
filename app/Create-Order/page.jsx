@@ -361,66 +361,52 @@ const getDistinctValues = (key) => {
 //filtering the options based on previous values
 const getOptions = (filterKey, previousKey) => {
   var filteredData = []; 
-  if(selectedValues["rateName"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "typeOfAd"){ //Check whether the selected key is valid or not
+
+  if (selectedValues["rateName"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "typeOfAd") {
     filteredData = ratesData.filter(item => 
       !selectedValues["rateName"]['value'] || item["rateName"] === selectedValues["rateName"]['value']
-      );
-    
-    // Extract distinct values of the specified filterKey from the filtered data
-    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-  
-    // Return the distinct values sorted and mapped to objects with value and label properties
-    return distinctValues.sort().map(value => ({ value, label: value }));
-  } else if(selectedValues["typeOfAd"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "adType"){ //Check whether the selected key is valid or not
+    );
+  } else if (selectedValues["typeOfAd"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "adType") {
     filteredData = ratesData.filter(item => 
       (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
       (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value)
     );
-  
-    // Extract distinct values of the specified filterKey from the filtered data
-    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-
-    // Return the distinct values sorted and mapped to objects with value and label properties
-    return distinctValues.sort().map(value => ({ value, label: value }));
-  } else if(selectedValues["adType"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Location"){ //Check whether the selected key is valid or not
+  } else if (selectedValues["adType"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Location") {
     filteredData = ratesData.filter(item => 
       (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
       (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
       (!selectedValues.adType.value || item.adType === selectedValues.adType.value) 
     );
-  
-    // Extract distinct values of the specified filterKey from the filtered data
-    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-
-    // Return the distinct values sorted and mapped to objects with value and label properties
-    return distinctValues.sort().map(value => ({ value, label: value }));
-  } else if(selectedValues["Location"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Package"){ //Check whether the selected key is valid or not
+  } else if (selectedValues["Location"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "Package") {
     filteredData = ratesData.filter(item => 
       (!selectedValues.rateName.value || item.rateName === selectedValues.rateName.value) && 
       (!selectedValues.typeOfAd.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
       (!selectedValues.adType.value || item.adType === selectedValues.adType.value) &&
       (!selectedValues.Location.value || item.Location === selectedValues.Location.value) 
     );
-  
-    // Extract distinct values of the specified filterKey from the filtered data
-    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-
-    // Return the distinct values sorted and mapped to objects with value and label properties
-    return distinctValues.sort().map(value => ({ value, label: value }));
-  } else if(elementsToHide.includes("RatesCategorySelect")){
-    
-    const filteredData = ratesData.filter(item => 
-      !selectedValues.rateName.value || item.rateName === selectedValues.rateName.value //filter based on the previous key value
-      );
-       // Extract distinct values of the specified filterKey from the filtered data
-    const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
-  
-    // Return the distinct values sorted and mapped to objects with value and label properties
-    return distinctValues.sort().map(value => ({ value, label: value }));
-  }else{
-    return;
+  } else if (filterKey === "vendorName") {
+    // Vendor-specific logic
+    filteredData = ratesData.filter(item => 
+      (!selectedValues.rateName?.value || item.rateName === selectedValues.rateName.value) &&
+      (!selectedValues.typeOfAd?.value || item.typeOfAd === selectedValues.typeOfAd.value) &&
+      (!selectedValues.adType?.value || item.adType === selectedValues.adType.value) &&
+      (!selectedValues.Location?.value || item.Location === selectedValues.Location.value)
+    );
+  } else if (elementsToHide.includes("RatesCategorySelect")) {
+    filteredData = ratesData.filter(item => 
+      !selectedValues.rateName.value || item.rateName === selectedValues.rateName.value
+    );
+  } else {
+    return [];
   }
+
+  // Extract distinct values of the specified filterKey from the filtered data
+  const distinctValues = [...new Set(filteredData.map(item => item[filterKey]))];
+
+  // Return the distinct values sorted and mapped to objects with value and label properties
+  return distinctValues.sort().map(value => ({ value, label: value }));
 };
+
 
 // Function to handle dropdown selection
 const handleSelectChange = (selectedOption, filterKey) => {
@@ -1863,10 +1849,11 @@ return (
               placeholder="Select Vendor"
               value={selectedValues.vendorName.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'vendorName')}
-              options={vendors}
-              optionLabel="label"
-              optionGroupLabel="label"
-              optionGroupChildren="options"
+              options={getOptions('vendorName','Location')}
+              // options={vendors}
+              // optionLabel="label"
+              // optionGroupLabel="label"
+              // optionGroupChildren="options"
               disabled={isOrderUpdate} 
             />
             {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
