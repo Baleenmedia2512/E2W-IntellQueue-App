@@ -866,6 +866,7 @@ const insertNewFinance = async (e) => {
       if (orderAmount === 0 || orderAmount === ""){
           setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
           amountRef?.current.focus();
+          setIsButtonDisabled(false);
           return;
       }
       if (bill && billNumber === "") {
@@ -885,6 +886,7 @@ const insertNewFinance = async (e) => {
         );
         setSeverity('warning');
         setToast(true);
+        
       try {
           const response = await Promise.race([
               fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClientName=${clientName}`),
@@ -910,7 +912,11 @@ const insertNewFinance = async (e) => {
           setTimeout(() => setToast(false), 3000);
       }
   } else {
-      showToast("Please fill the necessary details in the form.", "error");
+      setToastMessage("Please fill the necessary details in the form.");
+      setSeverity("error");
+      setToast(true);
+      setIsButtonDisabled(false);
+      setTimeout(() => setToast(false), 3000);
   }
 };
 
@@ -1164,7 +1170,6 @@ useEffect(() => {
       console.error("Error fetching finance details:", error);
     }
 };
-  
   
   const handleFinanceSelection = (e) => {
     const selectedFinance = e.target.value;
@@ -1999,14 +2004,14 @@ const handleGSTAmountChange = (gst) => {
                 setTransactionDate(newValue);
                 validateTransactionDate(newValue);  // Call validation after setting the new date
                 // Validate the new transaction date and set errors
-    const errorMsg = validateTransactionDate(newValue);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      transactionDate: errorMsg, // Set the error message if any
-    }));
+                const errorMsg = validateTransactionDate(newValue);
+                setErrors((prevErrors) => ({
+                  ...prevErrors,
+                  transactionDate: errorMsg, // Set the error message if any
+                }));
                 handleDateClose();
               }}
-              
+              maxDate={dayjs()}
             />
           </Popover>
         </Box>
