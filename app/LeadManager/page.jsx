@@ -10,13 +10,12 @@ import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
-import { useAppSelector } from "@/redux/store";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import LoadingComponent from "./progress";
 import { motion } from 'framer-motion';
 import { FaFilter, FaTimes } from "react-icons/fa";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import ToastMessage from '../components/ToastMessage';
+import SuccessToast from '../components/SuccessToast';
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -64,10 +63,9 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userName = useAppSelector(state => state.authSlice.userName);
   const [showModal, setShowModal] = useState(false);
-  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "" });
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
+  const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [followupDate, setFollowupDate] = useState("");
@@ -75,146 +73,150 @@ const EventCards = ({params, searchParams}) => {
   const [hideOtherStatus, setHideOtherStatus] = useState(false);
   const [followupOnly, setFollowpOnly] = useState(false);
   const [initialSelectedStatus, setInitialSelectedStatus] = useState(selectedStatus);
-const [initialFollowupDate, setInitialFollowupDate] = useState(followupDate);
-const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
-const [initialCompanyName, setInitialCompanyName] = useState(companyName);
-const [initialRemarks, setInitialRemarks] = useState(remarks);
-const [initialLeadStatus, setInitialLeadStatus] = useState("");
-const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
-const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
-const [prospectType, setProspectType] = useState("");
-const [isLoading, setIsLoading] = useState(false); // State to track the loading status
-const [hasSaved, setHasSaved] = useState(false);
-const [statusFilter, setStatusFilter] = useState("All");
-const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-const [searchQuery, setSearchQuery] = useState('');
-const [filtersVisible, setFiltersVisible] = useState(false);
-const [fromDate, setFromDate] = useState(null); // Use null for default empty date
-const [toDate, setToDate] = useState(null); // Use null for default empty date 
-const [timers, setTimers] = useState("");
+  const [initialFollowupDate, setInitialFollowupDate] = useState(followupDate);
+  const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
+  const [initialCompanyName, setInitialCompanyName] = useState(companyName);
+  const [initialRemarks, setInitialRemarks] = useState(remarks);
+  const [initialLeadStatus, setInitialLeadStatus] = useState("");
+  const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
+  const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
+  const [prospectType, setProspectType] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // State to track the loading status
+  const [hasSaved, setHasSaved] = useState(false); 
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+  const [toDate, setToDate] = useState(null); // Use null for default empty date
+  const [timers, setTimers] = useState("");
+  const [toast, setToast] = useState(false);
+  const [severity, setSeverity] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-const toggleFilters = () => {
-  setFiltersVisible((prev) => !prev);
-};
+  // console.log(rows)
+  const toggleFilters = () => {
+    setFiltersVisible((prev) => !prev);
+  };
 
-const handleSearch = (query) => {
-  setSearchQuery(query.toLowerCase());
-};
+  const handleSearch = (query) => {
+    setSearchQuery(query.toLowerCase());
+  };
+  
+  const clearFilters = () => {
+    setStatusFilter('All');
+    setProspectTypeFilter('All');
+    setFromDate(null);
+    setToDate(null);
+    setSearchQuery('');
+  };
 
-const handleFocus = (e) => {
-  e.target.select();
-};
+  const prospectTypes = [
+    { type: "All", icon: null },  // No icon for "All"
+    { type: "Hot", icon: <GiCampfire className="inline-block text-red-500 mr-1" size={20}/> },
+    { type: "Warm", icon: <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1" size={20}/> },
+    { type: "Cold", icon: <FaRegSnowflake className="inline-block text-blue-500 mr-1" size={20}/> },
+  ];
 
-const clearFilters = () => {
-  setStatusFilter('All');
-  setProspectTypeFilter('All');
-  setFromDate(null);
-  setToDate(null);
-  setSearchQuery('');
-};
+  const filteredRows = rows
+  .filter((row) =>
+    statusFilter === 'All' || row.Status === statusFilter
+  )
+  .filter((row) =>
+    prospectTypeFilter === 'All' || row.ProspectType === prospectTypeFilter
+  )
+  .filter((row) =>
+    [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
+      .filter(Boolean)
+      .some((field) =>
+        field.toLowerCase().includes(searchQuery)
+      )
+  )
+  .filter((row) => {
+    const followUpDate = new Date(row.FollowupDate);
+    const leadDate = new Date(row.LeadDate);
 
-const prospectTypes = [
-  { type: "All", icon: null },  // No icon for "All"
-  { type: "Hot", icon: <GiCampfire className="inline-block text-red-500 mr-1" size={20}/> },
-  { type: "Warm", icon: <MdOutlineWbSunny className="inline-block text-yellow-500 mr-1" size={20}/> },
-  { type: "Cold", icon: <FaRegSnowflake className="inline-block text-blue-500 mr-1" size={20}/> },
-];
+    // Convert 'fromDate' and 'toDate' into Date objects for comparison
+    const fromDateObj = fromDate ? new Date(fromDate) : null;
+    const toDateObj = toDate ? new Date(toDate) : null;
 
-const filteredRows = rows
-.filter((row) =>
-  statusFilter === 'All' || row.Status === statusFilter
-)
-.filter((row) =>
-  prospectTypeFilter === 'All' || row.ProspectType === prospectTypeFilter
-)
-.filter((row) =>
-  [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
-    .filter(Boolean)
-    .some((field) =>
-      field.toLowerCase().includes(searchQuery)
-    )
-)
-.filter((row) => {
-  const followUpDate = new Date(row.FollowupDate);
-  const leadDate = new Date(row.LeadDate);
+    // Ensure both fromDateObj and toDateObj are defined
+    if (!fromDateObj || !toDateObj) return true; 
 
-  // Convert 'fromDate' and 'toDate' into Date objects for comparison
-  const fromDateObj = fromDate ? new Date(fromDate) : null;
-  const toDateObj = toDate ? new Date(toDate) : null;
-
-  // Ensure both fromDateObj and toDateObj are defined
-  if (!fromDateObj || !toDateObj) return true; 
-
-  if (
-    (followUpDate >= fromDateObj && followUpDate <= toDateObj) ||
-    (leadDate >= fromDateObj && leadDate <= toDateObj)
-  ) {
-    return true; 
-  }
-  return false; 
-});
-
-useEffect(() => {
-  const intervals = {};
-
-  rows.forEach((row) => {
-    if (row.Status === "New") {
-      const leadDateTime = new Date(`${row.LeadDate} ${row.LeadTime}`);
-      const currentTime = new Date();
-      const initialSeconds = Math.floor((currentTime - leadDateTime) / 1000);
-
-      // Start or continue the timer
-      if (!intervals[row.SNo]) {
-        setTimers((prevTimers) => ({
-          ...prevTimers,
-          [row.SNo]: initialSeconds > 0 ? initialSeconds : 0,
-        }));
-        intervals[row.SNo] = setInterval(() => {
-          setTimers((prevTimers) => {
-            const updatedTimers = {
-              ...prevTimers,
-              [row.SNo]: (prevTimers[row.SNo] || initialSeconds || 0) + 1,
-            };
-            localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
-            return updatedTimers;
-          });
-        }, 1000);
-      }
-    } else {
-      // Clear the timer if status changes
-      clearInterval(intervals[row.SNo]);
-      setTimers((prevTimers) => {
-        const updatedTimers = { ...prevTimers, [row.SNo]: 0 };
-        localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
-        return updatedTimers;
-      });
+    if (
+      (followUpDate >= fromDateObj && followUpDate <= toDateObj) ||
+      (leadDate >= fromDateObj && leadDate <= toDateObj)
+    ) {
+      return true; 
     }
+    return false; 
   });
 
-  // Cleanup intervals on unmount or when rows change
-  return () => {
-    Object.values(intervals).forEach(clearInterval);
+  const isNoDataFound = filteredRows.length === 0;
+
+  useEffect(() => {
+    const intervals = {};
+  
+    rows.forEach((row) => {
+      if (row.Status === "New") {
+        const leadDateTime = new Date(`${row.LeadDate} ${row.LeadTime}`);
+        const currentTime = new Date();
+        const initialSeconds = Math.floor((currentTime - leadDateTime) / 1000);
+  
+        // Start or continue the timer
+        if (!intervals[row.SNo]) {
+          setTimers((prevTimers) => ({
+            ...prevTimers,
+            [row.SNo]: initialSeconds > 0 ? initialSeconds : 0,
+          }));
+          intervals[row.SNo] = setInterval(() => {
+            setTimers((prevTimers) => {
+              const updatedTimers = {
+                ...prevTimers,
+                [row.SNo]: (prevTimers[row.SNo] || initialSeconds || 0) + 1,
+              };
+              localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
+              return updatedTimers;
+            });
+          }, 1000);
+        }
+      } else {
+        // Clear the timer if status changes
+        clearInterval(intervals[row.SNo]);
+        setTimers((prevTimers) => {
+          const updatedTimers = { ...prevTimers, [row.SNo]: 0 };
+          localStorage.setItem("leadTimers", JSON.stringify(updatedTimers));
+          return updatedTimers;
+        });
+      }
+    });
+  
+    // Cleanup intervals on unmount or when rows change
+    return () => {
+      Object.values(intervals).forEach(clearInterval);
+    };
+  }, [rows]);
+  
+
+  const formatTime = (seconds) => {
+    const days = Math.floor(seconds / 86400); // 86400 seconds in a day
+    const remainingSeconds = seconds % 86400;
+    const hrs = Math.floor(remainingSeconds / 3600).toString().padStart(2, "0");
+    const mins = Math.floor((remainingSeconds % 3600) / 60).toString().padStart(2, "0");
+    const secs = (remainingSeconds % 60).toString().padStart(2, "0");
+  
+    if (days > 0) {
+      return `${days}d ${hrs}:${mins}:${secs}`;
+    }
+  
+    return `${hrs}:${mins}:${secs}`;
   };
-}, [rows]);
-
-
-const formatTime = (seconds) => {
-  const days = Math.floor(seconds / 86400); // 86400 seconds in a day
-  const remainingSeconds = seconds % 86400;
-  const hrs = Math.floor(remainingSeconds / 3600).toString().padStart(2, "0");
-  const mins = Math.floor((remainingSeconds % 3600) / 60).toString().padStart(2, "0");
-  const secs = (remainingSeconds % 60).toString().padStart(2, "0");
-
-  if (days > 0) {
-    return `${days}d ${hrs}:${mins}:${secs}`;
-  }
-
-  return `${hrs}:${mins}:${secs}`;
-};
-
-const handleCheckboxChange = () => {
-  setHasSaved(true); // Set hasSaved to true when checkbox is checked
-};	
+  
+  
+  const handleCheckboxChange = () => {
+    setHasSaved(true); // Set hasSaved to true when checkbox is checked
+  };	
 
   const fetchData = async () => {
     try {
@@ -226,6 +228,7 @@ const handleCheckboxChange = () => {
 
       const fetchedRows = await fetchDataFromAPI(params.id, filters);
       setRows(fetchedRows);
+      // console.log(fetchedRows)
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -234,10 +237,11 @@ const handleCheckboxChange = () => {
   };
 
   useEffect(() => {
-    if (!userName) return;
     fetchData();
   }, [params.id, searchParams]);
 
+
+  
   useEffect(() => {
     if (showModal) {
       // Set initial values when the modal is opened
@@ -246,12 +250,12 @@ const handleCheckboxChange = () => {
       setInitialFollowupTime(followupTime);
       setInitialCompanyName(companyName);
       setInitialRemarks(remarks);
-      setInitialLeadStatus(prospectType);
+      setInitialLeadStatus(selectedLeadStatus);
     }
   }, [showModal]); // Runs when the modal opens
   
-  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime) => {
-    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime });
+  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent });
 
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
@@ -264,38 +268,44 @@ const handleCheckboxChange = () => {
 
   const handleSave = async (Sno, quoteSent, sendQuoteOnly) => {
 
-      setIsLoading(true);
-        // Check if changes were made before proceeding
-      const hasChanges =
-      selectedStatus !== initialSelectedStatus ||
-      followupDate !== initialFollowupDate ||
-      followupTime !== initialFollowupTime ||
-      companyName !== initialCompanyName ||
-      remarks !== initialRemarks||
-      selectedLeadStatus !== initialLeadStatus||
-      quoteSent !== initialQuoteStatus;
-
-    if (!hasChanges) {
-      alert("No changes have been made.");
-      return;
-    }
-
+    // const initialQuoteStatus = currentCall?.quoteSent || "";
+    setIsLoading(true);
+    // Check if changes were made before proceeding
+    const hasChanges =
+    (selectedStatus || "") !== (initialSelectedStatus || "") ||
+    (followupDate || "") !== (initialFollowupDate || "") ||
+    (followupTime || "") !== (initialFollowupTime || "") ||
+    (companyName || "") !== (initialCompanyName || "") ||
+    (remarks || "") !== (initialRemarks || "") ||
+    (selectedLeadStatus || "") !== (initialLeadStatus || "") ||
+    (quoteSent || "") !== (initialQuoteStatus || "");
+      
+      if (!hasChanges) {
+        setToastMessage("No changes have been made.");
+        setSeverity('warning');
+          setToast(true);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
+        // setShowModal(false);
+        setIsLoading(false);
+        return;
+      }
+      
 
     let payload = {};
-
+  
     // Prepare payload based on context
     if (sendQuoteOnly) {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
-        handledBy: toTitleCase(userName)
       };
     } else if (followupOnly) {
       payload = {
         sNo: currentCall.sNo,
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
-        handledBy: toTitleCase(userName)
       };
     } else {
       payload = {
@@ -304,10 +314,9 @@ const handleCheckboxChange = () => {
         companyName: companyName || "", // Default to an empty string if undefined
         followupDate: followupDate || "",
         followupTime: followupTime || "",
-        quoteSent: quoteSent || "",
+        quoteSent: initialQuoteStatus || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
-        handledBy: toTitleCase(userName)
       };
     }
   
@@ -327,7 +336,12 @@ const handleCheckboxChange = () => {
   
       if (!response.ok) throw new Error("Failed to update lead");
       fetchData();
-      if (!sendQuoteOnly) alert("Lead updated successfully!");
+      if (!sendQuoteOnly) {
+        setSuccessMessage('Lead updated successfully!');
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 3000); // 3000 milliseconds = 3 seconds
+      }
       if (hasSaved) {
         const contact = {
           name: currentCall?.name,
@@ -338,7 +352,12 @@ const handleCheckboxChange = () => {
       }
     } catch (error) {
       console.error("Error updating lead:", error);
-      alert("Failed to update lead. Please try again.");
+      setToastMessage("Failed to update lead. Please try again.");
+      setSeverity("error");
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
     } finally {
       setIsLoading(false);
       setShowModal(false);
@@ -373,10 +392,18 @@ const handleCheckboxChange = () => {
   
       if (!response.ok) throw new Error("Failed to update lead");
       fetchData();
-      alert("Followup removed successfully!");
+      setSuccessMessage("Followup removed successfully!");
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000); // 3000 milliseconds = 3 seconds
     } catch (error) {
       console.error("Error updating lead:", error);
-      alert("Failed to update lead. Please try again.");
+      setToastMessage("Failed to update lead. Please try again.");
+      setSeverity("error");
+      setToast(true);
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
     } finally {
       setShowModal(false);
       setHideOtherStatus(false);
@@ -403,9 +430,9 @@ const handleCheckboxChange = () => {
     setFollowupDate(date); // Set the date
     setFollowupTime(time); // Set the time
   };
-
-  const addNewFollowup = (phone, name, sNo, Platform, Enquiry, LeadDateTime) => {
-    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime});
+  
+  const addNewFollowup = (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent});
 
     setHideOtherStatus(true);
     const now = new Date(); // Get the current date and time
@@ -434,8 +461,8 @@ const handleCheckboxChange = () => {
 
   if (loading) {
     return (
-      <div>
-        <LoadingComponent />
+      <div className="font-poppins text-center">
+        <h2>Loading...</h2>
       </div>
     );
   }
@@ -451,7 +478,14 @@ const handleCheckboxChange = () => {
   const toggleQuoteSent = async(sNo, status) => {
     var setValue = status === 'Yes' ? 'No' : 'Yes';
     await handleSave(sNo, setValue, true);
-    status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
+    // status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
+    const successMessage = status !== 'Yes' 
+        ? "Marked as Quote Sent!" 
+        : "Marked as Quote Not Sent";
+    setSuccessMessage(successMessage);
+    setTimeout(() => {
+        setSuccessMessage('');
+    }, 3000); // Hide the message after 3 seconds
   }
 
 
@@ -478,7 +512,10 @@ const handleCheckboxChange = () => {
   
     //alert("vCard downloaded successfully!");
   };
-  
+  const handleFocus = (e) => {
+    e.target.select();
+  };
+
 
   return (
     <div className="p-4 text-black">
@@ -493,9 +530,9 @@ const handleCheckboxChange = () => {
           Sheet 
         </button>
       </div>
-
-          {/* Search Bar */}
-          <div className="p-4">
+      
+       {/* Search Bar */}
+      <div className="p-4">
       {/* Search Bar and Filter Icon */}
       <div className="flex items-center justify-between mb-2">
         <input
@@ -592,8 +629,10 @@ const handleCheckboxChange = () => {
       )}
     </div>
 
-{/* Lead Cards */}
-{filteredRows.length === 0 ? (
+
+    
+      {/* Lead Cards */}
+      {filteredRows.length === 0 ? (
     <div className="flex items-start justify-center h-screen">
     <div className="text-center pt-20">No data found.</div>
   </div>
@@ -610,16 +649,16 @@ const handleCheckboxChange = () => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
               </span>
-              {row.HandleBy && (
+              {row.HandledBy && (
               <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
                 <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
                 <p className="font-poppins">
-                  {row.HandleBy}
+                  {row.HandledBy}
                 </p>
               </div>
             )}
@@ -686,6 +725,7 @@ const handleCheckboxChange = () => {
           )}
             </div>
 
+        
             {/* Name and Company */}
             <div className="mb-2 mt-8">
               <h3 className="text-lg font-bold text-gray-900">
@@ -750,11 +790,10 @@ const handleCheckboxChange = () => {
       </div>
       )}
 
-
       {/* Modal for Call Status */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-[90%] max-w-md mb-16">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-auto max-w-md mb-16 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Lead Status</h3>
               <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(false); setFollowupTime(false)}}>
@@ -801,6 +840,7 @@ const handleCheckboxChange = () => {
                 ))}
             </div>
             }
+             
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -907,8 +947,13 @@ const handleCheckboxChange = () => {
           </div>
 
           </div>
+          {toast && <ToastMessage message={toastMessage} type="error"/>}
+          {toast && <ToastMessage message={toastMessage} type="warning"/>}
         </div>
       )}
+      {/* ToastMessage component */}
+      {successMessage && <SuccessToast message={successMessage} />}
+      
     </div>
   );
 };
