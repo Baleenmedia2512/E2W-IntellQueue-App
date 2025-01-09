@@ -16,6 +16,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { useAppSelector } from "@/redux/store";
+import LoadingComponent from "./progress";
+import { FaFileAlt } from "react-icons/fa";
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -64,6 +67,7 @@ const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const userName = useAppSelector(state => state.authSlice.userName);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
@@ -237,6 +241,7 @@ const EventCards = ({params, searchParams}) => {
   };
 
   useEffect(() => {
+    if (!userName) return;
     fetchData();
   }, [params.id, searchParams]);
 
@@ -300,12 +305,14 @@ const EventCards = ({params, searchParams}) => {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
+        handledBy: toTitleCase(userName)
       };
     } else if (followupOnly) {
       payload = {
         sNo: currentCall.sNo,
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
+        handledBy: toTitleCase(userName)
       };
     } else {
       payload = {
@@ -317,6 +324,7 @@ const EventCards = ({params, searchParams}) => {
         quoteSent: initialQuoteStatus || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
+        handledBy: toTitleCase(userName)
       };
     }
   
@@ -461,8 +469,8 @@ const EventCards = ({params, searchParams}) => {
 
   if (loading) {
     return (
-      <div className="font-poppins text-center">
-        <h2>Loading...</h2>
+      <div>
+        <LoadingComponent />
       </div>
     );
   }
@@ -519,17 +527,32 @@ const EventCards = ({params, searchParams}) => {
 
   return (
     <div className="p-4 text-black">
-      {/* Top Bar with Filter Button */}
-      <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-        <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+      {/* Top Bar with Filter and Report Buttons */}
+    <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
+      <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+      <div className="flex  space-x-4 ">
+        {/* Sheet Button */}
         <button
-          className="flex items-center px-4 py-2 bg-transparent text-green-500 rounded-md border border-green-500"
+          className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
           onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
         >
-          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-500" />
-          Sheet 
+          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-600" />
+          Sheet
         </button>
+        
+        {/* Report Button */}
+        <a href="/LeadManager/Report">
+          <button
+            className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
+          >
+            <FaFileAlt className="mr-2 text-lg" />
+            Report
+          </button>
+        </a>
       </div>
+
+    </div>
+
       
        {/* Search Bar */}
       <div className="p-4">
@@ -725,7 +748,7 @@ const EventCards = ({params, searchParams}) => {
           )}
             </div>
 
-        
+          
             {/* Name and Company */}
             <div className="mb-2 mt-8">
               <h3 className="text-lg font-bold text-gray-900">
