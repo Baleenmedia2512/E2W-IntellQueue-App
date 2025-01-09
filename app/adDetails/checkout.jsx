@@ -24,6 +24,11 @@ import { addItemsToCart, toggleItemSelection, removeEditModeItems } from '@/redu
 //const minimumUnit = Cookies.get('minimumunit');
 
 export const formattedMargin = (number) => {
+
+  if(isNaN(number)){
+    return 0;
+  }
+
   const roundedNumber = (number / 1).toFixed(2);
   return Number((roundedNumber / 1).toFixed(roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 : 2));
 };
@@ -367,7 +372,7 @@ const CheckoutPage = () => {
                       (item.unit === "SCM" ? item.qty * item.width : item.qty) *
                       item.unitPrice *
                       (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
-                      parseInt(item.margin)
+                      (parseInt(item.margin) ? parseInt(item.margin) : 0) 
                     ) / (item.unit === "SCM" ? item.qty * item.width : item.qty)
                 )} per {item.unit}
               </td>
@@ -377,7 +382,7 @@ const CheckoutPage = () => {
                     (item.unit === "SCM" ? item.qty * item.width : item.qty) *
                     item.unitPrice *
                     (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
-                    parseInt(item.margin)
+                    (parseInt(item.margin) ? parseInt(item.margin) : 0) 
                   )
                 )}
               </td>
