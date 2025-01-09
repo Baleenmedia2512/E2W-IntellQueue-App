@@ -32,7 +32,6 @@ const ClientsData = () => {
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
-  // const loggedInUser = 'GraceScans'
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
   const [title, setTitle] = useState('Mr.');
@@ -333,6 +332,61 @@ const ClientsData = () => {
       });
   };
 
+  const FetchClientDetailsByContact = (clientNumber) => {
+    axios
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContact.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .then((response) => {
+        const data = response.data;
+        if (data && data.length > 0) {
+          setErrors({});
+          setClientNumberSuggestions([]);
+          const clientDetails = data[0];
+
+          // Update client data in state
+          dispatch(setClientData({
+            clientContact: clientNumber,
+            clientID: clientDetails.id || "",
+            clientName: clientDetails.name || "",
+            clientEmail: clientDetails.email || "",
+            clientSource: clientDetails.source || "",
+            clientTitle: clientDetails.gender || "",
+            consultantName: clientDetails.consname || "",
+          }));
+
+          // Update client information locally
+          setDisplayClientNumber(clientNumber);
+          setDisplayClientID(clientDetails.id);
+          setDisplayClientName(clientDetails.name);
+          setAddress(clientDetails.address || "");
+          setSelectedOption(clientDetails.gender || "");
+          setTitle(clientDetails.gender || "");
+          setConsultantName(clientDetails.consname || "");
+          setConsultantNumber(clientDetails.consnumber || "");
+          setClientGST(clientDetails.GST || "");
+          setClientContactPerson(clientDetails.clientContactPerson || "");
+          setMonths(clientDetails.Age || "");
+
+          // Handle DOB and Age
+          const formattedDOB = parseDateFromDB(clientDetails.DOB);
+          setDOB(clientDetails.DOB);
+          setDisplayDOB(formattedDOB);
+          setClientAge(calculateAge(clientDetails.DOB));
+
+          // Handle PAN extraction from GST if applicable
+          const pan = clientDetails.GST?.length >= 15 && !clientDetails.PAN
+            ? clientDetails.GST.slice(2, 12)
+            : clientDetails.PAN;
+          setClientPAN(pan);
+      
+        } else {
+          console.warn("No client details found for the given name and contact number.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching client details:", error);
+      });
+  };
+
   useEffect(() => {    
         if (!loggedInUser || dbName === "") {
           router.push('/login');
@@ -365,7 +419,6 @@ const ClientsData = () => {
     });
   }, [elementsToHide])
 
-
   const handleClientContactChange = (newValue) => {
     
     // Contact Validation
@@ -386,6 +439,7 @@ const ClientsData = () => {
                         setIsNewClient(false);
                         setEditMode(true);
                         setContactWarning('Contact number already exists.');
+                        setErrors((prevErrors) => ({ ...prevErrors, clientContact: 'Contact number already exists' }));
 
                         // MP-95-As a user, I should able to restore a removed client.
                     if (data.warningMessage.includes('restore the client')) {
@@ -490,6 +544,7 @@ const ClientsData = () => {
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
       const data = await response.json();
+      
       if (data === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
                 setTimeout(() => {
@@ -846,7 +901,7 @@ const handleRestoreClient = () => {
             setTimeout(() => {
             setSuccessMessage('');
           }, 3000);
-          fetchClientDetails(clientID);
+          FetchClientDetailsByContact(clientContactToRestore);
           } else {
             setToastMessage("Failed to restore client: " + data.message);
             setSeverity('error');
@@ -967,6 +1022,7 @@ const BMvalidateFields = () => {
     // Reset other client-related fields
     setClientAge("");
     setDOB("");
+    setDisplayDOB("");
     setAddress("");
     setConsultantName("");
     setConsultantNumber("");
@@ -1141,7 +1197,7 @@ const BMvalidateFields = () => {
                   setClientNameSuggestions([]);
                   setContactWarning('');
                   if (clientContact.length === 10 && !isNewClient) {
-                    fetchClientDetails(clientID);
+                    FetchClientDetailsByContact(clientContact);
                   } else{
                     setClientNumberSuggestions([]);
                   }
@@ -1166,7 +1222,7 @@ const BMvalidateFields = () => {
                 ))}
               </ul>
             )}
-            {contactWarning && <p className="text-red-500 text-xs">{contactWarning}</p>}
+            {/* {contactWarning && <p className="text-red-500 text-xs">{contactWarning}</p>} */}
             {errors.clientContact && <p className="text-red-500 text-xs">{errors.clientContact}</p>}
           </div>
               <div name="ClientEmailInput">

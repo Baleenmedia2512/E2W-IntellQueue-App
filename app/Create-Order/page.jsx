@@ -65,20 +65,21 @@ const CreateOrder = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const isOrderExist = useAppSelector(state => state.orderSlice.isOrderExist);
-  const [vendors, setVendors] = useState([]);
-  const [ratesData, setRatesData] = useState([]);
-  // const [units, setUnits] = useState([])
-  const [isSlabAvailable, setIsSlabAvailable] = useState(false)
-  const [showCampaignDuration, setShowCampaignDuration] = useState(false)
-  const [leadDays, setLeadDays] = useState(0);
-  const [campaignDuration, setCampaignDuration] = useState("");
-  const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("");
-  const [campaignUnits, setCampaignUnits] = useState([]); 
-  // const [validityDays, setValidityDays] = useState(0)
-  // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
-  const [waiverAmount, setWaiverAmount] = useState(0);
+    const [vendors, setVendors] = useState([]);
+    const [ratesData, setRatesData] = useState([]);
+    // const [units, setUnits] = useState([])
+    const [isSlabAvailable, setIsSlabAvailable] = useState(false)
+    const [showCampaignDuration, setShowCampaignDuration] = useState(false)
+    const [leadDays, setLeadDays] = useState(0);
+    const [campaignDuration, setCampaignDuration] = useState("");
+    const [selectedCampaignUnits, setSelectedCampaignUnits] = useState("");
+    const [campaignUnits, setCampaignUnits] = useState([]); 
+    // const [validityDays, setValidityDays] = useState(0)
+    // const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [isConsultantWaiverChecked, setIsConsultantWaiverChecked] = useState(false);
+    const [waiverAmount, setWaiverAmount] = useState(0);
+    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   
     
     const dispatch = useDispatch();
@@ -114,16 +115,10 @@ const CreateOrder = () => {
     const [hasOrderDetails, setHasOrderDetails] = useState(false);
     const [orderSearchSuggestion, setOrderSearchSuggestion] = useState([]);
     const [orderSearchTerm,setOrderSearchTerm] = useState("");
-    const [ordereId, setOrderId] = useState(null);
     const [displayClientName, setDisplayClientName] = useState(clientName);
     const [orderNumber, setOrderNumber] = useState(orderNumberRP);
     const [orderAmount, setorderAmount] = useState('');
    
-
-     // Function to toggle expand/collapse
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
     
     useEffect(() => {
       if (!loggedInUser || dbName === "" ) {
@@ -711,6 +706,7 @@ const fetchOrderDetailsByOrderNumber = () => {
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
           setWaiverAmount(data.waiverAmount);
+          // dispatch(setOrderData({ clientNumber: data.clientContact }));
           if (data.waiverAmount !== "0" && data.waiverAmount !== 0) {
             setIsConsultantWaiverChecked(true);
           }
@@ -791,11 +787,13 @@ const CreateStages = async () => {
 
   
       const createNewOrder = async() => {
+        setIsButtonDisabled(true);
         // If the discount amount has changed and remarks are not filled
         if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
           setToastMessage('Please provide a reason in the Remarks field.');
           setSeverity('warning');
           setToast(true);
+          setIsButtonDisabled(false);
           setTimeout(() => {
             setToast(false);
           }, 2000);
@@ -808,11 +806,31 @@ const CreateStages = async () => {
         var orderOwner = companyName === 'Baleen Media' ? clientSource === '6.Own' ? loggedInUser : 'leenah_cse': loggedInUser;
 
         if (validateFields()) {
+          setToastMessage(
+            <span>
+                <CircularProgress size={20} style={{ marginRight: "8px" }} />
+                {`Processing`}
+            </span>
+        );
+        setSeverity('warning');
+        setToast(true);
           const formattedOrderDate = formatDateToSave(orderDate);
+          const { nextOrderNumber, nextRateWiseOrderNumber } = await fetchMaxOrderNumber();
+
+        if (!nextOrderNumber || !nextRateWiseOrderNumber) {
+            setToastMessage('Order Number not Found!');
+            setSeverity('error');
+            setToast(true);
+            setIsButtonDisabled(false);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+        }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${maxOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${encodeURIComponent(selectedValues.vendorName.value)}&JsonCategory=${encodeURIComponent(selectedValues.Location.value + " : " + selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonWaiverAmount=${waiverAmount}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
+                setToast(false);
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
                 // MP-101
@@ -820,30 +838,34 @@ const CreateStages = async () => {
                 if (elementsToHide.includes('OrderNumberText')) {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
-                  setSuccessMessage('Work Order #'+ maxOrderNumber +' Created Successfully!');
+                  setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
                 }
                 dispatch(setIsOrderExist(true));
                 
                 setTimeout(() => {
                 setSuccessMessage('');
+                setIsButtonDisabled(false);
                 router.push('/FinanceEntry');
-              }, 3000);
+              }, 2000);
                 
               //setMessage(data.message);
             } else {
               alert(`The following error occurred while inserting data: ${data}`);
+              setIsButtonDisabled(false);
             }
           } catch (error) {
             console.error('Error updating rate:', error);
+            setIsButtonDisabled(false);
           }
         } else {
           // MP-101
           setToastMessage('Please fill all necessary fields.');
-    setSeverity('error');
-    setToast(true);
-    setTimeout(() => {
-      setToast(false);
-    }, 2000);
+          setSeverity('error');
+          setToast(true);
+          setIsButtonDisabled(false);
+          setTimeout(() => {
+            setToast(false);
+          }, 2000);
       }
        }
 //update order-SK (02-08-2024)------------------------------------
@@ -872,14 +894,14 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: selectedValues.rateName.value,
-      JsonVendorName: selectedValues.vendorName.value,
-      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
-      JsonType: selectedValues.adType.value,
+      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
+      JsonVendorName: encodeURIComponent(selectedValues.vendorName.value),
+      JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
+      JsonType: encodeURIComponent(selectedValues.adType.value),
       JsonHeight: qty.toString(),
       JsonWidth: '1',
-      JsonLocation: selectedValues.Location.value,
-      JsonPackage: selectedValues.Package.value,
+      JsonLocation: encodeURIComponent(selectedValues.Location.value),
+      JsonPackage: encodeURIComponent(selectedValues.Package.value),
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -956,8 +978,7 @@ const updateNewOrder = async (event) => {
           const data = await response.json();
           setMaxOrderNumber(data.nextOrderNumber);
           setNextRateWiseOrderNumber(data.nextRateWiseOrderNumber);
-        dispatch(setOrderData({ maxOrderNumber: data }))
-        dispatch(setOrderData({ nextRateWiseOrderNumber: data }))
+          return data;
         } catch (error) {
           console.error(error);
         }
@@ -1330,6 +1351,7 @@ const handleOpenDialog = () => {
     dispatch(setIsOrderUpdate(false));
     setWaiverAmount(0);
     setIsConsultantWaiverChecked(false);
+    setClientNumber('');
     //window.location.reload(); // Reload the page
   };
 
@@ -2009,6 +2031,7 @@ return (
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Name</p>
         <p className="truncate text-black">{displayClientName}</p>
+        <p className="truncate text-black">{displayClientName}</p>
       </div>
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
         <p className="text-gray-500 text-xs mb-1">Consultant</p>
@@ -2112,6 +2135,7 @@ return (
   {/* ToastMessage component */}
   {successMessage && <SuccessToast message={successMessage} />}
   {toast && <ToastMessage message={toastMessage} type="error"/>}
+  {toast && <ToastMessage message={toastMessage} type="warning"/>}
 </div>
 
 

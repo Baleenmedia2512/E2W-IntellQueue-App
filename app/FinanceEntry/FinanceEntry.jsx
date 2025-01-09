@@ -102,7 +102,7 @@ const FinanceData = () => {
   const [taxType, setTaxType] = useState(taxTypeOptions[2]);
   const [gstAmount, setGSTAmount] = useState(null);
   const [gstPercentage, setGSTPercentage] = useState(null);
-  const [expenseCategory, setExpenseCategory] = useState(expenseCategoryOptions[0]);
+  const [expenseCategory, setExpenseCategory] = useState('');
   const [transactionDate, setTransactionDate] = useState(dayjs());
   const [transactionTime, setTransactionTime] = useState(dayjs());
   const [paymentMode, setPaymentMode] = useState(paymentModeOptions[0]);
@@ -142,6 +142,7 @@ const FinanceData = () => {
   const [previousPaymentMode, setPreviousPaymentMode] = useState('');
   const [previousAmountPaid, setPreviousAmountPaid] = useState(0);
   const [isDownloadInvoiceChecked, setIsDownloadInvoiceChecked] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
     if(dbName){
@@ -325,6 +326,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setReceivableAmount(clientDetails.receivableAmount);
           setPreviousPaymentMode(clientDetails.previousPaymentMode);
           setPreviousAmountPaid(clientDetails.previousAmountPaid);
+
+          setErrors({});
         }
       })
       .catch((error) => {
@@ -460,6 +463,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
+
+        setErrors({});
       } else {
         dispatch(setIsOrderExist(false));
       }
@@ -500,6 +505,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
+
+        setErrors({});
       } else {
         dispatch(setIsOrderExist(false));
       }
@@ -645,155 +652,302 @@ const openChequeDate = Boolean(anchorElChequeDate);
 };
   
 
-  const insertNewFinance = async (e) => {
-    e.preventDefault();
+//   const insertNewFinance = async (e) => {
+//     e.preventDefault();
 
-    var orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
+//     var orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber
 
-    if(billsOnly){
-      if(!bill){
-        setToastMessage("Please upload a Bill!");
-        setSeverity('error');
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 3000);
-        return;
-      }else if(!expenseCategory){
-        setErrors((prevErrors) => ({...prevErrors, expenseCategory: "Select an Expense Category!"}));
-        return;
-      }else if(orderAmount === 0 || orderAmount === ""){
-        setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
-        amountRef?.current.focus();
-        return;
-      }else if(bill && billNumber === ''){
-        setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
-        billNumberRef?.current.focus();
-        return;
-      }else if((orderNumberToBeUploaded === "" || parseInt(orderNumberToBeUploaded) === 0) && expenseCategory?.value === 'Project'){
-        setErrors((prevErrors) => ({...prevErrors, orderNumber: "Order Number is required for Project Category!"}));
-        orderNumberRef?.current.focus();
-        return;
-      }else{
-        await handleUploadBills();
-        setBill(null);
-        setClientName('');
-        setErrors({})
-        setExpenseCategory('');
-        setGSTAmount('');
-        setOrderAmount('');
-        setOrderNumber('');
-        setBillNumber("");
-        setBillDate(dayjs());
-        setRateWiseOrderNumber('');
-        setTaxType(taxTypeOptions[2]);
-        setTransactionType(transactionOptions[0]);
-        dispatch(resetOrderData());
-        dispatch(resetClientData());
-        return;
-      }
-    }
+//     if(billsOnly){
+//       if(!bill){
+//         setToastMessage("Please upload a Bill!");
+//         setSeverity('error');
+//         setToast(true);
+//         setTimeout(() => {
+//           setToast(false);
+//         }, 3000);
+//         return;
+//       }else if(!expenseCategory){
+//         setErrors((prevErrors) => ({...prevErrors, expenseCategory: "Select an Expense Category!"}));
+//         return;
+//       }else if(orderAmount === 0 || orderAmount === ""){
+//         setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
+//         amountRef?.current.focus();
+//         return;
+//       }else if(bill && billNumber === ''){
+//         setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
+//         billNumberRef?.current.focus();
+//         return;
+//       }else if((orderNumberToBeUploaded === "" || parseInt(orderNumberToBeUploaded) === 0) && expenseCategory?.value === 'Project'){
+//         setErrors((prevErrors) => ({...prevErrors, orderNumber: "Order Number is required for Project Category!"}));
+//         orderNumberRef?.current.focus();
+//         return;
+//       }else{
+//         await handleUploadBills();
+//         setBill(null);
+//         setClientName('');
+//         setErrors({})
+//         setExpenseCategory('');
+//         setGSTAmount('');
+//         setOrderAmount('');
+//         setOrderNumber('');
+//         setBillNumber("");
+//         setBillDate(dayjs());
+//         setRateWiseOrderNumber('');
+//         setTaxType(taxTypeOptions[2]);
+//         setTransactionType(transactionOptions[0]);
+//         dispatch(resetOrderData());
+//         dispatch(resetClientData());
+//         return;
+//       }
+//     }
 
-    if (!isOrderExist && !expenseCategory) {
-      setToastMessage('Order Number does not exist!');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 3000);
-      return;
-    }
-    if (balanceAmount === 0 || balanceAmount < 0) {
-      setToastMessage('Full payment has already been received!');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 3000);
-      return;
-    } else if(orderNumber === "" || isNaN(orderNumber)){
-      // orderNumber?.current.focus()
-      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter an valid Order Number!" }));
-      return;
-    }else if(isNaN(parseInt(orderAmount)) || orderAmount === "0"){
-      orderAmount?.current.focus()
-      setErrors((prevErrors) => ({...prevErrors, orderAmount: "Please enter an valid Order Amount!"}));
-      return;
-    }else if(bill && billNumber === ""){
-      setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
-      billNumberRef?.current.focus()
-      return;
-    }else {
+//     if (!isOrderExist && !expenseCategory) {
+//       setToastMessage('Order Number does not exist!');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//         setToast(false);
+//       }, 3000);
+//       return;
+//     }
+//     if (balanceAmount === 0 || balanceAmount < 0) {
+//       setToastMessage('Full payment has already been received!');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//         setToast(false);
+//       }, 3000);
+//       return;
+//     } else if(orderNumber === "" || isNaN(orderNumber)){
+//       // orderNumber?.current.focus()
+//       setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter an valid Order Number!" }));
+//       return;
+//     }else if(isNaN(parseInt(orderAmount)) || orderAmount === "0"){
+//       orderAmount?.current.focus()
+//       setErrors((prevErrors) => ({...prevErrors, orderAmount: "Please enter an valid Order Amount!"}));
+//       return;
+//     }else if(bill && billNumber === ""){
+//       setErrors((prevErrors) => ({...prevErrors, billNumber: "Enter a valid bill number"}));
+//       billNumberRef?.current.focus()
+//       return;
+//     }else {
 
-    if (validateFields()) {
-      try {
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClientName=${clientName}`);
-          const data = await response.json();
-          if (data === 'Inserted Successfully!') {
-            setSuccessMessage('Finance Entry Added');
-              setTimeout(() => {
-            setSuccessMessage('');
+//     if (validateFields()) {
+//       try {
+//         const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClientName=${clientName}`);
+//           const data = await response.json();
+//           if (data === 'Inserted Successfully!') {
+//             setSuccessMessage('Finance Entry Added');
+//               setTimeout(() => {
+//             setSuccessMessage('');
 
-            if (transactionType && transactionType.value === "Income") {
-              if (elementsToHide.includes("RateWiseOrderNumberText")) {
-                //BM
-                  SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
-              } else if (elementsToHide.includes("OrderNumberText")) {
-                SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
-                if (isDownloadInvoiceChecked) {
-                  sendDataToPdf();
-                }
-              } else {
-                setToastMessage('SMS Not Sent! Reason: No Database Found.');
-                setSeverity('warning');
-                setToast(true);
-                setTimeout(() => {
-                  setToast(false);
-                }, 2000);
-              }
-          }
+//             if (transactionType && transactionType.value === "Income") {
+//               if (elementsToHide.includes("RateWiseOrderNumberText")) {
+//                 //BM
+//                   SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+//               } else if (elementsToHide.includes("OrderNumberText")) {
+//                 SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
+//                 if (isDownloadInvoiceChecked) {
+//                   sendDataToPdf();
+//                 }
+//               } else {
+//                 setToastMessage('SMS Not Sent! Reason: No Database Found.');
+//                 setSeverity('warning');
+//                 setToast(true);
+//                 setTimeout(() => {
+//                   setToast(false);
+//                 }, 2000);
+//               }
+//           }
 
-          }, 1000);
-        }
-        if(transactionType && transactionType.value === "Operational Expense"){
-          handleUploadBills();
-          setBill(null);
-        }
+//           }, 1000);
+//         }
+//         if(transactionType && transactionType.value === "Operational Expense"){
+//           handleUploadBills();
+//           setBill(null);
+//         }
           
-          // showToastMessage('success', data);
-          setChequeNumber('');;
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setRateWiseOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          dispatch(resetClientData());
-          // window.location.reload();
-          cancelFinance();
+//           // showToastMessage('success', data);
+//           setChequeNumber('');;
+//           setClientName('');
+//           setExpenseCategory('');
+//           setGSTAmount('');
+//           setGSTPercentage('');
+//           setOrderAmount('');
+//           setOrderNumber('');
+//           setRateWiseOrderNumber('');
+//           setPaymentMode(paymentModeOptions[0]);
+//           setRemarks('');
+//           setTaxType(taxTypeOptions[2]);
+//           setTransactionType(transactionOptions[0]);
+//           dispatch(resetOrderData());
+//           dispatch(resetClientData());
+//           cancelFinance();
           
     
-      } catch (error) {
-          console.error(error);
-      }
+//       } catch (error) {
+//           console.error(error);
+//       }
       
-    } else {
-      setToastMessage('Please fill the necessary details in the form.');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
+//     } else {
+//       setToastMessage('Please fill the necessary details in the form.');
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => {
+//         setToast(false);
+//       }, 2000);
+//     }
          
+//   }
+// }
+
+const insertNewFinance = async (e) => {
+  e.preventDefault();
+  setIsButtonDisabled(true);
+
+  const orderNumberToBeUploaded = !elementsToHide.includes("RateWiseOrderNumberText") ? rateWiseOrderNumber : orderNumber;
+
+  if (billsOnly) {
+      // Validate bills-only scenario
+      if (!bill) {
+          setToastMessage("Please upload a Bill!");
+          setSeverity("error");
+          setToast(true);
+          setIsButtonDisabled(false);
+          setTimeout(() => setToast(false), 3000);
+          return;
+      }
+      if (!expenseCategory) {
+          setErrors((prevErrors) => ({ ...prevErrors, expenseCategory: "Select an Expense Category!" }));
+          setIsButtonDisabled(false);
+          return;
+      }
+      if (orderAmount === 0 || orderAmount === "") {
+          setErrors((prevErrors) => ({ ...prevErrors, orderAmount: "Enter a valid Order Amount" }));
+          amountRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+      if (bill && billNumber === "") {
+          setErrors((prevErrors) => ({ ...prevErrors, billNumber: "Enter a valid bill number" }));
+          billNumberRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+      if ((orderNumberToBeUploaded === "" || parseInt(orderNumberToBeUploaded) === 0) && expenseCategory?.value === "Project") {
+          setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Order Number is required for Project Category!" }));
+          orderNumberRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+
+      // Handle bill upload
+      await handleUploadBills();
+      cancelFinance();
+      setIsButtonDisabled(false);
+      return;
   }
-}
+
+  if (validateFields()) {
+
+      // Validate other fields
+      if (!isOrderExist && !expenseCategory) {
+          showToast("Order Number does not exist!", "error");
+          return;
+      }
+      if ((balanceAmount <= 0 && orderNumber && orderNumber !== '' && orderNumber !== 0) && transactionType?.value !== 'Operational Expense') {
+          showToast("Full payment has already been received!", "error");
+          return;
+      }
+      if ((!orderNumber || isNaN(orderNumber)) && transactionType?.value !== 'Operational Expense') {
+          setErrors((prevErrors) => ({ ...prevErrors, orderNumber: "Please enter a valid Order Number!" }));
+          setIsButtonDisabled(false);
+          return;
+      }
+      if (orderAmount === 0 || orderAmount === ""){
+          setErrors((prevErrors) => ({...prevErrors, orderAmount: "Enter a valid Order Amount"}));
+          amountRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+      if (bill && billNumber === "") {
+          setErrors((prevErrors) => ({ ...prevErrors, billNumber: "Enter a valid bill number" }));
+          billNumberRef?.current.focus();
+          setIsButtonDisabled(false);
+          return;
+      }
+
+      // Proceed with insertion
+
+          setToastMessage(
+            <span>
+                <CircularProgress size={20} style={{ marginRight: "8px" }} />
+                {`Processing`}
+            </span>
+        );
+        setSeverity('warning');
+        setToast(true);
+        
+      try {
+          const response = await Promise.race([
+              fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewFinanceEntry.php/?JsonTransactionType=${transactionType ? transactionType.value : ''}&JsonEntryUser=${username ? username : ''}&JsonOrderNumber=${orderNumber ? orderNumber : ''}&JsonOrderAmount=${orderAmount ? orderAmount : ''}&JsonTaxType=${taxType ? taxType.value : ''}&JsonGSTAmount=${gstAmount ? gstAmount : ''}&JsonExpenseCategory=${expenseCategory ? expenseCategory.value : ''}&JsonRemarks=${remarks ? remarks : ''}&JsonTransactionDate=${formattedDate + ' ' + formattedTime}&JsonPaymentMode=${paymentMode ? paymentMode.value : ''}&JsonChequeNumber=${chequeNumber ? chequeNumber : ''}&JsonChequeDate=${formattedChequeDate + ' ' + formattedChequeTime}&JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNumber}&JsonClientName=${clientName}`),
+              new Promise((_, reject) => setTimeout(() => reject(new Error("Request timed out")), 10000)) // Timeout after 10 seconds
+          ]);
+
+          const data = await response.json();
+          
+          if (data === "Inserted Successfully!") {
+              setSuccessMessage("Finance Entry Added");
+              setToast(false)
+              handlePostInsertActions();
+          } else {
+              setIsButtonDisabled(false);
+              throw new Error("Unexpected response from the server.");
+          }
+      } catch (error) {
+          console.error("Error during insertion:", error);
+          setToastMessage(error.message || "An error occurred while adding the finance entry.");
+          setSeverity("error");
+          setToast(true);
+          setIsButtonDisabled(false);
+          setTimeout(() => setToast(false), 3000);
+      }
+  } else {
+      setToastMessage("Please fill the necessary details in the form.");
+      setSeverity("error");
+      setToast(true);
+      setIsButtonDisabled(false);
+      setTimeout(() => setToast(false), 3000);
+  }
+};
+
+const showToast = (message, severity) => {
+  setToastMessage(message);
+  setSeverity(severity);
+  setToast(true);
+  setIsButtonDisabled(false);
+  setTimeout(() => setToast(false), 3000);
+};
+
+const handlePostInsertActions = () => {
+  setTimeout(() => {
+      setSuccessMessage("");
+      setIsButtonDisabled(false);
+      if (transactionType?.value === "Income") {
+          if (elementsToHide.includes("RateWiseOrderNumberText")) {
+              SendSMS(clientNumber, orderAmount, rateWiseOrderNumber);
+          } else if (elementsToHide.includes("OrderNumberText")) {
+              SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
+              if (isDownloadInvoiceChecked) sendDataToPdf();
+          } else {
+              showToast("SMS Not Sent! Reason: No Database Found.", "warning");
+          }
+      }
+  }, 1000);
+
+  cancelFinance();
+};
+
 
 const elementsToHideList = () => {
   try{
@@ -874,32 +1028,38 @@ useEffect(() => {
 
 
   const cancelFinance = (e) => {
-          setChequeNumber('');
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setRateWiseOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          setFinanceSearchTerm('');
-          setIsUpdateMode(false);
-          setTransactionDate(dayjs()); 
-          setDisplayClientName('');
-          setRateName('');
-          setRateType('');
-          setAdjustedOrderAmount(0);
-          setWaiverAmount(0);
-          setReceivableAmount(0);
-          setPreviousPaymentMode('');
-          setPreviousAmountPaid(0);
-          setBalanceAmount(0);
-          setIsDownloadInvoiceChecked(false);
+    setBill(null);
+    setErrors({});
+    setBillNumber("");
+    setBillDate(dayjs());
+    dispatch(resetClientData());
+    setChequeNumber('');
+    setClientName('');
+    setClientNumber('');
+    setExpenseCategory('');
+    setGSTAmount('');
+    setGSTPercentage('');
+    setOrderAmount('');
+    setOrderNumber('');
+    setRateWiseOrderNumber('');
+    setPaymentMode(paymentModeOptions[0]);
+    setRemarks('');
+    setTaxType(taxTypeOptions[2]);
+    setTransactionType(transactionOptions[0]);
+    dispatch(resetOrderData());
+    setFinanceSearchTerm('');
+    setIsUpdateMode(false);
+    setTransactionDate(dayjs()); 
+    setDisplayClientName('');
+    setRateName('');
+    setRateType('');
+    setAdjustedOrderAmount(0);
+    setWaiverAmount(0);
+    setReceivableAmount(0);
+    setPreviousPaymentMode('');
+    setPreviousAmountPaid(0);
+    setBalanceAmount(0);
+    setIsDownloadInvoiceChecked(false);
 
   };
   const handleFileChange = (e) => {
@@ -923,22 +1083,7 @@ useEffect(() => {
 
   // If search term is cleared, reset the update mode
   if (searchTerm.trim() === "") {
-    setIsUpdateMode(false); // Reset update mode
-      setChequeNumber('');
-          setClientName('');
-          setExpenseCategory('');
-          setGSTAmount('');
-          setGSTPercentage('');
-          setOrderAmount('');
-          setOrderNumber('');
-          setRateWiseOrderNumber('');
-          setPaymentMode(paymentModeOptions[0]);
-          setRemarks('');
-          setTaxType(taxTypeOptions[2]);
-          setTransactionType(transactionOptions[0]);
-          dispatch(resetOrderData());
-          setFinanceSearchTerm('');
-    setFinanceSearchSuggestion([]); // Clear suggestions
+    cancelFinance();
     return; // Exit early
   }
 
@@ -1009,6 +1154,7 @@ useEffect(() => {
         const clientData = clientResponse.data;
         setClientName(clientData[0].clientName);
         setDisplayClientName(clientData[0].clientName);
+        setClientNumber(clientData[0].clientContact);
         setRateName(clientData[0].rateName);
         setRateType(clientData[0].rateType);
         setAdjustedOrderAmount(clientData[0].adjustedOrderAmount);
@@ -1025,7 +1171,6 @@ useEffect(() => {
       console.error("Error fetching finance details:", error);
     }
 };
-  
   
   const handleFinanceSelection = (e) => {
     const selectedFinance = e.target.value;
@@ -1179,22 +1324,22 @@ useEffect(() => {
 };
 
 const handleGSTChange = (e) => {
-  const gstPer = parseFloat(e); // Get GST percentage from the input
+  const gstPer = parseFloat(e); // GST percentage
   const gst = (orderAmount * gstPer) / 100; // Calculate GST amount
-  setGSTAmount(gst); // Set GST amount in the state
-};
-
-const handleGSTAmountChange = (e) => {
-  const gstAm = e.target.value;
-  const gstPer = ( gstAm/ orderAmount) * 100; // Calculate GST percentage
-  setGSTPercentage(gstPer); // Set GST percentage in the state
+  setGSTAmount(gst); // Update GST amount
 };
 
 useEffect(() => {
-  if(parseFloat(gstPercentage) > 0){
+  if(parseFloat(gstPercentage) > 0 && parseInt(orderAmount) > 0){
     handleGSTChange(gstPercentage)
   }
-},[gstPercentage, orderAmount])
+},[orderAmount, gstPercentage])
+
+const handleGSTAmountChange = (gst) => {
+  const amount = gst.target.value
+  const gstPer = (amount / orderAmount) * 100; // Calculate GST percentage
+  setGSTPercentage(gstPer); // Update GST percentage
+};
 
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1218,6 +1363,7 @@ useEffect(() => {
   <button
     className="custom-button ml-2"
     onClick={isUpdateMode ? updateFinance : insertNewFinance}
+    disabled={isButtonDisabled}
   >
     
     {isUpdateMode ? 'Update' : 'Add'} 
@@ -1444,20 +1590,6 @@ useEffect(() => {
           </div>
           )}
                </div>
-               {transactionType && transactionType.value === 'Income' &&  (
-          <div className="flex items-center space-x-1 mt-1">
-            <input
-              type="checkbox"
-              id="invoiceRequired"
-              className={`h-4 w-4 text-blue-500 focus:ring focus:ring-blue-300 ${isUpdateMode ? 'border-yellow-500' : 'border-gray-300'} rounded`}
-              checked={isDownloadInvoiceChecked}
-              onChange={(e) => setIsDownloadInvoiceChecked(e.target.checked)}
-            />
-            <label htmlFor="invoiceRequired" className={`text-gray-500 font-medium text-sm ${isUpdateMode ? 'border-yellow-500' : 'border-gray-300'}`}>
-              Invoice Required
-            </label>
-          </div>
-          )}
                {transactionType && transactionType.value === 'Operational Expense' && (
                 <div className='mt-4' >
               <>
@@ -1494,7 +1626,7 @@ useEffect(() => {
   transactionType?.value === 'Income' || 
   (transactionType?.value === 'Operational Expense' && expenseCategory?.value === 'Project')
 ) ? (
-  <div className='mt-2' >
+  <div className='mt-1' >
               <>
             <label className='block mb-2 mt-3 text-gray-700 font-semibold '>Client Name<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1510,10 +1642,10 @@ useEffect(() => {
                 disabled={isUpdateMode || billsOnly}
                 onFocus={e => e.target.select()}
                 onBlur={() => {
-            setTimeout(() => {
-              setClientNameSuggestions([]);
-            }, 200); // Adjust the delay time according to your preference
-          }}
+                  setTimeout(() => {
+                    setClientNameSuggestions([]);
+                  }, 200); // Adjust the delay time according to your preference
+                }}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -1548,8 +1680,7 @@ useEffect(() => {
                 </ul>
             )}
 {errors.clientName && <span className="text-red-500 text-sm">{errors.clientName}</span>}</>
-</div>
-) : null}
+</div>) : null}
  {/* )} */}
 
     {(
@@ -1755,13 +1886,13 @@ useEffect(() => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {taxType && taxType.value === 'GST' && transactionType.value === "Operational Expense" && (
+               {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
           <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
               type="text"
-              placeholder="Ex: 5" 
+              placeholder="GST%" 
               id='4'
               name="GSTInput" 
               value={gstPercentage}
@@ -1770,7 +1901,7 @@ useEffect(() => {
                   setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
                 }
               }}
-              onFocus={(e) => e.target.select()}
+              onFocus={e => e.target.select()}
               onKeyDown={(e) => {
               if (e.key === 'Enter') {
                   e.preventDefault();
@@ -1784,10 +1915,10 @@ useEffect(() => {
               />
           </div>
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
-          </div>
-          )}
-          {taxType && taxType.value === 'GST' && transactionType.value === "Operational Expense" && (
-            <div>
+               </div>
+                    )}
+          {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && ( 
+          <div>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
             <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
@@ -1803,7 +1934,11 @@ useEffect(() => {
                     setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
                   }
                 }}
-                onBlur={handleGSTAmountChange}
+                onBlur={e => {
+                  if(parseFloat(gstAmount) > 0 && parseInt(orderAmount) > 0){
+                    handleGSTAmountChange(e);
+                  }
+                }}
                 onFocus={e => e.target.select()}
                 onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -1871,14 +2006,14 @@ useEffect(() => {
                 setTransactionDate(newValue);
                 validateTransactionDate(newValue);  // Call validation after setting the new date
                 // Validate the new transaction date and set errors
-    const errorMsg = validateTransactionDate(newValue);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      transactionDate: errorMsg, // Set the error message if any
-    }));
+                const errorMsg = validateTransactionDate(newValue);
+                setErrors((prevErrors) => ({
+                  ...prevErrors,
+                  transactionDate: errorMsg, // Set the error message if any
+                }));
                 handleDateClose();
               }}
-              
+              maxDate={dayjs()}
             />
           </Popover>
         </Box>

@@ -1,18 +1,24 @@
 "use client"
+import React from "react";
 import { useEffect, useState } from "react";
 import { api } from "@/app/api/FetchAPI";
-import { FiPhoneCall } from "react-icons/fi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FiCheck, FiX, FiPhone, FiCalendar, FiFileText, FiDatabase, FiTag } from "react-icons/fi";
+import { useAppSelector } from '@/redux/store';
 
-export default function manageQuotes() {
+export default function ManageQuotes() {
   const [data, setData] = useState([]); // Holds the fetched data
   const [loading, setLoading] = useState(true); // Loading state
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [filteredData, setFilteredData] = useState([]); // Holds the filtered data
   const [searchQuery, setSearchQuery] = useState("");
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const maxOrderNumber = useAppSelector((state) => state.orderSlice.maxOrderNumber);
+  const loggedInUser = useAppSelector(state => state.authSlice.userName);
+  const nextOrderNumber = maxOrderNumber?.nextOrderNumber;
+
 
   async function fetchData() {
     if (loading && !hasMore) return;
@@ -24,14 +30,14 @@ export default function manageQuotes() {
           "Content-Type": "application/json; charset=utf-8",
         },
         params: {
-          JsonDBName: "Baleen Media",
+          JsonDBName: companyName,
           page,
           limit: 10, // Set the limit explicitly for pagination
         },
       });
   
       const result = response.data;
-  
+      console.log(result)
       if (!Array.isArray(result)) {
         throw new Error("Unexpected response format");
       }
@@ -40,7 +46,7 @@ export default function manageQuotes() {
         setHasMore(false); // No more data to load
       }
       
-      console.log(result)
+     
       setData((prevData) => [...prevData, ...result]); // Append new data
     } catch (error) {
       console.error("Error fetching data:", error); // Detailed error logging
@@ -56,6 +62,7 @@ export default function manageQuotes() {
   useEffect(() => {
     fetchData(); // Fetch initial data
   }, [page]);
+
 
   useEffect(() => {
     if(searchQuery === ""){
@@ -96,9 +103,68 @@ export default function manageQuotes() {
     setFilteredData(filtered);
   };
 
-  const winQuote = async(QuoteData) => {
-    
-  }
+
+  const handleStatusChange = async (status, row) => {
+    setLoading(true);
+
+    const {
+        AdType, Adcategory, Amount, AmountwithoutGst, CampaignDurationUnits,
+        CartID, ClientContact, ClientEmail, ClientGST, ClientName,
+        DateOfRelease, GST, GSTAmount, MapID, Margin, RateId, Source,
+        Units, Vendor, Width, rateperunit,
+    } = row;
+
+    console.log("Row Data:", row);
+
+    const orderOwner = companyName === 'Baleen Media' 
+        ? (clientSource === '6.Own' ? loggedInUser : 'leenah_cse') 
+        : loggedInUser;
+
+    try {
+        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/GenerateOrder.php? + 
+            JsonDBName=${companyName}&
+            JsonMapID=${MapID}&
+            JsonStatus=${status}&
+            JsonEntryUser=${loggedInUser}&
+            JsonOrderNumber=${nextOrderNumber}&
+            JsonRateId=${RateId}&
+            JsonClientName=${ClientName}&
+            JsonClientContact=${ClientContact}&
+            JsonSource=${Source}&
+            JsonOwner=${orderOwner}&
+            JsonCSE=${loggedInUser}&
+            JsonReceivable=${Amount}&
+            JsonPayable=${AmountwithoutGst}&
+            JsonCardRatePerUnit=${rateperunit}&
+            JsonMargin=${Margin}&
+            JsonVendorName=${Vendor}&
+            JsonAdCategory=${Adcategory}&
+            JsonAdType=${AdType}&
+            JsonAdWidth=${Width}&
+            JsonBookedStatus=Booked&
+            JsonUnits=${Units}&
+            JsonClientAuthorizedPerson=${ClientEmail}`);
+        
+        const data = await response.json();
+        
+        // Check if both responses are successful
+        if (data.quoteResponse.success && data.orderResponse.success) {
+            alert("Updated data successfully");
+            setData([]);
+            fetchData();
+        } else {
+            alert(data.quoteResponse.message || data.orderResponse.message || "Failed to update status.");
+        }
+    } catch (error) {
+        console.error("Error updating status:", error);
+        alert("An error occurred while updating the status.");
+    } finally {
+        setLoading(false);
+    }
+};
+
+
+
 
   return (
     <div className="p-4 text-black font-montserrat ">
@@ -127,7 +193,9 @@ export default function manageQuotes() {
       
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {filteredData.map((row, index) => (
-          <div className="rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+          <div 
+            key={index}
+            className="rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
           <div className="bg-gradient-to-r p-6 min-h-max">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center my-2">
                   {row.ClientName}
@@ -179,7 +247,7 @@ export default function manageQuotes() {
                 </div>
               
             </div>
-            <div className="space-y-2 mt-2 text-gray-600 max-w-[90%] border border-blue-500 p-2 justify-self-center">
+            <div className="space-y-4 mt-4 text-gray-600 max-w-[90%] border-2 border-blue-600 rounded-lg p-4 shadow-lg bg-white justify-self-center">
               <span className="text-blue-500 flex flex-row justify-center"> <FiFileText className="mt-1" /> <strong className="mx-2">Ad Details</strong></span>
               
               <p>
@@ -195,22 +263,22 @@ export default function manageQuotes() {
           </div>
           {/* Action Buttons */}
           <div className="p-6 flex gap-4 justify-end">
-            <button
-              // onClick={handleWinQuote}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-            >
-              <FiCheck className="text-lg" />
-              Win Quote
-            </button>
-            
-            <button
-              // onClick={handleDropQuote}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              <FiX className="text-lg" />
-              Drop Quote
-            </button>
-          </div>
+              <button
+                onClick={() => handleStatusChange( "Won" ,row)}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+        
+                <FiCheck className="text-lg" />
+                Won
+              </button>
+              <button
+                onClick={() => handleStatusChange("Lost" ,row)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                <FiX className="text-lg" />
+                Drop
+              </button>
+            </div>
         </div>
         
         ))}
