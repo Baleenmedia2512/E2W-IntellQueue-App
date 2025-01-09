@@ -283,7 +283,10 @@ export const AdDetails = () => {
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
         const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
-
+        setTimeout(() => {
+        dispatch(resetQuotesData());
+        dispatch(setQuotesData({currentPage: "checkout"}));
+        },200)
       } catch(error){
         alert('An unexpected error occured while inserting Quote:' + error);
         return;
@@ -305,21 +308,26 @@ export const AdDetails = () => {
     const TnC = await getTnC(companyName);
     const quoteNumber = editQuoteItem.editQuoteNumber;
     let grandTotalAmount = calculateGrandTotal();
+
+    const selectedCartItems = cartItems.some(item => item.isSelected)
+    ? cartItems.filter(item => item.isSelected) // Filter selected items
+    : cartItems;
+
     grandTotalAmount = grandTotalAmount.replace('₹', '');
     if(clientName !== ""){
       try{
         const cart = await Promise.all(
-          cartItems
+          selectedCartItems
             .filter(item => !item.isCartRemoved)
             .map(item => pdfGeneration(item))
         );
         // console.log(cart)
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-        const promises = cartItems.map(item => updateQuoteToDB(item));
+        const promises = selectedCartItems.map(item => updateQuoteToDB(item));
         await Promise.all(promises);
         setTimeout(() => {
         dispatch(removeEditModeItems());
-        // dispatch(resetQuotesData());
+        dispatch(resetQuotesData());
         dispatch(resetClientData());
         // dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
       },200)
@@ -392,8 +400,8 @@ export const AdDetails = () => {
           dispatch(resetQuotesData());
 
           // clear while on edit mode
-          if (cartItems.length > 0 && cartItems[0].isEditMode) {
-            dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+          if (cartItems.length > 0 && editQuoteItem?.isEditMode) {
+            dispatch(setQuotesData({isEditMode: false, editQuoteNumber: cartItems.length > 0 ? editQuoteItem?.editQuoteNumber : 0}))
           }
 
           }}>
