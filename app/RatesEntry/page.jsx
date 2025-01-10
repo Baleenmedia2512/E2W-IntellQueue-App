@@ -11,7 +11,7 @@ import { TextField } from '@mui/material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FetchRateSeachTerm } from '../api/FetchAPI';
-import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll} from "react-icons/md";
+import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll, MdModeEditOutline } from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
@@ -95,6 +95,7 @@ const AdDetailsPage = () => {
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
   const [minimumPrice, setMinimumPrice] = useState("");
+  const [isUpdateRateName, setIsUpdateRateName] = useState(false);
   // const [rateGST, setRateGST] = useState("");
   const [tempSlabData, setTempSlabData] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
@@ -133,16 +134,30 @@ const AdDetailsPage = () => {
     package: []
   });
 
-  // const [selectedValues, setSelectedValues] = useState({
-  //   rateName: "",
-  //   typeOfAd: "",
-  //   adType: "",
-  //   Location: "",
-  //   vendorName: "",
-  //   Package: ""
-  // });
+  useEffect(() => {
+    if (newRateModel) {
+      switch (newRateType) {
+        case 'Rate Card Name':
+          setNewRateName(selectedValues.rateName?.label || '');
+          break;
+        case 'Type':
+          setNewRateName(selectedValues.adType?.label || '');
+          break;
+        case 'Category':
+          setNewRateName(selectedValues.typeOfAd?.label || '');
+          break;
+        case 'Location':
+          setNewRateName(selectedValues.Location?.label || '');
+          break;
+        case 'Package':
+          setNewRateName(selectedValues.Package?.label || '');
+          break;
+        default:
+          setNewRateName('');
+      }
+    }
+  }, [newRateModel, newRateType, selectedValues]);
 
-  // Function to toggle the modal
   const toggleModal = () => {
       setModal((prevState) => !prevState);
   }
@@ -836,10 +851,24 @@ var selectedRate = '';
   };
 
 
+useEffect(() => {
+console.log(selectedValues)
+  }, [selectedValues])
+  
+
+  const [initialValues, setInitialValues] = useState({
+    rateName: '',
+    adType: '',
+    typeOfAd: '',
+    Location: '',
+    Package: '',
+    vendorName: ''
+  });
   const handleRateId = async (selectedRateId) => {
+    console.log(selectedRateId)
     if(selectedRateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendorTest.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -853,6 +882,10 @@ var selectedRate = '';
         // if (validityDate < currentDate){
         //   return
         // }
+        // Update relevant fields for the dialogs
+        // setNewRateName(data.rateName); // Update field in new rate dialog
+        // setMinimumPrice(data.minimumCost); // Set for minimum cost dialog
+        // setStartQty(data.startQty); // Example, update this if needed
         // var locationValues = data.location;
         // var packageValues = data.package;
         // const colonIndex = data.adCategory.indexOf(':');
@@ -860,6 +893,16 @@ var selectedRate = '';
         //   locationValues = data.location.split(':')[0].trim()
         //   packageValues = data.packages.split(':')[1].trim()
         // } 
+         // Set initial values for comparison later
+         setInitialValues({
+          rateName: data.rateName,
+          adType: data.adType,
+          typeOfAd: data.typeOfAd,
+          Location: data.Location,
+          Package: data.Package,
+          vendorName: data.vendorName
+        });
+
         dispatch(setSelectedValues({
           rateName: {
             label:  data.rateName ,
@@ -895,6 +938,8 @@ var selectedRate = '';
         setShowCampaignDuration(false)
       }
       setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
+
+      
       // setRateGST({label: data.rategst, value: data.rategst})
       dispatch(setRateGST({label: data.rategst, value: data.rategst}));
       setLeadDays(data.LeadDays);
@@ -926,6 +971,9 @@ var selectedRate = '';
   }
   };
 
+
+
+
   const calculateDifference = () => {
   
     const parsedDate1 = new Date(validTill);
@@ -945,101 +993,197 @@ var selectedRate = '';
     setValidityDays(differenceInDays);
   };
 
-  const updateRates = async (e) => {
-    e.preventDefault()
-    if(editMode){
-      if (selectedUnit.value === "SCM") {
-        const existingSlab = combinedSlabData.find(
-            slab => slab.StartQty === slabData.StartQty && slab.Width === slabData.Width
-        );
-        if (existingSlab) {
-            updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
-        } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
-            // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
-        }
-    } else {
-        const existingSlab = combinedSlabData.find(
-            slab => slab.StartQty === slabData.StartQty
-        );
-        if (existingSlab) {
-            updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
-        } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
-            // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
-        }
-    }
+  // const updateRates = async (e) => {
+  //   e.preventDefault()
+  //   if(editMode){
+  //     if (selectedUnit.value === "SCM") {
+  //       const existingSlab = combinedSlabData.find(
+  //           slab => slab.StartQty === slabData.StartQty && slab.Width === slabData.Width
+  //       );
+  //       if (existingSlab) {
+  //           updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
+  //       } else {
+  //         combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
+  //           // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
+  //       }
+  //   } else {
+  //       const existingSlab = combinedSlabData.find(
+  //           slab => slab.StartQty === slabData.StartQty
+  //       );
+  //       if (existingSlab) {
+  //           updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
+  //       } else {
+  //         combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
+  //           // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
+  //       }
+  //   }
 
-      if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
-        setIsLeadDays(true)
-      } else if(selectedUnit === ""){
-        setIsUnitsSelected(true)
-      } else if(combinedSlabData.length === 0){
-        setIsQtySlab(true)
-      }else if(validityDays <= 0) {
-        setIsValidityDays(true);
-      }else{
-      if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
-        const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
-      try {
+  //     if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
+  //       setIsLeadDays(true)
+  //     } else if(selectedUnit === ""){
+  //       setIsUnitsSelected(true)
+  //     } else if(combinedSlabData.length === 0){
+  //       setIsQtySlab(true)
+  //     }else if(validityDays <= 0) {
+  //       setIsValidityDays(true);
+  //     }else{
+  //     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
+  //       const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
+  //     try {
 
-        const minSlab = combinedSlabData.reduce((min, current) => {
-          return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
-      }, combinedSlabData[0]);
+  //       const minSlab = combinedSlabData.reduce((min, current) => {
+  //         return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
+  //     }, combinedSlabData[0]);
 
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}&JsonWidth=${minSlab.Width}`);
+  //       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}&JsonWidth=${minSlab.Width}`);
         
-        // Check if the response is ok (status in the range 200-299)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+  //       // Check if the response is ok (status in the range 200-299)
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //       }
     
-        const data = await response.json();
-        // console.log(minSlab.StartQty, data)
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        setEditMode(false);
-        // showToastMessage('success', 'Updated Successfully!');
-        setSuccessMessage('Updated Successfully! ');
-          setTimeout(() => {
-        setSuccessMessage('');
-      }, 2000);
+  //       const data = await response.json();
+  //       // console.log(minSlab.StartQty, data)
+  //       if (data.error) {
+  //         throw new Error(data.error);
+  //       }
+  //       setEditMode(false);
+  //       // showToastMessage('success', 'Updated Successfully!');
+  //       setSuccessMessage('Updated Successfully! ');
+  //         setTimeout(() => {
+  //       setSuccessMessage('');
+  //     }, 2000);
       
-      // window.location.reload();
-    } catch (error) {
-      console.error('Error:', error);
-      // showToastMessage('error', error.message);
-      setToastMessage(error.message);
-      setSeverity('error');
-      setToast(true);
+  //     // window.location.reload();
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     // showToastMessage('error', error.message);
+  //     setToastMessage(error.message);
+  //     setSeverity('error');
+  //     setToast(true);
       
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
-  } else{
-    if(validityDays < 1){
-      setIsValidityDays(true)
-    }else{
-      // showToastMessage('warning', 'Please fill all the necessary fields to Update!')
-      setToastMessage('Please fill the necessary fields to Update!.');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
-  }}}else{
-      setToastMessage("No changes to update!")
-      setSeverity('warning')
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-  }
-  };
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
+  // } else{
+  //   if(validityDays < 1){
+  //     setIsValidityDays(true)
+  //   }else{
+  //     // showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+  //     setToastMessage('Please fill the necessary fields to Update!.');
+  //     setSeverity('error');
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
+  // }}}else{
+  //     setToastMessage("No changes to update!")
+  //     setSeverity('warning')
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  // }
+  // };
   
+
+  const updateRates = async (e) => {
+    e.preventDefault();
+  
+    if (editMode) {
+      // Validation checks
+      if (!selectedValues.rateName || !selectedValues.adType) {
+        setToastMessage('Rate Name and Ad Type are required.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      if (combinedSlabData.length === 0) {
+        setIsQtySlab(true);
+        setToastMessage('Quantity Slab Data is required.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      if (validityDays <= 0) {
+        setIsValidityDays(true);
+        setToastMessage('Validity Days must be greater than 0.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      try {
+        const campaignDurationVisibility = showCampaignDuration ? 1 : 0;
+  
+        // Find the minimum slab for pricing
+        const minSlab = combinedSlabData.reduce((min, current) => {
+          return selectedUnit.label === "SCM"
+            ? current.StartQty * current.Width < min.StartQty * min.Width
+              ? current
+              : min
+            : current.StartQty < min.StartQty
+            ? current
+            : min;
+        }, combinedSlabData[0]);
+  
+        console.log('Selected Values before API Call:', selectedValues);
+  
+        // Check if there were any changes made by comparing current selectedValues with initialValues
+        const isChanged = Object.keys(selectedValues).some((key) => {
+          return selectedValues[key].value !== initialValues[key]; // Compare selected values with initial values
+        });
+  
+        if (!isChanged) {
+          setToastMessage('No changes have been made!');
+          setSeverity('warning');
+          setToast(true);
+          setTimeout(() => setToast(false), 2000);
+          
+        } else {
+          // If there are changes, proceed with the API call
+          const response = await fetch(
+            `https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?JsonRateId=${rateId}&JsonRateGST=${rateGST?.value || ''}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits?.value || ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit?.value || ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location.value}${selectedValues.Package.value}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location?.value || ''}&JsonPackage=${selectedValues.Package?.value || ''}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}&JsonStartQty=${minSlab.StartQty}`
+          );
+  
+          // Check response
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+  
+          const data = await response.json();
+          if (data.error) {
+            throw new Error(data.error);
+          }
+  
+          // Success message
+          setEditMode(false);
+          setSuccessMessage('Updated Successfully!');
+          setTimeout(() => setSuccessMessage(''), 2000);
+          setRateSearchTerm("");
+          setIsNewRate(true);
+          handleEditMode();
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setToastMessage(error.message);
+        setSeverity('error');
+        setToast(true);
+      }
+    } else {
+      setToastMessage('No changes to update!');
+      setSeverity('warning');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+    }
+  };
 
   const rejectRates = async(e, rateID) => {
     e.preventDefault()
@@ -1230,7 +1374,97 @@ var selectedRate = '';
     setIsQtySlab(false);
     elementsToShowList("Show")
     setNewRateModel(false);
-  };  
+  };
+  
+  
+
+  const handleUpdateNewRateName = () => {
+    let updatedOptions = [];
+    let changedRate = "";
+
+    switch (newRateType) {
+      case 'Rate Card Name':
+        updatedOptions = [
+          ...getDistinctValues('rateName').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "rateName";
+        break;
+
+      case 'Type':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('adType').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "adType";
+        break;
+
+      case 'Category':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('typeOfAd').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "typeOfAd";
+        break;
+
+      case 'Location':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('Location').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "Location";
+        break;
+
+      case 'Package':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('Package').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "Package";
+        break;
+
+      default:
+        return;
+    }
+
+    // Update state and dispatch actions
+    setFilters({
+      ...filters,
+      [changedRate]: newRateName,
+    });
+
+    dispatch(setSelectedValues({
+      ...selectedValues,
+      [changedRate]: { label: newRateName, value: newRateName },
+    }));
+
+    setEditMode(true);
+    setIsUpdateRateName(true); // Enable update mode
+    setNewRateModel(false); // Close modal
+    setNewRateName(""); // Reset newRateName directly
+    setSuccessMessage(`${newRateType} updated successfully`, 'success');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 2000);
+};
+
+
 
   useEffect(() => {
     const setVendor = () => {
@@ -1676,13 +1910,13 @@ const handleBlur = (e) => {
           </DialogActions>
       </Dialog>
       <Dialog open={newRateModel} onClose={() => setNewRateModel(!newRateModel)} fullWidth={true} maxWidth='sm'>
-        <DialogTitle>Add New Rate</DialogTitle>
+        <DialogTitle>{!isNewRate ? "Add Rate" : "Add New Rate"}</DialogTitle>
         <DialogContent>
           <div className="relative">
-            <h3 className='normal-label mb-4 text-black'>Enter new {newRateType}</h3>
+            <h3 className='normal-label mb-4 text-black'>{!isNewRate ? `Enter ${newRateType}` : `Enter new ${newRateType}`}</h3>
             <TextField 
               id="newRateType" 
-              defaultValue={newRateName} 
+              value={newRateName} 
               label={newRateType} 
               variant="outlined" 
               size='small' 
@@ -1693,7 +1927,14 @@ const handleBlur = (e) => {
             </div>
             </DialogContent>
             <DialogActions className='mb-4'>
+            {isNewRate ? (
               <Button color = 'primary' variant="contained" onClick={() => handleSetNewRateName()}>Submit</Button>
+            ) : (
+              <>
+              <Button color='primary' variant="contained" onClick={() => handleSetNewRateName()}>Add</Button>
+              <Button color='secondary' variant="contained" onClick={() => handleUpdateNewRateName()}>Update</Button>
+            </>
+          )}
             </DialogActions>
       </Dialog>
       <Dialog open={openSCMModel} onClose={() => setSCMModel(!openSCMModel)} fullWidth={true} maxWidth='sm'>
@@ -1926,7 +2167,11 @@ const handleBlur = (e) => {
                           name='AddRateNameButton'
                           disabled={!rateValidity}
                         >
-                          <MdAddCircle size={28}/>
+                          {isNewRate || rateId === 0 ?(
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1953,7 +2198,11 @@ const handleBlur = (e) => {
                       />
                       <button className='justify-center text-blue-500 ml-6' onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Category");}}
                         disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                         {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -1984,7 +2233,11 @@ const handleBlur = (e) => {
                       name='AddAdCategoryButton'
                       onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Type");}}
                       disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                        {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -2016,7 +2269,11 @@ const handleBlur = (e) => {
                       name='AddLocationButton'
                       onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Location");}}
                       disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                         {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -2049,7 +2306,11 @@ const handleBlur = (e) => {
                     name='AddPackageButton'
                     onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Package");}}
                     disabled={!rateValidity}>
-                      <MdAddCircle size={28}/>
+                       {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                     </button>
                   </div>
                 </div>
@@ -2444,3 +2705,4 @@ const handleBlur = (e) => {
 
 }
 export default AdDetailsPage;
+
