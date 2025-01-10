@@ -71,14 +71,11 @@ const paymentModeOptions = [
 const FinanceData = () => {
   const orderData = useAppSelector(state => state.orderSlice);
   const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, rateWiseOrderNumber: nextRateWiseOrderNumber, remarks: orderRemarks } = orderData;
-  // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const amountRef = useRef(null);
   const orderNumberRef = useRef(null);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const billNumberRef = useRef(null);
-  // const dbName = "Grace Scans";
-  // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
@@ -445,10 +442,10 @@ const openChequeDate = Boolean(anchorElChequeDate);
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
+      
       if (data.length > 0) {
         const clientDetails = data[0];
         dispatch(setIsOrderExist(true));
-        //setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
@@ -458,7 +455,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setRateName(clientDetails.rateName);
         setRateType(clientDetails.rateType);
         setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
-        // setCommissionAmount(clientDetails.commission);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -486,11 +482,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
     {!billsOnly && axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
-      const data = response.data;
-      if (data.length > 0) {
-        const clientDetails = data[0];
+      const clientDetails = response.data;
+      if (clientDetails) {
         dispatch(setIsOrderExist(true));
-        setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
@@ -500,7 +494,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setRateName(clientDetails.rateName);
         setRateType(clientDetails.rateType);
         setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
-        // setCommissionAmount(clientDetails.commission);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);

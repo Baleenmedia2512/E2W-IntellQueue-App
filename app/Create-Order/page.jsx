@@ -265,7 +265,7 @@ useEffect(() => {
       fetchQtySlab();
 
       // Fetch commission only if consultantName exists
-      if (consultantName) {
+      if (consultantName && !isOrderUpdate) {
         const commission = await FetchCommissionData(
           companyName,
           consultantName,
@@ -281,6 +281,7 @@ useEffect(() => {
 
   fetchInitialData();
 }, [selectedValues.adType, selectedValues.rateName]);
+
 
 const handleRateId = async () => {
   if(rateId > 0){
@@ -742,6 +743,8 @@ const fetchRates = async () => {
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
+          setIsCommissionSingleUse(data.isCommissionAmountSingleUse === 1);
+          setCommissionAmount(data.commission);
 
           // Store the fetched data in a state to compare later
           setPrevData({
@@ -754,6 +757,8 @@ const fetchRates = async () => {
             consultantName: data.consultantName,
             discountAmount: data.adjustedOrderAmount,
             marginAmount: data.margin,
+            commissionAmount: data.commission,
+            isCommissionAmountSingleUse: data.isCommissionAmountSingleUse
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -1324,8 +1329,8 @@ const handleOpenDialog = () => {
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount ||
     parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
-    parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount)
-
+    parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount) ||
+    isCommissionSingleUse !== prevData.isCommissionSingleUse
   );
 
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
