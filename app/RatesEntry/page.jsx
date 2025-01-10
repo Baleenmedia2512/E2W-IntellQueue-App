@@ -2649,7 +2649,7 @@ const handleBlur = (e) => {
                   />
 </div>
                 </div>
-                
+                {isNewRate && (
                <div className="flex items-center justify-center mb-8 mt-11 sm:mt-5 sm:mr-0">
                  <button 
                   className="Createorder-button flex items-center justify-center space-x-2 sm:flex-col sm:space-x-0 sm:space-y-2"
@@ -2686,6 +2686,7 @@ const handleBlur = (e) => {
                   }}>
                  <ControlPointRoundedIcon className="mr-2" />Create Order</button>
                  </div> 
+                 )}
                 </form>
               </div>
               </div>
