@@ -457,9 +457,10 @@ const handleMarkAsUnprocessed = async () => {
   };
 
 // Dashboard Calculations  
+const rowsToCalucalate = selectedRows.length > 0 ? selectedRows : groupedData;
 
 // Total Amount Calculation
-const filteredAmountRows = selectedRows.filter(row => row.price && !row.rateCard.startsWith('Total'));
+const filteredAmountRows = rowsToCalucalate.filter(row => row.price && !row.rateCard.startsWith('Total'));
 
 const totalAmount = filteredAmountRows.reduce((sum, row) => {
     return sum + parseFloat(row.price);
@@ -468,11 +469,11 @@ const totalAmount = filteredAmountRows.reduce((sum, row) => {
 const formattedtotalAmount = formatIndianNumber(totalAmount);
 
 // Total No. Of Consultant Calulation
-const filteredNameRows = selectedRows.map(row => {
+const filteredNameRows = rowsToCalucalate.map(row => {
     if (row.consultant) {
         return row;
-    } else if (selectedRows.length > 0 && row.id) {
-        // If name is null and selectedRows is greater than 0, extract the name from row.id
+    } else if (rowsToCalucalate.length > 0 && row.id) {
+        // If name is null and rowsToCalucalate is greater than 0, extract the name from row.id
         
         return { ...row, consultant: row.consultant };
     }
@@ -485,7 +486,7 @@ const numberOfConsultants = new Set(filteredNameRows
 ).size;
 
 // Total No. Of Orders Calculation
-const totalCount = selectedRows.reduce((accumulator, row) => {
+const totalCount = rowsToCalucalate.reduce((accumulator, row) => {
     if (!row.rateCard.startsWith('Total')) {
       return accumulator + 1;
     }
@@ -871,7 +872,8 @@ const handleCheckboxChange = () => {
             
                         >
                         
-                            <Column field="consultant" header="Consultant" body={nameBodyTemplate} 
+                            <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
+                            <Column field="consultant" header="Consultant"  headerStyle={{ width: '13rem' }} body={nameBodyTemplate} 
                             headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.consultant?.value ? 'text-blue-600' : 'text-gray-800'}`} 
                             className="bg-white p-2 w-fit text-nowrap"
                             filter
@@ -879,8 +881,7 @@ const handleCheckboxChange = () => {
                             showFilterMatchModes={false}
                             
                             ></Column>
-                            <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateCard?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateCard" header="Rate Card"  headerStyle={{ width: '13rem' }} body={scanBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateCard?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'rateCard')}
                             showFilterMatchModes={false}
@@ -888,14 +889,14 @@ const handleCheckboxChange = () => {
                             showClearButton={false}
                             
                             ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateType?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white w-fit p-2"
+                            <Column field="rateType" header="Rate Type"  headerStyle={{ width: '13rem' }} body={scanTypeBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateType?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white w-fit p-2"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}
                             showFilterMatchModes={false}
                             showApplyButton={false}
                             showClearButton={false}
                             ></Column>
-                            <Column field="price" header="Price" body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="price" header="Price" headerStyle={{ width: '13rem' }} body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
                         </DataTable>
                     </div>
