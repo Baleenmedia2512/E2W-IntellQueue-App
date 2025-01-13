@@ -70,7 +70,6 @@ const EventCards = ({params, searchParams}) => {
   const [loading, setLoading] = useState(true);
   const userName = useAppSelector(state => state.authSlice.userName);
   const [showModal, setShowModal] = useState(false);
-  const userName = useAppSelector(state => state.authSlice.userName);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
