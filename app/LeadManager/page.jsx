@@ -8,7 +8,6 @@ import { FiPhoneCall } from "react-icons/fi";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
-import { useAppSelector } from "@/redux/store";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
 import { motion } from 'framer-motion';
@@ -19,7 +18,6 @@ import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
-import LoadingComponent from "./progress";
 import { FaFileAlt } from "react-icons/fa";
 
 const statusColors = {
