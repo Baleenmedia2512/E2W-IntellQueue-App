@@ -267,7 +267,7 @@ useEffect(() => {
       fetchQtySlab();
 
       // Fetch commission only if consultantName exists
-      if (consultantName) {
+      if (consultantName && !isOrderUpdate) {
         const commission = await FetchCommissionData(
           companyName,
           consultantName,
@@ -283,6 +283,7 @@ useEffect(() => {
 
   fetchInitialData();
 }, [selectedValues.adType, selectedValues.rateName]);
+
 
 const handleRateId = async () => {
   if(rateId > 0){
@@ -759,6 +760,8 @@ const fetchRates = async () => {
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
+          setIsCommissionSingleUse(data.isCommissionAmountSingleUse === 1);
+          setCommissionAmount(data.commission);
 
           // Store the fetched data in a state to compare later
           setPrevData({
@@ -771,6 +774,8 @@ const fetchRates = async () => {
             consultantName: data.consultantName,
             discountAmount: data.adjustedOrderAmount,
             marginAmount: data.margin,
+            commissionAmount: data.commission,
+            isCommissionAmountSingleUse: data.isCommissionAmountSingleUse
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -876,7 +881,7 @@ const CreateStages = async () => {
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${encodeURIComponent(selectedValues.Location.value + " : " + selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${encodeURIComponent(selectedValues.Location.value + " : " + selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
@@ -941,8 +946,8 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
-      JsonVendorName: selectedValues.vendorName.value,
+      JsonRateName: selectedValues.rateName.value,
+      JsonVendorName: encodeURIComponent(selectedValues.vendorName.value),
       JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
       JsonType: encodeURIComponent(selectedValues.adType.value),
       JsonHeight: qty.toString(),
@@ -968,7 +973,7 @@ const updateNewOrder = async (event) => {
       JsonIsCommissionSingleUse: IsCommissionForSingleUse,
     });
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrderTest.php?${params.toString()}`, {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
         headers: {
           'Content-Type': 'application/json'
@@ -1381,8 +1386,8 @@ const handleOpenDialog = () => {
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount ||
     parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
-    parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount)
-
+    parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount) ||
+    isCommissionSingleUse !== prevData.isCommissionSingleUse
   );
 
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
