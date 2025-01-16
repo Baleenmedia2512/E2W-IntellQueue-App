@@ -8,7 +8,6 @@ import { FiPhoneCall } from "react-icons/fi";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
-import { useAppSelector } from "@/redux/store";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
 import { motion } from 'framer-motion';
@@ -18,6 +17,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { useAppSelector } from "@/redux/store";
+import { FaFileAlt } from "react-icons/fa";
+import { Timer } from "@mui/icons-material";
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -236,7 +238,7 @@ const EventCards = ({params, searchParams}) => {
         followupDate: searchParams.followupDate || null,
       };
 
-      const fetchedRows = await fetchDataFromAPI(params.id, filters);
+      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName);
       setRows(fetchedRows);
       // console.log(fetchedRows)
     } catch (error) {
@@ -354,7 +356,7 @@ const EventCards = ({params, searchParams}) => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
       }
-      if (initialSelectedStatus === "New" && selectedStatus === "Call Followup") {
+      if (hasSaved) {
         const contact = {
           name: currentCall?.name,
           phone: currentCall?.phone,
@@ -551,17 +553,32 @@ const EventCards = ({params, searchParams}) => {
 
   return (
     <div className="p-4 text-black">
-      {/* Top Bar with Filter Button */}
-      <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-        <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+      {/* Top Bar with Filter and Report Buttons */}
+    <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
+      <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+      <div className="flex  space-x-4 ">
+        {/* Sheet Button */}
         <button
-          className="flex items-center px-4 py-2 bg-transparent text-green-500 rounded-md border border-green-500"
+          className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
           onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
         >
-          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-500" />
-          Sheet 
+          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-600" />
+          Sheet
         </button>
+        
+        {/* Report Button */}
+        {/* <a href="/LeadManager/Report">
+          <button
+            className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
+          >
+            <FaFileAlt className="mr-2 text-lg" />
+            Report
+          </button>
+        </a> */}
       </div>
+
+    </div>
+
       
        {/* Search Bar */}
       <div className="p-4">
@@ -777,17 +794,13 @@ const EventCards = ({params, searchParams}) => {
 
             {/* Platform at Top Left */}
             <div className="absolute top-40 right-3">
-            {row.Status === "New" && (
-            <div className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full">
-              {formatTime(timers[row.SNo] || 0)}
-            </div>
-          )}
+            
             </div>
 
-        
+          
             {/* Name and Company */}
             <div className="mb-2 mt-8">
-              <h3 className="text-lg font-bold text-gray-900 max-w-[90%]">
+              <h3 className="text-lg font-bold text-gray-900 max-w-[75%] capitalize">
                 {row.Name}
                 {row.CompanyName && row.CompanyName !== "No Company Name"
                   ? ` - ${row.CompanyName}`
@@ -830,10 +843,23 @@ const EventCards = ({params, searchParams}) => {
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
+    
               </div>
+              
             ) : (
-              <div className="text-sm max-w-fit mt-4">
+              <div className="text-sm mt-4 flex flex-row justify-between items-center w-full">
                 <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
+                {row.Status === "New" && (
+                  <div className="text-blue-500 relative group border font-semibold bg-blue-100 p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white ">
+                    <Timer className="mr-2"/>
+                    {formatTime(timers[row.SNo] || 0)}
+                    {/* Helper text that appears on hover */}
+                    <div className="absolute top-full mt-1 left-0 w-max bg-gray-800 text-white text-xs px-2 py-1 rounded-md hidden group-hover:block">
+                      Every Second Counts <br/>
+                      Take Action Now
+                    </div>
+                  </div>
+                )}
               </div>
             )}
              {/* Remarks */}
@@ -865,7 +891,7 @@ const EventCards = ({params, searchParams}) => {
             <p className="mb-2">
             Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
-            {/* <div>
+            <div>
             <label className=" mb-2 flex items-center space-x-2 ">
               <input
                 className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
@@ -876,7 +902,7 @@ const EventCards = ({params, searchParams}) => {
               />
               <span className="text-gray-800 font-medium">Save the contact</span>
             </label>
-            </div> */}
+            </div>
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
@@ -1020,7 +1046,7 @@ const EventCards = ({params, searchParams}) => {
 };
 
 
-async function fetchDataFromAPI(queryId, filters) {
+async function fetchDataFromAPI(queryId, filters, userName) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
   const response = await fetch(apiUrl, {
@@ -1045,7 +1071,7 @@ async function fetchDataFromAPI(queryId, filters) {
   const today = new Date().toDateString();
 
   const filteredData = data.rows.filter(
-    (lead) => lead.Status !== "Unqualified" && lead.Status !== "Won" && lead.Status !== "Lost"
+    (lead) => lead.Status !== "Unqualified" && lead.Status !== "Won" && lead.Status !== "Lost" && !lead['HandledBy'] && lead['HandledBy'] !== userName
   );
 
   const sortedRows = filteredData.sort((a, b) => {
