@@ -12,13 +12,14 @@ import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
 import { motion } from 'framer-motion';
 import { FaFilter, FaTimes } from "react-icons/fa";
+import LoadingComponent from "./progress";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
-import LoadingComponent from "./progress";
 import { FaFileAlt } from "react-icons/fa";
+import { Timer } from "@mui/icons-material";
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -66,8 +67,8 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const userName = useAppSelector(state => state.authSlice.userName);
+  const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
@@ -89,6 +90,7 @@ const EventCards = ({params, searchParams}) => {
   const [hasSaved, setHasSaved] = useState(false); 
   const [statusFilter, setStatusFilter] = useState("All");
   const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+  const [quoteSentFilter, setQuoteSentFilter] = useState("All")
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [fromDate, setFromDate] = useState(null); // Use null for default empty date
@@ -111,6 +113,7 @@ const EventCards = ({params, searchParams}) => {
   const clearFilters = () => {
     setStatusFilter('All');
     setProspectTypeFilter('All');
+    setQuoteSentFilter("All");
     setFromDate(null);
     setToDate(null);
     setSearchQuery('');
@@ -129,6 +132,11 @@ const EventCards = ({params, searchParams}) => {
   )
   .filter((row) =>
     prospectTypeFilter === 'All' || row.ProspectType === prospectTypeFilter
+  )
+  .filter((row) => 
+    quoteSentFilter === 'All' || 
+        (quoteSentFilter === 'Quote Sent' && row.QuoteSent === 'Yes' && row.Status === 'Call Followup') ||
+        (quoteSentFilter === 'Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
   )
   .filter((row) =>
     [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
@@ -245,8 +253,6 @@ const EventCards = ({params, searchParams}) => {
     fetchData();
   }, [params.id, searchParams]);
 
-
-  
   useEffect(() => {
     if (showModal) {
       // Set initial values when the modal is opened
@@ -299,7 +305,7 @@ const EventCards = ({params, searchParams}) => {
       
 
     let payload = {};
-  
+
     // Prepare payload based on context
     if (sendQuoteOnly) {
       payload = {
@@ -367,11 +373,31 @@ const EventCards = ({params, searchParams}) => {
         setToast(false);
       }, 2000);
     } finally {
+      const now = new Date(); // Get the current date and time
+
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+
+    // Format tomorrow's date as dd-MMM-yyyy
+    const formattedDate = tomorrow.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    // Format the current time as hh:mm AM/PM
+    const formattedTime = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
       setIsLoading(false);
       setShowModal(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
+      setFollowupDate(formattedDate);
+      setFollowupTime(formattedTime);
       setRemarks("");
       setSelectedLeadStatus("");
     }
@@ -541,14 +567,14 @@ const EventCards = ({params, searchParams}) => {
         </button>
         
         {/* Report Button */}
-        <a href="/LeadManager/Report">
+        {/* <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a>
+        </a> */}
       </div>
 
     </div>
@@ -588,7 +614,7 @@ const EventCards = ({params, searchParams}) => {
 
        {/* Filters */}
        {filtersVisible && (
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:flex-nowrap gap-2 sm:gap-4">
           {/* Status Filter Buttons */}
           <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
             {["All", "New", "Call Followup", "Unreachable"].map((status, index) => (
@@ -610,7 +636,7 @@ const EventCards = ({params, searchParams}) => {
           </div>
 
           {/* Prospect Type Filter */}
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-hidden">
             {prospectTypes.map((item, index) => (
               <motion.button
                 key={item.type}
@@ -624,11 +650,31 @@ const EventCards = ({params, searchParams}) => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                {item.icon ? item.icon : item.type}
+                {item.type}
               </motion.button>
             ))}
           </div>
 
+          {/* Status Filter Buttons */}
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {["All", "Quote Sent", "Yet To Send"].map((status, index) => (
+              <motion.button
+                key={status}
+                onClick={() => setQuoteSentFilter(status)}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  quoteSentFilter === status
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {status}
+              </motion.button>
+            ))}
+          </div>
+          
           {/* Date Range Filters */}
           <div className="flex flex-row gap-2 sm:gap-4">
             {/* From Date Picker */}
@@ -649,6 +695,8 @@ const EventCards = ({params, searchParams}) => {
             />
           </div>
         </div>
+
+        
       )}
     </div>
 
@@ -698,9 +746,10 @@ const EventCards = ({params, searchParams}) => {
               className={`inline-block rounded-full p-1 ${
                 row.QuoteSent === "Yes"
                   ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
-                  : "bg-gray-200"
+                  : "bg-gradient-to-r from-red-400 to-red-600"
               } hover:cursor-pointer`}
               title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
+              
             >
               {isLoading ? (
                 <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
@@ -726,32 +775,32 @@ const EventCards = ({params, searchParams}) => {
                     : "border-white"
                 }`}
               >
-                {row.ProspectType === "Hot" && (
-                  <GiCampfire className="inline-block text-red-500 " size={15} />
+                {row.ProspectType !== "Unknown" && row.ProspectType}
+                {/* {row.ProspectType === "Hot" && (
+                  row.ProspectType
+                  // <GiCampfire className="inline-block text-red-500 " size={15} />
                 )}
                 {row.ProspectType === "Warm" && (
-                  <MdOutlineWbSunny className="inline-block text-yellow-500 " size={15} />
+                  row.ProspectType
+                  //<MdOutlineWbSunny className="inline-block text-yellow-500 " size={15} />
                 )}
                 {row.ProspectType === "Cold" && (
-                  <FaRegSnowflake className="inline-block text-blue-500 " size={15} />
-                )}
+                  row.ProspectType
+                  //<FaRegSnowflake className="inline-block text-blue-500 " size={15} />
+                )} */}
               </span>
             )}
           </div>
 
             {/* Platform at Top Left */}
             <div className="absolute top-40 right-3">
-            {row.Status === "New" && (
-            <div className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full">
-              {formatTime(timers[row.SNo] || 0)}
-            </div>
-          )}
+            
             </div>
 
           
             {/* Name and Company */}
             <div className="mb-2 mt-8">
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-gray-900 max-w-[75%] capitalize">
                 {row.Name}
                 {row.CompanyName && row.CompanyName !== "No Company Name"
                   ? ` - ${row.CompanyName}`
@@ -794,10 +843,23 @@ const EventCards = ({params, searchParams}) => {
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
+    
               </div>
+              
             ) : (
-              <div className="text-sm max-w-fit mt-4">
+              <div className="text-sm mt-4 flex flex-row justify-between items-center w-full">
                 <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
+                {row.Status === "New" && (
+                  <div className="text-blue-500 relative group border font-semibold bg-blue-100 p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white ">
+                    <Timer className="mr-2"/>
+                    {formatTime(timers[row.SNo] || 0)}
+                    {/* Helper text that appears on hover */}
+                    <div className="absolute top-full mt-1 left-0 w-max bg-gray-800 text-white text-xs px-2 py-1 rounded-md hidden group-hover:block">
+                      Every Second Counts <br/>
+                      Take Action Now
+                    </div>
+                  </div>
+                )}
               </div>
             )}
              {/* Remarks */}
@@ -808,8 +870,10 @@ const EventCards = ({params, searchParams}) => {
                 </p>
               </div>
             )}
+            
           </div>
         ))}
+        
       </div>
       )}
 
