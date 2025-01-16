@@ -19,6 +19,7 @@ import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
 import { FaFileAlt } from "react-icons/fa";
+import { Timer } from "@mui/icons-material";
 
 const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -566,14 +567,14 @@ const EventCards = ({params, searchParams}) => {
         </button>
         
         {/* Report Button */}
-        <a href="/LeadManager/Report">
+        {/* <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a>
+        </a> */}
       </div>
 
     </div>
@@ -793,17 +794,13 @@ const EventCards = ({params, searchParams}) => {
 
             {/* Platform at Top Left */}
             <div className="absolute top-40 right-3">
-            {row.Status === "New" && (
-            <div className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full">
-              {formatTime(timers[row.SNo] || 0)}
-            </div>
-          )}
+            
             </div>
 
           
             {/* Name and Company */}
             <div className="mb-2 mt-8">
-              <h3 className="text-lg font-bold text-gray-900 max-w-[90%]">
+              <h3 className="text-lg font-bold text-gray-900 max-w-[75%] capitalize">
                 {row.Name}
                 {row.CompanyName && row.CompanyName !== "No Company Name"
                   ? ` - ${row.CompanyName}`
@@ -846,10 +843,23 @@ const EventCards = ({params, searchParams}) => {
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
+    
               </div>
+              
             ) : (
-              <div className="text-sm max-w-fit mt-4">
+              <div className="text-sm mt-4 flex flex-row justify-between items-center w-full">
                 <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
+                {row.Status === "New" && (
+                  <div className="text-blue-500 relative group border font-semibold bg-blue-100 p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white ">
+                    <Timer className="mr-2"/>
+                    {formatTime(timers[row.SNo] || 0)}
+                    {/* Helper text that appears on hover */}
+                    <div className="absolute top-full mt-1 left-0 w-max bg-gray-800 text-white text-xs px-2 py-1 rounded-md hidden group-hover:block">
+                      Every Second Counts <br/>
+                      Take Action Now
+                    </div>
+                  </div>
+                )}
               </div>
             )}
              {/* Remarks */}
