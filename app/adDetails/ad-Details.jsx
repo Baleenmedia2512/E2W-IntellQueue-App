@@ -678,7 +678,7 @@ const AdDetailsPage = () => {
           <span className="ml-2 text-sm font-medium">Bold</span>
         </label>
         {checked.bold && <div className='flex mt-2'>
-          <input disabled={!checked.bold} className='ml-2 max-w-14 max-h-7 rounded-md border p-1 focus:border-gray-300' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.boldPercentage} onChange={(e) => setChecked({...checked, boldPercentage: e.target.value})}/> 
+          <input disabled={!checked.bold} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1 ' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.boldPercentage} onChange={(e) => setChecked({...checked, boldPercentage: e.target.value})}/> 
           <p className='text-black ml-1 font-bold'>%</p>
         </div>
         }
@@ -695,7 +695,7 @@ const AdDetailsPage = () => {
           <span className="ml-2 text-sm font-medium">Semi Bold</span>
         </label>
         {checked.semibold && <div className='flex mt-2'>
-          <input disabled={!checked.semibold} className='ml-2 max-w-14 max-h-7 rounded-md border p-1 focus:border-gray-300' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.semiboldPercentage} onChange={(e) => setChecked({...checked, semiboldPercentage: e.target.value})}/> 
+          <input disabled={!checked.semibold} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.semiboldPercentage} onChange={(e) => setChecked({...checked, semiboldPercentage: e.target.value})}/> 
           <p className='text-black ml-1 font-bold'>%</p>
         </div>
         }
@@ -712,7 +712,7 @@ const AdDetailsPage = () => {
           <span className="ml-2 text-sm font-medium">Color</span>
         </label>
         {checked.color && <div className='flex mt-2'>
-          <input disabled={!checked.color} className='ml-2 max-w-14 max-h-7 rounded-md border p-1 focus:border-gray-300' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.colorPercentage} onChange={(e) => setChecked({...checked, colorPercentage: e.target.value})}/> 
+          <input disabled={!checked.color} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.colorPercentage} onChange={(e) => setChecked({...checked, colorPercentage: e.target.value})}/> 
           <p className='text-black ml-1 font-bold'>%</p>
         </div>
         }
@@ -729,7 +729,7 @@ const AdDetailsPage = () => {
           <span className="ml-2 text-sm font-medium">Tick</span>
         </label>
         {checked.tick && <div className='flex mt-2'>
-          <input disabled={!checked.tick} className='ml-2 max-w-14 max-h-7 rounded-md border p-1 focus:border-gray-300' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.tickPercentage} onChange={(e) => setChecked({...checked, tickPercentage: e.target.value})}/> 
+          <input disabled={!checked.tick} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.tickPercentage} onChange={(e) => setChecked({...checked, tickPercentage: e.target.value})}/> 
           <p className='text-black ml-1 font-bold'>%</p>
         </div>
         }
