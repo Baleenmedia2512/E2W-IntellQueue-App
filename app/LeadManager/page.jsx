@@ -226,9 +226,9 @@ const EventCards = ({params, searchParams}) => {
   };
   
   
-  const handleCheckboxChange = () => {
-    setHasSaved(true); // Set hasSaved to true when checkbox is checked
-  };	
+  // const handleCheckboxChange = () => {
+  //   setHasSaved(true); // Set hasSaved to true when checkbox is checked
+  // };	
 
   const fetchData = async () => {
     try {
@@ -238,7 +238,7 @@ const EventCards = ({params, searchParams}) => {
         followupDate: searchParams.followupDate || null,
       };
 
-      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName);
+      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, companyName);
       setRows(fetchedRows);
       // console.log(fetchedRows)
     } catch (error) {
@@ -356,7 +356,7 @@ const EventCards = ({params, searchParams}) => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
       }
-      if (hasSaved) {
+      if (selectedStatus === "Call Followup") {
         const contact = {
           name: currentCall?.name,
           phone: currentCall?.phone,
@@ -891,7 +891,7 @@ const EventCards = ({params, searchParams}) => {
             <p className="mb-2">
             Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
-            <div>
+            {/* <div>
             <label className=" mb-2 flex items-center space-x-2 ">
               <input
                 className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
@@ -902,7 +902,7 @@ const EventCards = ({params, searchParams}) => {
               />
               <span className="text-gray-800 font-medium">Save the contact</span>
             </label>
-            </div>
+            </div> */}
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
@@ -1046,20 +1046,16 @@ const EventCards = ({params, searchParams}) => {
 };
 
 
-async function fetchDataFromAPI(queryId, filters, userName) {
+async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
-  const response = await fetch(apiUrl, {
+  const urlWithParams = `${apiUrl}?dbCompanyName=${encodeURIComponent(dbCompanyName)}`;
+
+  const response = await fetch(urlWithParams, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-    },
-    params: {
-      id: queryId,
-      leadDate: filters.leadDate || "",
-      status: filters.status || "",
-      followupDate: filters.followupDate || "",
-    },
+    }
   });
 
   if (!response.ok) {
