@@ -177,6 +177,7 @@ export default function GroupedRowsDemo() {
             setSelectedRows([]);
         }
     }, [consultants]);
+    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -743,7 +744,7 @@ const handleCheckboxChange = () => {
                           {numberOfConsultants}
                         </div>
                         <div className="text-xs sm:text-base lg:text-lg text-blue-100">
-                          Consultants
+                          Payable Consultants
                         </div>
                     </div>
                     <div className="w-fit lg:w-32 h-auto rounded-lg shadow-lg p-4 mb-5 flex flex-col border border-gray-300 flex-shrink-0 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
