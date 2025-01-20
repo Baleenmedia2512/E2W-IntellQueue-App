@@ -501,6 +501,7 @@ const handleTransactionDelete = (id, RateWiseOrderNum) => {
             fetchAmounts();
             fetchSumOfFinance();
             fetchRateBaseIncome();
+            fetchMarginAmount();
           } else {
             setToastMessage(data.message);
             setSeverity('error');
@@ -589,6 +590,7 @@ const handleFinanceRestore = (id, RateWiseOrderNumber) => {
         fetchAmounts();
         fetchSumOfFinance();
         fetchRateBaseIncome();
+        fetchMarginAmount();
       } else {
         setToastMessage(data.message);
         setSeverity('error');
@@ -1348,9 +1350,6 @@ const calculateRateStats = () => {
 
   setRateStats(stats); // Update state with new stats
 };
-
-  
-
 
 
   useEffect(() => {
