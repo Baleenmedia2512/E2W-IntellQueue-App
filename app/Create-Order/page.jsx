@@ -1489,7 +1489,6 @@ const handleOrderSearch = async (e) => {
 const handleOrderSelection = (e) => {
   const selectedOrder = e.target.value;
 
-  // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
   const selectedOrderId = selectedOrder.split('-')[0];
 
   // Clear finance suggestions and set the search term
