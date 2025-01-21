@@ -369,6 +369,7 @@ const EventCards = ({params, searchParams}) => {
     } finally {
       setIsLoading(false);
       setShowModal(false);
+      setFollowupDate(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
