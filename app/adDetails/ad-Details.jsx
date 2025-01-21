@@ -58,6 +58,7 @@ const AdDetailsPage = () => {
     editIndex,
     editQuoteNumber,
     isNewCartOnEdit,
+    checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
   const cartItems = useAppSelector((state) => state.cartSlice.cart);
 
@@ -77,6 +78,16 @@ const AdDetailsPage = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [changing, setChanging] = useState(false);
+  const [checked, setChecked] = useState({
+    bold: false,
+    semibold: false,
+    color: false,
+    tick: false,
+    boldPercentage: -1,
+    semiboldPercentage: -1,
+    colorPercentage: -1,
+    tickPercentage: -1
+  })
 
   // Refs
   const marginAmountRef = useRef(null);
@@ -222,13 +233,36 @@ const AdDetailsPage = () => {
       if (qty === 1) {
         dispatch(setQuotesData({ quantity: firstSelectedSlab.StartQty }));
       }
+      
+      const hasChecked =
+        isChecked.bold === true ||
+        isChecked.semibold === true ||
+        isChecked.tick === true ||  
+        isChecked.color === true;
+      
+      if(hasChecked){
+        setChecked(isChecked)
+      }
+
+      if(adMedium !== "Newspaper"){
+        setChecked({
+          bold: false,
+          semibold: false,
+          color: false,
+          tick: false,
+          boldPercentage: -1,
+          semiboldPercentage: -1,
+          colorPercentage: -1,
+          tickPercentage: -1
+        })
+      }
+
     } catch (error) {
       console.error("Error in Loding form data: ", error);
     }
   };
 
-  const 
-  handleQtySlabChange = () => {
+  const handleQtySlabChange = () => {
     const selectedSlab = datas.slabData?.find(item => item.StartQty === qtySlab.Qty);
     const widthSelectedSlab = datas.slabData?.find(item => item.Width === qtySlab.Width);
     console.log(datas.slabData, qtySlab, selectedSlab)
@@ -396,7 +430,7 @@ const AdDetailsPage = () => {
       content: [
         {
           label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)) + formattedMargin(margin) )}`
+          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)) + formattedMargin(margin) + formattedMargin(checked.bold ? unitPrice * checked.boldPercentage / 100 : 0) + formattedMargin(checked.semibold ? unitPrice * checked.semiboldPercentage / 100 : 0) + formattedMargin(checked.color ? unitPrice * checked.colorPercentage / 100 : 0) + formattedMargin(checked.tick ? unitPrice * checked.tickPercentage / 100 : 0))}`
         },
         {
           label: 'Cost',
@@ -438,7 +472,11 @@ const AdDetailsPage = () => {
         CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
         leadDay: leadDay ? leadDay.LeadDays : "", 
         minimumCampaignDuration, ValidityDate, rateGST, width, 
-        campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false
+        campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false,
+        bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, 
+        semiboldPercentage: checked.semiboldPercentage, color: checked.color, 
+        colorPercentage: checked.colorPercentage, tick: checked.tickPercentage, 
+        tickPercentage: checked.tickPercentage
       };
   
       // Find the existing item with the same editIndex
@@ -597,7 +635,7 @@ const AdDetailsPage = () => {
 </div>
 
               {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
-              <div className="mb-3 overflow-y-auto h-full" > 
+              <div className="mb-4 overflow-y-auto h-full" > 
               <span className='flex flex-row mb-2 justify-center'>
   <div className="flex flex-col mr-2 items-center justify-center">
     <button
@@ -617,14 +655,14 @@ const AdDetailsPage = () => {
               let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
               if (result) {
                 const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tickPercentage, tickPercentage: checked.tickPercentage }]));
                 // setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tickPercentage, tickPercentage: checked.tickPercentage }]));
             setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
@@ -656,7 +694,79 @@ const AdDetailsPage = () => {
                   </button>
               </div>
               </span>
+              {adMedium === "Newspaper" &&
+              <div className='grid grid-cols-4 gap-3 my-2'>
+              <div className="flex flex-col items-center justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.bold}
+            onChange={() => setChecked({...checked, bold: !checked.bold})}
+          />
+          <span className="ml-2 text-sm font-medium">Bold</span>
+        </label>
+        {checked.bold && <div className='flex mt-2'>
+          <input disabled={!checked.bold} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1 ' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.boldPercentage} onChange={(e) => setChecked({...checked, boldPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      <div className="flex items-center flex-col justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.semibold}
+            onChange={() => setChecked({...checked, semibold: !checked.semibold})}
+          />
+          <span className="ml-2 text-sm font-medium">Semi Bold</span>
+        </label>
+        {checked.semibold && <div className='flex mt-2'>
+          <input disabled={!checked.semibold} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.semiboldPercentage} onChange={(e) => setChecked({...checked, semiboldPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      <div className="flex flex-col items-center justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.color}
+            onChange={() => setChecked({...checked, color: !checked.color})}
+          />
+          <span className="ml-2 text-sm font-medium">Color</span>
+        </label>
+        {checked.color && <div className='flex mt-2'>
+          <input disabled={!checked.color} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.colorPercentage} onChange={(e) => setChecked({...checked, colorPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      <div className="flex items-center flex-col justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.tick}
+            onChange={() => setChecked({...checked, tick: !checked.tick})}
+          />
+          <span className="ml-2 text-sm font-medium">Tick</span>
+        </label>
+        {checked.tick && <div className='flex mt-2'>
+          <input disabled={!checked.tick} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.tickPercentage} onChange={(e) => setChecked({...checked, tickPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      </div>}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
+                
                  { unit !== 'SCM' ? (
                   <div className="mb-4 flex flex-col ">
                    <label className="font-bold mb-1 ml-2">Quantity</label>
