@@ -233,7 +233,7 @@ const AdDetailsPage = () => {
       if (qty === 1) {
         dispatch(setQuotesData({ quantity: firstSelectedSlab.StartQty }));
       }
-      console.log(isChecked);
+      
       const hasChecked =
         isChecked.bold === true ||
         isChecked.semibold === true ||
