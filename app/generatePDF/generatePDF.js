@@ -210,6 +210,13 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const hasPosition = items.some(item => item.position && item.position !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
     const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA");
+    const hasColor = items.some(item => item.color === true)
+    const hasChecked = items.some(
+      (item) =>
+        item.bold === true ||
+        item.semibold === true ||
+        item.tick === true
+    ) !== undefined;
     
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
@@ -238,7 +245,25 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
       item.amountExclGst, 
       item.amountInclGst, 
       item.leadDays || 2, 
-      hasRemarks ? (item.remarks || 'NA') : null
+      hasRemarks ? (item.remarks || 'NA') : null,
+      item.color && parseInt(item.colorPercentage) > -1
+    ? `Color(${item.colorPercentage}%)`
+    : isNewspaper ? 'B/W' : null,
+  hasChecked
+    ? [
+        item.bold && parseInt(item.boldPercentage) > -1
+          ? `Bold(${item.boldPercentage}%)`
+          : null,
+        item.semibold && parseInt(item.semiboldPercentage) > -1
+          ? `Semibold(${item.semiboldPercentage}%)`
+          : null,
+        item.tick && parseInt(item.tickPercentage) > -1
+          ? `Tick(${item.tickPercentage}%)`
+          : null
+      ]
+        .filter(Boolean) // Remove null or undefined entries
+        .join('\n') // Combine into a single string
+    : null
     ].filter(Boolean));
     
     const headerColumns = [
@@ -255,7 +280,9 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
         'Price (Excl. GST) (in Rs.)', 
         'Price (Incl. GST) (in Rs.)', 
         'Lead Days', 
-        hasRemarks ? 'Remarks' : null
+        hasRemarks ? 'Remarks' : null,
+        isNewspaper ? "Color or B/W" : null,
+        hasChecked ? 'Highlights' : null
       ].filter(Boolean)
     ];
     
@@ -267,19 +294,21 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
 
     let columnWidths = {
-      'S.No.': 45,
+      'S.No.': 35,
       'Rate Card ID': 45,
-      // 'Rate Type': 60,
+      'Rate Type': 62,
       'Rate Category': 80,
-      // 'Edition': 60,
-      // 'Package': 60,
-      'Size': 60,
-      // 'Campaign Duration': hasCampaignDuration ? 80 : 0,
-      'Unit Price (in Rs.)': 80,
+      'Edition': 50,
+      'Package': 50,
+      'Size': 50,
+      'Service Duration': hasCampaignDuration ? 50 : 0,
+      'Unit Price (in Rs.)': 70,
       'Price (Excl. GST) (in Rs.)': 80,
       'Price (Incl. GST) (in Rs.)': 80,
-      // 'Lead Days': 50,
-      // 'Remarks': 60
+      'Color or B/W': 45,
+      'Highlights': 45,
+      'Lead Days': 35,
+      'Remarks': 60
     };
     
     // Map column names to their indices

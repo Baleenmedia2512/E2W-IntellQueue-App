@@ -49,7 +49,7 @@ export default function GroupedRowsDemo() {
     const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
     const defaultFilters = {
-        originalName: { value: null, matchMode: 'contains' },
+        consultant: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
     };
@@ -72,18 +72,19 @@ export default function GroupedRowsDemo() {
     const [consultantsWithZeroPrice, setConsultantsWithZeroPrice] = useState([]);
     const [matchMode, setMatchMode] = useState('contains');
     const [showIcProcessedConsultantsOnly, setShowIcProcessedConsultantsOnly] = useState(false);
+    const [loading, setLoading] = useState(false);
     const sessionFilterValues = sessionStorage.getItem('filterValues')
     ? JSON.parse(sessionStorage.getItem('filterValues'))
     : null;
     const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
-        originalName: '',
+        consultant: '',
         rateCard: '',
         rateType: '',
     });
 
     const activeFilters = {
         rateCard: filters.rateCard ? filters.rateCard.value : '',
-        name: filters.originalName ? filters.originalName.value : '',
+        consultant: filters.consultant ? filters.consultant.value : '',
         rateType: filters.rateType ? filters.rateType.value : ''
     };
 
@@ -144,7 +145,6 @@ export default function GroupedRowsDemo() {
 
     const fetchConsultants = async () => {
         const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
-        
         const groupedData = groupConsultants(data);
         setConsultants(groupedData);
     };
@@ -180,70 +180,48 @@ export default function GroupedRowsDemo() {
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-    const saveConsultant = async (event) => {
-            event.preventDefault();
-    
-        let dataToSave = null;
+const saveConsultant = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    let dataToSave = null;
         
-        // Function to filter out rows where id contains "total"
-        const filterRows = (rows) => rows.filter(row => !row.id.includes("total"));
-
-        const extractDataFromId = (id) => {
-            const parts = id.split('-');
-            let name, rateCard, rateType;
-
-            if (parts.length === 3) {
-                // When id contains three parts, map them to name, rateCard, and rateType
-                name = parts[0];
-                rateCard = parts[1];
-                rateType = parts[2];
-            } else if (parts.length === 4) {
-                // When id contains two parts, assume the rateCard is 'X-Ray'
-                name = parts[0];
-                rateCard = 'X-Ray';
-                rateType = parts[3];
-            }
-            
-            return { name, rateCard, rateType };
-        };
-
+    // Function to filter out rows where id contains "total"
+    const filterRows = (rows) => rows.filter(row => !row.rateCard.includes("total"));
 
     const orderNumbersToUse = selectedRows && selectedRows.length > 0
     ? selectedRows
         .filter(row => !row.rateCard.startsWith('Total')) // Exclude 'Total' rows
         .map(row => row.orderNumber)
-    : orderNumbers
+    : groupedData
+        .filter(row => !row.rateCard.startsWith('Total')) // Exclude 'Total' rows
+        .map(row => row.orderNumber)
+    
+    // Check if selectedRows has data
+    if (selectedRows && selectedRows.length > 0) {
+        // Filter out rows where id contains "total"
+        const filteredRows = filterRows(selectedRows);
+        // Extract data from filteredRows
+        dataToSave = filteredRows.map(row => {
+            return {
+                consultantName: row.consultant,
+                rateCard: row.rateCard, 
+                rateType: row.rateType,
+                unitPrice: row.price, 
+            };
+        });
+    } else if (groupedData && groupedData.length > 0) {
 
-    
-        // Check if selectedRows has data
-        if (selectedRows && selectedRows.length > 0) {
-            // Filter out rows where id contains "total"
-            const filteredRows = filterRows(selectedRows);
-    
-            // Extract data from filteredRows
-            dataToSave = filteredRows.map(row => {
-                const { name, rateCard, rateType } = extractDataFromId(row.id);
-                return {
-                    consultantName: name, // Use extracted name as consultant name
-                    rateCard: rateCard, // Use extracted rateCard or default to 'X-Ray'
-                    rateType: rateType, // Use extracted rateType or fallback to an empty string
-                    unitPrice: row.price, // Fallback to '0' if price is null
-                };
-            });
-    } else if (consultants && consultants.length > 0) {
-        // Extract data from consultants
-        dataToSave = consultants.flatMap(consultant => 
-            consultant.rates.flatMap(rate => 
-                rate.rateTypes.map(rateType => ({
-                    consultantName: consultant.name,
-                    rateCard: rate.rateCard,
-                    rateType: rateType.rateType,
-                    unitPrice: rateType.price
-                }))
-            )
-        );
+        const filteredgroupedData = filterRows(groupedData);
+        // Extract data from groupedData
+        dataToSave = filteredgroupedData.map(row => {
+            return {
+                consultantName: row.consultant, 
+                rateCard: row.rateCard, 
+                rateType: row.rateType,
+                unitPrice: row.price,
+            };
+        });
     }
-
         if (dataToSave) {
             try {
                 for (const data of dataToSave) {
@@ -272,6 +250,7 @@ export default function GroupedRowsDemo() {
                         console.log('Incentive status updated:', updateResult.success);
                     }
                 }
+                setLoading(false);
                 setOpen(false);
                 setSuccessMessage(`Incentive(s) for ${numberOfConsultants} consultant(s) processed successfully!`);
                 fetchConsultants();
@@ -290,19 +269,21 @@ export default function GroupedRowsDemo() {
             }, 2000);
         }
         
-    };
+};
 
 
 
 const handleMarkAsUnprocessed = async () => {
     if (selectedRows && selectedRows.length > 0) {
+        setLoading(true);
         try {
-            const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
-
-                for (const row of filteredRows) {
-                const { orderNumber } = row;
-                if (orderNumber && orderNumber.length > 0) {
-                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/MarkAsICUnprocessed.php?JsonOrderNumber=${orderNumber.join(',')}&JsonDBName=${companyName}`);
+            const orderNumbersToUse = selectedRows
+            .filter(row => row.rateCard !== "Total")
+            .map(row => row.orderNumber)
+ 
+            const orderNumbersString = orderNumbersToUse.join(',').replace(/\s*,\s*/g, ',');
+                if (orderNumbersToUse && orderNumbersToUse.length > 0) {
+                    const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/MarkAsICUnprocessed.php?JsonOrderNumber=${encodeURIComponent(orderNumbersString)}&JsonDBName=${companyName}`);
                     const result = await response.json();
 
                     if (result.error) {
@@ -310,9 +291,10 @@ const handleMarkAsUnprocessed = async () => {
                         return; // Stop if there's an error
                     }
                 }
-            }
+            
 
-            // Optionally refresh the consultants after marking them unprocessed
+            //Optionally refresh the consultants after marking them unprocessed
+            setLoading(false);
             fetchConsultants();
             setSuccessMessage(`Incentive(s) for selected consultant(s) marked as unprocessed successfully!`);
             setTimeout(() => {
@@ -322,7 +304,7 @@ const handleMarkAsUnprocessed = async () => {
             console.error('Error marking as unprocessed:', error);
         }
     } else {
-        setToastMessage('No consultants selected to mark as unprocessed.');
+        setToastMessage('No consultants selected!');
         setSeverity('error');
         setToast(true);
         setTimeout(() => {
@@ -349,460 +331,74 @@ const handleMarkAsUnprocessed = async () => {
 
       const groupConsultants = (data) => {
         const groupedData = [];
-        const storedPrices = JSON.parse(sessionStorage.getItem("unitPrices")) || {}; // Retrieve stored prices
     
         data.forEach((consultant) => {
-            let existingName = groupedData.find(group => group.name === consultant.name);
-            if (!existingName) {
-                existingName = { 
-                    name: consultant.name, 
+            let existingConsultant = groupedData.find(group => group.name === consultant.name);
+            if (!existingConsultant) {
+                existingConsultant = {
+                    name: consultant.name,
                     rates: [],
-                    count: 0,
-                    total: 0,
+                    totalCount: 0,
+                    totalPrice: 0,
                 };
-                groupedData.push(existingName);
+                groupedData.push(existingConsultant);
             }
     
-            let existingRateCard = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
+            existingConsultant.rates.push({
+                rateCard: consultant.rateCard,
+                rateType: consultant.rateType,
+                price: consultant.price ? parseFloat(consultant.price) : 0,
+                orderNumber: consultant.orderNumber
+            });
     
-            if (!existingRateCard) {
-                existingRateCard = { 
-                    rateCard: consultant.rateCard, 
-                    rateTypes: [],
-                };
-                existingName.rates.push(existingRateCard);
-            }
-    
-            let existingRateType = existingRateCard.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
-    
-            if (!existingRateType) {
-
-                existingRateType = { 
-                    rateType: consultant.rateType, 
-                    count: consultant.count,
-                    price: consultant.price,
-                };
-                existingRateCard.rateTypes.push(existingRateType);
-            }
-    
-            // Update counts, totals, and waiverAmount
-            existingName.count += consultant.count;
-
-            existingRateType.OrderNumbers = consultant.OrderNumbers;
-
-            existingName.total += existingRateType.price;
+            existingConsultant.totalCount++;
+            existingConsultant.totalPrice += consultant.price ? parseFloat(consultant.price) : 0;
         });
     
         return groupedData;
     };
 
-    //   const groupConsultants = (data) => {
-    //     const groupedData = [];
-    //     const storedPrices = JSON.parse(sessionStorage.getItem("unitPrices")) || {}; // Retrieve stored prices
-    
-    //     data.forEach((consultant) => {
-    //         let existingName = groupedData.find(group => group.name === consultant.name);
-    
-    //         if (!existingName) {
-    //             existingName = { 
-    //                 name: consultant.name, 
-    //                 rates: [], 
-    //                 total: 0,
-    //                 waiverAmount: 0, // Initialize waiverAmount
-    //             };
-    //             groupedData.push(existingName);
-    //         }
-    
-    //         let existingRateCard = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
-    
-    //         if (!existingRateCard) {
-    //             existingRateCard = { 
-    //                 rateCard: consultant.rateCard, 
-    //                 rateTypes: [], 
-    //                 waiverAmount: 0, // Initialize waiverAmount
-    //             };
-    //             existingName.rates.push(existingRateCard);
-    //         }
-    
-    //         let existingRateType = existingRateCard.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
-    
-    //         if (!existingRateType) {
-    //             const id = `${consultant.name}-${consultant.rateCard}-${consultant.rateType}`;
-    //             const storedPrice = storedPrices[id] !== undefined ? storedPrices[id] : consultant.price; // Check stored prices
-    
-    //             existingRateType = { 
-    //                 rateType: consultant.rateType, 
-    //                 count: 0, 
-    //                 price: storedPrice, // Use stored price if available
-    //                 waiverAmount: 0, // Initialize waiverAmount
-    //                 total: 0, // Initialize total
-    //             };
-    //             existingRateCard.rateTypes.push(existingRateType);
-    //         }
-    
-    //         // Update counts, totals, and waiverAmount
-    //         existingRateType.count += consultant.count;
-    //         existingRateType.waiverAmount += consultant.waiverAmount;
-    
-    //         // Recalculate price and total if stored price is available
-    //         const id = `${consultant.name}-${consultant.rateCard}-${consultant.rateType}`;
-    //         const storedPrice = storedPrices[id] !== undefined ? storedPrices[id] : existingRateType.price;
-    //         existingRateType.price = storedPrice; // Update price based on storedPrices
-    //         existingRateType.total = (existingRateType.count * storedPrice) + existingRateType.waiverAmount; // Update total
-    
-    //         // Update the total for the consultant group
-    //         existingName.total += (consultant.count * storedPrice) + consultant.waiverAmount;
-    //         existingRateType.OrderNumbers = consultant.OrderNumbers;
-    //     });
-    
-    //     return groupedData;
-    // };
-    
-    //OLD CODE
-    //   const groupConsultants = (data) => {
-    //     const groupedData = [];
-    
-    //     data.forEach((consultant) => {
-    //         let existingName = groupedData.find(group => group.name === consultant.name);
-    
-    //         if (!existingName) {
-    //             existingName = { 
-    //                 name: consultant.name, 
-    //                 rates: [], 
-    //                 total: 0,
-    //                 waiverAmount: 0, // Initialize waiverAmount
-    //             };
-    //             groupedData.push(existingName);
-    //         }
-    
-    //         let existingRateCard = existingName.rates.find(rateCard => rateCard.rateCard === consultant.rateCard);
-    
-    //         if (!existingRateCard) {
-    //             existingRateCard = { 
-    //                 rateCard: consultant.rateCard, 
-    //                 rateTypes: [], 
-    //                 waiverAmount: 0, // Initialize waiverAmount
-    //             };
-    //             existingName.rates.push(existingRateCard);
-    //         }
-    
-    //         let existingRateType = existingRateCard.rateTypes.find(rateType => rateType.rateType === consultant.rateType);
-    
-    //         if (!existingRateType) {
-    //             existingRateType = { 
-    //                 rateType: consultant.rateType, 
-    //                 count: 0, 
-    //                 price: consultant.price,
-    //                 waiverAmount: 0 // Initialize waiverAmount
-    //             };
-    //             existingRateCard.rateTypes.push(existingRateType);
-    //         }
-    
-    //         // Update counts, totals, and waiverAmount
-    //         existingRateType.count += consultant.count;
-    //         existingRateType.waiverAmount += consultant.waiverAmount;
-    
-    //         existingName.total += (consultant.count * consultant.price ) + consultant.waiverAmount; // Update total for the consultant
-    //         existingRateType.OrderNumbers = consultant.OrderNumbers;
-    //         // Add orderNumbers directly to the rateType
-    //         // if (consultant.OrderNumbers) {
-    //         //     const orderNumbersArray = consultant.OrderNumbers;
-    //         //     orderNumbersArray.forEach(orderNumber => {
-    //         //         if (!existingRateType.orderNumbers.includes(orderNumber)) {
-    //         //             existingRateType.orderNumbers.push(orderNumber);
-    //         //         }
-    //         //     });
-    //         // }
-    //     });
-    
-    //     return groupedData;
-    // };
-    //OLD CODE
-
-    //OLD CODE
-    // const renderGroupedData = (groupedData) => {
-    //     const rows = [];
-    
-    //     groupedData.forEach(group => {
-    //         let totalRows = group.rates.reduce((sum, rateCard) => sum + rateCard.rateTypes.length, 0);
-    //         let middleIndex = Math.floor(totalRows / 2);
-    
-    //         let currentIndex = 0;
-    //         let rateCardNames = [];
-
-    //         group.rates.forEach((rateCard, scanIndex) => {
-    //             rateCardNames.push(rateCard.rateCard);
-    //             rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-    //                 rows.push({
-    //                     id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-    //                     name: currentIndex === middleIndex ? group.name : null,
-    //                     // rateCard: scanTypeIndex === 0 ? rateCard.rateCard : null,
-    //                     rateCard: rateCard.rateCard,
-    //                     rateType: rateType.rateType,
-    //                     count: rateType.count,
-    //                     price: rateType.price,
-    //                     total: rateType.count * rateType.price,
-    //                     isGroup: currentIndex === middleIndex,
-    //                     isScanGroup: scanTypeIndex === 0,
-    //                     orderNumber: rateCard.orderNumbers,
-    //                     originalName: group.name
-    //                 });
-    //                 currentIndex++;
-    //             });
-    //         });
-            
-    //         const rateCardString = rateCardNames.join('-');
-            
-    //         // Add a row for the total of each consultant
-    //         rows.push({
-    //             id: `${group.name}-${rateCardString}-total`,
-    //             name: '',
-    //             rateCard: 'Total',
-    //             count: '',
-    //             price: '',
-    //             total: `₹${Math.round(group.total)}`,
-    //             isGroup: true,
-    //             isScanGroup: false,
-    //             originalName: group.name,
-    //             orderNumber: group.orderNumbers 
-    //         });
-    //     });
-    
-    //     return rows;
-    // };
-    //OLD CODE
-
-    const renderGroupedData = (groupedData, activeFilters = {}) => {
+    const renderGroupedData = (consultants) => {
         const rows = [];
-        
-        groupedData.forEach(group => {
-            let totalRows = group.rates.reduce((sum, rateCard) => sum + rateCard.rateTypes.length, 0);
-            let middleIndex = Math.floor(totalRows / 2);
-            
-            let currentIndex = 0;
-            let rateCardNames = [];
     
-            group.rates.forEach((rateCard, scanIndex) => {
-                rateCardNames.push(rateCard.rateCard);
-                rateCard.rateTypes.forEach((rateType, scanTypeIndex) => {
-                    const orderNumbersArray = rateType.OrderNumbers ? rateType.OrderNumbers.split(',').map(num => num.trim()) : [];
-                    
-                    rows.push({
-                        id: `${group.name}-${rateCard.rateCard}-${rateType.rateType}`,
-                        name: group.name,  // Add name if filter applies
-                        rateCard: rateCard.rateCard,
-                        rateType: rateType.rateType,
-                        count: rateType.count,
-                        total: rateType.price,
-                        isGroup: currentIndex === middleIndex,
-                        isScanGroup: scanTypeIndex === 0,
-                        orderNumber: orderNumbersArray,
-                        originalName: group.name
-                    });
-                    currentIndex++;
+        consultants.forEach((consultant, consultantIndex) => {
+            consultant.rates.forEach((rate, rateIndex) => {
+                rows.push({
+                    id: `${consultant.name}-${rateIndex}`,
+                    consultant: consultant.name,
+                    rateCard: rate.rateCard,
+                    rateType: rate.rateType,
+                    price: rate.price,
+                    orderNumber: rate.orderNumber
                 });
             });
-            
-            const rateCardString = rateCardNames.join('-');
+    
+            // Add a total row for the consultant
             rows.push({
-                id: `${group.name}-${rateCardString}-total`,
-                name: '',
-                rateCard: 'Total',
-                count: group.count,
-                total: `₹${Math.round(group.total)}`,
-                isGroup: true,
-                isScanGroup: false,
-                originalName: group.name
+                id: `total-${consultant.name}`,
+                consultant: "",
+                rateCard: "Total",
+                rateType: consultant.totalCount,
+                price: consultant.totalPrice,
+                orderNumber: ""
             });
         });
     
         return rows;
     };
     
-    
-    
-    const handlePriceChange = (id, newPrice) => {
-        setConsultants(prevConsultants => {
-            const updatedConsultants = [...prevConsultants];
-            updatedConsultants.forEach(group => {
-                group.rates.forEach(rateCard => {
-                    rateCard.rateTypes.forEach(rateType => {
-                        const rateId = `${group.name}-${rateCard.rateCard}-${rateType.rateType}`;
-                        if (rateId === id) {
-                            rateType.price = newPrice;
-                            rateType.total = (rateType.count * newPrice) + rateType.waiverAmount;
-                            group.total = group.rates.reduce((sum, rateCard) => 
-                                sum + rateCard.rateTypes.reduce((innerSum, rateType) => 
-                                    innerSum + (rateType.count * rateType.price) + (rateType.waiverAmount), 0), 0);
-                        }
-                    });
-                });
-            });
-            sessionStorage.setItem("unitPrices", JSON.stringify(updatedConsultants.reduce((acc, group) => {
-                group.rates.forEach(rateCard => {
-                    rateCard.rateTypes.forEach(rateType => {
-                        const rateId = `${group.name}-${rateCard.rateCard}-${rateType.rateType}`;
-                        acc[rateId] = rateType.price;
-                    });
-                });
-                return acc;
-            }, {})));
-            return updatedConsultants;
-        });
-
-        setSelectedRows(prevSelectedRows => {
-            const updatedSelectedRows = prevSelectedRows.map(row =>
-                row.id === id
-                    ? {
-                          ...row,
-                          price: newPrice,
-                          total: newPrice * row.count + row.waiverAmount, // Update total for the specific row
-                      }
-                    : row
-            );
-    
-            const totalRowIndex = updatedSelectedRows.findIndex(row => row.id.includes("-total"));
-            if (totalRowIndex !== -1) {
-                const totalRowIdParts = updatedSelectedRows[totalRowIndex].id.split("-");
-                const groupName = totalRowIdParts[0];
-                const rateCardString = totalRowIdParts.slice(1, -1).join("-"); // Extracts the combined rateCard part
-                const totalIdWithoutSuffix = `${groupName}-${rateCardString}`;
-    
-                const groupTotal = updatedSelectedRows.reduce(
-                    (sum, row) =>
-                        row.id.startsWith(groupName) && row.id !== `${totalIdWithoutSuffix}-total`
-                            ? sum + row.total
-                            : sum,
-                    0
-                );
-    
-                updatedSelectedRows[totalRowIndex].total = `₹${groupTotal}`;
-            }
-    
-            return updatedSelectedRows;
-        });
-    };
-    
-    //OLD CODE
-    // const handlePriceChange = (id, newPrice) => {
-    //     setConsultants(prevConsultants => {
-    //         const updatedConsultants = [...prevConsultants];
-            
-    //         // Find the row by id and update price
-    //         updatedConsultants.forEach(group => {
-    //             group.rates.forEach(rateCard => {
-    //                 rateCard.rateTypes.forEach(rateType => {
-    //                     if (`${group.name}-${rateCard.rateCard}-${rateType.rateType}` === id) {
-    //                         rateType.price = newPrice;
-    //                         rateType.total = (rateType.count * newPrice) + (rateType.waiverAmount);
-    //                         group.total = group.rates.reduce((sum, rateCard) => 
-    //                             sum + rateCard.rateTypes.reduce((innerSum, rateType) => 
-    //                                 innerSum + (rateType.count * rateType.price) + (rateType.waiverAmount), 0), 0);
-    //                     }
-    //                 });
-    //             });
-    //         });
-
-    //         return updatedConsultants;
-    //     });
-    //     setSelectedRows(prevSelectedRows => {
-    //         const updatedSelectedRows = prevSelectedRows.map(row => 
-    //             row.id === id ? { 
-    //                 ...row, 
-    //                 price: newPrice, 
-    //                 total: (newPrice * row.count) + (row.waiverAmount)  // Update total for the specific row
-    //             } : row
-    //         );
-    
-    //         const totalRowIndex = updatedSelectedRows.findIndex(row => row.id.includes('-total'));
-    //         if (totalRowIndex !== -1) {
-    //             const totalRowIdParts = updatedSelectedRows[totalRowIndex].id.split('-');
-    //             const groupName = totalRowIdParts[0];
-    //             const rateCardString = totalRowIdParts.slice(1, -1).join('-'); // Extracts the combined rateCard part
-    //             const totalIdWithoutSuffix = `${groupName}-${rateCardString}`;
-                
-    //             const groupTotal = updatedSelectedRows.reduce((sum, row) => 
-    //                 row.id.startsWith(groupName) && row.id !== `${totalIdWithoutSuffix}-total`
-    //                     ? sum + row.total 
-    //                     : sum, 0);
-
-    //             updatedSelectedRows[totalRowIndex].total = `₹${groupTotal}`;
-    //         }
-    
-    //         return updatedSelectedRows;
-    //     });
-
-    //     // setFilteredConsultants(prevFilteredConsultants => {
-    //     //     if (prevFilteredConsultants.length === 0) return prevFilteredConsultants;
-    
-    //     //     const updatedFilteredConsultants = prevFilteredConsultants.map(row => 
-    //     //         row.id === id ? { 
-    //     //             ...row, 
-    //     //             price: newPrice, 
-    //     //             total: newPrice * row.count  // Update total for the specific row
-    //     //         } : row
-    //     //     );
-    
-    //     //     const totalRowIndex = updatedFilteredConsultants.findIndex(row => row.id.includes('-total'));
-    //     //     if (totalRowIndex !== -1) {
-    //     //         const totalRowIdParts = updatedFilteredConsultants[totalRowIndex].id.split('-');
-    //     //         const groupName = totalRowIdParts[0];
-    //     //         const rateCardString = totalRowIdParts.slice(1, -1).join('-'); // Extracts the combined rateCard part
-    //     //         const totalIdWithoutSuffix = `${groupName}-${rateCardString}`;
-    
-    //     //         const groupTotal = updatedFilteredConsultants.reduce((sum, row) => 
-    //     //             row.id.startsWith(groupName) && row.id !== `${totalIdWithoutSuffix}-total`
-    //     //                 ? sum + row.total 
-    //     //                 : sum, 0);
-    
-    //     //         updatedFilteredConsultants[totalRowIndex].total = `₹${groupTotal}`;
-    //     //     }
-    
-    //     //     return updatedFilteredConsultants;
-    //     // });
-    // };
-    //OLD CODE
 
     const priceBodyTemplate = (rowData) => {
-
-        if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
-            return null; // Do not render the input for total rows
-        } else {
-
-        const handleChange = (e) => {
-            const newPrice = parseFloat(e.target.value) || 0;
-            handlePriceChange(rowData.id, newPrice);
-        };
-
-        const handleFocus = (e) => {
-            e.target.select(); // Select all text in the input field
-        };
-
-        return (
-            <input
-                type="number"
-                value={rowData.price === 0 ? '' : rowData.price}
-                onChange={handleChange}
-                onFocus={handleFocus}
-                disabled={showIcProcessedConsultantsOnly}
-                min="0"
-                className="p-inputtext p-component w-32 md:w-fit lg:w-fit h-full m-0 p-2 box-border rounded-md border border-sky-400 bg-white"
-            />
-        );
-    }
-    };
-
-    const totalBodyTemplate = (rowData) => {
         // Check if it's a total row and format accordingly
-        if (typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total')) {
-            return <span className="font-bold text-blue-500">{rowData.total}</span>;
+        if (typeof rowData.rateCard === 'string' && rowData.rateCard.startsWith('Total')) {
+            return <span className="font-bold text-blue-500">₹{rowData.price}</span>;
         }
-        return <span>₹{rowData.total}</span>; // Ensure this displays properly if it's a number
+        return <span>₹{rowData.price}</span>; // Ensure this displays properly if it's a number
     };
 
     const nameBodyTemplate = (rowData) => {
-        if (rowData.name) {
-            return <span className="font-bold ml-2">{rowData.name}</span>;
+        if (rowData.consultant) {
+            return <span className="font-bold ml-2">{rowData.consultant}</span>;
         }
         return null;
     };
@@ -818,115 +414,81 @@ const handleMarkAsUnprocessed = async () => {
     
 
     const scanTypeBodyTemplate = (rowData) => {
-        return rowData.rateType;
-    };
-
-    const countBodyTemplate = (rowData) => {
         if (rowData.rateCard === 'Total') {
-            return <span className="font-bold text-blue-500">{rowData.count}</span>;
+            const orderLabel = rowData.rateType > 1 ? 'Orders' : 'Order';
+            return <span className="font-bold text-blue-500">{rowData.rateType} {orderLabel}</span>;
         } else if (rowData.rateCard) {
-            return rowData.count;
+            return <span>{rowData.rateType}</span>;
         }
         return null;
     };
 
-    const waiverAmountBodyTemplate = (rowData) => {
-        return rowData.waiverAmount;
-    };
-
     const customRowClassName = (rowData) => {
-        const isTotalRow = typeof rowData.total === 'string' && rowData.rateCard.startsWith('Total');
-    
-        const baseClass = rowData.isGroup ? 'bg-white' : rowData.isScanGroup ? 'bg-white' : '';
+        const isTotalRow = typeof rowData.rateCard === 'string' && rowData.rateCard.startsWith('Total');
     
         const additionalClass = isTotalRow ? 'hide-checkbox border-b-2 border-gray-300' : '';
     
-        return `${baseClass} ${additionalClass}`;
+        return `'bg-white' ${additionalClass}`;
     };
-    
 
     const selectionBodyTemplate = (rowData) => {
-        if (rowData.name) {
+        if (rowData.consultant) {
             return <input type="checkbox" checked={selectedRows.includes(rowData)} readOnly />;
         }
         return null; // Render nothing if no consultant name
     };
     
     // Utility function to format numbers with commas in Indian format
-const formatIndianNumber = (number) => {
-    const parts = number.toString().split('.');
-    let integerPart = parts[0];
-    const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
-  
-    // Adding commas to the integer part
-    const lastThree = integerPart.substring(integerPart.length - 3);
-    const otherDigits = integerPart.substring(0, integerPart.length - 3);
-    if (otherDigits !== '') {
-      integerPart = otherDigits.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
-    } else {
-      integerPart = lastThree;
-    }
-  
-    return integerPart + decimalPart;
+    const formatIndianNumber = (number) => {
+        const parts = number.toString().split('.');
+        let integerPart = parts[0];
+        const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
+    
+        // Adding commas to the integer part
+        const lastThree = integerPart.substring(integerPart.length - 3);
+        const otherDigits = integerPart.substring(0, integerPart.length - 3);
+        if (otherDigits !== '') {
+        integerPart = otherDigits.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
+        } else {
+        integerPart = lastThree;
+        }
+    
+        return integerPart + decimalPart;
   };
 
-   // Determine the rows to calculate based on selection
-const rowsToCalculate = selectedRows.length > 0 ? selectedRows : groupedData;
+// Dashboard Calculations  
+const rowsToCalucalate = selectedRows.length > 0 ? selectedRows : groupedData;
 
-
-// Filter rows where total starts with "Total:"
-const filteredRows = rowsToCalculate.filter(row => typeof row.total === 'string' && row.rateCard.startsWith('Total'));
-const filteredAmountRows = selectedRows.filter(row => row.total && !row.rateCard.startsWith('Total'));
-
-// const filteredAmountRows = rowsToCalculate.filter(row => row.total);
-
-
-
-
-const extractNameFromId = (id) => {
-    // Split the id by '-' and return the first part (the name)
-    return id.split('-')[0];
-};
-
-// Filter out rows with null or empty values for name and rateCard
-// const filteredNameRows = rowsToCalculate.filter(row => row.name);
-const filteredNameRows = selectedRows.map(row => {
-    if (row.name) {
-        return row;
-    } else if (selectedRows.length > 0 && row.id) {
-        // If name is null and selectedRows is greater than 0, extract the name from row.id
-        
-        return { ...row, name: extractNameFromId(row.id) };
-    }
-    return row;
-});
-
-
-const filteredSelectionNameRows = selectedRows.filter(row => extractNameFromId(row.id));
-const filteredCountRows = rowsToCalculate.filter(row => row.count);
+// Total Amount Calculation
+const filteredAmountRows = rowsToCalucalate.filter(row => row.price && !row.rateCard.startsWith('Total'));
 
 const totalAmount = filteredAmountRows.reduce((sum, row) => {
-    return sum + parseFloat(row.total);
+    return sum + parseFloat(row.price);
 }, 0);
 
 const formattedtotalAmount = formatIndianNumber(totalAmount);
 
-// Calculate number of unique consultants
-// const numberOfConsultants = new Set(filteredNameRows.map(row => row.name)).size;
+// Total No. Of Consultant Calulation
+const filteredNameRows = rowsToCalucalate.map(row => {
+    if (row.consultant) {
+        return row;
+    } else if (rowsToCalucalate.length > 0 && row.id) {
+        // If name is null and rowsToCalucalate is greater than 0, extract the name from row.id
+        
+        return { ...row, consultant: row.consultant };
+    }
+    return row;
+});
+
 const numberOfConsultants = new Set(filteredNameRows
-    .map(row => row.name)
-    .filter(name => name) // This filters out null and empty string values
+    .map(row => row.consultant)
+    .filter(consultant => consultant) // This filters out null and empty string values
 ).size;
 
-
-const extractRateCardFromId = (id) => {
-    // Split the id by '-' and return the first part (the name)
-    return id.split('-')[1];
-};
-
-const totalCount = selectedRows.reduce((accumulator, row) => {
+// Total No. Of Orders Calculation
+const totalCount = rowsToCalucalate.reduce((accumulator, row) => {
     if (!row.rateCard.startsWith('Total')) {
-      return accumulator + (row.count || 0);
+      return accumulator + 1;
     }
     return accumulator; // Skip the row if it starts with 'Total'
   }, 0);
@@ -942,11 +504,10 @@ const handleExport = () => {
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
-        Consultant: extractNameFromId(row.id), // Default to an empty string if name is null
-        RateCard: extractRateCardFromId(row.id),
+        Consultant: row.consultant, // Default to an empty string if name is null
+        RateCard: row.rateCard,
         RateType: row.rateType,
-        Count: row.count,
-        Total: row.total
+        Price: row.price
     }));
 
     // Create a worksheet from the data
@@ -968,21 +529,19 @@ const handleExport = () => {
 };
 
 const handleSelectionChange = (e) => {
-    const selectedRows = e.value; 
-
-    const rowsToCheck = groupedData;
+    const selectedRows = e.value; // Get the selected rows from the event
+    const rowsToCheck = groupedData; // Reference to the grouped data (could be consultants grouped by their rates)
 
     // Reduce the grouped data to the new selection based on selected rows
     const newSelection = rowsToCheck.reduce((acc, row) => {
-        // Check if the current row's rateCard AND orderNumber exists in the selected rows
+        // Check if the current row's orderNumber and id exist in the selected rows
         const isSelected = selectedRows.some(selectedRow => 
-            selectedRow.rateCard === row.rateCard && 
             selectedRow.orderNumber === row.orderNumber && 
-            selectedRow.id === row.id // Add an `id` or another unique property to ensure uniqueness
+            selectedRow.id === row.id // Check if `orderNumber` and `id` match
         );
 
         if (isSelected) {
-            acc.push(row); // Add the row to the new selection if it's selected
+            acc.push(row); // Add to the selection if it matches the selected rows
         }
 
         return acc;
@@ -990,24 +549,22 @@ const handleSelectionChange = (e) => {
 
     if (selectedRows.length === 0) {
         // If no rows are selected, reset to all orderNumbers
-        setSelectedOrderNumbers(orderNumbers); // Ensure `orderNumbers` is available in the scope
+        setSelectedOrderNumbers([]); // Reset the order numbers
     } else {
         // Extract the unique orderNumbers from the selected rows
-        const selectedOrderNumbs = selectedRows.map(row => row.orderNumber);
+        const selectedOrderNumbers = selectedRows.map(row => row.orderNumber);
         
-        // Set the selectedOrderNumbers in state
-        setSelectedOrderNumbers(selectedOrderNumbs);
+        // Set the selectedOrderNumbers state with the selected order numbers
+        setSelectedOrderNumbers(selectedOrderNumbers);
     }
 
-    setSelectedRows(newSelection); // Update the selected rows state with the new selection
+    // Update the selected rows state with the new selection
+    setSelectedRows(newSelection); // Update selected rows
 };
 
-
-const resetFilters = () => {
-    setFilters(defaultFilters);
-};
 
 const filterHeaderTemplate = (column, filterField) => {
+    
     const handleApplyFilter = () => {
         let newFilters = { ...filters };
         let combinedFilteredRows = [...groupedData]; // Start with the entire dataset
@@ -1120,21 +677,22 @@ const filterHeaderTemplate = (column, filterField) => {
     );
 };
 
-
 useEffect(() => {
     if (selectedRows.length > 0) {
+        // Filter consultants with zero-priced rates in selected rows
         const zeroPriceConsultants = selectedRows.filter(
             row => row.price === '0' || row.price === 0
         );
         setConsultantsWithZeroPrice(zeroPriceConsultants);
     } else {
+        // Filter consultants with zero-priced rates in the full consultants list
         const zeroPriceConsultants = consultants.filter(consultant => 
-            consultant.rates.some(rate => 
-                rate.rateTypes.some(rateType => rateType.price === '0' || rateType.price === 0)
-            )
+            consultant.rates.some(rate => rate.price === 0)
         );
         setConsultantsWithZeroPrice(zeroPriceConsultants);
     }
+
+    // Restore filters from session if available
     if (sessionFilters) {
         setFilters(sessionFilters);
     }
@@ -1147,7 +705,6 @@ useEffect(() => {
 const handleClickOpen = () => {
     setOpen(true);
 };
-
 
 const handleClose = () => {
     setOpen(false);
@@ -1186,7 +743,7 @@ const handleCheckboxChange = () => {
                           {numberOfConsultants}
                         </div>
                         <div className="text-xs sm:text-base lg:text-lg text-blue-100">
-                          Consultants
+                          Payable Consultants
                         </div>
                     </div>
                     <div className="w-fit lg:w-32 h-auto rounded-lg shadow-lg p-4 mb-5 flex flex-col border border-gray-300 flex-shrink-0 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
@@ -1229,7 +786,8 @@ const handleCheckboxChange = () => {
         {showIcProcessedConsultantsOnly ? (
             <button
                 onClick={handleMarkAsUnprocessed}
-                className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base bg-red-500 hover:bg-red-600`}
+                disabled={loading}
+                className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base bg-red-500 hover:bg-red-600 ${loading ? "bg-red-500 opacity-50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600"}`}
             >
                 <i className="pi pi-ban mr-1 sm:mr-2"></i>
                 Mark As Unprocessed
@@ -1237,9 +795,9 @@ const handleCheckboxChange = () => {
         ) : (
             <button
                 onClick={saveConsultant}
-                disabled={showIcProcessedConsultantsOnly}
+                disabled={loading}
                 className={`h-fit text-white py-1.5 px-3 rounded shadow flex items-center text-sm sm:text-base md:text-sm lg:text-base
-                    ${showIcProcessedConsultantsOnly ? "bg-blue-500 opacity-50 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"}
+                    ${loading ? "bg-blue-500 opacity-50 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"}
                 `}
             >
                 <i className="pi pi-check mr-1 sm:mr-2"></i>
@@ -1309,21 +867,21 @@ const handleCheckboxChange = () => {
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['originalName', 'rateCard', 'rateType']}
+                            globalFilterFields={['consultant', 'rateCard', 'rateType']}
                             
             
                         >
                         
-                            <Column field="originalName" header="Consultant" body={nameBodyTemplate} 
-                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.originalName?.value ? 'text-blue-600' : 'text-gray-800'}`} 
+                            <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
+                            <Column field="consultant" header="Consultant"  headerStyle={{ width: '13rem' }} body={nameBodyTemplate} 
+                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.consultant?.value ? 'text-blue-600' : 'text-gray-800'}`} 
                             className="bg-white p-2 w-fit text-nowrap"
                             filter
-                            filterElement={filterHeaderTemplate({ header: 'Consultant Name' }, 'originalName')}
+                            filterElement={filterHeaderTemplate({ header: 'Consultant' }, 'consultant')}
                             showFilterMatchModes={false}
                             
                             ></Column>
-                            <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="rateCard" header="Rate Card" body={scanBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateCard?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateCard" header="Rate Card"  headerStyle={{ width: '13rem' }} body={scanBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateCard?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Card' }, 'rateCard')}
                             showFilterMatchModes={false}
@@ -1331,16 +889,14 @@ const handleCheckboxChange = () => {
                             showClearButton={false}
                             
                             ></Column>
-                            <Column field="rateType" header="Rate Type" body={scanTypeBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateType?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white w-fit p-2"
+                            <Column field="rateType" header="Rate Type"  headerStyle={{ width: '13rem' }} body={scanTypeBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.rateType?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white w-fit p-2"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Rate Type' }, 'rateType')}
                             showFilterMatchModes={false}
                             showApplyButton={false}
                             showClearButton={false}
                             ></Column>
-                            <Column field="count" header="Count" body={countBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2 border-r-2" className="bg-white w-fit p-2"
-                            ></Column>
-                            <Column field="total" header="Total" body={totalBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
+                            <Column field="price" header="Price" headerStyle={{ width: '13rem' }} body={priceBodyTemplate} headerClassName="bg-gray-100 text-gray-800 pt-5 pb-5 pl-2 pr-2" className="bg-white p-2 w-fit text-nowrap"
                             ></Column>
                         </DataTable>
                     </div>

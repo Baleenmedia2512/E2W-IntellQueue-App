@@ -120,6 +120,7 @@ const CreateOrder = () => {
     const [displayClientName, setDisplayClientName] = useState(clientName);
     const [orderNumber, setOrderNumber] = useState(orderNumberRP || "");
     const [orderAmount, setorderAmount] = useState('');
+    const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
    
     
     useEffect(() => {
@@ -267,7 +268,7 @@ useEffect(() => {
       fetchQtySlab();
 
       // Fetch commission only if consultantName exists
-      if (consultantName) {
+      if (consultantName && !isOrderUpdate) {
         const commission = await FetchCommissionData(
           companyName,
           consultantName,
@@ -283,6 +284,7 @@ useEffect(() => {
 
   fetchInitialData();
 }, [selectedValues.adType, selectedValues.rateName]);
+
 
 const handleRateId = async () => {
   if(rateId > 0){
@@ -759,6 +761,10 @@ const fetchRates = async () => {
           setDisplayClientName(data.clientName);
           setorderAmount(data.receivable);
           setMarginAmount(data.margin);
+          setIsCommissionSingleUse(data.isCommissionAmountSingleUse === 1);
+          if(data.consultantName) {
+            setCommissionAmount(data.commission);
+          }
 
           // Store the fetched data in a state to compare later
           setPrevData({
@@ -771,6 +777,8 @@ const fetchRates = async () => {
             consultantName: data.consultantName,
             discountAmount: data.adjustedOrderAmount,
             marginAmount: data.margin,
+            commissionAmount: data.commission,
+            isCommissionAmountSingleUse: data.isCommissionAmountSingleUse
           });
         } else {
           setHasOrderDetails(false); // Set to false if no details
@@ -876,7 +884,7 @@ const CreateStages = async () => {
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${encodeURIComponent(selectedValues.rateName.value)}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${encodeURIComponent(selectedValues.Location.value + " : " + selectedValues.Package.value)}&JsonType=${encodeURIComponent(selectedValues.adType.value)}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${encodeURIComponent(selectedValues.Location.value)}&JsonPackage=${encodeURIComponent(selectedValues.Package.value)}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
@@ -916,6 +924,15 @@ const CreateStages = async () => {
           }, 2000);
       }
        }
+
+const handlePlaceOrder = () => {
+  if ((!commissionAmount || commissionAmount === 0) && consultantName) {
+    setCommissionDialogOpen(true); // Open the confirmation dialog
+  } else {
+    createNewOrder(); // Directly create the order if commission is valid
+  }
+};
+
 //update order-SK (02-08-2024)------------------------------------
 const updateNewOrder = async (event) => {
   if (event) event.preventDefault();
@@ -941,14 +958,14 @@ const updateNewOrder = async (event) => {
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
       JsonMarginAmount: marginAmount.toString(),
-      JsonRateName: encodeURIComponent(selectedValues.rateName.value),
+      JsonRateName: selectedValues.rateName.value,
       JsonVendorName: selectedValues.vendorName.value,
-      JsonCategory: encodeURIComponent(`${selectedValues.Location.value} : ${selectedValues.Package.value}`),
-      JsonType: encodeURIComponent(selectedValues.adType.value),
+      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
+      JsonType: selectedValues.adType.value,
       JsonHeight: qty.toString(),
       JsonWidth: '1',
-      JsonLocation: encodeURIComponent(selectedValues.Location.value),
-      JsonPackage: encodeURIComponent(selectedValues.Package.value),
+      JsonLocation: selectedValues.Location.value,
+      JsonPackage: selectedValues.Package.value,
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -968,7 +985,7 @@ const updateNewOrder = async (event) => {
       JsonIsCommissionSingleUse: IsCommissionForSingleUse,
     });
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrderTest.php?${params.toString()}`, {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
         headers: {
           'Content-Type': 'application/json'
@@ -1298,6 +1315,7 @@ const fetchConsultantDetails = async (Id) => {
     setInitialConsultantName(data.ConsultantName);
     setConsultantNumber(data.ConsultantNumber || '');
 
+    if (data.ConsultantName) {
     const commission = await FetchCommissionData(
       companyName,
       data.ConsultantName,
@@ -1305,6 +1323,7 @@ const fetchConsultantDetails = async (Id) => {
       selectedValues.adType.value
     );
     setCommissionAmount(commission);
+    }
   } catch (error) {
     console.error('Error fetching consultant details:', error);
   }
@@ -1356,7 +1375,7 @@ const handleCommissionChange = (e) => {
 const [dialogOpen, setDialogOpen] = useState(false);
   const [updateReason, setUpdateReason] = useState('');
   const [prevData, setPrevData] = useState({});
-
+console.log(commissionAmount)
 
 const handleOpenDialog = () => {
   // Check if remarks are filled
@@ -1381,8 +1400,8 @@ const handleOpenDialog = () => {
     consultantName.trim() !== prevData.consultantName.trim() ||
     discountAmount !== prevData.discountAmount ||
     parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
-    parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount)
-
+    parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount) ||
+    isCommissionSingleUse !== prevData.isCommissionSingleUse
   );
 
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
@@ -1470,7 +1489,6 @@ const handleOrderSearch = async (e) => {
 const handleOrderSelection = (e) => {
   const selectedOrder = e.target.value;
 
-  // Extract the selected Finance ID from the value (assuming it's in 'ID-name' format)
   const selectedOrderId = selectedOrder.split('-')[0];
 
   // Clear finance suggestions and set the search term
@@ -1490,6 +1508,14 @@ const handleOrderSelection = (e) => {
   dispatch(resetClientData());
 };
 
+const handleCommissionCloseDialog = () => {
+  setCommissionDialogOpen(false);
+};
+
+const handleCommissionConfirm = () => {
+  handleCommissionCloseDialog();
+  createNewOrder();
+};
 
 
 return (
@@ -1570,9 +1596,33 @@ return (
     {/* <button className="cancel-button" onClick={handleCancelUpdate}>Cancel Update</button> */}
   </div>
 ) : (
-  <button className="custom-button" onClick={createNewOrder} disabled={isButtonDisabled}>Place Order</button>
+  <button className="custom-button" onClick={handlePlaceOrder} disabled={isButtonDisabled}>Place Order</button>
 )}
     
+    <Dialog
+      open={commissionDialogOpen}
+      onClose={handleCommissionCloseDialog}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">Are you sure want to continue?</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          The Commission amount is empty. Are you sure want to continue?
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCommissionCloseDialog} color="primary">
+          No
+        </Button>
+        <Button
+          onClick={handleCommissionConfirm}
+          color="primary"
+        >Yes
+        </Button>
+      </DialogActions>
+    </Dialog>
+
     <Dialog
       open={dialogOpen}
       onClose={handleUpdateCloseDialog}
@@ -1581,17 +1631,7 @@ return (
     >
       <DialogTitle id="alert-dialog-title">{"Provide a Reason for Update"}</DialogTitle>
       <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          id="update-reason"
-          label="Reason"
-          type="text"
-          fullWidth
-          variant="outlined"
-          value={updateReason}
-          onChange={handleReasonChange}
-        />
+        
       </DialogContent>
       <DialogActions>
         <Button onClick={handleUpdateCloseDialog} color="primary">
@@ -1605,8 +1645,6 @@ return (
         </Button>
       </DialogActions>
     </Dialog>
-
-  
 
 
   </div>
