@@ -878,7 +878,7 @@ const financeColumns = [
            }}
         >
           Delete
-        </Button> 
+        </button> 
         {/* <button
           className='delete-button py-1 px-2 rounded-md text-sm sm:text-xs mr-3'
           onClick={(e) => e.preventDefault()} // Prevent any action on click
@@ -1947,23 +1947,6 @@ const calculateRateStats = () => {
                         backgroundColor: '#fff385', // Yellow highlight
                         backgroundColor: '#fff385', // Yellow highlight
                       },
-                      '& .grey-row': {
-                        backgroundColor: '#ededed', // Grey highlight for invalid rows
-                      },
-                    }}
-                    getRowClassName={(params) => {
-                      // Check if the row has 'markInvalidFinanceDisabled' set to true (i.e., ValidStatus is 'Invalid')
-                      const isInvalid = params.row.markInvalidFinanceDisabled;
-                    
-                      // If markInvalidFinanceDisabled is true, return 'grey-row' to apply grey background, else return 'highlighted-row' for selected order
-                      if (isInvalid) {
-                        return 'grey-row';
-                      }
-                    
-                      // Highlight row if it matches the selected order
-                      return params.row.OrderNumber === selectedOrder ? 'highlighted-row' : '';
-                    }}
-                    
                       '& .grey-row': {
                         backgroundColor: '#ededed', // Grey highlight for invalid rows
                       },

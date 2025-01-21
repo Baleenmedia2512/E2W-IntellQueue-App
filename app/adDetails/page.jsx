@@ -505,7 +505,7 @@ export const AdDetails = () => {
                   ref={clientNameRef} 
                   onFocus={() => setIsClientNameFocus(true)} 
                   onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} 
-                  className={`w-2/3 sm:w-3/4 text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${!isClientName ? 'border-red-400' : ''}`}
+                  className={`w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7`}
                   value = {clientName} 
                   onChange={handleSearchTermChange} 
                 ></input>
@@ -516,7 +516,7 @@ export const AdDetails = () => {
                   <li key={index}>
                     <button
                       type="button"
-                      className=" z-10  text-left px-2 py-1 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none ml-2"
+                      className=" z-10 text-left px-2 py-1 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none ml-2"
                       onClick={handleClientNameSelection}
                       value={name}
                     >

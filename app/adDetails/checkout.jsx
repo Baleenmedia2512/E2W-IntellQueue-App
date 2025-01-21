@@ -93,7 +93,10 @@ const CheckoutPage = () => {
     } else {
       dispatch(removeItem(index));
     }
-    
+
+    if(!cartItems){
+      dispatch(setQuotesData({isEditMode: false, isNewCartOnEdit: false}))
+    }
   };
   const handleEditRow = (item) => {
     dispatch(setQuotesData({ 
@@ -128,9 +131,18 @@ const CheckoutPage = () => {
     // }
     isEditMode: true,
     editIndex: item.index,
-    editQuoteNumber: item.editQuoteNumber
+    editQuoteNumber: item.editQuoteNumber,
+    checked: {
+      bold: item.bold,
+      semibold: item.semibold,
+      color: item.color,
+      tick: item.tick,
+      boldPercentage: item.boldPercentage,
+      semiboldPercentage: item.semiboldPercentage,
+      colorPercentage: item.colorPercentage,
+      tickPercentage: item.tickPercentage
+    }
   }));
-  console.log(item);
   };
   
 
@@ -230,7 +242,15 @@ const CheckoutPage = () => {
           campaignDurationVisibility: item.campaignDurationVisibility || 0,
           editQuoteNumber: item.QuoteID || '',
           isEditMode: true,
-          cartId: item.CartId
+          cartId: item.CartId,
+          bold: item.Bold >= 0 ? true: false,
+          semibold: item.SemiBold >= 0 ? true: false,
+          color: item.Color >= 0 ? true: false,
+          tick: item.Tick >= 0 ? true: false,
+          boldPercentage: item.Bold,
+          semiboldPercentage: item.SemiBold,
+          colorPercentage: item.Color,
+          tickPercentage: item.Tick
         }]));
         {dispatch(setClientData({
           clientName: item.ClientName ,
@@ -512,9 +532,10 @@ const CheckoutPage = () => {
                                 dispatch(toggleItemSelection(item.index))
                               }
                             >
-                              {item.bold && "Bold: " + item.boldPercentage}
-                              <br />
-                              {item.semibold && "Semibold: " + item.semiboldPercentage}
+                              {(item.bold  && parseInt(item.boldPercentage) > -1) && "Bold: " + item.boldPercentage + "%\n" }
+                              {(item.semibold && parseInt(item.semiboldPercentage) > -1) && "Semibold: " + item.semiboldPercentage + "%\n"}
+                              {(item.color && parseInt(item.colorPercentage) > -1) && "Color: " + item.colorPercentage + "%\n"}
+                              {(item.tick && parseInt(item.tickPercentage) > -1) && "Tick: " + item.tickPercentage + "%\n"}
                             </td>
                           )}
                           <td

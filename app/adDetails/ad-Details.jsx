@@ -57,7 +57,8 @@ const AdDetailsPage = () => {
     isEditMode: isQuoteEditMode,
     editIndex,
     editQuoteNumber,
-    isNewCartOnEdit
+    isNewCartOnEdit,
+    checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
   const cartItems = useAppSelector((state) => state.cartSlice.cart);
 
@@ -82,10 +83,10 @@ const AdDetailsPage = () => {
     semibold: false,
     color: false,
     tick: false,
-    boldPercentage: 0,
-    semiboldPercentage: 0,
-    colorPercentage: 0,
-    tickPercentage: 0
+    boldPercentage: -1,
+    semiboldPercentage: -1,
+    colorPercentage: -1,
+    tickPercentage: -1
   })
 
   // Refs
@@ -232,6 +233,16 @@ const AdDetailsPage = () => {
       if (qty === 1) {
         dispatch(setQuotesData({ quantity: firstSelectedSlab.StartQty }));
       }
+      console.log(isChecked);
+      const hasChecked =
+        isChecked.bold === true ||
+        isChecked.semibold === true ||
+        isChecked.tick === true ||  
+        isChecked.color === true;
+      
+      if(hasChecked){
+        setChecked(isChecked)
+      }
 
       if(adMedium !== "Newspaper"){
         setChecked({
@@ -239,10 +250,10 @@ const AdDetailsPage = () => {
           semibold: false,
           color: false,
           tick: false,
-          boldPercentage: 0,
-          semiboldPercentage: 0,
-          colorPercentage: 0,
-          tickPercentage: 0
+          boldPercentage: -1,
+          semiboldPercentage: -1,
+          colorPercentage: -1,
+          tickPercentage: -1
         })
       }
 
