@@ -34,6 +34,16 @@ const initialState = {
   editIndex: '',
   editQuoteNumber: 0,
   isNewCartOnEdit: false,
+  checked: {
+    bold: false,
+    semibold: false,
+    color: false,
+    tick: false,
+    boldPercentage: 0,
+    semiboldPercentage: 0,
+    colorPercentage: 0,
+    tickPercentage: 0
+  }
 };
 
 export const quoteSlice = createSlice({
@@ -72,6 +82,12 @@ export const quoteSlice = createSlice({
         state = initialState; // Default to adMedium if no history is available
       }
       // Do not return anything here. Just modify the state directly.
+    },
+    updateCheckedItem: (state, action) => {
+      const { key, value } = action.payload; // Destructure key and value from the action payload
+      if (state.checked.hasOwnProperty(key)) {
+        state.checked[key] = value; // Update the checked property
+      }
     },
 }
 });
