@@ -232,6 +232,20 @@ const AdDetailsPage = () => {
       if (qty === 1) {
         dispatch(setQuotesData({ quantity: firstSelectedSlab.StartQty }));
       }
+
+      if(adMedium !== "Newspaper"){
+        setChecked({
+          bold: false,
+          semibold: false,
+          color: false,
+          tick: false,
+          boldPercentage: 0,
+          semiboldPercentage: 0,
+          colorPercentage: 0,
+          tickPercentage: 0
+        })
+      }
+
     } catch (error) {
       console.error("Error in Loding form data: ", error);
     }
@@ -669,6 +683,7 @@ const AdDetailsPage = () => {
                   </button>
               </div>
               </span>
+              {adMedium === "Newspaper" &&
               <div className='grid grid-cols-4 gap-3 my-2'>
               <div className="flex flex-col items-center justify-center text-black">
         <label className="flex items-center cursor-pointer">
@@ -738,7 +753,7 @@ const AdDetailsPage = () => {
         </div>
         }
       </div>
-      </div>
+      </div>}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
                 
                  { unit !== 'SCM' ? (
