@@ -17,7 +17,7 @@ import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, Fetc
 export const AdDetails = () => {
   const routers = useRouter();
   const dispatch = useDispatch();
-  const clientNameRef = useRef(null);
+  // const clientNameRef = useRef(null);
   const clientContactRef = useRef(null);
   
   const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -25,7 +25,7 @@ export const AdDetails = () => {
   const clientDetails = useAppSelector(state => state.clientSlice);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
   const [isClientContact, setIsClientContact] = useState(true);
-  const [isClientName, setIsClientName] = useState(true)
+  // const [isClientName, setIsClientName] = useState(true)
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [isHidden, setIsHidden] = useState(false);
   const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
@@ -60,13 +60,13 @@ export const AdDetails = () => {
     
   }, []);
 
-  useEffect(()=>{
-    if(clientName === ""){
-      clientNameRef.current?.focus()
-    }else if(clientContact === ""){
-      clientContactRef.current?.focus()
-    }
-  },[isClientContact, isClientName])
+  // useEffect(()=>{
+  //   if(clientName === ""){
+  //     clientNameRef.current?.focus()
+  //   }else if(clientContact === ""){
+  //     clientContactRef.current?.focus()
+  //   }
+  // },[isClientContact, isClientName])
 
   const fetchClientDetails = (clientID) => {
 
@@ -108,7 +108,7 @@ export const AdDetails = () => {
       setClientNameSuggestions([]);
     }
       dispatch(setClientData({clientName: newName}));
-      setIsClientName(true);
+      // setIsClientName(true);
   };
 
   const handleClientNameSelection = (names) => {
@@ -284,7 +284,7 @@ export const AdDetails = () => {
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
 
-    if(clientName !== ""){
+    // if(clientName !== ""){
       try{
 
         const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
@@ -300,13 +300,13 @@ export const AdDetails = () => {
         return;
       }
       
-    } else{
-      if(clientName === ""){
-        setIsClientName(false)
-      }else if(clientContact === ""){
-        setIsClientContact(false)
-      }
-    }
+    // } else{
+    //   if(clientName === ""){
+    //     // setIsClientName(false)
+    //   }else if(clientContact === ""){
+    //     // setIsClientContact(false)
+    //   }
+    // }
   };
   
   const handleUpdateAndDownloadQuote = async (e) => {
@@ -322,7 +322,7 @@ export const AdDetails = () => {
     : cartItems;
 
     grandTotalAmount = grandTotalAmount.replace('₹', '');
-    if(clientName !== ""){
+    // if(clientName !== ""){
       try{
         const cart = await Promise.all(
           selectedCartItems
@@ -344,13 +344,13 @@ export const AdDetails = () => {
         return;
       }
       
-    } else{
-      if(clientName === ""){
-        setIsClientName(false)
-      }else if(clientContact === ""){
-        setIsClientContact(false)
-      }
-    }
+    // } else{
+    //   if(clientName === ""){
+    //     setIsClientName(false)
+    //   }else if(clientContact === ""){
+    //     setIsClientContact(false)
+    //   }
+    // }
   };
 
   function showCurrentPage(){
@@ -510,14 +510,14 @@ export const AdDetails = () => {
               <td> 
                 <input 
                   placeholder="Ex: Tony" 
-                  ref={clientNameRef} 
+                  // ref={clientNameRef} 
                   onFocus={() => setIsClientNameFocus(true)} 
                   onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} 
                   className={`w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7`}
                   value = {clientName} 
                   onChange={handleSearchTermChange} 
                 ></input>
-              {!isClientName && <label className='text-red-500'>Please enter client name</label>}
+              {/* {!isClientName && <label className='text-red-500'>Please enter client name</label>} */}
               {clientNameSuggestions.length > 0 && isClientNameFocus && (
                 <ul className="absolute z-10 mt-1 w-auto bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
                 {clientNameSuggestions.map((name, index) => (
