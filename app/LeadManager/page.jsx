@@ -393,6 +393,7 @@ const EventCards = ({params, searchParams}) => {
 
       setIsLoading(false);
       setShowModal(false);
+      setFollowupDate(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
@@ -1023,7 +1024,7 @@ const EventCards = ({params, searchParams}) => {
                 isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
               }`}
               onClick={handleSave}
-              disabled={!selectedStatus || isLoading} // Disable button during loading
+              disabled={!selectedStatus || isLoading} // Disable button during loading..
             >
               {isLoading ? (
                 <span>Loading...</span> // Change text when loading
