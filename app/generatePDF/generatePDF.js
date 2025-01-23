@@ -210,13 +210,13 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const hasPosition = items.some(item => item.position && item.position !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
     const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA");
-    const hasColor = items.some(item => item.color === true)
+    const hasColor = items.some(item => (item.color && parseInt(item.colorPercentage) > -1))
     const hasChecked = items.some(
       (item) =>
-        item.bold === true ||
-        item.semibold === true ||
-        item.tick === true
-    ) !== undefined;
+        (item.bold && parseInt(item.boldPercentage) > -1) ||
+        (item.semibold && parseInt(item.semiboldPercentage) > -1) ||
+        (item.tick && parseInt(item.tickPercentage) > -1)
+    );
     
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
@@ -246,7 +246,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
       item.amountInclGst, 
       item.leadDays || 2, 
       hasRemarks ? (item.remarks || 'NA') : null,
-      item.color && parseInt(item.colorPercentage) > -1
+      hasColor
     ? `Color(${item.colorPercentage}%)`
     : isNewspaper ? 'B/W' : null,
   hasChecked
