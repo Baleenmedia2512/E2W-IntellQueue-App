@@ -388,14 +388,10 @@ export const AdDetails = () => {
       {isHidden ? <div className='flex items-center justify-center h-screen'>
       <h2 className='text-center'>Oops! It looks like you might be on the wrong link. Please double-check and try again!</h2>
     </div>:
-
       <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : 'h-[100vh]'} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
       <div className="border-2 ml-3 w-10 inline-block mb-6 border-blue-500 "></div>
         <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100">
-        
-       
-        
           {/* Back Button */}
          { (currentPage !== "adDetails" && currentPage !== "") ?
          (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
@@ -456,19 +452,20 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <div>
-              <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
-                dispatch(resetQuotesData());
+            <></>
+            // <div>
+            //   <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
+            //     dispatch(resetQuotesData());
 
-                // clear while on edit mode
-                if (cartItems.length > 0 && cartItems[0].isEditMode) {
-                dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
-                }
+            //     // clear while on edit mode
+            //     if (cartItems.length > 0 && cartItems[0].isEditMode) {
+            //     dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+            //     }
 
-                }}>
-              <FontAwesomeIcon icon={faCheckCircle} className='text-md' onClick={() => routers.push('/adDetails/manageQuotes')}/> Manage Quotes
-            </button>
-            </div>
+            //     }}>
+            //   <FontAwesomeIcon icon={faCheckCircle} className='text-md' onClick={() => routers.push('/adDetails/manageQuotes')}/> Manage Quotes
+            // </button>
+            // </div>
           )}
 
           {/* {currentPage === "checkout" ?(
@@ -554,7 +551,6 @@ export const AdDetails = () => {
             </tr>
           </table>
           </form>
-          
         )}
         </div>
       </div>
