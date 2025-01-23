@@ -269,10 +269,10 @@ const CheckoutPage = () => {
   const editQuoteItem = cartItems.find(item => item.editQuoteNumber);
   const hasChecked = cartItems.find(
     (item) =>
-      item.bold === true ||
-      item.semibold === true ||
-      item.tick === true ||
-      item.color === true
+      (item.bold && parseInt(item.boldPercentage) > -1) ||
+      (item.semibold && parseInt(item.semiboldPercentage) > -1) ||
+      (item.tick && parseInt(item.tickPercentage) > -1) ||
+      (item.color && parseInt(item.colorPercentage) > -1)
   ) !== undefined;
   const ratesSearchSuggestion = [];
 

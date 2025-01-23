@@ -1046,7 +1046,6 @@ const EventCards = ({params, searchParams}) => {
   );
 };
 
-
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
