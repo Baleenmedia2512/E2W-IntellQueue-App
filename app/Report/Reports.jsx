@@ -1623,7 +1623,7 @@ const calculateRateStats = () => {
               }
         
               return acc;
-            }, [...existingItems]); // Ensure we work on a copy of the existing items
+            }, [...existingItems]);
         
             return { items: updatedItems };
           });
