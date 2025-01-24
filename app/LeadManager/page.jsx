@@ -67,7 +67,7 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userName = useAppSelector(state => state.authSlice.userName);
+  const {userName, appRights} = useAppSelector(state => state.authSlice);
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -238,7 +238,7 @@ const EventCards = ({params, searchParams}) => {
         followupDate: searchParams.followupDate || null,
       };
 
-      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, companyName);
+      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, companyName, appRights);
       setRows(fetchedRows);
       // console.log(fetchedRows)
     } catch (error) {
@@ -1046,7 +1046,7 @@ const EventCards = ({params, searchParams}) => {
   );
 };
 
-async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName) {
+async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
   const urlWithParams = `${apiUrl}?dbCompanyName=${encodeURIComponent(dbCompanyName)}`;
@@ -1067,7 +1067,8 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName) {
   const today = new Date().toDateString();
 
   const filteredData = data.rows.filter(
-    (lead) => lead.Status !== "Unqualified" && lead.Status !== "Won" && lead.Status !== "Lost" && (!lead['HandledBy'] || lead['HandledBy'].toLowerCase() === userName.toLowerCase())
+    (lead) => lead.Status !== "Unqualified" && lead.Status !== "Won" && lead.Status !== "Lost" && 
+    appRights !== "Leadership" && (!lead['HandledBy'] || lead['HandledBy'].toLowerCase() === userName.toLowerCase())
   );
 
   const sortedRows = filteredData.sort((a, b) => {
