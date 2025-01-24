@@ -85,9 +85,9 @@ const Report = () => {
   const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
   const [invoiceData, setInvoiceData] = useState([]);
 
-const checkIfSMSSentToday = () => {
+const checkIfDIRSentToday = () => {
   axios
-    .get(`https://orders.baleenmedia.com/API/Media/CheckCDRSmsCount.php?JsonDBName=${companyName}`)
+    .get(`https://orders.baleenmedia.com/API/Media/CheckDIRCount.php?JsonDBName=${companyName}`)
     .then((response) => {
       const { count } = response.data;
       
@@ -106,7 +106,7 @@ const checkIfSMSSentToday = () => {
 
 // Call this function when the component is loaded
 useEffect(() => {
-  checkIfSMSSentToday();
+  checkIfDIRSentToday();
 }, []);
 
   const handleDropdownChange = (event) => {
@@ -118,6 +118,30 @@ useEffect(() => {
     router.push('/Report/ConsultantReport');
 };
 
+const handleCloseDay = () => {
+  axios
+    .get(`https://orders.baleenmedia.com/API/Media/DailyIncomeReportWhatsapp.php?JsonDBName=${companyName}`)
+    .then((response) => {
+      const result = response.data;
+      console.log(result)
+      if (result[0].success) {
+        setSuccessMessage('The Day is Closed And DIR is sent.');
+        setTimeout(() => {
+            setSuccessMessage('');
+        }, 3000);
+      } else {
+        setToastMessage(result.message);
+        setSeverity('warning');
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 3000);
+      }
+    })
+    .catch((error) => {
+      console.error('Error checking SMS count:', error);
+    });
+};
 
     const router = useRouter();
     const dispatch = useDispatch();
@@ -1351,6 +1375,9 @@ const calculateRateStats = () => {
   setRateStats(stats); // Update state with new stats
 };
 
+  
+
+
 
   useEffect(() => {
     const filteredRows = orderDetails.filter((row) => {
@@ -1478,9 +1505,22 @@ const calculateRateStats = () => {
       newRateWiseOrderNumber={newRateWiseOrderNumber}
     />
   </div>
-  <h1 className="md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500">
+  <div className="flex items-center justify-between">
+  <h1 className="text-xl sm:text-2xl font-bold ml-2 text-start text-blue-500">
     Reports
   </h1>
+  <div className="flex justify-end">
+    <button
+      className={`button close-day-button my-3 md:mb-0 sm:mr-0 md:mr-2 z-30 ${isButtonDisabled ? 'disabled' : ''}`}
+      onClick={handleCloseDay}
+      disabled={isButtonDisabled}
+      title={isButtonDisabled ? "The day is closed" : ""}
+    >
+      Close Day
+    </button>
+  </div>
+</div>
+
 
 {/* Sticky Container */}
 <div className="sticky top-0 z-10 bg-white p-2 shadow-md">
@@ -1549,10 +1589,13 @@ const calculateRateStats = () => {
       </div>
     ))}
   </div>
+  
+
 </div>
 
 
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
+    
     <div style={{ flex: 1, width: '100%', boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
       <DataGrid
          rows={filteredData.length > 0 ? filteredData : orderDetails}
@@ -1618,17 +1661,17 @@ const calculateRateStats = () => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
+              <h1 className='text-xl sm:text-2xl my-4 font-bold ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+    <button className="button custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
       Show Balance
     </button>
     {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+      <button className="button consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
         Cons. Report
       </button>
     )}
