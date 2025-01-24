@@ -106,6 +106,43 @@ transform: translateY(-7px);
   transform: none; /* No transform */
 }
 
+.close-day-button {
+  padding: 1.3em 3em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #06a2eb;
+  border: none;
+  border-radius: 45px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+  display: inline-block;
+  
+}
+
+.close-day-button:hover {
+  background-color: #34a5e7;
+  box-shadow: 0px 15px 20px rgba(30, 140, 243, 0.4);
+  color: #fff;
+  transform: translateY(-7px);
+}
+
+.close-day-button:active {
+  transform: translateY(-1px);
+}
+
+.close-day-button.disabled {
+  background-color: #cccccc; /* Grey background */
+  color: #666666; /* Dark grey text */
+  box-shadow: none; /* Remove shadow */
+  cursor: not-allowed; /* Show not-allowed cursor */
+  transform: none; /* Remove transform effect */
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .custom-button {
@@ -117,6 +154,10 @@ transform: translateY(-7px);
     font-size: 10px;
   }
   .consultant-sms-button {
+    padding: 1em 2.5em;
+    font-size: 10px;
+  }
+  .close-day-button {
     padding: 1em 2.5em;
     font-size: 10px;
   }
@@ -135,6 +176,10 @@ transform: translateY(-7px);
     padding: 0.8em 2em;
     font-size: 12px;
   }
+  .close-day-button {
+    padding: 1em 2.5em;
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 320px) {
@@ -149,6 +194,10 @@ transform: translateY(-7px);
   .consultant-sms-button {
     padding: 0.6em 1.5em;
     font-size: 8px;
+  }
+  .close-day-button {
+    padding: 1em 2.5em;
+    font-size: 10px;
   }
 }
 
