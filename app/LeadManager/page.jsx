@@ -1067,8 +1067,12 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
   const today = new Date().toDateString();
 
   const filteredData = data.rows.filter(
-    (lead) => lead.Status !== "Unqualified" && lead.Status !== "Won" && lead.Status !== "Lost" && 
-    appRights === "Leadership" || (!lead['HandledBy'] || lead['HandledBy'].toLowerCase() === userName.toLowerCase())
+    (lead) =>
+      (lead.Status !== "Unqualified" &&
+       lead.Status !== "Won" &&
+       lead.Status !== "Lost") &&
+      (appRights === "Leadership" || 
+       (!lead['HandledBy'] || lead['HandledBy'].toLowerCase() === userName.toLowerCase()))
   );
 
   const sortedRows = filteredData.sort((a, b) => {
