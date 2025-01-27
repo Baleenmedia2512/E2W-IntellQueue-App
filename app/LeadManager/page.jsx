@@ -325,7 +325,7 @@ const EventCards = ({params, searchParams}) => {
       };
     } else if (sendQuoteOnly === "Handled By") {
       payload = {
-        sNo: currentCall.sNo,
+        sNo: Sno,
         handledBy: toTitleCase(selectedUser)
       };
       console.log("Received on Condition")
@@ -568,7 +568,7 @@ const EventCards = ({params, searchParams}) => {
   const handleUserChange = async(user) => {
     setSelectedUser(user);
     console.log(user, currentCall.sNo)
-    await handleSave(undefined, undefined, "Handled By");
+    await handleSave(currentCall?.sNo, 'No', "Handled By");
     setIsHandledByChange(false);
   }
 
