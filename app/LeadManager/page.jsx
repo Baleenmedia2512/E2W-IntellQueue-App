@@ -279,7 +279,7 @@ const EventCards = ({params, searchParams}) => {
     }, 3000);
   };
 
-  const handleSave = async (Sno, quoteSent, sendQuoteOnly) => {
+  const handleSave = async (Sno, quoteSent, sendQuoteOnly, user) => {
 
     // const initialQuoteStatus = currentCall?.quoteSent || "";
     setIsLoading(true);
@@ -326,7 +326,7 @@ const EventCards = ({params, searchParams}) => {
     } else if (sendQuoteOnly === "Handled By") {
       payload = {
         sNo: Sno,
-        handledBy: toTitleCase(selectedUser)
+        handledBy: toTitleCase(user)
       };
       console.log("Received on Condition")
     }else {
@@ -357,6 +357,7 @@ const EventCards = ({params, searchParams}) => {
       );
   
       if (!response.ok) throw new Error("Failed to update lead");
+      console.log(response)
       fetchData();
       if (!sendQuoteOnly) {
         setSuccessMessage('Lead updated successfully!');
@@ -568,7 +569,7 @@ const EventCards = ({params, searchParams}) => {
   const handleUserChange = async(user) => {
     setSelectedUser(user);
     console.log(user, currentCall.sNo)
-    await handleSave(currentCall?.sNo, 'No', "Handled By");
+    await handleSave(currentCall?.sNo, 'No', "Handled By", user);
     setIsHandledByChange(false);
   }
 
