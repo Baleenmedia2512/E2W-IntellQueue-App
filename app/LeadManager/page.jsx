@@ -78,6 +78,7 @@ const EventCards = ({params, searchParams}) => {
   const [hideOtherStatus, setHideOtherStatus] = useState(false);
   const [followupOnly, setFollowpOnly] = useState(false);
   const [initialSelectedStatus, setInitialSelectedStatus] = useState(selectedStatus);
+  const [selectedUser, setSelectedUser] = useState('')
   const [initialFollowupDate, setInitialFollowupDate] = useState(followupDate);
   const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
   const [initialCompanyName, setInitialCompanyName] = useState(companyName);
@@ -100,6 +101,7 @@ const EventCards = ({params, searchParams}) => {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isHandledByChange, setIsHandledByChange] = useState('');
 
   // console.log(rows)
   const toggleFilters = () => {
@@ -306,8 +308,9 @@ const EventCards = ({params, searchParams}) => {
 
     let payload = {};
 
+    console.log("Received on Handle Save function")
     // Prepare payload based on context
-    if (sendQuoteOnly) {
+    if (sendQuoteOnly === "Quote Sent") {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
@@ -320,7 +323,13 @@ const EventCards = ({params, searchParams}) => {
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
         handledBy: toTitleCase(userName)
       };
-    } else {
+    } else if (sendQuoteOnly === "Handled By") {
+      payload = {
+        sNo: currentCall.sNo,
+        handledBy: toTitleCase(selectedUser)
+      };
+      console.log("Received on Condition")
+    }else {
       payload = {
         sNo: currentCall.sNo,
         status: selectedStatus,
@@ -336,7 +345,6 @@ const EventCards = ({params, searchParams}) => {
   
     
     try {
-      console.log("Payload before update:", payload); // Debug log
       const response = await fetch(
         "https://leads.baleenmedia.com/api/updateLeads",
         {
@@ -512,7 +520,7 @@ const EventCards = ({params, searchParams}) => {
 
   const toggleQuoteSent = async(sNo, status) => {
     var setValue = status === 'Yes' ? 'No' : 'Yes';
-    await handleSave(sNo, setValue, true);
+    await handleSave(sNo, setValue, "Quote Sent");
     // status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
     const successMessage = status !== 'Yes' 
         ? "Marked as Quote Sent!" 
@@ -551,6 +559,18 @@ const EventCards = ({params, searchParams}) => {
     e.target.select();
   };
 
+  const handleHandledByChange = (user, sNo) => {
+    setIsHandledByChange(!isHandledByChange);
+    setSelectedUser(user);
+    setCurrentCall({sNo: sNo})
+  }
+
+  const handleUserChange = async(user) => {
+    setSelectedUser(user);
+    console.log(user, currentCall.sNo)
+    await handleSave(undefined, undefined, "Handled By");
+    setIsHandledByChange(false);
+  }
 
   return (
     <div className="p-4 text-black">
@@ -696,7 +716,6 @@ const EventCards = ({params, searchParams}) => {
             />
           </div>
         </div>
-
         
       )}
     </div>
@@ -727,7 +746,10 @@ const EventCards = ({params, searchParams}) => {
                 {row.Status}
               </span>
               {row.HandledBy && (
-              <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
+              <div 
+                className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row "
+                onClick={() => handleHandledByChange(row.HandledBy, row.SNo)}
+              >
                 <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
                 <p className="font-poppins">
                   {row.HandledBy}
@@ -777,18 +799,7 @@ const EventCards = ({params, searchParams}) => {
                 }`}
               >
                 {row.ProspectType !== "Unknown" && row.ProspectType}
-                {/* {row.ProspectType === "Hot" && (
-                  row.ProspectType
-                  // <GiCampfire className="inline-block text-red-500 " size={15} />
-                )}
-                {row.ProspectType === "Warm" && (
-                  row.ProspectType
-                  //<MdOutlineWbSunny className="inline-block text-yellow-500 " size={15} />
-                )}
-                {row.ProspectType === "Cold" && (
-                  row.ProspectType
-                  //<FaRegSnowflake className="inline-block text-blue-500 " size={15} />
-                )} */}
+                
               </span>
             )}
           </div>
@@ -797,7 +808,6 @@ const EventCards = ({params, searchParams}) => {
             <div className="absolute top-40 right-3">
             
             </div>
-
           
             {/* Name and Company */}
             <div className="mb-2 mt-8">
@@ -877,6 +887,45 @@ const EventCards = ({params, searchParams}) => {
         
       </div>
       )}
+
+      {/*Modal for Assignee Change*/}
+      {isHandledByChange && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-auto max-w-md mb-16 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Change who can Handle the lead</h3>
+              <button onClick={() => {setIsHandledByChange(false)}}>
+                <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
+              </button>
+            </div>
+            
+            {/* Floating Radio Buttons for Status */}
+            {(!hideOtherStatus && !followupOnly) &&
+            <div className="mb-4 flex flex-wrap gap-1 justify-center">
+              {["Monisha", "Gomathi Shaira", "Usha", "Leenah"].map(
+                (user) => (
+                  <label
+                    key={user}
+                    className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
+                      selectedUser === user ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="user"
+                      value={user}
+                      checked={selectedUser === user}
+                      onChange={() => handleUserChange(user)}
+                      className="hidden"
+                    />
+                    {user}
+                  </label>
+                ))}
+            </div>
+            }
+            </div>
+            </div>
+            )}
 
       {/* Modal for Call Status */}
       {showModal && (
@@ -969,7 +1018,6 @@ const EventCards = ({params, searchParams}) => {
               </div> 
             }
             
-
             {/* Remarks */}
             {!followupOnly &&
             <div className="mb-4">
@@ -1141,45 +1189,6 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
 
 
 export default function Page({ params, searchParams }) {
-  // const [rows, setRows] = useState([]);
-  // const [loading, setLoading] = useState(true);
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const filters = {
-  //         leadDate: searchParams.leadDate || null,
-  //         status: searchParams.status || "",
-  //         followupDate: searchParams.followupDate || null,
-  //       };
-
-  //       const fetchedRows = await fetchDataFromAPI(params.id, filters);
-  //       setRows(fetchedRows);
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [params.id, searchParams]);
-
-  // if (loading) {
-  //   return (
-  //     <div className="font-poppins text-center">
-  //       <h2>Loading...</h2>
-  //     </div>
-  //   );
-  // }
-
-  // if (!rows.length) {
-  //   return (
-  //     <div className="font-poppins text-center">
-  //       <h2>No Data Found</h2>
-  //     </div>
-  //   );
-  // }
 
   return (
     <article>
