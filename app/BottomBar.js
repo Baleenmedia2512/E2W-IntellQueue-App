@@ -120,8 +120,8 @@ export default function BottomBarTest() {
         case '/ConsultantManager':
           setSelected('ConsultantManager');
           break;
-        case '/Payment-Milestone':
-          setSelected('paymentMilestone');
+        case '/Appointment-Form':
+          setSelected('appointmentManager');
           break;  
         case '/LeadManager':
           setSelected("LeadManager");
@@ -167,7 +167,7 @@ export default function BottomBarTest() {
         router.push('/ConsultantManager');
         break;
       case 10:
-        router.push('/Payment-Milestone');
+        router.push('/Appointment-Form');
         break; 
       case 11:
         router.push('/LeadManager');
@@ -394,7 +394,6 @@ export default function BottomBarTest() {
   }, [selected]);
   
 
-
   const handleMenuChange = (menu) => {
     setSelected(menu.name);
     let newValue;
@@ -543,13 +542,13 @@ export default function BottomBarTest() {
             additionalClasses="hover:bg-blue-50"
             dataTag=""
           />
-          {/* <SubNavItem
+          <SubNavItem
           icon={<PaymentMilestoneIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
-          label="Payment Milestone"
-          onClick={() => { setSelected('paymentMilestone'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
+          label="Appointment Manager"
+          onClick={() => { setSelected('appointmentManager'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
           additionalClasses="hover:bg-blue-50"
-          dataTag=""
-          /> */}
+          dataTag="appointmentManager"
+          />
           <SubNavItem
             icon={<LeadManagerIcon className="text-gray-600" />}
             label="Lead Manager"

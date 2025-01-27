@@ -16,6 +16,7 @@ import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/i
 import { checkClientContact } from './Validation';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import axios from 'axios';
 
 export default function AppointmentForm() {
   const dropdownRef = useRef(null);
@@ -25,6 +26,7 @@ export default function AppointmentForm() {
   const periodRef = useRef(null);
   const userName = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
+  const companyName = useAppSelector(state => state.authSlice.companyName);
   const [mobileNumber, setMobileNumber] = useState("");
   const [displayMobileNumber, setDisplayMobileNumber] = useState("");
   const [error, setError] = useState({
@@ -52,17 +54,33 @@ export default function AppointmentForm() {
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   const appointmentTimePeriod = [
-    {label: "Tomorrow", value: "Tomorrow"},
-    {label: "After 3 Days", value: "After 3 Days"},
-    { label: 'After 1 Week', value: 'After 1 Week' },
-    { label: 'After 10 Days', value: 'After 10 Days' },
-    { label: 'After 2 Weeks', value: 'After 2 Weeks' },
-    { label: 'After 4 Weeks', value: 'After 4 Weeks' },
-    {label: "After 1 Month", value: "After 1 Month"},
-    { label: 'After 6 Weeks', value: 'After 6 Weeks' }
+    { label: "Tomorrow", value: "Tomorrow", days: 1 },
+    { label: "After 3 Days", value: "After 3 Days", days: 3 },
+    { label: "After 1 Week", value: "After 1 Week", days: 7 },
+    { label: "After 10 Days", value: "After 10 Days", days: 10 },
+    { label: "After 2 Weeks", value: "After 2 Weeks", days: 14 },
+    { label: "After 4 Weeks", value: "After 4 Weeks", days: 28 },
+    { label: "After 1 Month", value: "After 1 Month", days: 30 },
+    { label: "After 6 Weeks", value: "After 6 Weeks", days: 42 },
   ];
+
+    // Function to calculate time period
+    function calculateTimePeriod(appointmentDate) {
+      const today = new Date();
+      const appointment = new Date(appointmentDate);
+      const diffInDays = Math.ceil((appointment - today) / (1000 * 60 * 60 * 24));
+  
+      // Match the closest period
+      const matchedPeriod = appointmentTimePeriod.find(
+        (period) => diffInDays <= period.days
+      );
+  
+      return matchedPeriod ? matchedPeriod.value : "";
+    }
+
   const getFormattedDate = () => {
     const date = new Date();
     const year = date.getFullYear();
@@ -86,7 +104,6 @@ export default function AppointmentForm() {
       console.error("Error showing element names: " + error)
     }
   }
-  console.log(whatsappKeys)
 
   const fetchWhatsappKeys= () => {
     try{
@@ -117,22 +134,27 @@ export default function AppointmentForm() {
 
   function handleAppointmentSearchSelection(e) {
     const selectedValue = e.target.value;
-    const arrayValues = selectedValue.split(" - ").map(value => value.trim());
+    const arrayValues = selectedValue.split(" - ").map((value) => value.trim());
 
-    setSearchTerm(selectedValue)
+    setSearchTerm(selectedValue);
     setAppointmentId(arrayValues[0]);
     setClientId(arrayValues[1]);
     setClientName(arrayValues[2]);
     setMobileWithoutString(arrayValues[3]);
+
     const formattedDate = new Date(arrayValues[4]).toISOString().slice(0, 10);
     setAppDate(formattedDate);
-    setExistingAppointments([])
-
+    setExistingAppointments([]);
     setDisplayClientId(arrayValues[1]);
     setDisplayClientName(arrayValues[2]);
+
     const cleanedMobile = arrayValues[3].replace(/\D/g, "");
     setDisplayMobileNumber(cleanedMobile);
     setEditMode(true);
+
+    // Set the time period based on the date
+    const period = calculateTimePeriod(arrayValues[4]);
+    setSelectedPeriod(period);
   }
 
   
@@ -289,26 +311,31 @@ export default function AppointmentForm() {
   }
 
   async function handleFormSubmit(e) {
+    setIsButtonDisabled(true);
     e.preventDefault()
     if(clientName === ""){
       nameRef?.current.focus();
       setError({name: "Please Enter a client Name"})
+      setIsButtonDisabled(false);
       return
     }
 
     if(mobileNumber === ""){
       mobileRef?.current.focus();
       setError({number: "Please Enter Client Contact"});
+      setIsButtonDisabled(false);
       return;
     }else if(mobileNumber.length < 10){
       mobileRef?.current.focus();
       setError({number: "Please enter a 10 digit contact number!"});
+      setIsButtonDisabled(false);
       return;
     }
 
     if(appDate === ""){
       periodRef?.current.focus();
       setError({period: "Select a valid Date!"});
+      setIsButtonDisabled(false);
       return;
     }
     // if(containsInteger){
@@ -318,6 +345,7 @@ export default function AppointmentForm() {
     // }
     if(clientId === 0){
       setShowAlert(true);
+      setIsButtonDisabled(false);
       return;
     }
 
@@ -339,6 +367,7 @@ export default function AppointmentForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          JsonDBName: companyName,
           JsonUserName: userName,
           JsonClientId: clientId,
           JsonDate: appointmentDate
@@ -357,37 +386,39 @@ export default function AppointmentForm() {
       }
 
       // const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
-      try{
+      try {
         if (whatsappKeys) {
           const { LicenceNumber, APIKey } = whatsappKeys;
-          console.log(LicenceNumber, APIKey)
-          console.log(whatsappKeys)
-
-          const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=new_appointment_template&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`);
-            
-            if (send.ok) {
-                // alert("Appointment Created and Message Sent Successfully!");
-                setSuccessMessage("Appointment Created and Message Sent Successfully!");
-  
-                setTimeout(() => {
-                  setSuccessMessage('');
-                }, 2000); 
-            } else {
-                // alert("Appointment Created Successfully, but Message Failed to Send.");
-                setToastMessage("Appointment Created Successfully, but Message Failed to Send.");
-                setSeverity('warning');
-                setToast(true);
-
-                setTimeout(() => {
-                  setToast(false);
-                }, 2000);
-            }
+      
+          const send = await fetch(
+            `https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=new_app_template&Param=${encodeURIComponent(clientName)},${encodeURIComponent(formatDate(appointmentDate))},${clientName},${encodeURIComponent(formatDate(appointmentDate))}`
+          );
+      
+          console.log(send);
+      
+          if (send.ok) {
+            setSuccessMessage("Appointment Created and Message Sent Successfully!");
+      
+            setTimeout(() => {
+              setSuccessMessage("");
+            }, 2000);
+          } else {
+            setToastMessage("Appointment Created Successfully, but Message Failed to Send.");
+            setSeverity("warning");
+            setToast(true);
+      
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+          }
         } else {
           console.log("No keys available to send message.");
         }
-      }catch(error){
-        console.error(error)
+      } catch (error) {
+        console.error(error);
+        setIsButtonDisabled(false); // Add this here to ensure the button is re-enabled
       }
+      
       setClientId(0);
       setClientName("");
       setMobileNumber("");
@@ -396,13 +427,14 @@ export default function AppointmentForm() {
       setDisplayClientId("");
       setDisplayClientName("");
       setDisplayMobileNumber("");
+      setIsButtonDisabled(false);
       // alert("Appointment Created Successfully!");
     } catch (error) {
       // alert(error);
       setToastMessage(error);
       setSeverity('error');
       setToast(true);
-      
+      setIsButtonDisabled(false);
       setTimeout(() => {
         setToast(false);
       }, 2000);
@@ -412,101 +444,112 @@ export default function AppointmentForm() {
   
 
   async function handleUpdateAppointment() {
+    setIsButtonDisabled(true); // Disable the button at the start
     const appointmentDate = appDate;
-    try {
-      const response = await fetch(`https://orders.baleenmedia.com/API/Hospital-Form/Update.php?JsonUserName=${encodeURIComponent(userName)}&JsonAppointmentId=${encodeURIComponent(appointmentId)}&JsonDate=${encodeURIComponent(appointmentDate)}`, {
-        method: "GET", // Use GET method
-        headers: {
-            "Content-Type": "application/json",
-        }
-    });    
-    //const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
-
-    try{
-      if (whatsappKeys) {
-      const { LicenceNumber, APIKey } = whatsappKeys;  
-         const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=app_ortho_reschedule&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
-      } else {
-        console.log("No keys available to send message.");
-      }
-    }catch(error){
-      console.log(error);
-    }
-    // console.log(response.text());
-        // if (!response.ok) {
-        //     let errorMessage = `Error ${response.status}: ${response.statusText}`;
-        //     const errorData = await response.text();
-        //     console.log(errorData)
-        //     errorMessage += ` - ${errorData.error || "Unknown error"}`;
-        //     throw new Error(errorMessage);
-        // }
-
-        // alert("Appointment Rescheduled Successfully!");
-        setSuccessMessage("Appointment Rescheduled Successfully!");
   
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 2000); 
-        handleEditMode();
+    try {
+      const response = await fetch(
+        `https://orders.baleenmedia.com/API/Hospital-Form/Update.php?JsonUserName=${encodeURIComponent(userName)}&JsonAppointmentId=${encodeURIComponent(appointmentId)}&JsonDate=${encodeURIComponent(appointmentDate)}`, 
+        {
+          method: "GET", // Use GET method
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      // const weeks = parseInt(selectedPeriod.match(/\d+/)[0]);
+  
+      try {
+        if (whatsappKeys) {
+          const { LicenceNumber, APIKey } = whatsappKeys;
+          const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=reschedule_app_template&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`);
+        } else {
+          console.log("No keys available to send message.");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+  
+      setSuccessMessage("Appointment Rescheduled Successfully!");
+  
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 2000);
+  
+      handleEditMode();
     } catch (error) {
-        // alert(error)
-        setToastMessage(error);
-        setSeverity('error');
-        setToast(true);
-        
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
+      setToastMessage(error);
+      setSeverity('error');
+      setToast(true);
+  
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    } finally {
+      setIsButtonDisabled(false); // Enable the button after the process completes
     }
-}
+  }
+  
 
   // async function handleCancelAppointment() {
   //   handleEditMode();
   // }
   async function handleCancelAppointment() {
+    setIsButtonDisabled(true); // Disable the button at the start
     const appointmentDate = appDate;
-    try {
-        const response = await fetch(`https://orders.baleenmedia.com/API/Hospital-Form/Update.php?JsonUserName=${encodeURIComponent(userName)}&JsonAppointmentId=${encodeURIComponent(appointmentId)}&JsonReject=true`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`Error ${response.status}: ${errorData}`);
-        }
-
-        // Send WhatsApp notification for appointment cancellation
-        try {
-          if (whatsappKeys) {
-            const { LicenceNumber, APIKey } = whatsappKeys;
-            const send = await fetch(`https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=reject_appointment_template&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`)
-          } else {
-            console.log("No keys available to send message.");
-          }  
-        } catch (error) {
-            console.error("Failed to send WhatsApp message:", error);
-        }
-
-        // alert("Appointment Cancelled Successfully!");
-        setSuccessMessage("Appointment Cancelled Successfully!");
   
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 2000); 
-        handleEditMode();
-
+    try {
+      const response = await fetch(
+        `https://orders.baleenmedia.com/API/Hospital-Form/Update.php?JsonUserName=${encodeURIComponent(userName)}&JsonAppointmentId=${encodeURIComponent(appointmentId)}&JsonReject=true`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Error ${response.status}: ${errorData}`);
+      }
+  
+      // Send WhatsApp notification for appointment cancellation
+      try {
+        if (whatsappKeys) {
+          const { LicenceNumber, APIKey } = whatsappKeys;
+          const send = await fetch(
+            `https://app.tendigit.in/api/sendtemplate.php?LicenseNumber=${LicenceNumber}&APIKey=${APIKey}&Contact=91${mobileNumber}&Template=reject_app_template&Param=${clientName},${formatDate(appointmentDate)},${clientName},${formatDate(appointmentDate)}`
+          );
+  
+          if (!send.ok) {
+            console.error("Failed to send WhatsApp message:", await send.text());
+          }
+        } else {
+          console.log("No keys available to send message.");
+        }
+      } catch (error) {
+        console.error("Failed to send WhatsApp message:", error);
+      }
+  
+      setSuccessMessage("Appointment Cancelled Successfully!");
+  
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 2000);
+      handleEditMode();
     } catch (error) {
-        // alert(`Cancellation failed: ${error.message}`);
-        setToastMessage(`Cancellation failed: ${error.message}`);
-        setSeverity('error');
-        setToast(true);
-        
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
+      setToastMessage(`Cancellation failed: ${error.message}`);
+      setSeverity("error");
+      setToast(true);
+  
+      setTimeout(() => {
+        setToast(false);
+      }, 2000);
+    } finally {
+      setIsButtonDisabled(false); // Re-enable the button after the process completes
     }
-}
+  }
+  
 
   // useEffect(() => {
   //   if(appointmentDate && appointmentTime && hours){
@@ -552,21 +595,22 @@ export default function AppointmentForm() {
   };
 
   return (
-    <form className="shadow-md shadow-blue-200 border p-8 my-6 text-black rounded-xl bg-white">
-      <div className="flex flex-col md:flex-row flex-2">
-        <div className="w-full m-auto max-w-[400px] h-auto">
-          <Image
-            src="/BG_Image.jpg"
-            alt="Background Image"
-            width={400}
-            height={200}
-            layout="responsive"
-            className='w-4 h-4'
-            priority
-            blurDataURL='data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=='
-          />
-        </div>
-        {showAlert &&
+<form className="shadow-md shadow-blue-200 border p-8 my-6 text-black rounded-xl bg-white">
+  <div className="flex flex-col md:flex-row items-center gap-8">
+    {/* Image Section */}
+    <div className="w-full max-w-[400px] h-auto">
+      <Image
+        src="/BG_Image.jpg"
+        alt="Background Image"
+        width={400}
+        height={200}
+        // layout="responsive"
+        className="rounded-lg"
+        priority
+        // blurDataURL="data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
+      />
+    </div>
+    {showAlert &&
           <CustomAlert 
           message={`You are adding appointment for a new client(${clientName}). Do you want to proceed?`}
           onOk={addNewClient}
@@ -574,81 +618,86 @@ export default function AppointmentForm() {
           />
         }
         
-        <div className="w-full m-auto max-w-[400px] h-auto">
-          <h1 className="text-blue-500 font-montserrat font-bold text-2xl mb-4">Appointment Manager</h1>
-          <div className="flex flex-col space-y-4" onTouchStart={handleTouchStart}>
-          {editMode && clientId !== 0 && (
-            <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg flex items-center shadow-md">
-              <button 
-                className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-                onClick={handleEditMode}
-              >
-                Exit Edit
-              </button>
-              <div className="flex flex-row text-left text-sm md:text-base pr-2">
-                <p className="text-gray-600 font-semibold">{displayClientId}</p>
-                <p className="text-gray-600 font-semibold mx-1">-</p>
-                <p className="text-gray-600 font-semibold">{displayClientName}</p>
-                <p className="text-gray-600 font-semibold mx-1">-</p>
-                <p className="text-gray-600 font-semibold">{displayMobileNumber}</p>
-              </div>
+    {/* Form Section */}
+    <div className="w-full max-w-[400px]">
+      <h1 className="text-blue-500 font-montserrat font-bold text-2xl mb-4">Appointment Manager</h1>
+      <div className="flex flex-col space-y-4" onTouchStart={handleTouchStart}>
+        {editMode && clientId !== 0 && (
+          <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg flex items-center shadow-md">
+            <button
+              className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2"
+              onClick={handleEditMode}
+            >
+              Exit Edit
+            </button>
+            <div className="flex flex-row text-left text-sm md:text-base pr-2">
+              <p className="text-gray-600 font-semibold">{displayClientId}</p>
+              <p className="text-gray-600 font-semibold mx-1">-</p>
+              <p className="text-gray-600 font-semibold">{displayClientName}</p>
+              <p className="text-gray-600 font-semibold mx-1">-</p>
+              <p className="text-gray-600 font-semibold">{displayMobileNumber}</p>
             </div>
-          )}
-            <div className="flex flex-col">
-              <label className="font-montserrat text-lg mb-1">Search</label>
-              <div className="flex items-center w-full border rounded-lg overflow-hidden border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
-                <input
-                  className="p-3 font-montserrat bg-white w-full rounded-md focus:border-blue-500 focus:outline-none"
-                  type="text"
-                  id="RateSearchInput"
-                  placeholder="Search Here.."
-                  ref={searchRef}
-                  value={searchTerm}
-                  onChange={getExistingAppointment}
-                  onFocus={(e) => { e.target.select(); }}
-                />
-                <div className="px-3">
-                  <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
-                </div>
-              </div>
-              <div>
-              {existingAppointments.length > 0 && searchTerm !== "" && (
-                <ul  className="absolute z-10 mt-1 w-fit bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48" >
-                  {existingAppointments.map((name, index) => (
-                    <li key={index}>
-                      <button
-                        type="button"
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                        onClick={handleAppointmentSearchSelection}
-                        value={name}
-                      >
-                        {name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              </div>
-            </div>
+          </div>
+        )}
 
-            <div className="flex flex-col">
-              <label className="font-montserrat text-lg mb-1">Name <span className="text-red-500">*</span></label>
-              <div>
-                <input
-                  placeholder="Your Name"
-                  required
-                  value={clientName}
-                  ref={nameRef}
-                  onChange={getSearchSuggestions}
-                  onFocus={e => e.target.select()}
-                  onBlur={() => setTimeout(() => setSearchSuggestions([]),150)}
-                  className={`border p-3 font-montserrat bg-white w-full rounded-md ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
-                />
-                {(nameError) && <p className="text-red-500 font-montserrat">{error.name}</p>}
-              </div>
-              <div>
+        {/* Search Input */}
+        <div className="relative">
+        <div className="flex flex-col">
+          <label className="font-montserrat font-medium text-lg mb-1">Search</label>
+          <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:ring focus-within:ring-blue-300">
+            <input
+              className="p-3 font-montserrat bg-white w-full rounded-md focus:border-blue-500 focus:outline-none"
+              type="text"
+              id="RateSearchInput"
+              placeholder="Search Here.."
+              ref={searchRef}
+              value={searchTerm}
+              onChange={getExistingAppointment}
+              onFocus={(e) => e.target.select()}
+            />
+            <div className="px-3">
+              <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
+            </div>
+          </div>
+          <div>
+          {existingAppointments.length > 0 && searchTerm !== "" && (
+            <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
+              {existingAppointments.map((name, index) => (
+                <li key={index}>
+                  <button
+                    type="button"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                    onClick={handleAppointmentSearchSelection}
+                    value={name}
+                  >
+                    {name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          </div>
+        </div>
+        </div>
+
+        {/* Name Input */}
+        <div className="relative">
+        <div className="flex flex-col">
+          <label className="font-montserrat font-medium text-lg mb-1">Name <span className="text-red-500">*</span></label>
+          <input
+            placeholder="Name"
+            required
+            value={clientName}
+            ref={nameRef}
+            onChange={getSearchSuggestions}
+            onFocus={(e) => e.target.select()}
+            onBlur={() => setTimeout(() => setSearchSuggestions([]), 150)}
+            className={`border p-3 font-montserrat bg-white w-full rounded-md focus:outline-none focus:shadow-outline ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300'}`}
+          />
+          {nameError && <p className="text-red-500 font-montserrat">{error.name}</p>}
+          <div>
               {searchSuggestions.length > 0 && clientName !== "" && (
-                <ul  className="absolute z-10 mt-1 w-fit bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48" >
+                <ul  className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48" >
                   {searchSuggestions.map((name, index) => (
                     <li key={index}>
                       <button
@@ -664,129 +713,115 @@ export default function AppointmentForm() {
                 </ul>
               )}
               </div>
-            </div>
+        </div>
+        </div>
 
-            <div className="flex flex-col">
-              <label className="font-montserrat text-lg mb-1">Contact Number <span className="text-red-500">*</span></label>
-              <div>
-                <input
-                  placeholder="Mobile Number"
-                  value={mobileNumber}
-                  onChange={handleInputChange}
-                  required
-                  ref={mobileRef}
-                  onFocus={e => e.target.select()}
-                  className={`border p-3 font-montserrat w-full bg-white rounded-md ${numberError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'}`}
-                />
-                {(numberError && mobileNumber !== "") && <p className="text-red-500 font-montserrat">{error.number}</p>}
-              </div>
-            </div>
+        {/* Contact Number Input */}
+        <div className="flex flex-col">
+          <label className="font-montserrat font-medium text-lg mb-1">Contact Number <span className="text-red-500">*</span></label>
+          <input
+            placeholder="Contact Number"
+            value={mobileNumber}
+            onChange={handleInputChange}
+            required
+            ref={mobileRef}
+            onFocus={(e) => e.target.select()}
+            className={`border p-3 font-montserrat w-full bg-white rounded-md focus:outline-none focus:shadow-outline ${numberError ? 'border-red-500' : 'border-gray-400  focus:border-blue-300 focus:ring focus:ring-blue-300'}`}
+          />
+          {numberError && mobileNumber !== "" && <p className="text-red-500 font-montserrat">{error.number}</p>}
+        </div>
 
-            <div className="flex flex-col justify-between">
-              <label className="font-montserrat text-lg mb-1">Appointment Period</label>
-              <Dropdown
-              className={`border p-2 --font-montserrat w-full bg-white rounded-md border-gray-400`}
-            //  className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline
-            //   ${error ? 'border-red-400' : 'border-gray-300'}
-            //   focus:border-blue-300 focus:ring focus:ring-blue-300`}
-            
-              
-              styles={{
-                control: (provided) => ({
-                  ...provided,
-                  minHeight: '50px',
-                }),
-              }}
-              placeholder="Select Time Period"
-              
-              options={appointmentTimePeriod}
-              value={selectedPeriod}
-              onChange={(selectedOption) => {setSelectedPeriod(selectedOption.target.value); setError({period: ""})}}   
-            />
-            
-               <div className="flex flex-col w-full mt-2" name="AppointmentDateSelect" id="22">
-                <label className="font-montserrat text-lg mb-1">Appointment Date <span className="text-red-500">*</span></label>
-                <input
-                  type='date'
-                  defaultValue={getFormattedDate()}
-                  ref={periodRef}
-                  value={appDate}
-                  min={getFormattedDate()}
-                  // onChange={e => setAppointmentDate(e.target.value)}
-                  onChange={(selectedOption) => {setAppDate(selectedOption.target.value); setError({period: ""}); console.log(selectedOption.target.value)}} 
-                  className={`border p-3 bg-white ${periodError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} font-montserrat w-full rounded-md`}
-                />
-                {periodError && <p className="text-red-500 font-montserrat mt-2">{error.period}</p>}
-              </div>
-              {/* // <div className="flex flex-col w-full ml-2">
-              //   <label className="font-montserrat text-lg mb-1">Appt. Time <span className="text-red-500">*</span></label>
-              //   <input
-              //     type='time'
-              //     defaultValue={getFormattedTime()}
-              //     className='border p-3 bg-white border-gray-400 font-montserrat w-full rounded-md'
-              //     value={appointmentTime}
-              //     t
-              //     onChange={e => setAppointmentTime(e.target.value)}
-              //   />
-              // </div> */} 
-            </div>
+        {/* Appointment Period Dropdown */}
+        <div className="flex flex-col justify-between">
+          <label className="font-montserrat font-medium text-lg mb-1">Appointment Period</label>
+          <Dropdown
+            className={`border p-2 font-montserrat w-full bg-white rounded-md border-gray-400`}
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                minHeight: '50px',
+              }),
+            }}
+            placeholder="Select Time Period"
+            options={appointmentTimePeriod}
+            value={selectedPeriod}
+            onChange={(selectedOption) => {
+              setSelectedPeriod(selectedOption.target.value);
+              setError({ period: "" });
+            }}
+          />
+        </div>
 
-           {/* <div className="flex flex-col">
-              <label className="font-montserrat text-lg mb-1">No. Of Hours <span className="text-red-500">*</span></label>
-              <select id="timeSelect" className='border p-3 bg-white border-gray-400 font-montserrat w-full rounded-md' value={hours} onChange={e => setHours(e.target.value)}>
-                {timeOptions.map((minutes) => (
-                  <option key={minutes} value={minutes}>
-                    {`${Math.floor(minutes / 60)}h ${minutes % 60}m`}
-                  </option>
-                ))}
-              </select>
-                </div> */}
-          </div>
+        {/* Appointment Date Input */}
+        {/* <div className="flex flex-col w-full mt-2">
+          <label className="font-montserrat text-lg mb-1">Appointment Date <span className="text-red-500">*</span></label>
+          <input
+            type="date"
+            defaultValue={getFormattedDate()}
+            ref={periodRef}
+            value={appDate}
+            min={getFormattedDate()}
+            onChange={(selectedOption) => {
+              setAppDate(selectedOption.target.value);
+              setError({ period: "" });
+            }}
+            className={`border p-3 bg-white ${periodError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} font-montserrat w-full rounded-md`}
+          />
+          {periodError && <p className="text-red-500 font-montserrat mt-2">{error.period}</p>}
+        </div> */}
 
-          <div className="flex flex-col gap-4 justify-end mt-6 w-full">
+        {/* Toast Messages */}
+        {successMessage && <SuccessToast message={successMessage} />}
+        {toast && <ToastMessage message={toastMessage} type="error" />}
+        {toast && <ToastMessage message={toastMessage} type="warning" />}
+
+        {/* Submit or Update Buttons */}
+        <div className="flex flex-col gap-4 justify-end mt-6 w-full">
           {editMode ? (
             <>
-              {/* Update Appointment Button */}
               <button
                 type="button"
                 onClick={handleUpdateAppointment}
-                className="w-full flex items-center justify-center font-montserrat py-3 px-6 bg-green-500 rounded-full text-white mt-2 transition-transform duration-200 ease-in-out active:scale-95 text-sm sm:text-lg hover:bg-green-600"
+                disabled={isButtonDisabled}
+                className={`w-full flex items-center justify-center font-montserrat py-3 px-6 
+                  ${isButtonDisabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600'} 
+                  rounded-md mt-2 transition-transform duration-200 ease-in-out active:scale-95 text-sm sm:text-lg`}
               >
                 <FontAwesomeIcon icon={faCheck} className="text-xl sm:text-2xl mr-2" />
                 Update Appointment
               </button>
 
-              {/* Cancel Appointment Button */}
               <button
                 type="button"
                 onClick={handleCancelAppointment}
-                className="w-full flex items-center justify-center font-montserrat py-3 px-6 bg-red-500 rounded-full text-white transition-transform duration-200 ease-in-out active:scale-95 text-sm sm:text-lg hover:bg-red-600"
+                className="w-full flex items-center justify-center font-montserrat py-3 px-6 bg-red-500 rounded-md text-white transition-transform duration-200 ease-in-out active:scale-95 text-sm sm:text-lg hover:bg-red-600"
               >
                 <FontAwesomeIcon icon={faTimes} className="text-xl sm:text-2xl mr-2" />
                 Cancel Appointment
               </button>
+
             </>
           ) : (
             <button
-              type="button"
-              onClick={handleFormSubmit}
-              disabled={clientNumberExists}
-              className={`w-full flex items-center justify-center font-montserrat py-3 px-6 ${!clientNumberExists ? 'bg-green-500' : 'bg-gray-200'} rounded-full text-white mt-2 ${!clientNumberExists && 'transition-transform duration-200 ease-in-out active:scale-95 hover:bg-green-600'} text-sm sm:text-lg `}
-            >
-              <FontAwesomeIcon icon={faCheck} className="text-xl sm:text-2xl mr-2" />
-              Book Appointment
-            </button>
+            type="button"
+            onClick={handleFormSubmit}
+            disabled={clientNumberExists || isButtonDisabled}
+            className={`w-full flex items-center justify-center font-montserrat py-3 px-6 
+              ${clientNumberExists || isButtonDisabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-green-500 text-white'} 
+              rounded-md mt-2 
+              ${!clientNumberExists && !isButtonDisabled && 'transition-transform duration-200 ease-in-out active:scale-95 hover:bg-green-600'} 
+              text-sm sm:text-lg`}
+          >
+            <FontAwesomeIcon icon={faCheck} className="text-xl sm:text-2xl mr-2" />
+            Book Appointment
+          </button>
+
           )}
         </div>
-
-
-        </div>
       </div>
-      {/* ToastMessage component */}
-      {successMessage && <SuccessToast message={successMessage} />}
-      {toast && <ToastMessage message={toastMessage} type="error"/>}
-      {toast && <ToastMessage message={toastMessage} type="warning"/>}
-    </form>
-    
+    </div>
+  </div>
+</form>
+
   );
 }
