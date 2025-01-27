@@ -21,7 +21,7 @@ import { useAppSelector } from "@/redux/store";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 
-const statusColors = {
+export const statusColors = {
   New: "bg-green-200 text-green-800",
   Unreachable: "bg-red-200 text-red-800",
   "Call Followup": "bg-yellow-200 text-yellow-800",
