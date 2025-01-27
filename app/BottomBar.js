@@ -120,7 +120,7 @@ export default function BottomBarTest() {
         case '/ConsultantManager':
           setSelected('ConsultantManager');
           break;
-        case '/Appointment-Form':
+        case '/AppointmentForm':
           setSelected('appointmentManager');
           break;  
         case '/LeadManager':
@@ -167,7 +167,7 @@ export default function BottomBarTest() {
         router.push('/ConsultantManager');
         break;
       case 10:
-        router.push('/Appointment-Form');
+        router.push('/AppointmentForm');
         break; 
       case 11:
         router.push('/LeadManager');
