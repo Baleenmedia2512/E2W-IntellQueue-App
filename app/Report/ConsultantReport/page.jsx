@@ -21,6 +21,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { FaCheck, FaTimes, FaWindowClose, FaFilter } from 'react-icons/fa';
 import Tippy from '@tippyjs/react'; // Tooltip library
 import 'tippy.js/dist/tippy.css'; // Import Tippy's default CSS
+import { generateReferralPdf } from '../../generatePDF/generateConsultantSlipPDF';
 
 const matchModes = [
     { label: 'Contains', value: 'contains' },
@@ -107,7 +108,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
@@ -177,6 +178,7 @@ export default function GroupedRowsDemo() {
             setSelectedRows([]);
         }
     }, [consultants]);
+    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -714,6 +716,84 @@ const handleCheckboxChange = () => {
     setShowIcProcessedConsultantsOnly((prev) => !prev);
 };
 
+const handleSlipGeneration = () => {
+    // Step 1: Filter out rows where rateCard is 'Total'
+    const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
+  
+    // Step 2: Group by consultant, rateCard, and rateType
+    const groupedData = filteredRows.reduce((acc, row) => {
+      const { consultant, rateCard, rateType, price } = row;
+  
+      // Initialize the group for the consultant if it doesn't exist
+      if (!acc[consultant]) {
+        acc[consultant] = {};
+      }
+  
+      // Initialize the group for the rateCard if it doesn't exist
+      if (!acc[consultant][rateCard]) {
+        acc[consultant][rateCard] = {};
+      }
+  
+      // Initialize the group for the rateType if it doesn't exist
+      if (!acc[consultant][rateCard][rateType]) {
+        acc[consultant][rateCard][rateType] = { count: 0, totalPrice: 0 };
+      }
+  
+      // Update the count and totalPrice for the rateType
+      acc[consultant][rateCard][rateType].count += 1;
+      acc[consultant][rateCard][rateType].totalPrice += price;
+  
+      return acc;
+    }, {});
+  
+    // Step 3: Create the summary output
+    const summary = [];
+    for (const consultant in groupedData) {
+      for (const rateCard in groupedData[consultant]) {
+        for (const rateType in groupedData[consultant][rateCard]) {
+          const { count, totalPrice } = groupedData[consultant][rateCard][rateType];
+          
+          // Get the date range for each consultant (assuming it is consistent)
+          // You can modify the logic to fetch actual date ranges if available
+  
+          summary.push({
+            consultant,
+            dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+            rateCard,
+            rateType,
+            count,
+            totalPrice
+          });
+        }
+      }
+    }
+  
+    // Step 4: If summary is not empty, send data to slip generation
+    if (summary.length > 0) {
+      generateReferralPdf(summary); // Pass the summary data to PDF generation
+    } else {
+      alert("No data to generate slip.");
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const months = [
+      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    ];
+  
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');  // Add leading zero for single digits
+    const month = months[date.getMonth()];  // Get month in 3-letter format
+    const year = date.getFullYear();  // Get full year
+    
+    return `${day}-${month}-${year}`;
+  };
+  
+  
+
+// console.log(selectedRows)
+
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -776,6 +856,15 @@ const handleCheckboxChange = () => {
                 </div>
 
         <div className="mt-auto flex justify-end gap-2 flex-wrap">
+        <button
+        onClick={() => handleSlipGeneration()}
+        className="bg-orange-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-orange-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+        >
+        <i className="pi pi-download mr-1 sm:mr-2"></i>
+        Generate Slip
+        </button>
+
+
         <button
           onClick={handleExport}
           className="bg-green-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
