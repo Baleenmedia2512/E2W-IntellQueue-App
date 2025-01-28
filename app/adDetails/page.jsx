@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/redux/store';
 import AdDetailsPage from './ad-Details';
 import CheckoutPage from './checkout';
-import { faArrowLeft, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCheckCircle, faClose, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { goBack, resetQuotesData, setQuotesData, updateCurrentPage } from '@/redux/features/quote-slice';
 import { useDispatch } from 'react-redux';
@@ -17,7 +17,7 @@ import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, Fetc
 export const AdDetails = () => {
   const routers = useRouter();
   const dispatch = useDispatch();
-  const clientNameRef = useRef(null);
+  // const clientNameRef = useRef(null);
   const clientContactRef = useRef(null);
   
   const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -25,7 +25,7 @@ export const AdDetails = () => {
   const clientDetails = useAppSelector(state => state.clientSlice);
   const [isClientNameFocus, setIsClientNameFocus] = useState(false);
   const [isClientContact, setIsClientContact] = useState(true);
-  const [isClientName, setIsClientName] = useState(true)
+  // const [isClientName, setIsClientName] = useState(true)
   const [clientNameSuggestions, setClientNameSuggestions] = useState([]);
   const [isHidden, setIsHidden] = useState(false);
   const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
@@ -60,13 +60,13 @@ export const AdDetails = () => {
     
   }, []);
 
-  useEffect(()=>{
-    if(clientName === ""){
-      clientNameRef.current?.focus()
-    }else if(clientContact === ""){
-      clientContactRef.current?.focus()
-    }
-  },[isClientContact, isClientName])
+  // useEffect(()=>{
+  //   if(clientName === ""){
+  //     clientNameRef.current?.focus()
+  //   }else if(clientContact === ""){
+  //     clientContactRef.current?.focus()
+  //   }
+  // },[isClientContact, isClientName])
 
   const fetchClientDetails = (clientID) => {
 
@@ -108,7 +108,7 @@ export const AdDetails = () => {
       setClientNameSuggestions([]);
     }
       dispatch(setClientData({clientName: newName}));
-      setIsClientName(true);
+      // setIsClientName(true);
   };
 
   const handleClientNameSelection = (names) => {
@@ -150,6 +150,14 @@ export const AdDetails = () => {
       remarks: item.remarks,
       width: item.width,
       rateId: item.rateId,
+      color: item.color,
+      colorPercentage: item.colorPercentage,
+      bold: item.bold,
+      boldPercentage: item.boldPercentage,
+      semibold: item.semibold,
+      semiboldPercentage: item.semiboldPercentage,
+      tick: item.tick,
+      tickPercentage: item.tickPercentage
     };
   };
 
@@ -176,7 +184,7 @@ export const AdDetails = () => {
 
     let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonNextQuoteId=${quoteNumber}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonNextQuoteId=${quoteNumber}&JsonBold=${item.bold ? item.boldPercentage : -1}&JsonSemibold=${item.semibold ? item.semiboldPercentage : -1}&JsonColor=${item.color ? item.colorPercentage : -1}&JsonTick=${item.tick ? item.tickPercentage : -1}`)
       
       const data = await response.json();
       if (!response.ok) {
@@ -233,7 +241,7 @@ export const AdDetails = () => {
             return;
           }
         } else {
-          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonScheme=&JsonBold=&JsonSemiBold=&JsonTick=&JsonColor=&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonCartId=${item.cartId}&JsonQuoteId=${editQuoteItem.editQuoteNumber}`)
+          const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateQuotesData.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonScheme=&JsonBold=&JsonSemiBold=&JsonTick=&JsonColor=&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonCartId=${item.cartId}&JsonQuoteId=${editQuoteItem.editQuoteNumber}&JsonBold=${item.bold ? item.boldPercentage : -1}&JsonSemiBold=${item.semibold ? item.semiboldPercentage : -1}&JsonColor=${item.color ? item.colorPercentage : -1}&JsonTick=${item.tick ? item.tickPercentage : -1}`)
         
           const data = await response.json();
           if (!response.ok) {
@@ -276,7 +284,7 @@ export const AdDetails = () => {
     let grandTotalAmount = calculateGrandTotal();
     grandTotalAmount = grandTotalAmount.replace('₹', '');
 
-    if(clientName !== ""){
+    // if(clientName !== ""){
       try{
 
         const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
@@ -292,13 +300,13 @@ export const AdDetails = () => {
         return;
       }
       
-    } else{
-      if(clientName === ""){
-        setIsClientName(false)
-      }else if(clientContact === ""){
-        setIsClientContact(false)
-      }
-    }
+    // } else{
+    //   if(clientName === ""){
+    //     // setIsClientName(false)
+    //   }else if(clientContact === ""){
+    //     // setIsClientContact(false)
+    //   }
+    // }
   };
   
   const handleUpdateAndDownloadQuote = async (e) => {
@@ -314,7 +322,7 @@ export const AdDetails = () => {
     : cartItems;
 
     grandTotalAmount = grandTotalAmount.replace('₹', '');
-    if(clientName !== ""){
+    // if(clientName !== ""){
       try{
         const cart = await Promise.all(
           selectedCartItems
@@ -336,13 +344,13 @@ export const AdDetails = () => {
         return;
       }
       
-    } else{
-      if(clientName === ""){
-        setIsClientName(false)
-      }else if(clientContact === ""){
-        setIsClientContact(false)
-      }
-    }
+    // } else{
+    //   if(clientName === ""){
+    //     setIsClientName(false)
+    //   }else if(clientContact === ""){
+    //     setIsClientContact(false)
+    //   }
+    // }
   };
 
   function showCurrentPage(){
@@ -380,14 +388,10 @@ export const AdDetails = () => {
       {isHidden ? <div className='flex items-center justify-center h-screen'>
       <h2 className='text-center'>Oops! It looks like you might be on the wrong link. Please double-check and try again!</h2>
     </div>:
-
       <div className={`text-black fixed top-0 left-0 right-0 bg-gray-100 overflow-y-auto sm:h-[100vh] ${currentPage === 'checkout' ? 'h-[100vh]' : 'h-[100vh]'} ${currentPage === 'checkout' ? 'overflow-y-scroll' : 'overflow-hidden'}`}>
       <h1 className='text-2xl font-bold ml-3 text-start text-blue-500 pt-2'>Quote Sender</h1>
       <div className="border-2 ml-3 w-10 inline-block mb-6 border-blue-500 "></div>
         <div className="flex flex-row items-center justify-between py-2 h-fit px-4 bg-gray-100">
-        
-       
-        
           {/* Back Button */}
          { (currentPage !== "adDetails" && currentPage !== "") ?
          (<button className="mr-4 mt-2 hover:scale-110 text-blue-500 text-nowrap max-h-10 font-semibold hover:animate-pulse border-blue-500 border px-2 py-1 rounded-lg bg-white" onClick={() => {
@@ -448,7 +452,20 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <div></div>
+            <></>
+            // <div>
+            //   <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
+            //     dispatch(resetQuotesData());
+
+            //     // clear while on edit mode
+            //     if (cartItems.length > 0 && cartItems[0].isEditMode) {
+            //     dispatch(setQuotesData({isEditMode: true, editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0}))
+            //     }
+
+            //     }}>
+            //   <FontAwesomeIcon icon={faCheckCircle} className='text-md' onClick={() => routers.push('/adDetails/manageQuotes')}/> Manage Quotes
+            // </button>
+            // </div>
           )}
 
           {/* {currentPage === "checkout" ?(
@@ -486,15 +503,25 @@ export const AdDetails = () => {
           <table className='mb-6 ml-4'>
             <tr>
               <td className='py-1 text-blue-600 font-semibold'>Name</td>
-              <td>:</td><td> <input placeholder="Ex: Tony" ref={clientNameRef} onFocus={() => setIsClientNameFocus(true)} onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} className=' py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value = {clientName} onChange={handleSearchTermChange} ></input>
-              {!isClientName && <label className='text-red-500'>Please enter client name</label>}
+              <td>:</td>
+              <td> 
+                <input 
+                  placeholder="Ex: Tony" 
+                  // ref={clientNameRef} 
+                  onFocus={() => setIsClientNameFocus(true)} 
+                  onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} 
+                  className={`w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7`}
+                  value = {clientName} 
+                  onChange={handleSearchTermChange} 
+                ></input>
+              {/* {!isClientName && <label className='text-red-500'>Please enter client name</label>} */}
               {clientNameSuggestions.length > 0 && isClientNameFocus && (
                 <ul className="absolute z-10 mt-1 w-auto bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
                 {clientNameSuggestions.map((name, index) => (
                   <li key={index}>
                     <button
                       type="button"
-                      className=" z-10  text-left px-2 py-1 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none ml-2"
+                      className=" z-10 text-left px-2 py-1 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none ml-2"
                       onClick={handleClientNameSelection}
                       value={name}
                     >
@@ -524,7 +551,6 @@ export const AdDetails = () => {
             </tr>
           </table>
           </form>
-          
         )}
         </div>
       </div>
