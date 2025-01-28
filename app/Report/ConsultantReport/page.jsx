@@ -760,7 +760,6 @@ const handleSlipGeneration = () => {
             consultant,
             dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
             rateCard,
-            rateType,
             count,
             totalPrice
           });

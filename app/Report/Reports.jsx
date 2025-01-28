@@ -25,6 +25,7 @@ import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
 import { Margin } from '@mui/icons-material';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
 import dayjs from 'dayjs';
+import { CircularProgress } from '@mui/material';
 
 
 const Report = () => {
@@ -121,12 +122,25 @@ useEffect(() => {
 
 const handleCloseDay = () => {
   setIsButtonDisabled(true);
+setToastMessage(
+            <span>
+                <CircularProgress size={20} style={{ marginRight: "8px" }} />
+                {`Processing`}
+            </span>
+        );
+        setSeverity('warning');
+        setToast(true);
+
   axios
     .get(`https://orders.baleenmedia.com/API/Media/DailyReportWhatsapp.php?JsonDBName=${companyName}`)
     .then((response) => {
       const result = response.data;
       console.log(result)
       if (result[0].success) {
+        setToastMessage('');
+        setSeverity('');
+        setToast(false);
+
         setSuccessMessage('The Day is Closed And Report is sent.');
         setIsButtonDisabled(false);
         checkIfDIRSentToday();

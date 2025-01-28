@@ -15,9 +15,9 @@ export const generateReferralPdf = (summary) => {
   // Add the dynamic rows based on the summary data
   summary.forEach(item => {
     // Combine No. of Case and Rate Type
-    const noOfCaseWithRateType = `${item.count}-${item.rateType}`;
+    // const noOfCaseWithRateType = `${item.count}-${item.rateType}`;
 
-    tableData.push([item.consultant, item.dateRange, item.rateCard, noOfCaseWithRateType, item.totalPrice]);
+    tableData.push([item.consultant, item.dateRange, item.rateCard, item.count, item.totalPrice]);
   });
 
   const createSection = (yOffset, rowData) => {

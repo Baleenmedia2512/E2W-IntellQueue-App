@@ -16,6 +16,7 @@ import { convertFieldResponseIntoMuiTextFieldProps } from '@mui/x-date-pickers/i
 import { checkClientContact } from './Validation';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import axios from 'axios';
 
 export default function AppointmentForm() {
@@ -610,13 +611,53 @@ export default function AppointmentForm() {
         // blurDataURL="data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
       />
     </div>
-    {showAlert &&
+
+    <Dialog
+  open={showAlert}
+  onClose={(e) => {
+    e.preventDefault();
+    setShowAlert(false);
+  }}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+>
+  <DialogTitle id="alert-dialog-title">Do you want to proceed?</DialogTitle>
+  <DialogContent>
+    <DialogContentText>
+      You are adding an appointment for a new client&nbsp;
+      <span style={{ fontWeight: "bold" }}>{clientName}</span>. Do you want to proceed?
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions>
+    <Button
+      onClick={(e) => {
+        e.preventDefault();
+        setShowAlert(false);
+      }}
+      color="primary"
+    >
+      No
+    </Button>
+    <Button
+      onClick={addNewClient}
+      style={{
+        border: "1px solid green",
+        color: "green",
+      }}
+    >
+      Yes
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
+    {/* {showAlert &&
           <CustomAlert 
           message={`You are adding appointment for a new client(${clientName}). Do you want to proceed?`}
           onOk={addNewClient}
           onCancel={(e) => {e.preventDefault(); setShowAlert(false);}}
           />
-        }
+        } */}
         
     {/* Form Section */}
     <div className="w-full max-w-[400px]">
