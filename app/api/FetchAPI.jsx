@@ -355,3 +355,24 @@ export const elementsToHideList = async(DBName) => {
 
     return LeadData;
   }
+
+  export const FetchTDSPercentage = async(DBName, OrderNumber) => {
+    let TDS = [];
+
+    try {
+        const response = await api.get("FetchExistingLeads.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                orderNumber: OrderNumber
+            }
+        });
+        TDS = response.data;
+    } catch (error) {
+        alert("Unable to Fetch Existing Leads Data")
+    }
+
+    return TDS;
+  }

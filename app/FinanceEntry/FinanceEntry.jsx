@@ -30,7 +30,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { FetchFinanceSearchTerm } from '../api/FetchAPI';
+import { FetchFinanceSearchTerm, FetchTDSPercentage } from '../api/FetchAPI';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
 
 const transactionOptions = [
@@ -443,7 +443,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
-    
+
     {!billsOnly &&
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
@@ -466,7 +466,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
-
+        
         setErrors({});
       } else {
         dispatch(setIsOrderExist(false));
