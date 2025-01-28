@@ -73,7 +73,7 @@ export default function ExistingClientToLeads() {
                 {/* {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
                   <FaTimes size={20} /> // Clear icon if any filter or search query is active
                 ) : ( */}
-                  <FaFilter size={20} /> // Filter icon if no filter or search query is active
+                  <FaFilter size={20} /> {/*// Filter icon if no filter or search query is active
                 {/* )} */}
               </button>
         

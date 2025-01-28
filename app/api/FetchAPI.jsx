@@ -313,3 +313,24 @@ export const elementsToHideList = async(DBName) => {
 
     return suggestions;
   }
+
+  export const FetchActiveCSE = async(DBName) => {
+    let CSE = [];
+
+    try {
+        const response = await api.get("FetchActiveCSEs.php/get",{
+            headers:{
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName
+            }
+        })
+
+        CSE = response.data;
+    } catch (error) {
+        alert("Unable to Fetch CSE Name")
+    }
+
+    return CSE;
+  }

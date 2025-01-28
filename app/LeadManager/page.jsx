@@ -20,6 +20,7 @@ import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
+import { FetchActiveCSE } from "../api/FetchAPI";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -102,6 +103,7 @@ const EventCards = ({params, searchParams}) => {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isHandledByChange, setIsHandledByChange] = useState('');
+  const [CSENames, setCSENames] = useState([]);
 
   // console.log(rows)
   const toggleFilters = () => {
@@ -166,6 +168,11 @@ const EventCards = ({params, searchParams}) => {
     }
     return false; 
   });
+
+  const fetchCSENames = async () => {
+    let data = await FetchActiveCSE(companyName);
+    setCSENames(data)
+  };
 
   const isNoDataFound = filteredRows.length === 0;
 
@@ -242,6 +249,7 @@ const EventCards = ({params, searchParams}) => {
 
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, companyName, appRights);
       setRows(fetchedRows);
+      fetchCSENames();
       // console.log(fetchedRows)
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -253,6 +261,7 @@ const EventCards = ({params, searchParams}) => {
   useEffect(() => {
     if (!userName) return;
     fetchData();
+    
   }, [params.id, searchParams]);
 
   useEffect(() => {
@@ -567,7 +576,7 @@ const EventCards = ({params, searchParams}) => {
   }
 
   const handleUserChange = async(user) => {
-    setSelectedUser(user);
+    setSelectedUser(toTitleCase(user));
     console.log(user, currentCall.sNo)
     await handleSave(currentCall?.sNo, 'No', "Handled By", user);
     setIsHandledByChange(false);
@@ -903,23 +912,23 @@ const EventCards = ({params, searchParams}) => {
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
-              {["Monisha", "Gomathi Shaira", "Usha", "Leenah"].map(
+              {CSENames.map(
                 (user) => (
                   <label
-                    key={user}
+                    key={user.usernamer}
                     className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
-                      selectedUser === user ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
+                      selectedUser === toTitleCase(user.username) ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
                     }`}
                   >
                     <input
                       type="radio"
                       name="user"
-                      value={user}
-                      checked={selectedUser === user}
-                      onChange={() => handleUserChange(user)}
+                      value={user.username}
+                      checked={selectedUser === user.username}
+                      onChange={() => handleUserChange(user.username)}
                       className="hidden"
                     />
-                    {user}
+                    {toTitleCase(user.username)}
                   </label>
                 ))}
             </div>
