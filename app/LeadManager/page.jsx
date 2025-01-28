@@ -28,6 +28,7 @@ export const statusColors = {
   "Call Followup": "bg-yellow-200 text-yellow-800",
   Unqualified: "bg-orange-200 text-orange-800",
   "No Status": "bg-gray-200 text-gray-800",
+  "Available": "bg-green-200 text-green-800"
 };
 
 const availableStatuses = [

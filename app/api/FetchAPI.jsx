@@ -334,3 +334,24 @@ export const elementsToHideList = async(DBName) => {
 
     return CSE;
   }
+ 
+  export const FetchExistingLeads = async(DBName, SearchTerm) => {
+    let LeadData = [];
+
+    try {
+        const response = await api.get("FetchExistingLeads.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                JsonSearchTerm: SearchTerm
+            }
+        });
+         LeadData = response.data;
+    } catch (error) {
+        alert("Unable to Fetch Existing Leads Data")
+    }
+
+    return LeadData;
+  }

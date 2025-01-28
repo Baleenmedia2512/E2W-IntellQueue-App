@@ -40,8 +40,10 @@ const transactionOptions = [
 
 const taxTypeOptions = [
   { value: 'GST', label: 'GST' },
-  { value: 'IGST', label: 'IGST' },
-  { value: 'NA', label: 'NA' }
+  {value: 'TDS', label: 'TDS'},
+  { value: 'NA', label: 'NA' },
+  { value: 'IGST', label: 'IGST' }
+  
 ];
 
 const expenseCategoryOptions = [
@@ -88,6 +90,8 @@ const FinanceData = () => {
   const [bill, setBill] = useState(null);
   const [billNumber, setBillNumber] = useState("");
   const [billDate, setBillDate] = useState(dayjs());
+  const [TDSAmount, setTDSAmount] = useState(null);
+  const [TDSPercentage, setTDSPercentage] = useState(null);
   // const [orderNumber, setOrderNumber] = useState(null);
   // const [clientName, setClientName] = useState(null);
   // const [orderAmount, setOrderAmount] = useState(null);
@@ -1328,11 +1332,30 @@ const handleGSTChange = (e) => {
   setGSTAmount(gst); // Update GST amount
 };
 
+const handleTDSAmountChange = (tds) => {
+  const amount = tds.target.value;
+  const tdsPer = (amount / orderAmount) * 100; // Calculate TDS percentage
+  setTDSPercentage(tdsPer); // Update TDS percentage
+};
+
+const handleTDSChange = (e) => {
+  const tdsPer = parseFloat(e); // TDS percentage
+  const tds = (orderAmount * tdsPer) / 100; // Calculate TDS amount
+  setTDSAmount(tds); // Update TDS amount
+};
+
+
 useEffect(() => {
   if(parseFloat(gstPercentage) > 0 && parseInt(orderAmount) > 0){
     handleGSTChange(gstPercentage)
   }
 },[orderAmount, gstPercentage])
+
+useEffect(() => {
+  if(parseFloat(TDSPercentage) > 0 && parseInt(orderAmount) > 0){
+    handleTDSChange(TDSPercentage)
+  }
+},[orderAmount, TDSPercentage])
 
 const handleGSTAmountChange = (gst) => {
   const amount = gst.target.value
@@ -1885,6 +1908,75 @@ const handleGSTAmountChange = (gst) => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
+               {taxType && taxType.value === 'TDS' && transactionType.value === 'Operational Expense' && (
+                <div>
+                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>TDS %<span className="text-red-500">*</span></label>
+           <div className="w-full flex gap-3">
+           <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstPercentage ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+               type="text"
+               placeholder="TDS%" 
+               id='4'
+               name="TDSInput" 
+               value={TDSPercentage}
+               onChange = {(e) => {setTDSPercentage(e.target.value)
+                 if (errors.gstPercentage) {
+                   setErrors((prevErrors) => ({ ...prevErrors, gstPercentage: undefined }));
+                 }
+               }}
+               onFocus={e => e.target.select()}
+               onKeyDown={(e) => {
+               if (e.key === 'Enter') {
+                   e.preventDefault();
+                   const inputs = document.querySelectorAll('input, select, textarea');
+                   const index = Array.from(inputs).findIndex(input => input === e.target);
+                   if (index !== -1 && index < inputs.length - 1) {
+                   inputs[index + 1].focus();
+                   }
+               }
+               }}
+               />
+           </div>
+           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
+                </div>
+                     )}
+                     {taxType && taxType.value === 'TDS' && transactionType.value === 'Operational Expense' && ( 
+          <div>
+            <label className='block mb-2 mt-5 text-gray-700 font-semibold'>TDS Amount<span className="text-red-500">*</span></label>
+            <div className="w-full flex gap-3">
+            <input className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.gstAmount ? 'border-red-400' :  isUpdateMode ? 'border-yellow-400' : 'border-gray-400'}`}
+                type="text"
+                placeholder="TDS Amount" 
+                id='7'
+                name="TDSAmountInput" 
+                // required={!isEmpty} 
+                value={TDSAmount}
+                onChange = {(e) => {
+                  setGSTAmount(e.target.value);
+                  // if (errors.tdsAmount) {
+                  //   setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
+                  // }
+                }}
+                onBlur={e => {
+                  if(parseFloat(TDSAmount) > 0 && parseInt(orderAmount) > 0){
+                    handleTDSAmountChange(e);
+                  }
+                }}
+                onFocus={e => e.target.select()}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    const index = Array.from(inputs).findIndex(input => input === e.target);
+                    if (index !== -1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                    }
+                }
+                }}
+                />
+            </div>
+            {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
+            </div>
+            )} 
                {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
