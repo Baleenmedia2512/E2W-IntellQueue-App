@@ -68,7 +68,7 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {userName, appRights} = useAppSelector(state => state.authSlice);
+  const {userName, appRights, companyName: UserCompanyName} = useAppSelector(state => state.authSlice);
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -170,7 +170,7 @@ const EventCards = ({params, searchParams}) => {
   });
 
   const fetchCSENames = async () => {
-    let data = await FetchActiveCSE(companyName);
+    let data = await FetchActiveCSE(UserCompanyName);
     setCSENames(data)
   };
 
