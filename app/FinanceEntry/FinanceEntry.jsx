@@ -439,10 +439,12 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
 
 
-  const handleOrderNumberChange = (event) => {
+  const handleOrderNumberChange = async(event) => {
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
+    const tdsPercent = await FetchTDSPercentage(companyName, newOrderNumber);
+    setTDSPercentage(tdsPercent)
 
     {!billsOnly &&
     axios
@@ -482,9 +484,12 @@ const openChequeDate = Boolean(anchorElChequeDate);
   }
   };
 
-  const handleRateWiseOrderNumberChange = (event) => {
+  const handleRateWiseOrderNumberChange = async(event) => {
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
+
+    const tdsPercent = await FetchTDSPercentage(companyName, newOrderNumber);
+    setTDSPercentage(tdsPercent)
 
     setRateWiseOrderNumber(newOrderNumber);
     {!billsOnly && axios
