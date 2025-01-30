@@ -305,9 +305,9 @@ export default function AppointmentForm() {
       setClientId(data.ClientId); 
       setDisplayClientId(data.ClientId); 
       
-      // if(data.ClientId){
-      //   addAppointment(data.ClientId)
-      // }
+      if(data.ClientId){
+        addAppointment(data.ClientId)
+      }
       setShowAlert(false)
     } catch (error) {
       // alert("Unable to add new Client!");
