@@ -1,4 +1,4 @@
-export const checkClientContact = async (clientContact) => {
+export const checkClientContact = async (DBName, clientContact) => {
   try {
     const response = await fetch("https://orders.baleenmedia.com/API/Hospital-Form/CheckClientContact.php", {
       method: "POST",

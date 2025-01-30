@@ -18,6 +18,7 @@ import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function AppointmentForm() {
   const dropdownRef = useRef(null);
@@ -25,6 +26,7 @@ export default function AppointmentForm() {
   const nameRef = useRef(null);
   const mobileRef = useRef(null);
   const periodRef = useRef(null);
+  const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const userName = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -57,6 +59,8 @@ export default function AppointmentForm() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [previousSelectedPeriod, setPreviousSelectedPeriod] = useState("");
+
+  const router = useRouter()
 
   const appointmentTimePeriod = [
     { label: "Tomorrow", value: "Tomorrow", days: 1 },
@@ -92,6 +96,10 @@ export default function AppointmentForm() {
   };
 
   useEffect(() => {
+    if (!loggedInUser || dbName === "") {
+      router.push('/login');
+    }
+
     searchRef?.current.focus();
     elementsToHideList();
     fetchWhatsappKeys(); 
@@ -293,12 +301,13 @@ export default function AppointmentForm() {
       }
 
       const data = await response.json();
+      console.log(data)
       setClientId(data.ClientId); 
       setDisplayClientId(data.ClientId); 
       
-      if(data.ClientId){
-        addAppointment(data.ClientId)
-      }
+      // if(data.ClientId){
+      //   addAppointment(data.ClientId)
+      // }
       setShowAlert(false)
     } catch (error) {
       // alert("Unable to add new Client!");
