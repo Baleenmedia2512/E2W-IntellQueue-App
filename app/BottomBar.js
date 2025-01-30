@@ -131,7 +131,7 @@ export default function BottomBarTest() {
       }
     // Set the value state variable based on the current path
     
-  }, [currentPath]); // Update useEffect dependency
+  }, [currentPath]); 
 
   const handleChange = (event, newValue) => {
     setValue(newValue); // Update the value state variable
