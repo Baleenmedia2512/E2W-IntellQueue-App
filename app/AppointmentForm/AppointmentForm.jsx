@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWhatsapp, faCheck, faSearch, faSms, faTimes } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
-import { FetchExistingAppointments, FetchSeachTerm } from '../api/getSearchTerm';
+import { FetchExistingAppointments, FetchSearchTerm } from '../api/getSearchTerm';
 import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -56,6 +56,7 @@ export default function AppointmentForm() {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [previousSelectedPeriod, setPreviousSelectedPeriod] = useState("");
 
   const appointmentTimePeriod = [
     { label: "Tomorrow", value: "Tomorrow", days: 1 },
@@ -129,7 +130,7 @@ export default function AppointmentForm() {
   async function getExistingAppointment(e){
     const inputData = e.target.value;
     setSearchTerm(inputData);
-    const existingAppointmentData = await FetchExistingAppointments(inputData);
+    const existingAppointmentData = await FetchExistingAppointments(companyName,inputData);
     setExistingAppointments(existingAppointmentData);
   }
 
@@ -156,6 +157,7 @@ export default function AppointmentForm() {
     // Set the time period based on the date
     const period = calculateTimePeriod(arrayValues[4]);
     setSelectedPeriod(period);
+    setPreviousSelectedPeriod(period);
   }
 
   
@@ -164,7 +166,7 @@ export default function AppointmentForm() {
     const inputData = e.target.value;
     setClientName(inputData);
     setError({name: ""});
-    const searchSuggestionsData = await FetchSeachTerm(inputData);
+    const searchSuggestionsData = await FetchSearchTerm(companyName, inputData);
     setSearchSuggestions(searchSuggestionsData);
   };
 
@@ -189,7 +191,7 @@ export default function AppointmentForm() {
 
     var clientExists = false;
     try{
-      clientExists = value.length === 10 && await checkClientContact(value);
+      clientExists = value.length === 10 && await checkClientContact(companyName,value);
     } catch(error){
       return false;
     }
@@ -333,9 +335,16 @@ export default function AppointmentForm() {
       return;
     }
 
+    if(selectedPeriod === ""){
+      periodRef?.current.focus();
+      setError({period: "Select a Appointment Period!"});
+      setIsButtonDisabled(false);
+      return;
+    }
+
     if(appDate === ""){
       periodRef?.current.focus();
-      setError({period: "Select a valid Date!"});
+      setError({period: "Select a Appointment Period!"});
       setIsButtonDisabled(false);
       return;
     }
@@ -424,6 +433,7 @@ export default function AppointmentForm() {
       setClientName("");
       setMobileNumber("");
       setSelectedPeriod("");
+      setPreviousSelectedPeriod("");
   
       setDisplayClientId("");
       setDisplayClientName("");
@@ -447,6 +457,20 @@ export default function AppointmentForm() {
   async function handleUpdateAppointment() {
     setIsButtonDisabled(true); // Disable the button at the start
     const appointmentDate = appDate;
+
+    // Check if the selected period has changed
+    if (selectedPeriod === previousSelectedPeriod) {
+      setToastMessage("No changes detected.");
+      setSeverity("warning");
+      setToast(true);
+
+      setTimeout(() => {
+          setToast(false);
+      }, 2000);
+
+      setIsButtonDisabled(false);
+      return;
+  }
   
     try {
       const response = await fetch(
@@ -580,6 +604,7 @@ export default function AppointmentForm() {
     setSearchSuggestions([]);
     setSearchTerm("");
     setSelectedPeriod("");
+    setPreviousSelectedPeriod("");
     setClientName("");
     setMobileNumber("");
     setError("");
@@ -730,10 +755,14 @@ export default function AppointmentForm() {
             required
             value={clientName}
             ref={nameRef}
+            disabled={editMode}
             onChange={getSearchSuggestions}
             onFocus={(e) => e.target.select()}
             onBlur={() => setTimeout(() => setSearchSuggestions([]), 150)}
-            className={`border p-3 font-montserrat bg-white w-full rounded-md focus:outline-none focus:shadow-outline ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300'}`}
+            className={`border p-3 font-montserrat w-full rounded-md focus:outline-none focus:shadow-outline 
+              ${editMode ? 'bg-gray-200 cursor-not-allowed text-gray-500 border-gray-300' : 'bg-white'}
+              ${nameError ? 'border-red-500' : 'border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300'}
+            `}
           />
           {nameError && <p className="text-red-500 font-montserrat">{error.name}</p>}
           <div>
@@ -763,34 +792,41 @@ export default function AppointmentForm() {
           <input
             placeholder="Contact Number"
             value={mobileNumber}
+            disabled={editMode}
             onChange={handleInputChange}
             required
             ref={mobileRef}
             onFocus={(e) => e.target.select()}
-            className={`border p-3 font-montserrat w-full bg-white rounded-md focus:outline-none focus:shadow-outline ${numberError ? 'border-red-500' : 'border-gray-400  focus:border-blue-300 focus:ring focus:ring-blue-300'}`}
+            className={`border p-3 font-montserrat w-full rounded-md focus:outline-none focus:shadow-outline 
+              ${editMode ? 'bg-gray-200 cursor-not-allowed text-gray-500 border-gray-300' : 'bg-white'}
+              ${numberError ? 'border-red-500' : 'border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300'}
+            `}
           />
           {numberError && mobileNumber !== "" && <p className="text-red-500 font-montserrat">{error.number}</p>}
         </div>
 
         {/* Appointment Period Dropdown */}
         <div className="flex flex-col justify-between">
-          <label className="font-montserrat font-medium text-lg mb-1">Appointment Period</label>
+          <label className="font-montserrat font-medium text-lg mb-1">Appointment Period <span className="text-red-500">*</span></label>
           <Dropdown
-            className={`border p-2 font-montserrat w-full bg-white rounded-md border-gray-400`}
+            className={`border p-1 bg-white ${periodError ? 'border-red-500' : 'border-gray-400 focus:border-blue-500'} font-montserrat w-full rounded-md`}
             styles={{
               control: (provided) => ({
                 ...provided,
                 minHeight: '50px',
               }),
             }}
+            ref={periodRef}
             placeholder="Select Time Period"
             options={appointmentTimePeriod}
             value={selectedPeriod}
             onChange={(selectedOption) => {
+              setPreviousSelectedPeriod(selectedPeriod);
               setSelectedPeriod(selectedOption.target.value);
               setError({ period: "" });
             }}
           />
+            {periodError && <p className="text-red-500 font-montserrat mt-1">{error.period}</p>}
         </div>
 
         {/* Appointment Date Input */}

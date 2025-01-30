@@ -131,7 +131,7 @@ export default function BottomBarTest() {
       }
     // Set the value state variable based on the current path
     
-  }, [currentPath]); 
+  }, [currentPath]); // Update useEffect dependency
 
   const handleChange = (event, newValue) => {
     setValue(newValue); // Update the value state variable
@@ -344,22 +344,23 @@ export default function BottomBarTest() {
     </svg>
 
   );
-  const PaymentMilestoneIcon = () => (
+  const AppointmentManagerIcon = () => ( 
     <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className="h-5 w-5"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 8.25h18M3 8.25c0-1.242.92-2.25 2.05-2.25h13.9c1.13 0 2.05 1.008 2.05 2.25M3 8.25v7.5c0 1.242.92 2.25 2.05 2.25h13.9c1.13 0 2.05-1.008 2.05-2.25v-7.5M3 15.75h18M9 12h6m-3-3v6"
-    />
-  </svg>
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-5 w-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 2v2M16 2v2M3 8h18M4 5h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM9 15l2 2 4-4"
+      />
+    </svg>
   );
+  
   
   const OrderManagerIcon = () => (
     <svg
@@ -543,7 +544,7 @@ export default function BottomBarTest() {
             dataTag=""
           />
           <SubNavItem
-          icon={<PaymentMilestoneIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
+          icon={<AppointmentManagerIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
           label="Appointment Manager"
           onClick={() => { setSelected('appointmentManager'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
           additionalClasses="hover:bg-blue-50"

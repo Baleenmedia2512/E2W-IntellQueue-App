@@ -4,7 +4,7 @@ const api = axios.create({
     baseURL: "https://orders.baleenmedia.com/API/Hospital-Form/"
 })
 
-export const FetchSeachTerm = async(SearchTerm) => {
+export const FetchSearchTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
     try{
         const response = await api.get("Search.php",{
@@ -12,6 +12,7 @@ export const FetchSeachTerm = async(SearchTerm) => {
                 'Content-Type': 'application/json'
             },
             params:{
+                JsonDBName: DBName,
                 JsonSearchTerm: SearchTerm
             }
         });
@@ -22,7 +23,7 @@ export const FetchSeachTerm = async(SearchTerm) => {
     return SearchTerms;
 }
 
-export const FetchExistingAppointments = async(SearchTerm) => {
+export const FetchExistingAppointments = async(DBName, SearchTerm) => {
     let SearchTerms = [];
     try {
         const response = await api.get("SearchAppointments.php",{
@@ -30,6 +31,7 @@ export const FetchExistingAppointments = async(SearchTerm) => {
                 'Content-Type' : 'application/json'
             },
             params:{
+                JsonDBName: DBName,
                 JsonSearchTerm: SearchTerm
             }
         });
