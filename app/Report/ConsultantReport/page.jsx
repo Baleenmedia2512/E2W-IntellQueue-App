@@ -746,17 +746,16 @@ const handleSlipGeneration = () => {
       return acc;
     }, {});
   
-    // Step 3: Create the summary output
-    const summary = [];
+    // Step 3: Create the summary output for each rate card
+    const summaryByRateCard = [];
     for (const consultant in groupedData) {
       for (const rateCard in groupedData[consultant]) {
+        const rateCardSummary = [];
         for (const rateType in groupedData[consultant][rateCard]) {
           const { count, totalPrice } = groupedData[consultant][rateCard][rateType];
-          
-          // Get the date range for each consultant (assuming it is consistent)
-          // You can modify the logic to fetch actual date ranges if available
   
-          summary.push({
+          // Get the date range for each consultant (assuming it is consistent)
+          summaryByRateCard.push({
             consultant,
             dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
             rateCard,
@@ -767,14 +766,24 @@ const handleSlipGeneration = () => {
       }
     }
   
-    // Step 4: If summary is not empty, send data to slip generation
-    if (summary.length > 0) {
-      generateReferralPdf(summary); // Pass the summary data to PDF generation
-    } else {
-      alert("No data to generate slip.");
+    // Step 4: Group data by rateCard to generate separate PDFs
+    const groupedByRateCard = summaryByRateCard.reduce((acc, row) => {
+      if (!acc[row.rateCard]) {
+        acc[row.rateCard] = [];
+      }
+      acc[row.rateCard].push(row);
+      return acc;
+    }, {});
+  
+    // Step 5: Generate PDF for each rate card
+    for (const rateCard in groupedByRateCard) {
+      const rateCardSummary = groupedByRateCard[rateCard];
+      if (rateCardSummary.length > 0) {
+        generateReferralPdf(rateCardSummary, rateCard);  // Pass the rateCard to the PDF generator
+      }
     }
   };
-
+  
   const formatDate = (dateString) => {
     const months = [
       "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
@@ -782,12 +791,13 @@ const handleSlipGeneration = () => {
     ];
   
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');  // Add leading zero for single digits
-    const month = months[date.getMonth()];  // Get month in 3-letter format
-    const year = date.getFullYear();  // Get full year
-    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+  
     return `${day}-${month}-${year}`;
   };
+  
   
   
 

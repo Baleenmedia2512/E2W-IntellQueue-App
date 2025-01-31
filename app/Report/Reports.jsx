@@ -85,30 +85,29 @@ const Report = () => {
   const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
   const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
   const [invoiceData, setInvoiceData] = useState([]);
+  const [isDIRSentToday, setIsDIRSentToday] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
-const checkIfDIRSentToday = () => {
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/CheckDIRCount.php?JsonDBName=${companyName}`)
-    .then((response) => {
-      const { count } = response.data;
+  const checkIfDIRSentToday = async (companyName) => {
+    try {
+      const response = await axios.get(
+        `https://orders.baleenmedia.com/API/Media/CheckDIRCount.php?JsonDBName=${companyName}`
+      );
       
-      if (count > 0) {
-        setIsButtonDisabled(true);
-      } else {
-        setIsButtonDisabled(false);
-      }
-    })
-    .catch((error) => {
-      console.error('Error checking SMS count:', error);
-    });
-};
-
+      const count = response.data.count || 0; // Ensure count is a number
+      return count > 0; // Return true if count > 0, otherwise false
+    } catch (error) {
+      console.error("Error checking SMS count:", error);
+      return false; // In case of an error, return false
+    }
+  };
+  
 
 
 // Call this function when the component is loaded
-useEffect(() => {
-  checkIfDIRSentToday();
-}, []);
+// useEffect(() => {
+//   checkIfDIRSentToday();
+// }, []);
 
   const handleDropdownChange = (event) => {
     setSelectedChart(event.target.value);
@@ -120,48 +119,71 @@ useEffect(() => {
 };
 
 
-const handleCloseDay = () => {
+const handleCloseDay = async () => {
   setIsButtonDisabled(true);
-setToastMessage(
-            <span>
-                <CircularProgress size={20} style={{ marginRight: "8px" }} />
-                {`Processing`}
-            </span>
-        );
-        setSeverity('warning');
-        setToast(true);
 
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/DailyReportWhatsapp.php?JsonDBName=${companyName}`)
-    .then((response) => {
-      const result = response.data;
-      console.log(result)
-      if (result[0].success) {
-        setToastMessage('');
-        setSeverity('');
-        setToast(false);
+  const resultDIR = await checkIfDIRSentToday(companyName);
+  setIsDIRSentToday(resultDIR);
+  console.log(resultDIR)
 
-        setSuccessMessage('The Day is Closed And Report is sent.');
-        setIsButtonDisabled(false);
-        checkIfDIRSentToday();
-        setTimeout(() => {
-            setSuccessMessage('');
-        }, 3000);
-      } else {
-        setToastMessage(result.message);
-        setIsButtonDisabled(false);
-        setSeverity('warning');
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 3000);
-      }
-    })
-    .catch((error) => {
-      console.error('Error checking SMS count:', error);
-      setIsButtonDisabled(false);
-    });
+  if (resultDIR) {
+    // Show confirmation dialog if DIR has already been sent
+    setShowConfirmationDialog(true);
+    setIsButtonDisabled(false);
+    return;
+  }
+
+  processCloseDay(); // Proceed if no confirmation is needed
 };
+
+// Function to handle closing after confirmation
+const processCloseDay = async () => {
+  setToastMessage(
+    <span>
+      <CircularProgress size={20} style={{ marginRight: "8px" }} />
+      {`Processing`}
+    </span>
+  );
+  setSeverity("warning");
+  setToast(true);
+
+  try {
+    const response = await axios.get(
+      `https://orders.baleenmedia.com/API/Media/DailyReportWhatsapp.php?JsonDBName=${companyName}`
+    );
+
+    const resultData = response.data;
+    console.log(resultData);
+
+    if (resultData[0]?.success) {
+      setToastMessage("");
+      setSeverity("");
+      setToast(false);
+
+      setSuccessMessage("The Day is Closed And Report is sent.");
+      setIsButtonDisabled(false);
+
+      // await checkIfDIRSentToday(companyName);
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } else {
+      setToastMessage(resultData.message || "An error occurred.");
+      setIsButtonDisabled(false);
+      setSeverity("warning");
+      setToast(true);
+
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+    }
+  } catch (error) {
+    console.error("Error checking SMS count:", error);
+    setIsButtonDisabled(false);
+  }
+};
+
 
     const router = useRouter();
     const dispatch = useDispatch();
@@ -1486,6 +1508,34 @@ const calculateRateStats = () => {
   </DialogActions>
 </Dialog>
 
+{/* DIR Confirmation Dialog */}
+<Dialog
+      open={showConfirmationDialog}
+      onClose={() => setShowConfirmationDialog(false)}
+    >
+      <DialogTitle>Confirmation</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          A Daily Report has already been sent today. Are you sure you want to close the day again?
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setShowConfirmationDialog(false)} color="secondary">
+          Cancel
+        </Button>
+        <Button
+          onClick={() => {
+            setShowConfirmationDialog(false);
+            processCloseDay();
+          }}
+          color="primary"
+          autoFocus
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+
 {/* CDR confirmation */}
 {/* <Dialog open={openCDR} onClose={handleCloseCDR}>
         <DialogTitle>SMS Confirmation</DialogTitle>
@@ -1600,7 +1650,7 @@ const calculateRateStats = () => {
   
   <hr className="border-t-1 border-gray-300 mb-3" />
 </div>
-<div className="flex justify-end px-2">
+<div name="CloseDayButton" className="flex justify-end px-2">
   <button
     className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
     onClick={handleCloseDay}
