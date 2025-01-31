@@ -21,6 +21,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { FaCheck, FaTimes, FaWindowClose, FaFilter } from 'react-icons/fa';
 import Tippy from '@tippyjs/react'; // Tooltip library
 import 'tippy.js/dist/tippy.css'; // Import Tippy's default CSS
+import { generateReferralPdf } from '../../generatePDF/generateConsultantSlipPDF';
 
 const matchModes = [
     { label: 'Contains', value: 'contains' },
@@ -715,6 +716,93 @@ const handleCheckboxChange = () => {
     setShowIcProcessedConsultantsOnly((prev) => !prev);
 };
 
+const handleSlipGeneration = () => {
+    // Step 1: Filter out rows where rateCard is 'Total'
+    const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
+  
+    // Step 2: Group by consultant, rateCard, and rateType
+    const groupedData = filteredRows.reduce((acc, row) => {
+      const { consultant, rateCard, rateType, price } = row;
+  
+      // Initialize the group for the consultant if it doesn't exist
+      if (!acc[consultant]) {
+        acc[consultant] = {};
+      }
+  
+      // Initialize the group for the rateCard if it doesn't exist
+      if (!acc[consultant][rateCard]) {
+        acc[consultant][rateCard] = {};
+      }
+  
+      // Initialize the group for the rateType if it doesn't exist
+      if (!acc[consultant][rateCard][rateType]) {
+        acc[consultant][rateCard][rateType] = { count: 0, totalPrice: 0 };
+      }
+  
+      // Update the count and totalPrice for the rateType
+      acc[consultant][rateCard][rateType].count += 1;
+      acc[consultant][rateCard][rateType].totalPrice += price;
+  
+      return acc;
+    }, {});
+  
+    // Step 3: Create the summary output for each rate card
+    const summaryByRateCard = [];
+    for (const consultant in groupedData) {
+      for (const rateCard in groupedData[consultant]) {
+        const rateCardSummary = [];
+        for (const rateType in groupedData[consultant][rateCard]) {
+          const { count, totalPrice } = groupedData[consultant][rateCard][rateType];
+  
+          // Get the date range for each consultant (assuming it is consistent)
+          summaryByRateCard.push({
+            consultant,
+            dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+            rateCard,
+            count,
+            totalPrice
+          });
+        }
+      }
+    }
+  
+    // Step 4: Group data by rateCard to generate separate PDFs
+    const groupedByRateCard = summaryByRateCard.reduce((acc, row) => {
+      if (!acc[row.rateCard]) {
+        acc[row.rateCard] = [];
+      }
+      acc[row.rateCard].push(row);
+      return acc;
+    }, {});
+  
+    // Step 5: Generate PDF for each rate card
+    for (const rateCard in groupedByRateCard) {
+      const rateCardSummary = groupedByRateCard[rateCard];
+      if (rateCardSummary.length > 0) {
+        generateReferralPdf(rateCardSummary, rateCard);  // Pass the rateCard to the PDF generator
+      }
+    }
+  };
+  
+  const formatDate = (dateString) => {
+    const months = [
+      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    ];
+  
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+  
+    return `${day}-${month}-${year}`;
+  };
+  
+  
+  
+
+// console.log(selectedRows)
+
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -777,6 +865,15 @@ const handleCheckboxChange = () => {
                 </div>
 
         <div className="mt-auto flex justify-end gap-2 flex-wrap">
+        <button
+        onClick={() => handleSlipGeneration()}
+        className="bg-orange-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-orange-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+        >
+        <i className="pi pi-download mr-1 sm:mr-2"></i>
+        Generate Slip
+        </button>
+
+
         <button
           onClick={handleExport}
           className="bg-green-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"

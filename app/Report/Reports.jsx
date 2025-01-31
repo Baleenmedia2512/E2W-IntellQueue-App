@@ -25,6 +25,7 @@ import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
 import { Margin } from '@mui/icons-material';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
 import dayjs from 'dayjs';
+import { CircularProgress } from '@mui/material';
 
 
 const Report = () => {
@@ -84,30 +85,29 @@ const Report = () => {
   const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
   const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
   const [invoiceData, setInvoiceData] = useState([]);
+  const [isDIRSentToday, setIsDIRSentToday] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
-const checkIfSMSSentToday = () => {
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/CheckCDRSmsCount.php?JsonDBName=${companyName}`)
-    .then((response) => {
-      const { count } = response.data;
+  const checkIfDIRSentToday = async (companyName) => {
+    try {
+      const response = await axios.get(
+        `https://orders.baleenmedia.com/API/Media/CheckDIRCount.php?JsonDBName=${companyName}`
+      );
       
-      if (count > 0) {
-        setIsButtonDisabled(true);
-      } else {
-        setIsButtonDisabled(false);
-      }
-    })
-    .catch((error) => {
-      console.error('Error checking SMS count:', error);
-    });
-};
-
+      const count = response.data.count || 0; // Ensure count is a number
+      return count > 0; // Return true if count > 0, otherwise false
+    } catch (error) {
+      console.error("Error checking SMS count:", error);
+      return false; // In case of an error, return false
+    }
+  };
+  
 
 
 // Call this function when the component is loaded
-useEffect(() => {
-  checkIfSMSSentToday();
-}, []);
+// useEffect(() => {
+//   checkIfDIRSentToday();
+// }, []);
 
   const handleDropdownChange = (event) => {
     setSelectedChart(event.target.value);
@@ -116,6 +116,72 @@ useEffect(() => {
   
   const handleConsultantReportOpen = () => {
     router.push('/Report/ConsultantReport');
+};
+
+
+const handleCloseDay = async () => {
+  setIsButtonDisabled(true);
+
+  const resultDIR = await checkIfDIRSentToday(companyName);
+  setIsDIRSentToday(resultDIR);
+  console.log(resultDIR)
+
+  if (resultDIR) {
+    // Show confirmation dialog if DIR has already been sent
+    setShowConfirmationDialog(true);
+    setIsButtonDisabled(false);
+    return;
+  }
+
+  processCloseDay(); // Proceed if no confirmation is needed
+};
+
+// Function to handle closing after confirmation
+const processCloseDay = async () => {
+  setToastMessage(
+    <span>
+      <CircularProgress size={20} style={{ marginRight: "8px" }} />
+      {`Processing`}
+    </span>
+  );
+  setSeverity("warning");
+  setToast(true);
+
+  try {
+    const response = await axios.get(
+      `https://orders.baleenmedia.com/API/Media/DailyReportWhatsapp.php?JsonDBName=${companyName}`
+    );
+
+    const resultData = response.data;
+    console.log(resultData);
+
+    if (resultData[0]?.success) {
+      setToastMessage("");
+      setSeverity("");
+      setToast(false);
+
+      setSuccessMessage("The Day is Closed And Report is sent.");
+      setIsButtonDisabled(false);
+
+      // await checkIfDIRSentToday(companyName);
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } else {
+      setToastMessage(resultData.message || "An error occurred.");
+      setIsButtonDisabled(false);
+      setSeverity("warning");
+      setToast(true);
+
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+    }
+  } catch (error) {
+    console.error("Error checking SMS count:", error);
+    setIsButtonDisabled(false);
+  }
 };
 
 
@@ -1442,6 +1508,34 @@ const calculateRateStats = () => {
   </DialogActions>
 </Dialog>
 
+{/* DIR Confirmation Dialog */}
+<Dialog
+      open={showConfirmationDialog}
+      onClose={() => setShowConfirmationDialog(false)}
+    >
+      <DialogTitle>Confirmation</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          A Daily Report has already been sent today. Are you sure you want to close the day again?
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setShowConfirmationDialog(false)} color="secondary">
+          Cancel
+        </Button>
+        <Button
+          onClick={() => {
+            setShowConfirmationDialog(false);
+            processCloseDay();
+          }}
+          color="primary"
+          autoFocus
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+
 {/* CDR confirmation */}
 {/* <Dialog open={openCDR} onClose={handleCloseCDR}>
         <DialogTitle>SMS Confirmation</DialogTitle>
@@ -1470,7 +1564,7 @@ const calculateRateStats = () => {
       </Dialog> */}
 
 
-            <Box className="px-3">
+            <Box>
             {value === 0 && (
               <div style={{ width: '100%' }}>
   <div>
@@ -1481,12 +1575,13 @@ const calculateRateStats = () => {
       newRateWiseOrderNumber={newRateWiseOrderNumber}
     />
   </div>
-  <h1 className="md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500">
+  <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 p-3">
     Reports
   </h1>
+<hr className="border-t-1 border-gray-300 mb-4" />
 
 {/* Sticky Container */}
-<div className="sticky top-0 z-10 bg-white p-2 shadow-md">
+<div className="sticky top-0 z-10 bg-white px-2">
   <div className="flex flex-nowrap overflow-x-auto">
     {/* DateRangePicker and Spacer */}
     <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
@@ -1498,7 +1593,7 @@ const calculateRateStats = () => {
     </div>
 
     {/* Combined Total Orders and Amounts box */}
-    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
+    <div className="w-fit h-auto rounded-lg p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
       <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
         {formatIndianNumber(sumOfOrders)}
       </div>
@@ -1526,7 +1621,7 @@ const calculateRateStats = () => {
     {Object.keys(rateStats).map((rateName) => (
       <div
         key={rateName}
-        className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
+        className="w-fit h-auto rounded-lg  p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
       >
         <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
           {formatIndianNumber(rateStats[rateName].orderCount)}
@@ -1552,11 +1647,25 @@ const calculateRateStats = () => {
       </div>
     ))}
   </div>
+  
+  <hr className="border-t-1 border-gray-300 mb-3" />
 </div>
+<div name="CloseDayButton" className="flex justify-end px-2">
+  <button
+    className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
+    onClick={handleCloseDay}
+    disabled={isButtonDisabled}
+    title={isButtonDisabled ? "The day is closed" : "Click to close the day"}
+  >
+    Close Day
+  </button>
 
+  </div>
 
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
-    <div style={{ flex: 1, width: '100%', boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '15px' }}>
+    
+    
+    <div style={{ flex: 1, width: '100%'}}>
       <DataGrid
          rows={filteredData.length > 0 ? filteredData : orderDetails}
         columns={orderColumns}
@@ -1621,17 +1730,17 @@ const calculateRateStats = () => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
+              <h1 className='text-xl sm:text-2xl my-4 font-bold ml-2 text-start text-blue-500'>Reports</h1>
              <div className="flex flex-grow text-black mb-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     
     <div className="flex flex-grow items-end ml-2 mb-4">
   <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+    <button className="button custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
       Show Balance
     </button>
     {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+      <button className="button consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
         Cons. Report
       </button>
     )}
