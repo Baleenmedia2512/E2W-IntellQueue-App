@@ -178,7 +178,7 @@ export const FetchCommissionData = async(DBName, ConsultantName, rateName, rateT
                 JsonRateType: rateType
             }
         }); 
-        result = response.data.Commission || [];
+        result = response.data.Commission || 0;
 
     }catch(error){
         console.error(error);
