@@ -109,6 +109,26 @@ const AdDetailsPage = () => {
    const campaignDurationVisibility = leadDay.campaignDurationVisibility || 0;
    const ValidityDate = leadDay.ValidityDate || 0;
 
+   // Calculate base cost
+let baseCost = (unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration);
+
+// Add additional feature costs to base cost
+if (checked.bold) {
+  baseCost += baseCost * (checked.boldPercentage / 100);
+}
+if (checked.semibold) {
+  baseCost += baseCost * (checked.semiboldPercentage / 100);
+}
+if (checked.color) {
+  baseCost += baseCost * (checked.colorPercentage / 100);
+}
+if (checked.tick) {
+  baseCost += baseCost * (checked.tickPercentage / 100);
+}
+
+// Calculate base price by adding margin to base cost
+const basePrice = baseCost + margin;
+
   // Helper to format dates
   const formattedDate = (date) => {
     const inputDate = new Date(date);
@@ -124,7 +144,7 @@ const AdDetailsPage = () => {
   // Fetch data for a specific rate
   const fetchRate = async (rateId) => {
     try {
-      const rateData = await FetchSpecificRateData(companyName, rateId);
+      const rateData = await FetchSpecificRateData("Baleen Media", rateId);
       const firstRate = rateData[0];
 
       // Update quote data in Redux
@@ -170,7 +190,7 @@ const AdDetailsPage = () => {
   // Handle rate search input
   const handleRateSearch = async (e) => {
     setRateSearchTerm(e.target.value);
-    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    const searchSuggestions = await FetchRateSeachTerm("Baleen Media", e.target.value);
     setDatas((prev) => ({
       ...prev,
       ratesSearchSuggestion: searchSuggestions,
@@ -200,7 +220,7 @@ const AdDetailsPage = () => {
       await fetchRate(rateId);
   
       // Fetch slab data
-      const slabData = await FetchQtySlab(companyName, rateId);
+      const slabData = await FetchQtySlab("Baleen Media", rateId);
       const sortedSlabData = [...slabData].sort(
         (a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width)
       );
@@ -348,7 +368,7 @@ const AdDetailsPage = () => {
     const newMarginAmount = parseInt(marginValue);
 
     // calculate margin percentage
-    const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount);
+    const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
     
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
@@ -362,7 +382,7 @@ const AdDetailsPage = () => {
     const newPercentage = parseFloat(marginPercent);
   
     // calculate margin amount
-    const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage);
+    const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
   
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
@@ -373,7 +393,21 @@ const AdDetailsPage = () => {
   };
 
   const marginLostFocus = () => {
-    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    let cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+
+    if (checked.color) {
+      cost += cost * (checked.colorPercentage / 100);
+    }
+    if (checked.tick) {
+      cost += cost * (checked.tickPercentage / 100);
+    }
+    if (checked.bold) {
+      cost += cost * (checked.boldPercentage / 100);
+    }
+    if (checked.semibold) {
+      cost += cost * (checked.semiboldPercentage / 100);
+    }
+
     const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
 
     // Ensure consistent update when margin field loses focus
@@ -424,33 +458,33 @@ const AdDetailsPage = () => {
     return matchingValue;
   };
 
-
-  const items = [
-    {
-      content: [
-        {
-          label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)) + formattedMargin(margin) + formattedMargin(checked.bold ? unitPrice * checked.boldPercentage / 100 : 0) + formattedMargin(checked.semibold ? unitPrice * checked.semiboldPercentage / 100 : 0) + formattedMargin(checked.color ? unitPrice * checked.colorPercentage / 100 : 0) + formattedMargin(checked.tick ? unitPrice * checked.tickPercentage / 100 : 0))}`
-        },
-        {
-          label: 'Cost',
-          value: ` ₹${formattedRupees((((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration))))}`
-        }
-      ]
-    },
-    {
-      content: [
-        {
-          label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)+ formattedMargin(margin)) * ((rateGST/100) + 1)) }`
-        },
-        {
-          label: 'Cost',
-          value: ` ₹${formattedRupees(((((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration))) * ((rateGST/100) + 1)))}`
-        }
-      ]
-    }
-  ];
+// Apply GST to both price and cost
+const items = [
+  {
+    content: [
+      {
+        label: 'Price (Excl. GST)',
+        value: ` ₹${formattedRupees(basePrice)}`
+      },
+      {
+        label: 'Cost (Excl. GST)',
+        value: ` ₹${formattedRupees(baseCost)}`
+      }
+    ]
+  },
+  {
+    content: [
+      {
+        label: 'Price (Incl. GST)',
+        value: ` ₹${formattedRupees(basePrice * (1 + rateGST / 100))}`
+      },
+      {
+        label: 'Cost (Incl. GST)',
+        value: ` ₹${formattedRupees(baseCost * (1 + rateGST / 100))}`
+      }
+    ]
+  }
+];
 
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -778,7 +812,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
@@ -800,7 +834,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
@@ -820,7 +854,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Width}
                       value={width}
                       onChange={(e) => {
-                        dispatch(setQuotesData({width: e.target.value, marginAmount: calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({width: e.target.value, marginAmount: calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, true));
                         setChanging(true);
                       }}
@@ -844,7 +878,7 @@ const AdDetailsPage = () => {
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: calculateMarginAmount(qty, width, unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage)})); 
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: calculateMarginAmount(qty, width, unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}

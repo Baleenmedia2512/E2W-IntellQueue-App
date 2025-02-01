@@ -5,10 +5,30 @@ export const calculateMarginAmount = (
   unitPrice,
   campaignDuration,
   minimumCampaignDuration,
-  marginPercentage
+  marginPercentage,
+  color, tick, bold, semibold
 ) => {
-  // Calculate the cost
-  const cost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+  // Calculate the base cost
+  let cost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+
+  // Add additional costs (color, tick, bold, semi-bold)
+  if (color) {
+    cost += cost * (color / 100);
+  }
+  if (tick) {
+    cost += cost * (tick / 100);
+  }
+  if (bold) {
+    cost += cost * (bold / 100);
+  }
+  if (semibold) {
+    cost += cost * (semibold / 100);
+  }
+
+  // Handle marginPercentage >= 100
+  if (marginPercentage >= 100) {
+    return cost;
+  }
 
   // Calculate margin amount using inverse formula
   const marginAmount = (cost * parseFloat(marginPercentage)) / (100 - parseFloat(marginPercentage));
@@ -23,10 +43,25 @@ export const calculateMarginPercentage = (
   unitPrice,
   campaignDuration,
   minimumCampaignDuration,
-  marginAmount
+  marginAmount,
+  color, tick, bold, semibold
 ) => {
-  // Calculate the cost
-  const cost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+  // Calculate the base cost
+  let cost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+
+  // Add additional costs (color, tick, bold, semi-bold)
+  if (color) {
+    cost += cost * (color / 100);
+  }
+  if (tick) {
+    cost += cost * (tick / 100);
+  }
+  if (bold) {
+    cost += cost * (bold / 100);
+  }
+  if (semibold) {
+    cost += cost * (semibold / 100);
+  }
 
   // Avoid division by zero
   if (cost + parseFloat(marginAmount) === 0) return 0;
