@@ -1128,7 +1128,7 @@ const EventCards = ({params, searchParams}) => {
 
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
-console.log(dbCompanyName)
+
   const urlWithParams = `${apiUrl}?dbCompanyName=${encodeURIComponent(dbCompanyName)}`;
 
   const response = await fetch(urlWithParams, {
