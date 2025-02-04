@@ -1434,7 +1434,6 @@ const handleOrderSelection = (e) => {
 
   const selectedOrderId = selectedOrder.split('-')[0];
 
-  // Clear finance suggestions and set the search term
   setOrderSearchSuggestion([]);
   setOrderSearchTerm(selectedOrder);
 
