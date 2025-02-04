@@ -18,14 +18,14 @@ import { Calendar } from 'primereact/calendar';
 
 
 const titleOptions = [
-  { label: 'Mr.', value: 'Mr.' },
-  { label: 'Miss.', value: 'Miss.' },
-  { label: 'Mrs.', value: 'Mrs.' },
-  { label: 'Ms.', value: 'Ms.' },
-  { label: 'B/o.', value: 'B/o.' },
-  { label: 'Baby.', value: 'Baby.' },
-  { label: 'Master.', value: 'Master.' },
-  { label: 'Dr.', value: 'Dr.' },
+  { label: 'Mr.', value: 'Mr.', gender: 'Male' },
+  { label: 'Miss.', value: 'Miss.', gender: 'Female' },
+  { label: 'Mrs.', value: 'Mrs.', gender: 'Female' },
+  { label: 'Ms.', value: 'Ms.', gender: '' },
+  { label: 'B/o.', value: 'B/o.', gender: '' },
+  { label: 'Baby.', value: 'Baby.', gender: '' },
+  { label: 'Master.', value: 'Master.', gender: 'Male' },
+  { label: 'Dr.', value: 'Dr.', gender: '' },
 ];
     
 const ClientsData = () => {
@@ -78,6 +78,8 @@ const ClientsData = () => {
   const nameInputRef = useRef(null);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [proceed, setProceed] = useState(false);
+  const genderOptions = ['Male', 'Female', 'Others'];
+  const [gender, setGender] = useState(genderOptions[1]);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -96,9 +98,11 @@ const ClientsData = () => {
 
   useEffect(() => {
     if (elementsToHide.includes("ClientGSTInput")) {
-      setSelectedOption("Mrs.");
+      setSelectedOption(titleOptions[2].value);
+      setGender(genderOptions[1]);
     } else {
-      setSelectedOption("Ms.");
+      setSelectedOption(titleOptions[3].value);
+      setGender(genderOptions[1]);
     }
   }, [elementsToHide]);
 
@@ -261,7 +265,7 @@ const ClientsData = () => {
 
   const fetchClientDetails = (clientID) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientID=${clientID}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -279,9 +283,10 @@ const ClientsData = () => {
           dispatch(setClientData({ clientSource: clientDetails.source || "" }));
           //setClientAge(clientDetails.Age || "");
           setAddress(clientDetails.address || "");
-          setTitle(clientDetails.gender || "");
-          setSelectedOption(clientDetails.gender || "");
-          dispatch(setClientData({clientTitle: clientDetails.gender}));
+          setTitle(clientDetails.title || "");
+          setSelectedOption(clientDetails.title || "");
+          setGender(clientDetails.gender || "");
+          dispatch(setClientData({clientTitle: clientDetails.title}));
           setConsultantName(clientDetails.consname || "");
           dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber(clientDetails.consnumber || "");
@@ -336,7 +341,7 @@ const ClientsData = () => {
 
   const FetchClientDetailsByContact = (clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContact.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContactTest.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -351,7 +356,7 @@ const ClientsData = () => {
             clientName: clientDetails.name || "",
             clientEmail: clientDetails.email || "",
             clientSource: clientDetails.source || "",
-            clientTitle: clientDetails.gender || "",
+            clientTitle: clientDetails.title || "",
             consultantName: clientDetails.consname || "",
           }));
 
@@ -360,13 +365,14 @@ const ClientsData = () => {
           setDisplayClientID(clientDetails.id);
           setDisplayClientName(clientDetails.name);
           setAddress(clientDetails.address || "");
-          setSelectedOption(clientDetails.gender || "");
-          setTitle(clientDetails.gender || "");
+          setSelectedOption(clientDetails.title || "");
+          setTitle(clientDetails.title || "");
           setConsultantName(clientDetails.consname || "");
           setConsultantNumber(clientDetails.consnumber || "");
           setClientGST(clientDetails.GST || "");
           setClientContactPerson(clientDetails.clientContactPerson || "");
           setMonths(clientDetails.Age || "");
+          setGender(clientDetails.gender || "");
 
           // Handle DOB and Age
           const formattedDOB = parseDateFromDB(clientDetails.DOB);
@@ -533,11 +539,10 @@ const ClientsData = () => {
     }
   };
 
-  const handleDialogClose = (result) => {
-    setProceed(result);
-    setContactDialogOpen(false);
-  };
-console.log(proceed)
+  // const handleDialogClose = (result) => {
+  //   setProceed(result);
+  //   setContactDialogOpen(false);
+  // };
 
   const submitDetails = async(event) => {
     event.preventDefault()
@@ -548,14 +553,14 @@ console.log(proceed)
     }
     const isValid = BMvalidateFields();
     if (isValid) {
-      if(clientContact === '' || clientContact === 0 ){
-        setContactDialogOpen(true);
-       if (!proceed){
-        return
-       }
-      }
+      // if(clientContact === '' || clientContact === 0 ){
+      //   setContactDialogOpen(true);
+      //  if (!proceed){
+      //   return
+      //  }
+      // }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       
       if (data === "Values Inserted Successfully!") {
@@ -607,14 +612,14 @@ console.log(proceed)
   else{
     const isValid = GSvalidateFields();
     if (isValid) {
-      if (clientContact === '' || clientContact === 0) {
-        setContactDialogOpen(true);
-      if (!proceed) return;
-      }
+      // if (clientContact === '' || clientContact === 0) {
+      //   setContactDialogOpen(true);
+      // if (!proceed) return;
+      // }
       
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonGender=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -953,6 +958,8 @@ const GSvalidateFields = () => {
   if (!DOB && selectedOption !== 'Baby.' && selectedOption !== 'B/o.') {
     errors.ageAndDOB = 'Age and DOB are required';
   }
+
+  if (!gender) errors.gender = 'Client Gender is required';
   // if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantName || !consultantNumber)) {
   //   if (!consultantName) errors.consultantName = 'Consultant Name is required';
   //   if (!consultantNumber) errors.consultantNumber = 'Consultant Contact is required';
@@ -1056,6 +1063,14 @@ const BMvalidateFields = () => {
     setEditMode(true);
     setIsNewClient(true);
 
+    if (elementsToHide.includes("ClientGSTInput")) {
+      setSelectedOption(titleOptions[2].value);
+      setGender(genderOptions[1]);
+    } else {
+      setSelectedOption(titleOptions[3].value);
+      setGender(genderOptions[1]);
+    }
+
     // Focus on the name input field
     setTimeout(() => {
       if (nameInputRef.current) {
@@ -1144,7 +1159,7 @@ const BMvalidateFields = () => {
             </DialogActions>
           </Dialog>
           {/* Contact dialog */}
-          <Dialog open={contactDialogOpen} onClose={() => handleDialogClose(false)}>
+          {/* <Dialog open={contactDialogOpen} onClose={() => handleDialogClose(false)}>
             <DialogTitle>No Contact Number Detected</DialogTitle>
             <DialogContent>
               <DialogContentText>
@@ -1159,7 +1174,7 @@ const BMvalidateFields = () => {
                 Yes
               </Button>
             </DialogActions>
-          </Dialog>
+          </Dialog> */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Left section */}
             <div className="space-y-4">
@@ -1170,8 +1185,12 @@ const BMvalidateFields = () => {
               value={selectedOption}
               options={titleOptions}
               onChange={(e) => {
+                const selectedTitle = e.target.value;
                 setSelectedOption(e.target.value);
                 dispatch(setClientData({clientTitle: e.target.value}));
+
+                const matchedTitle = titleOptions.find(option => option.value === selectedTitle);
+                setGender(matchedTitle ? matchedTitle.gender || '' : '');
               }}
               className={`w-1/3 sm:w-1/4 text-black border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientName ? 'border-red-400' : ''} overflow-visible`}
               id="1"
@@ -1308,17 +1327,19 @@ const BMvalidateFields = () => {
               <div name="ClientAddressTextArea">
                 <label className="block text-black mb-1 font-medium">Address</label>
                 <textarea
-                  className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                  className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 h-10`}
                   id="7"
                   name="ClientAddressTextArea"
                   placeholder="Address"
                   value={address}
                   onFocus={e => e.target.select()}
-                  onChange={e => setAddress(e.target.value)}
+                  onChange={e => setAddress(e.target.value) }
                 />
               </div>
               {selectedOption !== 'B/o.' && selectedOption !== 'Baby.' ? (
+                
                 <div className="flex space-x-2 mt-3" name="ClientAgeInput">
+                  
                   <div className="w-1/2">
                     <label className="block mb-1 text-black font-medium">Age<span className="text-red-500">*</span></label>
                     <input
@@ -1353,6 +1374,7 @@ const BMvalidateFields = () => {
                 </div>
               ) : (
                 <div className="flex space-x-2 mt-3">
+                  
                   <div className="w-1/2" name="MonthsInput">
                     <label className="block mb-1 text-black font-medium">Months<span className="text-red-500">*</span></label>
                     <input
@@ -1383,11 +1405,29 @@ const BMvalidateFields = () => {
                   </div>
                    </div>
                   </div>
+                  
                   </div>
+                  
               )}
               {errors.ageAndDOB && <p className="text-red-500 text-xs">{errors.ageAndDOB}</p>}
               {errors.months && <p className="text-red-500 text-xs">{errors.months}</p>}
               <div>
+              </div>
+              <div className="mt-4" name="ClientAgeInput">
+                <label className="block mb-1 text-black font-medium">Gender<span className="text-red-500">*</span></label>
+                <Dropdown
+                  className={`w-full text-black border rounded-lg ${errors.gender ? 'border-red-400' : ''}`}
+                  options={genderOptions}
+                  value={gender}
+                  placeholder='Select a Gender'
+                  onChange={e => {
+                    setGender(e.target.value);
+                    if (errors.gender) {
+                      setErrors(prevErrors => ({ ...prevErrors, gender: undefined }));
+                    }
+                  }}
+                />
+                {errors.gender && <p className="text-red-500 text-xs">{errors.gender}</p>}
               </div>
               <div className="mt-3" name="ClientGSTInput">
               <div>
