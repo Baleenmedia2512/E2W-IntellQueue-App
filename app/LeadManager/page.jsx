@@ -412,12 +412,15 @@ const EventCards = ({params, searchParams}) => {
 
       setIsLoading(false);
       setShowModal(false);
-      setFollowupDate(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
-      setFollowupDate(formattedDate);
-      setFollowupTime(formattedTime);
+      if(selectedStatus === "Call Followup"){
+        setFollowupDate(formattedDate);
+        setFollowupTime(formattedTime);
+      }else{
+        setFollowupDate(false);
+      }
       setRemarks("");
       setSelectedLeadStatus("");
     }
