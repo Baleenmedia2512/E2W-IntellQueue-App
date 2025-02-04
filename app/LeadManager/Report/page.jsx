@@ -1,72 +1,79 @@
 import React from "react";
 
-// Reusable Card Component
-const LeadCard = ({ lead, index }) => {
+import { Clock, Globe, Phone, RefreshCcw, User, Calendar } from "lucide-react";
+
+const Leaddiv = ({ lead, index }) => {
   return (
-    <div className="relative bg-slate-200 rounded-lg p-4  shadow-md border border-gray-200 overflow-hidden">
+    <div className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl border">
+      <div className="md:p-6 p-2">
+        {/* Header Section - Added icons for date and time */}
+        <div className="flex justify-between items-center md:mb-6 mb-4">
+          <div className="flex items-center">
+            <span className="bg-blue-50 text-blue-700 font-semibold px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap ">
+              Lead #{index + 1}
+            </span>
+          </div>
+          <div className="flex items-center md:gap-3 gap-1">
+            <span className=" text-black px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
+              <Calendar className="w-3 h-3" />
+              {lead.date}
+            </span>
+            <span className=" text-black px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
+              <Clock className="w-3 h-3" />
+              {lead.time}
+            </span>
+          </div>
+        </div>
 
-  <div className="flex flex-row-reverse justify-between items-center">
-  {/* Date and Time (Top Right Corner) */}
-  <div className="  flex  text-xs md:text-sm text-black text-right  mb-7 gap-2">
-    <div className="bg-blue-200 p-2 border rounded-lg ">{lead.date}</div>
-    <div className="bg-blue-200 p-2 border rounded-lg">{lead.time}</div>
-    <div className="bg-yellow-200 p-2 border rounded-lg">{lead.status}</div>
-  </div>
+        {/* Rest of the component remains the same */}
+        <div className="md:mb-6 mb-4">
+          <div className={`flex justify-between items-center px-4 py-3 rounded-lg  ${
+            lead.status === 'Active' ? 'bg-green-50 text-green-700' :
+            lead.status === 'In Progress' ? 'bg-blue-50 text-blue-700' :
+            lead.status === 'Completed' ? 'bg-purple-50 text-purple-700' :
+            'bg-yellow-50 text-yellow-700'
+          }`}>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full animate-pulse ${
+                lead.status === 'Active' ? 'bg-green-500' :
+                lead.status === 'In Progress' ? 'bg-blue-500' :
+                lead.status === 'Completed' ? 'bg-purple-500' :
+                'bg-yellow-500'
+              }`}></div>
+              <span className="font-semibold">{lead.status}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">TAT: {lead.tat}h</span>
+            </div>
+          </div>
+        </div>
 
-  {/* Lead Title */}
-  <h2 className="text-lg md:text-2xl font-bold text-blue-600  relative mb-7">
-    Lead #{index + 1}
-  </h2>
-  </div>
-
-  {/* Information Grid */}
-  <div className="grid grid-cols-1  gap-4  text-sm md:text-base  text-gray-700 mt-2 relative ">
-  <div className="flex items-center gap-2 justify-center  text-black bg-blue-100 p-3 border border-blue-600 rounded-md  "> 
-  <span className="font-semibold text-black">TAT:</span>
-  <span className="text-black font-bold">{lead.tat}</span>
-</div>
-  </div>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4  text-sm md:text-base  text-gray-700 mt-2 relative ">
-    <div className="flex items-center gap-2 bg-gray-50 p-2  rounded-md ">
-      <span className="font-semibold text-gray-600">Platform:</span>
-      <span>{lead.platform}</span>
+        <div className="grid grid-cols-2 md:gap-4 gap-2">
+          {[
+            
+            { icon: <User className="w-4 h-4 text-gray-500" />, label: "Name", value: lead.name },
+            { icon: <Globe className="w-4 h-4 text-gray-500" />, label: "Platform", value: lead.platform },
+            { icon: <Phone className="w-4 h-4 text-gray-500" />, label: "Phone", value: lead.phoneNumber },
+            { icon: <RefreshCcw className="w-4 h-4 text-gray-500" />, label: "Previous Status", value: lead.previousStatus },
+            { icon: <Clock className="w-4 h-4 text-gray-500" />, label: "Status Changed", value: lead.statusChangedTime },
+            { icon: <Calendar className="w-4 h-4 text-gray-500" />, label: "Change Date", value: lead.statusChangeDate }
+          ].map((item, i) => (
+            <div key={i} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-1">{item.icon}</div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                <p className="font-medium text-gray-900">{item.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
-    <div className="flex items-center gap-2 bg-gray-50 p-2  rounded-md">
-      <span className="font-semibold text-gray-600">Name:</span>
-      <span>{lead.name}</span>
-    </div>
-    <div className="flex items-center gap-2 bg-gray-50 p-2  rounded-md">
-      <span className="font-semibold text-gray-600">Phone:</span>
-      <span>{lead.phoneNumber}</span>
-    </div>
-    
-    <div className="flex items-center gap-2 bg-gray-50 p-2  rounded-md">
-      <span className="font-semibold text-gray-600">Prev Status:</span>
-      <span>{lead.previousStatus}</span>
-    </div>
-    <div className="flex items-center gap-2 bg-gray-50 p-2  rounded-md">
-      <span className="font-semibold text-gray-600">Status Changed:</span>
-      <span>{lead.statusChangedTime}</span>
-    </div>
-    <div className="flex items-center gap-2 bg-gray-50 p-2  rounded-md">
-      <span className="font-semibold text-gray-600">Change Date:</span>
-      <span>{lead.statusChangeDate}</span>
-    </div>
-    {/* <div className="flex items-center gap-2 bg-yellow-100 p-2  rounded-md">
-      <span className="font-semibold text-gray-600">Status:</span>
-      <span>{lead.status}</span>
-    </div> */}
-    
-  </div>
-
-  {/* Decorative Line */}
-  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
-</div>
   );
 };
 
 const LeadReport = () => {
-  // Example data for leads
   const leads = [
     {
       sNo: 1,
@@ -123,40 +130,42 @@ const LeadReport = () => {
   ];
 
   return (
-    <div className="p-4 ">
-  {/* Title */}
-  <div className="p-3 mt-2">
-    <h2 className="text-xl font-semibold text-blue-500 mb-6">Lead Report</h2>
-    <p className="text-gray-600">A detailed overview of lead information and statuses.</p>
-  </div>
+    <div className="max-w-7xl mx-auto p-8 space-y-8">
+      {/* Header Section */}
+      <div className="space-y-3 mb-8">
+        <h1 className="text-3xl font-semibold text-blue-500">Lead Report</h1>
+        <p className="text-gray-500 text-lg">A detailed overview of lead information and statuses</p>
+      </div>
 
-  {/* Summary Section */}
-  <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-4">
-    {/* Lead Count Card */}
-    <div className="bg-slate-200  border-2 border-gray-200 rounded-lg p-4 flex flex-col md:flex-row md:justify-around items-center gap-4 md:gap-0">
-      <h2 className="text-lg md:text-3xl font-semibold text-black ">Lead Count</h2>
-      <div className="flex justify-center items-center h-16 md:h-24 w-16 md:w-24 border-2 border-blue-500 bg-blue-50 text-blue-600 font-bold text-md md:text-2xl rounded-full">
-        <p>1000</p>
+      {/* Summary divs */}
+      <div className="grid md:grid-cols-2 gap-8 mb-8">
+        {[
+          { title: "Total Leads", value: "1,000", icon: <User className="w-8 h-8 text-blue-700" /> },
+          { title: "Average TAT", value: "58.56h", icon: <Clock className="w-8 h-8 text-blue-700" /> }
+        ].map((item, i) => (
+          <div key={i}>
+            <div className="p-6 border rounded-xl bg-slate-50 shadow-sm">
+              <div className="flex justify-between items-center">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">{item.title}</p>
+                  <p className="text-3xl font-bold text-gray-900">{item.value}</p>
+                </div>
+                <div className="p-4 bg-blue-100 rounded-full">
+                  {item.icon}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Lead divs Grid */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {leads.map((lead, index) => (
+          <Leaddiv key={index} lead={lead} index={index} />
+        ))}
       </div>
     </div>
-
-    {/* Average TAT Card */}
-    <div className="bg-slate-200  border-2 border-gray-200 rounded-lg p-4 flex flex-col md:flex-row justify-around items-center gap-4 md:gap-0">
-      <h2 className="text-lg md:text-3xl font-semibold text-black">Average TAT</h2>
-      <div className="flex justify-center items-center h-16 md:h-24 w-16 md:w-24 border-2 border-blue-500 bg-blue-50 text-blue-600 font-bold text-md md:text-2xl rounded-full">
-        <p>58.56</p>
-      </div>
-    </div>
-  </div>
-
-  {/* Cards Section */}
-  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
-    {leads.map((lead, index) => (
-      <LeadCard key={index} lead={lead} index={index} />
-    ))}
-  </div>
-</div>
-
   );
 };
 
