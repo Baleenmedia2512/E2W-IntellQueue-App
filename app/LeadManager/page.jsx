@@ -1063,6 +1063,7 @@ const EventCards = ({params, searchParams}) => {
             </div>
             }
             {/* Lead Status Buttons */}
+            {selectedStatus === "Call Followup" && (
             <div className="mb-4 flex justify-center gap-4">
               {[
                 { label: "Hot", icon: <GiCampfire />, color: "red" },
@@ -1073,8 +1074,8 @@ const EventCards = ({params, searchParams}) => {
                   key={label}
                   value={prospectType}
                   onClick={() => {
-                    setSelectedLeadStatus(label); 
-                    setProspectType(label); // Set the prospect type
+                    setSelectedLeadStatus((prev) => (prev === label ? "" : label)); 
+                    setProspectType((prev) => (prev === label ? "" : label)); 
                   }}
                   className={`flex items-center gap-1 px-3 py-1 border rounded-full transition-transform duration-300 text-sm ${
                     selectedLeadStatus === label
@@ -1095,6 +1096,7 @@ const EventCards = ({params, searchParams}) => {
                 </button>
               ))}
             </div>
+            )}
 
 
             <div className="flex justify-end">
