@@ -28,7 +28,8 @@ export const statusColors = {
   "Call Followup": "bg-yellow-200 text-yellow-800",
   Unqualified: "bg-orange-200 text-orange-800",
   "No Status": "bg-gray-200 text-gray-800",
-  "Available": "bg-green-200 text-green-800"
+  "Available": "bg-green-200 text-green-800",
+  "Ready for Quote": "bg-blue-200 text-blue-800",
 };
 
 const availableStatuses = [
@@ -318,7 +319,6 @@ const EventCards = ({params, searchParams}) => {
 
     let payload = {};
 
-    console.log("Received on Handle Save function")
     // Prepare payload based on context
     if (sendQuoteOnly === "Quote Sent") {
       payload = {
@@ -338,7 +338,6 @@ const EventCards = ({params, searchParams}) => {
         sNo: Sno,
         handledBy: toTitleCase(user)
       };
-      console.log("Received on Condition")
     }else {
       payload = {
         sNo: currentCall.sNo,

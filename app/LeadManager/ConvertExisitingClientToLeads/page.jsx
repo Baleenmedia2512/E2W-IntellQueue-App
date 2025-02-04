@@ -16,7 +16,11 @@ export default function ExistingClientToLeads() {
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false)
     const [expandedOrder, setExpandedOrder] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState("Available");
+    const [followupDate, setFollowupDate] = useState("");
+    const [followupTime, setFollowupTime] = useState("");
     const [currentLead, setCurrentLead] = useState(null);
+    const [notInterestedReason, setNotInterestedReason] = useState("");
     const {userName, appRights, companyName: UserCompanyName} = useAppSelector(state => state.authSlice);
     const filteredRows = leadData;
 
@@ -33,6 +37,157 @@ export default function ExistingClientToLeads() {
       FetchLeads();
     },[searchTerm])
     
+    const handleDateChange = (selectedDate) => {
+      // Format date as dd-MMM-yyyy
+      const date = selectedDate.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }); // Example: 02-Dec-2024
+  
+      // Format time as hh:mm AM/PM
+      const time = selectedDate.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }); // Example: 03:30 PM
+  
+      setFollowupDate(date); // Set the date
+      setFollowupTime(time); // Set the time
+    };
+
+    const handleSave = async (Sno, quoteSent, sendQuoteOnly, user) => {
+
+      // const initialQuoteStatus = currentCall?.quoteSent || "";
+      setIsLoading(true);
+      // Check if changes were made before proceeding
+      const hasChanges =
+      (selectedStatus || "") !== (initialSelectedStatus || "") ||
+      (followupDate || "") !== (initialFollowupDate || "") ||
+      (followupTime || "") !== (initialFollowupTime || "") ||
+      (companyName || "") !== (initialCompanyName || "") ||
+      (remarks || "") !== (initialRemarks || "") ||
+      (selectedLeadStatus || "") !== (initialLeadStatus || "") ||
+      (quoteSent || "") !== (initialQuoteStatus || "");
+        
+        if (!hasChanges) {
+          setToastMessage("No changes have been made.");
+          setSeverity('warning');
+            setToast(true);
+            setTimeout(() => {
+              setToast(false);
+            }, 2000);
+          // setShowModal(false);
+          setIsLoading(false);
+          return;
+        }
+        
+  
+      let payload = {};
+  
+      // Prepare payload based on context
+      if (sendQuoteOnly === "Quote Sent") {
+        payload = {
+          sNo: Sno,
+          quoteSent: quoteSent,
+          handledBy: toTitleCase(userName)
+        };
+      } else if (followupOnly) {
+        payload = {
+          sNo: currentCall.sNo,
+          followupDate: followupDate || "", // Ensure followupDate is a string or empty
+          followupTime: followupTime || "", // Ensure followupTime is a string or empty
+          handledBy: toTitleCase(userName)
+        };
+      } else if (sendQuoteOnly === "Handled By") {
+        payload = {
+          sNo: Sno,
+          handledBy: toTitleCase(user)
+        };
+
+      }else {
+        payload = {
+          sNo: currentCall.sNo,
+          status: selectedStatus,
+          companyName: companyName || "", // Default to an empty string if undefined
+          followupDate: followupDate || "",
+          followupTime: followupTime || "",
+          quoteSent: initialQuoteStatus || "",
+          remarks: remarks || "",
+          prospectType: prospectType || "",  // Include ProspectType
+          handledBy: toTitleCase(userName)
+        };
+      }
+    
+      
+      try {
+        const response = await fetch(
+          "https://leads.baleenmedia.com/api/updateLeads",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+    
+        if (!response.ok) throw new Error("Failed to update lead");
+        console.log(response)
+        fetchData();
+        if (!sendQuoteOnly) {
+          setSuccessMessage('Lead updated successfully!');
+          setTimeout(() => {
+            setSuccessMessage('');
+          }, 3000); // 3000 milliseconds = 3 seconds
+        }
+        if (selectedStatus === "Call Followup") {
+          const contact = {
+            name: currentCall?.name,
+            phone: currentCall?.phone,
+            email: currentCall?.email || "",
+          };
+          downloadContact(contact); // Download the contact vCard
+        }
+      } catch (error) {
+        console.error("Error updating lead:", error);
+        setToastMessage("Failed to update lead. Please try again.");
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+      } finally {
+        const now = new Date(); // Get the current date and time
+  
+      const tomorrow = new Date();
+      tomorrow.setDate(now.getDate() + 1);
+  
+      // Format tomorrow's date as dd-MMM-yyyy
+      const formattedDate = tomorrow.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+  
+      // Format the current time as hh:mm AM/PM
+      const formattedTime = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+  
+        setIsLoading(false);
+        setShowModal(false);
+        setFollowupDate(false);
+        setHideOtherStatus(false);
+        setFollowpOnly(false);
+        setSelectedStatus("");
+        setFollowupDate(formattedDate);
+        setFollowupTime(formattedTime);
+        setRemarks("");
+        setSelectedLeadStatus("");
+      }
+    };
+
     return (
       <div className="p-6 bg-gray-50 min-h-screen">
   {/* Top Bar with Filter and Report Buttons */}
@@ -56,7 +211,7 @@ export default function ExistingClientToLeads() {
       <input
         type="text"
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-        placeholder="Search by Phone No, Email Address, Ad Enquiry, Company Name, Remarks..."
+        placeholder="Search by Client Name, Phone No, Email Address, Ad Medium, Company Name, Remarks..."
         onChange={(e) => handleSearch(e.target.value)}
       />
       <button
@@ -90,10 +245,10 @@ export default function ExistingClientToLeads() {
           {/* Status at Top Right */}
           <div className="absolute top-4 right-4">
             <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors["Available"]} hover:cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
+              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[selectedStatus]} hover:cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
               onClick={() => { setCurrentLead(row); setShowModal(true) }}
             >
-              Available
+              {selectedStatus}
             </span>
             {row.CSE && (
               <div
@@ -143,10 +298,12 @@ export default function ExistingClientToLeads() {
                   <span className="font-medium">Ad Medium:</span>
                   <span className="text-gray-900 font-semibold">{row.Card}</span>
                 </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-medium">Ad Category:</span>
-                  <span className="text-gray-900 font-semibold">{row.AdCategory}</span>
-                </div>
+                {row.AdCategory !== " : " && 
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="font-medium">Ad Category:</span>
+                    <span className="text-gray-900 font-semibold">{row.AdCategory}</span>
+                  </div>
+                }
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Ad Type:</span>
                   <span className="text-gray-900 font-semibold">{row.AdType}</span>
@@ -178,71 +335,104 @@ export default function ExistingClientToLeads() {
   {/* Modal */}
   {showModal && currentLead && (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold text-gray-900">Lead Details</h3>
-          <button onClick={() => setShowModal(false)}>
-            <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
-          </button>
+    <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-bold text-gray-900">Lead Details</h3>
+        <button onClick={() => setShowModal(false)}>
+          <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
+        </button>
+      </div>
+      <div className="space-y-4 text-gray-700">
+        <p>Client: <strong>{currentLead.ClientName}</strong></p>
+        <p>Source: <strong>{currentLead.Source}</strong></p>
+        <p>Phone:
+          <a
+            onClick={() => handleCallButtonClick(currentLead.ClientContact, currentLead.ClientName, currentLead.OrderNumber)}
+            className="text-blue-600 hover:underline ml-1 cursor-pointer"
+          >
+            <strong>{currentLead.ClientContact}</strong>
+          </a>
+        </p>
+  
+        {/* Status Options */}
+        <div className="flex flex-wrap gap-2">
+          {["Available", "Ready for Quote", "Call Followup", "Not Interested"].map(
+            (status) => (
+              <label
+                key={status}
+                className={`cursor-pointer border-2 py-1 px-3 text-sm rounded-full ${
+                  selectedStatus === status ? "bg-blue-500 text-white border-blue-500" : "bg-transparent border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="status"
+                  value={status}
+                  checked={selectedStatus === status}
+                  onChange={() => setSelectedStatus(status)}
+                  className="hidden"
+                />
+                {status}
+              </label>
+            ))}
         </div>
-        <div className="space-y-4 text-gray-700">
-          <p>Client: <strong>{currentLead.ClientName}</strong></p>
-          <p>Source: <strong>{currentLead.Source}</strong></p>
-          <p>Phone:
-            <a
-              onClick={() => handleCallButtonClick(currentLead.ClientContact, currentLead.ClientName, currentLead.OrderNumber)}
-              className="text-blue-600 hover:underline ml-1 cursor-pointer"
+  
+        {/* Not Interested Reason Dropdown */}
+        {selectedStatus === "Not Interested" && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Select Not Interested Reason</label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+              onChange={(e) => setNotInterestedReason(e.target.value)}
             >
-              <strong>{currentLead.ClientContact}</strong>
-            </a>
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {["Available", "Call Followup", "Won", "Unreachable", "Unqualified", "Lost"].map(
-              (status) => (
-                <label
-                  key={status}
-                  className={`cursor-pointer border-2 py-1 px-3 text-sm rounded-full ${
-                    selectedStatus === status ? "bg-blue-500 text-white border-blue-500" : "bg-transparent border-gray-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="status"
-                    value={status}
-                    checked={selectedStatus === status}
-                    onChange={() => setSelectedStatus(status)}
-                    className="hidden"
-                  />
-                  {status}
-                </label>
+              <option value="" disabled selected>Select a reason</option>
+              {[
+                "Not required at the moment",
+                "Not Reachable",
+                "Ringing No Response",
+                "Invalid Phone Number",
+                "Don't Call Again - Service was not good",
+                "Don't Call Again - Poor Ad Response",
+                "Don't Call Again - Customer has behavioural Issues",
+                "Don't Call Again - Customer will call in case of any need",
+              ].map((reason, index) => (
+                <option key={index} value={reason}>
+                  {reason}
+                </option>
               ))}
+            </select>
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Followup Date and Time</label>
-            <DatePicker
-              selected={followupDate}
-              onChange={handleDateChange}
-              showTimeSelect
-              timeFormat="h:mm aa"
-              timeIntervals={15}
-              dateFormat="dd MMM yyyy h:mm aa"
-              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex justify-end">
-            <button
-              className={`px-4 py-2 rounded-md text-white ${
-                isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
-              } transition-all duration-200`}
-              onClick={handleSave}
-              disabled={!selectedStatus || isLoading}
-            >
-              {isLoading ? "Loading..." : "Save"}
-            </button>
-          </div>
+        )}
+  
+        {/* Followup Date and Time */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Followup Date and Time</label>
+          <DatePicker
+            selected={followupDate}
+            onChange={handleDateChange}
+            showTimeSelect
+            timeFormat="h:mm aa"
+            timeIntervals={15}
+            dateFormat="dd MMM yyyy h:mm aa"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+  
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <button
+            className={`px-4 py-2 rounded-md text-white ${
+              isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
+            } transition-all duration-200`}
+            onClick={handleSave}
+            disabled={!selectedStatus || isLoading}
+          >
+            {isLoading ? "Loading..." : "Save"}
+          </button>
         </div>
       </div>
     </div>
+  </div>
   )}
 </div>
     );
