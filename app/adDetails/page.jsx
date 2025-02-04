@@ -1,4 +1,4 @@
-'use client'
+'use client' //page.jsx
 import {useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/redux/store';
@@ -126,10 +126,10 @@ export const AdDetails = () => {
   };
 
   const pdfGeneration = async (item) => {
-    let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration ? (item.campaignDuration / item.minimumCampaignDuration) : 1)) + parseInt(item.margin))));
-    let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
+    // let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration ? (item.campaignDuration / item.minimumCampaignDuration) : 1)) + parseInt(item.margin))));
+    let AmountInclGST = Math.round(item.price * ((item.rateGST/100) + 1));
     // console.log(item.rateGST)
-    const unitPrice = (AmountExclGST/item.qty).toFixed(2)
+    const unitPrice = (item.price/(item.unit === "SCM" ? item.qty * item.width : item.qty)).toFixed(2)
     return {
       adMedium: item.adMedium,
       adCategory: item.adCategory,
@@ -138,7 +138,7 @@ export const AdDetails = () => {
       qty: item.qty,
       campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
       ratePerQty: formattedRupees(unitPrice),
-      amountExclGst: formattedRupees(AmountExclGST),
+      amountExclGst: formattedRupees(item.price),
       gst: item.rateGST + "%",
       amountInclGst: formattedRupees(AmountInclGST),
       leadDays: item.leadDay,
@@ -173,16 +173,9 @@ export const AdDetails = () => {
     let margin = item.margin || 0; // Default to 0
     let extraDiscount = item.extraDiscount || 0; // Default to 0
     
-    let AmountExclGST = Math.round(
-      (
-        ((item.unit === "SCM" ? qty * width : qty)
-          * unitPrice
-          * (campaignDuration / minimumCampaignDuration)) 
-        + (margin - extraDiscount)
-      )
-    );
+    let AmountExclGST = Math.round(item.price);
 
-    let AmountInclGST = Math.round(AmountExclGST * ((item.rateGST/100) + 1));
+    let AmountInclGST = Math.round(item.price * ((item.rateGST/100) + 1));
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonNextQuoteId=${quoteNumber}&JsonBold=${item.bold ? item.boldPercentage : -1}&JsonSemibold=${item.semibold ? item.semiboldPercentage : -1}&JsonColor=${item.color ? item.colorPercentage : -1}&JsonTick=${item.tick ? item.tickPercentage : -1}`)
       
