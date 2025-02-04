@@ -121,6 +121,9 @@ const CreateOrder = () => {
     const [orderNumber, setOrderNumber] = useState(orderNumberRP || "");
     const [orderAmount, setorderAmount] = useState('');
     const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [updateReason, setUpdateReason] = useState('');
+    const [prevData, setPrevData] = useState({});
    
     
     useEffect(() => {
@@ -893,6 +896,10 @@ const CreateStages = async () => {
                 // MP-101
                 if (elementsToHide.includes('OrderNumberText')) {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
+
+                // Notify order adjustment via WhatsApp
+                notifyOrderAdjustment(clientName, receivable, discountAmount, remarks, nextRateWiseOrderNumber, selectedValues.rateName.value, selectedValues.adType.value);
+
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
                   setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
                 }
@@ -995,6 +1002,18 @@ const updateNewOrder = async (event) => {
       const data = await response.json();
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Work Order #' + UpdateRateWiseOrderNumber + ' Updated Successfully!');
+        if (discountAmount !== prevData.discountAmount) {
+        // Call notifyOrderAdjustment after order update
+        notifyOrderAdjustment(
+          clientName,                      // Client Name
+          receivable,                      // Previous Order Amount
+          discountAmount,                  // Adjusted Amount (can be +ve or -ve)
+          updateReason,                    // Adjustment Remarks
+          UpdateRateWiseOrderNumber,       // Order Number
+          selectedValues.rateName.value,   // Rate Card
+          selectedValues.adType.value      // Rate Type
+      );
+    }
         dispatch(setIsOrderExist(true));
         // dispatch(setIsOrderUpdate(false));
         // dispatch(resetOrderData());
@@ -1372,11 +1391,6 @@ const handleCommissionChange = (e) => {
 };
 
 
-const [dialogOpen, setDialogOpen] = useState(false);
-  const [updateReason, setUpdateReason] = useState('');
-  const [prevData, setPrevData] = useState({});
-console.log(commissionAmount)
-
 const handleOpenDialog = () => {
   // Check if remarks are filled
   const isDiscountChanged = discountAmount !== prevData.discountAmount;
@@ -1517,6 +1531,52 @@ const handleCommissionConfirm = () => {
   createNewOrder();
 };
 
+const notifyOrderAdjustment = async (clientNam, orderAmt, adjustedOrderAmt, remarks, rateWiseOrderNum, rateCard, rateType) => {
+  // Ensure correct new amount calculation
+  const newAmount = orderAmt + adjustedOrderAmt;
+
+  // Prepare JSON payload with properly formatted parameters
+  const payload = {
+      clientNam: String(clientNam),
+      orderAmt: String(orderAmt),
+      adjustedOrderAmt: String(adjustedOrderAmt),
+      finalAmount: String(newAmount),
+      remarks: remarks,
+      rateWiseOrderNum: String(rateWiseOrderNum),
+      rateCard: rateCard,
+      rateType: rateType,
+  };
+
+
+  try {
+      const response = await axios.post(
+          `https://orders.baleenmedia.com/API/Media/NotifyOrderAdjustmentViaWhatsapp.php?JsonDBName=${companyName}`,
+          payload, // Send data as JSON
+          { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      const resultData = response.data;
+      console.log("API Response:", resultData);
+
+      if (resultData[0]?.success) {
+          console.log('✅ Message sent successfully!');
+      } else {
+          setToastMessage(resultData.message || "An error occurred.");
+          setIsButtonDisabled(false);
+          setSeverity("warning");
+          setToast(true);
+
+          setTimeout(() => {
+              setToast(false);
+          }, 3000);
+      }
+  } catch (error) {
+      console.error("❌ Error sending message:", error);
+      setIsButtonDisabled(false);
+  }
+};
+
+
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1631,7 +1691,17 @@ return (
     >
       <DialogTitle id="alert-dialog-title">{"Provide a Reason for Update"}</DialogTitle>
       <DialogContent>
-        
+        <TextField
+          autoFocus
+          margin="dense"
+          id="update-reason"
+          label="Reason"
+          type="text"
+          fullWidth
+          variant="outlined"
+          value={updateReason}
+          onChange={handleReasonChange}
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={handleUpdateCloseDialog} color="primary">

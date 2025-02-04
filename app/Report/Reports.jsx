@@ -447,6 +447,7 @@ const processCloseDay = async () => {
                     editDisabled: order.RateWiseOrderNumber < 0,
                     Commission: `₹ ${order.Commission}`,
                     invoiceDisabled: order.TotalAmountReceived === undefined || order.TotalAmountReceived === null || order.TotalAmountReceived === '',
+                    Gender: (order.ClientGender !== undefined && order.ClientGender !== null) ? order.ClientGender : '',
                 }));
                 setOrderDetails(data);
             })
@@ -821,6 +822,7 @@ const orderColumns = [
     { field: 'ClientName', headerName: 'Client Name', width: isMobile ? 150 : 120 },
     { field: 'ClientContact', headerName: 'Client Contact', width: isMobile ? 160 : 120 },
     { field: 'ClientAge', headerName: 'Client Age', width: isMobile ? 120 : 90 },
+    { field: 'Gender', headerName: 'Client Gender', width: isMobile ? 120 : 90 },
     { field: 'Card', headerName: 'Rate Name', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
     { field: 'AdType', headerName: 'Rate Type', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
     { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },

@@ -315,6 +315,17 @@ const EventCards = ({params, searchParams}) => {
         return;
       }
       
+      if (selectedStatus === "Call Followup" && !prospectType) {
+        setToastMessage("Please select a Prospect Type before saving.");
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+        setIsLoading(false);
+        return;
+      }
+
 
     let payload = {};
 
@@ -412,12 +423,13 @@ const EventCards = ({params, searchParams}) => {
 
       setIsLoading(false);
       setShowModal(false);
-      if(selectedStatus === "Call Followup"){
+      if (selectedStatus === "Unreachable") {
+        setFollowupDate(false);
+      } else {
         setFollowupDate(formattedDate);
         setFollowupTime(formattedTime);
-      }else{
-        setFollowupDate(false);
       }
+
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
@@ -748,7 +760,10 @@ const EventCards = ({params, searchParams}) => {
 
           <div
             key={row.SNo}
-            className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
+            className={`relative rounded-lg p-4 border-2 hover:shadow-lg hover:-translate-y-2 bg-white hover:transition-all border-gray-200 
+              ${timers[row.SNo] > 86400 ? " animate-pulse bg-green-600`" : ""}
+            `}
+
             style={{ minHeight: "240px" }}
           >
             {/* Status at Top Right */}
@@ -773,28 +788,29 @@ const EventCards = ({params, searchParams}) => {
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
-             {row.Status === 'Call Followup' &&
+            {row.Status === 'Call Followup' && (
             <span
               onClick={() => {
                 if (!isLoading) {
                   toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
                 }
               }}
-              className={`inline-block rounded-full p-1 ${
+              className={`flex items-center gap-2 rounded-lg px-3 py-1 text-white text-xs sm:text-sm font-medium shadow-md transition-all duration-300 cursor-pointer ${
                 row.QuoteSent === "Yes"
-                  ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
-                  : "bg-gradient-to-r from-red-400 to-red-600"
-              } hover:cursor-pointer`}
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
               title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
-              
             >
               {isLoading ? (
-                <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
+                <div className="animate-spin border-t-2 border-white rounded-full w-4 h-4" />
               ) : (
-                <FiCheckCircle className="text-white text-lg" />
+                <FiCheckCircle className="text-white text-base" />
               )}
+              <span>{row.QuoteSent === "Yes" ? "Sent" : "Not Sent"}</span>
             </span>
-          }
+          )}
+
             
             <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
@@ -875,7 +891,7 @@ const EventCards = ({params, searchParams}) => {
               <div className="text-sm mt-4 flex flex-row justify-between items-center w-full">
                 <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
                 {row.Status === "New" && (
-                  <div className="text-blue-500 relative group border font-semibold bg-blue-100 p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white ">
+                  <div className={`${timers[row.SNo] > 86400 ? "bg-red-100 text-red-500 animate-bounce" : "bg-blue-100 text-blue-500"} relative group border font-semibold p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white `}>
                     <Timer className="mr-2"/>
                     {formatTime(timers[row.SNo] || 0)}
                     {/* Helper text that appears on hover */}
@@ -885,6 +901,7 @@ const EventCards = ({params, searchParams}) => {
                     </div>
                   </div>
                 )}
+
               </div>
             )}
              {/* Remarks */}
