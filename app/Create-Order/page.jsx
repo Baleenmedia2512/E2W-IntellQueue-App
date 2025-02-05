@@ -1413,22 +1413,23 @@ const handleOpenDialog = () => {
   // }
   // Compare current data with previous data to check if any field has changed
   const isDataChanged = (
-    clientName.trim() !== prevData.clientName.trim() ||
+    clientName.trim() !== (prevData.clientName || '').trim() ||
     orderDate !== prevData.orderDate || // Ensure orderDate comparison works (check format)
     parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
     rateId !== prevData.rateId ||
-    consultantName.trim() !== prevData.consultantName.trim() ||
-    discountAmount !== prevData.discountAmount ||
+    consultantName.trim() !== (prevData.consultantName || '').trim() ||
+    parseFloat(discountAmount) !== parseFloat(prevData.discountAmount) ||
     parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
     parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount) ||
-    isCommissionSingleUse !== prevData.isCommissionSingleUse
+    Boolean(isCommissionSingleUse) !== Boolean(prevData.isCommissionSingleUse) // Ensure boolean comparison
   );
-
+  
+console.log(isDataChanged)
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
   if (isDataChanged) {
     setDialogOpen(true);
   } else {
-    setToastMessage('No changes have been made.');
+    setToastMessage('No changes detected.');
     setSeverity('warning');
     setToast(true);
     setTimeout(() => {
@@ -1436,7 +1437,7 @@ const handleOpenDialog = () => {
     }, 2000);
   }
 };
-
+console.log(prevData)
 
   // const handleOpenDialog = () => {
   //   setDialogOpen(true);
@@ -1468,9 +1469,12 @@ const handleOpenDialog = () => {
     dispatch(setIsOrderUpdate(false));
     setCommissionAmount(0);
     setIsCommissionSingleUse(false);
+    setRemarks('');
+    setUpdateReason('');
     // setWaiverAmount(0);
     // setIsConsultantWaiverChecked(false);
     setClientNumber('');
+    setPrevData({});
     //window.location.reload(); // Reload the page
   };
 
