@@ -404,7 +404,7 @@ const handleMarkAsUnprocessed = async () => {
         if (typeof rowData.rateCard === 'string' && rowData.rateCard.startsWith('Total')) {
             return <span className="font-bold text-blue-500">₹{rowData.price}</span>;
         }
-        return <span>₹{rowData.price}</span>; // Ensure this displays properly if it's a number
+        return <span>₹{rowData.price}</span>;
     };
 
     const consultantBodyTemplate = (rowData) => {
