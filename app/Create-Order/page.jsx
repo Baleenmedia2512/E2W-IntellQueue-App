@@ -279,6 +279,7 @@ useEffect(() => {
           selectedValues.adType.value
         );
         setCommissionAmount(commission);
+        setPrevData({commissionAmount: commission});
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -695,6 +696,7 @@ const fetchRates = async () => {
                 selectedValues.adType.value
               );
               setCommissionAmount(commission);
+              setPrevData({commissionAmount: commission});
             }
           } else {
             console.warn("No client details found for the given ID.");
@@ -767,6 +769,7 @@ const fetchRates = async () => {
           setIsCommissionSingleUse(data.isCommissionAmountSingleUse === 1);
           if(data.consultantName) {
             setCommissionAmount(data.commission);
+            // setPrevData({commissionAmount: commission});
           }
 
           // Store the fetched data in a state to compare later
@@ -898,7 +901,8 @@ const CreateStages = async () => {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
 
                 // Notify order adjustment via WhatsApp
-                notifyOrderAdjustment(clientName, receivable, discountAmount, remarks, nextRateWiseOrderNumber, selectedValues.rateName.value, selectedValues.adType.value);
+              
+                notifyOrderAdjustment(clientName, discountAmount, remarks, nextRateWiseOrderNumber, selectedValues.rateName.value, selectedValues.adType.value, commissionAmount, prevData.commissionAmount);
 
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
                   setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
@@ -1006,12 +1010,13 @@ const updateNewOrder = async (event) => {
         // Call notifyOrderAdjustment after order update
         notifyOrderAdjustment(
           clientName,                      // Client Name
-          receivable,                      // Previous Order Amount
           discountAmount,                  // Adjusted Amount (can be +ve or -ve)
           updateReason,                    // Adjustment Remarks
           UpdateRateWiseOrderNumber,       // Order Number
           selectedValues.rateName.value,   // Rate Card
-          selectedValues.adType.value      // Rate Type
+          selectedValues.adType.value,      // Rate Type
+          commissionAmount,
+          prevData.commissionAmount
       );
     }
         dispatch(setIsOrderExist(true));
@@ -1342,6 +1347,7 @@ const fetchConsultantDetails = async (Id) => {
       selectedValues.adType.value
     );
     setCommissionAmount(commission);
+    setPrevData({commissionAmount: commission});
     }
   } catch (error) {
     console.error('Error fetching consultant details:', error);
@@ -1531,20 +1537,18 @@ const handleCommissionConfirm = () => {
   createNewOrder();
 };
 
-const notifyOrderAdjustment = async (clientNam, orderAmt, adjustedOrderAmt, remarks, rateWiseOrderNum, rateCard, rateType) => {
-  // Ensure correct new amount calculation
-  const newAmount = orderAmt + adjustedOrderAmt;
+const notifyOrderAdjustment = async (clientNam, adjustedOrderAmt, remarks, rateWiseOrderNum, rateCard, rateType, commission, prevCommission) => {
 
   // Prepare JSON payload with properly formatted parameters
   const payload = {
       clientNam: String(clientNam),
-      orderAmt: String(orderAmt),
       adjustedOrderAmt: String(adjustedOrderAmt),
-      finalAmount: String(newAmount),
       remarks: remarks,
       rateWiseOrderNum: String(rateWiseOrderNum),
       rateCard: rateCard,
       rateType: rateType,
+      newCommissionAmount: String(commission),
+      prevCommissionAmount: (prevCommission != null ? String(prevCommission) : "0") === String(commission) ? "0" : String(prevCommission || "0")
   };
 
 
