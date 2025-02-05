@@ -80,7 +80,7 @@ export default function GroupedRowsDemo() {
     ? JSON.parse(sessionStorage.getItem('filterValues'))
     : null;
     const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
-        orderNumber: '',
+        rateWiseOrderNumber: '',
         consultant: '',
         client: '',
         rateCard: '',
@@ -88,7 +88,7 @@ export default function GroupedRowsDemo() {
     });
 
     const activeFilters = {
-        orderNumber: filters.orderNumber ? filters.orderNumber.value : '',
+        rateWiseOrderNumber: filters.rateWiseOrderNumber ? filters.rateWiseOrderNumber.value : '',
         rateCard: filters.rateCard ? filters.rateCard.value : '',
         consultant: filters.consultant ? filters.consultant.value : '',
         client: filters.client ? filters.client.value : '',
@@ -357,7 +357,8 @@ const handleMarkAsUnprocessed = async () => {
                 rateType: consultant.rateType,
                 price: consultant.price ? parseFloat(consultant.price) : 0,
                 orderNumber: consultant.orderNumber,
-                client: consultant.clientName
+                client: consultant.clientName,
+                rateWiseOrderNumber: consultant.rateWiseOrderNumber
             });
     
             existingConsultant.totalCount++;
@@ -379,7 +380,8 @@ const handleMarkAsUnprocessed = async () => {
                     rateCard: rate.rateCard,
                     rateType: rate.rateType,
                     price: rate.price,
-                    orderNumber: rate.orderNumber
+                    orderNumber: rate.orderNumber,
+                    rateWiseOrderNumber: rate.rateWiseOrderNumber
                 });
             });
     
@@ -391,7 +393,8 @@ const handleMarkAsUnprocessed = async () => {
                 rateCard: "Total",
                 rateType: consultant.totalCount,
                 price: consultant.totalPrice,
-                orderNumber: ""
+                orderNumber: "",
+                rateWiseOrderNumber: ""
             });
         });
     
@@ -404,7 +407,7 @@ const handleMarkAsUnprocessed = async () => {
         if (typeof rowData.rateCard === 'string' && rowData.rateCard.startsWith('Total')) {
             return <span className="font-bold text-blue-500">₹{rowData.price}</span>;
         }
-        return <span>₹{rowData.price}</span>
+        return <span>₹{rowData.price}</span>; // Ensure this displays properly if it's a number
     };
 
     const consultantBodyTemplate = (rowData) => {
@@ -430,11 +433,11 @@ const handleMarkAsUnprocessed = async () => {
         return null;
     };
 
-    const orderNumberBodyTemplate = (rowData) => {
+    const rateWiseOrderNumberBodyTemplate = (rowData) => {
         if (rowData.rateCard === 'Total') {
-            return <span className="text-blue-500">{rowData.orderNumber}</span>;
+            return <span className="text-blue-500">{rowData.rateWiseOrderNumber}</span>;
         } else if (rowData.rateCard) {
-            return <span>#{rowData.orderNumber}</span>;
+            return <span>#{rowData.rateWiseOrderNumber}</span>;
         }
         return null;
     };
@@ -531,7 +534,7 @@ const handleExport = () => {
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
-        OrderNumber: row.orderNumber,
+        rateWiseOrderNumber: row.rateWiseOrderNumber,
         Consultant: row.consultant,
         Client: row.client,
         RateCard: row.rateCard,
@@ -1012,15 +1015,15 @@ const handleSlipGeneration = () => {
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['orderNumber','consultant','client', 'rateCard', 'rateType']}
+                            globalFilterFields={['rateWiseOrderNumber','consultant','client', 'rateCard', 'rateType']}
                             
                         >
                         
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             
-                            <Column field="orderNumber" header="O#" headerStyle={{ width: '1rem' }} body={orderNumberBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.orderNumber?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateWiseOrderNumber" header="RO#" headerStyle={{ width: '1rem' }} body={rateWiseOrderNumberBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.orderNumber?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
                              filter
-                             filterElement={filterHeaderTemplate({ header: 'Order Number' }, 'orderNumber')}
+                             filterElement={filterHeaderTemplate({ header: 'Rate Wise Order Number' }, 'rateWiseOrderNumber')}
                              showFilterMatchModes={false}
                             ></Column>
                             <Column field="consultant" header="Consultant" headerStyle={{ width: '13rem' }} body={consultantBodyTemplate} 
