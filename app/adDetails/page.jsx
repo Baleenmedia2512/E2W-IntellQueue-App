@@ -445,7 +445,7 @@ export const AdDetails = () => {
               </button>
             </div>
           ) : (
-            <></>
+            <div></div>
             // <div>
             //   <button className={`mr-4 mt-2 bg-blue-500 text-nowrap max-h-10 font-semibold  border-blue-500 border p-2 rounded-lg text-white`} onClick={() => {
             //     dispatch(resetQuotesData());
