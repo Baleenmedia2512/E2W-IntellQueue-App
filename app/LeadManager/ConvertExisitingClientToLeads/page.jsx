@@ -1,12 +1,13 @@
 'use client'
 import { FaFileExcel, FaFilter } from "react-icons/fa";
 import { statusColors } from "../page";
-import { FetchExistingLeads } from "@/app/api/FetchAPI";
+import { FetchActiveCSE, FetchExistingLeads } from "@/app/api/FetchAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { FiCheckCircle, FiPhoneCall, FiCalendar } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/store";
+import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { AiOutlineClose } from "react-icons/ai";
 import DatePicker from "react-datepicker";
 
@@ -21,6 +22,9 @@ export default function ExistingClientToLeads() {
     const [followupTime, setFollowupTime] = useState("");
     const [currentLead, setCurrentLead] = useState(null);
     const [notInterestedReason, setNotInterestedReason] = useState("");
+    const [isHandledByChange, setIsHandledByChange] = useState('');
+    const [selectedUser, setSelectedUser] = useState('');
+    const [CSENames, setCSENames] = useState([]);
     const {userName, appRights, companyName: UserCompanyName} = useAppSelector(state => state.authSlice);
     const filteredRows = leadData;
 
@@ -30,13 +34,32 @@ export default function ExistingClientToLeads() {
 
     const FetchLeads = async() => {
       let response = await FetchExistingLeads(UserCompanyName, searchTerm);
-      setLeadData(response)
+      setLeadData(response);
+      fetchCSENames();
     }
 
     useEffect(()=>{
       FetchLeads();
     },[searchTerm])
     
+    const fetchCSENames = async () => {
+      let data = await FetchActiveCSE(UserCompanyName);
+      setCSENames(data)
+    };
+
+    const handleHandledByChange = (user, sNo) => {
+      setIsHandledByChange(!isHandledByChange);
+      setSelectedUser(user);
+      // setCurrentCall({sNo: sNo})
+    }
+  
+    const handleUserChange = async(user) => {
+      setSelectedUser(toTitleCase(user));
+      console.log(user, currentCall.sNo)
+      await handleSave(currentCall?.sNo, 'No', "Handled By", user);
+      setIsHandledByChange(false);
+    }
+
     const handleDateChange = (selectedDate) => {
       // Format date as dd-MMM-yyyy
       const date = selectedDate.toLocaleDateString("en-GB", {
@@ -55,136 +78,36 @@ export default function ExistingClientToLeads() {
       setFollowupTime(time); // Set the time
     };
 
-    const handleSave = async (Sno, quoteSent, sendQuoteOnly, user) => {
+    function toTitleCase(str) {
+      return str
+        .toLowerCase()
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
 
-      // const initialQuoteStatus = currentCall?.quoteSent || "";
-      setIsLoading(true);
-      // Check if changes were made before proceeding
-      const hasChanges =
-      (selectedStatus || "") !== (initialSelectedStatus || "") ||
-      (followupDate || "") !== (initialFollowupDate || "") ||
-      (followupTime || "") !== (initialFollowupTime || "") ||
-      (companyName || "") !== (initialCompanyName || "") ||
-      (remarks || "") !== (initialRemarks || "") ||
-      (selectedLeadStatus || "") !== (initialLeadStatus || "") ||
-      (quoteSent || "") !== (initialQuoteStatus || "");
-        
-        if (!hasChanges) {
-          setToastMessage("No changes have been made.");
-          setSeverity('warning');
-            setToast(true);
-            setTimeout(() => {
-              setToast(false);
-            }, 2000);
-          // setShowModal(false);
-          setIsLoading(false);
-          return;
-        }
-        
-  
-      let payload = {};
-  
-      // Prepare payload based on context
-      if (sendQuoteOnly === "Quote Sent") {
-        payload = {
-          sNo: Sno,
-          quoteSent: quoteSent,
-          handledBy: toTitleCase(userName)
-        };
-      } else if (followupOnly) {
-        payload = {
-          sNo: currentCall.sNo,
-          followupDate: followupDate || "", // Ensure followupDate is a string or empty
-          followupTime: followupTime || "", // Ensure followupTime is a string or empty
-          handledBy: toTitleCase(userName)
-        };
-      } else if (sendQuoteOnly === "Handled By") {
-        payload = {
-          sNo: Sno,
-          handledBy: toTitleCase(user)
-        };
-
-      }else {
-        payload = {
-          sNo: currentCall.sNo,
-          status: selectedStatus,
-          companyName: companyName || "", // Default to an empty string if undefined
-          followupDate: followupDate || "",
-          followupTime: followupTime || "",
-          quoteSent: initialQuoteStatus || "",
-          remarks: remarks || "",
-          prospectType: prospectType || "",  // Include ProspectType
-          handledBy: toTitleCase(userName)
-        };
-      }
-    
-      
-      try {
-        const response = await fetch(
-          "https://leads.baleenmedia.com/api/updateLeads",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          }
-        );
-    
-        if (!response.ok) throw new Error("Failed to update lead");
-        console.log(response)
-        fetchData();
-        if (!sendQuoteOnly) {
-          setSuccessMessage('Lead updated successfully!');
-          setTimeout(() => {
-            setSuccessMessage('');
-          }, 3000); // 3000 milliseconds = 3 seconds
-        }
-        if (selectedStatus === "Call Followup") {
-          const contact = {
-            name: currentCall?.name,
-            phone: currentCall?.phone,
-            email: currentCall?.email || "",
-          };
-          downloadContact(contact); // Download the contact vCard
-        }
-      } catch (error) {
-        console.error("Error updating lead:", error);
-        setToastMessage("Failed to update lead. Please try again.");
-        setSeverity("error");
-        setToast(true);
-        setTimeout(() => {
-          setToast(false);
-        }, 2000);
-      } finally {
-        const now = new Date(); // Get the current date and time
-  
-      const tomorrow = new Date();
-      tomorrow.setDate(now.getDate() + 1);
-  
-      // Format tomorrow's date as dd-MMM-yyyy
-      const formattedDate = tomorrow.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-  
-      // Format the current time as hh:mm AM/PM
-      const formattedTime = now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-  
-        setIsLoading(false);
-        setShowModal(false);
-        setFollowupDate(false);
-        setHideOtherStatus(false);
-        setFollowpOnly(false);
-        setSelectedStatus("");
-        setFollowupDate(formattedDate);
-        setFollowupTime(formattedTime);
-        setRemarks("");
-        setSelectedLeadStatus("");
+    const handleSave = async () => {
+      const formData = {
+        "JsonDBName": UserCompanyName,
+        "JsonEntryUser": userName,
+        "JsonLeadDate": "2023-10-15",
+        "JsonLeadTime": "14:30",
+        "JsonPlatform": "Website",
+        "JsonClientName": "Jane Smith",
+        "JsonClientContact": "1234567890",
+        "JsonClientEmail": "jane@example.com",
+        "JsonDescription": "Interested in product X",
+        "JsonStatus": "New",
+        "JsonRejectionReason": "",
+        "JsonLeadType": "Hot",
+        "JsonPreviousStatus": "",
+        "JsonNextFollowupDate": "2023-10-20",
+        "JsonNextFollowupTime": "10:00",
+        "JsonClientCompanyName": "Example Corp",
+        "JsonRemarks": "Follow up scheduled",
+        "JsonHandledBy": "Sales Team",
+        "JsonProspectType": "Potential",
+        "JsonIsUnreachable": 0
       }
     };
 
@@ -253,9 +176,10 @@ export default function ExistingClientToLeads() {
             {row.CSE && (
               <div
                 className="text-xs mt-2 p-1 px-3 hover:cursor-pointer text-orange-800 bg-orange-50 rounded-full flex items-center"
+                onClick={() => handleHandledByChange(row.CSE, row.OrderNumber)}
               >
                 <FontAwesomeIcon icon={faUserCircle} className="mr-1" />
-                <p>{row.CSE}</p>
+                <p>{toTitleCase(row.CSE)}</p>
               </div>
             )}
           </div>
@@ -273,7 +197,7 @@ export default function ExistingClientToLeads() {
             <p>Source: <strong>{row.Source}</strong></p>
             <p>Phone:
               <a
-                onClick={() => window.location.href = `tel:${row.ClientCo}`}
+                onClick={() => window.location.href = `tel:${row.ClientContact}`}
                 className="text-blue-600 hover:underline ml-1 cursor-pointer"
               >
                 <strong>{row.ClientContact}</strong>
@@ -332,6 +256,44 @@ export default function ExistingClientToLeads() {
     </div>
   )}
 
+{isHandledByChange && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-auto max-w-md mb-16 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Change who can Handle the lead</h3>
+              <button onClick={() => {setIsHandledByChange(false)}}>
+                <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
+              </button>
+            </div>
+            
+            {/* Floating Radio Buttons for Status */}
+            
+            <div className="mb-4 flex flex-wrap gap-1 justify-center">
+              {CSENames.map(
+                (user) => (
+                  <label
+                    key={user.username}
+                    className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
+                      selectedUser === toTitleCase(user.username) ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="user"
+                      value={user.username}
+                   
+                      checked={selectedUser === user.username}
+                      onChange={() => handleUserChange(user.username)}
+                      className="hidden"
+                    />
+                    {toTitleCase(user.username)}
+                  </label>
+                ))}
+            </div>
+            
+            </div>
+            </div>
+            )}
   {/* Modal */}
   {showModal && currentLead && (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
