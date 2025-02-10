@@ -32,6 +32,7 @@ import { computeOffsetLeft } from '@mui/x-data-grid/hooks/features/virtualizatio
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { formatDateForAPI, calculateValidityDays, addDaysToDate } from './Components/dateUtils';
 
 const AdDetailsPage = () => {
 
@@ -315,12 +316,12 @@ const AdDetailsPage = () => {
 //   }
 // }
   
-  const addQtySlab = async(StartQty, Width, UnitPrice) => {
+  const addQtySlab = async(StartQty, Width, UnitPrice, SlabId) => {
 
     try{
         try{
           //console.log("Function here")
-          const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${StartQty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}&JsonWidth=${Width}`);
+          const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlabTest.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${StartQty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}&JsonWidth=${Width}&JsonSlabId=${SlabId}`);
           const result = await response.json();
           if(result === "Failed to Insert" || result === "Failed to Update"){
             // showToastMessage("Error", "Error while updating data")
@@ -947,17 +948,18 @@ var selectedRate = '';
         if (existingSlab) {
             updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
         } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
+          combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice, item.Id));
             // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
         }
     } else {
         const existingSlab = combinedSlabData.find(
             slab => slab.StartQty === slabData.StartQty
         );
+        
         if (existingSlab) {
             updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
         } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
+          combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice, item.Id));
             // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
         }
     }
@@ -1072,23 +1074,40 @@ var selectedRate = '';
   }
 
   const handleDateChange = (event) => {
-    const parsedDate1 = new Date(event);
-    parsedDate1.setHours(0,0,0,0);
-
-    // Set time part of parsedDate2 to midnight
-    const parsedDate2 = new Date();
-    parsedDate2.setHours(0, 0, 0, 0);
-  
-    // Calculate the difference in milliseconds
-    const differenceInMilliseconds = parsedDate1 - parsedDate2;
-  
-    // Convert the difference to days
-    const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
-  
-    setValidityDays(differenceInDays);
-
-    setValidityDate(parsedDate1);
+    try {
+      const formattedDate = formatDateForAPI(event);
+      setValidityDate(event);
+      setValidTill(formattedDate);
+      const days = calculateValidityDays(formattedDate);
+      setValidityDays(days);
+      setIsValidityDays(days <= 0);
+      setEditMode(true);
+    } catch (error) {
+      console.error('Error handling date change:', error);
+      setToastMessage('Invalid date selected');
+      setSeverity('error');
+      setToast(true);
+    }
   };
+
+  // const handleDateChange = (event) => {
+  //   const parsedDate1 = new Date(event);
+  //   parsedDate1.setHours(0,0,0,0);
+
+  //   // Set time part of parsedDate2 to midnight
+  //   const parsedDate2 = new Date();
+  //   parsedDate2.setHours(0, 0, 0, 0);
+  
+  //   // Calculate the difference in milliseconds
+  //   const differenceInMilliseconds = parsedDate1 - parsedDate2;
+  
+  //   // Convert the difference to days
+  //   const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
+  
+  //   setValidityDays(differenceInDays);
+
+  //   setValidityDate(parsedDate1);
+  // };
   
   const handleSetNewRateName = () => {
     // Add the new rate name to the options based on the newRateType
@@ -1402,18 +1421,39 @@ setEditModal(false);
   setEditMode(true);
 };
 
+  // const handleValidityChange = (e) => {
+  //   setIsValidityDays(false)
+  //   setEditMode(true)
+  //   const daysToAdd = parseInt(e.target.value);
+  //   if (!isNaN(daysToAdd)) {
+  //     const currentDate = new Date();
+  //     const newValidityDate = new Date(currentDate.setDate(currentDate.getDate() + daysToAdd));
+  //     const formattedDate = newValidityDate.toISOString().split('T')[0];
+  //     setValidityDate(formattedDate)
+  //     setValidTill(formattedDate);
+  //   }
+  //   setValidityDays(e.target.value);
+  // };
+
   const handleValidityChange = (e) => {
-    setIsValidityDays(false)
-    setEditMode(true)
-    const daysToAdd = parseInt(e.target.value);
-    if (!isNaN(daysToAdd)) {
-      const currentDate = new Date();
-      const newValidityDate = new Date(currentDate.setDate(currentDate.getDate() + daysToAdd));
-      const formattedDate = newValidityDate.toISOString().split('T')[0];
-      setValidityDate(formattedDate)
-      setValidTill(formattedDate);
+    try {
+      const daysValue = e.target.value;
+      setValidityDays(daysValue);
+      setIsValidityDays(daysValue <= 0);
+      
+      if (daysValue > 0) {
+        const newValidTill = addDaysToDate(daysValue);
+        setValidTill(newValidTill);
+        setValidityDate(new Date(newValidTill));
+      }
+      
+      setEditMode(true);
+    } catch (error) {
+      console.error('Error handling validity change:', error);
+      setToastMessage('Invalid number of days');
+      setSeverity('error');
+      setToast(true);
     }
-    setValidityDays(e.target.value);
   };
 
   useEffect(() => {
@@ -2352,7 +2392,7 @@ const handleBlur = (e) => {
                         dateFormatCalendar='dd-MMM-yyyy'
                         showYearDropdown
                         showMonthDropdown
-                        className="border rounded-md p-2"
+                        className="border rounded-md p-2 text-black"
                         minDate={new Date()}
                         calendarClassName="bg-white shadow-md rounded-md mt-2"
                       />
