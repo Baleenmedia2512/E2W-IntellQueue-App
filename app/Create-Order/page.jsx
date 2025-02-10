@@ -279,7 +279,10 @@ useEffect(() => {
           selectedValues.adType.value
         );
         setCommissionAmount(commission);
-        setPrevData({commissionAmount: commission});
+        setPrevData(prevData => ({
+          ...prevData, // Keep existing data
+          commissionAmount: commission // Update only commissionAmount
+      }));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -696,7 +699,10 @@ const fetchRates = async () => {
                 selectedValues.adType.value
               );
               setCommissionAmount(commission);
-              setPrevData({commissionAmount: commission});
+              setPrevData(prevData => ({
+                ...prevData, // Keep existing data
+                commissionAmount: commission // Update only commissionAmount
+            }));
             }
           } else {
             console.warn("No client details found for the given ID.");
@@ -901,8 +907,9 @@ const CreateStages = async () => {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
 
                 // Notify order adjustment via WhatsApp
-              
+                if (![null, undefined, 0, "0"].includes(discountAmount)) {
                 notifyOrderAdjustment(clientName, discountAmount, remarks, nextRateWiseOrderNumber, selectedValues.rateName.value, selectedValues.adType.value, commissionAmount, prevData.commissionAmount);
+                }
 
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
                   setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
@@ -1347,7 +1354,10 @@ const fetchConsultantDetails = async (Id) => {
       selectedValues.adType.value
     );
     setCommissionAmount(commission);
-    setPrevData({commissionAmount: commission});
+    setPrevData(prevData => ({
+      ...prevData, // Keep existing data
+      commissionAmount: commission // Update only commissionAmount
+  }));
     }
   } catch (error) {
     console.error('Error fetching consultant details:', error);
@@ -1424,7 +1434,6 @@ const handleOpenDialog = () => {
     Boolean(isCommissionSingleUse) !== Boolean(prevData.isCommissionSingleUse) // Ensure boolean comparison
   );
   
-console.log(isDataChanged)
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
   if (isDataChanged) {
     setDialogOpen(true);
@@ -1437,7 +1446,7 @@ console.log(isDataChanged)
     }, 2000);
   }
 };
-console.log(prevData)
+console.log(discountAmount, prevData.discountAmount)
 
   // const handleOpenDialog = () => {
   //   setDialogOpen(true);
