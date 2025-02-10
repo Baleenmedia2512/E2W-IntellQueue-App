@@ -114,7 +114,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
@@ -769,71 +769,48 @@ const handleCheckboxChange = () => {
 const handleSlipGeneration = () => {
     // Step 1: Filter out rows where rateCard is 'Total'
     const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
-  
-    // Step 2: Group by consultant, rateCard, and rateType
+
+    // Step 2: Group data by consultant, then by rateCard
     const groupedData = filteredRows.reduce((acc, row) => {
-      const { consultant, rateCard, rateType, price } = row;
-  
-      // Initialize the group for the consultant if it doesn't exist
-      if (!acc[consultant]) {
-        acc[consultant] = {};
-      }
-  
-      // Initialize the group for the rateCard if it doesn't exist
-      if (!acc[consultant][rateCard]) {
-        acc[consultant][rateCard] = {};
-      }
-  
-      // Initialize the group for the rateType if it doesn't exist
-      if (!acc[consultant][rateCard][rateType]) {
-        acc[consultant][rateCard][rateType] = { count: 0, totalPrice: 0 };
-      }
-  
-      // Update the count and totalPrice for the rateType
-      acc[consultant][rateCard][rateType].count += 1;
-      acc[consultant][rateCard][rateType].totalPrice += price;
-  
-      return acc;
-    }, {});
-  
-    // Step 3: Create the summary output for each rate card
-    const summaryByRateCard = [];
-    for (const consultant in groupedData) {
-      for (const rateCard in groupedData[consultant]) {
-        const rateCardSummary = [];
-        for (const rateType in groupedData[consultant][rateCard]) {
-          const { count, totalPrice } = groupedData[consultant][rateCard][rateType];
-  
-          // Get the date range for each consultant (assuming it is consistent)
-          summaryByRateCard.push({
-            consultant,
-            dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
-            rateCard,
-            count,
-            totalPrice
-          });
+        const { consultant, rateCard, price } = row;
+
+        if (!acc[consultant]) {
+            acc[consultant] = [];
         }
-      }
-    }
-  
-    // Step 4: Group data by rateCard to generate separate PDFs
-    const groupedByRateCard = summaryByRateCard.reduce((acc, row) => {
-      if (!acc[row.rateCard]) {
-        acc[row.rateCard] = [];
-      }
-      acc[row.rateCard].push(row);
-      return acc;
+
+        let rateCardEntry = acc[consultant].find(item => item.rateCard === rateCard);
+        if (!rateCardEntry) {
+            rateCardEntry = { rateCard, count: 0, totalPrice: 0 };
+            acc[consultant].push(rateCardEntry);
+        }
+
+        rateCardEntry.count += 1;
+        rateCardEntry.totalPrice += price;
+
+        return acc;
     }, {});
-  
-    // Step 5: Generate PDF for each rate card
-    for (const rateCard in groupedByRateCard) {
-      const rateCardSummary = groupedByRateCard[rateCard];
-      if (rateCardSummary.length > 0) {
-        generateReferralPdf(rateCardSummary, rateCard);  // Pass the rateCard to the PDF generator
-      }
+
+    // Step 3: Convert grouped data into an array with consultant sections
+    const summaryByConsultant = [];
+    for (const consultant in groupedData) {
+        summaryByConsultant.push({ consultant, isHeader: true }); // Consultant header
+
+        groupedData[consultant].forEach(rateCardEntry => {
+            summaryByConsultant.push({
+                consultant,
+                rateCard: rateCardEntry.rateCard,
+                count: rateCardEntry.count,
+                totalPrice: rateCardEntry.totalPrice,
+                dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`
+            });
+        });
     }
-  };
-  
+
+    // Step 4: Generate a single PDF with grouped consultant sections
+    generateReferralPdf(summaryByConsultant);
+};
+
+
   const formatDate = (dateString) => {
     const months = [
       "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
