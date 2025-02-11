@@ -229,9 +229,54 @@ const EventCards = ({params, searchParams}) => {
     };
   }, [rows]);
   
+  const insertEnquiry = async () => {
+    let row = currentCall.rowData;
+
+    try {
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${row.Phone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${true}`;
+
+        const response = await fetch(url);
+
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const text = await response.text(); // Get raw response
+        console.log("Raw Response:", text); // Log to debug
+
+        let data;
+        try {
+            data = JSON.parse(text); // Attempt to parse JSON
+        } catch (jsonError) {
+            throw new Error(`Invalid JSON response: ${text}`);
+        }
+
+        if (data === "Values Inserted Successfully!") {
+            setSuccessMessage('Client Details Are Saved!');
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 2000);
+        } else if (data === "Duplicate Entry!") {
+            setToastMessage('Contact Number Already Exists!');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        } else {
+            alert(`The following error occurred while inserting data: ${data}`);
+        }
+    } catch (error) {
+        console.error('Error while inserting data:', error);
+        alert(`Error: ${error.message}`);
+    }
+};
+
+
   const insertLeadToDB = async () => {
     let row = currentCall.rowData;
-    
+
     const leadData = {
         JsonDBName: alternateCompanyName,
         JsonEntryUser: toTitleCase(userName),
@@ -256,8 +301,8 @@ const EventCards = ({params, searchParams}) => {
     };
 
     const response = await PostInsertOrUpdate("InsertLeadStatus", leadData);
-
-    console.log("Insert Response:", response);
+    const anotherResponse = await insertEnquiry()
+    return response && anotherResponse
 };
 
   const formatTime = (seconds) => {
