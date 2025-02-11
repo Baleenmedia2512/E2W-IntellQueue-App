@@ -70,7 +70,7 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {userName, appRights, companyName: UserCompanyName} = useAppSelector(state => state.authSlice);
+  const {userName, appRights, dbName: UserCompanyName} = useAppSelector(state => state.authSlice);
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -89,12 +89,14 @@ const EventCards = ({params, searchParams}) => {
   const [initialLeadStatus, setInitialLeadStatus] = useState("");
   const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
   const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
+  const [quoteSentChecked, setQuoteSentChecked] = useState("");
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
   const [statusFilter, setStatusFilter] = useState("All");
   const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-  const [quoteSentFilter, setQuoteSentFilter] = useState("All")
+  const [quoteSentFilter, setQuoteSentFilter] = useState("All");
+  const [CSEFilter, setCSEFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [fromDate, setFromDate] = useState(null); // Use null for default empty date
@@ -121,6 +123,7 @@ const EventCards = ({params, searchParams}) => {
     setProspectTypeFilter('All');
     setQuoteSentFilter("All");
     setFromDate(null);
+    setCSEFilter("");
     setToDate(null);
     setSearchQuery('');
   };
@@ -143,6 +146,9 @@ const EventCards = ({params, searchParams}) => {
     quoteSentFilter === 'All' || 
         (quoteSentFilter === 'Quote Sent' && row.QuoteSent === 'Yes' && row.Status === 'Call Followup') ||
         (quoteSentFilter === 'Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
+  )
+  .filter((row) =>
+    CSEFilter === 'All' || row.HandledBy === CSEFilter
   )
   .filter((row) =>
     [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
@@ -249,7 +255,7 @@ const EventCards = ({params, searchParams}) => {
         followupDate: searchParams.followupDate || null,
       };
 
-      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, companyName, appRights);
+      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
       setRows(fetchedRows);
       fetchCSENames();
       // console.log(fetchedRows)
@@ -324,19 +330,22 @@ const EventCards = ({params, searchParams}) => {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
     } else if (followupOnly) {
       payload = {
         sNo: currentCall.sNo,
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
     } else if (sendQuoteOnly === "Handled By") {
       payload = {
         sNo: Sno,
-        handledBy: toTitleCase(user)
+        handledBy: toTitleCase(user),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
     }else {
       payload = {
@@ -348,7 +357,9 @@ const EventCards = ({params, searchParams}) => {
         quoteSent: initialQuoteStatus || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test",
+        quoteSent: quoteSentChecked === true ? "Yes" : "No"
       };
     }
   
@@ -626,7 +637,7 @@ const EventCards = ({params, searchParams}) => {
         />
        <button
         onClick={() => {
-          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
+          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All") {
             clearFilters(); // If any filters or search query is active, clear them
           } else {
             toggleFilters(); // Otherwise, toggle filter visibility
@@ -634,7 +645,7 @@ const EventCards = ({params, searchParams}) => {
         }}
         className="ml-2 p-2 sm:p-3 bg-blue-500 text-white rounded-lg focus:outline-none hover:bg-blue-600"
       >
-        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
+        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All" ? (
           <FaTimes size={20} /> // Clear icon if any filter or search query is active
         ) : (
           <FaFilter size={20} /> // Filter icon if no filter or search query is active
@@ -706,6 +717,27 @@ const EventCards = ({params, searchParams}) => {
             ))}
           </div>
           
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {[
+              { username: "All" }, // Add "All" at the beginning
+              ...CSENames].map((status, index) => (
+              <motion.button
+                key={status.username}
+                onClick={() => setCSEFilter(toTitleCase(status.username))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  CSEFilter === toTitleCase(status.username)
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {toTitleCase(status.username)}
+              </motion.button>
+            ))}
+          </div>
+
           {/* Date Range Filters */}
           <div className="flex flex-row gap-2 sm:gap-4">
             {/* From Date Picker */}
@@ -987,7 +1019,21 @@ const EventCards = ({params, searchParams}) => {
                 ))}
             </div>
             }
-             
+              {selectedStatus === "Call Followup" && (
+                <div>
+                <label className=" mb-2 flex items-center space-x-2 ">
+                  <input
+                    className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
+                    type="checkbox"
+                    value={quoteSentChecked}
+                    onChange={(e) => {
+                      if (e.target.checked) setQuoteSentChecked(!quoteSentChecked);
+                    }}
+                  />
+                  <span className="text-gray-800 font-medium">Quote Sent to Client</span>
+                </label>
+                </div> 
+              )}
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
