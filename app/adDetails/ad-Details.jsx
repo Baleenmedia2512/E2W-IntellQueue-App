@@ -109,6 +109,26 @@ const AdDetailsPage = () => {
    const campaignDurationVisibility = leadDay.campaignDurationVisibility || 0;
    const ValidityDate = leadDay.ValidityDate || 0;
 
+   // Calculate base cost
+let baseCost = (unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration);
+
+// Add additional feature costs to base cost
+if (checked.bold) {
+  baseCost += baseCost * (checked.boldPercentage / 100);
+}
+if (checked.semibold) {
+  baseCost += baseCost * (checked.semiboldPercentage / 100);
+}
+if (checked.color) {
+  baseCost += baseCost * (checked.colorPercentage / 100);
+}
+if (checked.tick) {
+  baseCost += baseCost * (checked.tickPercentage / 100);
+}
+
+// Calculate base price by adding margin to base cost
+const basePrice = baseCost + parseInt(margin);
+
   // Helper to format dates
   const formattedDate = (date) => {
     const inputDate = new Date(date);
@@ -265,7 +285,6 @@ const AdDetailsPage = () => {
   const handleQtySlabChange = () => {
     const selectedSlab = datas.slabData?.find(item => item.StartQty === qtySlab.Qty);
     const widthSelectedSlab = datas.slabData?.find(item => item.Width === qtySlab.Width);
-    console.log(datas.slabData, qtySlab, selectedSlab)
 
     if (!selectedSlab) {
       console.error("No matching slab data found.");
@@ -326,7 +345,7 @@ const AdDetailsPage = () => {
   },[margin, marginPercentage]);
 
   useEffect(() => {
-    if (!isQuoteEditMode && qtySlab) {
+    if (qtySlab) {
       handleQtySlabChange();
     }
   }, [qtySlab]);
@@ -348,7 +367,7 @@ const AdDetailsPage = () => {
     const newMarginAmount = parseInt(marginValue);
 
     // calculate margin percentage
-    const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount);
+    const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
     
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
@@ -362,7 +381,7 @@ const AdDetailsPage = () => {
     const newPercentage = parseFloat(marginPercent);
   
     // calculate margin amount
-    const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage);
+    const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
   
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
@@ -373,7 +392,21 @@ const AdDetailsPage = () => {
   };
 
   const marginLostFocus = () => {
-    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    let cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+
+    if (checked.color) {
+      cost += cost * (checked.colorPercentage / 100);
+    }
+    if (checked.tick) {
+      cost += cost * (checked.tickPercentage / 100);
+    }
+    if (checked.bold) {
+      cost += cost * (checked.boldPercentage / 100);
+    }
+    if (checked.semibold) {
+      cost += cost * (checked.semiboldPercentage / 100);
+    }
+
     const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
 
     // Ensure consistent update when margin field loses focus
@@ -424,33 +457,33 @@ const AdDetailsPage = () => {
     return matchingValue;
   };
 
-
-  const items = [
-    {
-      content: [
-        {
-          label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)) + formattedMargin(margin) + formattedMargin(checked.bold ? unitPrice * checked.boldPercentage / 100 : 0) + formattedMargin(checked.semibold ? unitPrice * checked.semiboldPercentage / 100 : 0) + formattedMargin(checked.color ? unitPrice * checked.colorPercentage / 100 : 0) + formattedMargin(checked.tick ? unitPrice * checked.tickPercentage / 100 : 0))}`
-        },
-        {
-          label: 'Cost',
-          value: ` ₹${formattedRupees((((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration))))}`
-        }
-      ]
-    },
-    {
-      content: [
-        {
-          label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)+ formattedMargin(margin)) * ((rateGST/100) + 1)) }`
-        },
-        {
-          label: 'Cost',
-          value: ` ₹${formattedRupees(((((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration))) * ((rateGST/100) + 1)))}`
-        }
-      ]
-    }
-  ];
+// Apply GST to both price and cost
+const items = [
+  {
+    content: [
+      {
+        label: 'Price',
+        value: ` ₹${formattedRupees(basePrice)}`
+      },
+      {
+        label: 'Cost',
+        value: ` ₹${formattedRupees(baseCost)}`
+      }
+    ]
+  },
+  {
+    content: [
+      {
+        label: 'Price',
+        value: ` ₹${formattedRupees(basePrice * (1 + rateGST / 100))}`
+      },
+      {
+        label: 'Cost',
+        value: ` ₹${formattedRupees(baseCost * (1 + rateGST / 100))}`
+      }
+    ]
+  }
+];
 
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -476,7 +509,7 @@ const AdDetailsPage = () => {
         bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, 
         semiboldPercentage: checked.semiboldPercentage, color: checked.color, 
         colorPercentage: checked.colorPercentage, tick: checked.tick, 
-        tickPercentage: checked.tickPercentage
+        tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost
       };
   
       // Find the existing item with the same editIndex
@@ -655,14 +688,14 @@ const AdDetailsPage = () => {
               let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
               if (result) {
                 const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage }]));
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost }]));
                 // setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage }]));
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost  }]));
             setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
@@ -778,7 +811,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
@@ -800,7 +833,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
@@ -820,7 +853,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Width}
                       value={width}
                       onChange={(e) => {
-                        dispatch(setQuotesData({width: e.target.value, marginAmount: calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({width: e.target.value, marginAmount: calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, true));
                         setChanging(true);
                       }}
@@ -844,7 +877,7 @@ const AdDetailsPage = () => {
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: calculateMarginAmount(qty, width, unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage)})); 
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: calculateMarginAmount(qty, width, unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}
