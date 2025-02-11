@@ -231,9 +231,11 @@ const EventCards = ({params, searchParams}) => {
   
   const insertEnquiry = async () => {
     let row = currentCall.rowData;
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
 
     try {
-        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${row.Phone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${true}`;
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${true}`;
 
         const response = await fetch(url);
 
@@ -277,6 +279,9 @@ const EventCards = ({params, searchParams}) => {
   const insertLeadToDB = async () => {
     let row = currentCall.rowData;
 
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
+
     const leadData = {
         JsonDBName: alternateCompanyName,
         JsonEntryUser: toTitleCase(userName),
@@ -284,10 +289,10 @@ const EventCards = ({params, searchParams}) => {
         JsonLeadTime: formatDBTime(row.LeadTime),
         JsonPlatform: row.Platform,
         JsonClientName: row.Name,
-        JsonClientContact: row.Phone,
+        JsonClientContact: cleanedPhone,
         JsonClientEmail: row.Email,
         JsonDescription: row.Enquiry,
-        JsonStatus: row.Status,
+        JsonStatus: selectedStatus,
         JsonLeadType: "New",
         JsonPreviousStatus: "",
         JsonNextFollowupDate: formatDBDate(followupDate),
