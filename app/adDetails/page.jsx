@@ -278,18 +278,64 @@ export const AdDetails = () => {
     grandTotalAmount = grandTotalAmount.replace('₹', '');
 
     // if(clientName !== ""){
-      try{
+      try {
+        // Step 1: Check if the lead exists and fetch the SheetId (Lead ID)
+        const response = await fetch(`https://orders.baleenmedia.com/API/Media/CheckLeadsOfExistingClient.php?JsonClientContact=${clientContact}&JsonDBName=${companyName}`);
+        const data = await response.json();
+    
+        if (!data.SheetId) {
+          alert("Lead not found. Cannot proceed with PDF generation.");
+          isGeneratingPdf = false;
+          return;
+        }
+    
+        // Check if SheetId exists
+        if (!data || !data.SheetId) {
+          console.log("no sheet data")
+        }else{
+          const SheetId = data.SheetId; // Store Lead ID
+          console.log("Lead Found. SheetId:", SheetId); // Log Lead ID
+          const payload = {
+            sNo: data.SheetId,
+            quoteSent: "Yes",
+            dbCompanyName: companyName
+          };
+          try {
+            const response = await fetch(
+              "https://leads.baleenmedia.com/api/updateLeads",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+              }
+            );
+        
+            if (!response.ok) throw new Error("Failed to update lead");
+            console.log(response)
+        } catch (error) {
+          console.error("Error updating lead:", error);
+        }
 
+        }
+        
+    
+        // Step 2: Proceed with PDF Generation
         const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
+    
+        // Step 3: Save Quote Data
         const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
         await Promise.all(promises);
+    
         setTimeout(() => {
-        dispatch(resetQuotesData());
-        dispatch(setQuotesData({currentPage: "checkout"}));
-        },200)
-      } catch(error){
-        alert('An unexpected error occured while inserting Quote:' + error);
+          dispatch(resetQuotesData());
+          dispatch(setQuotesData({ currentPage: "checkout" }));
+        }, 200);
+      } catch (error) {
+        alert("An unexpected error occurred while processing the lead: " + error);
+        isGeneratingPdf = false;
         return;
       }
       
