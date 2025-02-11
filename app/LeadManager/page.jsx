@@ -18,18 +18,21 @@ import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
+import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
+import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
 import { AiOutlinePlus } from "react-icons/ai";
 
-export const statusColors = { //Kumara code
+export const statusColors = {
   New: "bg-green-200 text-green-800",
   Unreachable: "bg-red-200 text-red-800",
   "Call Followup": "bg-yellow-200 text-yellow-800",
   Unqualified: "bg-orange-200 text-orange-800",
   "No Status": "bg-gray-200 text-gray-800",
-  "Available": "bg-green-200 text-green-800"
+  "Available": "bg-green-200 text-green-800",
+  "Ready for Quote": "bg-blue-200 text-blue-800",
 };
 
 const availableStatuses = [
@@ -70,9 +73,9 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {userName, appRights, companyName: UserCompanyName} = useAppSelector(state => state.authSlice);
+  const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
   const [showModal, setShowModal] = useState(false);
-  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -89,16 +92,18 @@ const EventCards = ({params, searchParams}) => {
   const [initialLeadStatus, setInitialLeadStatus] = useState("");
   const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
   const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
+  const [quoteSentChecked, setQuoteSentChecked] = useState("");
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
   const [statusFilter, setStatusFilter] = useState("All");
   const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-  const [quoteSentFilter, setQuoteSentFilter] = useState("All")
+  const [quoteSentFilter, setQuoteSentFilter] = useState("All");
+  const [CSEFilter, setCSEFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersVisible, setFiltersVisible] = useState(false);
-  const [fromDate, setFromDate] = useState(null); 
-  const [toDate, setToDate] = useState(null); 
+  const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+  const [toDate, setToDate] = useState(null); // Use null for default empty date
   const [timers, setTimers] = useState("");
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -133,6 +138,7 @@ const EventCards = ({params, searchParams}) => {
     setProspectTypeFilter('All');
     setQuoteSentFilter("All");
     setFromDate(null);
+    setCSEFilter("");
     setToDate(null);
     setSearchQuery('');
   };
@@ -155,6 +161,9 @@ const EventCards = ({params, searchParams}) => {
     quoteSentFilter === 'All' || 
         (quoteSentFilter === 'Quote Sent' && row.QuoteSent === 'Yes' && row.Status === 'Call Followup') ||
         (quoteSentFilter === 'Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
+  )
+  .filter((row) =>
+    CSEFilter === 'All' || row.HandledBy === CSEFilter
   )
   .filter((row) =>
     [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
@@ -369,6 +378,86 @@ const formatUnreachableTime = (timeStr) => {
     };
   }, [rows]);
   
+  const insertEnquiry = async () => {
+    let row = currentCall.rowData;
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
+
+    try {
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${true}`;
+
+        const response = await fetch(url);
+
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const text = await response.text(); // Get raw response
+        console.log("Raw Response:", text); // Log to debug
+
+        let data;
+        try {
+            data = JSON.parse(text); // Attempt to parse JSON
+        } catch (jsonError) {
+            throw new Error(`Invalid JSON response: ${text}`);
+        }
+
+        if (data === "Values Inserted Successfully!") {
+            setSuccessMessage('Client Details Are Saved!');
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 2000);
+        } else if (data === "Duplicate Entry!") {
+            setToastMessage('Contact Number Already Exists!');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        } else {
+            alert(`The following error occurred while inserting data: ${data}`);
+        }
+    } catch (error) {
+        console.error('Error while inserting data:', error);
+        alert(`Error: ${error.message}`);
+    }
+};
+
+
+  const insertLeadToDB = async () => {
+    let row = currentCall.rowData;
+
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
+
+    const leadData = {
+        JsonDBName: alternateCompanyName,
+        JsonEntryUser: toTitleCase(userName),
+        JsonLeadDate: formatDBDate(row.LeadDate),
+        JsonLeadTime: formatDBTime(row.LeadTime),
+        JsonPlatform: row.Platform,
+        JsonClientName: row.Name,
+        JsonClientContact: cleanedPhone,
+        JsonClientEmail: row.Email,
+        JsonDescription: row.Enquiry,
+        JsonStatus: selectedStatus,
+        JsonLeadType: "New",
+        JsonPreviousStatus: "",
+        JsonNextFollowupDate: formatDBDate(followupDate),
+        JsonNextFollowupTime: formatDBTime(followupTime),
+        JsonClientCompanyName: companyName,
+        JsonRemarks: remarks,
+        JsonHandledBy: toTitleCase(userName),
+        JsonProspectType: prospectType,
+        JsonIsUnreachable: 0,
+        JsonSheetId: row.SNo
+    };
+
+    const response = await PostInsertOrUpdate("InsertLeadStatus", leadData);
+    const anotherResponse = await insertEnquiry()
+    return response && anotherResponse
+};
 
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 86400); // 86400 seconds in a day
@@ -380,7 +469,7 @@ const formatUnreachableTime = (timeStr) => {
     if (days > 0) {
       return `${days}d ${hrs}:${mins}:${secs}`;
     }
-      
+  
     return `${hrs}:${mins}:${secs}`;
   };
   
@@ -396,6 +485,7 @@ const formatUnreachableTime = (timeStr) => {
         status: searchParams.status || "",
         followupDate: searchParams.followupDate || null,
       };
+
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
 
     if (fetchedRows.length > 0) {
@@ -498,15 +588,14 @@ const formatUnreachableTime = (timeStr) => {
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
         handledBy: toTitleCase(userName),
-        dbCompanyName: UserCompanyName
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
     } else if (sendQuoteOnly === "Handled By") {
       payload = {
         sNo: Sno,
         handledBy: toTitleCase(user),
-        dbCompanyName: UserCompanyName
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
-      console.log("Received on Condition")
     }else {
       payload = {
         sNo: currentCall.sNo,
@@ -514,13 +603,14 @@ const formatUnreachableTime = (timeStr) => {
         companyName: companyName || "", // Default to an empty string if undefined
         followupDate: followupDate || "",
         followupTime: followupTime || "",
-        quoteSent: initialQuoteStatus || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
         handledBy: toTitleCase(userName),
-        dbCompanyName: UserCompanyName
+        dbCompanyName: UserCompanyName || "Baleen Test",
+        quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
       };
     }
+  
     
     try {
       const response = await fetch(
@@ -550,6 +640,14 @@ const formatUnreachableTime = (timeStr) => {
           email: currentCall?.email || "",
         };
         downloadContact(contact); // Download the contact vCard
+        try {
+          if(initialSelectedStatus !== "Call Followup"){
+            insertLeadToDB()
+          }
+        } catch (error) {
+          alert("Error while inserting data: " + error)
+        }
+        
       }
     } catch (error) {
       console.error("Error updating lead:", error);
@@ -845,14 +943,14 @@ const formatUnreachableTime = (timeStr) => {
         </button>
         
         {/* Report Button */}
-        {/* <a href="/LeadManager/Report">
+        <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a> */}
+        </a>
       </div>
 
     </div>
@@ -873,7 +971,7 @@ const formatUnreachableTime = (timeStr) => {
         />
        <button
         onClick={() => {
-          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
+          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All") {
             clearFilters(); // If any filters or search query is active, clear them
           } else {
             toggleFilters(); // Otherwise, toggle filter visibility
@@ -881,7 +979,7 @@ const formatUnreachableTime = (timeStr) => {
         }}
         className="ml-2 p-2 sm:p-3 bg-blue-500 text-white rounded-lg focus:outline-none hover:bg-blue-600"
       >
-        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
+        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All" ? (
           <FaTimes size={20} /> // Clear icon if any filter or search query is active
         ) : (
           <FaFilter size={20} /> // Filter icon if no filter or search query is active
@@ -953,6 +1051,27 @@ const formatUnreachableTime = (timeStr) => {
             ))}
           </div>
           
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {[
+              { username: "All" }, // Add "All" at the beginning
+              ...CSENames].map((status, index) => (
+              <motion.button
+                key={status.username}
+                onClick={() => setCSEFilter(toTitleCase(status.username))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  CSEFilter === toTitleCase(status.username)
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {toTitleCase(status.username)}
+              </motion.button>
+            ))}
+          </div>
+
           {/* Date Range Filters */}
           <div className="flex flex-row gap-2 sm:gap-4">
             {/* From Date Picker */}
@@ -991,16 +1110,13 @@ const formatUnreachableTime = (timeStr) => {
 
           <div
             key={row.SNo}
-            className={`relative rounded-lg p-4 border-2 hover:shadow-lg hover:-translate-y-2 bg-white hover:transition-all border-gray-200 
-              ${timers[row.SNo] > 86400 ? " animate-pulse bg-green-600`" : ""}
-            `}
+            className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
             style={{ minHeight: "240px" }}
           >
-
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent, rowData: row}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -1019,28 +1135,28 @@ const formatUnreachableTime = (timeStr) => {
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
-            {row.Status === 'Call Followup' && (
+             {row.Status === 'Call Followup' &&
             <span
               onClick={() => {
                 if (!isLoading) {
                   toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
                 }
               }}
-              className={`flex items-center gap-2 rounded-lg px-3 py-1 text-white text-xs sm:text-sm font-medium shadow-md transition-all duration-300 cursor-pointer ${
+              className={`inline-block rounded-full p-1 ${
                 row.QuoteSent === "Yes"
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-red-500 hover:bg-red-600"
-              }`}
+                  ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
+                  : "bg-gradient-to-r from-red-400 to-red-600"
+              } hover:cursor-pointer`}
               title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
+              
             >
               {isLoading ? (
-                <div className="animate-spin border-t-2 border-white rounded-full w-4 h-4" />
+                <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
               ) : (
-                <FiCheckCircle className="text-white text-base" />
+                <FiCheckCircle className="text-white text-lg" />
               )}
-              <span>{row.QuoteSent === "Yes" ? "Sent" : "Not Sent"}</span>
             </span>
-          )}
+          }
             
             <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
@@ -1121,7 +1237,7 @@ const formatUnreachableTime = (timeStr) => {
               <div className="text-sm mt-4 flex flex-row justify-between items-center w-full">
                 <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
                 {row.Status === "New" && (
-                  <div className={`${timers[row.SNo] > 86400 ? "bg-red-100 text-red-500 animate-bounce" : "bg-blue-100 text-blue-500"} relative group border font-semibold p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white `}>
+                  <div className="text-blue-500 relative group border font-semibold bg-blue-100 p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white ">
                     <Timer className="mr-2"/>
                     {formatTime(timers[row.SNo] || 0)}
                     {/* Helper text that appears on hover */}
@@ -1369,14 +1485,36 @@ const formatUnreachableTime = (timeStr) => {
                 ))}
             </div>
             }
-             
+              {selectedStatus === "Call Followup" && (
+                <div>
+                <label className=" mb-2 flex items-center space-x-2 ">
+                  <input
+                    className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
+                    type="checkbox"
+                    value={quoteSentChecked || currentCall.quoteSent === "Yes" ? true: false}
+                    onChange={(e) => {
+                      if (e.target.checked) setQuoteSentChecked(!quoteSentChecked);
+                    }}
+                  />
+                  <span className="text-gray-800 font-medium">Quote Sent to Client</span>
+                </label>
+                </div> 
+              )}
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Followup Date and Time
                 </label>
                 <DatePicker
-                 selected={new Date(`${followupDate} ${followupTime}`)}
+                  selected={
+                    followupDate
+                      ? new Date(`${followupDate} ${followupTime}`) // If a date is selected, use it
+                      : selectedStatus === "Unreachable" // Only for "Unreachable"
+                      ? new Date(new Date().getTime() + 60 * 60 * 1000) // Set time 1 hour ahead
+                      : selectedStatus === "Call Followup" // For "Call Followup", set the date to tomorrow
+                      ? new Date(new Date().setDate(new Date().getDate() + 1)) // Set to tomorrow
+                      : new Date() // For other statuses, default to the current date
+                  }
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa" // Sets the format for time (12-hour format with AM/PM)
@@ -1416,7 +1554,6 @@ const formatUnreachableTime = (timeStr) => {
             </div>
             }
             {/* Lead Status Buttons */}
-            {selectedStatus === "Call Followup" && (
             <div className="mb-4 flex justify-center gap-4">
               {[
                 { label: "Hot", icon: <GiCampfire />, color: "red" },
@@ -1427,8 +1564,8 @@ const formatUnreachableTime = (timeStr) => {
                   key={label}
                   value={prospectType}
                   onClick={() => {
-                    setSelectedLeadStatus((prev) => (prev === label ? "" : label)); 
-                    setProspectType((prev) => (prev === label ? "" : label)); 
+                    setSelectedLeadStatus(label); 
+                    setProspectType(label); // Set the prospect type
                   }}
                   className={`flex items-center gap-1 px-3 py-1 border rounded-full transition-transform duration-300 text-sm ${
                     selectedLeadStatus === label
@@ -1449,7 +1586,7 @@ const formatUnreachableTime = (timeStr) => {
                 </button>
               ))}
             </div>
-            )}
+
 
             <div className="flex justify-end">
             <button
@@ -1481,6 +1618,7 @@ const formatUnreachableTime = (timeStr) => {
 
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
+
   const urlWithParams = `${apiUrl}?dbCompanyName=${encodeURIComponent(dbCompanyName)}`;
 
   const response = await fetch(urlWithParams, {
