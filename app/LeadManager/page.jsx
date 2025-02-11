@@ -18,8 +18,10 @@ import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
+import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
+import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
 
 export const statusColors = {
@@ -70,9 +72,9 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {userName, appRights, dbName: UserCompanyName} = useAppSelector(state => state.authSlice);
+  const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
   const [showModal, setShowModal] = useState(false);
-  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -227,6 +229,36 @@ const EventCards = ({params, searchParams}) => {
     };
   }, [rows]);
   
+  const insertLeadToDB = async () => {
+    let row = currentCall.rowData;
+    
+    const leadData = {
+        JsonDBName: alternateCompanyName,
+        JsonEntryUser: toTitleCase(userName),
+        JsonLeadDate: formatDBDate(row.LeadDate),
+        JsonLeadTime: formatDBTime(row.LeadTime),
+        JsonPlatform: row.Platform,
+        JsonClientName: row.Name,
+        JsonClientContact: row.Phone,
+        JsonClientEmail: row.Email,
+        JsonDescription: row.Enquiry,
+        JsonStatus: row.Status,
+        JsonLeadType: "New",
+        JsonPreviousStatus: "",
+        JsonNextFollowupDate: formatDBDate(followupDate),
+        JsonNextFollowupTime: formatDBTime(followupTime),
+        JsonClientCompanyName: companyName,
+        JsonRemarks: remarks,
+        JsonHandledBy: toTitleCase(userName),
+        JsonProspectType: prospectType,
+        JsonIsUnreachable: 0,
+        JsonSheetId: row.SNo
+    };
+
+    const response = await PostInsertOrUpdate("InsertLeadStatus", leadData);
+
+    console.log("Insert Response:", response);
+};
 
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 86400); // 86400 seconds in a day
@@ -354,12 +386,11 @@ const EventCards = ({params, searchParams}) => {
         companyName: companyName || "", // Default to an empty string if undefined
         followupDate: followupDate || "",
         followupTime: followupTime || "",
-        quoteSent: initialQuoteStatus || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
         handledBy: toTitleCase(userName),
         dbCompanyName: UserCompanyName || "Baleen Test",
-        quoteSent: quoteSentChecked === true ? "Yes" : "No"
+        quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
       };
     }
   
@@ -392,6 +423,14 @@ const EventCards = ({params, searchParams}) => {
           email: currentCall?.email || "",
         };
         downloadContact(contact); // Download the contact vCard
+        try {
+          if(initialSelectedStatus !== "Call Followup"){
+            insertLeadToDB()
+          }
+        } catch (error) {
+          alert("Error while inserting data: " + error)
+        }
+        
       }
     } catch (error) {
       console.error("Error updating lead:", error);
@@ -782,7 +821,7 @@ const EventCards = ({params, searchParams}) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent, rowData: row}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -1025,7 +1064,7 @@ const EventCards = ({params, searchParams}) => {
                   <input
                     className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
                     type="checkbox"
-                    value={quoteSentChecked}
+                    value={quoteSentChecked || currentCall.quoteSent === "Yes" ? true: false}
                     onChange={(e) => {
                       if (e.target.checked) setQuoteSentChecked(!quoteSentChecked);
                     }}
