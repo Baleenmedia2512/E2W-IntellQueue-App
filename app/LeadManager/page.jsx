@@ -427,14 +427,13 @@ const EventCards = ({params, searchParams}) => {
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
-      setFollowupDate(formattedDate);
-      setFollowupTime(formattedTime);
       setRemarks("");
       setSelectedLeadStatus("");
       if (selectedStatus === "Unreachable") {
         setFollowupDate(false);
       } else {
         setFollowupDate(formattedDate);
+        setFollowupTime(formattedTime);
       }
     }
   };  
