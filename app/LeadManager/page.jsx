@@ -178,6 +178,35 @@ const EventCards = ({params, searchParams}) => {
   const isNoDataFound = filteredRows.length === 0;
 
   useEffect(() => {
+    let defaultDate = new Date();
+  
+    if (selectedStatus === "Unreachable") {
+      defaultDate.setHours(defaultDate.getHours() + 1); // 1 hour ahead
+    } else if (selectedStatus === "Call Followup") {
+      let currentTime = defaultDate.getHours() * 60 + defaultDate.getMinutes(); // Get current time in minutes
+      defaultDate = new Date(defaultDate.setDate(defaultDate.getDate() + 1)); // Move to tomorrow
+      defaultDate.setHours(Math.floor(currentTime / 60), currentTime % 60, 0); // Keep current time
+    }
+  
+    // Format date as dd-MMM-yyyy
+    const formattedDate = defaultDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  
+    // Format time as hh:mm AM/PM
+    const formattedTime = defaultDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  
+    setFollowupDate(formattedDate);
+    setFollowupTime(formattedTime);
+  }, [selectedStatus]); // Runs whenever `selectedStatus` changes
+
+  useEffect(() => {
     const intervals = {};
   
     rows.forEach((row) => {
