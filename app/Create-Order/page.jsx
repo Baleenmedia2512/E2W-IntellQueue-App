@@ -119,6 +119,9 @@ const CreateOrder = () => {
     const [orderNumber, setOrderNumber] = useState(orderNumberRP || "");
     const [orderAmount, setorderAmount] = useState('');
     const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [updateReason, setUpdateReason] = useState('');
+    const [prevData, setPrevData] = useState({});
    
     
     useEffect(() => {
@@ -274,6 +277,10 @@ useEffect(() => {
           selectedValues.adType.value
         );
         setCommissionAmount(commission);
+        setPrevData(prevData => ({
+          ...prevData, // Keep existing data
+          commissionAmount: commission // Update only commissionAmount
+      }));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -675,6 +682,10 @@ const fetchRates = async () => {
                 selectedValues.adType.value
               );
               setCommissionAmount(commission);
+              setPrevData(prevData => ({
+                ...prevData, // Keep existing data
+                commissionAmount: commission // Update only commissionAmount
+            }));
             }
           } else {
             console.warn("No client details found for the given ID.");
@@ -747,6 +758,7 @@ const fetchRates = async () => {
           setIsCommissionSingleUse(data.isCommissionAmountSingleUse === 1);
           if(data.consultantName) {
             setCommissionAmount(data.commission);
+            // setPrevData({commissionAmount: commission});
           }
 
           // Store the fetched data in a state to compare later
@@ -836,6 +848,12 @@ const fetchRates = async () => {
                 // MP-101
                 if (elementsToHide.includes('OrderNumberText')) {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
+
+                // Notify order adjustment via WhatsApp
+                if (![null, undefined, 0, "0"].includes(discountAmount)) {
+                notifyOrderAdjustment(clientName, discountAmount, remarks, nextRateWiseOrderNumber, selectedValues.rateName.value, selectedValues.adType.value, commissionAmount, prevData.commissionAmount);
+                }
+
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
                   setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
                 }
@@ -938,6 +956,19 @@ const updateNewOrder = async (event) => {
       const data = await response.json();
       if (data === "Values Updated Successfully!") {
         setSuccessMessage('Work Order #' + UpdateRateWiseOrderNumber + ' Updated Successfully!');
+        if (discountAmount !== prevData.discountAmount) {
+        // Call notifyOrderAdjustment after order update
+        notifyOrderAdjustment(
+          clientName,                      // Client Name
+          discountAmount,                  // Adjusted Amount (can be +ve or -ve)
+          updateReason,                    // Adjustment Remarks
+          UpdateRateWiseOrderNumber,       // Order Number
+          selectedValues.rateName.value,   // Rate Card
+          selectedValues.adType.value,      // Rate Type
+          commissionAmount,
+          prevData.commissionAmount
+      );
+    }
         dispatch(setIsOrderExist(true));
         // dispatch(setIsOrderUpdate(false));
         // dispatch(resetOrderData());
@@ -1266,6 +1297,10 @@ const fetchConsultantDetails = async (Id) => {
       selectedValues.adType.value
     );
     setCommissionAmount(commission);
+    setPrevData(prevData => ({
+      ...prevData, // Keep existing data
+      commissionAmount: commission // Update only commissionAmount
+  }));
     }
   } catch (error) {
     console.error('Error fetching consultant details:', error);
@@ -1315,11 +1350,6 @@ const handleCommissionChange = (e) => {
 };
 
 
-const [dialogOpen, setDialogOpen] = useState(false);
-  const [updateReason, setUpdateReason] = useState('');
-  const [prevData, setPrevData] = useState({});
-
-
 const handleOpenDialog = () => {
   // Check if remarks are filled
   const isDiscountChanged = discountAmount !== prevData.discountAmount;
@@ -1336,22 +1366,22 @@ const handleOpenDialog = () => {
   // }
   // Compare current data with previous data to check if any field has changed
   const isDataChanged = (
-    clientName.trim() !== prevData.clientName.trim() ||
+    clientName.trim() !== (prevData.clientName || '').trim() ||
     orderDate !== prevData.orderDate || // Ensure orderDate comparison works (check format)
     parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
     rateId !== prevData.rateId ||
-    consultantName.trim() !== prevData.consultantName.trim() ||
-    discountAmount !== prevData.discountAmount ||
+    consultantName.trim() !== (prevData.consultantName || '').trim() ||
+    parseFloat(discountAmount) !== parseFloat(prevData.discountAmount) ||
     parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
     parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount) ||
-    isCommissionSingleUse !== prevData.isCommissionSingleUse
+    Boolean(isCommissionSingleUse) !== Boolean(prevData.isCommissionSingleUse) // Ensure boolean comparison
   );
-
+  
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
   if (isDataChanged) {
     setDialogOpen(true);
   } else {
-    setToastMessage('No changes have been made.');
+    setToastMessage('No changes detected.');
     setSeverity('warning');
     setToast(true);
     setTimeout(() => {
@@ -1391,9 +1421,12 @@ const handleOpenDialog = () => {
     dispatch(setIsOrderUpdate(false));
     setCommissionAmount(0);
     setIsCommissionSingleUse(false);
+    setRemarks('');
+    setUpdateReason('');
     // setWaiverAmount(0);
     // setIsConsultantWaiverChecked(false);
     setClientNumber('');
+    setPrevData({});
     //window.location.reload(); // Reload the page
   };
 
@@ -1459,7 +1492,51 @@ const handleCommissionConfirm = () => {
   handleCommissionCloseDialog();
   createNewOrder();
 };
-console.log(commissionAmount)
+
+const notifyOrderAdjustment = async (clientNam, adjustedOrderAmt, remarks, rateWiseOrderNum, rateCard, rateType, commission, prevCommission) => {
+
+  // Prepare JSON payload with properly formatted parameters
+  const payload = {
+      clientNam: String(clientNam),
+      adjustedOrderAmt: String(adjustedOrderAmt),
+      remarks: remarks,
+      rateWiseOrderNum: String(rateWiseOrderNum),
+      rateCard: rateCard,
+      rateType: rateType,
+      newCommissionAmount: String(commission),
+      prevCommissionAmount: (prevCommission != null ? String(prevCommission) : "0") === String(commission) ? "0" : String(prevCommission || "0")
+  };
+
+
+  try {
+      const response = await axios.post(
+          `https://orders.baleenmedia.com/API/Media/NotifyOrderAdjustmentViaWhatsapp.php?JsonDBName=${companyName}`,
+          payload, // Send data as JSON
+          { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      const resultData = response.data;
+      console.log("API Response:", resultData);
+
+      if (resultData[0]?.success) {
+          console.log('✅ Message sent successfully!');
+      } else {
+          setToastMessage(resultData.message || "An error occurred.");
+          setIsButtonDisabled(false);
+          setSeverity("warning");
+          setToast(true);
+
+          setTimeout(() => {
+              setToast(false);
+          }, 3000);
+      }
+  } catch (error) {
+      console.error("❌ Error sending message:", error);
+      setIsButtonDisabled(false);
+  }
+};
+
+
 
 return (
   <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
@@ -1754,8 +1831,8 @@ return (
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
-      
-          </div>
+
+    </div>
     <div>
       <label className="block text-gray-700 font-semibold mb-2">Adjustment (+/-)</label>
       <input 

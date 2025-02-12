@@ -424,11 +424,10 @@ const EventCards = ({params, searchParams}) => {
 
       setIsLoading(false);
       setShowModal(false);
-      // setFollowupDate(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
-      // setFollowupDate(formattedDate);
+      setFollowupDate(formattedDate);
       setFollowupTime(formattedTime);
       setRemarks("");
       setSelectedLeadStatus("");

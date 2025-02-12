@@ -21,6 +21,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { FaCheck, FaTimes, FaWindowClose, FaFilter } from 'react-icons/fa';
 import Tippy from '@tippyjs/react'; // Tooltip library
 import 'tippy.js/dist/tippy.css'; // Import Tippy's default CSS
+import { generateReferralPdf } from '../../generatePDF/generateConsultantSlipPDF';
 
 const matchModes = [
     { label: 'Contains', value: 'contains' },
@@ -49,7 +50,9 @@ export default function GroupedRowsDemo() {
     const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
     const defaultFilters = {
+        orderNumber: { value: null, matchMode: 'contains' },
         consultant: { value: null, matchMode: 'contains' },
+        client: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
     };
@@ -77,14 +80,18 @@ export default function GroupedRowsDemo() {
     ? JSON.parse(sessionStorage.getItem('filterValues'))
     : null;
     const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
+        rateWiseOrderNumber: '',
         consultant: '',
+        client: '',
         rateCard: '',
         rateType: '',
     });
 
     const activeFilters = {
+        rateWiseOrderNumber: filters.rateWiseOrderNumber ? filters.rateWiseOrderNumber.value : '',
         rateCard: filters.rateCard ? filters.rateCard.value : '',
         consultant: filters.consultant ? filters.consultant.value : '',
+        client: filters.client ? filters.client.value : '',
         rateType: filters.rateType ? filters.rateType.value : ''
     };
 
@@ -107,7 +114,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
@@ -145,6 +152,7 @@ export default function GroupedRowsDemo() {
 
     const fetchConsultants = async () => {
         const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
+        
         const groupedData = groupConsultants(data);
         setConsultants(groupedData);
     };
@@ -177,7 +185,6 @@ export default function GroupedRowsDemo() {
             setSelectedRows([]);
         }
     }, [consultants]);
-    
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -349,7 +356,9 @@ const handleMarkAsUnprocessed = async () => {
                 rateCard: consultant.rateCard,
                 rateType: consultant.rateType,
                 price: consultant.price ? parseFloat(consultant.price) : 0,
-                orderNumber: consultant.orderNumber
+                orderNumber: consultant.orderNumber,
+                client: consultant.clientName,
+                rateWiseOrderNumber: consultant.rateWiseOrderNumber
             });
     
             existingConsultant.totalCount++;
@@ -367,10 +376,12 @@ const handleMarkAsUnprocessed = async () => {
                 rows.push({
                     id: `${consultant.name}-${rateIndex}`,
                     consultant: consultant.name,
+                    client: rate.client,
                     rateCard: rate.rateCard,
                     rateType: rate.rateType,
                     price: rate.price,
-                    orderNumber: rate.orderNumber
+                    orderNumber: rate.orderNumber,
+                    rateWiseOrderNumber: rate.rateWiseOrderNumber
                 });
             });
     
@@ -378,10 +389,12 @@ const handleMarkAsUnprocessed = async () => {
             rows.push({
                 id: `total-${consultant.name}`,
                 consultant: "",
+                client: "",
                 rateCard: "Total",
                 rateType: consultant.totalCount,
                 price: consultant.totalPrice,
-                orderNumber: ""
+                orderNumber: "",
+                rateWiseOrderNumber: ""
             });
         });
     
@@ -397,9 +410,16 @@ const handleMarkAsUnprocessed = async () => {
         return <span>₹{rowData.price}</span>; // Ensure this displays properly if it's a number
     };
 
-    const nameBodyTemplate = (rowData) => {
+    const consultantBodyTemplate = (rowData) => {
         if (rowData.consultant) {
             return <span className="font-bold ml-2">{rowData.consultant}</span>;
+        }
+        return null;
+    };
+
+    const clientBodyTemplate = (rowData) => {
+        if (rowData.consultant) {
+            return <span className="ml-2">{rowData.client}</span>;
         }
         return null;
     };
@@ -409,6 +429,15 @@ const handleMarkAsUnprocessed = async () => {
             return <span className="font-bold text-blue-500">{rowData.rateCard}</span>;
         } else if (rowData.rateCard) {
             return <span className="font-bold">{rowData.rateCard}</span>;
+        }
+        return null;
+    };
+
+    const rateWiseOrderNumberBodyTemplate = (rowData) => {
+        if (rowData.rateCard === 'Total') {
+            return <span className="text-blue-500">{rowData.rateWiseOrderNumber}</span>;
+        } else if (rowData.rateCard) {
+            return <span>#{rowData.rateWiseOrderNumber}</span>;
         }
         return null;
     };
@@ -505,7 +534,9 @@ const handleExport = () => {
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
-        Consultant: row.consultant, // Default to an empty string if name is null
+        rateWiseOrderNumber: row.rateWiseOrderNumber,
+        Consultant: row.consultant,
+        Client: row.client,
         RateCard: row.rateCard,
         RateType: row.rateType,
         Price: row.price
@@ -570,32 +601,52 @@ const filterHeaderTemplate = (column, filterField) => {
         let newFilters = { ...filters };
         let combinedFilteredRows = [...groupedData]; // Start with the entire dataset
     
-    
+        console.log('before', combinedFilteredRows);
+        
         // Apply filters based on each filter field
         for (const key in tempFilterValues) {
-            // if (tempFilterValues[key] !== '') {
+            if (tempFilterValues[key] !== '') {
                 newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
+    
                 // Apply the filter on the combinedFilteredRows
                 combinedFilteredRows = combinedFilteredRows.filter(row => {
                     const fieldValue = row[key]; // Dynamically access the field based on key
-                    
+    
                     // Handle null or undefined values
                     if (fieldValue === null || fieldValue === undefined) {
                         return false; // Skip rows with null/undefined values for filtering
                     }
-                    
-                    if (typeof fieldValue === 'string') {
-                        return fieldValue.toLowerCase().includes(tempFilterValues[key].toLowerCase());
+    
+                    let formattedFilterValue = tempFilterValues[key];
+    
+                    // If filter value starts with #, remove it for filtering
+                    if (formattedFilterValue && formattedFilterValue.startsWith("#")) {
+                        formattedFilterValue = formattedFilterValue.slice(1); // Remove #
                     }
-                    return false; // Handle other cases if necessary
+    
+                    // If fieldValue is a string, compare it after converting both to lowercase
+                    if (typeof fieldValue === 'string') {
+                        return fieldValue.toLowerCase().includes(formattedFilterValue.toLowerCase());
+                    }
+    
+                    // If fieldValue is a number (like orderNumber), compare it directly
+                    if (typeof fieldValue === 'number') {
+                        return fieldValue.toString().includes(formattedFilterValue); // Ensure to convert to string for comparison
+                    }
+    
+                    return false; // Return false for unsupported types
                 });
-            // }
+            }
         }
-
+    
+        console.log('after', combinedFilteredRows); // Log after filtering to debug
+    
+        // Update session storage and filters
         sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters);
         setSelectedRows(combinedFilteredRows); // Automatically select the filtered rows
     };
+    
 
     const handleClearFilter = () => {
         let newFilters = { ...filters };
@@ -715,6 +766,70 @@ const handleCheckboxChange = () => {
     setShowIcProcessedConsultantsOnly((prev) => !prev);
 };
 
+const handleSlipGeneration = () => {
+    // Step 1: Filter out rows where rateCard is 'Total'
+    const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
+
+    // Step 2: Group data by consultant, then by rateCard
+    const groupedData = filteredRows.reduce((acc, row) => {
+        const { consultant, rateCard, price } = row;
+
+        if (!acc[consultant]) {
+            acc[consultant] = [];
+        }
+
+        let rateCardEntry = acc[consultant].find(item => item.rateCard === rateCard);
+        if (!rateCardEntry) {
+            rateCardEntry = { rateCard, count: 0, totalPrice: 0 };
+            acc[consultant].push(rateCardEntry);
+        }
+
+        rateCardEntry.count += 1;
+        rateCardEntry.totalPrice += price;
+
+        return acc;
+    }, {});
+
+    // Step 3: Convert grouped data into an array with consultant sections
+    const summaryByConsultant = [];
+    for (const consultant in groupedData) {
+        summaryByConsultant.push({ consultant, isHeader: true }); // Consultant header
+
+        groupedData[consultant].forEach(rateCardEntry => {
+            summaryByConsultant.push({
+                consultant,
+                rateCard: rateCardEntry.rateCard,
+                count: rateCardEntry.count,
+                totalPrice: rateCardEntry.totalPrice,
+                dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`
+            });
+        });
+    }
+
+    // Step 4: Generate a single PDF with grouped consultant sections
+    generateReferralPdf(summaryByConsultant);
+};
+
+
+  const formatDate = (dateString) => {
+    const months = [
+      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    ];
+  
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+  
+    return `${day}-${month}-${year}`;
+  };
+  
+  
+  
+
+// console.log(selectedRows)
+
 
     return (
         <div className="relative min-h-screen mb-20">
@@ -777,6 +892,15 @@ const handleCheckboxChange = () => {
                 </div>
 
         <div className="mt-auto flex justify-end gap-2 flex-wrap">
+        <button
+        onClick={() => handleSlipGeneration()}
+        className="bg-orange-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-orange-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+        >
+        <i className="pi pi-download mr-1 sm:mr-2"></i>
+        Generate Slip
+        </button>
+
+
         <button
           onClick={handleExport}
           className="bg-green-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
@@ -868,17 +992,30 @@ const handleCheckboxChange = () => {
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['consultant', 'rateCard', 'rateType']}
+                            globalFilterFields={['rateWiseOrderNumber','consultant','client', 'rateCard', 'rateType']}
                             
-            
                         >
                         
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="consultant" header="Consultant"  headerStyle={{ width: '13rem' }} body={nameBodyTemplate} 
+                            
+                            <Column field="rateWiseOrderNumber" header="RO#" headerStyle={{ width: '1rem' }} body={rateWiseOrderNumberBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.orderNumber?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
+                             filter
+                             filterElement={filterHeaderTemplate({ header: 'Rate Wise Order Number' }, 'rateWiseOrderNumber')}
+                             showFilterMatchModes={false}
+                            ></Column>
+                            <Column field="consultant" header="Consultant" headerStyle={{ width: '13rem' }} body={consultantBodyTemplate} 
                             headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.consultant?.value ? 'text-blue-600' : 'text-gray-800'}`} 
                             className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant' }, 'consultant')}
+                            showFilterMatchModes={false}
+                            
+                            ></Column>
+                            <Column field="client" header="Client"  headerStyle={{ width: '13rem' }} body={clientBodyTemplate} 
+                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.client?.value ? 'text-blue-600' : 'text-gray-800'}`} 
+                            className="bg-white p-2 w-fit text-nowrap"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Client' }, 'client')}
                             showFilterMatchModes={false}
                             
                             ></Column>

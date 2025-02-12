@@ -1,4 +1,4 @@
-'use client'
+'use client' //checkout
 import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
@@ -546,17 +546,7 @@ const CheckoutPage = () => {
                           >
                             ₹{" "}
                             {formattedRupees(
-                              ((item.unit === "SCM"
-                                ? item.qty * item.width
-                                : item.qty) *
-                                item.unitPrice *
-                                (item.minimumCampaignDuration > 0
-                                  ? item.campaignDuration /
-                                    item.minimumCampaignDuration
-                                  : 1) +
-                                (parseInt(item.margin)
-                                  ? parseInt(item.margin)
-                                  : 0)) /
+                              (item.price) /
                                 (item.unit === "SCM"
                                   ? item.qty * item.width
                                   : item.qty)
@@ -572,17 +562,7 @@ const CheckoutPage = () => {
                             ₹{" "}
                             {formattedRupees(
                               Math.round(
-                                (item.unit === "SCM"
-                                  ? item.qty * item.width
-                                  : item.qty) *
-                                  item.unitPrice *
-                                  (item.minimumCampaignDuration > 0
-                                    ? item.campaignDuration /
-                                      item.minimumCampaignDuration
-                                    : 1) +
-                                  (parseInt(item.margin)
-                                    ? parseInt(item.margin)
-                                    : 0)
+                                item.price
                               )
                             )}
                           </td>
