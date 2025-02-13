@@ -1161,7 +1161,7 @@ const EventCards = ({params, searchParams}) => {
                   <input
                     className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
                     type="checkbox"
-                    value={quoteSentChecked || currentCall.quoteSent === "Yes" ? true: false}
+                    checked={quoteSentChecked || currentCall.quoteSent === "Yes" ? true: false}
                     onChange={(e) => {
                       if (e.target.checked) setQuoteSentChecked(!quoteSentChecked);
                     }}
