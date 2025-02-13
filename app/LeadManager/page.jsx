@@ -918,7 +918,7 @@ const EventCards = ({params, searchParams}) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent, rowData: row}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent, rowData: row}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType); row.QuoteSent === "Yes" ? setQuoteSentChecked(true): setQuoteSentChecked(false)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -1161,10 +1161,8 @@ const EventCards = ({params, searchParams}) => {
                   <input
                     className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
                     type="checkbox"
-                    checked={quoteSentChecked || currentCall.quoteSent === "Yes" ? true: false}
-                    onChange={(e) => {
-                      if (e.target.checked) setQuoteSentChecked(!quoteSentChecked);
-                    }}
+                    checked={quoteSentChecked}
+                    onChange={() => setQuoteSentChecked((prev) => !prev)}
                   />
                   <span className="text-gray-800 font-medium">Quote Sent to Client</span>
                 </label>
