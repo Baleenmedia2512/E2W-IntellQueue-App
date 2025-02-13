@@ -187,6 +187,35 @@ const EventCards = ({params, searchParams}) => {
   const isNoDataFound = filteredRows.length === 0;
 
   useEffect(() => {
+    let defaultDate = new Date();
+  
+    if (selectedStatus === "Unreachable") {
+      defaultDate.setHours(defaultDate.getHours() + 1); // 1 hour ahead
+    } else if (selectedStatus === "Call Followup") {
+      let currentTime = defaultDate.getHours() * 60 + defaultDate.getMinutes(); // Get current time in minutes
+      defaultDate = new Date(defaultDate.setDate(defaultDate.getDate() + 1)); // Move to tomorrow
+      defaultDate.setHours(Math.floor(currentTime / 60), currentTime % 60, 0); // Keep current time
+    }
+  
+    // Format date as dd-MMM-yyyy
+    const formattedDate = defaultDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  
+    // Format time as hh:mm AM/PM
+    const formattedTime = defaultDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  
+    setFollowupDate(formattedDate);
+    setFollowupTime(formattedTime);
+  }, [selectedStatus]); // Runs whenever `selectedStatus` changes
+
+  useEffect(() => {
     const intervals = {};
   
     rows.forEach((row) => {
@@ -404,7 +433,16 @@ const EventCards = ({params, searchParams}) => {
         return;
       }
       
-
+      if (selectedStatus === "Call Followup" && !prospectType) {
+        setToastMessage("Please select a Prospect Type before saving.");
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+        setIsLoading(false);
+        return;
+      }
     let payload = {};
 
     // Prepare payload based on context
@@ -511,14 +549,17 @@ const EventCards = ({params, searchParams}) => {
 
       setIsLoading(false);
       setShowModal(false);
-      setFollowupDate(false);
       setHideOtherStatus(false);
       setFollowpOnly(false);
       setSelectedStatus("");
-      setFollowupDate(formattedDate);
-      setFollowupTime(formattedTime);
       setRemarks("");
       setSelectedLeadStatus("");
+      if (selectedStatus === "Unreachable") {
+        setFollowupDate(false);
+      } else {
+        setFollowupDate(formattedDate);
+        setFollowupTime(formattedTime);
+      }
     }
   };  
 
@@ -686,7 +727,10 @@ const EventCards = ({params, searchParams}) => {
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-      <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+    <h2 className="text-xl font-semibold text-blue-500">
+    {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
+  </h2>
+
       <div className="flex  space-x-4 ">
         {/* Sheet Button */}
         <button
@@ -698,14 +742,14 @@ const EventCards = ({params, searchParams}) => {
         </button>
         
         {/* Report Button */}
-        <a href="/LeadManager/Report">
+        {/* <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a>
+        </a> */}
       </div>
 
     </div>
@@ -865,9 +909,12 @@ const EventCards = ({params, searchParams}) => {
 
           <div
             key={row.SNo}
-            className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
+            className={`relative rounded-lg p-4 border-2 hover:shadow-lg hover:-translate-y-2 bg-white hover:transition-all border-gray-200 
+              ${timers[row.SNo] > 86400 ? " animate-pulse bg-green-600`" : ""}
+            `}
             style={{ minHeight: "240px" }}
           >
+
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
@@ -890,28 +937,28 @@ const EventCards = ({params, searchParams}) => {
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
-             {row.Status === 'Call Followup' &&
+            {row.Status === 'Call Followup' && (
             <span
               onClick={() => {
                 if (!isLoading) {
                   toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
                 }
               }}
-              className={`inline-block rounded-full p-1 ${
+              className={`flex items-center gap-2 rounded-lg px-3 py-1 text-white text-xs sm:text-sm font-medium shadow-md transition-all duration-300 cursor-pointer ${
                 row.QuoteSent === "Yes"
-                  ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
-                  : "bg-gradient-to-r from-red-400 to-red-600"
-              } hover:cursor-pointer`}
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
               title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
-              
             >
               {isLoading ? (
-                <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
+                <div className="animate-spin border-t-2 border-white rounded-full w-4 h-4" />
               ) : (
-                <FiCheckCircle className="text-white text-lg" />
+                <FiCheckCircle className="text-white text-base" />
               )}
+              <span>{row.QuoteSent === "Yes" ? "Sent" : "Not Sent"}</span>
             </span>
-          }
+          )}
             
             <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
@@ -992,7 +1039,7 @@ const EventCards = ({params, searchParams}) => {
               <div className="text-sm mt-4 flex flex-row justify-between items-center w-full">
                 <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
                 {row.Status === "New" && (
-                  <div className="text-blue-500 relative group border font-semibold bg-blue-100 p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white ">
+                  <div className={`${timers[row.SNo] > 86400 ? "bg-red-100 text-red-500 animate-bounce" : "bg-blue-100 text-blue-500"} relative group border font-semibold p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white `}>
                     <Timer className="mr-2"/>
                     {formatTime(timers[row.SNo] || 0)}
                     {/* Helper text that appears on hover */}
@@ -1129,15 +1176,7 @@ const EventCards = ({params, searchParams}) => {
                   Followup Date and Time
                 </label>
                 <DatePicker
-                  selected={
-                    followupDate
-                      ? new Date(`${followupDate} ${followupTime}`) // If a date is selected, use it
-                      : selectedStatus === "Unreachable" // Only for "Unreachable"
-                      ? new Date(new Date().getTime() + 60 * 60 * 1000) // Set time 1 hour ahead
-                      : selectedStatus === "Call Followup" // For "Call Followup", set the date to tomorrow
-                      ? new Date(new Date().setDate(new Date().getDate() + 1)) // Set to tomorrow
-                      : new Date() // For other statuses, default to the current date
-                  }
+                 selected={new Date(`${followupDate} ${followupTime}`)}
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa" // Sets the format for time (12-hour format with AM/PM)
@@ -1177,6 +1216,7 @@ const EventCards = ({params, searchParams}) => {
             </div>
             }
             {/* Lead Status Buttons */}
+            {selectedStatus === "Call Followup" && (
             <div className="mb-4 flex justify-center gap-4">
               {[
                 { label: "Hot", icon: <GiCampfire />, color: "red" },
@@ -1187,8 +1227,8 @@ const EventCards = ({params, searchParams}) => {
                   key={label}
                   value={prospectType}
                   onClick={() => {
-                    setSelectedLeadStatus(label); 
-                    setProspectType(label); // Set the prospect type
+                    setSelectedLeadStatus((prev) => (prev === label ? "" : label)); 
+                    setProspectType((prev) => (prev === label ? "" : label)); 
                   }}
                   className={`flex items-center gap-1 px-3 py-1 border rounded-full transition-transform duration-300 text-sm ${
                     selectedLeadStatus === label
@@ -1209,7 +1249,7 @@ const EventCards = ({params, searchParams}) => {
                 </button>
               ))}
             </div>
-
+            )}
 
             <div className="flex justify-end">
             <button
