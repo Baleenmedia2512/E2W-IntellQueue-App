@@ -262,9 +262,10 @@ const EventCards = ({params, searchParams}) => {
     let row = currentCall.rowData;
     // Extract only the 10-digit number
     const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
-
+    const isNewClient = await checkIfNewClient(cleanedPhone)
+    console.log(isNewClient)
     try {
-        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${true}`;
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${isNewClient}`;
 
         const response = await fetch(url);
 
@@ -358,6 +359,21 @@ const EventCards = ({params, searchParams}) => {
   //   setHasSaved(true); // Set hasSaved to true when checkbox is checked
   // };	
 
+  const checkIfNewClient = async (clientContact) => {
+    try {
+      const response = await fetch(
+        `https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${clientContact}&JsonDBName=${UserCompanyName}`
+      );
+      
+      const data = await response.json();
+      console.log(data, data.isNewUser)
+      return data.isNewUser ? true : false; // Returns true if new user, false if existing
+    } catch (error) {
+      console.error("Error checking contact number:", error);
+      return false; // Default to false in case of an error
+    }
+  };
+  
   const fetchData = async () => {
     try {
       const filters = {
