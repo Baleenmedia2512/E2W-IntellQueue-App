@@ -216,7 +216,7 @@ export const fetchQuoteClientData = async(clientID, DBName) => {
 export const ClientSearchSuggestions = async(ClientName, DBName, SearchType) => {
     let ClientData = [];
     try{
-        const response = await api.get("SuggestingClientNames.php/get",{
+        const response = await api.get("SuggestingClientNamesTest.php/get",{
             headers: {
                 'Content-Type': 'application/json; charset=utf-8'
             },

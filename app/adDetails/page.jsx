@@ -99,7 +99,7 @@ export const AdDetails = () => {
     
     if (newName !== '') {
       try{
-        suggestedClients = await ClientSearchSuggestions(newName, companyName, 'name');
+        suggestedClients = await ClientSearchSuggestions(newName, companyName, 'enquiry');
         setClientNameSuggestions(suggestedClients)
       } catch(error){
         console.error("Error Suggesting Client Names: " + error)
