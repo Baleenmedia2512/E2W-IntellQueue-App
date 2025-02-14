@@ -13,7 +13,9 @@ const parseDate = (str) => {
 
 const LeadReport = () => {
   const [leads, setLeads] = useState([]);
-
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
+  
   // Transform a Google Sheets row into a lead object
   const transformRow = (row) => {
     // Convert LeadDate and ArrivedDate to Date objects
