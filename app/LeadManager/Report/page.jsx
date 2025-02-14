@@ -2,7 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { Clock,User} from "lucide-react";
 import { useAppSelector } from "@/redux/store";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import Leaddiv from "./leadDiv";
+
+const parseDate = (str) => {
+  const parts = str.split("-");
+  return new Date(parts[2], parts[1] - 1, parts[0]);
+};
 
 const LeadReport = () => {
   const [leads, setLeads] = useState([]);
@@ -90,6 +97,38 @@ const LeadReport = () => {
         </p>
       </div>
 
+      {/* Date Picker Fields with Reset Button */}
+      <div className="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-4 md:space-y-0 mb-8">
+        <div className="">
+          <label className="mb-1 block text-sm font-medium text-gray-700">From Date</label>
+          <DatePicker
+            selected={fromDate}
+            onChange={(date) => setFromDate(date)}
+            placeholderText="Select From Date"
+            className="w-full p-2 border rounded-md"
+            dateFormat="dd-MM-yyyy"
+          />
+        </div>
+        <div className="">
+          <label className="mb-1 block text-sm font-medium text-gray-700">To Date</label>
+          <DatePicker
+            selected={toDate}
+            onChange={(date) => setToDate(date)}
+            placeholderText="Select To Date"
+            className="w-full p-2 border rounded-md"
+            dateFormat="dd-MM-yyyy"
+          />
+        </div>
+        <div className="flex-shrink-0">
+          <button
+            onClick={handleReset}
+            className="mt-6 px-4 py-2 bg-blue-500 text-gray-100 rounded-md hover:bg-blue-700 transition"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+      
       {/* Summary Cards */}
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         <div className="p-6 border rounded-xl bg-slate-50 shadow-sm">
