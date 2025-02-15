@@ -242,6 +242,7 @@ const chartData = Object.values(aggregatedData)
             <DatePicker 
               selected={fromDate} 
               onChange={setFromDate} 
+              maxDate={new Date()}
               className="w-full p-2 border rounded-md"
             />
           </div>
@@ -250,6 +251,7 @@ const chartData = Object.values(aggregatedData)
             <DatePicker 
               selected={toDate} 
               onChange={setToDate} 
+              maxDate={new Date()}
               className="w-full p-2 border rounded-md"
             />
           </div>
@@ -274,7 +276,7 @@ const chartData = Object.values(aggregatedData)
             <option value="Friends/Relatives">Friends/Relatives</option>
           </select>
         </div>
-        <div>
+        <div className="space-y-2">
           <label className="block text-sm font-medium">Handled By</label>
           <select
             value={handledByFilter}
@@ -288,7 +290,7 @@ const chartData = Object.values(aggregatedData)
           </select>
           
         </div>
-        <div>
+        <div className="space-y-2">
           <label className="block text-sm font-medium">Lead Status</label>
           <select
             value={statusFilter}
@@ -304,7 +306,7 @@ const chartData = Object.values(aggregatedData)
             {/* Add additional statuses as needed */}
           </select>
           </div>
-        <div>
+        <div className="space-y-2">
           <label className="block text-sm font-medium">TAT</label>
           <select
             value={tatFilter}
