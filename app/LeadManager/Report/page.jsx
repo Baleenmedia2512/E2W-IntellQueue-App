@@ -1,21 +1,31 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { Clock,User} from "lucide-react";
+import { Clock, User, BarChart2 } from "lucide-react";
 import { useAppSelector } from "@/redux/store";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Leaddiv from "./leadDiv";
-
-const parseDate = (str) => {
-  const parts = str.split("-");
-  return new Date(parts[2], parts[1] - 1, parts[0]);
-};
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { FetchActiveCSE } from "@/app/api/FetchAPI";
+import { toTitleCase } from "../page";
 
 const LeadReport = () => {
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Date filters
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
+  const [CSENames, setCSENames] = useState([]);
+  
+  // Other filters
+  const [platformFilter, setPlatformFilter] = useState("");
+  const [handledByFilter, setHandledByFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [tatFilter, setTatFilter] = useState(""); // "safe", "average", "delayed"
+  
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Transform a Google Sheets row into a lead object
   const transformRow = (row) => {
@@ -53,12 +63,20 @@ const LeadReport = () => {
       arrivedDate: row.ArrivedDate || "N/A",
       arrivedTime: row.ArrivedTime || "N/A",
       isUnreachable: row.IsUnreachable || "N/A",
+      // Store the Date object for filtering purposes
+      leadDate: leadDate,
     };
   };
 
   const { userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName } = useAppSelector(state => state.authSlice);
 
+  const fetchCSENames = async () => {
+    let data = await FetchActiveCSE(UserCompanyName);
+    setCSENames(data)
+  };
+
   useEffect(() => {
+    setLoading(true);
     fetch("https://leads.baleenmedia.com/api/fetchLeads")
       .then((res) => res.json())
       .then((data) => {
@@ -69,32 +87,61 @@ const LeadReport = () => {
         const transformedLeads = data.rows
           .map(transformRow)
           .filter((lead) => lead.statusChangeDate !== "N/A" && lead.statusChangeDate);
-
+        fetchCSENames()
         setLeads(transformedLeads);
         setFilteredLeads(transformedLeads); // Set initial filtered leads
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching leads: ", error);
+        setLoading(false);
       });
   }, []);
 
-  const filterLeadsByDate = () => {
-    if (!fromDate || !toDate) {
-      setFilteredLeads(leads); // No filter applied
-      return;
+  // Filtering function that applies all filters
+  const filterLeads = () => {
+    let updatedLeads = [...leads];
+
+    // Date Range Filter
+    if (fromDate && toDate) {
+      updatedLeads = updatedLeads.filter((lead) => {
+        if (!lead.leadDate) return false;
+        return lead.leadDate >= fromDate && lead.leadDate <= toDate;
+      });
     }
 
-    const filtered = leads.filter((lead) => {
-      const leadDate = new Date(lead.date.split("-").reverse().join("-"));
-      return leadDate >= fromDate && leadDate <= toDate;
-    });
+    // Platform Filter
+    if (platformFilter) {
+      updatedLeads = updatedLeads.filter(lead => lead.platform === platformFilter);
+    }
 
-    setFilteredLeads(filtered);
+    // HandledBy Filter
+    if (handledByFilter) {
+      updatedLeads = updatedLeads.filter(lead => lead.handledBy === handledByFilter);
+    }
+
+    // Lead Status Filter
+    if (statusFilter) {
+      updatedLeads = updatedLeads.filter(lead => lead.status === statusFilter);
+    }
+
+    // TAT Filter
+    if (tatFilter) {
+      if (tatFilter === "safe") {
+        updatedLeads = updatedLeads.filter(lead => lead.tat <= 1);
+      } else if (tatFilter === "average") {
+        updatedLeads = updatedLeads.filter(lead => lead.tat > 1 && lead.tat <= 3);
+      } else if (tatFilter === "delayed") {
+        updatedLeads = updatedLeads.filter(lead => lead.tat > 3);
+      }
+    }
+
+    setFilteredLeads(updatedLeads);
   };
 
   useEffect(() => {
-    filterLeadsByDate();
-  }, [fromDate, toDate, leads]);
+    filterLeads();
+  }, [fromDate, toDate, platformFilter, handledByFilter, statusFilter, tatFilter, leads]);
 
   // Calculate average TAT (Total Turnaround Time)
   const avgTAT =
@@ -103,50 +150,142 @@ const LeadReport = () => {
       : 0;
 
   const handleReset = () => {
-    setFromDate(null);
-    setToDate(null);
-    setFilteredLeads(leads); // Restore full list
+    setFromDate(new Date());
+    setToDate(new Date());
+    setPlatformFilter("");
+    setHandledByFilter("");
+    setStatusFilter("");
+    setTatFilter("");
+    setFilteredLeads(leads);
   };
 
+  // Aggregate analytics data by lead date:
+  // For each lead date, calculate the number of leads and average TAT.
+  // Aggregate analytics data by lead date (within selected date range)
+const aggregatedData = {};
+filteredLeads.forEach((lead) => {
+  if (lead.leadDate) {
+    const dateStr = lead.leadDate.toISOString().split("T")[0]; // Format as "yyyy-MM-dd"
+
+    if (!aggregatedData[dateStr]) {
+      aggregatedData[dateStr] = { date: dateStr, count: 0, totalTAT: 0 };
+    }
+    aggregatedData[dateStr].count += 1;
+    aggregatedData[dateStr].totalTAT += lead.tat;
+  }
+});
+
+// Convert aggregated data into chart-compatible format
+const chartData = Object.values(aggregatedData)
+  .filter((item) => {
+    const leadDate = new Date(item.date);
+    return leadDate >= fromDate && leadDate <= toDate; // Filter by selected date range
+  })
+  .map((item) => ({
+    date: item.date,
+    count: item.count,
+    avgTAT: item.count > 0 ? Number((item.totalTAT / item.count).toFixed(2)) : 0,
+  }));
   return (
     <div className="max-w-7xl mx-auto p-8 space-y-8">
       {/* Header Section */}
-      <div className="space-y-3 mb-8">
+      <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-semibold text-blue-500">Lead Report</h1>
-        <p className="text-gray-500 text-lg">A detailed overview of lead information and statuses</p>
+        <button
+          onClick={() => setShowAnalytics(true)}
+          className="px-4 py-2 bg-green-500 text-white rounded-md flex items-center gap-2"
+        >
+          <BarChart2 size={18} /> Show Analytics
+        </button>
       </div>
 
-      {/* Date Picker Fields with Reset Button */}
-      <div className="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-4 md:space-y-0 mb-8">
-        <div className="">
-          <label className="mb-1 block text-sm font-medium text-gray-700">From Date</label>
+      {/* Filters */}
+      <div className="grid md:grid-cols-6 gap-4 mb-8">
+        <div>
+          <label className="block text-sm font-medium">From Date</label>
           <DatePicker
             selected={fromDate}
             onChange={(date) => setFromDate(date)}
-            placeholderText="Select From Date"
             className="w-full p-2 border rounded-md"
             dateFormat="dd-MM-yyyy"
           />
         </div>
-        <div className="">
-          <label className="mb-1 block text-sm font-medium text-gray-700">To Date</label>
+        <div>
+          <label className="block text-sm font-medium">To Date</label>
           <DatePicker
             selected={toDate}
             onChange={(date) => setToDate(date)}
-            placeholderText="Select To Date"
             className="w-full p-2 border rounded-md"
             dateFormat="dd-MM-yyyy"
           />
         </div>
-        <div className="flex-shrink-0">
-          <button
-            onClick={handleReset}
-            className="mt-6 px-4 py-2 bg-blue-500 text-gray-100 rounded-md hover:bg-blue-700 transition"
+        <div>
+          <label className="block text-sm font-medium">Platform</label>
+          <select
+            value={platformFilter}
+            onChange={(e) => setPlatformFilter(e.target.value)}
+            className="w-full p-2 border rounded-md"
           >
-            Reset
-          </button>
+            <option value="">All</option>
+            <option value="Meta">Meta</option>
+            <option value="IndiaMart">IndiaMart</option>
+            <option value="Justdial">Justdial</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Handled By</label>
+          <select
+            value={handledByFilter}
+            onChange={(e) => setHandledByFilter(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">All</option>
+            {CSENames.map((cse) => {
+             return <option value={toTitleCase(cse.username)}>{toTitleCase(cse.username)}</option>
+            })}
+          </select>
+          
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Lead Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">All</option>
+            <option value="New">New</option>
+            <option value="Call Followup">Call Followup</option>
+            <option value="Unreachable">Unreachable</option>
+            <option value="Lost">Lost</option>
+            <option value="Unqualified">Unqualified</option>
+            {/* Add additional statuses as needed */}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium">TAT</label>
+          <select
+            value={tatFilter}
+            onChange={(e) => setTatFilter(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">All</option>
+            <option value="safe">Safe (≤ 1 day)</option>
+            <option value="average">Average (≤ 3 days)</option>
+            <option value="delayed">Delayed ({'>'} 3 days)</option>
+          </select>
         </div>
       </div>
+
+      <button
+        onClick={handleReset}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+      >
+        Reset Filters
+      </button>
+
+      {/* Loader */}
+      {loading && <p className="text-center">Loading leads...</p>}
 
       {/* Summary Cards */}
       <div className="grid md:grid-cols-2 gap-8 mb-8">
@@ -176,10 +315,40 @@ const LeadReport = () => {
 
       {/* Lead Cards Grid */}
       <div className="grid md:grid-cols-2 gap-8">
-        {filteredLeads.map((lead, index) => (
-          <Leaddiv key={index} lead={lead} index={index} />
-        ))}
+        {filteredLeads.length > 0 ? (
+          filteredLeads.map((lead, index) => (
+            <Leaddiv key={index} lead={lead} index={index} />
+          ))
+        ) : (
+          <p>No lead report for the selected Date Range</p>
+        )}
       </div>
+
+      {/* Analytics Modal */}
+      {showAnalytics && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-md shadow-md w-1/2">
+            <h2 className="text-xl font-bold mb-4">Lead Analytics by Date</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={chartData}>
+                <XAxis dataKey="date" />
+                <YAxis yAxisId="left" orientation="left" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip />
+                <Legend />
+                <Bar yAxisId="left" dataKey="count" fill="#8884d8" name="No. of Leads" />
+                <Line yAxisId="right" type="monotone" dataKey="avgTAT" stroke="#ff7300" name="Avg TAT (Hrs.)" />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <button
+              onClick={() => setShowAnalytics(false)}
+              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

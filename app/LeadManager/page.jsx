@@ -42,7 +42,7 @@ const availableStatuses = [
   "No Status",
 ];
 
-function toTitleCase(str) {
+export function toTitleCase(str) {
   return str
     .toLowerCase()
     .split(" ")
