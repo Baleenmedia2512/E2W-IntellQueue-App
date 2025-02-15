@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { Clock, User, BarChart2 } from "lucide-react";
+import { Clock, User, BarChart2, Filter } from "lucide-react";
 import { useAppSelector } from "@/redux/store";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -8,11 +8,14 @@ import Leaddiv from "./leadDiv";
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FetchActiveCSE } from "@/app/api/FetchAPI";
 import { toTitleCase } from "../page";
+import { useMediaQuery } from "react-responsive";
 
 const LeadReport = () => {
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const isMdOrLarger = useMediaQuery({ minWidth: 768 });
   
   // Date filters
   const [fromDate, setFromDate] = useState(new Date());
@@ -128,11 +131,11 @@ const LeadReport = () => {
     // TAT Filter
     if (tatFilter) {
       if (tatFilter === "safe") {
-        updatedLeads = updatedLeads.filter(lead => lead.tat <= 1);
+        updatedLeads = updatedLeads.filter(lead => lead.tat <= 24);
       } else if (tatFilter === "average") {
-        updatedLeads = updatedLeads.filter(lead => lead.tat > 1 && lead.tat <= 3);
+        updatedLeads = updatedLeads.filter(lead => lead.tat > 24 && lead.tat <= 72);
       } else if (tatFilter === "delayed") {
-        updatedLeads = updatedLeads.filter(lead => lead.tat > 3);
+        updatedLeads = updatedLeads.filter(lead => lead.tat > 72);
       }
     }
 
@@ -157,6 +160,7 @@ const LeadReport = () => {
     setStatusFilter("");
     setTatFilter("");
     setFilteredLeads(leads);
+    if (!isMdOrLarger) setShowFilters(false);
   };
 
   // Aggregate analytics data by lead date:
@@ -174,6 +178,17 @@ filteredLeads.forEach((lead) => {
     aggregatedData[dateStr].totalTAT += lead.tat;
   }
 });
+
+const isFilterApplied = () => {
+  return (
+    platformFilter !== "" ||
+    handledByFilter !== "" ||
+    statusFilter !== "" ||
+    tatFilter !== "" ||
+    fromDate.toDateString() !== new Date().toDateString() ||
+    toDate.toDateString() !== new Date().toDateString()
+  );
+};
 
 // Convert aggregated data into chart-compatible format
 const chartData = Object.values(aggregatedData)
@@ -199,37 +214,64 @@ const chartData = Object.values(aggregatedData)
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="grid md:grid-cols-6 gap-4 mb-8">
-        <div>
-          <label className="block text-sm font-medium">From Date</label>
-          <DatePicker
-            selected={fromDate}
-            onChange={(date) => setFromDate(date)}
-            className="w-full p-2 border rounded-md"
-            dateFormat="dd-MM-yyyy"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">To Date</label>
-          <DatePicker
-            selected={toDate}
-            onChange={(date) => setToDate(date)}
-            className="w-full p-2 border rounded-md"
-            dateFormat="dd-MM-yyyy"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Platform</label>
-          <select
+      {/* Mobile Filter Button */}
+      <div className="md:hidden flex justify-between items-center gap-4">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md flex items-center gap-2 flex-1 justify-center"
+        >
+          <Filter size={18} /> 
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
+        </button>
+        <button
+          onClick={handleReset}
+          disabled={!isFilterApplied()}
+          className={`px-4 py-2 ${
+            isFilterApplied() ? "bg-blue-500" : "bg-gray-300 cursor-not-allowed"
+          } text-white rounded-md flex-1 justify-center`}
+        >
+          Reset Filters
+        </button>
+      </div>
+
+      {/* Filters Section */}
+      {(showFilters || isMdOrLarger) && (
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">From Date</label>
+            <DatePicker 
+              selected={fromDate} 
+              onChange={setFromDate} 
+              className="w-full p-2 border rounded-md"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">To Date</label>
+            <DatePicker 
+              selected={toDate} 
+              onChange={setToDate} 
+              className="w-full p-2 border rounded-md"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Platform</label>
+            <select
             value={platformFilter}
             onChange={(e) => setPlatformFilter(e.target.value)}
             className="w-full p-2 border rounded-md"
           >
             <option value="">All</option>
             <option value="Meta">Meta</option>
-            <option value="IndiaMart">IndiaMart</option>
             <option value="Justdial">Justdial</option>
+            <option value="IndiaMart">IndiaMart</option>
+            <option value="Sulekha">Sulekha</option>
+            <option value="LG">LG</option>
+            <option value="Consultant">Consultant</option>
+            <option value="Own">Own</option>
+            <option value="WebApp DB">WebApp DB</option>
+            <option value="Online">Online</option>
+            <option value="Online">Self</option>
+            <option value="Friends/Relatives">Friends/Relatives</option>
           </select>
         </div>
         <div>
@@ -261,7 +303,7 @@ const chartData = Object.values(aggregatedData)
             <option value="Unqualified">Unqualified</option>
             {/* Add additional statuses as needed */}
           </select>
-        </div>
+          </div>
         <div>
           <label className="block text-sm font-medium">TAT</label>
           <select
@@ -275,11 +317,12 @@ const chartData = Object.values(aggregatedData)
             <option value="delayed">Delayed ({'>'} 3 days)</option>
           </select>
         </div>
-      </div>
+        </div>
+      )}
 
       <button
         onClick={handleReset}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+        className="hidden md:flex mb-4 px-4 py-2 bg-blue-500 text-white rounded-md"
       >
         Reset Filters
       </button>
