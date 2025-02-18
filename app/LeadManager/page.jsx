@@ -1349,7 +1349,7 @@ console.log("handle by",formData.handledBy)
       {/* Modal Form */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-4 sm:p-6 rounded-lg w-5/6 sm:w-96 lg:w-96 h-auto max-w-lg 
+          <div className="bg-white p-4 sm:p-6 rounded-lg w-5/6 sm:w-96 lg:w-96 h-p[60vh] sm:h-auto max-w-lg 
                    max-h-[90vh] overflow-y-auto relative shadow-lg mb-10 md:mb-0">
             {/* Flex container for title and close button */}
             <div className="flex justify-between items-center mb-4">
@@ -1456,7 +1456,6 @@ console.log("handle by",formData.handledBy)
                       className="w-full p-2 text-sm border border-gray-300 rounded-md"
                       maxLength={10}
                       pattern="[0-9]{10}"
-                      required
                     />
                   </div>
                   </>
