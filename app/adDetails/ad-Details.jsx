@@ -127,7 +127,7 @@ if (checked.tick) {
 }
 
 // Calculate base price by adding margin to base cost
-const basePrice = baseCost + parseInt(margin);
+const basePrice = baseCost + margin;
 
   // Helper to format dates
   const formattedDate = (date) => {
@@ -144,7 +144,7 @@ const basePrice = baseCost + parseInt(margin);
   // Fetch data for a specific rate
   const fetchRate = async (rateId) => {
     try {
-      const rateData = await FetchSpecificRateData(companyName, rateId);
+      const rateData = await FetchSpecificRateData("Baleen Media", rateId);
       const firstRate = rateData[0];
 
       // Update quote data in Redux
@@ -190,7 +190,7 @@ const basePrice = baseCost + parseInt(margin);
   // Handle rate search input
   const handleRateSearch = async (e) => {
     setRateSearchTerm(e.target.value);
-    const searchSuggestions = await FetchRateSeachTerm(companyName, e.target.value);
+    const searchSuggestions = await FetchRateSeachTerm("Baleen Media", e.target.value);
     setDatas((prev) => ({
       ...prev,
       ratesSearchSuggestion: searchSuggestions,
@@ -220,7 +220,7 @@ const basePrice = baseCost + parseInt(margin);
       await fetchRate(rateId);
   
       // Fetch slab data
-      const slabData = await FetchQtySlab(companyName, rateId);
+      const slabData = await FetchQtySlab("Baleen Media", rateId);
       const sortedSlabData = [...slabData].sort(
         (a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width)
       );
@@ -285,6 +285,7 @@ const basePrice = baseCost + parseInt(margin);
   const handleQtySlabChange = () => {
     const selectedSlab = datas.slabData?.find(item => item.StartQty === qtySlab.Qty);
     const widthSelectedSlab = datas.slabData?.find(item => item.Width === qtySlab.Width);
+    console.log(datas.slabData, qtySlab, selectedSlab)
 
     if (!selectedSlab) {
       console.error("No matching slab data found.");
@@ -345,7 +346,7 @@ const basePrice = baseCost + parseInt(margin);
   },[margin, marginPercentage]);
 
   useEffect(() => {
-    if (qtySlab) {
+    if (!isQuoteEditMode && qtySlab) {
       handleQtySlabChange();
     }
   }, [qtySlab]);

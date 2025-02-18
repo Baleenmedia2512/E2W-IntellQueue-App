@@ -1,4 +1,4 @@
-'use client' //checkout
+'use client'
 import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
