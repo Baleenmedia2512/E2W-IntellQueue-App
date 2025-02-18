@@ -23,6 +23,7 @@ import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
+import { AiOutlinePlus } from "react-icons/ai";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -110,7 +111,26 @@ const EventCards = ({params, searchParams}) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [nextSNo, setNextSNo] = useState(0); 
+  const [formData, setFormData] = useState({
+    sNo: "",
+    date: "",
+    time: "",
+    platform: "",
+    name: "",
+    phoneNo: "",
+    email: "", 
+    adEnquiry: "",
+    consultantNumber: "",
+    consultantName: "",
+    handledBy: "",
+  });
 
+  useEffect(() => {
+    console.log(formData)
+  }, [formData])
+  
   // console.log(rows)
   const toggleFilters = () => {
     setFiltersVisible((prev) => !prev);
@@ -186,34 +206,143 @@ const EventCards = ({params, searchParams}) => {
 
   const isNoDataFound = filteredRows.length === 0;
 
-  useEffect(() => {
-    let defaultDate = new Date();
-  
-    if (selectedStatus === "Unreachable") {
-      defaultDate.setHours(defaultDate.getHours() + 1); // 1 hour ahead
-    } else if (selectedStatus === "Call Followup") {
-      let currentTime = defaultDate.getHours() * 60 + defaultDate.getMinutes(); // Get current time in minutes
-      defaultDate = new Date(defaultDate.setDate(defaultDate.getDate() + 1)); // Move to tomorrow
-      defaultDate.setHours(Math.floor(currentTime / 60), currentTime % 60, 0); // Keep current time
-    }
-  
-    // Format date as dd-MMM-yyyy
-    const formattedDate = defaultDate.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
+//-------------------------------------------------------------------------------------------------------------
+useEffect(() => {
+  if (isModalOpen) {
+    const now = new Date();
+    const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const formattedTime = now.toTimeString().slice(0, 5); // HH:MM
+
+    setFormData((prev) => ({
+      ...prev,
+      date: formattedDate,
+      time: formattedTime,
+    }));
+  }
+}, [isModalOpen]);
+
+useEffect(() => {
+  let defaultDate = new Date();
+
+  if (selectedStatus === "Unreachable") {
+    defaultDate.setHours(defaultDate.getHours() + 1); // 1 hour ahead
+  } else if (selectedStatus === "Call Followup") {
+    let currentTime = defaultDate.getHours() * 60 + defaultDate.getMinutes(); // Get current time in minutes
+    defaultDate = new Date(defaultDate.setDate(defaultDate.getDate() + 1)); // Move to tomorrow
+    defaultDate.setHours(Math.floor(currentTime / 60), currentTime % 60, 0); // Keep current time
+  }
+
+  // Format date as dd-MMM-yyyy
+  const formattedDate = defaultDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  // Format time as hh:mm AM/PM
+  const formattedTime = defaultDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  setFollowupDate(formattedDate);
+  setFollowupTime(formattedTime);
+}, [selectedStatus]); // Runs whenever `selectedStatus` changes
+
+const checkAndUpdateStatus = async (rowsData) => {
+  if (!rowsData || rowsData.length === 0) return;
+
+  const currentTime = new Date();
+  const hours24 = 24 * 60 * 60 * 1000;
+
+  const updatePromises = rowsData
+    .filter(row => row.Status === "Unreachable" && row.FollowupDate && row.FollowupTime)
+    .map(async (row) => {
+      const formattedDate = formatDate(row.FollowupDate);
+      const formattedTime = formatUnreachableTime(row.FollowupTime);
+      const followupDateTime = new Date(`${formattedDate}T${formattedTime}`);
+      
+      if (currentTime - followupDateTime >= hours24) {
+        const payload = {
+          sNo: row.SNo,
+          status: "New",
+          isUnreachable: "Yes",
+          dbCompanyName: UserCompanyName,
+          followupDate: "",
+          followupTime: "",
+        };
+
+        try {
+          const response = await fetch("https://leads.baleenmedia.com/api/updateLeads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (response.ok) {
+            console.log(`Status for row ${row.SNo} updated to "New" after 24 hours`);
+            return { sNo: row.SNo, status: "New" };
+          } else {
+            throw new Error("Failed to update lead");
+          }
+        } catch (error) {
+          console.error("Error updating lead:", error);
+        }
+      }
     });
-  
-    // Format time as hh:mm AM/PM
-    const formattedTime = defaultDate.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
+
+  const updatedStatuses = await Promise.all(updatePromises);
+
+  setSelectedStatus((prevStatuses) => {
+    const newStatuses = { ...prevStatuses };
+    updatedStatuses.forEach((item) => {
+      if (item) newStatuses[item.sNo] = item.status;
     });
-  
-    setFollowupDate(formattedDate);
-    setFollowupTime(formattedTime);
-  }, [selectedStatus]); // Runs whenever `selectedStatus` changes
+    return newStatuses;
+  });
+};
+
+
+const formatDate = (dateStr) => {
+  const months = {
+    Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
+    Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
+  };
+
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, "0");
+    const month = months[parts[1]];
+    const year = parts[2];
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return "";
+};
+
+const formatUnreachableTime = (timeStr) => {
+  const timeParts = timeStr.match(/(\d+):(\d+) (\w{2})/);
+  if (!timeParts) return "00:00:00";
+
+  let [_, hours, minutes, period] = timeParts;
+  hours = parseInt(hours, 10);
+
+  if (period.toLowerCase() === "pm" && hours !== 12) {
+    hours += 12;
+  } else if (period.toLowerCase() === "am" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
+};
+
+
+
+//==============================================================================================================
+
+
 
   useEffect(() => {
     const intervals = {};
@@ -350,7 +479,7 @@ const EventCards = ({params, searchParams}) => {
     if (days > 0) {
       return `${days}d ${hrs}:${mins}:${secs}`;
     }
-  
+      
     return `${hrs}:${mins}:${secs}`;
   };
   
@@ -373,7 +502,7 @@ const EventCards = ({params, searchParams}) => {
       return false; // Default to false in case of an error
     }
   };
-  
+
   const fetchData = async () => {
     try {
       const filters = {
@@ -381,11 +510,17 @@ const EventCards = ({params, searchParams}) => {
         status: searchParams.status || "",
         followupDate: searchParams.followupDate || null,
       };
-
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+
+    if (fetchedRows.length > 0) {
+      const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
+      setNextSNo(maxSlNo + 1);
+    } else {
+      console.log("No rows found to calculate max Sl. No.");
+    }
+    
       setRows(fetchedRows);
       fetchCSENames();
-      // console.log(fetchedRows)
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -398,6 +533,13 @@ const EventCards = ({params, searchParams}) => {
     fetchData();
     
   }, [params.id, searchParams]);
+
+  useEffect(() => {
+    if (!userName) return;
+    checkAndUpdateStatus(rows)
+    console.log(rows)
+  }, [rows]);
+  
 
   useEffect(() => {
     if (showModal) {
@@ -461,6 +603,7 @@ const EventCards = ({params, searchParams}) => {
       }
     let payload = {};
 
+    console.log("Received on Handle Save function")
     // Prepare payload based on context
     if (sendQuoteOnly === "Quote Sent") {
       payload = {
@@ -497,7 +640,6 @@ const EventCards = ({params, searchParams}) => {
         quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
       };
     }
-  
     
     try {
       const response = await fetch(
@@ -739,6 +881,79 @@ const EventCards = ({params, searchParams}) => {
     setIsHandledByChange(false);
   }
 
+
+  const toggleModal = () => setIsModalOpen(!showModal);
+
+  // Handle form changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const dbCompanyName = encodeURIComponent(UserCompanyName);
+    const payload = {
+      sNo: nextSNo, // Use the incremented serial number
+      date: formData.date,
+      time: formData.time,
+      platform: formData.platform,
+      name: formData.name,
+      phoneNo: formData.phoneNo,
+      email: formData.email,
+      adEnquiry: formData.adEnquiry,
+      handledBy: formData.handledBy,
+      consultantName: formData.consultantName,
+      consultantNumber: formData.consultantNumber,
+      dbCompanyName,
+    };
+console.log("handle by",formData.handledBy)
+    const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload), 
+      });
+
+      const data = await response.json(); 
+      if (response.ok) {
+        
+        console.log("Response from server:", data);
+        alert("Lead added successfully!");
+        setIsModalOpen(false);
+        setFormData({
+          date: "",
+          time: "",
+          platform: "",
+          name: "",
+          phoneNo: "",
+          email: "",
+          adEnquiry: "",
+          consultantNumber: "",
+          consultantName: "",
+        });
+        fetchData();
+      } else {
+       
+        console.error("Error response from server:", data.error || response.statusText);
+        alert(data.error || "Error adding record");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error adding record. Please try again.");
+    }
+};
+  
+  
+  
+
   return (
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
@@ -886,7 +1101,7 @@ const EventCards = ({params, searchParams}) => {
               </motion.button>
             ))}
           </div>
-
+          
           {/* Date Range Filters */}
           <div className="flex flex-row gap-2 sm:gap-4">
             {/* From Date Picker */}
@@ -1121,6 +1336,204 @@ const EventCards = ({params, searchParams}) => {
             </div>
             )}
 
+      <div className="relative">
+            {/* "+" Button */}
+            <button
+        onClick={toggleModal}
+        className="fixed right-4 bottom-24 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-28 z-50"
+      >
+        <AiOutlinePlus size={24} />
+      </button>
+
+
+      {/* Modal Form */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-4 sm:p-6 rounded-lg w-5/6 sm:w-96 lg:w-96 h-auto max-w-lg 
+                   max-h-[90vh] overflow-y-auto relative shadow-lg mb-10 md:mb-0">
+            {/* Flex container for title and close button */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-blue-500">Add New Lead</h2>
+              <button
+                className="text-black hover:text-red-500 text-3xl sm:text-4xl"
+                onClick={() => setIsModalOpen(false)} // Close modal when clicked
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
+                {/* Input Fields */}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Date:</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Time:</label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={formData.time}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                  <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">
+                    Platform:
+                  </label>
+                  <select
+                    name="platform"
+                    value={formData.platform}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Platform</option>
+                    <option value="JustDial">JustDial</option>
+                    <option value="IndiaMart">IndiaMart</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Sulekha">Sulekha</option>
+                    <option value="LG">LG</option>
+                    <option value="Consultant">Consultant</option>
+                    <option value="Own">Own</option>
+                    <option value="WebApp DB">WebApp DB</option>
+                    <option value="Online">Online</option>
+                    <option value="Self">Self</option>
+                    <option value="Friends/Relatives">Friends/Relatives</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Name:</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                {formData.platform === 'Consultant' && (
+                  <>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Name:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantName"
+                      value={formData.consultantName}
+                      onChange={handleInputChange}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Number:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantNumber"
+                      value={formData.consultantNumber}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                        if (numericValue.length <= 10) {
+                          handleInputChange({ target: { name: "consultantNumber", value: numericValue } });
+                        }
+                      }}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                      required
+                    />
+                  </div>
+                  </>
+              )}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Add Enquiry:</label>
+                  <input
+                    type="text"
+                    name="adEnquiry"
+                    value={formData.adEnquiry}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                <label className="block text-sm md:text-base font-medium text-gray-700">Phone No:</label>
+                <input
+                  type="tel"
+                  name="phoneNo"
+                  value={formData.phoneNo}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                    if (numericValue.length <= 10) {
+                      handleInputChange({ target: { name: "phoneNo", value: numericValue } });
+                    }
+                  }}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  required
+                />
+              </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Email Address:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Handled By:</label>
+                  <select
+                    name="handledBy"
+                    value={formData.handledBy}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Handled By</option>
+                    <option value="Leenah">Leenah</option>
+                    <option value="Monisha">Monisha</option>
+                    <option value="Gomathi Shaira">Gomathi Shaira</option>
+                    <option value="Usha">Usha</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full mt-4 p-3 bg-blue-500 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+    </div>
+
+
       {/* Modal for Call Status */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
@@ -1202,6 +1615,7 @@ const EventCards = ({params, searchParams}) => {
                 />
               </div>
             )}
+          
 
             {!followupOnly && 
               <div className="mb-4">
@@ -1293,6 +1707,8 @@ const EventCards = ({params, searchParams}) => {
   );
 };
 
+
+
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
@@ -1310,7 +1726,7 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
   }
 
   const data = await response.json();
-  console.log(data)
+
   const today = new Date().toDateString();
 
   const filteredData = data.rows.filter(
@@ -1385,6 +1801,7 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
 
   return sortedRows;
 }
+
 
 
 export default function Page({ params, searchParams }) {
