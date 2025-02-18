@@ -1310,7 +1310,7 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
   }
 
   const data = await response.json();
-
+  console.log(data)
   const today = new Date().toDateString();
 
   const filteredData = data.rows.filter(
