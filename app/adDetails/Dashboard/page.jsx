@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useAppSelector } from '@/redux/store';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import {
@@ -15,32 +16,35 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import useClickTracker from './useClickTracker'; 
 
 const QuoteSenderDashboard = () => {
-  // State for our metrics and date range
+  useClickTracker();
+  const clickCount = useAppSelector((state) => state.countSlice.clickCount);
+  //  const clientDetails = useAppSelector(state => state.clientSlice);
+  // Other metrics (could be fetched or remain static)
   const [metrics, setMetrics] = useState({
-    "totalClicks": 120,
-    "avgGenerationTime": 15,
-    "quotesGeneratedToday": 45,
-    "clicksOverTime": [
-      { "date": "2025-02-01", "clicks": 30, "quotesGenerated": 5 },
-      { "date": "2025-02-02", "clicks": 35, "quotesGenerated": 8 },
-      { "date": "2025-02-03", "clicks": 45, "quotesGenerated": 10 }
+    avgGenerationTime: 15,
+    quotesGeneratedToday: 45,
+    clicksOverTime: [
+      { date: "2025-02-01", clicks: 30, quotesGenerated: 5 },
+      { date: "2025-02-02", clicks: 35, quotesGenerated: 8 },
+      { date: "2025-02-03", clicks: 45, quotesGenerated: 10 }
     ],
-    "generationTimeOverTime": [
-      { "date": "2025-02-01", "avgTime": 20, "quotesGenerated": 5 },
-      { "date": "2025-02-02", "avgTime": 15, "quotesGenerated": 8 },
-      { "date": "2025-02-03", "avgTime": 10, "quotesGenerated": 10 }
+    generationTimeOverTime: [
+      { date: "2025-02-01", avgTime: 20, quotesGenerated: 5 },
+      { date: "2025-02-02", avgTime: 15, quotesGenerated: 8 },
+      { date: "2025-02-03", avgTime: 10, quotesGenerated: 10 }
     ],
-    "pageBreakdown": {
-      "adDetails": { "clicks": 60, "avgTime": 4.2 },
-      "checkout": { "clicks": 60, "avgTime": 3.4 }
+    pageBreakdown: {
+      adDetails: { clicks: 60, avgTime: 4.2 },
+      checkout: { clicks: 60, avgTime: 3.4 }
     },
-    "quotesBreakdown": [
-      { "clientName": "Client A", "clientContact": "1234567890", "quoteCount": 3, "avgTime": 4.5, "clicks": 5 },
-      { "clientName": "Client B", "clientContact": "0987654321", "quoteCount": 2, "avgTime": 3.2, "clicks": 3 }
+    quotesBreakdown: [
+      { clientName: "Client A", clientContact: "1234567890", quoteCount: 3, avgTime: 4.5, clicks: 5 },
+      { clientName: "Client B", clientContact: "0987654321", quoteCount: 2, avgTime: 3.2, clicks: 3 }
     ],
-    "suggestions": [
+    suggestions: [
       "Reduce the number of steps on the Ad Details page to cut down clicks.",
       "Consider pre-loading frequently used data to lower generation time."
     ]
@@ -48,6 +52,10 @@ const QuoteSenderDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
+  
+
+  // New state for tracking user clicks dynamically
+  // const [clickCount, setClickCount] = useState(0);
 
   // Function to fetch metrics from backend with optional date range filtering
   const fetchMetrics = async (start, end) => {
@@ -67,6 +75,19 @@ const QuoteSenderDashboard = () => {
       setLoading(false);
     }
   };
+
+  // Global click tracking: Increment clickCount on every user click
+  // useEffect(() => {
+  //   const handleUserClick = () => {
+  //     setClickCount(prevCount => prevCount + 1);
+  //   };
+
+  //   document.addEventListener('click', handleUserClick);
+
+  //   return () => {
+  //     document.removeEventListener('click', handleUserClick);
+  //   };
+  // }, []);
 
   // Fetch metrics on mount and when date range changes
   useEffect(() => {
@@ -99,9 +120,10 @@ const QuoteSenderDashboard = () => {
 
       {/* Overall Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Dynamically tracked Total Clicks */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800">Total Clicks</h2>
-          <p className="text-5xl font-bold mt-4 text-blue-600">{metrics.totalClicks}</p>
+          <p className="text-5xl font-bold mt-4 text-blue-600">{clickCount}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800">Average Generation Time</h2>

@@ -10,6 +10,7 @@ import { orderReducer } from "./features/order-slice";
 import { employeeReducer } from "./features/emp-slice"; 
 import { cartReducer } from "./features/cart-slice";
 import { reportReducer } from "./features/report-slice";
+import { countReducer } from "./features/count-slice";
 
 const createNoopStorage = () => {
   return {
@@ -78,6 +79,12 @@ const reportPersistConfig = {
   whitelist: ["dateRange"],
 }
 
+const countPersistConfig = {
+  key: "count",
+  storage: storage,
+  whitelist: ["clickCount"],
+}
+
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer);
 const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer);
@@ -86,6 +93,7 @@ const persistedRateReducer = persistReducer(ratePersistConfig, rateReducer);
 const persistedOrderReducer = persistReducer(orderPersistConfig, orderReducer);
 const persistedEmployeeReducer = persistReducer(employeePersistConfig, employeeReducer);
 const persistedReportReducer = persistReducer(reportPersistConfig, reportReducer);
+const persistedCountReducer = persistReducer(countPersistConfig, countReducer);
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
@@ -96,6 +104,7 @@ const rootReducer = combineReducers({
   orderSlice: persistedOrderReducer,
   employeeSlice: persistedEmployeeReducer,
   reportSlice: persistedReportReducer,
+  countSlice: persistedCountReducer,
 });
 
 export const store = configureStore({

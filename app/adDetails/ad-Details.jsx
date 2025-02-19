@@ -23,9 +23,10 @@ import SuccessToast from '../components/SuccessToast';
 import { FetchAllValidRates, FetchQtySlab, FetchQuoteRemarks, FetchRateSeachTerm, FetchSpecificRateData } from '../api/FetchAPI';
 import './page.css';
 import { calculateMarginAmount, calculateMarginPercentage } from '../utils/commonFunctions';
+import useClickTracker from './Dashboard/useClickTracker'; 
 
 export const formattedMargin = (number) => {
-  
+ 
   if(isNaN(number)){
     return 0;
   }
@@ -35,7 +36,7 @@ export const formattedMargin = (number) => {
 };
 
 const AdDetailsPage = () => {
-
+  useClickTracker();
   const { companyName, userName } = useAppSelector((state) => state.authSlice);
   const {
     selectedAdMedium: adMedium,
