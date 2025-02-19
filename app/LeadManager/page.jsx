@@ -187,25 +187,35 @@ const EventCards = ({params, searchParams}) => {
   const isNoDataFound = filteredRows.length === 0;
 
   useEffect(() => {
-    let defaultDate = new Date();
+    const now = new Date();
+    let newDate = null;
   
     if (selectedStatus === "Unreachable") {
-      defaultDate.setHours(defaultDate.getHours() + 1); // 1 hour ahead
+      // Set followup date/time to current time + 1 hour.
+      newDate = new Date(now.getTime() + 60 * 60 * 1000);
     } else if (selectedStatus === "Call Followup") {
-      let currentTime = defaultDate.getHours() * 60 + defaultDate.getMinutes(); // Get current time in minutes
-      defaultDate = new Date(defaultDate.setDate(defaultDate.getDate() + 1)); // Move to tomorrow
-      defaultDate.setHours(Math.floor(currentTime / 60), currentTime % 60, 0); // Keep current time
+      // If a followup date already exists, do not update.
+      if (followupDate !== "" && followupDate !== "No Followup Date") {
+        setFollowupDate(currentCall.rowData.FollowupDate);
+        setFollowupTime(currentCall.rowData.FollowupTime)
+        return
+      };
+      // Otherwise, set followup date to tomorrow with current time.
+      newDate = new Date(now);
+      newDate.setDate(newDate.getDate() + 1);
+    } else {
+      return; // For other statuses, do nothing.
     }
   
-    // Format date as dd-MMM-yyyy
-    const formattedDate = defaultDate.toLocaleDateString("en-GB", {
+    // Format the date as dd-MMM-yyyy
+    const formattedDate = newDate.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   
-    // Format time as hh:mm AM/PM
-    const formattedTime = defaultDate.toLocaleTimeString("en-US", {
+    // Format the time as hh:mm AM/PM
+    const formattedTime = newDate.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -213,7 +223,7 @@ const EventCards = ({params, searchParams}) => {
   
     setFollowupDate(formattedDate);
     setFollowupTime(formattedTime);
-  }, [selectedStatus]); // Runs whenever `selectedStatus` changes
+  }, [selectedStatus]); // Trigger when selectedStatus changes
 
   useEffect(() => {
     const intervals = {};
@@ -739,7 +749,37 @@ const EventCards = ({params, searchParams}) => {
     setIsHandledByChange(false);
   }
 
+  // Inside your component
+const handleStatusClick = (row) => {
+  setShowModal(true);
+
+  // Set followup date and time if available
+  if (row.FollowupDate !== "No Followup Date") {
+    setFollowupDate(row.FollowupDate);
+    setFollowupTime(row.FollowupTime);
+  }
+
+  // Update the current call information
+  setCurrentCall({
+    phone: row.Phone,
+    name: row.Name,
+    sNo: row.SNo,
+    Platform: row.Platform,
+    Enquiry: row.Enquiry,
+    LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
+    quoteSent: row.QuoteSent,
+    rowData: row,
+  });
+
+  // Set various status and remarks values
+  setSelectedStatus(row.Status);
+  setRemarks(row.Remarks);
+  setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
+  setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+  setQuoteSentChecked(row.QuoteSent === "Yes");
+};
   return (
+
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
@@ -934,7 +974,7 @@ const EventCards = ({params, searchParams}) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent, rowData: row}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType); row.QuoteSent === "Yes" ? setQuoteSentChecked(true): setQuoteSentChecked(false)}}
+                onClick={() => {handleStatusClick(row)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -1127,7 +1167,7 @@ const EventCards = ({params, searchParams}) => {
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-auto max-w-md mb-16 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Lead Status</h3>
-              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(false); setFollowupTime(false)}}>
+              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(followupDate); setFollowupTime(followupTime)}}>
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
             </div>
