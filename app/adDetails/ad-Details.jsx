@@ -127,7 +127,7 @@ if (checked.tick) {
 }
 
 // Calculate base price by adding margin to base cost
-const basePrice = baseCost + parseInt(margin);
+const basePrice = baseCost + margin;
 
   // Helper to format dates
   const formattedDate = (date) => {
@@ -345,7 +345,7 @@ const basePrice = baseCost + parseInt(margin);
   },[margin, marginPercentage]);
 
   useEffect(() => {
-    if (qtySlab) {
+    if (!isQuoteEditMode && qtySlab) {
       handleQtySlabChange();
     }
   }, [qtySlab]);
