@@ -237,7 +237,7 @@ const EventCards = ({params, searchParams}) => {
     setFollowupDate(newDate);
     setFollowupTime(newTime);
   
-  }, [selectedStatus]); //Triggers when selected status or current call is called  
+  }, [selectedStatus, showModal]); //Triggers when selected status or current call is called  
 
   
   useEffect(() => {
