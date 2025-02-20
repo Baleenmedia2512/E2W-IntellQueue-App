@@ -770,22 +770,24 @@ const handleSlipGeneration = () => {
     // Step 1: Filter out rows where rateCard is 'Total'
     const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
 
-    // Step 2: Group data by consultant, then by rateCard
+    // Step 2: Group data by consultant, then by rateCard, then by price
     const groupedData = filteredRows.reduce((acc, row) => {
         const { consultant, rateCard, price } = row;
 
         if (!acc[consultant]) {
-            acc[consultant] = [];
+            acc[consultant] = {};
         }
 
-        let rateCardEntry = acc[consultant].find(item => item.rateCard === rateCard);
-        if (!rateCardEntry) {
-            rateCardEntry = { rateCard, count: 0, totalPrice: 0 };
-            acc[consultant].push(rateCardEntry);
+        if (!acc[consultant][rateCard]) {
+            acc[consultant][rateCard] = {};
         }
 
-        rateCardEntry.count += 1;
-        rateCardEntry.totalPrice += price;
+        if (!acc[consultant][rateCard][price]) {
+            acc[consultant][rateCard][price] = { count: 0, totalPrice: 0 };
+        }
+
+        acc[consultant][rateCard][price].count += 1;
+        acc[consultant][rateCard][price].totalPrice += price;
 
         return acc;
     }, {});
@@ -795,21 +797,24 @@ const handleSlipGeneration = () => {
     for (const consultant in groupedData) {
         summaryByConsultant.push({ consultant, isHeader: true }); // Consultant header
 
-        groupedData[consultant].forEach(rateCardEntry => {
-            summaryByConsultant.push({
-                consultant,
-                rateCard: rateCardEntry.rateCard,
-                count: rateCardEntry.count,
-                totalPrice: rateCardEntry.totalPrice,
-                dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`
-            });
-        });
+        for (const rateCard in groupedData[consultant]) {
+            for (const price in groupedData[consultant][rateCard]) {
+                const { count, totalPrice } = groupedData[consultant][rateCard][price];
+                summaryByConsultant.push({
+                    consultant,
+                    rateCard,
+                    price,
+                    count,
+                    totalPrice,
+                    dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`
+                });
+            }
+        }
     }
 
     // Step 4: Generate a single PDF with grouped consultant sections
     generateReferralPdf(summaryByConsultant);
 };
-
 
   const formatDate = (dateString) => {
     const months = [
