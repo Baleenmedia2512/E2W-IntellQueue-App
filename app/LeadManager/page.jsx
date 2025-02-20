@@ -1363,7 +1363,7 @@ const handleStatusClick = async(row) => {
               {CSENames.map(
                 (user) => (
                   <label
-                    key={user.usernamer}
+                    key={user.username}
                     className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
                       selectedUser === toTitleCase(user.username) ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
                     }`}
@@ -1437,7 +1437,7 @@ const handleStatusClick = async(row) => {
                 </div>
                   <div>
                   <label className="block text-sm md:text-base font-medium text-gray-700">
-                    Platform:
+                    Client Platform:
                   </label>
                   <select
                     name="platform"
@@ -1454,14 +1454,14 @@ const handleStatusClick = async(row) => {
                     <option value="LG">LG</option>
                     <option value="Consultant">Consultant</option>
                     <option value="Own">Own</option>
-                    <option value="WebApp DB">WebApp DB</option>
+                    <option value="WebApp DB">Web App DB</option>
                     <option value="Online">Online</option>
                     <option value="Self">Self</option>
                     <option value="Friends/Relatives">Friends/Relatives</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm md:text-base font-medium text-gray-700">Name:</label>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Name:</label>
                   <input
                     type="text"
                     name="name"
@@ -1508,7 +1508,7 @@ const handleStatusClick = async(row) => {
                   </>
               )}
                 <div>
-                  <label className="block text-sm md:text-base font-medium text-gray-700">Add Enquiry:</label>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Ad Enquiry:</label>
                   <input
                     type="text"
                     name="adEnquiry"
@@ -1519,7 +1519,7 @@ const handleStatusClick = async(row) => {
                   />
                 </div>
                 <div>
-                <label className="block text-sm md:text-base font-medium text-gray-700">Phone No:</label>
+                <label className="block text-sm md:text-base font-medium text-gray-700">Client Contact:</label>
                 <input
                   type="tel"
                   name="phoneNo"
@@ -1538,7 +1538,7 @@ const handleStatusClick = async(row) => {
               </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-sm md:text-base font-medium text-gray-700">Email Address:</label>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Email Address:</label>
                   <input
                     type="email"
                     name="email"
@@ -1557,10 +1557,11 @@ const handleStatusClick = async(row) => {
                     required
                   >
                     <option value="">Select a Handled By</option>
-                    <option value="Leenah">Leenah</option>
-                    <option value="Monisha">Monisha</option>
-                    <option value="Gomathi Shaira">Gomathi Shaira</option>
-                    <option value="Usha">Usha</option>
+                    {CSENames.map((user) => (
+                      <option key={user.username} value={toTitleCase(user.username)}>
+                        {toTitleCase(user.username)}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
