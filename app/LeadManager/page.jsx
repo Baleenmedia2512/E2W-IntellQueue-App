@@ -127,9 +127,6 @@ const EventCards = ({params, searchParams}) => {
     handledBy: "",
   });
 
-  useEffect(() => {
-    console.log(formData)
-  }, [formData])
   
   // console.log(rows)
   const toggleFilters = () => {
@@ -222,43 +219,56 @@ useEffect(() => {
 }, [isModalOpen]);
 
 useEffect(() => {
+  // Get the current date and time
   const now = new Date();
-  let newDate = null;
+  let newDate;
+  let newTime;
 
-  if (selectedStatus === "Unreachable") {
-    // Set followup date/time to current time + 1 hour.
-    newDate = new Date(now.getTime() + 60 * 60 * 1000);
-  } else if (selectedStatus === "Call Followup") {
-    // If a followup date already exists, do not update.
-    if (followupDate !== "" && followupDate !== "No Followup Date") {
-      setFollowupDate(currentCall.rowData.FollowupDate);
-      setFollowupTime(currentCall.rowData.FollowupTime)
-      return
-    };
-    // Otherwise, set followup date to tomorrow with current time.
-    newDate = new Date(now);
-    newDate.setDate(newDate.getDate() + 1);
+  // If the status is "Call Followup" and there’s a valid followup date in currentCall,
+  // then use that value directly.
+  if (
+    selectedStatus === "Call Followup" &&
+    currentCall?.rowData?.FollowupDate &&
+    currentCall.rowData.FollowupDate !== "No Followup Date"
+  ) {
+    newDate = currentCall.rowData.FollowupDate;
+    newTime = currentCall.rowData.FollowupTime;
   } else {
-    return; // For other statuses, do nothing.
+    // Otherwise, start with the current date as the default
+    const defaultDate = new Date(now);
+    if (selectedStatus === "Unreachable") {
+      // For "Unreachable", set the default date to 1 hour ahead.
+      defaultDate.setHours(defaultDate.getHours() + 1);
+    } else if (selectedStatus === "Call Followup") {
+      // For "Call Followup" (when no valid date is present),
+      // move to tomorrow while keeping the current time.
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      defaultDate.setDate(defaultDate.getDate() + 1);
+      defaultDate.setHours(
+        Math.floor(currentTimeMinutes / 60),
+        currentTimeMinutes % 60,
+        0
+      );
+    }
+    
+    // Format the date and time based on the updated defaultDate.
+    newDate = defaultDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    newTime = defaultDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   }
 
-  // Format the date as dd-MMM-yyyy
-  const formattedDate = newDate.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  // Update state with the new followup date and time
+  setFollowupDate(newDate);
+  setFollowupTime(newTime);
 
-  // Format the time as hh:mm AM/PM
-  const formattedTime = newDate.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-
-  setFollowupDate(formattedDate);
-  setFollowupTime(formattedTime);
-}, [selectedStatus]); //Triggers whenever FollowupStatus changes
+}, [selectedStatus, showModal]); //Triggers when selected status or current call is called  
 
 const checkAndUpdateStatus = async (rowsData) => {
   if (!rowsData || rowsData.length === 0) return;
@@ -547,7 +557,6 @@ const formatUnreachableTime = (timeStr) => {
   useEffect(() => {
     if (!userName) return;
     checkAndUpdateStatus(rows)
-    console.log(rows)
   }, [rows]);
   
 
@@ -961,8 +970,38 @@ console.log("handle by",formData.handledBy)
     }
 };
   
+const handleStatusClick = async(row) => {
+  setShowModal(true);
+
+  // Set followup date and time if available
+  if (row.FollowupDate !== "No Followup Date") {
+    console.log("Followup date and time is updated: " + row.FollowupDate + row.FollowupTime)
+    setFollowupDate(row.FollowupDate);
+    setFollowupTime(row.FollowupTime);
+  }else{
+    console.log("Followup date time is skipped " + row.FollowupDate)
+  }
+
+  // Update the current call information
+  setCurrentCall({
+    phone: row.Phone,
+    name: row.Name,
+    sNo: row.SNo,
+    Platform: row.Platform,
+    Enquiry: row.Enquiry,
+    LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
+    quoteSent: row.QuoteSent,
+    rowData: row,
+  });
+
+  // Set various status and remarks values
   
-  
+  setRemarks(row.Remarks);
+  setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
+  setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+  setQuoteSentChecked(row.QuoteSent === "Yes")
+  setSelectedStatus(row.Status);
+};
 
   return (
     <div className="p-4 text-black">
