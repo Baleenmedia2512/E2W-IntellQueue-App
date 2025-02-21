@@ -506,7 +506,7 @@ const items = [
         campaignDuration, margin, remarks, rateId, 
         CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
         leadDay: leadDay ? leadDay.LeadDays : "", 
-        minimumCampaignDuration, ValidityDate, rateGST, width, 
+        minimumCampaignDuration, formattedDate: formattedDate(ValidityDate), rateGST, width, 
         campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false,
         bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, 
         semiboldPercentage: checked.semiboldPercentage, color: checked.color, 
@@ -690,14 +690,14 @@ const items = [
               let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
               if (result) {
                 const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost }]));
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost, formattedDate: formattedDate(ValidityDate)}]));
                 // setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost  }]));
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost, formattedDate: formattedDate(ValidityDate)}]));
             setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
