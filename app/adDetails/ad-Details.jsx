@@ -505,7 +505,7 @@ const items = [
         campaignDuration, margin, remarks, rateId, 
         CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
         leadDay: leadDay ? leadDay.LeadDays : "", 
-        minimumCampaignDuration, ValidityDate, rateGST, width, 
+        minimumCampaignDuration, formattedDate: formattedDate(ValidityDate), rateGST, width, 
         campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false,
         bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, 
         semiboldPercentage: checked.semiboldPercentage, color: checked.color, 
