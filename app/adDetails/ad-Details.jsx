@@ -128,7 +128,7 @@ if (checked.tick) {
 }
 
 // Calculate base price by adding margin to base cost
-const basePrice = baseCost + margin;
+const basePrice = baseCost + parseInt(margin);
 
   // Helper to format dates
   const formattedDate = (date) => {
@@ -477,11 +477,11 @@ const items = [
     content: [
       {
         label: 'Price',
-        value: ` ₹${formattedRupees(basePrice * (1 + rateGST / 100))}`
+        value: ` ₹${formattedRupees(parseFloat(basePrice) * parseFloat(1 + rateGST / 100))}`
       },
       {
         label: 'Cost',
-        value: ` ₹${formattedRupees(baseCost * (1 + rateGST / 100))}`
+        value: ` ₹${formattedRupees(parseFloat(baseCost) * parseFloat(1 + rateGST / 100))}`
       }
     ]
   }
