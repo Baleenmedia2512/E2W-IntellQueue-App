@@ -46,9 +46,9 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
     pdf.addImage(ImageUrl, 'PNG', 10, 60, 100, 100)
-    pdf.text(clientName !== "" ? 'To,' : '', 10, 165);
-    pdf.text(clientName !== "" ? clientName : "", 10, 180);
-    pdf.text(clientName !== "" ? clientEmail : "", 10, 195);
+    pdf.text('To,', 10, 165);
+    pdf.text(clientName, 10, 180);
+    pdf.text(clientEmail, 10, 195);
 
     const lineThickness = 3; // Set the desired thickness
     pdf.setLineWidth(lineThickness);
@@ -84,10 +84,11 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const today = new Date();
-    const proposedDay = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
-    const proposedMonth = months[today.getMonth()]; // Get month abbreviation from the array
+    const proposedDay = ('0' + today.getDate()).slice(-2);
+    const proposedMonth = months[today.getMonth()];
     const proposedYear = today.getFullYear();
     const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
+
 
     textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
     xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
