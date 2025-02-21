@@ -214,7 +214,7 @@ const ClientsData = () => {
     } catch (error) {
         console.error("Error checking similar consultant names: " + error);
     }
-    return false; // No similar consultants found
+    return false;
 };
 
 
