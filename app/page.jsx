@@ -36,7 +36,7 @@ const ClientsData = () => {
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
-  const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
+  const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.Web App DB', '8.Online','9.Self', '10.Friends/Relatives'];
   const gssources = ['Consultant', 'Self', 'Online', 'Friends/Relatives', 'Others'];
   const [toast, setToast] = useState(false);
   const [clientAge, setClientAge] = useState('');
@@ -80,6 +80,9 @@ const ClientsData = () => {
   const [proceed, setProceed] = useState(false);
   const genderOptions = ['Male', 'Female', 'Others'];
   const [gender, setGender] = useState(genderOptions[1]);
+  const [similarConsultantNames, setSimilarConsultantNames] = useState([]);
+  const [similarConsultantDialogOpen, setSimilarConsultantDialogOpen] = useState(false);
+  const [shouldCheckForSimilarConsultantNames, setShouldCheckForSimilarConsultantNames] = useState(true);
   
   const dispatch = useDispatch();
   const router = useRouter()
@@ -184,13 +187,36 @@ const ClientsData = () => {
     const newName = event.target.value;
     setConsultantName(newName)
     dispatch(setClientData({ consultantName: newName || "" }));
+
+    if (newName.length > 1) {
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
       .then((data) => {setConsultantNameSuggestions(data)});
       if (errors.consultantName) {
         setErrors((prevErrors) => ({ ...prevErrors, consultantName: undefined }));
       }
+    } else {
+      setConsultantNameSuggestions([]);
+    }
   };
+
+  const checkForSimilarNames = async () => {
+    try {
+        const response = await fetch(
+            `https://orders.baleenmedia.com/API/Media/CheckSimilarConsultantNames.php?ConsultantName=${consultantName}&JsonDBName=${companyName}`
+        );
+        const data = await response.json();
+        
+        if (data.similarConsultants.length > 0) {
+            setSimilarConsultantNames(data.similarConsultants); // Store objects instead of just names
+            return true; // Similar consultants found
+        }
+    } catch (error) {
+        console.error("Error checking similar consultant names: " + error);
+    }
+    return false; // No similar consultants found
+};
+
 
   const showToastMessage = (severityStatus, toastMessageContent) => {
     setSeverity(severityStatus)
@@ -265,7 +291,7 @@ const ClientsData = () => {
 
   const fetchClientDetails = (clientID) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientID=${clientID}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -341,7 +367,7 @@ const ClientsData = () => {
 
   const FetchClientDetailsByContact = (clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContactTest.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContact.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -545,7 +571,19 @@ const ClientsData = () => {
   // };
 
   const submitDetails = async(event) => {
-    event.preventDefault()
+      event.preventDefault();
+
+    // Ensure we only check for similar names once
+    if (shouldCheckForSimilarConsultantNames) {
+      setShouldCheckForSimilarConsultantNames(false); // Prevent re-checking
+      if (clientSource === "Consultant" || clientSource === "5.Consultant") {
+        const similarNamesFound = await checkForSimilarNames();
+        if (similarNamesFound) {
+          setSimilarConsultantDialogOpen(true);
+          return; // Stop execution here until the user makes a choice
+        }
+      }
+    }
     
     if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
       if (isEmpty === true){
@@ -560,7 +598,7 @@ const ClientsData = () => {
       //  }
       // }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       
       if (data === "Values Inserted Successfully!") {
@@ -619,7 +657,7 @@ const ClientsData = () => {
       
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -1071,6 +1109,10 @@ const BMvalidateFields = () => {
       setGender(genderOptions[1]);
     }
 
+    setSimilarConsultantNames([]);
+    setSimilarConsultantDialogOpen(false);
+    setShouldCheckForSimilarConsultantNames(true);
+
     // Focus on the name input field
     setTimeout(() => {
       if (nameInputRef.current) {
@@ -1142,22 +1184,102 @@ const BMvalidateFields = () => {
 
         <form className="space-y-6">
           {/* Restore client dialog */}
-          <Dialog open={restoreDialogOpen} onClose={() => setRestoreDialogOpen(false)}>
-            <DialogTitle>Restore Client</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-              This record appears to be a duplicate. Would you like to restore the existing record?
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setRestoreDialogOpen(false)} color="primary">
-                No
-              </Button>
-              <Button onClick={handleRestoreClient} color="primary" autoFocus>
-                Yes
-              </Button>
-            </DialogActions>
-          </Dialog>
+          <Dialog 
+  open={restoreDialogOpen} 
+  onClose={() => setRestoreDialogOpen(false)} 
+  className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+>
+  <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg sm:max-w-md">
+    <DialogTitle className="text-lg font-semibold text-gray-900 text-center sm:text-left">
+      Restore Client
+    </DialogTitle>
+    <DialogContent className="mt-2">
+      <DialogContentText className="text-gray-600 text-sm text-center sm:text-left">
+        This record appears to be a duplicate. Would you like to restore the existing record?
+      </DialogContentText>
+    </DialogContent>
+    <DialogActions className="flex flex-col sm:flex-row justify-center sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+      <button 
+        onClick={() => setRestoreDialogOpen(false)} 
+        className="w-full sm:w-auto px-5 py-2 text-gray-700 bg-gray-200 rounded-full font-medium hover:bg-gray-300 transition duration-200 ease-in-out shadow-sm active:scale-95 focus:ring-2 focus:ring-gray-400"
+      >
+        No
+      </button>
+      <button 
+        onClick={handleRestoreClient} 
+        className="w-full sm:w-auto px-5 py-2 text-white bg-green-600 rounded-full font-medium hover:bg-green-700 transition duration-200 ease-in-out shadow-md active:scale-95 focus:ring-2 focus:ring-green-400"
+        autoFocus
+      >
+        Yes
+      </button>
+    </DialogActions>
+  </div>
+</Dialog>
+
+
+
+          {/* Similar Consultants dialog */}
+          <Dialog 
+  open={similarConsultantDialogOpen} 
+  onClose={() => setSimilarConsultantDialogOpen(false)} 
+  className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+>
+  <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg sm:max-w-md">
+    <DialogTitle className="text-lg font-semibold text-gray-900 text-center sm:text-left">
+      Similar Consultant Names Found
+    </DialogTitle>
+    <DialogContent className="mt-2">
+      <DialogContentText className="text-gray-600 text-sm text-center sm:text-left">
+        The following similar consultant names were found in the database:
+      </DialogContentText>
+      <ul className="mt-3 space-y-2 text-sm font-medium text-gray-800 text-center sm:text-left">
+  {similarConsultantNames.map((consultant, index) => (
+    <li
+      key={index}
+      className="p-2 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition"
+      onClick={() => {
+        setConsultantName(consultant.ConsultantName);
+        setConsultantNumber(consultant.ConsultantNumber || '');
+        setSimilarConsultantDialogOpen(false); // Close the dialog
+        setShouldCheckForSimilarConsultantNames(false); // Prevent rechecking on next submit
+      }}
+    >
+      {consultant.ConsultantName} - {consultant.ConsultantNumber}
+    </li>
+  ))}
+</ul>
+
+      <p className="mt-4 text-gray-700 font-medium text-center sm:text-left">
+        Do you want to proceed with the new consultant?
+      </p>
+    </DialogContent>
+    <DialogActions className="flex flex-col sm:flex-row justify-center sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+      <button 
+        onClick={(e) => {
+          setSimilarConsultantDialogOpen(false);
+          setShouldCheckForSimilarConsultantNames(true);
+        }} 
+        className="w-full sm:w-auto px-5 py-2 text-gray-700 bg-gray-200 rounded-full font-medium hover:bg-gray-300 transition duration-200 ease-in-out shadow-sm active:scale-95 focus:ring-2 focus:ring-gray-400"
+      >
+        No
+      </button>
+      <button 
+        onClick={async (e) => {
+          setSimilarConsultantDialogOpen(false); // Close dialog first
+          await new Promise((resolve) => setTimeout(resolve, 50)); // Short delay to ensure closure
+          setShouldCheckForSimilarConsultantNames(false);
+          submitDetails(e);
+        }} 
+        className="w-full sm:w-auto px-5 py-2 text-white bg-blue-600 rounded-full font-medium hover:bg-blue-700 transition duration-200 ease-in-out shadow-md active:scale-95 focus:ring-2 focus:ring-blue-400"
+        autoFocus
+      >
+        Yes
+      </button>
+    </DialogActions>
+  </div>
+</Dialog>
+
+
           {/* Contact dialog */}
           {/* <Dialog open={contactDialogOpen} onClose={() => handleDialogClose(false)}>
             <DialogTitle>No Contact Number Detected</DialogTitle>
