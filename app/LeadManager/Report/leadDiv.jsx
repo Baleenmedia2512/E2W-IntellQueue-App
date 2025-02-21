@@ -1,6 +1,28 @@
 import { Clock, Globe, Phone, RefreshCcw, User, Calendar, Briefcase } from "lucide-react";
 
 const Leaddiv = ({ lead, index }) => {
+  // Determine the appropriate styles based on whether TAT is available.
+  const tatClass =
+    lead.tat === null
+      ? "bg-gray-50 text-gray-700" 
+      : lead.tat <= 24
+      ? "bg-green-50 text-green-700"
+      : lead.tat <= 72
+      ? "bg-yellow-50 text-yellow-700"
+      : "bg-red-50 text-red-700";
+
+  const dotClass =
+    lead.tat === null
+      ? "bg-gray-500"
+      : lead.tat <= 24
+      ? "bg-green-500"
+      : lead.tat <= 72
+      ? "bg-yellow-500"
+      : "bg-red-500";
+
+  // Display TAT value or "Unattended" if no TAT is computed.
+  const displayTAT = lead.tat === null ? "Unattended" : `${lead.tat}h`;
+
   return (
     <div className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl border">
       <div className="md:p-6 p-2">
@@ -25,35 +47,20 @@ const Leaddiv = ({ lead, index }) => {
 
         {/* Status + Handled By Section */}
         <div className="md:mb-6 mb-4">
-          <div
-            className={`flex justify-between items-center px-4 py-3 rounded-lg  ${
-              lead.tat <= 24
-                ? "bg-green-50 text-green-700"
-                : lead.tat <= 72
-                ? "bg-yellow-50 text-yellow-700"
-                : "bg-red-50 text-red-700"
-            }`}
-          >
+          <div className={`flex justify-between items-center px-4 py-3 rounded-lg ${tatClass}`}>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <div
-                  className={`w-3 h-3 rounded-full animate-pulse ${
-                    lead.tat <= 24 ? "bg-green-500"    
-                    : lead.tat <= 72 ? "bg-yellow-500"
-                    : "bg-red-500"                    
-                  }`}                
-                ></div>
+                <div className={`w-3 h-3 rounded-full animate-pulse ${dotClass}`}></div>
                 <span className="font-semibold">{lead.status}</span>
               </div>
               {/* Handled By Info */}
               <div className="flex items-center gap-2 text-xs font-medium mt-1">
-                {/* <Briefcase className="w-3 h-3" /> */}
                 Handled by: {lead.handledBy || "N/A"}
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">TAT: {lead.tat}h</span>
+              <span className="text-sm font-medium">TAT: {displayTAT}</span>
             </div>
           </div>
         </div>

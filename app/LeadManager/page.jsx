@@ -23,6 +23,7 @@ import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
+import { useRouter } from "next/navigation";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -73,6 +74,7 @@ const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
+  const router = useRouter()
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -419,10 +421,14 @@ const EventCards = ({params, searchParams}) => {
   };
 
   useEffect(() => {
-    if (!userName) return;
+    if (!userName || UserCompanyName === "") 
+      {
+        router.push("/login")
+      };
     fetchData();
-    
   }, [params.id, searchParams]);
+
+    
 
   useEffect(() => {
     if (showModal) {
@@ -819,14 +825,14 @@ const handleStatusClick = async(row) => {
         </button>
         
         {/* Report Button */}
-        {/* <a href="/LeadManager/Report">
+         <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a> */}
+        </a> 
       </div>
 
     </div>
