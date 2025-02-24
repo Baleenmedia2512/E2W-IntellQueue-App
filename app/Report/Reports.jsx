@@ -244,15 +244,26 @@ const processCloseDay = async () => {
     },[])
     
     useEffect(() => {
-        fetchMarginAmount();
-        fetchOrderDetails();
-        fetchFinanceDetails();
-        fetchSumOfFinance();
-        fetchRateBaseIncome();
-        fetchSumOfOrders();
-        FetchCurrentBalanceAmount();
-        fetchAmounts();
-    }, [dateRange.startDate, dateRange.endDate]);
+      const fetchData = async () => {
+          try {
+              await Promise.all([
+                  fetchMarginAmount(),
+                  fetchOrderDetails(),
+                  fetchFinanceDetails(),
+                  fetchSumOfFinance(),
+                  fetchRateBaseIncome(),
+                  // fetchSumOfOrders(),
+                  FetchCurrentBalanceAmount(),
+                  // fetchAmounts()
+              ]);
+          } catch (error) {
+              console.error("Error fetching data:", error);
+          }
+      };
+  
+      fetchData();
+  }, [dateRange.startDate, dateRange.endDate]);
+  
 
 
     useEffect(() => {
@@ -432,14 +443,14 @@ const processCloseDay = async () => {
 
     const fetchOrderDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
+            .get(`https://orders.baleenmedia.com/API/Media/OrdersListTest.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
             .then((response) => {
                 const data = response.data.map((order, index) => ({
                     ...order,
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
                     AdjustedOrderAmount: `₹ ${order.AdjustedOrderAmount}`,
-                    TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : '',
+                    TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : `₹ 0`,
                     AmountDifference: order.RateWiseOrderNumber < 0 ? `₹ 0` : `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
@@ -540,7 +551,7 @@ const processCloseDay = async () => {
                     setSuccessMessage('');
                 }, 2000);
                 fetchOrderDetails();
-                fetchAmounts();
+                // fetchAmounts();
             }
         })
         .catch((error) => {
@@ -565,7 +576,7 @@ const handleTransactionDelete = (id, RateWiseOrderNum) => {
               setSuccessMessage('');
             }, 2000);
             fetchFinanceDetails();
-            fetchAmounts();
+            // fetchAmounts();
             fetchSumOfFinance();
             fetchRateBaseIncome();
             fetchMarginAmount();
@@ -632,7 +643,7 @@ const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
           setSuccessMessage('Order Restored!');
           setTimeout(() => setSuccessMessage(''), 2000);
           fetchOrderDetails();
-          fetchAmounts();
+          // fetchAmounts();
       }
   } catch (error) {
       console.error('Error during restore operation:', error);
@@ -654,7 +665,7 @@ const handleFinanceRestore = (id, RateWiseOrderNumber) => {
           setSuccessMessage('');
         }, 2000);
         fetchFinanceDetails();
-        fetchAmounts();
+        // fetchAmounts();
         fetchSumOfFinance();
         fetchRateBaseIncome();
         fetchMarginAmount();
@@ -825,12 +836,60 @@ const orderColumns = [
     { field: 'Gender', headerName: 'Client Gender', width: isMobile ? 120 : 90 },
     { field: 'Card', headerName: 'Rate Name', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
     { field: 'AdType', headerName: 'Rate Type', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
-    { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },
-    { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
-    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 200 : 150 },
-    { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
-    { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100 },
-    { field: 'Commission', headerName: 'Commission Amount(₹)', width: 100 },
+    { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+      },
+    { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, 
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+      renderCell: (params) => <div>{params.value}</div> },
+    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 200 : 150,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+     },
+    { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },      
+     },
+    { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+     },
+    { field: 'Commission', headerName: 'Commission Amount(₹)', width: 100,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+     },
     { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 120 },
     { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: isMobile ? 190 : 130 },
     { field: 'Remarks', headerName: 'Order Remarks', width: isMobile ? 180 : 160 },
@@ -920,8 +979,24 @@ const financeColumns = [
   { field: 'ID', headerName: 'Finance ID', width: isMobile ? 140 : 130 },
   { field: 'TransactionType', headerName: 'Transaction Type', width: isMobile ? 180 : 150 },
   { field: 'TransactionDate', headerName: 'Transaction Date', width: isMobile ? 180 : 150 },
-  { field: 'Amount', headerName: 'Amount(₹)', width: isMobile ? 140 : 100 },
-  { field: 'OrderValue', headerName: 'Order Value(₹)', width: isMobile ? 180 : 100 },
+  { field: 'Amount', headerName: 'Amount(₹)', width: isMobile ? 140 : 100,
+    sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+   },
+  { field: 'OrderValue', headerName: 'Order Value(₹)', width: isMobile ? 180 : 100,
+    sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+   },
   { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 100 },
   { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: isMobile ? 130 : 80 },

@@ -80,7 +80,7 @@ export default function GroupedRowsDemo() {
     ? JSON.parse(sessionStorage.getItem('filterValues'))
     : null;
     const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
-        orderNumber: '',
+        rateWiseOrderNumber: '',
         consultant: '',
         client: '',
         rateCard: '',
@@ -88,7 +88,7 @@ export default function GroupedRowsDemo() {
     });
 
     const activeFilters = {
-        orderNumber: filters.orderNumber ? filters.orderNumber.value : '',
+        rateWiseOrderNumber: filters.rateWiseOrderNumber ? filters.rateWiseOrderNumber.value : '',
         rateCard: filters.rateCard ? filters.rateCard.value : '',
         consultant: filters.consultant ? filters.consultant.value : '',
         client: filters.client ? filters.client.value : '',
@@ -357,7 +357,8 @@ const handleMarkAsUnprocessed = async () => {
                 rateType: consultant.rateType,
                 price: consultant.price ? parseFloat(consultant.price) : 0,
                 orderNumber: consultant.orderNumber,
-                client: consultant.clientName
+                client: consultant.clientName,
+                rateWiseOrderNumber: consultant.rateWiseOrderNumber
             });
     
             existingConsultant.totalCount++;
@@ -379,7 +380,8 @@ const handleMarkAsUnprocessed = async () => {
                     rateCard: rate.rateCard,
                     rateType: rate.rateType,
                     price: rate.price,
-                    orderNumber: rate.orderNumber
+                    orderNumber: rate.orderNumber,
+                    rateWiseOrderNumber: rate.rateWiseOrderNumber
                 });
             });
     
@@ -391,7 +393,8 @@ const handleMarkAsUnprocessed = async () => {
                 rateCard: "Total",
                 rateType: consultant.totalCount,
                 price: consultant.totalPrice,
-                orderNumber: ""
+                orderNumber: "",
+                rateWiseOrderNumber: ""
             });
         });
     
@@ -430,11 +433,11 @@ const handleMarkAsUnprocessed = async () => {
         return null;
     };
 
-    const orderNumberBodyTemplate = (rowData) => {
+    const rateWiseOrderNumberBodyTemplate = (rowData) => {
         if (rowData.rateCard === 'Total') {
-            return <span className="text-blue-500">{rowData.orderNumber}</span>;
+            return <span className="text-blue-500">{rowData.rateWiseOrderNumber}</span>;
         } else if (rowData.rateCard) {
-            return <span>#{rowData.orderNumber}</span>;
+            return <span>#{rowData.rateWiseOrderNumber}</span>;
         }
         return null;
     };
@@ -531,7 +534,7 @@ const handleExport = () => {
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
-        OrderNumber: row.orderNumber,
+        rateWiseOrderNumber: row.rateWiseOrderNumber,
         Consultant: row.consultant,
         Client: row.client,
         RateCard: row.rateCard,
@@ -766,71 +769,53 @@ const handleCheckboxChange = () => {
 const handleSlipGeneration = () => {
     // Step 1: Filter out rows where rateCard is 'Total'
     const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
-  
-    // Step 2: Group by consultant, rateCard, and rateType
+
+    // Step 2: Group data by consultant, then by rateCard, then by price
     const groupedData = filteredRows.reduce((acc, row) => {
-      const { consultant, rateCard, rateType, price } = row;
-  
-      // Initialize the group for the consultant if it doesn't exist
-      if (!acc[consultant]) {
-        acc[consultant] = {};
-      }
-  
-      // Initialize the group for the rateCard if it doesn't exist
-      if (!acc[consultant][rateCard]) {
-        acc[consultant][rateCard] = {};
-      }
-  
-      // Initialize the group for the rateType if it doesn't exist
-      if (!acc[consultant][rateCard][rateType]) {
-        acc[consultant][rateCard][rateType] = { count: 0, totalPrice: 0 };
-      }
-  
-      // Update the count and totalPrice for the rateType
-      acc[consultant][rateCard][rateType].count += 1;
-      acc[consultant][rateCard][rateType].totalPrice += price;
-  
-      return acc;
-    }, {});
-  
-    // Step 3: Create the summary output for each rate card
-    const summaryByRateCard = [];
-    for (const consultant in groupedData) {
-      for (const rateCard in groupedData[consultant]) {
-        const rateCardSummary = [];
-        for (const rateType in groupedData[consultant][rateCard]) {
-          const { count, totalPrice } = groupedData[consultant][rateCard][rateType];
-  
-          // Get the date range for each consultant (assuming it is consistent)
-          summaryByRateCard.push({
-            consultant,
-            dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
-            rateCard,
-            count,
-            totalPrice
-          });
+        const { consultant, rateCard, price } = row;
+
+        if (!acc[consultant]) {
+            acc[consultant] = {};
         }
-      }
-    }
-  
-    // Step 4: Group data by rateCard to generate separate PDFs
-    const groupedByRateCard = summaryByRateCard.reduce((acc, row) => {
-      if (!acc[row.rateCard]) {
-        acc[row.rateCard] = [];
-      }
-      acc[row.rateCard].push(row);
-      return acc;
+
+        if (!acc[consultant][rateCard]) {
+            acc[consultant][rateCard] = {};
+        }
+
+        if (!acc[consultant][rateCard][price]) {
+            acc[consultant][rateCard][price] = { count: 0, totalPrice: 0 };
+        }
+
+        acc[consultant][rateCard][price].count += 1;
+        acc[consultant][rateCard][price].totalPrice += price;
+
+        return acc;
     }, {});
-  
-    // Step 5: Generate PDF for each rate card
-    for (const rateCard in groupedByRateCard) {
-      const rateCardSummary = groupedByRateCard[rateCard];
-      if (rateCardSummary.length > 0) {
-        generateReferralPdf(rateCardSummary, rateCard);  // Pass the rateCard to the PDF generator
-      }
+
+    // Step 3: Convert grouped data into an array with consultant sections
+    const summaryByConsultant = [];
+    for (const consultant in groupedData) {
+        summaryByConsultant.push({ consultant, isHeader: true }); // Consultant header
+
+        for (const rateCard in groupedData[consultant]) {
+            for (const price in groupedData[consultant][rateCard]) {
+                const { count, totalPrice } = groupedData[consultant][rateCard][price];
+                summaryByConsultant.push({
+                    consultant,
+                    rateCard,
+                    price,
+                    count,
+                    totalPrice,
+                    dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`
+                });
+            }
+        }
     }
-  };
-  
+
+    // Step 4: Generate a single PDF with grouped consultant sections
+    generateReferralPdf(summaryByConsultant);
+};
+
   const formatDate = (dateString) => {
     const months = [
       "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
@@ -1012,15 +997,15 @@ const handleSlipGeneration = () => {
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['orderNumber','consultant','client', 'rateCard', 'rateType']}
+                            globalFilterFields={['rateWiseOrderNumber','consultant','client', 'rateCard', 'rateType']}
                             
                         >
                         
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
                             
-                            <Column field="orderNumber" header="O#" headerStyle={{ width: '1rem' }} body={orderNumberBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.orderNumber?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
+                            <Column field="rateWiseOrderNumber" header="RO#" headerStyle={{ width: '1rem' }} body={rateWiseOrderNumberBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.orderNumber?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
                              filter
-                             filterElement={filterHeaderTemplate({ header: 'Order Number' }, 'orderNumber')}
+                             filterElement={filterHeaderTemplate({ header: 'Rate Wise Order Number' }, 'rateWiseOrderNumber')}
                              showFilterMatchModes={false}
                             ></Column>
                             <Column field="consultant" header="Consultant" headerStyle={{ width: '13rem' }} body={consultantBodyTemplate} 

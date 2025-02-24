@@ -279,6 +279,10 @@ useEffect(() => {
           selectedValues.adType.value
         );
         setCommissionAmount(commission);
+        setPrevData(prevData => ({
+          ...prevData, // Keep existing data
+          commissionAmount: commission // Update only commissionAmount
+      }));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -695,6 +699,10 @@ const fetchRates = async () => {
                 selectedValues.adType.value
               );
               setCommissionAmount(commission);
+              setPrevData(prevData => ({
+                ...prevData, // Keep existing data
+                commissionAmount: commission // Update only commissionAmount
+            }));
             }
           } else {
             console.warn("No client details found for the given ID.");
@@ -767,6 +775,7 @@ const fetchRates = async () => {
           setIsCommissionSingleUse(data.isCommissionAmountSingleUse === 1);
           if(data.consultantName) {
             setCommissionAmount(data.commission);
+            // setPrevData({commissionAmount: commission});
           }
 
           // Store the fetched data in a state to compare later
@@ -898,7 +907,9 @@ const CreateStages = async () => {
                 setSuccessMessage('Work Order #'+ nextRateWiseOrderNumber +' Created Successfully!');
 
                 // Notify order adjustment via WhatsApp
-                notifyOrderAdjustment(clientName, receivable, discountAmount, remarks, nextRateWiseOrderNumber, selectedValues.rateName.value, selectedValues.adType.value);
+                if (![null, undefined, 0, "0"].includes(discountAmount)) {
+                notifyOrderAdjustment(clientName, discountAmount, remarks, nextRateWiseOrderNumber, selectedValues.rateName.value, selectedValues.adType.value, commissionAmount, prevData.commissionAmount);
+                }
 
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
                   setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
@@ -1006,12 +1017,13 @@ const updateNewOrder = async (event) => {
         // Call notifyOrderAdjustment after order update
         notifyOrderAdjustment(
           clientName,                      // Client Name
-          receivable,                      // Previous Order Amount
           discountAmount,                  // Adjusted Amount (can be +ve or -ve)
           updateReason,                    // Adjustment Remarks
           UpdateRateWiseOrderNumber,       // Order Number
           selectedValues.rateName.value,   // Rate Card
-          selectedValues.adType.value      // Rate Type
+          selectedValues.adType.value,      // Rate Type
+          commissionAmount,
+          prevData.commissionAmount
       );
     }
         dispatch(setIsOrderExist(true));
@@ -1342,6 +1354,10 @@ const fetchConsultantDetails = async (Id) => {
       selectedValues.adType.value
     );
     setCommissionAmount(commission);
+    setPrevData(prevData => ({
+      ...prevData, // Keep existing data
+      commissionAmount: commission // Update only commissionAmount
+  }));
     }
   } catch (error) {
     console.error('Error fetching consultant details:', error);
@@ -1407,22 +1423,22 @@ const handleOpenDialog = () => {
   // }
   // Compare current data with previous data to check if any field has changed
   const isDataChanged = (
-    clientName.trim() !== prevData.clientName.trim() ||
+    clientName.trim() !== (prevData.clientName || '').trim() ||
     orderDate !== prevData.orderDate || // Ensure orderDate comparison works (check format)
     parseFloat(unitPrice) !== parseFloat(prevData.receivable) || // Handle potential string/number issues
     rateId !== prevData.rateId ||
-    consultantName.trim() !== prevData.consultantName.trim() ||
-    discountAmount !== prevData.discountAmount ||
+    consultantName.trim() !== (prevData.consultantName || '').trim() ||
+    parseFloat(discountAmount) !== parseFloat(prevData.discountAmount) ||
     parseFloat(marginAmount) !== parseFloat(prevData.marginAmount) ||
     parseFloat(commissionAmount) !== parseFloat(prevData.commissionAmount) ||
-    isCommissionSingleUse !== prevData.isCommissionSingleUse
+    Boolean(isCommissionSingleUse) !== Boolean(prevData.isCommissionSingleUse) // Ensure boolean comparison
   );
-
+  
   // If any data has changed, open the dialog; otherwise, show the "No changes have been made" toast
   if (isDataChanged) {
     setDialogOpen(true);
   } else {
-    setToastMessage('No changes have been made.');
+    setToastMessage('No changes detected.');
     setSeverity('warning');
     setToast(true);
     setTimeout(() => {
@@ -1430,7 +1446,7 @@ const handleOpenDialog = () => {
     }, 2000);
   }
 };
-
+console.log(discountAmount, prevData.discountAmount)
 
   // const handleOpenDialog = () => {
   //   setDialogOpen(true);
@@ -1462,9 +1478,12 @@ const handleOpenDialog = () => {
     dispatch(setIsOrderUpdate(false));
     setCommissionAmount(0);
     setIsCommissionSingleUse(false);
+    setRemarks('');
+    setUpdateReason('');
     // setWaiverAmount(0);
     // setIsConsultantWaiverChecked(false);
     setClientNumber('');
+    setPrevData({});
     //window.location.reload(); // Reload the page
   };
 
@@ -1531,20 +1550,18 @@ const handleCommissionConfirm = () => {
   createNewOrder();
 };
 
-const notifyOrderAdjustment = async (clientNam, orderAmt, adjustedOrderAmt, remarks, rateWiseOrderNum, rateCard, rateType) => {
-  // Ensure correct new amount calculation
-  const newAmount = orderAmt + adjustedOrderAmt;
+const notifyOrderAdjustment = async (clientNam, adjustedOrderAmt, remarks, rateWiseOrderNum, rateCard, rateType, commission, prevCommission) => {
 
   // Prepare JSON payload with properly formatted parameters
   const payload = {
       clientNam: String(clientNam),
-      orderAmt: String(orderAmt),
       adjustedOrderAmt: String(adjustedOrderAmt),
-      finalAmount: String(newAmount),
       remarks: remarks,
       rateWiseOrderNum: String(rateWiseOrderNum),
       rateCard: rateCard,
       rateType: rateType,
+      newCommissionAmount: String(commission),
+      prevCommissionAmount: (prevCommission != null ? String(prevCommission) : "0") === String(commission) ? "0" : String(prevCommission || "0")
   };
 
 

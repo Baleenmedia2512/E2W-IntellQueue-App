@@ -18,9 +18,12 @@ import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
+import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
+import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
+import { AiOutlinePlus } from "react-icons/ai";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -28,7 +31,8 @@ export const statusColors = {
   "Call Followup": "bg-yellow-200 text-yellow-800",
   Unqualified: "bg-orange-200 text-orange-800",
   "No Status": "bg-gray-200 text-gray-800",
-  "Available": "bg-green-200 text-green-800"
+  "Available": "bg-green-200 text-green-800",
+  "Ready for Quote": "bg-blue-200 text-blue-800",
 };
 
 const availableStatuses = [
@@ -39,7 +43,7 @@ const availableStatuses = [
   "No Status",
 ];
 
-function toTitleCase(str) {
+export function toTitleCase(str) {
   return str
     .toLowerCase()
     .split(" ")
@@ -69,9 +73,9 @@ const parseFollowupDate = (dateStr) => {
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {userName, appRights, companyName: UserCompanyName} = useAppSelector(state => state.authSlice);
+  const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
   const [showModal, setShowModal] = useState(false);
-  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -88,12 +92,14 @@ const EventCards = ({params, searchParams}) => {
   const [initialLeadStatus, setInitialLeadStatus] = useState("");
   const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
   const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
+  const [quoteSentChecked, setQuoteSentChecked] = useState("");
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
   const [statusFilter, setStatusFilter] = useState("All");
   const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-  const [quoteSentFilter, setQuoteSentFilter] = useState("All")
+  const [quoteSentFilter, setQuoteSentFilter] = useState("All");
+  const [CSEFilter, setCSEFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [fromDate, setFromDate] = useState(null); // Use null for default empty date
@@ -105,7 +111,23 @@ const EventCards = ({params, searchParams}) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [nextSNo, setNextSNo] = useState(0); 
+  const [formData, setFormData] = useState({
+    sNo: "",
+    date: "",
+    time: "",
+    platform: "",
+    name: "",
+    phoneNo: "",
+    email: "", 
+    adEnquiry: "",
+    consultantNumber: "",
+    consultantName: "",
+    handledBy: "",
+  });
 
+  
   // console.log(rows)
   const toggleFilters = () => {
     setFiltersVisible((prev) => !prev);
@@ -120,6 +142,7 @@ const EventCards = ({params, searchParams}) => {
     setProspectTypeFilter('All');
     setQuoteSentFilter("All");
     setFromDate(null);
+    setCSEFilter("");
     setToDate(null);
     setSearchQuery('');
   };
@@ -142,6 +165,9 @@ const EventCards = ({params, searchParams}) => {
     quoteSentFilter === 'All' || 
         (quoteSentFilter === 'Quote Sent' && row.QuoteSent === 'Yes' && row.Status === 'Call Followup') ||
         (quoteSentFilter === 'Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
+  )
+  .filter((row) =>
+    CSEFilter === 'All' || row.HandledBy === CSEFilter
   )
   .filter((row) =>
     [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
@@ -176,6 +202,167 @@ const EventCards = ({params, searchParams}) => {
   };
 
   const isNoDataFound = filteredRows.length === 0;
+
+//-------------------------------------------------------------------------------------------------------------
+useEffect(() => {
+  if (isModalOpen) {
+    const now = new Date();
+    const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const formattedTime = now.toTimeString().slice(0, 5); // HH:MM
+
+    setFormData((prev) => ({
+      ...prev,
+      date: formattedDate,
+      time: formattedTime,
+    }));
+  }
+}, [isModalOpen]);
+
+useEffect(() => {
+  // Get the current date and time
+  const now = new Date();
+  let newDate;
+  let newTime;
+
+  // If the status is "Call Followup" and there’s a valid followup date in currentCall,
+  // then use that value directly.
+  if (
+    selectedStatus === "Call Followup" &&
+    currentCall?.rowData?.FollowupDate &&
+    currentCall.rowData.FollowupDate !== "No Followup Date"
+  ) {
+    newDate = currentCall.rowData.FollowupDate;
+    newTime = currentCall.rowData.FollowupTime;
+  } else {
+    // Otherwise, start with the current date as the default
+    const defaultDate = new Date(now);
+    if (selectedStatus === "Unreachable") {
+      // For "Unreachable", set the default date to 1 hour ahead.
+      defaultDate.setHours(defaultDate.getHours() + 1);
+    } else if (selectedStatus === "Call Followup") {
+      // For "Call Followup" (when no valid date is present),
+      // move to tomorrow while keeping the current time.
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      defaultDate.setDate(defaultDate.getDate() + 1);
+      defaultDate.setHours(
+        Math.floor(currentTimeMinutes / 60),
+        currentTimeMinutes % 60,
+        0
+      );
+    }
+    
+    // Format the date and time based on the updated defaultDate.
+    newDate = defaultDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    newTime = defaultDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  // Update state with the new followup date and time
+  setFollowupDate(newDate);
+  setFollowupTime(newTime);
+
+}, [selectedStatus, showModal]); //Triggers when selected status or current call is called  
+
+const checkAndUpdateStatus = async (rowsData) => {
+  if (!rowsData || rowsData.length === 0) return;
+
+  const currentTime = new Date();
+  const hours24 = 24 * 60 * 60 * 1000;
+
+  const updatePromises = rowsData
+    .filter(row => row.Status === "Unreachable" && row.FollowupDate && row.FollowupTime)
+    .map(async (row) => {
+      const formattedDate = formatDate(row.FollowupDate);
+      const formattedTime = formatUnreachableTime(row.FollowupTime);
+      const followupDateTime = new Date(`${formattedDate}T${formattedTime}`);
+      
+      if (currentTime - followupDateTime >= hours24) {
+        const payload = {
+          sNo: row.SNo,
+          status: "New",
+          isUnreachable: "Yes",
+          dbCompanyName: UserCompanyName,
+          followupDate: "",
+          followupTime: "",
+        };
+
+        try {
+          const response = await fetch("https://leads.baleenmedia.com/api/updateLeads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (response.ok) {
+            console.log(`Status for row ${row.SNo} updated to "New" after 24 hours`);
+            return { sNo: row.SNo, status: "New" };
+          } else {
+            throw new Error("Failed to update lead");
+          }
+        } catch (error) {
+          console.error("Error updating lead:", error);
+        }
+      }
+    });
+
+  const updatedStatuses = await Promise.all(updatePromises);
+
+  setSelectedStatus((prevStatuses) => {
+    const newStatuses = { ...prevStatuses };
+    updatedStatuses.forEach((item) => {
+      if (item) newStatuses[item.sNo] = item.status;
+    });
+    return newStatuses;
+  });
+};
+
+
+const formatDate = (dateStr) => {
+  const months = {
+    Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
+    Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
+  };
+
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, "0");
+    const month = months[parts[1]];
+    const year = parts[2];
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return "";
+};
+
+const formatUnreachableTime = (timeStr) => {
+  const timeParts = timeStr.match(/(\d+):(\d+) (\w{2})/);
+  if (!timeParts) return "00:00:00";
+
+  let [_, hours, minutes, period] = timeParts;
+  hours = parseInt(hours, 10);
+
+  if (period.toLowerCase() === "pm" && hours !== 12) {
+    hours += 12;
+  } else if (period.toLowerCase() === "am" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
+};
+
+
+
+//==============================================================================================================
+
+
 
   useEffect(() => {
     const intervals = {};
@@ -220,6 +407,87 @@ const EventCards = ({params, searchParams}) => {
     };
   }, [rows]);
   
+  const insertEnquiry = async () => {
+    let row = currentCall.rowData;
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
+    const isNewClient = await checkIfNewClient(cleanedPhone)
+    console.log(isNewClient)
+    try {
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${isNewClient}`;
+
+        const response = await fetch(url);
+
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const text = await response.text(); // Get raw response
+        console.log("Raw Response:", text); // Log to debug
+
+        let data;
+        try {
+            data = JSON.parse(text); // Attempt to parse JSON
+        } catch (jsonError) {
+            throw new Error(`Invalid JSON response: ${text}`);
+        }
+
+        if (data === "Values Inserted Successfully!") {
+            setSuccessMessage('Client Details Are Saved!');
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 2000);
+        } else if (data === "Duplicate Entry!") {
+            setToastMessage('Contact Number Already Exists!');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        } else {
+            alert(`The following error occurred while inserting data: ${data}`);
+        }
+    } catch (error) {
+        console.error('Error while inserting data:', error);
+        alert(`Error: ${error.message}`);
+    }
+};
+
+
+  const insertLeadToDB = async () => {
+    let row = currentCall.rowData;
+
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
+
+    const leadData = {
+        JsonDBName: alternateCompanyName,
+        JsonEntryUser: toTitleCase(userName),
+        JsonLeadDate: formatDBDate(row.LeadDate),
+        JsonLeadTime: formatDBTime(row.LeadTime),
+        JsonPlatform: row.Platform,
+        JsonClientName: row.Name,
+        JsonClientContact: cleanedPhone,
+        JsonClientEmail: row.Email,
+        JsonDescription: row.Enquiry,
+        JsonStatus: selectedStatus,
+        JsonLeadType: "New",
+        JsonPreviousStatus: "",
+        JsonNextFollowupDate: formatDBDate(followupDate),
+        JsonNextFollowupTime: formatDBTime(followupTime),
+        JsonClientCompanyName: companyName,
+        JsonRemarks: remarks,
+        JsonHandledBy: toTitleCase(userName),
+        JsonProspectType: prospectType,
+        JsonIsUnreachable: 0,
+        JsonSheetId: row.SNo
+    };
+
+    const response = await PostInsertOrUpdate("InsertLeadStatus", leadData);
+    const anotherResponse = await insertEnquiry()
+    return response && anotherResponse
+};
 
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 86400); // 86400 seconds in a day
@@ -231,7 +499,7 @@ const EventCards = ({params, searchParams}) => {
     if (days > 0) {
       return `${days}d ${hrs}:${mins}:${secs}`;
     }
-  
+      
     return `${hrs}:${mins}:${secs}`;
   };
   
@@ -240,6 +508,21 @@ const EventCards = ({params, searchParams}) => {
   //   setHasSaved(true); // Set hasSaved to true when checkbox is checked
   // };	
 
+  const checkIfNewClient = async (clientContact) => {
+    try {
+      const response = await fetch(
+        `https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${clientContact}&JsonDBName=${UserCompanyName}`
+      );
+      
+      const data = await response.json();
+      console.log(data, data.isNewUser)
+      return data.isNewUser ? true : false; // Returns true if new user, false if existing
+    } catch (error) {
+      console.error("Error checking contact number:", error);
+      return false; // Default to false in case of an error
+    }
+  };
+
   const fetchData = async () => {
     try {
       const filters = {
@@ -247,11 +530,17 @@ const EventCards = ({params, searchParams}) => {
         status: searchParams.status || "",
         followupDate: searchParams.followupDate || null,
       };
-
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+
+    if (fetchedRows.length > 0) {
+      const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
+      setNextSNo(maxSlNo + 1);
+    } else {
+      console.log("No rows found to calculate max Sl. No.");
+    }
+    
       setRows(fetchedRows);
       fetchCSENames();
-      // console.log(fetchedRows)
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -266,6 +555,12 @@ const EventCards = ({params, searchParams}) => {
   }, [params.id, searchParams]);
 
   useEffect(() => {
+    if (!userName) return;
+    checkAndUpdateStatus(rows)
+  }, [rows]);
+  
+
+  useEffect(() => {
     if (showModal) {
       // Set initial values when the modal is opened
       setInitialSelectedStatus(selectedStatus);
@@ -277,8 +572,8 @@ const EventCards = ({params, searchParams}) => {
     }
   }, [showModal]); // Runs when the modal opens
   
-  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent) => {
-    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent });
+  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData });
 
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
@@ -325,8 +620,6 @@ const EventCards = ({params, searchParams}) => {
         setIsLoading(false);
         return;
       }
-
-
     let payload = {};
 
     console.log("Received on Handle Save function")
@@ -335,21 +628,23 @@ const EventCards = ({params, searchParams}) => {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
     } else if (followupOnly) {
       payload = {
         sNo: currentCall.sNo,
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
     } else if (sendQuoteOnly === "Handled By") {
       payload = {
         sNo: Sno,
-        handledBy: toTitleCase(user)
+        handledBy: toTitleCase(user),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
-      console.log("Received on Condition")
     }else {
       payload = {
         sNo: currentCall.sNo,
@@ -357,13 +652,13 @@ const EventCards = ({params, searchParams}) => {
         companyName: companyName || "", // Default to an empty string if undefined
         followupDate: followupDate || "",
         followupTime: followupTime || "",
-        quoteSent: initialQuoteStatus || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test",
+        quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
       };
     }
-  
     
     try {
       const response = await fetch(
@@ -393,6 +688,14 @@ const EventCards = ({params, searchParams}) => {
           email: currentCall?.email || "",
         };
         downloadContact(contact); // Download the contact vCard
+        try {
+          if(initialSelectedStatus !== "Call Followup"){
+            insertLeadToDB()
+          }
+        } catch (error) {
+          alert("Error while inserting data: " + error)
+        }
+        
       }
     } catch (error) {
       console.error("Error updating lead:", error);
@@ -423,18 +726,17 @@ const EventCards = ({params, searchParams}) => {
 
       setIsLoading(false);
       setShowModal(false);
+      setHideOtherStatus(false);
+      setFollowpOnly(false);
+      setSelectedStatus("");
+      setRemarks("");
+      setSelectedLeadStatus("");
       if (selectedStatus === "Unreachable") {
         setFollowupDate(false);
       } else {
         setFollowupDate(formattedDate);
         setFollowupTime(formattedTime);
       }
-
-      setHideOtherStatus(false);
-      setFollowpOnly(false);
-      setSelectedStatus("");
-      setRemarks("");
-      setSelectedLeadStatus("");
     }
   };  
 
@@ -598,11 +900,117 @@ const EventCards = ({params, searchParams}) => {
     setIsHandledByChange(false);
   }
 
+
+  const toggleModal = () => setIsModalOpen(!showModal);
+
+  // Handle form changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const dbCompanyName = encodeURIComponent(UserCompanyName);
+    const payload = {
+      sNo: nextSNo, // Use the incremented serial number
+      date: formData.date,
+      time: formData.time,
+      platform: formData.platform,
+      name: formData.name,
+      phoneNo: formData.phoneNo,
+      email: formData.email,
+      adEnquiry: formData.adEnquiry,
+      handledBy: formData.handledBy,
+      consultantName: formData.consultantName,
+      consultantNumber: formData.consultantNumber,
+      dbCompanyName,
+    };
+console.log("handle by",formData.handledBy)
+    const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload), 
+      });
+
+      const data = await response.json(); 
+      if (response.ok) {
+        
+        console.log("Response from server:", data);
+        alert("Lead added successfully!");
+        setIsModalOpen(false);
+        setFormData({
+          date: "",
+          time: "",
+          platform: "",
+          name: "",
+          phoneNo: "",
+          email: "",
+          adEnquiry: "",
+          consultantNumber: "",
+          consultantName: "",
+        });
+        fetchData();
+      } else {
+       
+        console.error("Error response from server:", data.error || response.statusText);
+        alert(data.error || "Error adding record");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error adding record. Please try again.");
+    }
+};
+  
+const handleStatusClick = async(row) => {
+  setShowModal(true);
+
+  // Set followup date and time if available
+  if (row.FollowupDate !== "No Followup Date") {
+    console.log("Followup date and time is updated: " + row.FollowupDate + row.FollowupTime)
+    setFollowupDate(row.FollowupDate);
+    setFollowupTime(row.FollowupTime);
+  }else{
+    console.log("Followup date time is skipped " + row.FollowupDate)
+  }
+
+  // Update the current call information
+  setCurrentCall({
+    phone: row.Phone,
+    name: row.Name,
+    sNo: row.SNo,
+    Platform: row.Platform,
+    Enquiry: row.Enquiry,
+    LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
+    quoteSent: row.QuoteSent,
+    rowData: row,
+  });
+
+  // Set various status and remarks values
+  
+  setRemarks(row.Remarks);
+  setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
+  setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+  setQuoteSentChecked(row.QuoteSent === "Yes")
+  setSelectedStatus(row.Status);
+};
+
   return (
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-      <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
+    <h2 className="text-xl font-semibold text-blue-500">
+    {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
+  </h2>
+
       <div className="flex  space-x-4 ">
         {/* Sheet Button */}
         <button
@@ -642,7 +1050,7 @@ const EventCards = ({params, searchParams}) => {
         />
        <button
         onClick={() => {
-          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
+          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All") {
             clearFilters(); // If any filters or search query is active, clear them
           } else {
             toggleFilters(); // Otherwise, toggle filter visibility
@@ -650,7 +1058,7 @@ const EventCards = ({params, searchParams}) => {
         }}
         className="ml-2 p-2 sm:p-3 bg-blue-500 text-white rounded-lg focus:outline-none hover:bg-blue-600"
       >
-        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
+        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All" ? (
           <FaTimes size={20} /> // Clear icon if any filter or search query is active
         ) : (
           <FaFilter size={20} /> // Filter icon if no filter or search query is active
@@ -722,6 +1130,27 @@ const EventCards = ({params, searchParams}) => {
             ))}
           </div>
           
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {[
+              { username: "All" }, // Add "All" at the beginning
+              ...CSENames].map((status, index) => (
+              <motion.button
+                key={status.username}
+                onClick={() => setCSEFilter(toTitleCase(status.username))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  CSEFilter === toTitleCase(status.username)
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {toTitleCase(status.username)}
+              </motion.button>
+            ))}
+          </div>
+          
           {/* Date Range Filters */}
           <div className="flex flex-row gap-2 sm:gap-4">
             {/* From Date Picker */}
@@ -763,13 +1192,13 @@ const EventCards = ({params, searchParams}) => {
             className={`relative rounded-lg p-4 border-2 hover:shadow-lg hover:-translate-y-2 bg-white hover:transition-all border-gray-200 
               ${timers[row.SNo] > 86400 ? " animate-pulse bg-green-600`" : ""}
             `}
-
             style={{ minHeight: "240px" }}
           >
+
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
+                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent, rowData: row}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType); row.QuoteSent === "Yes" ? setQuoteSentChecked(true): setQuoteSentChecked(false)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -810,7 +1239,6 @@ const EventCards = ({params, searchParams}) => {
               <span>{row.QuoteSent === "Yes" ? "Sent" : "Not Sent"}</span>
             </span>
           )}
-
             
             <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
@@ -859,14 +1287,14 @@ const EventCards = ({params, searchParams}) => {
                 Phone:
                 <a
                   // href={`tel:${row.Phone}`}
-                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
                   className="text-blue-600 hover:underline ml-1"
                 >
                   <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
                   title="Call"
                 >
                   <FiPhoneCall className="text-lg" />
@@ -901,7 +1329,6 @@ const EventCards = ({params, searchParams}) => {
                     </div>
                   </div>
                 )}
-
               </div>
             )}
              {/* Remarks */}
@@ -936,7 +1363,7 @@ const EventCards = ({params, searchParams}) => {
               {CSENames.map(
                 (user) => (
                   <label
-                    key={user.usernamer}
+                    key={user.username}
                     className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
                       selectedUser === toTitleCase(user.username) ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
                     }`}
@@ -958,13 +1385,209 @@ const EventCards = ({params, searchParams}) => {
             </div>
             )}
 
+      <div className="relative">
+            {/* "+" Button */}
+            <button
+        onClick={toggleModal}
+        className="fixed right-4 bottom-24 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-28 z-50"
+      >
+        <AiOutlinePlus size={24} />
+      </button>
+
+      {/* Modal Form */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-4 sm:p-6 rounded-lg w-5/6 sm:w-96 lg:w-96 h-[60vh] sm:h-auto max-w-lg 
+                   max-h-[90vh] overflow-y-auto relative shadow-lg mb-10 md:mb-0">
+            {/* Flex container for title and close button */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-blue-500">Add New Lead</h2>
+              <button
+                className="text-black hover:text-red-500 text-3xl sm:text-4xl"
+                onClick={() => setIsModalOpen(false)} // Close modal when clicked
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
+                {/* Input Fields */}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Date:</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Time:</label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={formData.time}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                  <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">
+                    Client Platform:
+                  </label>
+                  <select
+                    name="platform"
+                    value={formData.platform}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Platform</option>
+                    <option value="JustDial">JustDial</option>
+                    <option value="IndiaMart">IndiaMart</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Sulekha">Sulekha</option>
+                    <option value="LG">LG</option>
+                    <option value="Consultant">Consultant</option>
+                    <option value="Own">Own</option>
+                    <option value="WebApp DB">Web App DB</option>
+                    <option value="Online">Online</option>
+                    <option value="Self">Self</option>
+                    <option value="Friends/Relatives">Friends/Relatives</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Name:</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                {formData.platform === 'Consultant' && (
+                  <>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Name:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantName"
+                      value={formData.consultantName}
+                      onChange={handleInputChange}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Number:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantNumber"
+                      value={formData.consultantNumber}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                        if (numericValue.length <= 10) {
+                          handleInputChange({ target: { name: "consultantNumber", value: numericValue } });
+                        }
+                      }}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                    />
+                  </div>
+                  </>
+              )}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Ad Enquiry:</label>
+                  <input
+                    type="text"
+                    name="adEnquiry"
+                    value={formData.adEnquiry}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                <label className="block text-sm md:text-base font-medium text-gray-700">Client Contact:</label>
+                <input
+                  type="tel"
+                  name="phoneNo"
+                  value={formData.phoneNo}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                    if (numericValue.length <= 10) {
+                      handleInputChange({ target: { name: "phoneNo", value: numericValue } });
+                    }
+                  }}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  required
+                />
+              </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Email Address:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Handled By:</label>
+                  <select
+                    name="handledBy"
+                    value={formData.handledBy}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Handled By</option>
+                    {CSENames.map((user) => (
+                      <option key={user.username} value={toTitleCase(user.username)}>
+                        {toTitleCase(user.username)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full mt-4 p-3 bg-blue-500 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+    </div>
+
+
       {/* Modal for Call Status */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-auto max-w-md mb-16 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Lead Status</h3>
-              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(false); setFollowupTime(false)}}>
+              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(followupDate); setFollowupTime(followupTime)}}>
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
             </div>
@@ -1008,22 +1631,26 @@ const EventCards = ({params, searchParams}) => {
                 ))}
             </div>
             }
-             
+              {selectedStatus === "Call Followup" && (
+                <div>
+                <label className=" mb-2 flex items-center space-x-2 ">
+                  <input
+                    className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
+                    type="checkbox"
+                    checked={quoteSentChecked}
+                    onChange={() => setQuoteSentChecked((prev) => !prev)}
+                  />
+                  <span className="text-gray-800 font-medium">Quote Sent to Client</span>
+                </label>
+                </div> 
+              )}
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Followup Date and Time
                 </label>
                 <DatePicker
-                  selected={
-                    followupDate
-                      ? new Date(`${followupDate} ${followupTime}`) // If a date is selected, use it
-                      : selectedStatus === "Unreachable" // Only for "Unreachable"
-                      ? new Date(new Date().getTime() + 60 * 60 * 1000) // Set time 1 hour ahead
-                      : selectedStatus === "Call Followup" // For "Call Followup", set the date to tomorrow
-                      ? new Date(new Date().setDate(new Date().getDate() + 1)) // Set to tomorrow
-                      : new Date() // For other statuses, default to the current date
-                  }
+                 selected={new Date(`${followupDate} ${followupTime}`)}
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa" // Sets the format for time (12-hour format with AM/PM)
@@ -1035,6 +1662,7 @@ const EventCards = ({params, searchParams}) => {
                 />
               </div>
             )}
+          
 
             {!followupOnly && 
               <div className="mb-4">
@@ -1125,6 +1753,8 @@ const EventCards = ({params, searchParams}) => {
     </div>
   );
 };
+
+
 
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
@@ -1218,6 +1848,7 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
 
   return sortedRows;
 }
+
 
 
 export default function Page({ params, searchParams }) {
