@@ -24,6 +24,36 @@ const getEndOfDay = (date) => {
   return d;
 };
 
+const convertTo24Hour = (timeStr) => {
+  if (!timeStr) return "";
+  const [time, modifier] = timeStr.trim().split(" ");
+  let [hours, minutes] = time.split(":");
+  hours = parseInt(hours, 10);
+  if (modifier.toLowerCase() === "pm" && hours !== 12) {
+    hours += 12;
+  }
+  if (modifier.toLowerCase() === "am" && hours === 12) {
+    hours = 0;
+  }
+  return `${hours.toString().padStart(2, "0")}:${minutes}`;
+};
+
+const convertTimeToTimestamp = (timeStr, baseDate = new Date()) => {
+  if (!timeStr) return null;
+  const [time, modifier] = timeStr.trim().split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+  if (modifier.toLowerCase() === "pm" && hours !== 12) {
+    hours += 12;
+  }
+  if (modifier.toLowerCase() === "am" && hours === 12) {
+    hours = 0;
+  }
+  const date = new Date(baseDate);
+  date.setHours(hours, minutes, 0, 0);
+  return date.getTime();
+};
+
+
 const LeadReport = () => {
   const router = useRouter();
   const isMdOrLarger = useMediaQuery({ minWidth: 768 });
@@ -50,9 +80,13 @@ const LeadReport = () => {
     try {
       const leadDate = row.LeadDate ? getStartOfDay(new Date(row.LeadDate)) : null;
       const statusChangeDate = row.DateOfStatusChange ? new Date(row.DateOfStatusChange) : null;
+      const leadDateTime = row.LeadTime ? new Date(convertTimeToTimestamp(row.LeadTime, leadDate)) : null;
+      const statusChangeDateTime = row.LastStatusChangeTime ? new Date(convertTimeToTimestamp(row.LastStatusChangeTime, statusChangeDate)) : null;
+      console.log(statusChangeDateTime)
+      // const statusChangeDateTime = statusChangeDate ? new Date(statusChangeDate + " " + statusChangeTime) : null
       // Compute TAT in hours only if a status change exists
       const tat = (leadDate && statusChangeDate)
-        ? Math.round((statusChangeDate - leadDate) / (1000 * 60 * 60))
+        ? ((statusChangeDateTime - leadDateTime) / (1000 * 60 * 60)).toFixed(2)
         : null;
       return {
         sNo: row.SNo || Date.now().toString(),
@@ -67,6 +101,8 @@ const LeadReport = () => {
         statusChangeDate: row.DateOfStatusChange || "N/A",
         leadType: row.LeadType || "N/A",
         handledBy: row.HandledBy || "N/A",
+        statusChangedTime: row.LastStatusChangeTime || "N/A",
+        previousStatus: row.PreviousStatus || "N/A",
         tat, // numeric value in hours (or null if not available)
         // For UI display – if tat is null then show "Unattended"
         displayTAT: tat === null ? "Unattended" : `${tat}h`,
@@ -144,7 +180,7 @@ const LeadReport = () => {
   const avgTAT = useMemo(() => {
     const validTATLeads = filteredLeads.filter(lead => lead.tat !== null);
     return validTATLeads.length > 0
-      ? validTATLeads.reduce((sum, lead) => sum + lead.tat, 0) / validTATLeads.length
+      ? validTATLeads.reduce((sum, lead) => sum + parseInt(lead.tat), 0) / validTATLeads.length
       : null;
   }, [filteredLeads]);
 
