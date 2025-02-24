@@ -24,6 +24,7 @@ import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
 import { useRouter } from "next/navigation";
+import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -285,6 +286,38 @@ const EventCards = ({params, searchParams}) => {
     };
   }, [rows]);
   
+  useEffect(() => {
+    // Request permission on component mount
+    requestNotificationPermission().then(permission => {
+      if (permission === 'granted') {
+        scheduleFollowupNotifications(rows);
+      }
+    });
+    
+    // Set up periodic sync (every 1 hour)
+    if ('periodicSync' in navigator) {
+      navigator.periodicSync.register('followup-check', {
+        minInterval: 60 * 60 * 1000 // 1 hour
+      });
+    }
+
+    return () => {
+      // Cleanup
+      if ('periodicSync' in navigator) {
+        navigator.periodicSync.unregister('followup-check');
+      }
+    };
+  }, [rows]);
+
+  useEffect(() => {
+    if (navigator.serviceWorker.controller && userName) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SET_USERNAME',
+        userName, // from state.authSlice.username
+      });
+    }
+  }, [userName]);
+
   const insertEnquiry = async () => {
     let row = currentCall.rowData;
     // Extract only the 10-digit number

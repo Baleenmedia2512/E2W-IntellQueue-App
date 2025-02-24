@@ -1,10 +1,9 @@
 import { Clock, Globe, Phone, RefreshCcw, User, Calendar, Briefcase } from "lucide-react";
 
 const Leaddiv = ({ lead, index }) => {
-  // Determine the appropriate styles based on whether TAT is available.
   const tatClass =
     lead.tat === null
-      ? "bg-gray-50 text-gray-700" 
+      ? "bg-gray-50 text-gray-700"
       : lead.tat <= 24
       ? "bg-green-50 text-green-700"
       : lead.tat <= 72
@@ -20,7 +19,6 @@ const Leaddiv = ({ lead, index }) => {
       ? "bg-yellow-500"
       : "bg-red-500";
 
-  // Display TAT value or "Unattended" if no TAT is computed.
   const displayTAT = lead.tat === null ? "Unattended" : `${lead.tat}h`;
 
   return (
@@ -34,11 +32,11 @@ const Leaddiv = ({ lead, index }) => {
             </span>
           </div>
           <div className="flex items-center md:gap-3 gap-1">
-            <span className="text-black px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
+            <span className="text-black px-2  md:px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
               <Calendar className="w-3 h-3" />
               {lead.date}
             </span>
-            <span className="text-black px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
+            <span className="text-black px-2 md:px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
               <Clock className="w-3 h-3" />
               {lead.time}
             </span>
@@ -53,9 +51,9 @@ const Leaddiv = ({ lead, index }) => {
                 <div className={`w-3 h-3 rounded-full animate-pulse ${dotClass}`}></div>
                 <span className="font-semibold">{lead.status}</span>
               </div>
-              {/* Handled By Info */}
+              {/* Handled By Info (inline) */}
               <div className="flex items-center gap-2 text-xs font-medium mt-1">
-                Handled by: {lead.handledBy || "N/A"}
+                <Briefcase className="w-3 h-3" /> Handled by: {lead.handledBy || "N/A"}
               </div>
             </div>
             <div className="flex items-center gap-2">
