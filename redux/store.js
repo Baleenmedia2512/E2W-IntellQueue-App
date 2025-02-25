@@ -12,6 +12,9 @@ import { cartReducer } from "./features/cart-slice";
 import { reportReducer } from "./features/report-slice";
 import { stageReducer } from "./features/stage-slice";
 import { filterReducer } from "./features/lead-filter-slice";
+import { countReducer } from "./features/count-slice";
+import { timeReducer } from './features/time-slice';
+
 
 const createNoopStorage = () => {
   return {
@@ -92,6 +95,18 @@ const filterPersistConfig = {
   whitelist: ["statusFilter", "prospectTypeFilter", "quoteSentFilter", "CSEFilter", "fromDate", "toDate", "searchQuery", "filtersVisible"]
 }
 
+const countPersistConfig = {
+  key: "count",
+  storage: storage,
+  whitelist: ["quoteClickCount"],
+}
+
+const timePersistConfig = {
+  key: "time",
+  storage: storage,
+  whitelist: ["timeElapsed"],
+}
+
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer);
 const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer);
@@ -102,6 +117,9 @@ const persistedEmployeeReducer = persistReducer(employeePersistConfig, employeeR
 const persistedReportReducer = persistReducer(reportPersistConfig, reportReducer);
 const persistedStageReducer = persistReducer(stagePersistConfig, stageReducer);
 const persistedFilterReducer = persistReducer(filterPersistConfig, filterReducer);
+const persistedCountReducer = persistReducer(countPersistConfig, countReducer);
+const persistedTimeReducer = persistReducer(timePersistConfig, timeReducer);
+
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
@@ -113,7 +131,10 @@ const rootReducer = combineReducers({
   employeeSlice: persistedEmployeeReducer,
   reportSlice: persistedReportReducer,
   stageSlice: persistedStageReducer,
-  filterSlice: persistedFilterReducer
+  filterSlice: persistedFilterReducer,
+  countSlice: persistedCountReducer,
+  timeSlice: persistedTimeReducer,
+
 });
 
 export const store = configureStore({
