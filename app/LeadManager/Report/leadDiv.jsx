@@ -32,11 +32,11 @@ const Leaddiv = ({ lead, index }) => {
             </span>
           </div>
           <div className="flex items-center md:gap-3 gap-1">
-            <span className="text-black px-2  md:px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
+            <span className="text-black px-2  md:px-4 py-1.5 rounded-full md:text-base text-xs text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
               <Calendar className="w-3 h-3" />
               {lead.date}
             </span>
-            <span className="text-black px-2 md:px-4 py-1.5 rounded-full md:text-base text-sm text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
+            <span className="text-black px-2 md:px-4 py-1.5 rounded-full md:text-base text-xs text-nowrap border font-medium whitespace-nowrap flex items-center gap-2">
               <Clock className="w-3 h-3" />
               {lead.time}
             </span>
@@ -64,10 +64,10 @@ const Leaddiv = ({ lead, index }) => {
         </div>
 
         {/* Details Grid */}
-        <div className="grid grid-cols-2 md:gap-4 gap-2">
+        <div className="grid grid-cols-2 md:gap-4 gap-2 text-sm md:text-base">
           {[
             {
-              icon: <User className="w-4 h-4 text-gray-500" />,
+              icon: <User className="w-4 h-4 text-gray-500 " />,
               label: "Name",
               value: lead.name,
             },
