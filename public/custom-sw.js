@@ -1,63 +1,91 @@
 // custom-sw.js
-
-// --- Your custom code starts here ---
-
 let currentUser = null;
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SET_USERNAME') {
     currentUser = event.data.username;
+    // Store in IndexedDB for persistence
+    event.waitUntil(
+      self.caches.open('user-data').then((cache) => {
+        return cache.put('currentUser', new Response(JSON.stringify({ username: currentUser })));
+      })
+    );
   }
 });
 
-self.addEventListener('periodicsync', (event) => {
-  if (event.tag === 'followup-check') {
-    event.waitUntil(checkFollowups());
-  }
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
+// Add this to initialize user data on service worker activation
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      if (clientList.length > 0) {
-        return clientList[0].focus();
-      }
-      return clients.openWindow(`/lead/${event.notification.data.leadId}`);
+    self.caches.open('user-data').then((cache) => {
+      return cache.match('currentUser').then((response) => {
+        if (response) {
+          return response.json().then((data) => {
+            currentUser = data.username;
+          });
+        }
+      });
     })
   );
 });
 
 const checkFollowups = async () => {
   try {
-    // Fetch your leads from your API.
-    const response = await fetch('https://leads.baleenmedia.com/api/fetchLeads');
-    if (!response.ok) throw new Error('Failed to fetch leads');
-    const data = await response.json();
-
-    // Use the currentUser (from postMessage) in filtering.
+    // Get user from cache if not set
     if (!currentUser) {
-      console.warn('No currentUser set in SW.');
+      const cache = await self.caches.open('user-data');
+      const response = await cache.match('currentUser');
+      if (response) {
+        const data = await response.json();
+        currentUser = data.username;
+      }
+    }
+
+    if (!currentUser) {
+      console.warn('No currentUser available');
       return;
     }
 
-    const dueLeads = data.rows.filter((lead) =>
-      lead.Status === 'Call Followup' &&
-      lead.HandledBy &&
-      lead.HandledBy.toLowerCase() === currentUser.toLowerCase() &&
-      new Date(`${lead.FollowupDate}T${lead.FollowupTime}`) <= new Date()
-    );
+    const response = await fetch('https://leads.baleenmedia.com/api/fetchLeads');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    
+    const data = await response.json();
+    const now = new Date();
+
+    const dueLeads = data.rows.filter((lead) => {
+      try {
+        if (lead.Status !== 'Call Followup') return false;
+        if (!lead.HandledBy || lead.HandledBy.toLowerCase() !== currentUser.toLowerCase()) return false;
+        
+        const followupDate = new Date(`${lead.FollowupDate}T${lead.FollowupTime}`);
+        return followupDate <= now;
+      } catch (error) {
+        console.error('Error processing lead:', lead, error);
+        return false;
+      }
+    });
 
     dueLeads.forEach((lead) => {
       self.registration.showNotification('Followup Reminder', {
         body: `Time to call ${lead.name} at ${lead.FollowupTime}`,
-        icon: '/icons/icon-192x192.png',
+        icon: '/icon-192x192.png',
+        // badge: '/icons/badge-72x72.png',
         data: { leadId: lead.sNo },
+        vibrate: [200, 100, 200]
       });
     });
   } catch (error) {
     console.error('Error in followup sync:', error);
+    // Retry logic
+    if (event && event.waitUntil) {
+      event.waitUntil(
+        self.registration.sync.register('retry-followup-check')
+      );
+    }
   }
 };
 
-// --- End of your custom code ---
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'retry-followup-check') {
+    event.waitUntil(checkFollowups());
+  }
+});

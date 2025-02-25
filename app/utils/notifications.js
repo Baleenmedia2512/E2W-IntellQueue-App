@@ -1,3 +1,5 @@
+import { convertTimeToTimestamp, getStartOfDay } from "../LeadManager/Report/page";
+
 // utils/notifications.js
 export const requestNotificationPermission = async () => {
     if (Notification.permission !== 'granted') {
@@ -8,23 +10,27 @@ export const requestNotificationPermission = async () => {
   
   export const scheduleFollowupNotifications = (leads) => {
     if (!('serviceWorker' in navigator)) return;
+    
+    const now = new Date();
+    const todayStr = now.toDateString();
+    
   
-    leads.forEach(lead => {
+    leads.forEach((lead) => {
       if (lead.FollowupDate && lead.FollowupTime) {
-        const followupDateTime = new Date(`${lead.FollowupDate}T${lead.FollowupTime}`);
-        const now = new Date();
-        
-        if (followupDateTime > now) {
-          // Schedule future notification
-          const timeout = followupDateTime - now;
-          
-          setTimeout(() => {
-            showNotification(lead);
-          }, timeout);
-        } else {
-          // Show immediate notification for past followups
+        // Convert lead FollowupDate & FollowupTime to a Date object.
+        const followupDateTime = new Date(
+          convertTimeToTimestamp(lead.FollowupTime, lead.FollowupDate)
+        );
+
+        // Check that the followup date is today.
+        // if (getStartOfDay(lead.FollowupDate) !== getStartOfDay(now)) return;
+        console.log(followupDateTime <= now && new Date(lead.FollowupDate).toDateString() === now.toDateString(), getStartOfDay(lead.FollowupDate))
+        // If the followup time is less than or equal to now, show notification.
+        if (followupDateTime <= now && new Date(lead.FollowupDate).toDateString() === now.toDateString()) {
+          console.log(lead)
           showNotification(lead);
         }
+        // Else, if it's in the future (later today), do nothing (or schedule if needed).
       }
     });
   };
@@ -33,7 +39,7 @@ export const requestNotificationPermission = async () => {
     if (Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(registration => {
         registration.showNotification('Followup Reminder', {
-          body: `Followup with ${lead.name} at ${lead.FollowupTime}`,
+          body: `Followup with ${lead.Name} at ${lead.FollowupTime}`,
           icon: '/icon-192x192.png',
           data: { leadId: lead.sNo }
         });

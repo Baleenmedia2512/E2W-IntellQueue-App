@@ -21,7 +21,7 @@ import { useMediaQuery } from "react-responsive";
 import { useRouter } from "next/navigation";
 
 // Utility functions to get start and end of day as Date objects
-const getStartOfDay = (date) => {
+export const getStartOfDay = (date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -35,7 +35,7 @@ const getEndOfDay = (date) => {
 
 // Convert a 12-hour (AM/PM) time string into a timestamp using a base date.
 // If no modifier is provided, assume the time is already in 24-hour format.
-const convertTimeToTimestamp = (timeStr, baseDate = new Date()) => {
+export const convertTimeToTimestamp = (timeStr, baseDate = new Date()) => {
   if (!timeStr) return null;
   const parts = timeStr.trim().split(" ");
   if (parts.length === 1) {

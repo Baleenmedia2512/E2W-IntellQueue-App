@@ -309,14 +309,28 @@ const EventCards = ({params, searchParams}) => {
     };
   }, [rows]);
 
-  useEffect(() => {
-    if (navigator.serviceWorker.controller && userName) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'SET_USERNAME',
-        userName, // from state.authSlice.username
-      });
+  // pages/_app.js or your main component
+useEffect(() => {
+  requestNotificationPermission().then(permission => {
+    if (permission === 'granted') {
+      scheduleFollowupNotifications(rows);
     }
-  }, [userName]);
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/custom-sw.js').then((registration) => {
+      console.log('Service Worker registered with scope:', registration.scope);
+      
+      // Send username to service worker
+      if (userName) { // Replace with your actual user object
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SET_USERNAME',
+          userName
+        });
+      }
+    });
+  }
+}, [userName]); // Add dependencies as needed
 
   const insertEnquiry = async () => {
     let row = currentCall.rowData;
