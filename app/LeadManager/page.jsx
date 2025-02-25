@@ -113,6 +113,7 @@ const EventCards = ({params, searchParams}) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
+  const [notificationSent, setNotificationSent] = useState(false);
 
   // console.log(rows)
   const toggleFilters = () => {
@@ -291,6 +292,7 @@ const EventCards = ({params, searchParams}) => {
     requestNotificationPermission().then(permission => {
       if (permission === 'granted') {
         scheduleFollowupNotifications(rows);
+        setNotificationSent(true);
       }
     });
     

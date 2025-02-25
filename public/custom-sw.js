@@ -84,6 +84,27 @@ const checkFollowups = async () => {
   }
 };
 
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If there is at least one client, check if it's already at the correct URL.
+      if (clientList.length > 0) {
+        for (const client of clientList) {
+          // If the client is already open but not on the lead page, navigate it.
+          if (!client.url.includes(`/LeadManager`)) {
+            client.navigate(`/LeadManager`);
+          }
+          return client.focus();
+        }
+      }
+      // If no window is open, open a new one.
+      return clients.openWindow(`/LeadManager`);
+    })
+  );
+});
+
+
 self.addEventListener('sync', (event) => {
   if (event.tag === 'retry-followup-check') {
     event.waitUntil(checkFollowups());
