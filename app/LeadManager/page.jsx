@@ -1023,14 +1023,14 @@ const handleStatusClick = async(row) => {
         </button>
         
         {/* Report Button */}
-        {/* <a href="/LeadManager/Report">
+        <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a> */}
+        </a>
       </div>
 
     </div>
