@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useAppSelector } from '@/redux/store';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import {
@@ -15,66 +16,108 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import useTimerTracker from './useTimerTracker';
 
 const QuoteSenderDashboard = () => {
-  // State for our metrics and date range
-  const [metrics, setMetrics] = useState({
-    "totalClicks": 120,
-    "avgGenerationTime": 15,
-    "quotesGeneratedToday": 45,
-    "clicksOverTime": [
-      { "date": "2025-02-01", "clicks": 30, "quotesGenerated": 5 },
-      { "date": "2025-02-02", "clicks": 35, "quotesGenerated": 8 },
-      { "date": "2025-02-03", "clicks": 45, "quotesGenerated": 10 }
-    ],
-    "generationTimeOverTime": [
-      { "date": "2025-02-01", "avgTime": 20, "quotesGenerated": 5 },
-      { "date": "2025-02-02", "avgTime": 15, "quotesGenerated": 8 },
-      { "date": "2025-02-03", "avgTime": 10, "quotesGenerated": 10 }
-    ],
-    "pageBreakdown": {
-      "adDetails": { "clicks": 60, "avgTime": 4.2 },
-      "checkout": { "clicks": 60, "avgTime": 3.4 }
-    },
-    "quotesBreakdown": [
-      { "clientName": "Client A", "clientContact": "1234567890", "quoteCount": 3, "avgTime": 4.5, "clicks": 5 },
-      { "clientName": "Client B", "clientContact": "0987654321", "quoteCount": 2, "avgTime": 3.2, "clicks": 3 }
-    ],
-    "suggestions": [
-      "Reduce the number of steps on the Ad Details page to cut down clicks.",
-      "Consider pre-loading frequently used data to lower generation time."
-    ]
-  });
-  const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState([null, null]);
-  const [startDate, endDate] = dateRange;
+  // useTimerTracker()
+  const companyName = useAppSelector(state => state.authSlice.companyName);
+  const [avgMetrics, setAvgMetrics] = useState({  avgClickCount: 0,
+    avgTimeTaken: 0,
+    quotesGenerated: 0,});
 
-  // Function to fetch metrics from backend with optional date range filtering
-  const fetchMetrics = async (start, end) => {
+  const [dateRange, setDateRange] = useState([new Date(), new Date()]);
+  // const [startDate, endDate] = dateRange;
+  const today = new Date();
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [chartData, setChartData] = useState([]); 
+  
+  // Fetch Module Tracking Data
+  const fetchModuleTrackingData = async (startDate, endDate) => {
     try {
-      let url = '/api/quote-sender-metrics';
-      if (start && end) {
-        // Append date parameters in ISO format or your desired format
-        url += `?startDate=${start.toISOString()}&endDate=${end.toISOString()}`;
+      const url = `https://www.orders.baleenmedia.com/API/Media/FetchModuleTracking.php?JsonDBName=${encodeURIComponent(companyName)}`;
+
+      console.log("Fetching Module Tracking Data from:", url);
+
+      const response = await fetch(url, { method: "GET" });
+      const result = await response.json();
+
+      console.log("Fetched Module Tracking Data:", result);
+
+      if (!Array.isArray(result) || result.length === 0) {
+        return { avgClickCount: 0, avgTimeTaken: 0, quotesGenerated: 0, chartData: [] };
       }
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-      const data = await response.json();
-      setMetrics(data);
+
+      // Convert startDate and endDate to comparable formats
+      const start = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : null;
+      const end = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : null;
+
+      // Filter data based on date range
+      const filteredData = result.filter((item) => {
+        const itemDate = new Date(item.EntryDateTime).setHours(0, 0, 0, 0);
+        return (!start || itemDate >= start) && (!end || itemDate <= end);
+      });
+
+      const quotesGenerated = filteredData.length; // Count of records matching date range
+
+      if (quotesGenerated === 0) {
+        return { avgClickCount: 0, avgTimeTaken: 0, quotesGenerated: 0, chartData: [] };
+      }
+
+      // Aggregate data by date
+      const dateMap = {};
+      filteredData.forEach((item) => {
+        const dateKey = item.EntryDateTime.split(" ")[0]; // Extract date part only
+        if (!dateMap[dateKey]) {
+          dateMap[dateKey] = { totalClicks: 0, totalTime: 0, count: 0 };
+        }
+        dateMap[dateKey].totalClicks += item.ClickCount;
+        dateMap[dateKey].totalTime += item.TimeTaken;
+        dateMap[dateKey].count += 1;
+      });
+
+      // Format data for the chart
+      const chartData = Object.keys(dateMap).map((date) => ({
+        date,
+        avgClickCount: (dateMap[date].totalClicks / dateMap[date].count).toFixed(2),
+        avgTime: (dateMap[date].totalTime / dateMap[date].count).toFixed(2),
+        quotesGenerated: dateMap[date].count
+      }));
+
+      // Calculate overall averages
+      const totalClickCount = filteredData.reduce((sum, item) => sum + item.ClickCount, 0);
+      const totalTimeTaken = filteredData.reduce((sum, item) => sum + item.TimeTaken, 0);
+      const avgClickCount = (totalClickCount / quotesGenerated).toFixed(2);
+      const avgTimeTaken = (totalTimeTaken / quotesGenerated).toFixed(2);
+
+      console.log("Calculated Averages:", { avgClickCount, avgTimeTaken, quotesGenerated });
+
+      return { avgClickCount, avgTimeTaken, quotesGenerated, chartData };
     } catch (error) {
-      console.error('Error fetching metrics:', error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching module tracking data:", error);
+      return { avgClickCount: 0, avgTimeTaken: 0, quotesGenerated: 0, chartData: [] };
     }
   };
 
+
   // Fetch metrics on mount and when date range changes
   useEffect(() => {
-    setLoading(true);
-    fetchMetrics(startDate, endDate);
-  }, [startDate, endDate]);
+    const fetchData = async () => {
+        const data = await fetchModuleTrackingData(startDate, endDate);
+        setAvgMetrics(data);
+        setChartData(data.chartData); 
+    };
 
-  if (loading) return <div className="p-8 text-center">Loading Dashboard...</div>;
+    fetchData();
+}, [startDate, endDate]);
+
+const handleDateChange = (dates) => {
+  const [start, end] = dates;
+  setStartDate(start || today);
+  setEndDate(end || today);
+};
+
+  // if (loading) return <div className="p-8 text-center">Loading Dashboard...</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-gray-100 p-8">
@@ -88,9 +131,7 @@ const QuoteSenderDashboard = () => {
             selectsRange
             startDate={startDate}
             endDate={endDate}
-            onChange={(update) => {
-              setDateRange(update);
-            }}
+            onChange={handleDateChange}
             isClearable={true}
             className="p-2 border rounded"
           />
@@ -99,17 +140,19 @@ const QuoteSenderDashboard = () => {
 
       {/* Overall Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Dynamically tracked Total Clicks */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-800">Total Clicks</h2>
-          <p className="text-5xl font-bold mt-4 text-blue-600">{metrics.totalClicks}</p>
-        </div>
+  <h2 className="text-xl font-semibold text-gray-800">Average Clicks</h2>
+  <p className="text-5xl font-bold mt-4 text-blue-600">{avgMetrics.avgClickCount}</p>
+</div>
+<div className="bg-white p-6 rounded-lg shadow-lg">
+  <h2 className="text-xl font-semibold text-gray-800">Average Time Taken</h2>
+  <p className="text-5xl font-bold mt-4 text-blue-600">{avgMetrics.avgTimeTaken} sec</p>
+</div>
+
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-800">Average Generation Time</h2>
-          <p className="text-5xl font-bold mt-4 text-blue-600">{metrics.avgGenerationTime} sec</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-800">Quotes Generated Today</h2>
-          <p className="text-5xl font-bold mt-4 text-blue-600">{metrics.quotesGeneratedToday}</p>
+          <h2 className="text-xl font-semibold text-gray-800">Quotes Generated </h2>
+          <p className="text-5xl font-bold mt-4 text-blue-600">{avgMetrics.quotesGenerated}</p>
         </div>
       </div>
 
@@ -117,24 +160,24 @@ const QuoteSenderDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Clicks & Quotes Generated Over Time */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Clicks & Quotes Over Time</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={metrics.clicksOverTime}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-              <XAxis dataKey="date" stroke="#555" />
-              <YAxis stroke="#555" />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="clicks" stroke="#8884d8" strokeWidth={2} name="Clicks" activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="quotesGenerated" stroke="#ff7300" strokeWidth={2} name="Quotes Generated" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">Average Clicks Over Time</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+            <XAxis dataKey="date" stroke="#555" />
+            <YAxis stroke="#555" />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="avgClickCount" stroke="#8884d8" strokeWidth={2} name="Avg Clicks" activeDot={{ r: 8 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
         {/* Average Generation Time & Quotes Over Time */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">Avg Generation Time & Quotes Over Time</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={metrics.generationTimeOverTime}>
+            <ComposedChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
               <XAxis dataKey="date" stroke="#555" />
               <YAxis yAxisId="left" stroke="#555" label={{ value: 'Time (sec)', angle: -90, position: 'insideLeft' }} />
@@ -149,23 +192,23 @@ const QuoteSenderDashboard = () => {
       </div>
 
       {/* Page Breakdown */}
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-8">  	
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Page Breakdown</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 border rounded">
             <h3 className="font-semibold text-gray-700">Ad Details Page</h3>
-            <p className="mt-2 text-gray-600">Clicks: {metrics.pageBreakdown.adDetails.clicks}</p>
-            <p className="text-gray-600">Avg Generation Time: {metrics.pageBreakdown.adDetails.avgTime} sec</p>
+            <p className="mt-2 text-gray-600">Clicks: {avgMetrics.avgClickCount}</p>
+            <p className="text-gray-600">Avg Generation Time: {avgMetrics.avgTimeTaken} sec</p>
           </div>
           <div className="p-4 border rounded">
             <h3 className="font-semibold text-gray-700">Checkout Page</h3>
-            <p className="mt-2 text-gray-600">Clicks: {metrics.pageBreakdown.checkout.clicks}</p>
-            <p className="text-gray-600">Avg Generation Time: {metrics.pageBreakdown.checkout.avgTime} sec</p>
+            <p className="mt-2 text-gray-600">Clicks: {avgMetrics.avgClickCount}</p>
+            <p className="text-gray-600">Avg Generation Time: {avgMetrics.avgTimeTaken} sec</p>
           </div>
         </div>
       </div>
 
-      {/* Per Client Metrics */}
+      {/* Per Client Metrics
       <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Per Client Metrics</h2>
         <div className="overflow-x-auto">
@@ -192,10 +235,10 @@ const QuoteSenderDashboard = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </div> */}
 
       {/* Suggestions */}
-      <div className="bg-white p-6 rounded-lg shadow-lg">
+      {/* <div className="bg-white p-6 rounded-lg shadow-lg">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Suggestions for Improvement</h2>
         <ul className="list-disc ml-6 text-gray-700">
           {metrics.suggestions && metrics.suggestions.length > 0 ? (
@@ -206,7 +249,7 @@ const QuoteSenderDashboard = () => {
             <li>No suggestions at this time.</li>
           )}
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 };
