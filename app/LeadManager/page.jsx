@@ -25,6 +25,8 @@ import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
 import { useRouter } from "next/navigation";
 import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
+import { useDispatch } from "react-redux";
+import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -75,7 +77,9 @@ const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
+  const {statusFilter, prospectTypeFilter, quoteSentFilter, CSEFilter, fromDate, toDate, filtersVisible, searchQuery} = useAppSelector(state => state.filterSlice)
   const router = useRouter()
+  const dispatch = useDispatch()
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -98,14 +102,14 @@ const EventCards = ({params, searchParams}) => {
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-  const [quoteSentFilter, setQuoteSentFilter] = useState("All");
-  const [CSEFilter, setCSEFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filtersVisible, setFiltersVisible] = useState(false);
-  const [fromDate, setFromDate] = useState(null); // Use null for default empty date
-  const [toDate, setToDate] = useState(null); // Use null for default empty date
+  // const [statusFilter, setStatusFilter] = useState("All");
+  // const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+  // const [quoteSentFilter, setQuoteSentFilter] = useState("All");
+  // const [CSEFilter, setCSEFilter] = useState("All");
+  // const [searchQuery, setSearchQuery] = useState('');
+  // const [filtersVisible, setFiltersVisible] = useState(false);
+  // const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+  // const [toDate, setToDate] = useState(null); // Use null for default empty date
   const [timers, setTimers] = useState("");
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -117,21 +121,15 @@ const EventCards = ({params, searchParams}) => {
 
   // console.log(rows)
   const toggleFilters = () => {
-    setFiltersVisible((prev) => !prev);
+    dispatch(toggleFiltersVisible());
   };
 
   const handleSearch = (query) => {
-    setSearchQuery(query.toLowerCase());
+    dispatch(setSearchQuery(query.toLowerCase()));
   };
   
   const clearFilters = () => {
-    setStatusFilter('All');
-    setProspectTypeFilter('All');
-    setQuoteSentFilter("All");
-    setFromDate(null);
-    setCSEFilter("");
-    setToDate(null);
-    setSearchQuery('');
+    dispatch(resetFilters());
   };
 
   const prospectTypes = [
@@ -964,7 +962,7 @@ const handleStatusClick = async(row) => {
             {["All", "New", "Call Followup", "Unreachable"].map((status, index) => (
               <motion.button
                 key={status}
-                onClick={() => setStatusFilter(status)}
+                onClick={() => dispatch(setStatusFilter(status))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   statusFilter === status
                     ? "bg-white text-gray-700"
@@ -984,7 +982,7 @@ const handleStatusClick = async(row) => {
             {prospectTypes.map((item, index) => (
               <motion.button
                 key={item.type}
-                onClick={() => setProspectTypeFilter(item.type)}
+                onClick={() => dispatch(setProspectTypeFilter(item.type))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   prospectTypeFilter === item.type
                     ? "bg-white text-gray-700"
@@ -1004,7 +1002,7 @@ const handleStatusClick = async(row) => {
             {["All", "Quote Sent", "Yet To Send"].map((status, index) => (
               <motion.button
                 key={status}
-                onClick={() => setQuoteSentFilter(status)}
+                onClick={() => dispatch(setQuoteSentFilter(status))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   quoteSentFilter === status
                     ? "bg-white text-gray-700"
@@ -1025,7 +1023,7 @@ const handleStatusClick = async(row) => {
               ...CSENames].map((status, index) => (
               <motion.button
                 key={status.username}
-                onClick={() => setCSEFilter(toTitleCase(status.username))}
+                onClick={() => dispatch(setCSEFilter(toTitleCase(status.username)))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   CSEFilter === toTitleCase(status.username)
                     ? "bg-white text-gray-700"
@@ -1045,7 +1043,7 @@ const handleStatusClick = async(row) => {
             {/* From Date Picker */}
             <DatePicker
               selected={fromDate}
-              onChange={(date) => setFromDate(date)}
+              onChange={(date) => dispatch(setFromDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="From Date"
               dateFormat="dd-MMM-yyyy"
@@ -1053,7 +1051,7 @@ const handleStatusClick = async(row) => {
             {/* To Date Picker */}
             <DatePicker
               selected={toDate}
-              onChange={(date) => setToDate(date)}
+              onChange={(date) => dispatch(setToDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="To Date"
               dateFormat="dd-MMM-yyyy"
