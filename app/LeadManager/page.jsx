@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineClose, AiOutlinePlus } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -23,7 +23,10 @@ import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
-import { AiOutlinePlus } from "react-icons/ai";
+import { useRouter } from "next/navigation";
+import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
+import { useDispatch } from "react-redux";
+import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -72,8 +75,12 @@ const parseFollowupDate = (dateStr) => {
 
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
+  const notificationSent = useRef(new Set())
   const [loading, setLoading] = useState(true);
   const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
+  const {statusFilter, prospectTypeFilter, quoteSentFilter, CSEFilter, fromDate, toDate, filtersVisible, searchQuery} = useAppSelector(state => state.filterSlice)
+  const router = useRouter()
+  const dispatch = useDispatch()
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -96,14 +103,14 @@ const EventCards = ({params, searchParams}) => {
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-  const [quoteSentFilter, setQuoteSentFilter] = useState("All");
-  const [CSEFilter, setCSEFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filtersVisible, setFiltersVisible] = useState(false);
-  const [fromDate, setFromDate] = useState(null); // Use null for default empty date
-  const [toDate, setToDate] = useState(null); // Use null for default empty date
+  // const [statusFilter, setStatusFilter] = useState("All");
+  // const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+  // const [quoteSentFilter, setQuoteSentFilter] = useState("All");
+  // const [CSEFilter, setCSEFilter] = useState("All");
+  // const [searchQuery, setSearchQuery] = useState('');
+  // const [filtersVisible, setFiltersVisible] = useState(false);
+  // const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+  // const [toDate, setToDate] = useState(null); // Use null for default empty date
   const [timers, setTimers] = useState("");
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -130,21 +137,15 @@ const EventCards = ({params, searchParams}) => {
   
   // console.log(rows)
   const toggleFilters = () => {
-    setFiltersVisible((prev) => !prev);
+    dispatch(toggleFiltersVisible());
   };
 
   const handleSearch = (query) => {
-    setSearchQuery(query.toLowerCase());
+    dispatch(setSearchQuery(query.toLowerCase()));
   };
   
   const clearFilters = () => {
-    setStatusFilter('All');
-    setProspectTypeFilter('All');
-    setQuoteSentFilter("All");
-    setFromDate(null);
-    setCSEFilter("");
-    setToDate(null);
-    setSearchQuery('');
+    dispatch(resetFilters());
   };
 
   const prospectTypes = [
@@ -407,6 +408,90 @@ const formatUnreachableTime = (timeStr) => {
     };
   }, [rows]);
   
+  useEffect(() => {
+    const handleNotifications = async () => {
+      const permission = await requestNotificationPermission();
+      
+      if (permission === 'granted') {
+        // Filter leads that need notifications
+        console.log(notificationSent)
+        const leadsToNotify = rows.filter(lead => 
+          !notificationSent.current.has(lead.id)
+        );
+  
+        console.log(leadsToNotify)
+        if (leadsToNotify.length > 0) {
+          await scheduleFollowupNotifications(leadsToNotify, userName);
+          
+          // Add to sent notifications
+          leadsToNotify.forEach(lead => 
+            notificationSent.current.add(lead.id)
+          );
+        }
+      }
+    };
+  
+    // Set up periodic sync
+    const registerSync = async () => {
+      if ('periodicSync' in navigator) {
+        try {
+          await navigator.periodicSync.register('followup-check', {
+            minInterval: 60 * 60 * 1000 // 1 hour
+          });
+        } catch (error) {
+          console.log('Periodic sync not supported:', error);
+        }
+      }
+    };
+  
+    handleNotifications();
+    registerSync();
+  
+    return () => {
+      if ('periodicSync' in navigator) {
+        navigator.periodicSync.unregister('followup-check');
+      }
+    };
+  }, [rows]); // Only trigger when rows change
+  
+  // Utility function to check if followup is due
+  const isFollowupDue = (date, time) => {
+    const followupDate = new Date(`${date}T${time}`);
+    const now = new Date();
+    return followupDate <= now;
+  };
+
+  // pages/_app.js or your main component
+  useEffect(() => {
+    const registerSWAndSendUsername = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          // Register the custom service worker
+          const registration = await navigator.serviceWorker.register('/custom-sw.js');
+          console.log('Service Worker registered with scope:', registration.scope);
+
+          // Wait until the service worker is ready
+          await navigator.serviceWorker.ready;
+
+          // Optionally, you might want to request notification permission here
+          // await requestNotificationPermission();
+
+          // Send the current username to the service worker if available
+          if (userName && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SET_USERNAME',
+              username: userName, // using "username" key for consistency
+            });
+          }
+        } catch (error) {
+          console.error('Service Worker registration failed:', error);
+        }
+      }
+    };
+
+    registerSWAndSendUsername();
+  }, [userName]);
+
   const insertEnquiry = async () => {
     let row = currentCall.rowData;
     // Extract only the 10-digit number
@@ -530,6 +615,7 @@ const formatUnreachableTime = (timeStr) => {
         status: searchParams.status || "",
         followupDate: searchParams.followupDate || null,
       };
+
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
 
     if (fetchedRows.length > 0) {
@@ -541,6 +627,7 @@ const formatUnreachableTime = (timeStr) => {
     
       setRows(fetchedRows);
       fetchCSENames();
+      // console.log(fetchedRows)
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -549,9 +636,11 @@ const formatUnreachableTime = (timeStr) => {
   };
 
   useEffect(() => {
-    if (!userName) return;
+    if (!userName || UserCompanyName === "") 
+      {
+        router.push("/login")
+      };
     fetchData();
-    
   }, [params.id, searchParams]);
 
   useEffect(() => {
@@ -571,7 +660,7 @@ const formatUnreachableTime = (timeStr) => {
       setInitialLeadStatus(selectedLeadStatus);
     }
   }, [showModal]); // Runs when the modal opens
-  
+
   const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData) => {
     setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData });
 
@@ -622,7 +711,6 @@ const formatUnreachableTime = (timeStr) => {
       }
     let payload = {};
 
-    console.log("Received on Handle Save function")
     // Prepare payload based on context
     if (sendQuoteOnly === "Quote Sent") {
       payload = {
@@ -659,6 +747,7 @@ const formatUnreachableTime = (timeStr) => {
         quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
       };
     }
+  
     
     try {
       const response = await fetch(
@@ -1004,6 +1093,7 @@ const handleStatusClick = async(row) => {
 };
 
   return (
+
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
@@ -1022,14 +1112,14 @@ const handleStatusClick = async(row) => {
         </button>
         
         {/* Report Button */}
-        {/* <a href="/LeadManager/Report">
+         <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a> */}
+        </a> 
       </div>
 
     </div>
@@ -1075,7 +1165,7 @@ const handleStatusClick = async(row) => {
             {["All", "New", "Call Followup", "Unreachable"].map((status, index) => (
               <motion.button
                 key={status}
-                onClick={() => setStatusFilter(status)}
+                onClick={() => dispatch(setStatusFilter(status))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   statusFilter === status
                     ? "bg-white text-gray-700"
@@ -1095,7 +1185,7 @@ const handleStatusClick = async(row) => {
             {prospectTypes.map((item, index) => (
               <motion.button
                 key={item.type}
-                onClick={() => setProspectTypeFilter(item.type)}
+                onClick={() => dispatch(setProspectTypeFilter(item.type))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   prospectTypeFilter === item.type
                     ? "bg-white text-gray-700"
@@ -1115,7 +1205,7 @@ const handleStatusClick = async(row) => {
             {["All", "Quote Sent", "Yet To Send"].map((status, index) => (
               <motion.button
                 key={status}
-                onClick={() => setQuoteSentFilter(status)}
+                onClick={() => dispatch(setQuoteSentFilter(status))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   quoteSentFilter === status
                     ? "bg-white text-gray-700"
@@ -1136,7 +1226,7 @@ const handleStatusClick = async(row) => {
               ...CSENames].map((status, index) => (
               <motion.button
                 key={status.username}
-                onClick={() => setCSEFilter(toTitleCase(status.username))}
+                onClick={() => dispatch(setCSEFilter(toTitleCase(status.username)))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   CSEFilter === toTitleCase(status.username)
                     ? "bg-white text-gray-700"
@@ -1150,13 +1240,13 @@ const handleStatusClick = async(row) => {
               </motion.button>
             ))}
           </div>
-          
+
           {/* Date Range Filters */}
           <div className="flex flex-row gap-2 sm:gap-4">
             {/* From Date Picker */}
             <DatePicker
               selected={fromDate}
-              onChange={(date) => setFromDate(date)}
+              onChange={(date) => dispatch(setFromDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="From Date"
               dateFormat="dd-MMM-yyyy"
@@ -1164,7 +1254,7 @@ const handleStatusClick = async(row) => {
             {/* To Date Picker */}
             <DatePicker
               selected={toDate}
-              onChange={(date) => setToDate(date)}
+              onChange={(date) => dispatch(setToDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="To Date"
               dateFormat="dd-MMM-yyyy"
@@ -1198,7 +1288,7 @@ const handleStatusClick = async(row) => {
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent, rowData: row}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType); row.QuoteSent === "Yes" ? setQuoteSentChecked(true): setQuoteSentChecked(false)}}
+                onClick={() => {handleStatusClick(row)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
@@ -1287,14 +1377,14 @@ const handleStatusClick = async(row) => {
                 Phone:
                 <a
                   // href={`tel:${row.Phone}`}
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedStatus(row.Status); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
                   className="text-blue-600 hover:underline ml-1"
                 >
                   <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedStatus(row.Status); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
                   title="Call"
                 >
                   <FiPhoneCall className="text-lg" />
@@ -1662,7 +1752,6 @@ const handleStatusClick = async(row) => {
                 />
               </div>
             )}
-          
 
             {!followupOnly && 
               <div className="mb-4">
@@ -1753,8 +1842,6 @@ const handleStatusClick = async(row) => {
     </div>
   );
 };
-
-
 
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
@@ -1848,7 +1935,6 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
 
   return sortedRows;
 }
-
 
 
 export default function Page({ params, searchParams }) {
