@@ -73,8 +73,8 @@ const LeadReport = () => {
   const [CSENames, setCSENames] = useState([]);
 
   // Filter states – default date filters are set to null to show all datas
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(getStartOfDay(new Date()));
+  const [toDate, setToDate] = useState(getEndOfDay(new Date()));
   const [platformFilter, setPlatformFilter] = useState("");
   const [handledByFilter, setHandledByFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
