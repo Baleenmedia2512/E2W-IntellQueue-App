@@ -252,8 +252,8 @@ const LeadReport = () => {
 
   // Reset filters to default values
   const handleReset = useCallback(() => {
-    setFromDate(new Date());
-    setToDate(new Date());
+    setFromDate(getStartOfDay(new Date()));
+    setToDate(getEndOfDay(new Date()));
     setPlatformFilter("");
     setHandledByFilter("");
     setStatusFilter("");
