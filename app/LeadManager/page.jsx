@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
@@ -113,7 +113,7 @@ const EventCards = ({params, searchParams}) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
-  const [notificationSent, setNotificationSent] = useState(false);
+  const notificationSent = useRef(new Set());
 
   // console.log(rows)
   const toggleFilters = () => {
@@ -288,36 +288,65 @@ const EventCards = ({params, searchParams}) => {
   }, [rows]);
   
   useEffect(() => {
-    // Request permission on component mount
-    requestNotificationPermission().then(permission => {
+    const handleNotifications = async () => {
+      const permission = await requestNotificationPermission();
+      
       if (permission === 'granted') {
-        scheduleFollowupNotifications(rows);
-        setNotificationSent(true);
+        // Filter leads that need notifications
+        console.log(notificationSent)
+        const leadsToNotify = rows.filter(lead => 
+          !notificationSent.current.has(lead.id)
+        );
+  
+        console.log(leadsToNotify)
+        if (leadsToNotify.length > 0) {
+          await scheduleFollowupNotifications(leadsToNotify, userName);
+          
+          // Add to sent notifications
+          leadsToNotify.forEach(lead => 
+            notificationSent.current.add(lead.id)
+          );
+        }
       }
-    });
-    
-    // Set up periodic sync (every 1 hour)
-    if ('periodicSync' in navigator) {
-      navigator.periodicSync.register('followup-check', {
-        minInterval: 60 * 60 * 1000 // 1 hour
-      });
-    }
-
+    };
+  
+    // Set up periodic sync
+    const registerSync = async () => {
+      if ('periodicSync' in navigator) {
+        try {
+          await navigator.periodicSync.register('followup-check', {
+            minInterval: 60 * 60 * 1000 // 1 hour
+          });
+        } catch (error) {
+          console.log('Periodic sync not supported:', error);
+        }
+      }
+    };
+  
+    handleNotifications();
+    registerSync();
+  
     return () => {
-      // Cleanup
       if ('periodicSync' in navigator) {
         navigator.periodicSync.unregister('followup-check');
       }
     };
-  }, [rows]);
+  }, [rows]); // Only trigger when rows change
+  
+  // Utility function to check if followup is due
+  const isFollowupDue = (date, time) => {
+    const followupDate = new Date(`${date}T${time}`);
+    const now = new Date();
+    return followupDate <= now;
+  };
 
   // pages/_app.js or your main component
 useEffect(() => {
-  requestNotificationPermission().then(permission => {
-    if (permission === 'granted') {
-      scheduleFollowupNotifications(rows);
-    }
-  });
+  // requestNotificationPermission().then(permission => {
+  //   if (permission === 'granted' ) {
+  //     scheduleFollowupNotifications(rows);
+  //   }
+  // });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/custom-sw.js').then((registration) => {

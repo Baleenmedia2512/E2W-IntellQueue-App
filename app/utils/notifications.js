@@ -8,7 +8,7 @@ export const requestNotificationPermission = async () => {
     return Notification.permission;
   };
   
-  export const scheduleFollowupNotifications = (leads) => {
+  export const scheduleFollowupNotifications = (leads,userName) => {
     if (!('serviceWorker' in navigator)) return;
     
     const now = new Date();
@@ -24,9 +24,9 @@ export const requestNotificationPermission = async () => {
 
         // Check that the followup date is today.
         // if (getStartOfDay(lead.FollowupDate) !== getStartOfDay(now)) return;
-        console.log(followupDateTime <= now && new Date(lead.FollowupDate).toDateString() === now.toDateString(), getStartOfDay(lead.FollowupDate))
+        console.log(followupDateTime <= now && new Date(lead.FollowupDate).toDateString() === now.toDateString(), getStartOfDay(lead.FollowupDate) && lead.HandledBy === userName, lead.HandledBy, userName)
         // If the followup time is less than or equal to now, show notification.
-        if (followupDateTime <= now && new Date(lead.FollowupDate).toDateString() === now.toDateString()) {
+        if (followupDateTime <= now && new Date(lead.FollowupDate).toDateString() === now.toDateString() && lead.notificationSent !== "Yes" && lead.HandledBy === userName) {
           console.log(lead)
           showNotification(lead);
         }

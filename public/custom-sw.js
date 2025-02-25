@@ -1,87 +1,44 @@
 // custom-sw.js
 let currentUser = null;
 
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SET_USERNAME') {
-    currentUser = event.data.username;
-    // Store in IndexedDB for persistence
-    event.waitUntil(
-      self.caches.open('user-data').then((cache) => {
-        return cache.put('currentUser', new Response(JSON.stringify({ username: currentUser })));
-      })
-    );
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'followup-check') {
+    event.waitUntil(checkFollowups(true)); // Pass isPeriodicCheck flag
   }
 });
 
-// Add this to initialize user data on service worker activation
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    self.caches.open('user-data').then((cache) => {
-      return cache.match('currentUser').then((response) => {
-        if (response) {
-          return response.json().then((data) => {
-            currentUser = data.username;
-          });
-        }
-      });
-    })
-  );
-});
-
-const checkFollowups = async () => {
+const checkFollowups = async (isPeriodicCheck = false) => {
   try {
-    // Get user from cache if not set
-    if (!currentUser) {
-      const cache = await self.caches.open('user-data');
-      const response = await cache.match('currentUser');
-      if (response) {
-        const data = await response.json();
-        currentUser = data.username;
-      }
-    }
-
-    if (!currentUser) {
-      console.warn('No currentUser available');
-      return;
-    }
-
     const response = await fetch('https://leads.baleenmedia.com/api/fetchLeads');
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    
     const data = await response.json();
-    const now = new Date();
-
-    const dueLeads = data.rows.filter((lead) => {
-      try {
-        if (lead.Status !== 'Call Followup') return false;
-        if (!lead.HandledBy || lead.HandledBy.toLowerCase() !== currentUser.toLowerCase()) return false;
-        
-        const followupDate = new Date(`${lead.FollowupDate}T${lead.FollowupTime}`);
-        return followupDate <= now;
-      } catch (error) {
-        console.error('Error processing lead:', lead, error);
-        return false;
-      }
+    
+    const dueLeads = data.rows.filter(lead => {
+      if (!isFollowupDue(lead.FollowupDate, lead.FollowupTime)) return false;
+      return !isNotificationSent(lead.id);
     });
 
-    dueLeads.forEach((lead) => {
-      self.registration.showNotification('Followup Reminder', {
-        body: `Time to call ${lead.name} at ${lead.FollowupTime}`,
-        icon: '/icon-192x192.png',
-        // badge: '/icons/badge-72x72.png',
-        data: { leadId: lead.sNo },
-        vibrate: [200, 100, 200]
-      });
+    dueLeads.forEach(lead => {
+      showNotification(lead);
+      markNotificationSent(lead.id);
     });
   } catch (error) {
     console.error('Error in followup sync:', error);
-    // Retry logic
-    if (event && event.waitUntil) {
-      event.waitUntil(
-        self.registration.sync.register('retry-followup-check')
-      );
-    }
   }
+};
+
+// IndexedDB helpers
+const markNotificationSent = async (leadId) => {
+  const db = await openDB('notifications', 1, {
+    upgrade(db) {
+      db.createObjectStore('sentNotifications');
+    }
+  });
+  await db.put('sentNotifications', true, leadId);
+};
+
+const isNotificationSent = async (leadId) => {
+  const db = await openDB('notifications', 1);
+  return !!await db.get('sentNotifications', leadId);
 };
 
 self.addEventListener('notificationclick', (event) => {
