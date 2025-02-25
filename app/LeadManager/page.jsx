@@ -341,27 +341,35 @@ const EventCards = ({params, searchParams}) => {
   };
 
   // pages/_app.js or your main component
-useEffect(() => {
-  // requestNotificationPermission().then(permission => {
-  //   if (permission === 'granted' ) {
-  //     scheduleFollowupNotifications(rows);
-  //   }
-  // });
+  useEffect(() => {
+    const registerSWAndSendUsername = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          // Register the custom service worker
+          const registration = await navigator.serviceWorker.register('/custom-sw.js');
+          console.log('Service Worker registered with scope:', registration.scope);
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/custom-sw.js').then((registration) => {
-      console.log('Service Worker registered with scope:', registration.scope);
-      
-      // Send username to service worker
-      if (userName) { // Replace with your actual user object
-        navigator.serviceWorker.controller.postMessage({
-          type: 'SET_USERNAME',
-          userName
-        });
+          // Wait until the service worker is ready
+          await navigator.serviceWorker.ready;
+
+          // Optionally, you might want to request notification permission here
+          // await requestNotificationPermission();
+
+          // Send the current username to the service worker if available
+          if (userName && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SET_USERNAME',
+              username: userName, // using "username" key for consistency
+            });
+          }
+        } catch (error) {
+          console.error('Service Worker registration failed:', error);
+        }
       }
-    });
-  }
-}, [userName]); // Add dependencies as needed
+    };
+
+    registerSWAndSendUsername();
+  }, [userName]);
 
   const insertEnquiry = async () => {
     let row = currentCall.rowData;
