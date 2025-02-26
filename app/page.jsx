@@ -1058,13 +1058,13 @@ const BMvalidateFields = () => {
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
-  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantNumber || consultantNumber.length !== 10)) {
-    if (!consultantNumber) {
-      errors.consultantNumber = 'Consultant contact is required.';
-    } else if (consultantNumber.length !== 10) {
-      errors.consultantNumber = 'Consultant contact must be exactly 10 digits.';
-    }
-  }
+  // if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantNumber || consultantNumber.length !== 10)) {
+  //   if (!consultantNumber) {
+  //     errors.consultantNumber = 'Consultant contact is required.';
+  //   } else if (consultantNumber.length !== 10) {
+  //     errors.consultantNumber = 'Consultant contact must be exactly 10 digits.';
+  //   }
+  // }
   // if (selectedOption === 'Ms.' && !clientContactPerson) {
   //   errors.clientContactPerson = 'Contact Person Name is required';
   // }
