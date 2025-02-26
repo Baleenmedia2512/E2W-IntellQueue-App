@@ -731,7 +731,7 @@ function formatDate(inputValue) {
 
 const handleInputChange = (event) => {
   const inputDate = new Date(event.target.value);
-  if (!isNaN(inputDate.getTime())) { // Check if valid date
+  if (!isNaN(inputDate.getTime())) {
     // setDOB(event.target.value); // Update the input value
     const age = calculateAge(inputDate); // Calculate age
     setClientAge(age); // Update client age in state
