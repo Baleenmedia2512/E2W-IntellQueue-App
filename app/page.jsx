@@ -214,7 +214,7 @@ const ClientsData = () => {
     } catch (error) {
         console.error("Error checking similar consultant names: " + error);
     }
-    return false;
+    return false; // No similar consultants found
 };
 
 
@@ -731,7 +731,7 @@ function formatDate(inputValue) {
 
 const handleInputChange = (event) => {
   const inputDate = new Date(event.target.value);
-  if (!isNaN(inputDate.getTime())) {
+  if (!isNaN(inputDate.getTime())) { // Check if valid date
     // setDOB(event.target.value); // Update the input value
     const age = calculateAge(inputDate); // Calculate age
     setClientAge(age); // Update client age in state
@@ -1249,6 +1249,8 @@ const BMvalidateFields = () => {
       onClick={() => {
         setConsultantName(consultant.ConsultantName);
         setConsultantNumber(consultant.ConsultantNumber || '');
+        dispatch(setClientData({ consultantName: consultant.ConsultantName}));
+        dispatch(setClientData({ consultantNumber: consultant.ConsultantNumber || '' }));
         setSimilarConsultantDialogOpen(false); // Close the dialog
         setShouldCheckForSimilarConsultantNames(false); // Prevent rechecking on next submit
       }}
@@ -1259,7 +1261,7 @@ const BMvalidateFields = () => {
 </ul>
 
       <p className="mt-4 text-gray-700 font-medium text-center sm:text-left">
-        Do you want to proceed with the new consultant?
+      Do you want to continue with the selected consultant?
       </p>
     </DialogContent>
     <DialogActions className="flex flex-col sm:flex-row justify-center sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
