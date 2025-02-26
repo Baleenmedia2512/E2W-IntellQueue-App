@@ -572,18 +572,6 @@ const ClientsData = () => {
 
   const submitDetails = async(event) => {
       event.preventDefault();
-
-    // Ensure we only check for similar names once
-    if (shouldCheckForSimilarConsultantNames) {
-      setShouldCheckForSimilarConsultantNames(false); // Prevent re-checking
-      if (clientSource === "Consultant" || clientSource === "5.Consultant") {
-        const similarNamesFound = await checkForSimilarNames();
-        if (similarNamesFound) {
-          setSimilarConsultantDialogOpen(true);
-          return; // Stop execution here until the user makes a choice
-        }
-      }
-    }
     
     if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
       if (isEmpty === true){
@@ -597,6 +585,17 @@ const ClientsData = () => {
       //   return
       //  }
       // }
+      // Ensure we only check for similar names once
+      if (shouldCheckForSimilarConsultantNames) {
+        setShouldCheckForSimilarConsultantNames(false); // Prevent re-checking
+        if (clientSource === "Consultant" || clientSource === "5.Consultant") {
+          const similarNamesFound = await checkForSimilarNames();
+          if (similarNamesFound) {
+            setSimilarConsultantDialogOpen(true);
+            return; // Stop execution here until the user makes a choice
+          }
+        }
+      }
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
@@ -654,7 +653,17 @@ const ClientsData = () => {
       //   setContactDialogOpen(true);
       // if (!proceed) return;
       // }
-      
+      // Ensure we only check for similar names once
+      if (shouldCheckForSimilarConsultantNames) {
+        setShouldCheckForSimilarConsultantNames(false); // Prevent re-checking
+        if (clientSource === "Consultant" || clientSource === "5.Consultant") {
+          const similarNamesFound = await checkForSimilarNames();
+          if (similarNamesFound) {
+            setSimilarConsultantDialogOpen(true);
+            return; // Stop execution here until the user makes a choice
+          }
+        }
+      }
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
@@ -1049,13 +1058,13 @@ const BMvalidateFields = () => {
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
   if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
-  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantNumber || consultantNumber.length !== 10)) {
-    if (!consultantNumber) {
-      errors.consultantNumber = 'Consultant contact is required.';
-    } else if (consultantNumber.length !== 10) {
-      errors.consultantNumber = 'Consultant contact must be exactly 10 digits.';
-    }
-  }
+  // if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantNumber || consultantNumber.length !== 10)) {
+  //   if (!consultantNumber) {
+  //     errors.consultantNumber = 'Consultant contact is required.';
+  //   } else if (consultantNumber.length !== 10) {
+  //     errors.consultantNumber = 'Consultant contact must be exactly 10 digits.';
+  //   }
+  // }
   // if (selectedOption === 'Ms.' && !clientContactPerson) {
   //   errors.clientContactPerson = 'Contact Person Name is required';
   // }
