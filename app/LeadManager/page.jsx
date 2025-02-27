@@ -24,7 +24,7 @@ import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
 import { useRouter } from "next/navigation";
-import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
+// import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
 import { useDispatch } from "react-redux";
 import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 
