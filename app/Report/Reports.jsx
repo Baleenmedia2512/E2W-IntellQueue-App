@@ -1216,13 +1216,13 @@ const incomeOptions = [
           height: '440px', // Adjust height as needed
           background: '#ffffff',
           borderRadius: '12px',
-          boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
           marginBottom: '20px',
           display: 'flex',
           justifyContent: 'center', // Center horizontally
           alignItems: 'center', // Center vertically
           flexDirection: 'column', // Column direction for title and chart
-        },
+          border: '1px solid #ccc', // Add border color
+        },        
         slideContainer: {
           display: 'flex',
           width: '100%',
@@ -1652,16 +1652,16 @@ const calculateRateStats = () => {
       newRateWiseOrderNumber={newRateWiseOrderNumber}
     />
   </div>
-  <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 p-3">
+  <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">
     Reports
   </h1>
 <hr className="border-t-1 border-gray-300 mb-4" />
 
 {/* Sticky Container */}
-<div className="sticky top-0 z-10 bg-white px-2">
+<div className="sticky top-0 z-10 bg-white px-4">
   <div className="flex flex-nowrap overflow-x-auto">
     {/* DateRangePicker and Spacer */}
-    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
+    <div className="w-fit h-auto rounded-lg p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
       <DateRangePicker
         startDate={selectedRange.startDate}
         endDate={selectedRange.endDate}
@@ -1725,8 +1725,8 @@ const calculateRateStats = () => {
     ))}
   </div>
   
-  <hr className="border-t-1 border-gray-300 mb-3" />
 </div>
+<hr className="border-t-1 border-gray-300 mb-3" />
 <div name="CloseDayButton" className="flex justify-end px-2">
   <button
     className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
@@ -1807,8 +1807,9 @@ const calculateRateStats = () => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <h1 className='text-xl sm:text-2xl my-4 font-bold ml-2 text-start text-blue-500'>Reports</h1>
-             <div className="flex flex-grow text-black mb-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
+              <hr className="border-t-1 border-gray-300 mb-4"/>
+             <div className="flex flex-grow text-black mb-4 px-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     
     <div className="flex flex-grow items-end ml-2 mb-4">
@@ -1943,7 +1944,7 @@ const calculateRateStats = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+            <div className='px-4'>
             <div style={styles.chartContainer}>
       <div style={styles.slideContainer}>
         {/* Income Breakdown Chart */}
@@ -2058,6 +2059,7 @@ const calculateRateStats = () => {
         </div>
       </div>
     </div>
+    </div>
             {/* <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
@@ -2096,7 +2098,7 @@ const calculateRateStats = () => {
       )} */}
       {/* </div>
       </div> */}
-             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', marginBottom: '54px' }}>
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '15px' }}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
