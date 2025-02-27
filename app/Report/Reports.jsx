@@ -2162,14 +2162,6 @@ const calculateRateStats = () => {
              </div>
              </div>
          </div>
-        //   <div style={{ width: '100%' }}>
-        //   <div style={{ height: 500 , width: '100%' }}>
-        //     <DataGrid
-        //       rows={financeDetails}
-        //       columns={financeColumns}
-        //     />
-        //   </div>
-        // </div>
         )}
       </Box>
       {successMessage && <SuccessToast message={successMessage} />}
