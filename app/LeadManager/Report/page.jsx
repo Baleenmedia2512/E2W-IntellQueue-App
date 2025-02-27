@@ -27,7 +27,7 @@ export const getStartOfDay = (date) => {
   return d;
 };
 
-export const getEndOfDay = (date) => {
+const getEndOfDay = (date) => {
   const d = new Date(date);
   d.setHours(23, 59, 59, 999);
   return d;
@@ -72,7 +72,7 @@ const LeadReport = () => {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [CSENames, setCSENames] = useState([]);
 
-  // Filter states – default date filters are set to null to show all datas
+  // Filter states – default date filters are set to null to show all data
   const [fromDate, setFromDate] = useState(getStartOfDay(new Date()));
   const [toDate, setToDate] = useState(getEndOfDay(new Date()));
   const [platformFilter, setPlatformFilter] = useState("");
@@ -267,7 +267,7 @@ const LeadReport = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto p-8 space-y-8">
+    <div className=" mx-auto p-8 space-y-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
         <h1 className="text-3xl font-semibold text-blue-500">Lead Report</h1>
@@ -283,13 +283,13 @@ const LeadReport = () => {
       <div className="md:hidden flex justify-between items-center gap-4">
       <button
         onClick={() => setShowFilters(!showFilters)}
-        className="w-full px-4 py-2 bg-blue-500 text-white rounded-md flex items-center gap-2 justify-center"
+        className=" md:hidden w-full px-4 py-2 bg-blue-500 text-white rounded-md flex items-center gap-2 justify-center"
       >
         <Filter size={18} /> {showFilters ? "Hide Filters" : "Show Filters"}
       </button>
     </div>
     {(showFilters || isMdOrLarger) && (
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8 md:hidden">
         <button
           onClick={handleReset}
           disabled={
@@ -300,7 +300,7 @@ const LeadReport = () => {
             (!fromDate) &&
             (!toDate)
           }
-          className={`w-full px-4 py-2 ${
+          className={`w-full px-4 py-2 md:hidden ${
             platformFilter ||
             handledByFilter ||
             statusFilter ||
@@ -326,7 +326,7 @@ const LeadReport = () => {
                 setFromDate(date ? getStartOfDay(date) : null)
               }
               maxDate={new Date()}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md "
               dateFormat="dd/MM/yyyy"
             />
           </div>
@@ -450,7 +450,7 @@ const LeadReport = () => {
       </div>
 
       {/* Lead Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredLeadsMemo.length > 0 ? (
           filteredLeadsMemo.map((lead, index) => (
             <Leaddiv key={lead.sNo || index} lead={lead} index={index} />
