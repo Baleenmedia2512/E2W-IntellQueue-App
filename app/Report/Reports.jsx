@@ -124,7 +124,6 @@ const handleCloseDay = async () => {
 
   const resultDIR = await checkIfDIRSentToday(companyName);
   setIsDIRSentToday(resultDIR);
-  console.log(resultDIR)
 
   if (resultDIR) {
     // Show confirmation dialog if DIR has already been sent
@@ -153,7 +152,6 @@ const processCloseDay = async () => {
     );
 
     const resultData = response.data;
-    console.log(resultData);
 
     if (resultData[0]?.success) {
       setToastMessage("");
@@ -627,32 +625,55 @@ const handleRestoreClose = () => {
   setRestoreDialogOpen(false);
 };
 
-const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+const handleRestore = async (rateWiseOrderNum, orderNum, rateName, confirm = false) => {
   try {
-      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&Action=restore`);
-      
-      if (response.data.conflict) {
-          // Fetch next available RateWiseOrderNumber
-          const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
-          const data = await fetchResponse.json();
-          setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
-          setOrderNum(orderNum);
-          setRestoreDialogOpen(true);
-      } else {
-          // Successful restore
-          setSuccessMessage('Order Restored!');
-          setTimeout(() => setSuccessMessage(''), 2000);
-          fetchOrderDetails();
-          // fetchAmounts();
+    const response = await axios.get(
+      `https://orders.baleenmedia.com/API/Media/RestoreOrder.php`,
+      {
+        params: {
+          JsonDBName: companyName,
+          JsonRateWiseOrderNumber: rateWiseOrderNum,
+          OrderNumber: orderNum,
+          RateCard: rateName,
+          CheckRateWiseOrderNumber: !confirm, // Check conflict only if not confirming
+        },
       }
-  } catch (error) {
-      console.error('Error during restore operation:', error);
-      setToastMessage(`Failed to restore. Error: ${error.message}`);
-      setSeverity('error');
+    );
+
+    if (response.data.conflict && !confirm) {
+      // Conflict found, fetch next available RateWiseOrderNumber
+      const fetchResponse = await fetch(
+        `https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`
+      );
+      const data = await fetchResponse.json();
+      
+      setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
+      setOrderNum(orderNum);
+      setRestoreDialogOpen(true);
+    } else if (response.data.success) {
+      // Successful restore
+      setSuccessMessage(confirm ? "Order Restored with new number!" : "Order Restored!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+      fetchOrderDetails();
+    } else {
+      setToastMessage("Failed to restore order.");
+      setSeverity("error");
       setToast(true);
       setTimeout(() => setToast(false), 2000);
+    }
+  } catch (error) {
+    console.error("Restore failed:", error);
+    setToastMessage(`Failed to restore. Error: ${error.message}`);
+    setSeverity("error");
+    setToast(true);
+    setTimeout(() => setToast(false), 2000);
+  }
+
+  if (confirm) {
+    setRestoreDialogOpen(false);
   }
 };
+
 
 const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
@@ -690,21 +711,21 @@ const handleFinanceRestore = (id, RateWiseOrderNumber) => {
 };
 
 
-const handleConfirm = async () => {
-  try {
-      await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
-      setSuccessMessage('Order Restored with new number!');
-      setTimeout(() => setSuccessMessage(''), 2000);
-      fetchOrderDetails();
-  } catch (error) {
-      console.error('Restore failed:', error);
-      setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => setToast(false), 2000);
-  }
-  setRestoreDialogOpen(false);
-};
+// const handleConfirm = async () => {
+//   try {
+//       await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+//       setSuccessMessage('Order Restored with new number!');
+//       setTimeout(() => setSuccessMessage(''), 2000);
+//       fetchOrderDetails();
+//   } catch (error) {
+//       console.error('Restore failed:', error);
+//       setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => setToast(false), 2000);
+//   }
+//   setRestoreDialogOpen(false);
+// };
 
   const fetchMarginAmount = () => {
     axios
@@ -1216,13 +1237,13 @@ const incomeOptions = [
           height: '440px', // Adjust height as needed
           background: '#ffffff',
           borderRadius: '12px',
-          boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
           marginBottom: '20px',
           display: 'flex',
           justifyContent: 'center', // Center horizontally
           alignItems: 'center', // Center vertically
           flexDirection: 'column', // Column direction for title and chart
-        },
+          border: '1px solid #ccc', // Add border color
+        },        
         slideContainer: {
           display: 'flex',
           width: '100%',
@@ -1648,20 +1669,20 @@ const calculateRateStats = () => {
     <RestoreOrderDialog
       open={restoredialogOpen}
       onClose={handleRestoreClose}
-      onConfirm={handleConfirm}
+      onConfirm={() => handleRestore(newRateWiseOrderNumber, orderNum, "", true)}
       newRateWiseOrderNumber={newRateWiseOrderNumber}
     />
   </div>
-  <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 p-3">
+  <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">
     Reports
   </h1>
 <hr className="border-t-1 border-gray-300 mb-4" />
 
 {/* Sticky Container */}
-<div className="sticky top-0 z-10 bg-white px-2">
+<div className="sticky top-0 z-10 bg-white px-4">
   <div className="flex flex-nowrap overflow-x-auto">
     {/* DateRangePicker and Spacer */}
-    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
+    <div className="w-fit h-auto rounded-lg p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
       <DateRangePicker
         startDate={selectedRange.startDate}
         endDate={selectedRange.endDate}
@@ -1725,8 +1746,8 @@ const calculateRateStats = () => {
     ))}
   </div>
   
-  <hr className="border-t-1 border-gray-300 mb-3" />
 </div>
+<hr className="border-t-1 border-gray-300 mb-3" />
 <div name="CloseDayButton" className="flex justify-end px-2">
   <button
     className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
@@ -1807,8 +1828,9 @@ const calculateRateStats = () => {
 
         {value === 1 && (
              <div style={{ width: '100%' }}>
-              <h1 className='text-xl sm:text-2xl my-4 font-bold ml-2 text-start text-blue-500'>Reports</h1>
-             <div className="flex flex-grow text-black mb-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
+              <hr className="border-t-1 border-gray-300 mb-4"/>
+             <div className="flex flex-grow text-black mb-4 px-4">
     <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
     
     <div className="flex flex-grow items-end ml-2 mb-4">
@@ -1943,7 +1965,7 @@ const calculateRateStats = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+            <div className='px-4'>
             <div style={styles.chartContainer}>
       <div style={styles.slideContainer}>
         {/* Income Breakdown Chart */}
@@ -2058,6 +2080,7 @@ const calculateRateStats = () => {
         </div>
       </div>
     </div>
+    </div>
             {/* <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
@@ -2096,7 +2119,8 @@ const calculateRateStats = () => {
       )} */}
       {/* </div>
       </div> */}
-             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', marginBottom: '54px' }}>
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '0 15px' }}>
+             <div style={{ flex: 1, width: '100%'}}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
@@ -2135,6 +2159,7 @@ const calculateRateStats = () => {
                     }}
                     
                  />
+             </div>
              </div>
          </div>
         //   <div style={{ width: '100%' }}>
