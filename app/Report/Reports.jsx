@@ -2098,7 +2098,8 @@ const calculateRateStats = () => {
       )} */}
       {/* </div>
       </div> */}
-             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '15px' }}>
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '0 15px' }}>
+             <div style={{ flex: 1, width: '100%'}}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
@@ -2137,6 +2138,7 @@ const calculateRateStats = () => {
                     }}
                     
                  />
+             </div>
              </div>
          </div>
         //   <div style={{ width: '100%' }}>
