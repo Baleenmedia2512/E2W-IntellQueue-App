@@ -19,6 +19,7 @@ import { FetchActiveCSE } from "@/app/api/FetchAPI";
 import { toTitleCase } from "../page";
 import { useMediaQuery } from "react-responsive";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 
 // Utility functions to get start and end of day as Date objects
 export const getStartOfDay = (date) => {
@@ -252,8 +253,8 @@ const LeadReport = () => {
 
   // Reset filters to default values
   const handleReset = useCallback(() => {
-    setFromDate(new Date());
-    setToDate(new Date());
+    setFromDate(getStartOfDay(new Date()));
+    setToDate(getEndOfDay(new Date()));
     setPlatformFilter("");
     setHandledByFilter("");
     setStatusFilter("");
@@ -266,8 +267,80 @@ const LeadReport = () => {
       <div className="text-center text-red-500 p-8">Error: {error}</div>
     );
 
+    useEffect(() => {
+      if (showAnalytics) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "auto";
+      }
+      return () => {
+        document.body.style.overflow = "auto";
+      };
+    }, [showAnalytics]);
+
+    const distinctHandledByNames = useMemo(() => {
+      const namesSet = new Set();
+      leads.forEach((lead) => {
+        if (lead.handledBy && lead.handledBy.trim() !== "") {
+          namesSet.add(lead.handledBy);
+        }
+      });
+      return Array.from(namesSet).sort();
+    }, [leads]);
+
   return (
     <div className=" mx-auto p-8 space-y-8">
+      {/* Analytics Modal with two charts */}
+    
+      {showAnalytics && (
+        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 backdrop-blur-md p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowAnalytics(false)}
+              className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Scrollable Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-gray-800 mb-6 text-center">
+              Lead Analytics by Date
+            </h2>
+
+              {/* Charts Container */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="w-full min-w-[280px]">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <ComposedChart data={chartData}>
+                      <XAxis dataKey="date" />
+                      <YAxis yAxisId="left" orientation="left" />
+                      <YAxis yAxisId="right" orientation="right" />
+                      <Tooltip />
+                      <Legend />
+                      <Bar yAxisId="left" dataKey="count" fill="#4F46E5" name="No. of Leads" />
+                      <Line yAxisId="right" type="monotone" dataKey="avgTAT" stroke="#F97316" name="Avg TAT (Hrs.)" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="w-full min-w-[280px]">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <ComposedChart data={attendedUnattendedChartData}>
+                      <XAxis dataKey="date" />
+                      <YAxis yAxisId="left" orientation="left" />
+                      <Tooltip />
+                      <Legend />
+                      <Bar yAxisId="left" dataKey="attended" fill="#22C55E" name="Attended" />
+                      <Bar yAxisId="left" dataKey="unattended" fill="#EF4444" name="Unattended" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
         <h1 className="text-3xl font-semibold text-blue-500">Lead Report</h1>
@@ -371,13 +444,14 @@ const LeadReport = () => {
               className="w-full p-2 border rounded-md"
             >
               <option value="">All</option>
-              {CSENames.map((cse, idx) => (
-                <option key={idx} value={toTitleCase(cse.username)}>
-                  {toTitleCase(cse.username)}
+              {distinctHandledByNames.map((name, idx) => (
+                <option key={idx} value={toTitleCase(name)}>
+                  {toTitleCase(name)}
                 </option>
               ))}
             </select>
           </div>
+
           <div className="space-y-2">
             <label className="block text-sm font-medium">Lead Status</label>
             <select
@@ -412,7 +486,7 @@ const LeadReport = () => {
       {/* Reset Filters Button for Desktop */}
       <button
         onClick={handleReset}
-        className="hidden md:flex mb-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+        className="hidden md:flex mb-4 px-4 py-2 bg-blue-600 text-white rounded-md ml-auto"
       >
         Reset Filters
       </button>
@@ -460,59 +534,7 @@ const LeadReport = () => {
             No lead report for the selected Date Range
           </p>
         )}
-      </div>
-
-      {/* Analytics Modal with two charts */}
-    
-      {showAnalytics && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 max-h-[80%] flex justify-center items-center p-4">
-    <div className="bg-white rounded-md shadow-md w-11/12 md:w-1/2 max-h-[90vh] flex flex-col">
-      {/* Scrollable content area */}
-      <div className="p-6 overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Lead Analytics by Date</h2>
-        {/* Charts container: row on desktop, column on mobile with horizontal scroll if needed */}
-        <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
-          <div className="flex-1 min-w-[300px]">
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={chartData}>
-                <XAxis dataKey="date" />
-                <YAxis yAxisId="left" orientation="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Bar yAxisId="left" dataKey="count" fill="#8884d8" name="No. of Leads" />
-                <Line yAxisId="right" type="monotone" dataKey="avgTAT" stroke="#ff7300" name="Avg TAT (Hrs.)" />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex-1 min-w-[300px]">
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={attendedUnattendedChartData}>
-                <XAxis dataKey="date" />
-                <YAxis yAxisId="left" orientation="left" />
-                <Tooltip />
-                <Legend />
-                <Bar yAxisId="left" dataKey="attended" fill="#4CAF50" name="Attended" />
-                <Bar yAxisId="left" dataKey="unattended" fill="#F44336" name="Unattended" />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-      {/* Footer: Close button always visible */}
-      <div className="p-4">
-        <button
-          onClick={() => setShowAnalytics(false)}
-          className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-md"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-        
+      </div> 
     </div>
   );
 };

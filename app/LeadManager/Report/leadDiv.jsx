@@ -97,7 +97,7 @@ const Leaddiv = ({ lead, index }) => {
               value: lead.statusChangeDate,
             },
           ].map((item, i) => (
-            <div key={i} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
+            <div key={i} className="flex items-start space-x-3 p-4 bg-gray-100 rounded-lg">
               <div className="mt-1">{item.icon}</div>
               <div className="flex-1">
                 <p className="text-xs text-gray-500 mb-1">{item.label}</p>
