@@ -501,7 +501,7 @@ export default function BottomBarTest() {
   </span>
   {/* Sub Navigation Sidebar */}
   <div
-        className={`fixed bottom-[96px] mr-14 sm:mr-0 w-fit pt-2 border-1 bg-white border-blue-300 shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed bottom-[96px] mr-14 sm:mr-0 w-fit pt-2 border-1 bg-white shadow-lg rounded-xl transition-transform duration-300 ease-in-out ${
           showMoreOptions ? 'translate-y-3' : 'translate-y-[600px]'
         }`}
       >
