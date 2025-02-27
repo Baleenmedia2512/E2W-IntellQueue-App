@@ -124,7 +124,6 @@ const handleCloseDay = async () => {
 
   const resultDIR = await checkIfDIRSentToday(companyName);
   setIsDIRSentToday(resultDIR);
-  console.log(resultDIR)
 
   if (resultDIR) {
     // Show confirmation dialog if DIR has already been sent
@@ -153,7 +152,6 @@ const processCloseDay = async () => {
     );
 
     const resultData = response.data;
-    console.log(resultData);
 
     if (resultData[0]?.success) {
       setToastMessage("");
@@ -627,32 +625,55 @@ const handleRestoreClose = () => {
   setRestoreDialogOpen(false);
 };
 
-const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+const handleRestore = async (rateWiseOrderNum, orderNum, rateName, confirm = false) => {
   try {
-      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&Action=restore`);
-      
-      if (response.data.conflict) {
-          // Fetch next available RateWiseOrderNumber
-          const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
-          const data = await fetchResponse.json();
-          setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
-          setOrderNum(orderNum);
-          setRestoreDialogOpen(true);
-      } else {
-          // Successful restore
-          setSuccessMessage('Order Restored!');
-          setTimeout(() => setSuccessMessage(''), 2000);
-          fetchOrderDetails();
-          // fetchAmounts();
+    const response = await axios.get(
+      `https://orders.baleenmedia.com/API/Media/RestoreOrderTest.php`,
+      {
+        params: {
+          JsonDBName: companyName,
+          JsonRateWiseOrderNumber: rateWiseOrderNum,
+          OrderNumber: orderNum,
+          RateCard: rateName,
+          CheckRateWiseOrderNumber: !confirm, // Check conflict only if not confirming
+        },
       }
-  } catch (error) {
-      console.error('Error during restore operation:', error);
-      setToastMessage(`Failed to restore. Error: ${error.message}`);
-      setSeverity('error');
+    );
+
+    if (response.data.conflict && !confirm) {
+      // Conflict found, fetch next available RateWiseOrderNumber
+      const fetchResponse = await fetch(
+        `https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`
+      );
+      const data = await fetchResponse.json();
+      
+      setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
+      setOrderNum(orderNum);
+      setRestoreDialogOpen(true);
+    } else if (response.data.success) {
+      // Successful restore
+      setSuccessMessage(confirm ? "Order Restored with new number!" : "Order Restored!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+      fetchOrderDetails();
+    } else {
+      setToastMessage("Failed to restore order.");
+      setSeverity("error");
       setToast(true);
       setTimeout(() => setToast(false), 2000);
+    }
+  } catch (error) {
+    console.error("Restore failed:", error);
+    setToastMessage(`Failed to restore. Error: ${error.message}`);
+    setSeverity("error");
+    setToast(true);
+    setTimeout(() => setToast(false), 2000);
+  }
+
+  if (confirm) {
+    setRestoreDialogOpen(false);
   }
 };
+
 
 const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
@@ -690,21 +711,21 @@ const handleFinanceRestore = (id, RateWiseOrderNumber) => {
 };
 
 
-const handleConfirm = async () => {
-  try {
-      await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
-      setSuccessMessage('Order Restored with new number!');
-      setTimeout(() => setSuccessMessage(''), 2000);
-      fetchOrderDetails();
-  } catch (error) {
-      console.error('Restore failed:', error);
-      setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => setToast(false), 2000);
-  }
-  setRestoreDialogOpen(false);
-};
+// const handleConfirm = async () => {
+//   try {
+//       await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+//       setSuccessMessage('Order Restored with new number!');
+//       setTimeout(() => setSuccessMessage(''), 2000);
+//       fetchOrderDetails();
+//   } catch (error) {
+//       console.error('Restore failed:', error);
+//       setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => setToast(false), 2000);
+//   }
+//   setRestoreDialogOpen(false);
+// };
 
   const fetchMarginAmount = () => {
     axios
@@ -1648,7 +1669,7 @@ const calculateRateStats = () => {
     <RestoreOrderDialog
       open={restoredialogOpen}
       onClose={handleRestoreClose}
-      onConfirm={handleConfirm}
+      onConfirm={() => handleRestore(newRateWiseOrderNumber, orderNum, "", true)}
       newRateWiseOrderNumber={newRateWiseOrderNumber}
     />
   </div>
