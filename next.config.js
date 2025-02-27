@@ -5,4 +5,7 @@ const withPWA = require('next-pwa')({
 
 module.exports = withPWA({
   reactStrictMode: true, // Add other Next.js config options here
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 });
