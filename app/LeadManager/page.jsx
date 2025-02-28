@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineClose, AiOutlinePlus } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
 import { useDispatch } from "react-redux";
 import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
+import { storeLeads } from "../utils/db";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -118,6 +119,21 @@ const EventCards = ({params, searchParams}) => {
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
   const notificationSent = useRef(new Set());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [nextSNo, setNextSNo] = useState(0); 
+  const [formData, setFormData] = useState({
+    sNo: "",
+    date: "",
+    time: "",
+    platform: "",
+    name: "",
+    phoneNo: "",
+    email: "", 
+    adEnquiry: "",
+    consultantNumber: "",
+    consultantName: "",
+    handledBy: "",
+  });
 
   // console.log(rows)
   const toggleFilters = () => {
@@ -188,60 +204,167 @@ const EventCards = ({params, searchParams}) => {
 
   const isNoDataFound = filteredRows.length === 0;
 
-  useEffect(() => {
-    // Get the current date and time
+//-------------------------------------------------------------------------------------------------------------
+useEffect(() => {
+  if (isModalOpen) {
     const now = new Date();
-    let newDate;
-    let newTime;
-  
-    // If the status is "Call Followup" and there’s a valid followup date in currentCall,
-    // then use that value directly.
-    if (
-      selectedStatus === "Call Followup" &&
-      currentCall?.rowData?.FollowupDate &&
-      currentCall.rowData.FollowupDate !== "No Followup Date"
-    ) {
-      newDate = currentCall.rowData.FollowupDate;
-      newTime = currentCall.rowData.FollowupTime;
-    } else {
-      // Otherwise, start with the current date as the default
-      const defaultDate = new Date(now);
-  
-      if (selectedStatus === "Unreachable") {
-        // For "Unreachable", set the default date to 1 hour ahead.
-        defaultDate.setHours(defaultDate.getHours() + 1);
-      } else if (selectedStatus === "Call Followup") {
-        // For "Call Followup" (when no valid date is present),
-        // move to tomorrow while keeping the current time.
-        const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
-        defaultDate.setDate(defaultDate.getDate() + 1);
-        defaultDate.setHours(
-          Math.floor(currentTimeMinutes / 60),
-          currentTimeMinutes % 60,
-          0
-        );
-      }
-      
-      // Format the date and time based on the updated defaultDate.
-      newDate = defaultDate.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-      newTime = defaultDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    }
-  
-    // Update state with the new followup date and time
-    setFollowupDate(newDate);
-    setFollowupTime(newTime);
-  
-  }, [selectedStatus, showModal]); //Triggers when selected status or current call is called  
+    const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const formattedTime = now.toTimeString().slice(0, 5); // HH:MM
 
-  
+    setFormData((prev) => ({
+      ...prev,
+      date: formattedDate,
+      time: formattedTime,
+    }));
+  }
+}, [isModalOpen]);
+
+useEffect(() => {
+  // Get the current date and time
+  const now = new Date();
+  let newDate;
+  let newTime;
+
+  // If the status is "Call Followup" and there’s a valid followup date in currentCall,
+  // then use that value directly.
+  if (
+    selectedStatus === "Call Followup" &&
+    currentCall?.rowData?.FollowupDate &&
+    currentCall.rowData.FollowupDate !== "No Followup Date"
+  ) {
+    newDate = currentCall.rowData.FollowupDate;
+    newTime = currentCall.rowData.FollowupTime;
+  } else {
+    // Otherwise, start with the current date as the default
+    const defaultDate = new Date(now);
+    if (selectedStatus === "Unreachable") {
+      // For "Unreachable", set the default date to 1 hour ahead.
+      defaultDate.setHours(defaultDate.getHours() + 1);
+    } else if (selectedStatus === "Call Followup") {
+      // For "Call Followup" (when no valid date is present),
+      // move to tomorrow while keeping the current time.
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      defaultDate.setDate(defaultDate.getDate() + 1);
+      defaultDate.setHours(
+        Math.floor(currentTimeMinutes / 60),
+        currentTimeMinutes % 60,
+        0
+      );
+    }
+    
+    // Format the date and time based on the updated defaultDate.
+    newDate = defaultDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    newTime = defaultDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  // Update state with the new followup date and time
+  setFollowupDate(newDate);
+  setFollowupTime(newTime);
+
+}, [selectedStatus, showModal]); //Triggers when selected status or current call is called  
+
+const checkAndUpdateStatus = async (rowsData) => {
+  if (!rowsData || rowsData.length === 0) return;
+
+  const currentTime = new Date();
+  const hours24 = 24 * 60 * 60 * 1000;
+
+  const updatePromises = rowsData
+    .filter(row => row.Status === "Unreachable" && row.FollowupDate && row.FollowupTime)
+    .map(async (row) => {
+      const formattedDate = formatDate(row.FollowupDate);
+      const formattedTime = formatUnreachableTime(row.FollowupTime);
+      const followupDateTime = new Date(`${formattedDate}T${formattedTime}`);
+      
+      if (currentTime - followupDateTime >= hours24) {
+        const payload = {
+          sNo: row.SNo,
+          status: "New",
+          isUnreachable: "Yes",
+          dbCompanyName: UserCompanyName,
+          followupDate: "",
+          followupTime: "",
+        };
+
+        try {
+          const response = await fetch("https://leads.baleenmedia.com/api/updateLeads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (response.ok) {
+            console.log(`Status for row ${row.SNo} updated to "New" after 24 hours`);
+            return { sNo: row.SNo, status: "New" };
+          } else {
+            throw new Error("Failed to update lead");
+          }
+        } catch (error) {
+          console.error("Error updating lead:", error);
+        }
+      }
+    });
+
+  const updatedStatuses = await Promise.all(updatePromises);
+
+  setSelectedStatus((prevStatuses) => {
+    const newStatuses = { ...prevStatuses };
+    updatedStatuses.forEach((item) => {
+      if (item) newStatuses[item.sNo] = item.status;
+    });
+    return newStatuses;
+  });
+};
+
+
+const formatDate = (dateStr) => {
+  const months = {
+    Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
+    Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
+  };
+
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, "0");
+    const month = months[parts[1]];
+    const year = parts[2];
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return "";
+};
+
+const formatUnreachableTime = (timeStr) => {
+  const timeParts = timeStr.match(/(\d+):(\d+) (\w{2})/);
+  if (!timeParts) return "00:00:00";
+
+  let [_, hours, minutes, period] = timeParts;
+  hours = parseInt(hours, 10);
+
+  if (period.toLowerCase() === "pm" && hours !== 12) {
+    hours += 12;
+  } else if (period.toLowerCase() === "am" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
+};
+
+
+
+//==============================================================================================================
+
+
+
   useEffect(() => {
     const intervals = {};
   
@@ -285,89 +408,99 @@ const EventCards = ({params, searchParams}) => {
     };
   }, [rows]);
   
-  useEffect(() => {
-    const handleNotifications = async () => {
+  // components/LeadManager.js
+useEffect(() => {
+  const initializeNotifications = async () => {
+    // Store leads in IndexedDB for background access
+    await storeLeads(rows);
+
+    // Handle immediate notifications while component is active
+    const handleForegroundNotifications = async () => {
       const permission = await requestNotificationPermission();
       
       if (permission === 'granted') {
-        // Filter leads that need notifications
-        console.log(notificationSent)
         const leadsToNotify = rows.filter(lead => 
+          isFollowupDue(lead.FollowupDate, lead.FollowupTime) &&
           !notificationSent.current.has(lead.id)
         );
-  
-        console.log(leadsToNotify)
+
         if (leadsToNotify.length > 0) {
           await scheduleFollowupNotifications(leadsToNotify, userName);
-          
-          // Add to sent notifications
           leadsToNotify.forEach(lead => 
             notificationSent.current.add(lead.id)
           );
         }
       }
     };
-  
-    // Set up periodic sync
+
+    // Set up sync mechanisms
     const registerSync = async () => {
+      // Immediate background sync
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.sync.register('check-followups');
+      }
+
+      // Periodic sync (combine both intervals)
       if ('periodicSync' in navigator) {
         try {
+          // Unregister previous first
+          await navigator.periodicSync.unregister('followup-check');
+          
+          // Register new with combined interval
           await navigator.periodicSync.register('followup-check', {
-            minInterval: 60 * 60 * 1000 // 1 hour
+            minInterval: 60 * 60 * 1000 // 1 hour (can adjust as needed)
           });
         } catch (error) {
-          console.log('Periodic sync not supported:', error);
+          console.log('Periodic sync registration failed:', error);
         }
       }
     };
-  
-    handleNotifications();
-    registerSync();
-  
-    return () => {
-      if ('periodicSync' in navigator) {
-        navigator.periodicSync.unregister('followup-check');
-      }
-    };
-  }, [rows]); // Only trigger when rows change
-  
-  // Utility function to check if followup is due
-  const isFollowupDue = (date, time) => {
-    const followupDate = new Date(`${date}T${time}`);
-    const now = new Date();
-    return followupDate <= now;
+
+    await Promise.all([handleForegroundNotifications(), registerSync()]);
   };
 
-  // pages/_app.js or your main component
-  useEffect(() => {
-    const registerSWAndSendUsername = async () => {
-      if ('serviceWorker' in navigator) {
-        try {
-          // Register the custom service worker
-          const registration = await navigator.serviceWorker.register('/custom-sw.js');
-          console.log('Service Worker registered with scope:', registration.scope);
+  initializeNotifications();
 
-          // Wait until the service worker is ready
-          await navigator.serviceWorker.ready;
+  return () => {
+    // Cleanup sync registrations
+    if ('periodicSync' in navigator) {
+      navigator.periodicSync.unregister('followup-check');
+    }
+  };
+}, [rows, userName]); // Add userName as dependency
 
-          // Optionally, you might want to request notification permission here
-          // await requestNotificationPermission();
+// Utility functions
+const isFollowupDue = (date, time) => {
+  if (!date || !time) return false;
+  const followupDate = new Date(`${date}T${time}`);
+  return followupDate <= new Date();
+};
 
-          // Send the current username to the service worker if available
-          if (userName && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({
-              type: 'SET_USERNAME',
-              username: userName, // using "username" key for consistency
-            });
-          }
-        } catch (error) {
-          console.error('Service Worker registration failed:', error);
+// pages/_app.js (keep this separate)
+useEffect(() => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker
+      .register('/custom-sw.js')
+      .then(async (registration) => {
+        console.log('Service Worker registered with scope:', registration.scope);
+
+        // Wait for the service worker to be ready
+        await navigator.serviceWorker.ready;
+
+        // Send the username to the SW via postMessage if available.
+        if (userName && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'SET_USERNAME',
+            username: userName,
+          });
         }
-      }
-    };
-
-    registerSWAndSendUsername();
-  }, [userName]);
+      })
+      .catch((error) => {
+        console.error('Service Worker registration failed:', error);
+      });
+  }
+}, [userName]);
 
   const insertEnquiry = async () => {
     let row = currentCall.rowData;
@@ -461,7 +594,7 @@ const EventCards = ({params, searchParams}) => {
     if (days > 0) {
       return `${days}d ${hrs}:${mins}:${secs}`;
     }
-  
+      
     return `${hrs}:${mins}:${secs}`;
   };
   
@@ -484,7 +617,7 @@ const EventCards = ({params, searchParams}) => {
       return false; // Default to false in case of an error
     }
   };
-  
+
   const fetchData = async () => {
     try {
       const filters = {
@@ -494,6 +627,14 @@ const EventCards = ({params, searchParams}) => {
       };
 
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+
+    if (fetchedRows.length > 0) {
+      const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
+      setNextSNo(maxSlNo + 1);
+    } else {
+      console.log("No rows found to calculate max Sl. No.");
+    }
+    
       setRows(fetchedRows);
       fetchCSENames();
       // console.log(fetchedRows)
@@ -512,7 +653,11 @@ const EventCards = ({params, searchParams}) => {
     fetchData();
   }, [params.id, searchParams]);
 
-    
+  useEffect(() => {
+    if (!userName) return;
+    checkAndUpdateStatus(rows)
+  }, [rows]);
+  
 
   useEffect(() => {
     if (showModal) {
@@ -854,8 +999,76 @@ const EventCards = ({params, searchParams}) => {
     setIsHandledByChange(false);
   }
 
+
+  const toggleModal = () => setIsModalOpen(!showModal);
+
+  // Handle form changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const dbCompanyName = encodeURIComponent(UserCompanyName);
+    const payload = {
+      sNo: nextSNo, // Use the incremented serial number
+      date: formData.date,
+      time: formData.time,
+      platform: formData.platform,
+      name: formData.name,
+      phoneNo: formData.phoneNo,
+      email: formData.email,
+      adEnquiry: formData.adEnquiry,
+      handledBy: formData.handledBy,
+      consultantName: formData.consultantName,
+      consultantNumber: formData.consultantNumber,
+      dbCompanyName,
+    };
+console.log("handle by",formData.handledBy)
+    const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload), 
+      });
+
+      const data = await response.json(); 
+      if (response.ok) {
+        
+        console.log("Response from server:", data);
+        alert("Lead added successfully!");
+        setIsModalOpen(false);
+        setFormData({
+          date: "",
+          time: "",
+          platform: "",
+          name: "",
+          phoneNo: "",
+          email: "",
+          adEnquiry: "",
+          consultantNumber: "",
+          consultantName: "",
+        });
+        fetchData();
+      } else {
+       
+        console.error("Error response from server:", data.error || response.statusText);
+        alert(data.error || "Error adding record");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error adding record. Please try again.");
+    }
+};
   
-  // Inside your component
 const handleStatusClick = async(row) => {
   setShowModal(true);
 
@@ -1250,7 +1463,7 @@ const handleStatusClick = async(row) => {
               {CSENames.map(
                 (user) => (
                   <label
-                    key={user.usernamer}
+                    key={user.username}
                     className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
                       selectedUser === toTitleCase(user.username) ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
                     }`}
@@ -1271,6 +1484,202 @@ const handleStatusClick = async(row) => {
             </div>
             </div>
             )}
+
+      <div className="relative">
+            {/* "+" Button */}
+            <button
+        onClick={toggleModal}
+        className="fixed right-4 bottom-24 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-28 z-50"
+      >
+        <AiOutlinePlus size={24} />
+      </button>
+
+      {/* Modal Form */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-4 sm:p-6 rounded-lg w-5/6 sm:w-96 lg:w-96 h-[60vh] sm:h-auto max-w-lg 
+                   max-h-[90vh] overflow-y-auto relative shadow-lg mb-10 md:mb-0">
+            {/* Flex container for title and close button */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-blue-500">Add New Lead</h2>
+              <button
+                className="text-black hover:text-red-500 text-3xl sm:text-4xl"
+                onClick={() => setIsModalOpen(false)} // Close modal when clicked
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
+                {/* Input Fields */}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Date:</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Time:</label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={formData.time}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                  <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">
+                    Client Platform:
+                  </label>
+                  <select
+                    name="platform"
+                    value={formData.platform}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Platform</option>
+                    <option value="JustDial">JustDial</option>
+                    <option value="IndiaMart">IndiaMart</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Sulekha">Sulekha</option>
+                    <option value="LG">LG</option>
+                    <option value="Consultant">Consultant</option>
+                    <option value="Own">Own</option>
+                    <option value="WebApp DB">Web App DB</option>
+                    <option value="Online">Online</option>
+                    <option value="Self">Self</option>
+                    <option value="Friends/Relatives">Friends/Relatives</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Name:</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                {formData.platform === 'Consultant' && (
+                  <>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Name:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantName"
+                      value={formData.consultantName}
+                      onChange={handleInputChange}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Number:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantNumber"
+                      value={formData.consultantNumber}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                        if (numericValue.length <= 10) {
+                          handleInputChange({ target: { name: "consultantNumber", value: numericValue } });
+                        }
+                      }}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                    />
+                  </div>
+                  </>
+              )}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Ad Enquiry:</label>
+                  <input
+                    type="text"
+                    name="adEnquiry"
+                    value={formData.adEnquiry}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                <label className="block text-sm md:text-base font-medium text-gray-700">Client Contact:</label>
+                <input
+                  type="tel"
+                  name="phoneNo"
+                  value={formData.phoneNo}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                    if (numericValue.length <= 10) {
+                      handleInputChange({ target: { name: "phoneNo", value: numericValue } });
+                    }
+                  }}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  required
+                />
+              </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Email Address:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Handled By:</label>
+                  <select
+                    name="handledBy"
+                    value={formData.handledBy}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Handled By</option>
+                    {CSENames.map((user) => (
+                      <option key={user.username} value={toTitleCase(user.username)}>
+                        {toTitleCase(user.username)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full mt-4 p-3 bg-blue-500 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+    </div>
+
 
       {/* Modal for Call Status */}
       {showModal && (

@@ -84,7 +84,7 @@ const Login = () => {
 };
 
 const handleLogin = (event) => {
-    event.preventDefault();
+    event && event.preventDefault();
 
     if (validateFields()) {
         const encodedPassw = encodeURIComponent(password);
@@ -162,8 +162,6 @@ const handleLogin = (event) => {
     }
 };
 
-
-
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
             <div className="max-w-screen-lg min-w-fit min-h-fit bg-white shadow-md rounded-lg overflow-hidden p-8 md:flex md:items-center md:justify-center md:space-x-8">
@@ -172,7 +170,7 @@ const handleLogin = (event) => {
                 <h2 className="text-2xl font-bold font-inter text-gray-800">WELCOME TO</h2>
                 <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK IBMS</h2>
                    <div className="border-2 w-10 inline-block mb-4 border-blue-500 "></div>
-                    <form>
+                    <form onKeyDown={(e) => { e.preventDefault(); handleLogin(); }}>
                         <div className="mb-4">
                             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
                                 Username
@@ -253,6 +251,7 @@ const handleLogin = (event) => {
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                             type="button"
                             onClick={handleLogin}
+                            
                             >
                              Sign In
                         </button>

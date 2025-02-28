@@ -6,6 +6,7 @@
     "start_url": "/",
     "name": "Easy2Work",
     "short_name": "Easy2Work",
+    "gcm_sender_id": "103953800507",
     "icons": [
         {
             "src": "/icon-192x192.png",

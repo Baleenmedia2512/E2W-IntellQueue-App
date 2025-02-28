@@ -46,3 +46,14 @@ export const requestNotificationPermission = async () => {
       });
     }
   };
+
+  // utils/notifications.js
+export const isNotificationSent = async (leadId) => {
+  const db = await initDB();
+  return db.get('notifications', leadId);
+};
+
+export const markNotificationSent = async (leadId) => {
+  const db = await initDB();
+  await db.put('notifications', { id: leadId, sentAt: new Date() });
+};
