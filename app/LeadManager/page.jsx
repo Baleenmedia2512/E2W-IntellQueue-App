@@ -792,13 +792,13 @@ const EventCards = ({params, searchParams}) => {
     );
   }
 
-  if (!rows.length) {
-    return (
-      <div className="font-poppins text-center">
-        <h2>No Data Found</h2>
-      </div>
-    );
-  }
+  // if (!rows.length) {
+  //   return (
+  //     <div className="font-poppins text-center">
+  //       <h2>No Data Found</h2>
+  //     </div>
+  //   );
+  // }
 
   const toggleQuoteSent = async(sNo, status) => {
     var setValue = status === 'Yes' ? 'No' : 'Yes';
@@ -963,7 +963,7 @@ const handleStatusClick = async(row) => {
               <motion.button
                 key={status}
                 onClick={() => dispatch(setStatusFilter(status))}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   statusFilter === status
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -978,12 +978,12 @@ const handleStatusClick = async(row) => {
           </div>
 
           {/* Prospect Type Filter */}
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-hidden">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 md:max-w-[20%] overflow-x-scroll">
             {prospectTypes.map((item, index) => (
               <motion.button
                 key={item.type}
                 onClick={() => dispatch(setProspectTypeFilter(item.type))}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   prospectTypeFilter === item.type
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1003,7 +1003,7 @@ const handleStatusClick = async(row) => {
               <motion.button
                 key={status}
                 onClick={() => dispatch(setQuoteSentFilter(status))}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   quoteSentFilter === status
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1017,7 +1017,7 @@ const handleStatusClick = async(row) => {
             ))}
           </div>
           
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg md:max-w-[20%] max-w-[100%] p-1 overflow-x-scroll">
             {[
               { username: "All" }, // Add "All" at the beginning
               ...CSENames].map((status, index) => (
