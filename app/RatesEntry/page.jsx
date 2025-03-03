@@ -102,6 +102,7 @@ const AdDetailsPage = () => {
   const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
   const [maxRateID, setMaxRateID] = useState("");
   const [elementsToHide, setElementsToHide] = useState([])
+  const [ratePerSCM, setRatePerSCM] = useState(0);
   const [elementsToShow, setElementsToShow] = useState([]);
   const [isUnitsSelected, setIsUnitsSelected] = useState(false);
   const [isQty, setIsQty] = useState(false);
@@ -1137,17 +1138,17 @@ console.log(selectedValues)
         console.log('Selected Values before API Call:', selectedValues);
   
         // Check if there were any changes made by comparing current selectedValues with initialValues
-        const isChanged = Object.keys(selectedValues).some((key) => {
-          return selectedValues[key].value !== initialValues[key]; // Compare selected values with initial values
-        });
+        // const isChanged = Object.keys(selectedValues).some((key) => {
+        //   return selectedValues[key].value !== initialValues[key]; // Compare selected values with initial values
+        // });
   
-        if (!isChanged) {
-          setToastMessage('No changes have been made!');
-          setSeverity('warning');
-          setToast(true);
-          setTimeout(() => setToast(false), 2000);
+        // if (!isChanged) {
+        //   setToastMessage('No changes have been made!');
+        //   setSeverity('warning');
+        //   setToast(true);
+        //   setTimeout(() => setToast(false), 2000);
           
-        } else {
+        // } else {
           // If there are changes, proceed with the API call
           const response = await fetch(
             `https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?JsonRateId=${rateId}&JsonRateGST=${rateGST?.value || ''}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits?.value || ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit?.value || ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location.value}${selectedValues.Package.value}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location?.value || ''}&JsonPackage=${selectedValues.Package?.value || ''}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}&JsonStartQty=${minSlab.StartQty}`
@@ -1163,14 +1164,28 @@ console.log(selectedValues)
             throw new Error(data.error);
           }
   
+          // Insert or update slab data
+          for (const slab of combinedSlabData) {
+
+            if (slab) {
+              await insertQtySlab(slab.StartQty, slab.UnitPrice, slab.Width);
+              console.log('Adding Slab:', slab);
+            } else {
+              setToastMessage("No Slab data to Update!");
+              setSeverity('warning');
+              setToast(true);
+            }
+          }
+
           // Success message
-          setEditMode(false);
+          // setEditMode(false);
           setSuccessMessage('Updated Successfully!');
           setTimeout(() => setSuccessMessage(''), 2000);
-          setRateSearchTerm("");
-          setIsNewRate(true);
-          handleEditMode();
-        }
+          // setRateSearchTerm("");
+          // setIsNewRate(true);
+          fetchRates();
+          // handleEditMode();
+        // }
       } catch (error) {
         console.error('Error:', error);
         setToastMessage(error.message);
@@ -1745,7 +1760,7 @@ setEditModal(false);
           return updatedSlabData;
         } else {
           // Add the new slab
-          return [...prevSlabData, { StartQty: startQty, UnitPrice: price, Width: width }];
+          return [...prevSlabData, { StartQty: startQty, UnitPrice: price, Width: width, isTemp: true }];
         }
       });
       setSCMModel(false);
@@ -1948,8 +1963,20 @@ const handleBlur = (e) => {
               label="Minimum Cost"
               variant="outlined" 
               size='small' 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`} 
-              onChange={e => setMinimumPrice(e.target.value)}
+              className={`w-full px-4 py-2 gap-y-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`} 
+              onChange={e => {setMinimumPrice(e.target.value); setRatePerSCM(e.target.value/(startQty * width))}}
+              onFocus={event => event.target.select()}
+            />
+             <h3 className='normal-label my-4 text-black'>(Or)</h3>
+             <h3 className='normal-label mb-4 text-black'>Enter Rate Per Unit for {startQty * width}+ Quantities</h3>
+            <TextField
+              id="ratePerSCMBox" 
+              value={ratePerSCM} 
+              label="Rate Per SCM"
+              variant="outlined" 
+              size='small' 
+              className={`w-full px-4 py-2 mt-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`} 
+              onChange={e => {setRatePerSCM(e.target.value); setMinimumPrice(e.target.value * (startQty * width))}}
               onFocus={event => event.target.select()}
             />
             </div>
@@ -2627,19 +2654,20 @@ const handleBlur = (e) => {
                     {isValidityDays && <p className='text-red-500 font-medium'>Validity Days should be more than 0</p>}
                 </div>
 
-                <div className='mr-9 mt-4' name="RateGSTSelect">
+                <div className='mr-9' name="RateGSTSelect">
                   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
                   <CreatableSelect
-                                        className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                                          // className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
-                                          styles={{
-                                            control: (provided) => ({
-                                              ...provided,
-                                              minHeight: '40px',
-                                            }),
-                                          }}
+                    className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                      // className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+                      styles={{
+                        control: (provided) => ({
+                          ...provided,
+                          minHeight: '40px',
+                        }),
+                      }}
                     id="29"
                     instanceId="RateGST"
+                    menuPlacement='top'
                     placeholder="Select Rate GST%"
                     value={rateGST}
                     onChange={(selectedOption) => {dispatch(setRateGST(selectedOption)); setEditMode(true)}}
@@ -2706,4 +2734,3 @@ const handleBlur = (e) => {
 
 }
 export default AdDetailsPage;
-
