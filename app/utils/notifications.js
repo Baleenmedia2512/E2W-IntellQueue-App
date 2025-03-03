@@ -55,7 +55,7 @@ export const scheduleFollowupNotifications = async (leads, userName) => {
     try {
       const registration = await navigator.serviceWorker.ready;
       registration.showNotification('Followup Reminder', {
-        body: `Followup with ${lead.Name} is due`,
+        body: `Followup with ${lead.Name} is ${lead.FollowupTime}`,
         icon: '/icon-192x192.png',
         data: { leadId: lead.SNo, notifId },
       });

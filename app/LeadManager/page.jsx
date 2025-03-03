@@ -422,7 +422,7 @@ const formatUnreachableTime = (timeStr) => {
         if ('periodicSync' in navigator) {
           try {
             await navigator.periodicSync.register('followup-check', {
-              minInterval: 5 * 60 * 1000, // 5 minutes
+              minInterval: 1 * 60 * 1000, // 1 minute
             });
           } catch (error) {
             console.log('Periodic sync failed:', error);
