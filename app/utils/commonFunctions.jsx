@@ -31,7 +31,8 @@ export const calculateMarginAmount = (
   }
 
   // Calculate margin amount using inverse formula
-  const marginAmount = (cost * parseFloat(marginPercentage)) / (100 - parseFloat(marginPercentage));
+  let marginPerUnit =(((cost /(unit === "SCM" ? qty * width : qty))/(100 - marginPercentage))*100) - (unitPrice);
+  const marginAmount = (marginPerUnit * (unit === "SCM" ? qty * width : qty));
 
   return parseFloat(marginAmount.toFixed(2)); // Keeping precision
 };

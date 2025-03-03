@@ -37,7 +37,8 @@ export const formattedMargin = (number) => {
 
 const AdDetailsPage = () => {
   useClickTracker();
-  const { companyName, userName } = useAppSelector((state) => state.authSlice);
+  const { userName } = useAppSelector((state) => state.authSlice);
+  const companyName = "Baleen Media"
   const {
     selectedAdMedium: adMedium,
     selectedAdType: adType,
