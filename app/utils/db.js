@@ -2,47 +2,50 @@
 import { openDB } from 'idb';
 
 export const initDB = async () => {
-  return openDB('leadNotifications', 3, { // Increment version to 3
+  return openDB('leadNotifications', 5, {
     upgrade(db, oldVersion) {
-      // Handle database upgrades
+      // Create "leads" store with a consistent keyPath.
       if (!db.objectStoreNames.contains('leads')) {
-        // Create with auto-generated keys
-        db.createObjectStore('leads', { 
+        const leadStore = db.createObjectStore('leads', {
           keyPath: 'id',
-          autoIncrement: true 
+          autoIncrement: true,
         });
+        leadStore.createIndex('SNo', 'SNo');
+        leadStore.createIndex('Name', 'Name');
       }
-      
+      // Create "notifications" store using a key that will be our notification ID.
       if (!db.objectStoreNames.contains('notifications')) {
         db.createObjectStore('notifications', {
-          keyPath: 'leadId'
+          keyPath: 'leadId',
         });
       }
-
-      if (oldVersion < 2) {
-        // Migration logic for existing users
+      // Create "user" store for storing the current username.
+      if (!db.objectStoreNames.contains('user')) {
+        db.createObjectStore('user');
       }
-    }
+    },
   });
 };
 
 export const storeLeads = async (leads) => {
   const db = await initDB();
   const tx = db.transaction('leads', 'readwrite');
-  
-  // Clear existing leads before storing new ones
+  // Clear existing leads before storing new ones.
   await tx.store.clear();
-  
-  // Add IDs to leads if missing
-  const leadsWithIds = leads.map(lead => ({
-    ...lead,
-    id: lead.sNo || Date.now().toString()
-  }));
 
-  await Promise.all([
-    ...leadsWithIds.map(lead => tx.store.put(lead)),
-    tx.done
-  ]);
+  for (const lead of leads) {
+    try {
+      const processedLead = {
+        ...lead,
+        // Create a unique id using SNo (or timestamp) and a random suffix.
+        id: `lead_${lead.SNo || Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      };
+      await tx.store.put(processedLead);
+    } catch (error) {
+      console.error('Error storing lead:', lead, error);
+    }
+  }
+  await tx.done;
 };
 
 export const getStoredLeads = async () => {
@@ -50,7 +53,45 @@ export const getStoredLeads = async () => {
   return db.getAll('leads');
 };
 
+export const storeUsername = async (username) => {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('user', 'readwrite');
+    await tx.store.put(username, 'currentUser');
+    return tx.done;
+  } catch (error) {
+    console.error('Error storing username:', error);
+  }
+};
+
 export const getCurrentUserFromIDB = async () => {
-  const db = await initDB();
-  return db.get('user', 'currentUser');
+  try {
+    const db = await initDB();
+    return db.get('user', 'currentUser');
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
+
+export const isNotificationSent = async (notifId) => {
+  try {
+    const db = await initDB();
+    const result = await db.get('notifications', notifId);
+    return !!result;
+  } catch (error) {
+    console.error('Error checking notification status:', error);
+    return false;
+  }
+};
+
+export const markNotificationSent = async (notifId) => {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('notifications', 'readwrite');
+    await tx.store.put({ leadId: notifId, timestamp: Date.now() });
+    return tx.done;
+  } catch (error) {
+    console.error('Error marking notification as sent:', error);
+  }
 };

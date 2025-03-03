@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
 import { useDispatch } from "react-redux";
 import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
-import { storeLeads } from "../utils/db";
+import { storeLeads, storeUsername } from "../utils/db";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -409,95 +409,56 @@ const formatUnreachableTime = (timeStr) => {
   }, [rows]);
   
   // components/LeadManager.js
-useEffect(() => {
-  const initializeNotifications = async () => {
-    // Store leads in IndexedDB for background access
-    await storeLeads(rows);
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      await storeLeads(rows);
+      await storeUsername(userName);
 
-    // Handle immediate notifications while component is active
-    const handleForegroundNotifications = async () => {
-      const permission = await requestNotificationPermission();
-      
+      const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        const leadsToNotify = rows.filter(lead => 
-          isFollowupDue(lead.FollowupDate, lead.FollowupTime) &&
-          !notificationSent.current.has(lead.id)
-        );
+        await scheduleFollowupNotifications(rows, userName);
 
-        if (leadsToNotify.length > 0) {
-          await scheduleFollowupNotifications(leadsToNotify, userName);
-          leadsToNotify.forEach(lead => 
-            notificationSent.current.add(lead.id)
-          );
+        // Register periodic sync for more frequent background checks.
+        if ('periodicSync' in navigator) {
+          try {
+            await navigator.periodicSync.register('followup-check', {
+              minInterval: 5 * 60 * 1000, // 5 minutes
+            });
+          } catch (error) {
+            console.log('Periodic sync failed:', error);
+          }
         }
       }
     };
 
-    // Set up sync mechanisms
-    const registerSync = async () => {
-      // Immediate background sync
-      if ('serviceWorker' in navigator && 'SyncManager' in window) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.sync.register('check-followups');
-      }
+    initializeNotifications();
 
-      // Periodic sync (combine both intervals)
+    return () => {
       if ('periodicSync' in navigator) {
-        try {
-          // Unregister previous first
-          await navigator.periodicSync.unregister('followup-check');
-          
-          // Register new with combined interval
-          await navigator.periodicSync.register('followup-check', {
-            minInterval: 60 * 60 * 1000 // 1 hour (can adjust as needed)
-          });
-        } catch (error) {
-          console.log('Periodic sync registration failed:', error);
-        }
+        navigator.periodicSync.unregister('followup-check');
       }
     };
+  }, [rows, userName]);
 
-    await Promise.all([handleForegroundNotifications(), registerSync()]);
-  };
 
-  initializeNotifications();
-
-  return () => {
-    // Cleanup sync registrations
-    if ('periodicSync' in navigator) {
-      navigator.periodicSync.unregister('followup-check');
-    }
-  };
-}, [rows, userName]); // Add userName as dependency
-
-// Utility functions
-const isFollowupDue = (date, time) => {
-  if (!date || !time) return false;
-  const followupDate = new Date(`${date}T${time}`);
-  return followupDate <= new Date();
-};
-
-// pages/_app.js (keep this separate)
 useEffect(() => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker
-      .register('/custom-sw.js')
-      .then(async (registration) => {
-        console.log('Service Worker registered with scope:', registration.scope);
-
-        // Wait for the service worker to be ready
-        await navigator.serviceWorker.ready;
-
-        // Send the username to the SW via postMessage if available.
-        if (userName && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'SET_USERNAME',
-            username: userName,
+    navigator.serviceWorker.register('/custom-sw.js')
+      .then(registration => {
+        console.log('SW registered:', registration.scope);
+        
+        // Send username after SW is ready
+        if (userName) {
+          navigator.serviceWorker.ready.then(() => {
+            navigator.serviceWorker.controller?.postMessage({
+              type: 'SET_USERNAME',
+              username: userName
+            });
           });
         }
       })
-      .catch((error) => {
-        console.error('Service Worker registration failed:', error);
+      .catch(error => {
+        console.error('SW registration failed:', error);
       });
   }
 }, [userName]);
