@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineClose, AiOutlinePlus } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -23,8 +23,10 @@ import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
-import { AiOutlinePlus } from "react-icons/ai";
-import { Row } from "primereact/row";
+import { useRouter } from "next/navigation";
+// import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
+import { useDispatch } from "react-redux";
+import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -73,8 +75,12 @@ const parseFollowupDate = (dateStr) => {
 
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
+  const notificationSent = useRef(new Set())
   const [loading, setLoading] = useState(true);
   const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
+  const {statusFilter, prospectTypeFilter, quoteSentFilter, CSEFilter, fromDate, toDate, filtersVisible, searchQuery} = useAppSelector(state => state.filterSlice)
+  const router = useRouter()
+  const dispatch = useDispatch()
   const [showModal, setShowModal] = useState(false);
   const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -97,14 +103,14 @@ const EventCards = ({params, searchParams}) => {
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-  const [quoteSentFilter, setQuoteSentFilter] = useState("All");
-  const [CSEFilter, setCSEFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filtersVisible, setFiltersVisible] = useState(false);
-  const [fromDate, setFromDate] = useState(null); // Use null for default empty date
-  const [toDate, setToDate] = useState(null); // Use null for default empty date
+  // const [statusFilter, setStatusFilter] = useState("All");
+  // const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+  // const [quoteSentFilter, setQuoteSentFilter] = useState("All");
+  // const [CSEFilter, setCSEFilter] = useState("All");
+  // const [searchQuery, setSearchQuery] = useState('');
+  // const [filtersVisible, setFiltersVisible] = useState(false);
+  // const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+  // const [toDate, setToDate] = useState(null); // Use null for default empty date
   const [timers, setTimers] = useState("");
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
@@ -131,21 +137,15 @@ const EventCards = ({params, searchParams}) => {
   
   // console.log(rows)
   const toggleFilters = () => {
-    setFiltersVisible((prev) => !prev);
+    dispatch(toggleFiltersVisible());
   };
 
   const handleSearch = (query) => {
-    setSearchQuery(query.toLowerCase());
+    dispatch(setSearchQuery(query.toLowerCase()));
   };
   
   const clearFilters = () => {
-    setStatusFilter('All');
-    setProspectTypeFilter('All');
-    setQuoteSentFilter("All");
-    setFromDate(null);
-    setCSEFilter("");
-    setToDate(null);
-    setSearchQuery('');
+    dispatch(resetFilters());
   };
 
   const prospectTypes = [
@@ -407,7 +407,8 @@ const formatUnreachableTime = (timeStr) => {
       Object.values(intervals).forEach(clearInterval);
     };
   }, [rows]);
-  
+
+
   const insertEnquiry = async () => {
     let row = currentCall.rowData;
     // Extract only the 10-digit number
@@ -531,6 +532,7 @@ const formatUnreachableTime = (timeStr) => {
         status: searchParams.status || "",
         followupDate: searchParams.followupDate || null,
       };
+
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
 
     if (fetchedRows.length > 0) {
@@ -542,6 +544,7 @@ const formatUnreachableTime = (timeStr) => {
     
       setRows(fetchedRows);
       fetchCSENames();
+      // console.log(fetchedRows)
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -550,9 +553,11 @@ const formatUnreachableTime = (timeStr) => {
   };
 
   useEffect(() => {
-    if (!userName) return;
+    if (!userName || UserCompanyName === "") 
+      {
+        router.push("/login")
+      };
     fetchData();
-    
   }, [params.id, searchParams]);
 
   useEffect(() => {
@@ -572,7 +577,7 @@ const formatUnreachableTime = (timeStr) => {
       setInitialLeadStatus(selectedLeadStatus);
     }
   }, [showModal]); // Runs when the modal opens
-  
+
   const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData) => {
     setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData });
 
@@ -611,7 +616,7 @@ const formatUnreachableTime = (timeStr) => {
         return;
       }
       
-      if (selectedStatus === "Call Followup" && !currentCall.rowData.ProspectType) {
+      if (selectedStatus === "Call Followup" && !prospectType) {
         setToastMessage("Please select a Prospect Type before saving.");
         setSeverity("error");
         setToast(true);
@@ -623,7 +628,6 @@ const formatUnreachableTime = (timeStr) => {
       }
     let payload = {};
 
-    console.log("Received on Handle Save function")
     // Prepare payload based on context
     if (sendQuoteOnly === "Quote Sent") {
       payload = {
@@ -660,6 +664,7 @@ const formatUnreachableTime = (timeStr) => {
         quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
       };
     }
+  
     
     try {
       const response = await fetch(
@@ -999,12 +1004,13 @@ const handleStatusClick = async(row) => {
   
   setRemarks(row.Remarks);
   setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
-  setQuoteSentChecked(row.QuoteSent === "Yes")
   setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+  setQuoteSentChecked(row.QuoteSent === "Yes")
   setSelectedStatus(row.Status);
 };
 
   return (
+
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
@@ -1023,14 +1029,14 @@ const handleStatusClick = async(row) => {
         </button>
         
         {/* Report Button */}
-        <a href="/LeadManager/Report">
+         <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a>
+        </a> 
       </div>
 
     </div>
@@ -1076,8 +1082,8 @@ const handleStatusClick = async(row) => {
             {["All", "New", "Call Followup", "Unreachable"].map((status, index) => (
               <motion.button
                 key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                onClick={() => dispatch(setStatusFilter(status))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   statusFilter === status
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1092,12 +1098,12 @@ const handleStatusClick = async(row) => {
           </div>
 
           {/* Prospect Type Filter */}
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-hidden">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 md:max-w-[20%] overflow-x-scroll">
             {prospectTypes.map((item, index) => (
               <motion.button
                 key={item.type}
-                onClick={() => setProspectTypeFilter(item.type)}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                onClick={() => dispatch(setProspectTypeFilter(item.type))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   prospectTypeFilter === item.type
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1116,8 +1122,8 @@ const handleStatusClick = async(row) => {
             {["All", "Quote Sent", "Yet To Send"].map((status, index) => (
               <motion.button
                 key={status}
-                onClick={() => setQuoteSentFilter(status)}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                onClick={() => dispatch(setQuoteSentFilter(status))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   quoteSentFilter === status
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1131,13 +1137,13 @@ const handleStatusClick = async(row) => {
             ))}
           </div>
           
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg md:max-w-[20%] max-w-[100%] p-1 overflow-x-scroll">
             {[
               { username: "All" }, // Add "All" at the beginning
               ...CSENames].map((status, index) => (
               <motion.button
                 key={status.username}
-                onClick={() => setCSEFilter(toTitleCase(status.username))}
+                onClick={() => dispatch(setCSEFilter(toTitleCase(status.username)))}
                 className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
                   CSEFilter === toTitleCase(status.username)
                     ? "bg-white text-gray-700"
@@ -1151,13 +1157,13 @@ const handleStatusClick = async(row) => {
               </motion.button>
             ))}
           </div>
-          
+
           {/* Date Range Filters */}
           <div className="flex flex-row gap-2 sm:gap-4">
             {/* From Date Picker */}
             <DatePicker
               selected={fromDate}
-              onChange={(date) => setFromDate(date)}
+              onChange={(date) => dispatch(setFromDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="From Date"
               dateFormat="dd-MMM-yyyy"
@@ -1165,7 +1171,7 @@ const handleStatusClick = async(row) => {
             {/* To Date Picker */}
             <DatePicker
               selected={toDate}
-              onChange={(date) => setToDate(date)}
+              onChange={(date) => dispatch(setToDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="To Date"
               dateFormat="dd-MMM-yyyy"
@@ -1663,7 +1669,6 @@ const handleStatusClick = async(row) => {
                 />
               </div>
             )}
-          
 
             {!followupOnly && 
               <div className="mb-4">
@@ -1754,8 +1759,6 @@ const handleStatusClick = async(row) => {
     </div>
   );
 };
-
-
 
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
@@ -1849,7 +1852,6 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
 
   return sortedRows;
 }
-
 
 
 export default function Page({ params, searchParams }) {
