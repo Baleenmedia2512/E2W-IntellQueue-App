@@ -50,6 +50,7 @@ const ClientsData = () => {
   const [displayDOB, setDisplayDOB] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState('');
+  const [consultantPlace, setConsultantPlace] = useState('');
   const [displayWarning, setDisplayWarning] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
@@ -141,6 +142,7 @@ const ClientsData = () => {
                           setAddress("");
                           setConsultantName("");
                           setConsultantNumber("");
+                          setConsultantPlace("");
                           setClientPAN("");
                           setClientGST("");
                           setClientContactPerson("");
@@ -189,7 +191,7 @@ const ClientsData = () => {
     dispatch(setClientData({ consultantName: newName || "" }));
 
     if (newName.length > 1) {
-    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+    fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
       .then((response) => response.json())
       .then((data) => {setConsultantNameSuggestions(data)});
       if (errors.consultantName) {
@@ -203,7 +205,7 @@ const ClientsData = () => {
   const checkForSimilarNames = async () => {
     try {
         const response = await fetch(
-            `https://orders.baleenmedia.com/API/Media/CheckSimilarConsultantNames.php?ConsultantName=${consultantName}&JsonDBName=${companyName}`
+            `https://orders.baleenmedia.com/API/Media/CheckSimilarConsultantNamesTest.php?ConsultantName=${consultantName}&ConsultantNumber=${consultantNumber}&ConsultantPlace=${consultantPlace}&JsonDBName=${companyName}`
         );
         const data = await response.json();
         
@@ -282,8 +284,10 @@ const ClientsData = () => {
     .then((data) => {
         setConsultantName(data.ConsultantName);
         setConsultantNumber( data.ConsultantNumber ? data.ConsultantNumber : '');
+        setConsultantPlace(data.ConsultantPlace ? data.ConsultantPlace : '');
         dispatch(setClientData({ consultantName: data.ConsultantName || "" }));
         dispatch(setClientData({ consultantNumber: data.ConsultantNumber || "" }));
+        dispatch(setClientData({ consultantPlace: data.ConsultantPlace || "" }));
     })
     .catch((error) => {
     });
@@ -291,7 +295,7 @@ const ClientsData = () => {
 
   const fetchClientDetails = (clientID) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientID=${clientID}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -316,6 +320,7 @@ const ClientsData = () => {
           setConsultantName(clientDetails.consname || "");
           dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber(clientDetails.consnumber || "");
+          setConsultantPlace(clientDetails.consplace || "");
           // setClientPAN(clientDetails.PAN || "");
           setClientGST(clientDetails.GST || "");
           setClientContactPerson(clientDetails.clientContactPerson || "");
@@ -367,7 +372,7 @@ const ClientsData = () => {
 
   const FetchClientDetailsByContact = (clientNumber) => {
     axios
-      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContact.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
+      .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsByContactTest.php?ClientContact=${clientNumber}&JsonDBName=${companyName}`)
       .then((response) => {
         const data = response.data;
         if (data && data.length > 0) {
@@ -395,6 +400,7 @@ const ClientsData = () => {
           setTitle(clientDetails.title || "");
           setConsultantName(clientDetails.consname || "");
           setConsultantNumber(clientDetails.consnumber || "");
+          setConsultantPlace(clientDetails.consplace || "");
           setClientGST(clientDetails.GST || "");
           setClientContactPerson(clientDetails.clientContactPerson || "");
           setMonths(clientDetails.Age || "");
@@ -492,6 +498,7 @@ const ClientsData = () => {
                           setAddress("");
                           setConsultantName("");
                           setConsultantNumber("");
+                          setConsultantPlace("");
                           setClientPAN("");
                           setClientGST("");
                           setClientContactPerson("");
@@ -597,7 +604,7 @@ const ClientsData = () => {
         }
       }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       
       if (data === "Values Inserted Successfully!") {
@@ -666,7 +673,7 @@ const ClientsData = () => {
       }
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -937,6 +944,7 @@ const handleRemoveClient = () => {
           setConsultantName("");
           dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber("");
+          setConsultantPlace("");
           setClientPAN("");
           setClientGST("");
           setClientContactPerson("");
@@ -1098,6 +1106,7 @@ const BMvalidateFields = () => {
     setAddress("");
     setConsultantName("");
     setConsultantNumber("");
+    setConsultantPlace("");
     setClientPAN("");
     setClientGST("");
     setClientContactPerson("");
@@ -1249,13 +1258,15 @@ const BMvalidateFields = () => {
       onClick={() => {
         setConsultantName(consultant.ConsultantName);
         setConsultantNumber(consultant.ConsultantNumber || '');
+        setConsultantPlace(consultant.ConsultantPlace || '');
         dispatch(setClientData({ consultantName: consultant.ConsultantName}));
         dispatch(setClientData({ consultantNumber: consultant.ConsultantNumber || '' }));
+        dispatch(setClientData({ consultantPlace: consultant.ConsultantPlace || '' }));
         setSimilarConsultantDialogOpen(false); // Close the dialog
         setShouldCheckForSimilarConsultantNames(false); // Prevent rechecking on next submit
       }}
     >
-      {consultant.ConsultantName} - {consultant.ConsultantNumber}
+      {consultant.ConsultantName} - {consultant.ConsultantNumber} - {consultant.ConsultantPlace}
     </li>
   ))}
 </ul>
@@ -1669,6 +1680,18 @@ const BMvalidateFields = () => {
                     {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}
                     {errors.consultantNumber && <p className="text-red-500 text-xs">{errors.consultantNumber}</p>}
                   </div>
+                  <div name="ConsultantPlaceInput">
+                  <label className="block mb-1 text-black font-medium">Consultant Place</label>
+                  <input
+                    className="w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300"
+                    type="text"
+                    placeholder="Consultant Place"
+                    id="11"
+                    name="ConsultantPlaceInput"
+                    value={consultantPlace}
+                    onChange={(e) => setConsultantPlace(e.target.value)}
+                  />
+                </div>
                 </>
               )}
             </div>
