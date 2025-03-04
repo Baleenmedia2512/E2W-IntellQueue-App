@@ -802,12 +802,6 @@ var selectedRate = '';
     }
   };
 
-
-useEffect(() => {
-console.log(selectedValues)
-  }, [selectedValues])
-  
-
   const [initialValues, setInitialValues] = useState({
     rateName: '',
     adType: '',
@@ -1547,17 +1541,19 @@ console.log(selectedValues)
         } else if(selectedUnit === ""){
           setIsUnitsSelected(true)
         } else if(combinedSlabData.length === 0){
+          qtyRef.current.focus();
           setIsQtySlab(true);
         }else if (validityDays <= 0) {
+          validityRef.current.focus();
             setIsValidityDays(true);
           } else if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
+            ldRef.current.focus();
             setIsLeadDays(true)
         }else { 
           const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0;
           const minSlab = combinedSlabData.reduce((min, current) => {
             return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
         }, combinedSlabData[0]);
-
             try {
               const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}`)
                 const data = await response.json();
@@ -1566,7 +1562,6 @@ console.log(selectedValues)
                 setTimeout(() => {
                 setSuccessMessage('');
               }, 2000);
-
                 // Setting the new Rate into Old Rate
                 setIsNewRate(true);
                 fetchMaxRateID()
@@ -2112,7 +2107,7 @@ const handleBlur = (e) => {
       <form className="space-y-4">
       {/* <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3> */}
       {/* { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>}  */}
-      {rateId > 0 && rateValidity && (
+      {rateId > 0 && rateValidity && !isNewRate && (
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
