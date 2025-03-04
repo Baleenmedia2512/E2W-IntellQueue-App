@@ -1523,7 +1523,6 @@ var selectedRate = '';
 
   const insertNewRate = async (e) => {
     e.preventDefault();
-    console.log("Inserting New Rate")
     const typeOfAdEncoded = encodeURIComponent(selectedValues.typeOfAd.value);
     const adTypeEncoded = encodeURIComponent(selectedValues.adType.value);
     const locationEncoded = encodeURIComponent(selectedValues.Location.value);
@@ -1533,7 +1532,6 @@ var selectedRate = '';
     try {
         if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
             // showToastMessage('warning', "Please fill all the fields!");
-            console.log("Please fill all the fields!")
             setToastMessage('Please fill all the fields!');
             setSeverity('error');
             setToast(true);
@@ -1556,7 +1554,6 @@ var selectedRate = '';
           const minSlab = combinedSlabData.reduce((min, current) => {
             return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
         }, combinedSlabData[0]);
-            console.log("Inserting New Rate")
             try {
               const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}`)
                 const data = await response.json();
