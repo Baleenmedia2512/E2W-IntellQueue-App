@@ -247,26 +247,6 @@ const AdDetailsPage = () => {
       });
       toggleModal();
       setIsSlabAvailable(true);
-    // if (isNewRate) {
-     
-    //   setIsSlabAvailable(true);
-    // }
-    
-    // if(newUnitPrice > 0){
-    //   console.log(tempSlabData.Qty, tempSlabData.newUnitPrice)
-    //   try{
-    //     if(!startQty.includes(Number(Qty))){
-    //       await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${tempSlabData.Qty}&JsonUnitPrice=${tempSlabData.newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
-    //       fetchQtySlab();
-    //       setQty(0)
-    //       toggleModal();
-    //       setNewUnitPrice("");
-    //     } else{
-    //       updateQtySlab()
-    //     }
-    //   }catch(error){
-    //     console.error(error)
-    //   }
     } else {
       // showToastMessage("error", "Enter valid Unit Price!")
       setToastMessage('Enter valid Unit Price!');
@@ -1165,17 +1145,17 @@ console.log(selectedValues)
           }
   
           // Insert or update slab data
-          for (const slab of combinedSlabData) {
+          // for (const slab of combinedSlabData) {
 
-            if (slab) {
-              await insertQtySlab(slab.StartQty, slab.UnitPrice, slab.Width);
-              console.log('Adding Slab:', slab);
-            } else {
-              setToastMessage("No Slab data to Update!");
-              setSeverity('warning');
-              setToast(true);
-            }
-          }
+          //   if (slab) {
+          //     await insertQtySlab(slab.StartQty, slab.UnitPrice, slab.Width);
+          //     console.log('Adding Slab:', slab);
+          //   } else {
+          //     setToastMessage("No Slab data to Update!");
+          //     setSeverity('warning');
+          //     setToast(true);
+          //   }
+          // }
 
           // Success message
           // setEditMode(false);
