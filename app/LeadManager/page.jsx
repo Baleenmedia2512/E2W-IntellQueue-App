@@ -99,7 +99,7 @@ const EventCards = ({params, searchParams}) => {
   const [initialLeadStatus, setInitialLeadStatus] = useState("");
   const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
   const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
-  const [quoteSentChecked, setQuoteSentChecked] = useState("");
+  // const [quoteSentChecked, setQuoteSentChecked] = useState("");
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
@@ -120,7 +120,7 @@ const EventCards = ({params, searchParams}) => {
   const [CSENames, setCSENames] = useState([]);
   const notificationSent = useRef(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [nextSNo, setNextSNo] = useState(0); 
+  // const [nextSNo, setNextSNo] = useState(0); 
   const [formData, setFormData] = useState({
     sNo: "",
     date: "",
@@ -581,6 +581,7 @@ useEffect(() => {
 
   const fetchData = async () => {
     try {
+
       const filters = {
         leadDate: searchParams.leadDate || null,
         status: searchParams.status || "",
@@ -588,13 +589,6 @@ useEffect(() => {
       };
 
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
-
-    if (fetchedRows.length > 0) {
-      const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
-      setNextSNo(maxSlNo + 1);
-    } else {
-      console.log("No rows found to calculate max Sl. No.");
-    }
     
       setRows(fetchedRows);
       fetchCSENames();
@@ -715,7 +709,7 @@ useEffect(() => {
         prospectType: prospectType || "",  // Include ProspectType
         handledBy: toTitleCase(userName),
         dbCompanyName: UserCompanyName || "Baleen Test",
-        quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
+        quoteSent: initialQuoteStatus
       };
     }
   
@@ -975,6 +969,28 @@ useEffect(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const filters = {
+      leadDate: searchParams.leadDate || null,
+      status: searchParams.status || "",
+      followupDate: searchParams.followupDate || null,
+    };
+
+    console.log(rows);
+
+    const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+    let nextSNo = 0;
+
+    console.log(fetchedRows)
+
+    if (fetchedRows.length > 0) {
+      nextSNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) + 1 || 0;
+      console.log(nextSNo)
+    } else{
+      alert("Problem in network, please try again");
+      return;
+    }
+
     const dbCompanyName = encodeURIComponent(UserCompanyName);
     const payload = {
       sNo: nextSNo, // Use the incremented serial number
@@ -1059,7 +1075,7 @@ const handleStatusClick = async(row) => {
   setRemarks(row.Remarks);
   setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
   setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
-  setQuoteSentChecked(row.QuoteSent === "Yes")
+  // setQuoteSentChecked(row.QuoteSent === "Yes")
   setSelectedStatus(row.Status);
 };
 
@@ -1576,7 +1592,7 @@ const handleStatusClick = async(row) => {
                     value={formData.adEnquiry}
                     onChange={handleInputChange}
                     className="w-full p-2 text-sm border border-gray-300 rounded-md"
-                    required
+                    // required
                   />
                 </div>
                 <div>
@@ -1692,7 +1708,7 @@ const handleStatusClick = async(row) => {
                 ))}
             </div>
             }
-              {selectedStatus === "Call Followup" && (
+              {/* {selectedStatus === "Call Followup" && (
                 <div>
                 <label className=" mb-2 flex items-center space-x-2 ">
                   <input
@@ -1704,7 +1720,7 @@ const handleStatusClick = async(row) => {
                   <span className="text-gray-800 font-medium">Quote Sent to Client</span>
                 </label>
                 </div> 
-              )}
+              )} */}
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">

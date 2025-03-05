@@ -163,114 +163,153 @@ const handleLogin = (event) => {
 };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-            <div className="max-w-screen-lg min-w-fit min-h-fit bg-white shadow-md rounded-lg overflow-hidden p-8 md:flex md:items-center md:justify-center md:space-x-8">
-                {/* Sign-in form */}
-                <div className="w-full md:w-1/2">
-                <h2 className="text-2xl font-bold font-inter text-gray-800">WELCOME TO</h2>
-                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK IBMS</h2>
-                   <div className="border-2 w-10 inline-block mb-4 border-blue-500 "></div>
-                    <form onKeyDown={(e) => { e.preventDefault(); handleLogin(); }}>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-                                Username
-                            </label>
-                            <input
-                                 className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.username ? 'border-red-400' : ''}`}
-                                id="username"
-                                type="text"
-                                placeholder="Enter your username"
-                                value={userName}
-                                onFocus={e => e.target.select()}
-                                onChange={(e) => setUserName(e.target.value)}
-                            />
-                            {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <input
-                                    className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.password ? 'border-red-400' : ''}`}
-                                    id="password"
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Enter your password"
-                                    value={password}
-                                    onFocus={e => e.target.select()}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
-                                    onClick={toggleShowPassword}
-                                >
-                                    {showPassword ? (
-                                        <EyeSlashIcon className="h-5 w-5 text-gray-700" />
-                                    ) : (
-                                        <EyeIcon className="h-5 w-5 text-gray-700" />
-                                    )}
-                                </button>
-                            </div>
-                            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-                        </div>
-                        <div className="mb-6 relative">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="company">
-                                Company Name
-                            </label>
-                            <input
-                                className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${errors.companyName ? 'border-red-400' : ''}`}
-                                id="company"
-                                type="text"
-                                placeholder="Enter your company name"
-                                value={companyName}
-                                onFocus={e => e.target.select()}
-                                onChange={handleSearchTermChange}
-                            />
-                            {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
-                            {/* Company Name Suggestions */}
-                            {(companyNameSuggestions.length > 0 && companyName !== '') && (
-                                <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                                    {companyNameSuggestions.map((name, index) => (
-                                        <li key={index}>
-                                            <button
-                                                type="button"
-                                                className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                                                onClick={handleCompanyNameSelection}
-                                                value={name}
-                                            >
-                                                {name}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                        
+      <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
+        <div className="max-w-screen-lg min-w-fit min-h-fit bg-white shadow-md rounded-lg overflow-hidden p-8 md:flex md:items-center md:justify-center md:space-x-8">
+          {/* Sign-in form */}
+          <div className="w-full md:w-1/2">
+            <h2 className="text-2xl font-bold font-inter text-gray-800">
+              WELCOME TO
+            </h2>
+            <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">
+              EASY2WORK IBMS
+            </h2>
+            <div className="border-2 w-10 inline-block mb-4 border-blue-500 "></div>
+            <form
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleLogin();
+                }
+              }}
+            >
+              <div className="mb-4">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
+                  Username
+                </label>
+                <input
+                  className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${
+                    errors.username ? "border-red-400" : ""
+                  }`}
+                  id="username"
+                  type="text"
+                  placeholder="Enter your username"
+                  value={userName}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setUserName(e.target.value)}
+                />
+                {errors.username && (
+                  <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="password"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${
+                      errors.password ? "border-red-400" : ""
+                    }`}
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                    onClick={toggleShowPassword}
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-700" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-gray-700" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
+              </div>
+              <div className="mb-6 relative">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="company"
+                >
+                  Company Name
+                </label>
+                <input
+                  className={`border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 w-full ${
+                    errors.companyName ? "border-red-400" : ""
+                  }`}
+                  id="company"
+                  type="text"
+                  placeholder="Enter your company name"
+                  value={companyName}
+                  onFocus={(e) => e.target.select()}
+                  onChange={handleSearchTermChange}
+                />
+                {errors.companyName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.companyName}
+                  </p>
+                )}
+                {/* Company Name Suggestions */}
+                {companyNameSuggestions.length > 0 && companyName !== "" && (
+                  <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                    {companyNameSuggestions.map((name, index) => (
+                      <li key={index}>
                         <button
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
-                            type="button"
-                            onClick={handleLogin}
-                            
-                            >
-                             Sign In
+                          type="button"
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                          onClick={handleCompanyNameSelection}
+                          value={name}
+                        >
+                          {name}
                         </button>
-                    </form>
-                    <div className="text-gray-600 text-xs mt-4">
-                        Version 1.8.12 {/*Commenting for release */}
-                    </div>
-                </div>
-                <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">
-                <div className="flex flex-col items-center justify-center">
-                <h2 className="text-xl text-center font-bold text-yellow-300 mb-4">Streamline Your Customer Relationships with Ease</h2>
-                <div className="border-2 w-10 inline-block mb-4 border-yellow-300"></div>
-                <img src="/images/login.png" alt="Login" className="w-72  h-auto rounded-br-lg" />
-                </div>
-                </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+                type="button"
+                onClick={handleLogin}
+              >
+                Sign In
+              </button>
+            </form>
+            <div className="text-gray-600 text-xs mt-4">
+              Version 1.8.12 {/*Commenting for release */}
             </div>
-  {successMessage && <SuccessToast message={successMessage} />}
-  {toast && <ToastMessage message={toastMessage} type="error"/>}
+          </div>
+          <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">
+            <div className="flex flex-col items-center justify-center">
+              <h2 className="text-xl text-center font-bold text-yellow-300 mb-4">
+                Streamline Your Customer Relationships with Ease
+              </h2>
+              <div className="border-2 w-10 inline-block mb-4 border-yellow-300"></div>
+              <img
+                src="/images/login.png"
+                alt="Login"
+                className="w-72  h-auto rounded-br-lg"
+              />
+            </div>
+          </div>
         </div>
+        {successMessage && <SuccessToast message={successMessage} />}
+        {toast && <ToastMessage message={toastMessage} type="error" />}
+      </div>
     );
 };
 
