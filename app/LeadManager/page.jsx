@@ -75,7 +75,6 @@ const parseFollowupDate = (dateStr) => {
 
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
-  const notificationSent = useRef(new Set())
   const [loading, setLoading] = useState(true);
   const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
   const {statusFilter, prospectTypeFilter, quoteSentFilter, CSEFilter, fromDate, toDate, filtersVisible, searchQuery} = useAppSelector(state => state.filterSlice)
@@ -99,7 +98,7 @@ const EventCards = ({params, searchParams}) => {
   const [initialLeadStatus, setInitialLeadStatus] = useState("");
   const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
   const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
-  const [quoteSentChecked, setQuoteSentChecked] = useState("");
+  // const [quoteSentChecked, setQuoteSentChecked] = useState("");
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
@@ -119,7 +118,7 @@ const EventCards = ({params, searchParams}) => {
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [nextSNo, setNextSNo] = useState(0); 
+  // const [nextSNo, setNextSNo] = useState(0); 
   const [formData, setFormData] = useState({
     sNo: "",
     date: "",
@@ -134,7 +133,6 @@ const EventCards = ({params, searchParams}) => {
     handledBy: "",
   });
 
-  
   // console.log(rows)
   const toggleFilters = () => {
     dispatch(toggleFiltersVisible());
@@ -527,6 +525,7 @@ const formatUnreachableTime = (timeStr) => {
 
   const fetchData = async () => {
     try {
+
       const filters = {
         leadDate: searchParams.leadDate || null,
         status: searchParams.status || "",
@@ -534,13 +533,6 @@ const formatUnreachableTime = (timeStr) => {
       };
 
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
-
-    if (fetchedRows.length > 0) {
-      const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
-      setNextSNo(maxSlNo + 1);
-    } else {
-      console.log("No rows found to calculate max Sl. No.");
-    }
     
       setRows(fetchedRows);
       fetchCSENames();
@@ -661,7 +653,7 @@ const formatUnreachableTime = (timeStr) => {
         prospectType: prospectType || "",  // Include ProspectType
         handledBy: toTitleCase(userName),
         dbCompanyName: UserCompanyName || "Baleen Test",
-        quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
+        quoteSent: initialQuoteStatus
       };
     }
   
@@ -844,13 +836,13 @@ const formatUnreachableTime = (timeStr) => {
     );
   }
 
-  if (!rows.length) {
-    return (
-      <div className="font-poppins text-center">
-        <h2>No Data Found</h2>
-      </div>
-    );
-  }
+  // if (!rows.length) {
+  //   return (
+  //     <div className="font-poppins text-center">
+  //       <h2>No Data Found</h2>
+  //     </div>
+  //   );
+  // }
 
   const toggleQuoteSent = async(sNo, status) => {
     var setValue = status === 'Yes' ? 'No' : 'Yes';
@@ -921,6 +913,23 @@ const formatUnreachableTime = (timeStr) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const filters = {
+      leadDate: searchParams.leadDate || null,
+      status: searchParams.status || "",
+      followupDate: searchParams.followupDate || null,
+    };
+
+    const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+    let nextSNo = 0;
+
+    if (fetchedRows.length > 0) {
+      nextSNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) + 1 || 0;
+    } else{
+      alert("Problem in network, please try again");
+      return;
+    }
+
     const dbCompanyName = encodeURIComponent(UserCompanyName);
     const payload = {
       sNo: nextSNo, // Use the incremented serial number
@@ -1005,7 +1014,7 @@ const handleStatusClick = async(row) => {
   setRemarks(row.Remarks);
   setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
   setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
-  setQuoteSentChecked(row.QuoteSent === "Yes")
+  // setQuoteSentChecked(row.QuoteSent === "Yes")
   setSelectedStatus(row.Status);
 };
 
@@ -1083,7 +1092,7 @@ const handleStatusClick = async(row) => {
               <motion.button
                 key={status}
                 onClick={() => dispatch(setStatusFilter(status))}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   statusFilter === status
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1098,12 +1107,12 @@ const handleStatusClick = async(row) => {
           </div>
 
           {/* Prospect Type Filter */}
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-hidden">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 md:max-w-[20%] overflow-x-scroll">
             {prospectTypes.map((item, index) => (
               <motion.button
                 key={item.type}
                 onClick={() => dispatch(setProspectTypeFilter(item.type))}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   prospectTypeFilter === item.type
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1123,7 +1132,7 @@ const handleStatusClick = async(row) => {
               <motion.button
                 key={status}
                 onClick={() => dispatch(setQuoteSentFilter(status))}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   quoteSentFilter === status
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -1137,7 +1146,7 @@ const handleStatusClick = async(row) => {
             ))}
           </div>
           
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg md:max-w-[20%] max-w-[100%] p-1 overflow-x-scroll">
             {[
               { username: "All" }, // Add "All" at the beginning
               ...CSENames].map((status, index) => (
@@ -1522,7 +1531,7 @@ const handleStatusClick = async(row) => {
                     value={formData.adEnquiry}
                     onChange={handleInputChange}
                     className="w-full p-2 text-sm border border-gray-300 rounded-md"
-                    required
+                    // required
                   />
                 </div>
                 <div>
@@ -1638,7 +1647,7 @@ const handleStatusClick = async(row) => {
                 ))}
             </div>
             }
-              {selectedStatus === "Call Followup" && (
+              {/* {selectedStatus === "Call Followup" && (
                 <div>
                 <label className=" mb-2 flex items-center space-x-2 ">
                   <input
@@ -1650,7 +1659,7 @@ const handleStatusClick = async(row) => {
                   <span className="text-gray-800 font-medium">Quote Sent to Client</span>
                 </label>
                 </div> 
-              )}
+              )} */}
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
