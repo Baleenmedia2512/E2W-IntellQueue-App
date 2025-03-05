@@ -2018,7 +2018,7 @@ const handleBlur = (e) => {
           value={rateSearchTerm}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          onChange={e => debouncedSearch(e)}
+          onChange={handleRateSearch}
         />
         <div className="px-3">
           <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
