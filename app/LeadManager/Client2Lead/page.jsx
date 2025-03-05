@@ -57,7 +57,8 @@ export default function ExistingClientToLeads() {
 
   const FetchLeads = async () => {
     let response = await FetchExistingLeads(UserCompanyName, searchTerm);
-    setLeadData(response);
+    console.log(response)
+    setLeadData(response.data);
     fetchCSENames();
   };
 

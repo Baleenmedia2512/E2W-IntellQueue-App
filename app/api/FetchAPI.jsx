@@ -339,12 +339,12 @@ export const elementsToHideList = async(DBName) => {
     let LeadData = [];
 
     try {
-        const response = await api.get("FetchExistingLeads.php/get",{
+        const response = await api.get("FetchExistingLeadsTest.php/get",{
             headers: {
                 'Content-Type': 'application/json; charset=utf-8'
             },
             params:{
-                JsonDBName: DBName,
+                JsonDBName: "Baleen Media",
                 JsonSearchTerm: SearchTerm
             }
         });
