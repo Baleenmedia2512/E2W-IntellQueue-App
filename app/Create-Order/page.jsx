@@ -32,7 +32,7 @@ const CreateOrder = () => {
     const orderDetails = useAppSelector(state => state.orderSlice);
     const stages = useAppSelector(state => state.stageSlice.stages);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
-    const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
+    const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR, consultantId: consultantIdCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP, clientName: clientNameRP, clientContact: clientNumberRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -53,6 +53,7 @@ const CreateOrder = () => {
     const [receivable, setReceivable] = useState("");
     const [address, setAddress] = useState('');
     const [clientID, setClientID] = useState(clientIDCR || '');
+    const [consultantID, setConsultantID] = useState(consultantIdCR || '');
     const [consultantName, setConsultantName] = useState(consultantNameCR || '');
     const [initialConsultantName, setInitialConsultantName] = useState(consultantNameCR || '');
     const [consultantNumber, setConsultantNumber] = useState('');
@@ -138,6 +139,7 @@ const CreateOrder = () => {
     },[])
 
     useEffect(() => {
+      setConsultantID(consultantIdCR || '');
       setConsultantName(consultantNameCR || '');
       setInitialConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
@@ -646,7 +648,7 @@ const fetchRates = async () => {
       const fetchClientDetails = async (clientID) => {
         try {
           const response = await axios.get(
-            `https://orders.baleenmedia.com/API/Media/FetchClientDetails.php?ClientID=${clientID}&JsonDBName=${companyName}`
+            `https://orders.baleenmedia.com/API/Media/FetchClientDetailsTest.php?ClientID=${clientID}&JsonDBName=${companyName}`
           );
       
           const data = response.data;
@@ -670,6 +672,7 @@ const fetchRates = async () => {
             setClientEmail(clientDetails.email || "");
             setClientSource(clientDetails.source || "");
             setAddress(clientDetails.address || "");
+            setConsultantID(clientDetails.consid || "");
             setConsultantName(clientDetails.consname || "");
             setInitialConsultantName(clientDetails.consname || "");
             setClientGST(clientDetails.GST || "");
@@ -748,7 +751,7 @@ const fetchRates = async () => {
     const fetchOrderDetailsByOrderNumber = async (orderNum) => {
       try {
         const response = await axios.get(
-          `https://orders.baleenmedia.com/API/Media/FetchOrderData.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`
+          `https://orders.baleenmedia.com/API/Media/FetchOrderDataTest.php?OrderNumber=${orderNum}&JsonDBName=${companyName}`
         );
     
         const data = response.data;
@@ -766,6 +769,7 @@ const fetchRates = async () => {
           dispatch(setRateId(data.rateId));
           setHasOrderDetails(true);
           setClientID(data.clientID);
+          setConsultantID(data.consultantId);
           setConsultantName(data.consultantName);
           setInitialConsultantName(data.consultantName);
           setDiscountAmount(data.adjustedOrderAmount);
@@ -896,7 +900,7 @@ const CreateStages = async () => {
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrderTest.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}&JsonConsultantId=${consultantID}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
@@ -1001,9 +1005,10 @@ const updateNewOrder = async (event) => {
       JsonAdjustedOrderAmount: discountAmount,
       JsonCommission: commissionAmount,
       JsonIsCommissionSingleUse: IsCommissionForSingleUse,
+      JsonConsultantId: consultantID
     });
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrderTest.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
         headers: {
           'Content-Type': 'application/json'
@@ -1301,7 +1306,7 @@ const handleConsultantNameChange = (event) => {
   const newName = event.target.value;
   setConsultantName(newName)
   // dispatch(setClientData({ consultantName: newName || "" }));
-  fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNames.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
+  fetch(`https://orders.baleenmedia.com/API/Media/SuggestingVendorNamesTest.php/get?suggestion=${newName}&JsonDBName=${companyName}`)
     .then((response) => response.json())
     .then((data) => {setConsultantNameSuggestions(data)});
     if (errors.consultantName) {
@@ -1342,6 +1347,7 @@ const fetchConsultantDetails = async (Id) => {
 
     const data = await response.json();
 
+    setConsultantID(Id);
     setConsultantName(data.ConsultantName);
     setInitialConsultantName(data.ConsultantName);
     setConsultantNumber(data.ConsultantNumber || '');
@@ -1446,7 +1452,7 @@ const handleOpenDialog = () => {
     }, 2000);
   }
 };
-console.log(discountAmount, prevData.discountAmount)
+
 
   // const handleOpenDialog = () => {
   //   setDialogOpen(true);
@@ -1470,6 +1476,7 @@ console.log(discountAmount, prevData.discountAmount)
     setUpdateRateWiseOrderNumber('');
     dispatch(setRateId(''));
     setClientID('');
+    setConsultantID('');
     setConsultantName('');
     setInitialConsultantName('');
     setDiscountAmount(0);
@@ -1888,24 +1895,6 @@ return (
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
         <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
       </div>
-      <label className='text-gray-500 text-[13px] hover:cursor-pointer'> 
-      Add &nbsp;
-  <span 
-    className='underline text-sky-500 hover:text-sky-600' 
-    onClick={() => {
-      // Trim the clientName to prevent empty spaces from bypassing the check
-      if (clientName && clientName.trim() !== '') {  
-        router.push('/Payment-Milestone');
-      } else {
-        setErrors({clientName: "Please enter a valid Client Name"})
-        // You can use any notification, such as toast or alert, to notify the user
-        //alert('Please fill out the Client Name before proceeding.');
-      }
-    }}
-  >
-    Payment Milestone
-  </span>
-</label>
 
     </div>
     <div>

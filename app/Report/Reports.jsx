@@ -915,6 +915,7 @@ const orderColumns = [
     { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: isMobile ? 190 : 130 },
     { field: 'Remarks', headerName: 'Order Remarks', width: isMobile ? 180 : 160 },
     { field: 'ConsultantName', headerName: 'Consultant Name', width: isMobile ? 180 : 150 },
+    { field: 'ConsultantPlace', headerName: 'Consultant Place', width: isMobile ? 180 : 150 },
     {
       field: 'actions',
       headerName: 'Actions',

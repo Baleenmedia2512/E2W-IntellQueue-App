@@ -20,7 +20,8 @@ const initialState = {
   clientID: "",
   nextRateWiseOrderNumber: "",
   orderNumber: "",
-  isOrderUpdate: false
+  isOrderUpdate: false,
+  consultantId: ""
 };
 
 export const orderSlice = createSlice({

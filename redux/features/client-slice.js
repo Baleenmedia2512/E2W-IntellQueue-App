@@ -11,9 +11,17 @@ const initialState = {
   clientAddress: "",
   clientGST: "",
   clientPAN: "",
+  consultantId: "",
   consultantName: "",
   consultantNumber: "",
-  clientID: ""
+  clientID: "",
+  consultantId: "",
+  clientContactPerson: "",
+  clientGender: "",
+  clientMonths: "",
+  displayClientNumber: "",
+  displayClientName: "",
+  displayClientID: "",
 };
 
 export const clientSlice = createSlice({
