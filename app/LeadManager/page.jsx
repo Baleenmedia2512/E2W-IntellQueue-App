@@ -414,9 +414,8 @@ const formatUnreachableTime = (timeStr) => {
     // Extract only the 10-digit number
     const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
     const isNewClient = await checkIfNewClient(cleanedPhone)
-    console.log(isNewClient)
     try {
-        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${isNewClient}`;
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${isNewClient}`;
 
         const response = await fetch(url);
 
@@ -435,12 +434,12 @@ const formatUnreachableTime = (timeStr) => {
             throw new Error(`Invalid JSON response: ${text}`);
         }
 
-        if (data === "Values Inserted Successfully!") {
+        if (data.message === "Values Inserted Successfully!") {
             setSuccessMessage('Client Details Are Saved!');
             setTimeout(() => {
                 setSuccessMessage('');
             }, 2000);
-        } else if (data === "Duplicate Entry!") {
+        } else if (data.message === "Duplicate Entry!") {
             setToastMessage('Contact Number Already Exists!');
             setSeverity('error');
             setToast(true);
@@ -448,7 +447,7 @@ const formatUnreachableTime = (timeStr) => {
                 setToast(false);
             }, 2000);
         } else {
-            alert(`The following error occurred while inserting data: ${data}`);
+            alert(`The following error occurred while inserting data: ${data.message}`);
         }
     } catch (error) {
         console.error('Error while inserting data:', error);
