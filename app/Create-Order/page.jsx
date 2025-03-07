@@ -30,7 +30,7 @@ const CreateOrder = () => {
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
     const isOrderUpdate = useAppSelector(state => state.orderSlice.isOrderUpdate);
-    const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR} = clientDetails;
+    const {clientName: clientNameCR, consultantName: consultantNameCR, clientContact: clientNumberCR, clientID: clientIDCR, consultantId: consultantIdCR} = clientDetails;
     const {orderNumber: orderNumberRP, receivable: receivableRP, clientName: clientNameRP, clientContact: clientNumberRP} = orderDetails;
     const [clientName, setClientName] = useState(clientNameCR || "");
     const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -51,6 +51,7 @@ const CreateOrder = () => {
     const [receivable, setReceivable] = useState("");
     const [address, setAddress] = useState('');
     const [clientID, setClientID] = useState(clientIDCR || '');
+    const [consultantID, setConsultantID] = useState(consultantIdCR || '');
     const [consultantName, setConsultantName] = useState(consultantNameCR || '');
     const [initialConsultantName, setInitialConsultantName] = useState(consultantNameCR || '');
     const [consultantNumber, setConsultantNumber] = useState('');
@@ -136,6 +137,7 @@ const CreateOrder = () => {
     },[])
 
     useEffect(() => {
+      setConsultantID(consultantIdCR || '');
       setConsultantName(consultantNameCR || '');
       setInitialConsultantName(consultantNameCR || '');
       setClientID(clientIDCR || '');
@@ -653,6 +655,7 @@ const fetchRates = async () => {
             setClientEmail(clientDetails.email || "");
             setClientSource(clientDetails.source || "");
             setAddress(clientDetails.address || "");
+            setConsultantID(clientDetails.consid || "");
             setConsultantName(clientDetails.consname || "");
             setInitialConsultantName(clientDetails.consname || "");
             setClientGST(clientDetails.GST || "");
@@ -749,6 +752,7 @@ const fetchRates = async () => {
           dispatch(setRateId(data.rateId));
           setHasOrderDetails(true);
           setClientID(data.clientID);
+          setConsultantID(data.consultantId);
           setConsultantName(data.consultantName);
           setInitialConsultantName(data.consultantName);
           setDiscountAmount(data.adjustedOrderAmount);
@@ -839,7 +843,7 @@ const fetchRates = async () => {
             }, 2000);
         }
         try {
-            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}`)
+            const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php/?JsonUserName=${loggedInUser}&JsonUserName=${loggedInUser}&JsonOrderNumber=${nextOrderNumber}&JsonRateId=${rateId}&JsonClientName=${clientName}&JsonClientContact=${clientNumber}&JsonClientSource=${clientSource}&JsonOwner=${orderOwner}&JsonCSE=${loggedInUser}&JsonReceivable=${receivable}&JsonPayable=${payable}&JsonRatePerUnit=${unitPrice}&JsonConsultantName=${consultantName}&JsonMarginAmount=${marginAmount}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCategory=${selectedValues.Location.value + " : " + selectedValues.Package.value}&JsonType=${selectedValues.adType.value}&JsonHeight=${qty}&JsonWidth=1&JsonLocation=${selectedValues.Location.value}&JsonPackage=${selectedValues.Package.value}&JsonGST=${rateGST.value}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonClientAddress=${address}&JsonBookedStatus=Booked&JsonUnits=${selectedUnit.value}&JsonMinPrice=${unitPrice}&JsonRemarks=${remarks}&JsonContactPerson=${clientContactPerson}&JsonReleaseDates=${releaseDates}&JsonDBName=${companyName}&JsonClientAuthorizedPersons=${clientEmail}&JsonOrderDate=${formattedOrderDate}&JsonRateWiseOrderNumber=${nextRateWiseOrderNumber}&JsonAdjustedOrderAmount=${discountAmount}&JsonCommission=${commissionAmount}&JsonIsCommissionSingleUse=${IsCommissionForSingleUse}&JsonConsultantId=${consultantID}`)
             const data = await response.json();
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
@@ -944,6 +948,7 @@ const updateNewOrder = async (event) => {
       JsonAdjustedOrderAmount: discountAmount,
       JsonCommission: commissionAmount,
       JsonIsCommissionSingleUse: IsCommissionForSingleUse,
+      JsonConsultantId: consultantID
     });
     try {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
@@ -1285,6 +1290,7 @@ const fetchConsultantDetails = async (Id) => {
 
     const data = await response.json();
 
+    setConsultantID(Id);
     setConsultantName(data.ConsultantName);
     setInitialConsultantName(data.ConsultantName);
     setConsultantNumber(data.ConsultantNumber || '');
@@ -1413,6 +1419,7 @@ const handleOpenDialog = () => {
     setUpdateRateWiseOrderNumber('');
     dispatch(setRateId(''));
     setClientID('');
+    setConsultantID('');
     setConsultantName('');
     setInitialConsultantName('');
     setDiscountAmount(0);
@@ -1535,7 +1542,6 @@ const notifyOrderAdjustment = async (clientNam, adjustedOrderAmt, remarks, rateW
       setIsButtonDisabled(false);
   }
 };
-
 
 
 return (

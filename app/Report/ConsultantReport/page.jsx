@@ -114,7 +114,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
@@ -280,7 +280,6 @@ const saveConsultant = async (event) => {
 };
 
 
-
 const handleMarkAsUnprocessed = async () => {
     if (selectedRows && selectedRows.length > 0) {
         setLoading(true);
@@ -341,9 +340,11 @@ const handleMarkAsUnprocessed = async () => {
         const groupedData = [];
     
         data.forEach((consultant) => {
-            let existingConsultant = groupedData.find(group => group.name === consultant.name);
+            let existingConsultant = groupedData.find(group => group.id === consultant.ConsultantId);
+    
             if (!existingConsultant) {
                 existingConsultant = {
+                    id: consultant.ConsultantId,
                     name: consultant.name,
                     rates: [],
                     totalCount: 0,
@@ -367,6 +368,7 @@ const handleMarkAsUnprocessed = async () => {
     
         return groupedData;
     };
+    
 
     const renderGroupedData = (consultants) => {
         const rows = [];
@@ -374,27 +376,29 @@ const handleMarkAsUnprocessed = async () => {
         consultants.forEach((consultant, consultantIndex) => {
             consultant.rates.forEach((rate, rateIndex) => {
                 rows.push({
-                    id: `${consultant.name}-${rateIndex}`,
+                    id: `${consultant.id}-${consultant.name}-${rateIndex}`,
                     consultant: consultant.name,
                     client: rate.client,
                     rateCard: rate.rateCard,
                     rateType: rate.rateType,
                     price: rate.price,
                     orderNumber: rate.orderNumber,
-                    rateWiseOrderNumber: rate.rateWiseOrderNumber
+                    rateWiseOrderNumber: rate.rateWiseOrderNumber,
+                    consultantId: consultant.id
                 });
             });
     
             // Add a total row for the consultant
             rows.push({
-                id: `total-${consultant.name}`,
+                id: `${consultant.id}-${consultant.name}-total`,
                 consultant: "",
                 client: "",
                 rateCard: "Total",
                 rateType: consultant.totalCount,
                 price: consultant.totalPrice,
                 orderNumber: "",
-                rateWiseOrderNumber: ""
+                rateWiseOrderNumber: "", 
+                consultantId: ""
             });
         });
     
@@ -510,9 +514,10 @@ const filteredNameRows = rowsToCalucalate.map(row => {
     return row;
 });
 
-const numberOfConsultants = new Set(filteredNameRows
-    .map(row => row.consultant)
-    .filter(consultant => consultant) // This filters out null and empty string values
+const numberOfConsultants = new Set(
+    filteredNameRows
+        .map(row => row.consultantId) // Use consultantId instead of name
+        .filter(consultantId => consultantId) // Ensure no null or empty values
 ).size;
 
 // Total No. Of Orders Calculation
@@ -594,14 +599,11 @@ const handleSelectionChange = (e) => {
     setSelectedRows(newSelection); // Update selected rows
 };
 
-
 const filterHeaderTemplate = (column, filterField) => {
     
     const handleApplyFilter = () => {
         let newFilters = { ...filters };
-        let combinedFilteredRows = [...groupedData]; // Start with the entire dataset
-    
-        console.log('before', combinedFilteredRows);
+        let combinedFilteredRows = [...groupedData]; 
         
         // Apply filters based on each filter field
         for (const key in tempFilterValues) {
@@ -638,8 +640,7 @@ const filterHeaderTemplate = (column, filterField) => {
                 });
             }
         }
-    
-        console.log('after', combinedFilteredRows); // Log after filtering to debug
+
     
         // Update session storage and filters
         sessionStorage.setItem('filters', JSON.stringify(newFilters));
@@ -678,7 +679,7 @@ const filterHeaderTemplate = (column, filterField) => {
                 });
             }
         }
-
+    
         sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters); // Update filters without the cleared filter
     
@@ -689,7 +690,6 @@ const filterHeaderTemplate = (column, filterField) => {
             setSelectedRows(combinedFilteredRows); // Update selected rows based on remaining active filters
         }
     };
-
 
     return (
         <div>
@@ -767,54 +767,62 @@ const handleCheckboxChange = () => {
 };
 
 const handleSlipGeneration = () => {
-    // Step 1: Filter out rows where rateCard is 'Total'
     const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
-
-    // Step 2: Group data by consultant, then by rateCard, then by price
+  
     const groupedData = filteredRows.reduce((acc, row) => {
-        const { consultant, rateCard, price } = row;
-
-        if (!acc[consultant]) {
-            acc[consultant] = {};
+        const { consultantId, consultant, rateCard, price, rateType } = row;
+      
+        if (!acc[consultantId]) {
+            acc[consultantId] = { consultant, data: {} };
         }
-
-        if (!acc[consultant][rateCard]) {
-            acc[consultant][rateCard] = {};
+      
+        if (!acc[consultantId].data[rateCard]) {
+            acc[consultantId].data[rateCard] = {};
         }
-
-        if (!acc[consultant][rateCard][price]) {
-            acc[consultant][rateCard][price] = { count: 0, totalPrice: 0 };
+      
+        if (!acc[consultantId].data[rateCard][price]) {
+            acc[consultantId].data[rateCard][price] = { count: 0, totalPrice: 0, rateTypes: new Set() };
         }
-
-        acc[consultant][rateCard][price].count += 1;
-        acc[consultant][rateCard][price].totalPrice += price;
-
+      
+        acc[consultantId].data[rateCard][price].count += 1;
+        acc[consultantId].data[rateCard][price].totalPrice += price;
+      
+        if (rateType) {
+            acc[consultantId].data[rateCard][price].rateTypes.add(rateType.trim());
+        }
+      
         return acc;
     }, {});
+      
+    // Sort consultants by name (alphabetical order)
+    const sortedConsultants = Object.values(groupedData).sort((a, b) => a.consultant.localeCompare(b.consultant));
 
-    // Step 3: Convert grouped data into an array with consultant sections
+    // Convert to an array format for PDF generation
     const summaryByConsultant = [];
-    for (const consultant in groupedData) {
-        summaryByConsultant.push({ consultant, isHeader: true }); // Consultant header
+    sortedConsultants.forEach(({ consultant, data }) => {
+        summaryByConsultant.push({ consultant, isHeader: true });
 
-        for (const rateCard in groupedData[consultant]) {
-            for (const price in groupedData[consultant][rateCard]) {
-                const { count, totalPrice } = groupedData[consultant][rateCard][price];
+        for (const rateCard in data) {
+            for (const price in data[rateCard]) {
+                const { count, totalPrice, rateTypes } = data[rateCard][price];
                 summaryByConsultant.push({
                     consultant,
                     rateCard,
                     price,
                     count,
                     totalPrice,
-                    dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`
+                    dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+                    rateType: [...rateTypes].join(", "), // Merge only for that rateCard & price
                 });
             }
         }
-    }
-
-    // Step 4: Generate a single PDF with grouped consultant sections
-    generateReferralPdf(summaryByConsultant);
+    });
+      
+    generateReferralPdf(summaryByConsultant);      
 };
+
+
+
 
   const formatDate = (dateString) => {
     const months = [
@@ -829,12 +837,6 @@ const handleSlipGeneration = () => {
   
     return `${day}-${month}-${year}`;
   };
-  
-  
-  
-
-// console.log(selectedRows)
-
 
     return (
         <div className="relative min-h-screen mb-20">

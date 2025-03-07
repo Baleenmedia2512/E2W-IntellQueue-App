@@ -48,8 +48,10 @@ const ClientsData = () => {
   const [address, setAddress] = useState('');
   const [DOB, setDOB] = useState('');
   const [displayDOB, setDisplayDOB] = useState('');
+  const [consultantId, setConsultantId] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [consultantNumber, setConsultantNumber] = useState('');
+  const [consultantPlace, setConsultantPlace] = useState('');
   const [displayWarning, setDisplayWarning] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
   const [displayDOBWarning, setDisplayDOBWarning] = useState(false);
@@ -139,8 +141,10 @@ const ClientsData = () => {
                           setClientAge("");
                           setDOB("");
                           setAddress("");
+                          setConsultantId("");
                           setConsultantName("");
                           setConsultantNumber("");
+                          setConsultantPlace("");
                           setClientPAN("");
                           setClientGST("");
                           setClientContactPerson("");
@@ -203,7 +207,7 @@ const ClientsData = () => {
   const checkForSimilarNames = async () => {
     try {
         const response = await fetch(
-            `https://orders.baleenmedia.com/API/Media/CheckSimilarConsultantNames.php?ConsultantName=${consultantName}&JsonDBName=${companyName}`
+            `https://orders.baleenmedia.com/API/Media/CheckSimilarConsultantNames.php?ConsultantName=${consultantName}&ConsultantNumber=${consultantNumber}&ConsultantPlace=${consultantPlace}&JsonDBName=${companyName}`
         );
         const data = await response.json();
         
@@ -234,39 +238,25 @@ const ClientsData = () => {
     const name = rest.substring(0, rest.indexOf('(')).trim();
     const number = rest.substring(rest.indexOf('(') + 1, rest.indexOf(')')).trim();
     
-    dispatch(setClientData({clientName: name}));
-    dispatch(setClientData({clientContact: number}));
+    dispatch(setClientData({
+      clientName: name,
+      clientContact: number,
+      clientID: ID
+    }));
+
+    setDisplayClientID(ID);
+    setDisplayClientName(name);
+    setDisplayClientNumber(number);
+
     fetchClientDetails(ID);
+
     setClientNameSuggestions([]);
     setClientNumberSuggestions([]);
     setIsNewClient(false);
     setEditMode(true);
     setContactWarning('');
-    setDisplayClientNumber(number);
   };
-  
-  // const handleConsultantNameSelection = (event) => {
-  //   const input = event.target.value;
-  //     // Split by '-' to separate the ID and the rest of the input
-  //     const parts = input.split('-');
 
-  //     // Extract the rest after '-' (name and any parentheses)
-  //     const rest = parts.length > 1 ? parts.slice(1).join('-').trim() : parts[0].trim();
-  
-  //     // Use regex to match the phone number (if any) inside parentheses
-  //     const phoneMatch = rest.match(/\((\d{10,})\)$/); // Matches the number if it's in parentheses at the end
-  
-  //     // Extract the name, ignoring parentheses
-  //     const name = rest.replace(/\(.*?\)/g, '').trim(); // Remove anything in parentheses from the name
-  //     const number = phoneMatch ? phoneMatch[1] : '';
-
-  
-  //   setConsultantNameSuggestions([]);
-  //   setConsultantName(name)
-  //   dispatch(setClientData({ consultantName: name || "" }));
-  //   setConsultantNumber(number);
-  //   // fetchConsultantDetails(name, number);
-  // };
 
   const handleConsultantNameSelection = (event) => {
     const input = event.target.value;
@@ -280,10 +270,15 @@ const ClientsData = () => {
     fetch(`https://orders.baleenmedia.com/API/Media/FetchConsultantDetails.php?JsonConsultantID=${Id}&JsonDBName=${companyName}`)
     .then((response) => response.json())
     .then((data) => {
+        setConsultantId(Id);
         setConsultantName(data.ConsultantName);
         setConsultantNumber( data.ConsultantNumber ? data.ConsultantNumber : '');
+        setConsultantPlace(data.ConsultantPlace ? data.ConsultantPlace : '');
+
+        dispatch(setClientData({ ConsultantId: Id }));
         dispatch(setClientData({ consultantName: data.ConsultantName || "" }));
         dispatch(setClientData({ consultantNumber: data.ConsultantNumber || "" }));
+        dispatch(setClientData({ consultantPlace: data.ConsultantPlace || "" }));
     })
     .catch((error) => {
     });
@@ -297,71 +292,58 @@ const ClientsData = () => {
         if (data && data.length > 0) {
           setErrors({});
           const clientDetails = data[0];
-          // setClientID(clientDetails.id);
-          dispatch(setClientData({ clientID: clientDetails.id || "" }));
-          dispatch(setClientData({ clientName: clientDetails.name || "" }));
-          //MP-69-New Record are not fetching in GS
-          // Convert DOB to dd-M-yy for display
+
           const formattedDOB = parseDateFromDB(clientDetails.DOB);
           setDOB(clientDetails.DOB);
           setDisplayDOB(formattedDOB);
-          dispatch(setClientData({ clientEmail: clientDetails.email || "" }));
-          dispatch(setClientData({ clientSource: clientDetails.source || "" }));
-          //setClientAge(clientDetails.Age || "");
+
           setAddress(clientDetails.address || "");
           setTitle(clientDetails.title || "");
           setSelectedOption(clientDetails.title || "");
           setGender(clientDetails.gender || "");
-          dispatch(setClientData({clientTitle: clientDetails.title}));
+          setConsultantId(clientDetails.consid || "");
           setConsultantName(clientDetails.consname || "");
-          dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
           setConsultantNumber(clientDetails.consnumber || "");
-          // setClientPAN(clientDetails.PAN || "");
+          setConsultantPlace(clientDetails.consplace || "");
           setClientGST(clientDetails.GST || "");
           setClientContactPerson(clientDetails.clientContactPerson || "");
           setMonths(clientDetails.Age || "");
+          
           const age = calculateAge(clientDetails.DOB);
           setClientAge(age);
-          setDisplayClientID(clientDetails.id);
-          setDisplayClientName(clientDetails.name);
-          // Extract PAN from GST if necessary
+          dispatch(setClientData({ clientAge: age || "" }));
+          
         if (clientDetails.GST && clientDetails.GST.length >= 15 && (!clientDetails.PAN || clientDetails.PAN === "")) {
-          const pan = clientDetails.GST.slice(2, 12); // Correctly slice GST to get PAN
+          const pan = clientDetails.GST.slice(2, 12);
           setClientPAN(pan);
+          dispatch(setClientData({ clientPAN: pan || "" }));
         } else {
           setClientPAN(clientDetails.PAN);
+          dispatch(setClientData({ clientPAN: clientDetails.PAN || "" }));
         }
-      
+
+          dispatch(setClientData({ 
+            clientName: clientDetails.name || "", 
+            clientTitle: clientDetails.title || "", 
+            clientEmail: clientDetails.email || "", 
+            clientAddress: clientDetails.address || "", 
+            clientDOB: clientDetails.DOB || "", 
+            clientMonths: clientDetails.age || "", 
+            clientGST: clientDetails.GST || "", 
+            clientSource: clientDetails.source || "", 
+            consultantId: clientDetails.consid || "", 
+            consultantName: clientDetails.consname || "", 
+            consultantNumber: clientDetails.consnumber || "", 
+            consultantPlace: clientDetails.consplace || "", 
+            clientContactPerson: clientDetails.clientContactPerson || "", 
+            clientGender: clientDetails.gender || "" }));
+
         } else {
-          // Handle case where no data is returned
-          // dispatch(setClientData({ clientEmail: "" }));
-          // dispatch(setClientData({ clientSource: "" }));
-          // setClientAge("");
-          // // setDOB("");
-          // setAddress("");
-          // setTitle("");
-          // setSelectedOption("");
-          // setConsultantName("");
-          // setConsultantNumber("");
-          // setClientPAN("");
-          // setClientGST("");
           console.warn("No client details found for the given name and contact number.");
         }
       })
       .catch((error) => {
         console.error("Error fetching client details:", error);
-        // Optionally, you can reset the fields or show an error message to the user
-        // dispatch(setClientData({ clientEmail: "" }));
-        // dispatch(setClientData({ clientSource: "" }));
-        // setClientAge("");
-        // setDOB("");
-        // setAddress("");
-        // setTitle("");
-        // setSelectedOption("");
-        // setConsultantName("");
-        // setConsultantNumber("");
-        // setClientPAN("");
-        // setClientGST("");
       });
   };
 
@@ -375,31 +357,6 @@ const ClientsData = () => {
           setClientNumberSuggestions([]);
           const clientDetails = data[0];
 
-          // Update client data in state
-          dispatch(setClientData({
-            clientContact: clientNumber,
-            clientID: clientDetails.id || "",
-            clientName: clientDetails.name || "",
-            clientEmail: clientDetails.email || "",
-            clientSource: clientDetails.source || "",
-            clientTitle: clientDetails.title || "",
-            consultantName: clientDetails.consname || "",
-          }));
-
-          // Update client information locally
-          setDisplayClientNumber(clientNumber);
-          setDisplayClientID(clientDetails.id);
-          setDisplayClientName(clientDetails.name);
-          setAddress(clientDetails.address || "");
-          setSelectedOption(clientDetails.title || "");
-          setTitle(clientDetails.title || "");
-          setConsultantName(clientDetails.consname || "");
-          setConsultantNumber(clientDetails.consnumber || "");
-          setClientGST(clientDetails.GST || "");
-          setClientContactPerson(clientDetails.clientContactPerson || "");
-          setMonths(clientDetails.Age || "");
-          setGender(clientDetails.gender || "");
-
           // Handle DOB and Age
           const formattedDOB = parseDateFromDB(clientDetails.DOB);
           setDOB(clientDetails.DOB);
@@ -411,6 +368,50 @@ const ClientsData = () => {
             ? clientDetails.GST.slice(2, 12)
             : clientDetails.PAN;
           setClientPAN(pan);
+
+          // Update client information locally
+          setDisplayClientNumber(clientNumber);
+          setDisplayClientID(clientDetails.id);
+          setDisplayClientName(clientDetails.name);
+          setAddress(clientDetails.address || "");
+          setSelectedOption(clientDetails.title || "");
+          setTitle(clientDetails.title || "");
+          setConsultantId(clientDetails.consid || "");
+          setConsultantName(clientDetails.consname || "");
+          setConsultantNumber(clientDetails.consnumber || "");
+          setConsultantPlace(clientDetails.consplace || "");
+          setClientGST(clientDetails.GST || "");
+          setClientContactPerson(clientDetails.clientContactPerson || "");
+          setMonths(clientDetails.Age || "");
+          setGender(clientDetails.gender || "");
+
+          // Update client data in state
+          dispatch(setClientData({
+            clientContact: clientNumber,
+            clientID: clientDetails.id || "",
+            clientName: clientDetails.name || "",
+            clientEmail: clientDetails.email || "",
+            clientSource: clientDetails.source || "",
+            clientTitle: clientDetails.title || "",
+            consultantName: clientDetails.consname || "",
+            // Additional values from local state
+            displayClientNumber: clientNumber,
+            displayClientID: clientDetails.id || "",
+            displayClientName: clientDetails.name || "",
+            address: clientDetails.address || "",
+            selectedOption: clientDetails.title || "",
+            title: clientDetails.title || "",
+            consultantNumber: clientDetails.consnumber || "",
+            consultantPlace: clientDetails.consplace || "",
+            clientGST: clientDetails.GST || "",
+            clientContactPerson: clientDetails.clientContactPerson || "",
+            months: clientDetails.Age || "",
+            gender: clientDetails.gender || "",
+            DOB: clientDetails.DOB,
+            displayDOB: formattedDOB,
+            clientAge: clientAge,
+            clientPAN: pan
+          }));
       
         } else {
           console.warn("No client details found for the given name and contact number.");
@@ -430,9 +431,9 @@ const ClientsData = () => {
         //   dispatch(resetClientData());
         //   dispatch(resetQuotesData());
         // }
-        if (!isDetails) {
-        dispatch(resetClientData());
-        }
+        // if (!isDetails) {
+        // dispatch(resetClientData());
+        // }
         // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
@@ -490,8 +491,10 @@ const ClientsData = () => {
                           setClientAge("");
                           setDOB("");
                           setAddress("");
+                          setConsultantId("");
                           setConsultantName("");
                           setConsultantNumber("");
+                          setConsultantPlace("");
                           setClientPAN("");
                           setClientGST("");
                           setClientContactPerson("");
@@ -597,7 +600,7 @@ const ClientsData = () => {
         }
       }
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       
       if (data === "Values Inserted Successfully!") {
@@ -666,7 +669,7 @@ const ClientsData = () => {
       }
     try {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       if (data === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
@@ -927,22 +930,24 @@ const handleRemoveClient = () => {
       if (data.success) {
           // Client removed successfully
           setSuccessMessage('Client removed successfully!');
-          dispatch(setClientData({ clientEmail: "" }));
-          dispatch(setClientData({ clientName: "" }));
-          dispatch(setClientData({ clientContact: "" }));
-          dispatch(setClientData({clientSource: ""}));
-          setClientAge("");
-          setDOB("");
-          setAddress("");
-          setConsultantName("");
-          dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
-          setConsultantNumber("");
-          setClientPAN("");
-          setClientGST("");
-          setClientContactPerson("");
-          // setClientID("");
-          dispatch(setClientData({ clientID: "" }));
-          setIsNewClient(true);
+          handleEditMode();
+          // dispatch(setClientData({ clientEmail: "" }));
+          // dispatch(setClientData({ clientName: "" }));
+          // dispatch(setClientData({ clientContact: "" }));
+          // dispatch(setClientData({clientSource: ""}));
+          // setClientAge("");
+          // setDOB("");
+          // setAddress("");
+          // setConsultantName("");
+          // dispatch(setClientData({ consultantName: clientDetails.consname || "" }));
+          // setConsultantNumber("");
+          // setConsultantPlace("");
+          // setClientPAN("");
+          // setClientGST("");
+          // setClientContactPerson("");
+          // // setClientID("");
+          // dispatch(setClientData({ clientID: "" }));
+          // setIsNewClient(true);
           setTimeout(() => {
           setSuccessMessage('');
         }, 3000);
@@ -1086,18 +1091,17 @@ const BMvalidateFields = () => {
     setContactWarning('');
   
     // Reset client data fields
-    dispatch(setClientData({ clientEmail: "" }));
-    dispatch(setClientData({ clientName: "" }));
-    dispatch(setClientData({ clientID: "" }));
-    dispatch(setClientData({ clientContact: "" }));
+    dispatch(resetClientData());
   
     // Reset other client-related fields
     setClientAge("");
     setDOB("");
     setDisplayDOB("");
     setAddress("");
+    setConsultantId("");
     setConsultantName("");
     setConsultantNumber("");
+    setConsultantPlace("");
     setClientPAN("");
     setClientGST("");
     setClientContactPerson("");
@@ -1129,6 +1133,7 @@ const BMvalidateFields = () => {
       }
     }, 0);  
   };
+
 
     return (
       <div className='min-h-screen bg-gray-100 mb-14 p-2'>
@@ -1247,15 +1252,21 @@ const BMvalidateFields = () => {
       key={index}
       className="p-2 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition"
       onClick={() => {
+        setConsultantId(consultant.CId);
         setConsultantName(consultant.ConsultantName);
         setConsultantNumber(consultant.ConsultantNumber || '');
+        setConsultantPlace(consultant.ConsultantPlace || '');
+
+        dispatch(setClientData({ consultantId: consultant.CId }));
         dispatch(setClientData({ consultantName: consultant.ConsultantName}));
         dispatch(setClientData({ consultantNumber: consultant.ConsultantNumber || '' }));
+        dispatch(setClientData({ consultantPlace: consultant.ConsultantPlace || '' }));
+
         setSimilarConsultantDialogOpen(false); // Close the dialog
         setShouldCheckForSimilarConsultantNames(false); // Prevent rechecking on next submit
       }}
     >
-      {consultant.ConsultantName} - {consultant.ConsultantNumber}
+      {consultant.ConsultantName} - {consultant.ConsultantNumber} - {consultant.ConsultantPlace}
     </li>
   ))}
 </ul>
@@ -1669,6 +1680,18 @@ const BMvalidateFields = () => {
                     {consulantWarning && <p className="text-red-500">{consulantWarning}</p>}
                     {errors.consultantNumber && <p className="text-red-500 text-xs">{errors.consultantNumber}</p>}
                   </div>
+                  <div name="ConsultantPlaceInput">
+                  <label className="block mb-1 text-black font-medium">Consultant Place</label>
+                  <input
+                    className="w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300"
+                    type="text"
+                    placeholder="Consultant Place"
+                    id="11"
+                    name="ConsultantPlaceInput"
+                    value={consultantPlace}
+                    onChange={(e) => setConsultantPlace(e.target.value)}
+                  />
+                </div>
                 </>
               )}
             </div>
