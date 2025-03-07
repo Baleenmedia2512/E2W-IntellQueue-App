@@ -603,8 +603,9 @@ const ClientsData = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       
-      if (data === "Values Inserted Successfully!") {
+      if (data.message === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
+                dispatch(setClientData({ consultantId: data.CId }));
                 setTimeout(() => {
                 setSuccessMessage('');
                 if (isDetails) {
@@ -671,8 +672,9 @@ const ClientsData = () => {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
-      if (data === "Values Inserted Successfully!") {
+      if (data.message === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
+        dispatch(setClientData({ consultantId: data.CId }));
         setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
