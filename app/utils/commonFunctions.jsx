@@ -95,3 +95,38 @@ export const formatDBTime = (followupTime) => {
 
   return `${hours.padStart(2, "0")}:${minutes}`; // Format: HH:mm
 };
+
+/**
+ * Converts a DB date string ("YYYY-MM-DD HH:MM:SS") into a readable date and time.
+ *
+ * @param {string} dbDateStr - The date string from the database.
+ * @returns {{ formattedDate: string, formattedTime: string }} The formatted date and time.
+ */
+export function formatDBDateTime(dbDateStr) {
+  if (!dbDateStr) return { formattedDate: '', formattedTime: '' };
+
+  // Convert the DB date string to an ISO format date string
+  // so that it can be parsed reliably.
+  const isoDateStr = dbDateStr.replace(' ', 'T');
+  const dateObj = new Date(isoDateStr);
+
+  // Format the date: "25 Mar 2024"
+  const day = dateObj.getDate();
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  const formattedDate = `${day} ${month} ${year}`;
+
+  // Format the time: "10 : 53 pm"
+  let hours = dateObj.getHours();
+  const minutes = dateObj.getMinutes();
+  const period = hours >= 12 ? 'pm' : 'am';
+  hours = hours % 12;
+  hours = hours === 0 ? 12 : hours; // Convert hour "0" to "12"
+  
+  // Ensure minutes have two digits (e.g., "03" for 3)
+  const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+  const formattedTime = `${hours}:${formattedMinutes} ${period}`;
+
+  return formattedDate + " " + formattedTime;
+}

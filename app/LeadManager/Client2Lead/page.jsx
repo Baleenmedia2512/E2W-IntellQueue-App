@@ -1,7 +1,7 @@
 'use client'
 import { FaDownload, FaFilter } from "react-icons/fa";
 import { statusColors } from "../page";
-import { FetchActiveCSE, FetchExistingLeads } from "@/app/api/FetchAPI";
+import { FetchActiveCSE, FetchExistingLeads, FetchLeadsData } from "@/app/api/FetchAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { FiPhoneCall } from "react-icons/fi";
@@ -13,13 +13,14 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
 import SuccessToast from "@/app/components/SuccessToast";
+import { formatDBDateTime } from "@/app/utils/commonFunctions";
 
 const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
 
 let initialCurrentUpdate = {
   EnquiryDescription: "",
-  Status: "Available",
+  Status: "Convert",
   RejectionReason: "",
   NextFollowupDate: tomorrow,
   Remarks: "",
@@ -82,7 +83,9 @@ export default function ExistingClientToLeads() {
 
   const FetchLeads = async () => {
     let response = await FetchExistingLeads(UserCompanyName, searchTerm);
-    setLeadData(response);
+    let data = await FetchLeadsData(UserCompanyName, searchTerm);
+    let allLeads = data.concat(response);
+    setLeadData(allLeads);
     fetchCSENames();
   };
 
@@ -95,11 +98,11 @@ export default function ExistingClientToLeads() {
     setCSENames(data);
   };
 
-  const handleHandledByChange = (user, sNo) => {
-    setIsHandledByChange(true);
-    setCurrentUpdate(prev => ({ ...prev, selectedUser: user }));
-    setCurrentCall({ sNo: sNo });
-  };
+  // const handleHandledByChange = (user, sNo) => {
+  //   setIsHandledByChange(true);
+  //   setCurrentUpdate(prev => ({ ...prev, selectedUser: user }));
+  //   setCurrentCall({ sNo: sNo });
+  // };
 
   const handleUserChange = async (user) => {
     setCurrentUpdate(prev => ({
@@ -141,7 +144,7 @@ export default function ExistingClientToLeads() {
       ClientContact: row.ClientContact,
       CSE: toTitleCase(row.CSE),
       DateOfLastRelease: row.DateOfLastRelease,
-      Status: row.Status || "Available"
+      Status: row.Status || "Convert"
     }));
   
     const ws = XLSX.utils.json_to_sheet(filteredData);
@@ -183,13 +186,13 @@ export default function ExistingClientToLeads() {
     let currentTime = currentDateTime.split('T')[1].split('.')[0];
     currentDateTime = currentDate + ' ' + currentTime;
     
-    console.log(currentLead?.Status || "Available", currentUpdate.Status);
-    if ((currentLead?.Status || "Available") === currentUpdate.Status) {
+    if ((currentLead?.Status || "Convert") === currentUpdate.Status) {
       alert("No changes made.");
       setIsLoading(false);
       return;
     }
 
+    setShowModal(false);
     // Format the followup date and time if provided
     let formattedDate = "";
     let formattedTime = "";
@@ -199,13 +202,12 @@ export default function ExistingClientToLeads() {
       formattedTime = dateObj.toTimeString().split(' ')[0];
     }
 
-    console.log("formattedTime", currentUpdate.NextFollowupDate, formattedTime);
     const formData = {
       "JsonDBName": UserCompanyName,
       "JsonEntryUser": userName,
       "JsonLeadDate": currentDate,
       "JsonLeadTime": currentTime,
-      "JsonPlatform": currentLead?.Platform || "",
+      "JsonPlatform": currentLead?.Source || "",
       "JsonClientName": currentLead?.ContactPerson || currentLead?.ClientName,
       "JsonClientContact": currentLead?.ClientContact || "",
       "JsonClientEmail": currentLead?.ClientAuthorizedPerson || "",
@@ -224,14 +226,15 @@ export default function ExistingClientToLeads() {
     };
     const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", formData);
     const enquiryResponse = await insertEnquiry();
-    if(leadResponse.success && enquiryResponse === "Values Inserted Successfully!"){
+    if(leadResponse.status === "success" && enquiryResponse === "Values Inserted Successfully!"){
       setCurrentUpdate(initialCurrentUpdate);
       alert("Enquiry Saved Successfully!");
     } else{
-      console.error("Error while saving enquiry:", enquiryResponse);
+      console.error("Error while saving enquiry:", leadResponse, leadResponse.success);
       alert('Unable to save due to some network issue!');
     }
     setIsLoading(false);
+    FetchLeads();
   };
 
   const handleCallButtonClick = (contact, name, orderNumber) => {
@@ -300,7 +303,7 @@ export default function ExistingClientToLeads() {
                 className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="All">All</option>
-                <option value="Available">Available</option>
+                <option value="Convert">Convert</option>
                 <option value="Ready for Quote">Ready for Quote</option>
                 <option value="Call Followup">Call Followup</option>
                 <option value="Unqualified">Unqualified</option>
@@ -365,15 +368,15 @@ export default function ExistingClientToLeads() {
             >
               <div className="absolute top-4 right-4">
                 <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status || "Available"]} hover:cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status || "Convert"]} hover:cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
                   onClick={() => { setCurrentLead(row); setShowModal(true); }}
                 >
-                  {row.Status || "Available"}
+                  {row.Status || "Convert"}
                 </span>
                 {row.CSE && (
                   <div
                     className="text-xs mt-2 p-1 px-3 hover:cursor-pointer text-orange-800 bg-orange-50 rounded-full flex items-center"
-                    onClick={() => handleHandledByChange(row.CSE, row.OrderNumber)}
+                    // onClick={() => handleHandledByChange(row.CSE, row.OrderNumber)}
                   >
                     <FontAwesomeIcon icon={faUserCircle} className="mr-1" />
                     <p>{toTitleCase(row.CSE)}</p>
@@ -383,21 +386,16 @@ export default function ExistingClientToLeads() {
 
               <div className="mb-4 mt-8">
                 <h3 className="text-xl font-bold text-gray-900 max-w-[75%] capitalize">
-                  {row.ClientName} - Order #{row.OrderNumber}
+                  {row.ClientName} {row.OrderNumber ? ` - Order # ${row.OrderNumber}` : row.ClientCompanyName === row.ClientName ? "" : `(${row.ClientCompanyName})`}
                 </h3>
               </div>
 
               <div className="space-y-3 text-base">
-                <p className="text-gray-600">
-                  Order #<span className="font-medium text-gray-900">{row.OrderNumber}</span>
+                {row.Lead_ID && <p className="text-gray-600">
+                  Arrived Date Time: <span className="font-medium text-gray-900">{formatDBDateTime(row.ArrivedDateTime)}</span>
                 </p>
-                <p className="text-gray-600">
-                  Contact: <span className="font-medium text-gray-900">{row.ClientAuthorizedPerson}</span>
-                </p>
-                <p className="text-gray-600">
-                  Source: <span className="font-medium text-gray-900">{row.Source}</span>
-                </p>
-                <div className="flex items-center gap-2 text-gray-600">
+                }
+              <div className="flex items-center gap-2 text-gray-600">
                   Phone: 
                   <a
                     href={`tel:${row.ClientContact}`}
@@ -408,6 +406,14 @@ export default function ExistingClientToLeads() {
                     {row.ClientContact}
                   </a>
                 </div>
+                {(row.ClientAuthorizedPerson || row.ClientEmail) && <p className="text-gray-600">
+                  Email: <span className="font-medium text-gray-900">{row.ClientAuthorizedPerson || row.ClientEmail}</span>
+                </p>
+                }
+                <p className="text-gray-600">
+                  Source: <span className="font-medium text-gray-900">{row.Source || row.Platform}</span>
+                </p>
+                
               </div>
 
               <button
@@ -487,7 +493,7 @@ export default function ExistingClientToLeads() {
               </p>
               {/* Status Options */}
               <div className="flex flex-wrap gap-2">
-                {["Available", "Ready for Quote", "Call Followup", "Not Interested"].map((status) => (
+                {["Convert", "Ready for Quote", "Call Followup", "Not Interested"].map((status) => (
                   <label
                     key={status}
                     className={`cursor-pointer border-2 py-1 px-3 text-base rounded-full ${
