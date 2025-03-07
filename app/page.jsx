@@ -626,7 +626,7 @@ const ClientsData = () => {
           
           
         // setMessage(data.message);
-      } else if (data === "Duplicate Entry!"){
+      } else if (data.message  === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
           setSeverity('error');
           setToast(true);
@@ -634,7 +634,7 @@ const ClientsData = () => {
             setToast(false);
           }, 2000);
       } else {
-        alert(`The following error occurred while inserting data: ${data}`);
+        alert(`The following error occurred while inserting data: ${data.message }`);
       }
 
     } catch (error) {
@@ -672,6 +672,7 @@ const ClientsData = () => {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
+
       if (data.message === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
         dispatch(setClientData({ consultantId: data.CId }));
@@ -684,7 +685,7 @@ const ClientsData = () => {
           // window.location.reload();
         
         //setMessage(data.message);
-      } else if (data === "Duplicate Entry!"){
+      } else if (data.message === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
         setSeverity('error');
         setToast(true);
@@ -701,7 +702,7 @@ const ClientsData = () => {
       //   }, 2000);
 
     } else {
-      setToastMessage(data);
+      setToastMessage(data.message);
       setSeverity('error');
       setToast(true);
       setTimeout(() => {
