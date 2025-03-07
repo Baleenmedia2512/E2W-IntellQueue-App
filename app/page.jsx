@@ -431,9 +431,9 @@ const ClientsData = () => {
         //   dispatch(resetClientData());
         //   dispatch(resetQuotesData());
         // }
-        if (!isDetails) {
-        dispatch(resetClientData());
-        }
+        // if (!isDetails) {
+        // dispatch(resetClientData());
+        // }
         // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
