@@ -8,7 +8,7 @@ import {
 } from "@/app/api/FetchAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import { FiPhoneCall } from "react-icons/fi";
+import { FiCalendar, FiPhoneCall } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/store";
 import {
@@ -36,6 +36,7 @@ let initialCurrentUpdate = {
   ProspectType: "",
   IsUnreachable: 0,
   selectedUser: "",
+  PreviousStatus: ""
 };
 export default function ExistingClientToLeads() {
   const router = useRouter();
@@ -95,7 +96,14 @@ export default function ExistingClientToLeads() {
   const FetchLeads = async () => {
     let response = await FetchExistingLeads(UserCompanyName, searchTerm);
     let data = await FetchLeadsData(UserCompanyName, searchTerm);
-    let allLeads = data.concat(response);
+
+    // Convert all date strings to Date objects
+    const processLeads = (leads) => leads.map(lead => ({
+      ...lead,
+      NextFollowupDate: lead.NextFollowupDate ? new Date(`${lead.NextFollowupDate}T${lead.NextFollowupTime}`) : null
+    }));
+
+    let allLeads = processLeads(data).concat(processLeads(response));
     setLeadData(allLeads);
     fetchCSENames();
   };
@@ -131,9 +139,11 @@ export default function ExistingClientToLeads() {
 
   // Update the raw date object in currentUpdate
   const handleDateChange = (selectedDate) => {
+    let chosenDate = new Date(selectedDate);
+    console.log("Selected Date:", selectedDate, typeof selectedDate, chosenDate);
     setCurrentUpdate((prev) => ({
       ...prev,
-      NextFollowupDate: selectedDate,
+      NextFollowupDate: chosenDate,
     }));
   };
 
@@ -200,11 +210,8 @@ export default function ExistingClientToLeads() {
     let currentTime = currentDateTime.split("T")[1].split(".")[0];
     currentDateTime = currentDate + " " + currentTime;
 
-    if ((currentLead?.Status || "Convert") === currentUpdate.Status) {
-      alert("No changes made.");
-      setIsLoading(false);
-      return;
-    }
+    //Check if the lead is existing or not
+    const isExistingLead = currentLead?.Lead_ID ? true : false;
 
     setShowModal(false);
     // Format the followup date and time if provided
@@ -214,6 +221,19 @@ export default function ExistingClientToLeads() {
       const dateObj = new Date(currentUpdate.NextFollowupDate);
       formattedDate = dateObj.toISOString().split("T")[0]; // example formatting
       formattedTime = dateObj.toTimeString().split(" ")[0];
+    }
+
+    const updateFormData = {
+      JsonLead_ID: currentLead?.Lead_ID || "",
+      JsonDBName: UserCompanyName,
+      JsonEntryUser: userName,
+      JsonStatus: currentUpdate.Status,
+      JsonRejectionReason: currentUpdate.RejectionReason,
+      JsonNextFollowupDate: currentUpdate.NextFollowupDate ? formattedDate : "",
+      JsonNextFollowupTime: currentUpdate.NextFollowupDate ? formattedTime : "",
+      JsonRemarks: currentUpdate.Remarks || currentLead.Remarks,
+      JsonHandledBy: currentUpdate.HandledBy || userName,
+      JsonPreviousStatus: currentUpdate.PreviousStatus || currentLead.Status,
     }
 
     const formData = {
@@ -233,19 +253,32 @@ export default function ExistingClientToLeads() {
       JsonNextFollowupDate: currentUpdate.NextFollowupDate ? formattedDate : "",
       JsonNextFollowupTime: currentUpdate.NextFollowupDate ? formattedTime : "",
       JsonClientCompanyName: currentLead?.ClientName || "",
-      JsonRemarks: currentUpdate.Remarks,
+      JsonRemarks: currentUpdate.Remarks || currentLead.Remarks,
       JsonHandledBy: userName,
       JsonProspectType: currentUpdate.ProspectType,
       JsonIsUnreachable: currentUpdate.Status === "Unreachable" ? 1 : 0,
     };
-    const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", formData);
+
+    const hasChanges = Object.keys(updateFormData).some(key => {
+      const originalValue = currentLead[key.replace("Json", "")];
+      const newValue = updateFormData[key];
+      return originalValue !== undefined && newValue !== originalValue;
+    });
+    
+    //check if the status is changed or not
+    if (!hasChanges) {
+      alert("No changes made.");
+      setIsLoading(false);
+      return;
+    }
+
+    const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", isExistingLead ? updateFormData : formData);
     const enquiryResponse = await insertEnquiry();
     if (
       leadResponse.status === "success" &&
       enquiryResponse.message === "Values Inserted Successfully!"
     ) {
       setCurrentUpdate(initialCurrentUpdate);
-      console.log("saving enquiry:", leadResponse, enquiryResponse);
       alert("Enquiry Saved Successfully!");
     } else {
       console.error(
@@ -332,25 +365,8 @@ export default function ExistingClientToLeads() {
                 <option value="Convert">Convert</option>
                 <option value="Ready for Quote">Ready for Quote</option>
                 <option value="Call Followup">Call Followup</option>
+                <option value="Unreachable">Unreachable</option>
                 <option value="Unqualified">Unqualified</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Prospect Type
-              </label>
-              <select
-                value={filters.prospectTypeFilter}
-                onChange={(e) =>
-                  updateFilter("prospectTypeFilter", e.target.value)
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="All">All</option>
-                <option value="Hot">Hot</option>
-                <option value="Warm">Warm</option>
-                <option value="Cold">Cold</option>
               </select>
             </div>
 
@@ -408,6 +424,19 @@ export default function ExistingClientToLeads() {
                   onClick={() => {
                     setCurrentLead(row);
                     setShowModal(true);
+                    if(row.Lead_ID){
+                      setCurrentUpdate({
+                        ...currentUpdate,
+                        Status: row.Status || "Convert",
+                        RejectionReason: row.RejectionReason,
+                        NextFollowupDate: row.NextFollowupDate,
+                        Remarks: row.Remarks,
+                        HandledBy: row.HandledBy,
+                        ProspectType: row.ProspectType,
+                        IsUnreachable: row.IsUnreachable,
+                        PreviousStatus: row.PreviousStatus
+                      });
+                    }
                   }}
                 >
                   {row.Status || "Convert"}
@@ -473,7 +502,17 @@ export default function ExistingClientToLeads() {
                   </span>
                 </p>
               </div>
-
+                {row.NextFollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
+                              <div className="text-sm max-w-fit" >
+                              <p className="text-sm text-gray-700 mb-1">Followup Date:</p>
+                                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
+                                <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {formatDBDateTime(row.NextFollowupDate.toISOString())}</span>
+                                </p>
+                                <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
+                    
+                              </div>
+                              
+                            ) : null}
               <button
                 onClick={() => openExpandedModal(row)}
                 className="mt-4 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full text-center transition-all duration-200"
@@ -569,7 +608,8 @@ export default function ExistingClientToLeads() {
                   "Convert",
                   "Ready for Quote",
                   "Call Followup",
-                  "Not Interested",
+                  "Unreachable",
+                  "Unqualified"
                 ].map((status) => (
                   <label
                     key={status}
@@ -597,10 +637,10 @@ export default function ExistingClientToLeads() {
                 ))}
               </div>
               {/* Not Interested Reason Dropdown */}
-              {currentUpdate.Status === "Not Interested" && (
+              {currentUpdate.Status === "Unqualified" && (
                 <div className="space-y-2">
                   <label className="block text-base font-medium text-gray-700">
-                    Select Not Interested Reason
+                    Select Unqualified Reason
                   </label>
                   <select
                     className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
@@ -648,6 +688,14 @@ export default function ExistingClientToLeads() {
                   />
                 </div>
               )}
+              <div className="space-y-2">
+                  <label className="block text-base font-medium text-gray-700">
+                    Remarks
+                  </label>
+                  <input className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    value={currentUpdate.Remarks}
+                    onChange={(e) => setCurrentUpdate(prev => ({ ...prev, Remarks: e.target.value }))} />
+                </div>
               {/* Save Button */}
               <div className="flex justify-end">
                 <button
