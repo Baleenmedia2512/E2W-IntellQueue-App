@@ -35,7 +35,7 @@ export const formattedMargin = (number) => {
 
 const CheckoutPage = () => {
   const dispatch = useDispatch()
-
+  const backupRef = useRef([]);
   const [datas, setDatas] = useState([]);
   const [nextQuoteNumber, setNextQuoteNumber] = useState([]);
   const companyName = useAppSelector(state => state.authSlice.companyName);
@@ -283,6 +283,13 @@ const CheckoutPage = () => {
     dispatch(addItemsToCart(updatedCartItems)); 
   };
   
+  const backupCartItems = cartItems.filter(item => !item.isEditMode);
+  backupRef.current = backupCartItems;
+
+  const itemsToRender = isEditMode 
+  ? cartItems.filter(item => item.isEditMode)
+  : cartItems;
+
   return (
     <div className="text-black w-full items-center px-3">
       <h1 className="text-2xl font-bold text-center mb-4 text-blue-500">
@@ -338,6 +345,11 @@ const CheckoutPage = () => {
                       setQuoteSearchTerm("");
                       dispatch(removeEditModeItems());
                       dispatch(resetClientData());
+                      if (backupRef.current && backupRef.current.length) {
+                        dispatch(addItemsToCart(backupRef.current));
+                      }
+                      // Optionally, clear backup
+                      backupRef.current = [];
                       // dispatch(resetQuotesData());
                       // dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails'}));
                     }}
@@ -420,7 +432,7 @@ const CheckoutPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {cartItems.map((item, index) => (
+                      {itemsToRender.map((item, index) => (
                         <tr
                           key={index}
                           className={

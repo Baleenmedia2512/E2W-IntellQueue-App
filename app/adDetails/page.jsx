@@ -484,7 +484,7 @@ export const AdDetails = () => {
               )}
               <button
                 className={`ml-2 ${cartItems.length > 0 ? 'Clearall-button' : 'Clearallafter-button'}`}
-                disabled={cartItems.length > 0 ? false : true}
+                disabled={cartItems.length > 0 && !cartItems.isEditMode ? false : true}
                 onClick={() => dispatch(resetCartItem())}
               >
                 Clear All
