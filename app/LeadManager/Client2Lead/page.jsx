@@ -36,7 +36,8 @@ let initialCurrentUpdate = {
   ProspectType: "",
   IsUnreachable: 0,
   selectedUser: "",
-  PreviousStatus: ""
+  PreviousStatus: "",
+  FollowupOnly: false,
 };
 export default function ExistingClientToLeads() {
   const router = useRouter();
@@ -48,6 +49,7 @@ export default function ExistingClientToLeads() {
   const [currentLead, setCurrentLead] = useState(null);
   const [isHandledByChange, setIsHandledByChange] = useState(false);
   const [CSENames, setCSENames] = useState([]);
+
   // Combined state for lead update fields
   const [currentUpdate, setCurrentUpdate] = useState(initialCurrentUpdate);
   const [currentCall, setCurrentCall] = useState(null);
@@ -99,14 +101,33 @@ export default function ExistingClientToLeads() {
 
     // Convert all date strings to Date objects
     const processLeads = (leads) => leads.map(lead => ({
-      ...lead,
-      NextFollowupDate: lead.NextFollowupDate ? new Date(`${lead.NextFollowupDate}T${lead.NextFollowupTime}`) : null
+        ...lead,
+        NextFollowupDate: lead.NextFollowupDate ? new Date(`${lead.NextFollowupDate}T${lead.NextFollowupTime}`) : null
     }));
 
+    // Process both sets of leads
     let allLeads = processLeads(data).concat(processLeads(response));
-    setLeadData(allLeads);
+
+    // Get today's date in "YYYY-MM-DD" format
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Separate today's follow-up leads, existing leads, and other follow-up leads
+    const todaysLeads = allLeads.filter(lead => lead.NextFollowupDate && lead.NextFollowupDate.toISOString().slice(0, 10) === today);
+    const existingLeads = allLeads.filter(lead => lead.DateOfLastRelease);  // Assuming existing leads have DateOfLastRelease
+    const otherFollowupLeads = allLeads.filter(lead => lead.NextFollowupDate && lead.NextFollowupDate.toISOString().slice(0, 10) !== today);
+
+    // Sort other follow-up leads in ascending order of NextFollowupDate
+    otherFollowupLeads.sort((a, b) => a.NextFollowupDate - b.NextFollowupDate);
+
+    // Combine the leads in the required order: today's leads on top, then existing leads, then other follow-up leads
+    let sortedLeads = [...todaysLeads, ...existingLeads, ...otherFollowupLeads];
+
+    // Update the state with the sorted leads
+    setLeadData(sortedLeads);
+
+    // Fetch CSENames
     fetchCSENames();
-  };
+};
 
   useEffect(() => {
     if (!userName) {
@@ -276,7 +297,7 @@ export default function ExistingClientToLeads() {
     const enquiryResponse = await insertEnquiry();
     if (
       leadResponse.status === "success" &&
-      enquiryResponse.message === "Values Inserted Successfully!"
+      isExistingLead ? true : enquiryResponse.status === "success"
     ) {
       setCurrentUpdate(initialCurrentUpdate);
       alert("Enquiry Saved Successfully!");
@@ -503,9 +524,9 @@ export default function ExistingClientToLeads() {
                 </p>
               </div>
                 {row.NextFollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
-                              <div className="text-sm max-w-fit" >
-                              <p className="text-sm text-gray-700 mb-1">Followup Date:</p>
-                                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setFollowpOnly(true); setSelectedStatus("Call Followup"); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setFollowupDate(row.FollowupDate); setFollowupTime(row.FollowupTime)}}>
+                              <div className="flex items-start gap-2 flex-col" >
+                              <p className="text-gray-600">Followup Date:</p>
+                                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setCurrentUpdate({...currentUpdate, Status: "Call Followup", FollowupOnly: true, NextFollowupDate: new Date(row.NextFollowupDate)}); console.log(new Date(row.NextFollowupDate));setCurrentLead(row);}}>
                                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {formatDBDateTime(row.NextFollowupDate.toISOString())}</span>
                                 </p>
                                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
@@ -603,6 +624,7 @@ export default function ExistingClientToLeads() {
                 </a>
               </p>
               {/* Status Options */}
+              {!currentUpdate.FollowupOnly && (
               <div className="flex flex-wrap gap-2">
                 {[
                   "Convert",
@@ -635,9 +657,9 @@ export default function ExistingClientToLeads() {
                     {status}
                   </label>
                 ))}
-              </div>
+              </div>)}
               {/* Not Interested Reason Dropdown */}
-              {currentUpdate.Status === "Unqualified" && (
+              {!currentUpdate.FollowupOnly && currentUpdate.Status === "Unqualified" && (
                 <div className="space-y-2">
                   <label className="block text-base font-medium text-gray-700">
                     Select Unqualified Reason
@@ -688,6 +710,7 @@ export default function ExistingClientToLeads() {
                   />
                 </div>
               )}
+              {!currentUpdate.FollowupOnly && (
               <div className="space-y-2">
                   <label className="block text-base font-medium text-gray-700">
                     Remarks
@@ -695,7 +718,7 @@ export default function ExistingClientToLeads() {
                   <input className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                     value={currentUpdate.Remarks}
                     onChange={(e) => setCurrentUpdate(prev => ({ ...prev, Remarks: e.target.value }))} />
-                </div>
+                </div>)}
               {/* Save Button */}
               <div className="flex justify-end">
                 <button
