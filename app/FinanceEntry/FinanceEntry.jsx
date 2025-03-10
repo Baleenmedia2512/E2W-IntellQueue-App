@@ -32,6 +32,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchFinanceSearchTerm, FetchTDSPercentage } from '../api/FetchAPI';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
+import { GetInsertOrUpdate } from '../api/InsertUpdateAPI';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -446,16 +447,52 @@ const openChequeDate = Boolean(anchorElChequeDate);
     const tdsPercent = await FetchTDSPercentage(companyName, newOrderNumber);
     setTDSPercentage(tdsPercent)
 
+    if(transactionType.value === 'Operational Expense' && expenseCategory.value === 'Project'){
+      const response = await GetInsertOrUpdate('FetchPayable', {OrderNumber: newOrderNumber, JsonDBName: companyName});
+      // Clear validation errors
+      if (errors.orderNumber) {
+        setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+      }
+
+      if(response.length > 0){
+        const clientDetails = response[0];
+          dispatch(setIsOrderExist(true));
+          //setRemarks(clientDetails.remarks);
+          setOrderAmount(clientDetails.balanceAmount);
+          console.log(clientDetails.balanceAmount);
+          clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);
+          setGSTPercentage(clientDetails.gstPercentage);
+          setClientName(clientDetails.clientName);
+          setClientNumber(clientDetails.clientContact);
+          setBalanceAmount(clientDetails.balanceAmount);
+          setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
+          setRateName(clientDetails.rateName);
+          setRateType(clientDetails.rateType);
+          setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+          setWaiverAmount(clientDetails.waiverAmount);
+          setReceivableAmount(clientDetails.receivableAmount);
+          setPreviousPaymentMode(clientDetails.previousPaymentMode);
+          setPreviousAmountPaid(clientDetails.previousAmountPaid);
+          setErrors({});       
+      } else {
+        dispatch(setIsOrderExist(false));
+      }
+      return;
+    }
+    console.log("Enters the function")
+      
     {!billsOnly &&
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
       const data = response.data;
+      console.log(data);
       if (data.length > 0) {
         const clientDetails = data[0];
         dispatch(setIsOrderExist(true));
         //setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
+        clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);  
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
         setClientNumber(clientDetails.clientContact);
@@ -477,10 +514,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
     .catch((error) => {
       console.error(error);
     });
-    // Clear validation errors
-    if (errors.orderNumber) {
-      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-    }
   }
   };
 
@@ -1982,7 +2015,7 @@ const handleGSTAmountChange = (gst) => {
             {errors.gstAmount && <span className="text-red-500 text-sm">{errors.gstAmount}</span>}
             </div>
             )} 
-               {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && (
+               {taxType && taxType.value === 'GST'  && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
@@ -2013,7 +2046,7 @@ const handleGSTAmountChange = (gst) => {
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
                </div>
                     )}
-          {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && ( 
+          {taxType && taxType.value === 'GST' && ( 
           <div>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
