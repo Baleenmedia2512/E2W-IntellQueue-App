@@ -76,6 +76,7 @@ export default function GroupedRowsDemo() {
     const [matchMode, setMatchMode] = useState('contains');
     const [showIcProcessedConsultantsOnly, setShowIcProcessedConsultantsOnly] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
     const sessionFilterValues = sessionStorage.getItem('filterValues')
     ? JSON.parse(sessionStorage.getItem('filterValues'))
     : null;
@@ -114,7 +115,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
@@ -531,7 +532,46 @@ const totalCount = rowsToCalucalate.reduce((accumulator, row) => {
 const numberOfScans = totalCount;
 
 
+// const handleExport = () => {
+//     // Filter out rows where the rateCard field is 'Total'
+//     const filteredData = groupedData.filter(row => row.rateCard !== 'Total');
+//     const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
+
+//     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
+//     // Prepare the data for export
+//     const exportData = rowsToExport.map(row => ({
+//         rateWiseOrderNumber: row.rateWiseOrderNumber,
+//         Consultant: row.consultant,
+//         Client: row.client,
+//         RateCard: row.rateCard,
+//         RateType: row.rateType,
+//         Price: row.price
+//     }));
+
+//     // Create a worksheet from the data
+//     const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+//     // Create a workbook and add the worksheet
+//     const workbook = XLSX.utils.book_new();
+//     XLSX.utils.book_append_sheet(workbook, worksheet, 'Consultant Report');
+
+//     // Generate a binary string representation of the workbook
+//     const excelBuffer = XLSX.write(workbook, {
+//         bookType: 'xlsx',
+//         type: 'array'
+//     });
+
+//     // Create a Blob from the buffer and trigger a download
+//     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+//     saveAs(blob, 'Consultant_Report.xlsx');
+// };
+
 const handleExport = () => {
+    setExportDialogOpen(true);
+};
+
+// Add these new functions for export options
+const handleDetailedExport = () => {
     // Filter out rows where the rateCard field is 'Total'
     const filteredData = groupedData.filter(row => row.rateCard !== 'Total');
     const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
@@ -546,6 +586,11 @@ const handleExport = () => {
         RateType: row.rateType,
         Price: row.price
     }));
+
+    // Format date range for filename
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+    const dateRangeForFilename = `${formattedStartDate} to ${formattedEndDate}`;
 
     // Create a worksheet from the data
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -562,7 +607,85 @@ const handleExport = () => {
 
     // Create a Blob from the buffer and trigger a download
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    saveAs(blob, 'Consultant_Report.xlsx');
+    saveAs(blob,  `Consultant_Report_Detailed (${dateRangeForFilename}).xlsx`);
+    
+    setExportDialogOpen(false);
+};
+
+const handleGroupedExport = () => {
+    const filteredRows = selectedRows.length > 0 
+        ? selectedRows.filter(row => row.rateCard !== "Total")
+        : groupedData.filter(row => row.rateCard !== "Total");
+  
+    const groupedData = filteredRows.reduce((acc, row) => {
+        const { consultantId, consultant, rateCard, price, rateType } = row;
+      
+        if (!acc[consultantId]) {
+            acc[consultantId] = { consultant, data: {} };
+        }
+      
+        if (!acc[consultantId].data[rateCard]) {
+            acc[consultantId].data[rateCard] = {};
+        }
+      
+        if (!acc[consultantId].data[rateCard][price]) {
+            acc[consultantId].data[rateCard][price] = { count: 0, totalPrice: 0, rateTypes: new Set() };
+        }
+      
+        acc[consultantId].data[rateCard][price].count += 1;
+        acc[consultantId].data[rateCard][price].totalPrice += price;
+      
+        if (rateType) {
+            acc[consultantId].data[rateCard][price].rateTypes.add(rateType.trim());
+        }
+      
+        return acc;
+    }, {});
+      
+    // Sort consultants by name (alphabetical order)
+    const sortedConsultants = Object.values(groupedData).sort((a, b) => a.consultant.localeCompare(b.consultant));
+
+    // Convert to an array format for Excel export
+    const exportData = [];
+    sortedConsultants.forEach(({ consultant, data }) => {
+        for (const rateCard in data) {
+            for (const price in data[rateCard]) {
+                const { count, totalPrice, rateTypes } = data[rateCard][price];
+                exportData.push({
+                    Consultant: consultant,
+                    RateCard: rateCard,
+                    RateType: [...rateTypes].join(", "),
+                    Price: price,
+                    Count: count,
+                    TotalAmount: totalPrice
+                });
+            }
+        }
+    });
+
+    // Format date range for filename
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+    const dateRangeForFilename = `${formattedStartDate} to ${formattedEndDate}`;
+      
+    // Create a worksheet from the data
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Create a workbook and add the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Consultant Report');
+
+    // Generate a binary string representation of the workbook
+    const excelBuffer = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array'
+    });
+
+    // Create a Blob from the buffer and trigger a download
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, `Consultant_Report_Grouped (${dateRangeForFilename}).xlsx`);
+    
+    setExportDialogOpen(false);
 };
 
 const handleSelectionChange = (e) => {
@@ -685,7 +808,7 @@ const filterHeaderTemplate = (column, filterField) => {
     
         // Reset selectedRows when all filters are cleared
         if (Object.values(newFilters).every(filter => filter.value === null || filter.value === '')) {
-            setSelectedRows(groupedData); // Clear selected rows when all filters are empty
+            setSelectedRows([...groupedData]); // Ensure to reset selected rows to the full dataset
         } else {
             setSelectedRows(combinedFilteredRows); // Update selected rows based on remaining active filters
         }
@@ -840,6 +963,48 @@ const handleSlipGeneration = () => {
 
     return (
         <div className="relative min-h-screen mb-20">
+            {/* Export Options Dialog */}
+            <Dialog 
+                open={exportDialogOpen} 
+                onClose={() => setExportDialogOpen(false)} 
+                className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            >
+                <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg sm:max-w-md">
+                    <DialogTitle className="text-lg font-semibold text-gray-900 text-center sm:text-left">
+                        Export Options
+                    </DialogTitle>
+                    <DialogContent className="mt-2">
+                        <DialogContentText className="text-gray-600 text-sm text-center sm:text-left">
+                            Please select how you would like to export the data:
+                        </DialogContentText>
+                        <div className="mt-4 space-y-3">
+                            <div 
+                                className="p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition"
+                                onClick={handleDetailedExport}
+                            >
+                                <h3 className="font-medium text-gray-800">Detailed Export</h3>
+                                <p className="text-sm text-gray-600">Export all individual records with complete details</p>
+                            </div>
+                            <div 
+                                className="p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition"
+                                onClick={handleGroupedExport}
+                            >
+                                <h3 className="font-medium text-gray-800">Grouped Export</h3>
+                                <p className="text-sm text-gray-600">Export data grouped by consultant, rate card, and price</p>
+                            </div>
+                        </div>
+                    </DialogContent>
+                    <DialogActions className="flex flex-col sm:flex-row justify-center sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4">
+                        <button
+                            onClick={() => setExportDialogOpen(false)}
+                            className="w-full sm:w-auto px-5 py-2 text-gray-700 bg-gray-200 rounded-full font-medium hover:bg-gray-300 transition duration-200 ease-in-out shadow-sm active:scale-95 focus:ring-2 focus:ring-gray-400"
+                        >
+                            Cancel
+                        </button>
+                    </DialogActions>
+                </div>
+            </Dialog>
+
             {/* Background colors */}
             <div className="absolute inset-0 bg-blue-600 h-96"></div>
             {/* <div className="absolute inset-x-0 bottom-0 bg-white h-52"></div> */}
