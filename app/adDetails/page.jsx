@@ -283,11 +283,11 @@ export const AdDetails = () => {
         const response = await fetch(`https://orders.baleenmedia.com/API/Media/CheckLeadsOfExistingClient.php?JsonClientContact=${clientContact}&JsonDBName=${companyName}`);
         const data = await response.json();
     
-        if (!data.SheetId) {
-          alert("Lead not found. Cannot proceed with PDF generation.");
-          isGeneratingPdf = false;
-          return;
-        }
+        // if (!data.SheetId) {
+        //   alert("Lead not found. Cannot proceed with PDF generation.");
+        //   isGeneratingPdf = false;
+        //   return;
+        // }
     
         // Check if SheetId exists
         if (!data || !data.SheetId) {

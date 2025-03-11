@@ -303,12 +303,12 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
       'Size': 50,
       'Service Duration': hasCampaignDuration ? 50 : 0,
       'Unit Price (in Rs.)': 70,
-      'Price (Excl. GST) (in Rs.)': 80,
-      'Price (Incl. GST) (in Rs.)': 80,
+      'Price (Excl. GST) (in Rs.)': 60,
+      'Price (Incl. GST) (in Rs.)': 60,
       'Color or B/W': 45,
       'Highlights': 45,
       'Lead Days': 35,
-      'Remarks': 60
+      'Remarks': 100
     };
     
     // Map column names to their indices
