@@ -20,7 +20,7 @@ import 'primereact/resources/primereact.min.css';
 import { addItemsToCart } from '@/redux/features/cart-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
-import { FetchAllValidRates, FetchQtySlab, FetchQuoteRemarks, FetchRateSeachTerm, FetchSpecificRateData } from '../api/FetchAPI';
+import { FetchAllValidRates, FetchQtySlab, FetchQuoteRemarks, FetchRateSeachTerm, FetchSpecificRateData, FetchValidRatesSearchTerm } from '../api/FetchAPI';
 import './page.css';
 import { calculateMarginAmount, calculateMarginPercentage } from '../utils/commonFunctions';
 import useClickTracker from './Dashboard/useClickTracker'; 
@@ -37,8 +37,8 @@ export const formattedMargin = (number) => {
 
 const AdDetailsPage = () => {
   useClickTracker();
-  const { userName } = useAppSelector((state) => state.authSlice);
-  const companyName = "Baleen Media"
+  const { userName, companyName } = useAppSelector((state) => state.authSlice);
+  // const  = "Baleen Media"
   const {
     selectedAdMedium: adMedium,
     selectedAdType: adType,
@@ -146,7 +146,7 @@ const basePrice = baseCost + parseInt(margin);
   // Fetch data for a specific rate
   const fetchRate = async (rateId) => {
     try {
-      const rateData = await FetchSpecificRateData("Baleen Media", rateId);
+      const rateData = await FetchSpecificRateData(companyName, rateId);
       const firstRate = rateData[0];
 
       // Update quote data in Redux
@@ -192,7 +192,7 @@ const basePrice = baseCost + parseInt(margin);
   // Handle rate search input
   const handleRateSearch = async (e) => {
     setRateSearchTerm(e.target.value);
-    const searchSuggestions = await FetchRateSeachTerm("Baleen Media", e.target.value);
+    const searchSuggestions = await FetchValidRatesSearchTerm(companyName, e.target.value);
     setDatas((prev) => ({
       ...prev,
       ratesSearchSuggestion: searchSuggestions,
@@ -222,7 +222,7 @@ const basePrice = baseCost + parseInt(margin);
       await fetchRate(rateId);
   
       // Fetch slab data
-      const slabData = await FetchQtySlab("Baleen Media", rateId);
+      const slabData = await FetchQtySlab(companyName, rateId);
       const sortedSlabData = [...slabData].sort(
         (a, b) => Number(a.StartQty * a.Width) - Number(b.StartQty * b.Width)
       );

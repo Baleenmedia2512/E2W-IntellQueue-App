@@ -20,6 +20,21 @@ export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
     return SearchTerms;
 }
 
+export const FetchValidRatesSearchTerm = async(DBName, SearchTerm) => {
+    let SearchTerms = [];
+    const response = await api.get("SearchValidRates.php/get",{
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
+        params:{
+            JsonDBName: DBName,
+            JsonSearchTerm: SearchTerm
+        }
+    });
+    SearchTerms = response.data;
+    return SearchTerms;
+} 
+
 export const FetchFinanceSearchTerm = async(DBName, SearchTerm) => {
     let SearchTerms = [];
     const response = await api.get("SearchFinance.php/get",{
