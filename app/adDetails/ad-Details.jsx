@@ -73,6 +73,7 @@ const AdDetailsPage = () => {
     remarksSuggestion: [],
   });
   const [qtySlab, setQtySlab] = useState({ Qty: 1, Width: 1 });
+  const [grossPerQty, setGrossPerQty] = useState(0);
   const [rateSearchTerm, setRateSearchTerm] = useState("");
   const [selectedDayRange, setSelectedDayRange] = useState("Day");
   const [toast, setToast] = useState(false);
@@ -201,6 +202,7 @@ const basePrice = baseCost + parseInt(margin);
 
   // Handle rate selection
   const handleRateSelection = async (e) => {
+    dispatch(resetQuotesData());
     const selectedRate = e.target.value;
     const selectedRateId = selectedRate.split('-')[0];
     setDatas((prev) => ({ ...prev, ratesSearchSuggestion: [] }));
@@ -287,7 +289,6 @@ const basePrice = baseCost + parseInt(margin);
   const handleQtySlabChange = () => {
     const selectedSlab = datas.slabData?.find(item => item.StartQty === qtySlab.Qty);
     const widthSelectedSlab = datas.slabData?.find(item => item.Width === qtySlab.Width);
-    console.log(datas.slabData, qtySlab, selectedSlab)
 
     if (!selectedSlab) {
       console.error("No matching slab data found.");
@@ -372,6 +373,7 @@ const basePrice = baseCost + parseInt(margin);
     // calculate margin percentage
     const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
     
+    setGrossPerQty(parseFloat(unitPrice) + newMarginAmount/(unit === "SCM" ? qty * width : qty));
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
 
@@ -385,7 +387,8 @@ const basePrice = baseCost + parseInt(margin);
   
     // calculate margin amount
     const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
-  
+   
+    setGrossPerQty(parseInt(unitPrice) + newMarginAmount/(unit === "SCM" ? qty * width : qty));
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
   
@@ -653,7 +656,7 @@ const items = [
 
   {/* <!-- Vendor Cost Box --> */}
   <div className="flex-shrink-0 w-[50%] bg-green-50 border border-green-200 h-fit rounded-lg p-2">
-    <div className="sm:text-lg text-md font-bold text-green-500 mb-2">Including GST{rateGST && '@' + rateGST + '%'}</div>
+    <div className="sm:text-lg text-md font-bold text-green-500 mb-2">Including GST {rateGST > 0 && '@' + rateGST + '%'}</div>
     {items[1].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
         <div className={`sm:text-lg text-[16px] break-words font-semibold sm:font-bold text-green-600`}>
@@ -814,8 +817,24 @@ const items = [
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
+                        const effectiveQty = e.target.value;
+                      
+                        let cost = parseFloat(effectiveQty * unitPrice * (campaignDuration / minimumCampaignDuration));
+                        if (checked.color) { cost += cost * (checked.colorPercentage / 100); }
+                        if (checked.tick) { cost += cost * (checked.tickPercentage / 100); }
+                        if (checked.bold) { cost += cost * (checked.boldPercentage / 100); }
+                        if (checked.semibold) { cost += cost * (checked.semiboldPercentage / 100); }
+                        
+                        const costPerUnit = cost / effectiveQty;
+                        const marginPerUnit = grossPerQty - costPerUnit;
+                        const newMarginAmount = marginPerUnit * effectiveQty;
+
+                        let marginCalculated = grossPerQty < 1 ? calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0) : newMarginAmount;
+
+                        let effectiveQuantity = e.target.value;
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: marginCalculated}));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
+                        grossPerQty < 1 ? setGrossPerQty(unitPrice + (marginCalculated / effectiveQuantity)) : null;
                         setChanging(true);
                       }}
                       onFocus={(e) => e.target.select()}
@@ -836,7 +855,23 @@ const items = [
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
+                        const effectiveQty = e.target.value * width ;
+                      
+                        let cost = parseFloat(effectiveQty * unitPrice * (campaignDuration / minimumCampaignDuration));
+                        if (checked.color) { cost += cost * (checked.colorPercentage / 100); }
+                        if (checked.tick) { cost += cost * (checked.tickPercentage / 100); }
+                        if (checked.bold) { cost += cost * (checked.boldPercentage / 100); }
+                        if (checked.semibold) { cost += cost * (checked.semiboldPercentage / 100); }
+                        
+                        const costPerUnit = cost / effectiveQty;
+                        const marginPerUnit = grossPerQty - costPerUnit;
+                        const newMarginAmount = marginPerUnit * effectiveQty;
+
+                        let marginCalculated = grossPerQty < 1 ? calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0) : newMarginAmount;
+
+                        let effectiveQuantity = e.target.value * width;
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: marginCalculated}));
+                        grossPerQty < 1 ? setGrossPerQty(unitPrice + (marginCalculated / effectiveQuantity)) : null;
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
@@ -856,7 +891,22 @@ const items = [
                       min={qtySlab.Width}
                       value={width}
                       onChange={(e) => {
-                        dispatch(setQuotesData({width: e.target.value, marginAmount: calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
+                        const effectiveQty = unit === "SCM" ? qty * e.target.value : qty;
+                      
+                        let cost = parseFloat(effectiveQty * unitPrice * (campaignDuration / minimumCampaignDuration));
+                        if (checked.color) { cost += cost * (checked.colorPercentage / 100); }
+                        if (checked.tick) { cost += cost * (checked.tickPercentage / 100); }
+                        if (checked.bold) { cost += cost * (checked.boldPercentage / 100); }
+                        if (checked.semibold) { cost += cost * (checked.semiboldPercentage / 100); }
+                        
+                        const costPerUnit = cost / effectiveQty;
+                        const marginPerUnit = grossPerQty - costPerUnit;
+                        const newMarginAmount = marginPerUnit * effectiveQty;
+
+                        let marginCalculated = grossPerQty < 1 ? calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0) : newMarginAmount;
+                        let effectiveQuantity = qty * e.target.value;
+                        dispatch(setQuotesData({width: e.target.value, marginAmount: marginCalculated}));
+                        grossPerQty < 1 ? setGrossPerQty(unitPrice + (marginCalculated / effectiveQuantity)) : null;
                         setQtySlab(findMatchingQtySlab(e.target.value, true));
                         setChanging(true);
                       }}
@@ -880,7 +930,23 @@ const items = [
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: calculateMarginAmount(qty, width, unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)})); 
+                          const effectiveQty = e.target.value;
+                      
+                        let cost = parseFloat(effectiveQty * unitPrice * (campaignDuration / minimumCampaignDuration));
+                        if (checked.color) { cost += cost * (checked.colorPercentage / 100); }
+                        if (checked.tick) { cost += cost * (checked.tickPercentage / 100); }
+                        if (checked.bold) { cost += cost * (checked.boldPercentage / 100); }
+                        if (checked.semibold) { cost += cost * (checked.semiboldPercentage / 100); }
+                        
+                        const costPerUnit = cost / effectiveQty;
+                        const marginPerUnit = grossPerQty - costPerUnit;
+                        const newMarginAmount = marginPerUnit * effectiveQty;
+
+                        let marginCalculated = grossPerQty < 1 ? calculateMarginAmount(qty, e.target.value  , unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0) : newMarginAmount;
+
+                        grossPerQty < 1 ? setGrossPerQty(unitPrice + (marginCalculated / effectiveQuantity)) : null;
+
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: marginCalculated})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}
@@ -978,6 +1044,48 @@ const items = [
                       setQtySlab(selectedValue)
                     }}
                     options={slabOptions}
+                  />
+                </div>
+                <div className="mb-4 flex flex-col">
+                  <label className="font-bold mb-1 ml-2">Gross Price per {unit || "Unit"}</label>
+                  <input
+                   className={`w-[80%] ml-2 px-4 py-2 border  border-gray-400  text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 `}
+                    value={grossPerQty}
+                    type="number"
+                    onChange={(e) => {
+                      const newGross = parseFloat(e.target.value);
+                      setGrossPerQty(newGross);
+                      const effectiveQty = unit === "SCM" ? qty * width : qty;
+                      
+                      let cost = parseFloat(effectiveQty * unitPrice * (campaignDuration / minimumCampaignDuration));
+                      if (checked.color) { cost += cost * (checked.colorPercentage / 100); }
+                      if (checked.tick) { cost += cost * (checked.tickPercentage / 100); }
+                      if (checked.bold) { cost += cost * (checked.boldPercentage / 100); }
+                      if (checked.semibold) { cost += cost * (checked.semiboldPercentage / 100); }
+                      
+                      const costPerUnit = cost / effectiveQty;
+                      const marginPerUnit = newGross - costPerUnit;
+                      const newMarginAmount = marginPerUnit * effectiveQty;
+                      
+                      const newMarginPercentage = calculateMarginPercentage(
+                        qty,
+                        width,
+                        unit,
+                        unitPrice,
+                        campaignDuration,
+                        minimumCampaignDuration,
+                        newMarginAmount,
+                        checked.color ? checked.colorPercentage : 0,
+                        checked.tick ? checked.tickPercentage : 0,
+                        checked.bold ? checked.boldPercentage : 0,
+                        checked.semibold ? checked.semiboldPercentage : 0
+                      );
+                      
+                      dispatch(setQuotesData({
+                        marginAmount: newMarginAmount,
+                        marginPercentage: newMarginPercentage
+                      }));
+                    }}                    
                   />
                 </div>
                 </div>
