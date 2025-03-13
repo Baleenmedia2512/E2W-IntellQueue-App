@@ -434,3 +434,25 @@ export const elementsToHideList = async(DBName) => {
 
     return TDS;
   }
+
+  export const FetchOrderHistory = async(DBName, OrderNumber) => { 
+    let OrderHistory = [];
+
+    try {
+        const response = await api.get("FetchClientOrderHistory.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                orderNumber: OrderNumber
+            }
+        });
+        OrderHistory = response.data;
+    }
+    catch (error) {
+        alert("Unable to Fetch Order History")
+    }
+
+    return OrderHistory;
+}

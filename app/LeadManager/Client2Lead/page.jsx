@@ -50,6 +50,7 @@ export default function ExistingClientToLeads() {
   const [currentLead, setCurrentLead] = useState(null);
   const [isHandledByChange, setIsHandledByChange] = useState(false);
   const [CSENames, setCSENames] = useState([]);
+  const [orderHistory, setOrderHistory] = useState([]);
 
   // Combined state for lead update fields
   const [currentUpdate, setCurrentUpdate] = useState(initialCurrentUpdate);
@@ -342,9 +343,16 @@ export default function ExistingClientToLeads() {
     console.log("Initiate call to:", contact, name, orderNumber);
   };
 
-  const openExpandedModal = (lead) => {
+  const openExpandedModal = async(lead) => {
     setCurrentLead(lead);
     setShowExpandedModal(true);
+    const response = await GetInsertOrUpdate("FetchClientOrderHistory", {
+      JsonDBName: UserCompanyName,
+      JsonClientContact: lead.ClientContact,
+    });
+    if(response.success){
+      setOrderHistory(response.data);
+    }
   };
 
   return (
@@ -857,54 +865,27 @@ export default function ExistingClientToLeads() {
             </button>
             <div className="p-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Ad Details for Order #{currentLead.OrderNumber}
+                Ad Details for client {currentLead.ClientName}
               </h3>
-              <div className="space-y-3 text-gray-700">
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-medium">Ad Medium:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {currentLead.Card}
-                  </span>
-                </div>
-                {currentLead.AdCategory !== " : " && (
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="font-medium">Ad Category:</span>
-                    <span className="text-gray-900 font-semibold">
-                      {currentLead.AdCategory}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-medium">Ad Type:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {currentLead.AdType}
-                  </span>
-                </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-medium">Ad Width:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {currentLead.AdWidth}
-                  </span>
-                </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-medium">Ad Height:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {currentLead.AdHeight}
-                  </span>
-                </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-medium">First Release:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {currentLead.DateOfFirstRelease}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Last Release:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {currentLead.DateOfLastRelease}
-                  </span>
-                </div>
-              </div>
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="text-left">Order Number</th>
+                    <th className="text-left">Type</th>
+                    <th className="text-left">Release Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderHistory.length > 0 ? orderHistory.map((lead) => (
+                  <tr>
+                    <td>{lead.OrderNumber}</td>
+                    <td>{lead.AdType}</td>
+                    <td>{lead.DateOfLastRelease}</td>
+                  </tr>
+                  )) : <tr><td colSpan="3" className="text-center">No data found</td></tr>
+                }
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
