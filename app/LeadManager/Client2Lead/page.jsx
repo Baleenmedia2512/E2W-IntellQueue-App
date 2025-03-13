@@ -8,7 +8,7 @@ import {
 } from "@/app/api/FetchAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import { FiCalendar, FiPhoneCall } from "react-icons/fi";
+import { FiCalendar, FiPhoneCall, FiCheckCircle, FiLoader } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/store";
 import {
@@ -20,8 +20,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
 import SuccessToast from "@/app/components/SuccessToast";
-import { formatDBDateTime } from "@/app/utils/commonFunctions";
+import { formatDBDateTime, normalizeDate } from "@/app/utils/commonFunctions";
 import { useRouter } from "next/navigation";
+
 
 const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
@@ -87,9 +88,31 @@ export default function ExistingClientToLeads() {
   const {
     userName,
     appRights,
-    companyName: UserCompanyName,
+    // "Baleen Media": UserCompanyName,
   } = useAppSelector((state) => state.authSlice);
-  const filteredRows = leadData; // Add additional filtering logic if needed
+
+  const UserCompanyName = "Baleen Media"
+  const filteredRows = leadData
+                        .filter(row => filters.statusFilter === "All" || (row.Status || "Convert") === filters.statusFilter )
+                        .filter((row) => {
+                          const followUpDate = normalizeDate(new Date(row.NextFollowupDate));
+                          const leadDate = normalizeDate(new Date(row.LeadDate));
+                      
+                          // Convert 'fromDate' and 'toDate' into Date objects for comparison
+                          const fromDateObj = filters.fromDate ? normalizeDate(new Date(filters.fromDate)) : null;
+                          const toDateObj = filters.toDate ? normalizeDate(new Date(filters.toDate)) : null;
+                      
+                          // Ensure both fromDateObj and toDateObj are defined
+                          if (!fromDateObj || !toDateObj) return true; 
+                      
+                          if (
+                            (followUpDate >= fromDateObj && followUpDate <= toDateObj) ||
+                            (leadDate >= fromDateObj && leadDate <= toDateObj)
+                          ) {
+                            return true; 
+                          }
+                          return false; 
+                        }) ; // Add additional filtering logic if needed
 
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
@@ -347,7 +370,7 @@ export default function ExistingClientToLeads() {
         <div className="flex items-center justify-between">
           <input
             type="text"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            className="w-full p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             placeholder="Search by Client Name, Phone No, Email Address, Ad Medium, Company Name, Remarks..."
             onChange={(e) => handleSearch(e.target.value)}
           />
@@ -374,28 +397,28 @@ export default function ExistingClientToLeads() {
       {/* Filter Panel */}
       {filters.showFilters && (
         <div className="p-4 bg-white rounded-lg shadow-sm mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
+          <div className="flex flex-col md:flex-row justify-start md:justify-evenly">
+            <div className="mb-4 md:mb-0">
               <label className="block text-sm font-medium text-gray-700">
                 Status
               </label>
               <select
                 value={filters.statusFilter}
                 onChange={(e) => updateFilter("statusFilter", e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-60 text-black p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="All">All</option>
                 <option value="Convert">Convert</option>
-                <option value="Ready for Quote">Ready for Quote</option>
+                {/* <option value="Ready for Quote">Won</option> */}
                 <option value="Call Followup">Call Followup</option>
                 <option value="Unreachable">Unreachable</option>
-                <option value="Unqualified">Unqualified</option>
+                {/* <option value="Unqualified">Unqualified</option> */}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Date Range
+                Lead Date Range
               </label>
               <DatePicker
                 selectsRange={true}
@@ -412,145 +435,226 @@ export default function ExistingClientToLeads() {
               />
             </div>
 
-            <div className="flex justify-end md:justify-start">
+            {/* <div className="flex justify-end md:justify-start">
               <button
                 onClick={() => toggleFilters()}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full md:w-auto"
               >
                 Apply Filters
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       )}
-  
+
       {/* Lead Cards */}
-      {filteredRows.length === 0 ? 
-        isLoading ?  (<div className="flex items-center justify-center h-64">
-          <div className="text-center text-black text-2xl">
-            Loading data...
-          </div>
-        </div>) :(<div className="flex items-center justify-center h-64">
-          <div className="text-center text-gray-500 text-lg">
-            No data found.
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredRows.map((row) => (
-            <div
-              key={row.OrderNumber}
-              className="relative bg-white rounded-lg p-6 border border-gray-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-              style={{ minHeight: "240px" }}
-            >
-              <div className="absolute top-4 right-4">
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                    statusColors[row.Status || "Convert"]
-                  } hover:cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
-                  onClick={() => {
-                    setCurrentLead(row);
-                    setShowModal(true);
-                    if(row.Lead_ID){
-                      setCurrentUpdate({
-                        ...currentUpdate,
-                        Status: row.Status || "Convert",
-                        RejectionReason: row.RejectionReason,
-                        NextFollowupDate: row.NextFollowupDate,
-                        Remarks: row.Remarks,
-                        HandledBy: row.HandledBy,
-                        ProspectType: row.ProspectType,
-                        IsUnreachable: row.IsUnreachable,
-                        PreviousStatus: row.PreviousStatus
-                      });
-                    }
-                  }}
-                >
-                  {row.Status || "Convert"}
-                </span>
-                {row.CSE && (
-                  <div
-                    className="text-xs mt-2 p-1 px-3 hover:cursor-pointer text-orange-800 bg-orange-50 rounded-full flex items-center"
-                    // onClick={() => handleHandledByChange(row.CSE, row.OrderNumber)}
-                  >
-                    <FontAwesomeIcon icon={faUserCircle} className="mr-1" />
-                    <p>{toTitleCase(row.CSE)}</p>
-                  </div>
-                )}
-              </div>
 
-              <div className="mb-4 mt-8">
-                <h3 className="text-xl font-bold text-gray-900 max-w-[75%] capitalize">
-                  {row.ClientName}{" "}
-                  {row.OrderNumber
-                    ? ` - Order # ${row.OrderNumber}`
-                    : row.ClientCompanyName === row.ClientName
-                    ? ""
-                    : `(${row.ClientCompanyName})`}
-                </h3>
-              </div>
+  {filteredRows.length === 0 ? 
+    isLoading ?  (<div className="flex items-center justify-center h-64">
+      <div className="flex flex-row text-center text-black text-lg font-semibold">
+      <FiLoader className="animate-spin mr-2 border-white rounded-full w-6 h-6 text-blue-500"/>
+      Loading data...
+      </div>
+    </div>) :(<div className="flex items-center justify-center h-64">
+      <div className="text-center text-gray-500 text-lg">
+        No data found.
+      </div>
+    </div>
+  ) : (
+  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    {filteredRows.map((row) => (
+      <div
+        key={row.OrderNumber}
+        className="relative bg-white rounded-xl shadow-md hover:shadow-xl p-5 border-l-4 border-l-blue-500 transition-all duration-300"
+        style={{ minHeight: "280px" }}
+      >
+        {/* Header Section with Client Name and Status */}
+        <div className="flex justify-between items-start  mb-2">
+          <h3 className="text-lg font-bold text-gray-900 capitalize pr-2 leading-tight">
+            {row.ClientName}
+          </h3>
+          <span
+          onClick={() => {
+             if (!isLoading) {
+              toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
+            }
+           }}
+           className={`flex items-center gap-2 rounded-lg px-3 py-1 text-white text-xs sm:text-sm font-medium shadow-md transition-all duration-300 cursor-pointer ${
+             row.QuoteSent === "Yes"
+               ? "bg-green-500 hover:bg-green-600"
+               : "bg-red-500 hover:bg-red-600"
+           }`}
+          title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
+         >
+          {isLoading ? (
+            <div className="animate-spin border-t-2 border-white rounded-full w-4 h-4" />
+          ) : (
+             <FiCheckCircle className="text-white text-base" />
+          )}
+           <span>{row.QuoteSent === "Yes" ? "Sent" : "Not Sent"}</span>
+         </span>
 
-              <div className="space-y-3 text-base">
-                {row.Lead_ID && (
-                  <p className="text-gray-600">
-                    Arrived Date Time:{" "}
-                    <span className="font-medium text-gray-900">
-                      {formatDBDateTime(row.ArrivedDateTime)}
-                    </span>
-                  </p>
-                )}
-                <div className="flex items-center gap-2 text-gray-600">
-                  Phone:
-                  <a
-                    href={`tel:${row.ClientContact}`}
-                    className="font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    onClick={() => {
-                      setTimeout(() => {
-                        setShowModal(true);
-                      }, 3000);
-                    }}
-                  >
-                    <FiPhoneCall className="w-4 h-4" />
-                    {row.ClientContact}
-                  </a>
-                </div>
-                {(row.ClientAuthorizedPerson || row.ClientEmail) && (
-                  <p className="text-gray-600">
-                    Email:{" "}
-                    <span className="font-medium text-gray-900">
-                      {row.ClientAuthorizedPerson || row.ClientEmail}
-                    </span>
-                  </p>
-                )}
-                <p className="text-gray-600">
-                  Source:{" "}
-                  <span className="font-medium text-gray-900">
-                    {row.Source || row.Platform}
-                  </span>
-                </p>
-              </div>
-                {row.NextFollowupDate !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") ? (
-                              <div className="flex items-start gap-2 flex-col" >
-                              <p className="text-gray-600">Followup Date:</p>
-                                <p className="bg-green-200 hover:bg-green-300 text-green-900 p-2 text-[14px] rounded-lg cursor-pointer"   onClick={() => {setShowModal(true); setCurrentUpdate({...currentUpdate, Status: "Call Followup", FollowupOnly: true, NextFollowupDate: new Date(row.NextFollowupDate)}); console.log(new Date(row.NextFollowupDate));setCurrentLead(row);}}>
-                                <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {formatDBDateTime(row.NextFollowupDate.toISOString())}</span>
-                                </p>
-                                <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
-                    
-                              </div>
-                              
-                            ) : null}
-              <button
-                onClick={() => openExpandedModal(row)}
-                className="mt-4 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full text-center transition-all duration-200"
-              >
-                View More
-              </button>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              statusColors[row.Status || "Convert"]
+            } hover:cursor-pointer hover:shadow-md transition-all duration-200`}
+            onClick={() => {
+              setCurrentLead(row);
+              setShowModal(true);
+              if(row.Lead_ID){
+                setCurrentUpdate({
+                  ...currentUpdate,
+                  Status: row.Status || "Convert",
+                  RejectionReason: row.RejectionReason,
+                  NextFollowupDate: row.NextFollowupDate,
+                  Remarks: row.Remarks,
+                  HandledBy: row.HandledBy,
+                  ProspectType: row.ProspectType,
+                  IsUnreachable: row.IsUnreachable,
+                  PreviousStatus: row.PreviousStatus
+                });
+              }
+            }}
+          >
+            {row.Status || "Convert"}
+          </span>
+          
+                      {/* CSE Assignment */}
+        {row.CSE && (
+          <div className="mb-4">
+            <div className="text-xs py-1 px-3 inline-flex items-center text-orange-800 bg-orange-50 rounded-full">
+              <FontAwesomeIcon icon={faUserCircle} className="mr-1" />
+              <p>{toTitleCase(row.CSE)}</p>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
 
+                      
+        </div>
+
+        {/* Order Number & Company */}
+        <div className="mb-4">
+          {row.OrderNumber && (
+            <div className="text-sm text-gray-600 font-medium mb-1">
+              Order # {row.OrderNumber}
+            </div>
+          )}
+          {row.ClientCompanyName && row.ClientCompanyName !== row.ClientName && (
+            <div className="text-sm text-gray-700 font-medium">
+              {row.ClientCompanyName}
+            </div>
+          )}
+        </div>
+
+        
+
+        {/* Client Details Section - Clean List */}
+        <div className="space-y-2.5 mb-12">
+          {row.Lead_ID && (
+            <div className="flex items-baseline">
+              <div className="w-28 text-xs text-gray-500 uppercase font-medium">Date</div>
+              <div className="flex-1 text-gray-900 text-sm">
+                {formatDBDateTime(row.ArrivedDateTime)}
+              </div>
+            </div>
+          )}
+          
+          <div className="flex items-baseline">
+            <div className="w-28 text-xs text-gray-500 uppercase font-medium">Phone</div>
+            <a
+              href={`tel:${row.ClientContact}`}
+              className="flex-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
+              onClick={() => {
+                setTimeout(() => {
+                  setShowModal(true);
+                }, 3000);
+              }}
+            >
+              <div className="flex items-center">
+                <FiPhoneCall className="w-3.5 h-3.5 mr-1.5" />
+                {row.ClientContact}
+              </div>
+            </a>
+          </div>
+          
+          {(row.ClientAuthorizedPerson || row.ClientEmail) && (
+            <div className="flex items-baseline">
+              <div className="w-28 text-xs text-gray-500 uppercase font-medium">Email</div>
+              <div className="flex-1 text-gray-900 text-sm truncate">
+                {row.ClientAuthorizedPerson || row.ClientEmail}
+              </div>
+            </div>
+          )}
+          
+          <div className="flex items-baseline">
+            <div className="w-28 text-xs text-gray-500 uppercase font-medium">Source</div>
+            <div className="flex-1 text-gray-900 text-sm">
+              {row.Source || row.Platform}
+            </div>
+          </div>
+        </div>
+
+        {/* Follow-up Date Tab */}
+        {/* {row.NextFollowupDate !== "No Followup Date" && 
+         (row.Status === "Call Followup" || row.Status === "Unreachable") && (
+          <div className="absolute left-[407px] top-[225px] transform translate-x-8">
+            <div
+              className="bg-green-100 hover:bg-green-200 text-green-900 px-4 py-2 rounded-l-lg shadow cursor-pointer -rotate-90 origin-top-left"
+              onClick={() => {
+                setShowModal(true);
+                setCurrentUpdate({
+                  ...currentUpdate,
+                  Status: "Call Followup",
+                  FollowupOnly: true,
+                  NextFollowupDate: new Date(row.NextFollowupDate),
+                });
+                setCurrentLead(row);
+              }}
+            >
+              <div className="flex items-center whitespace-nowrap text-xs font-medium">
+                <FiCalendar className="mr-1.5" />
+                {formatDBDateTime(row.NextFollowupDate.toISOString())}
+              </div>
+            </div>
+          </div>
+        )} */}
+
+        {/* Action Buttons */}
+        <div className="absolute bottom-5 left-5 right-5 flex gap-2">
+          {row.Status !== "Convert" && row.Status !== "Call Followup" && row.Status !== "Unreachable" && (
+            <button
+              onClick={() => openExpandedModal(row)}
+              className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium"
+            >
+              View More
+            </button>
+          )}
+          
+          {row.Status !== "No Followup Date" && (row.Status === "Call Followup" || row.Status === "Unreachable") && (
+            <div
+            className="bg-green-600 hover:bg-green-700 text-green-100 px-4 py-2 rounded-lg shadow cursor-pointer w-full "
+            onClick={() => {
+              setShowModal(true);
+              setCurrentUpdate({
+                ...currentUpdate,
+                Status: "Call Followup",
+                FollowupOnly: true,
+                NextFollowupDate: new Date(row.NextFollowupDate),
+              });
+              setCurrentLead(row);
+            }}
+          >
+            <div className="flex items-center whitespace-nowrap text-xs font-medium">
+              <FiCalendar className="mr-1.5" />
+              {formatDBDateTime(row.NextFollowupDate.toISOString())}
+            </div>
+          </div>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
       {/* Change Handled By Modal */}
       {isHandledByChange && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
@@ -579,7 +683,7 @@ export default function ExistingClientToLeads() {
                     value={user.username}
                     checked={currentUpdate.selectedUser === user.username}
                     onChange={() => handleUserChange(user.username)}
-                    className="hidden"
+                    className="hidden text-black"
                   />
                   {toTitleCase(user.username)}
                 </label>
@@ -633,11 +737,10 @@ export default function ExistingClientToLeads() {
               {!currentUpdate.FollowupOnly && (
               <div className="flex flex-wrap gap-2">
                 {[
-                  "Convert",
-                  "Ready for Quote",
                   "Call Followup",
                   "Unreachable",
-                  "Unqualified"
+                  "Unqualified",
+                  "Won",
                 ].map((status) => (
                   <label
                     key={status}
@@ -658,7 +761,7 @@ export default function ExistingClientToLeads() {
                           Status: status,
                         }))
                       }
-                      className="hidden"
+                      className="hidden text-black"
                     />
                     {status}
                   </label>
@@ -721,7 +824,7 @@ export default function ExistingClientToLeads() {
                   <label className="block text-base font-medium text-gray-700">
                     Remarks
                   </label>
-                  <input className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  <input className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-black"
                     value={currentUpdate.Remarks}
                     onChange={(e) => setCurrentUpdate(prev => ({ ...prev, Remarks: e.target.value }))} />
                 </div>)}
