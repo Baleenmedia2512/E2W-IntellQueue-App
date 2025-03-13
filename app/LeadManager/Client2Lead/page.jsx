@@ -287,7 +287,7 @@ export default function ExistingClientToLeads() {
       JsonEntryUser: userName,
       JsonLeadDate: currentDate,
       JsonLeadTime: currentTime,
-      JsonPlatform: currentLead?.Platform || "",
+      JsonPlatform: currentLead?.Source || "",
       JsonClientName: currentLead?.ContactPerson || currentLead?.ClientName,
       JsonClientContact: currentLead?.ClientContact || "",
       JsonClientEmail: currentLead?.ClientAuthorizedPerson || "",
@@ -321,8 +321,8 @@ export default function ExistingClientToLeads() {
     const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", isExistingLead ? updateFormData : formData);
     const enquiryResponse = await insertEnquiry();
     if (
-      leadResponse.status === "success" &&
-      isExistingLead ? true : enquiryResponse.status === "success"
+      enquiryResponse.message === "Values Inserted Successfully!" &&
+      isExistingLead ? true : leadResponse.status === "success"
     ) {
       setCurrentUpdate(initialCurrentUpdate);
       alert("Enquiry Saved Successfully!");
