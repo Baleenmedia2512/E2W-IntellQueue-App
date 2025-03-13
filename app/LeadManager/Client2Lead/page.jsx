@@ -96,6 +96,7 @@ export default function ExistingClientToLeads() {
   };
 
   const FetchLeads = async () => {
+    setIsLoading(true);
     let response = await FetchExistingLeads(UserCompanyName, searchTerm);
     let data = await FetchLeadsData(UserCompanyName, searchTerm);
 
@@ -127,6 +128,7 @@ export default function ExistingClientToLeads() {
 
     // Fetch CSENames
     fetchCSENames();
+    setIsLoading(false);
 };
 
   useEffect(() => {
@@ -421,10 +423,14 @@ export default function ExistingClientToLeads() {
           </div>
         </div>
       )}
-
+  
       {/* Lead Cards */}
-      {filteredRows.length === 0 ? (
-        <div className="flex items-center justify-center h-64">
+      {filteredRows.length === 0 ? 
+        isLoading ?  (<div className="flex items-center justify-center h-64">
+          <div className="text-center text-black text-2xl">
+            Loading data...
+          </div>
+        </div>) :(<div className="flex items-center justify-center h-64">
           <div className="text-center text-gray-500 text-lg">
             No data found.
           </div>
