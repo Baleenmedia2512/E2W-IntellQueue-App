@@ -22,6 +22,7 @@ import * as XLSX from "xlsx";
 import SuccessToast from "@/app/components/SuccessToast";
 import { formatDate, formatDBDateTime, normalizeDate } from "@/app/utils/commonFunctions";
 import { useRouter } from "next/navigation";
+import { Yesteryear } from "next/font/google";
 
 
 const tomorrow = new Date();
@@ -39,6 +40,7 @@ let initialCurrentUpdate = {
   selectedUser: "",
   PreviousStatus: "",
   FollowupOnly: false,
+  QuoteSent: 0,
 };
 export default function ExistingClientToLeads() {
   const router = useRouter();
@@ -51,7 +53,6 @@ export default function ExistingClientToLeads() {
   const [isHandledByChange, setIsHandledByChange] = useState(false);
   const [CSENames, setCSENames] = useState([]);
   const [orderHistory, setOrderHistory] = useState([]);
-
   // Combined state for lead update fields
   const [currentUpdate, setCurrentUpdate] = useState(initialCurrentUpdate);
   const [currentCall, setCurrentCall] = useState(null);
@@ -249,6 +250,18 @@ export default function ExistingClientToLeads() {
     }
   };
 
+  const handleQuoteSent = async(QuoteParams) => {
+    const isExistingLead =  true;
+    const response = await PostInsertOrUpdate("InsertLeadStatus", QuoteParams);
+    if ( response.status === "success") {
+      alert("Quote Sent status updated successfully!");
+    } else {
+      console.error("Error while updating Quote Sent status:", response);
+      alert("Unable to update Quote Sent status due to some network issue!");
+    }
+    setIsLoading(false);
+    FetchLeads();
+  }
   const handleSave = async () => {
     setIsLoading(true);
 
@@ -278,9 +291,10 @@ export default function ExistingClientToLeads() {
       JsonRejectionReason: currentUpdate.RejectionReason,
       JsonNextFollowupDate: currentUpdate.NextFollowupDate ? formattedDate : "",
       JsonNextFollowupTime: currentUpdate.NextFollowupDate ? formattedTime : "",
-      JsonRemarks: currentUpdate.Remarks || currentLead.Remarks,
+      JsonRemarks: currentUpdate.Remarks,
       JsonHandledBy: currentUpdate.HandledBy || userName,
-      JsonPreviousStatus: currentUpdate.PreviousStatus || currentLead.Status,
+      JsonPreviousStatus: currentUpdate.PreviousStatus || currentLead?.Status,
+      JsonQuoteSent: currentUpdate.QuoteSent,
     }
 
     const formData = {
@@ -300,7 +314,7 @@ export default function ExistingClientToLeads() {
       JsonNextFollowupDate: currentUpdate.NextFollowupDate ? formattedDate : "",
       JsonNextFollowupTime: currentUpdate.NextFollowupDate ? formattedTime : "",
       JsonClientCompanyName: currentLead?.ClientName || "",
-      JsonRemarks: currentUpdate.Remarks || currentLead.Remarks,
+      JsonRemarks: currentUpdate.Remarks || currentLead?.Remarks,
       JsonHandledBy: userName,
       JsonProspectType: currentUpdate.ProspectType,
       JsonIsUnreachable: currentUpdate.Status === "Unreachable" ? 1 : 0,
@@ -456,92 +470,32 @@ export default function ExistingClientToLeads() {
       )}
 
       {/* Lead Cards */}
-
-  {filteredRows.length === 0 ? 
-    isLoading ?  (<div className="flex items-center justify-center h-64">
-      <div className="flex flex-row text-center text-black text-lg font-semibold">
-      <FiLoader className="animate-spin mr-2 border-white rounded-full w-6 h-6 text-blue-500"/>
-      Loading data...
-      </div>
-    </div>) :(<div className="flex items-center justify-center h-64">
-      <div className="text-center text-gray-500 text-lg">
-        No data found.
-      </div>
+{filteredRows.length === 0 ? 
+  isLoading ?  (<div className="flex items-center justify-center h-64">
+    <div className="flex flex-row text-center text-black text-lg font-semibold">
+    <FiLoader className="animate-spin mr-2 border-white rounded-full w-6 h-6 text-blue-500"/>
+    Loading data...
     </div>
-  ) : (
-  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  </div>) :(<div className="flex items-center justify-center h-64">
+    <div className="text-center text-gray-500 text-lg">
+      No data found.
+    </div>
+  </div>
+) : (
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4">
     {filteredRows.map((row) => (
       <div
         key={row.OrderNumber}
         className="relative bg-white rounded-xl shadow-md hover:shadow-xl p-5 border-l-4 border-l-blue-500 transition-all duration-300"
         style={{ minHeight: "280px" }}
       >
-        {/* Header Section with Client Name and Status */}
-        <div className="flex justify-between items-start  mb-2">
-          <h3 className="text-lg font-bold text-gray-900 capitalize pr-2 leading-tight">
-            {row.ClientName}
-          </h3>
-          <span
-          onClick={() => {
-             if (!isLoading) {
-              toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
-            }
-           }}
-           className={`flex items-center gap-2 rounded-lg px-3 py-1 text-white text-xs sm:text-sm font-medium shadow-md transition-all duration-300 cursor-pointer ${
-             row.QuoteSent === "Yes"
-               ? "bg-green-500 hover:bg-green-600"
-               : "bg-red-500 hover:bg-red-600"
-           }`}
-          title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
-         >
-          {isLoading ? (
-            <div className="animate-spin border-t-2 border-white rounded-full w-4 h-4" />
-          ) : (
-             <FiCheckCircle className="text-white text-base" />
-          )}
-           <span>{row.QuoteSent === "Yes" ? "Sent" : "Not Sent"}</span>
-         </span>
-
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              statusColors[row.Status || "Convert"]
-            } hover:cursor-pointer hover:shadow-md transition-all duration-200`}
-            onClick={() => {
-              setCurrentLead(row);
-              setShowModal(true);
-              if(row.Lead_ID){
-                setCurrentUpdate({
-                  ...currentUpdate,
-                  Status: row.Status || "Convert",
-                  RejectionReason: row.RejectionReason,
-                  NextFollowupDate: row.NextFollowupDate,
-                  Remarks: row.Remarks,
-                  HandledBy: row.HandledBy,
-                  ProspectType: row.ProspectType,
-                  IsUnreachable: row.IsUnreachable,
-                  PreviousStatus: row.PreviousStatus
-                });
-              }
-            }}
-          >
-            {row.Status || "Convert"}
-          </span>
-          
-                      {/* CSE Assignment */}
-        {row.CSE && (
-          <div className="mb-4">
-            <div className="text-xs py-1 px-3 inline-flex items-center text-orange-800 bg-orange-50 rounded-full">
-              <FontAwesomeIcon icon={faUserCircle} className="mr-1" />
-              <p>{toTitleCase(row.CSE)}</p>
-            </div>
-          </div>
-        )}
-
-                      
-        </div>
-
-        {/* Order Number & Company */}
-        <div className="mb-4">
+   {/* Header Section with Client Name and Status */}
+<div className="flex    justify-between  items-start border-b-2  mb-3">
+  {/* Order Number & Company */}
+  <div className="">
+        <h3 className="text-lg font-bold text-gray-900 capitalize pr-2 leading-tight w-full md:w-auto">
+    {row.ClientName}
+  </h3>
           {row.OrderNumber && (
             <div className="text-sm text-gray-600 font-medium mb-1">
               Order # {row.OrderNumber}
@@ -553,6 +507,84 @@ export default function ExistingClientToLeads() {
             </div>
           )}
         </div>
+  
+  <div className="flex flex-wrap justify-end gap-2 items-start ">
+    {row.Status === "Call Followup" &&
+    <span
+      onClick={() => {
+        if (!isLoading) {
+          if (row.Lead_ID) {
+            const QuoteParams = {
+              JsonDBName: UserCompanyName,
+              JsonEntryUser: userName,
+              JsonLead_ID: row.Lead_ID,
+              JsonStatus: row.Status || "Convert",
+              JsonRejectionReason: row.RejectionReason,
+              JsonNextFollowupDate: row.NextFollowupDate,
+              JsonRemarks: row.Remarks,
+              JsonHandledBy: row.HandledBy,
+              JsonProspectType: row.ProspectType,
+              JsonIsUnreachable: row.IsUnreachable,
+              JsonPreviousStatus: row.PreviousStatus,
+              JsonQuoteSent: row.QuoteSentStatus === 1 ? 0 : 1,
+            };
+            console.log(row.QuoteSentStatus)
+            handleQuoteSent(QuoteParams);
+          }
+        }
+      }}
+      className={`flex items-start gap-2 rounded-lg px-2 py-1 text-white text-xs sm:text-xs font-medium shadow-md transition-all duration-300 cursor-pointer ${
+        row.QuoteSentStatus === 1
+          ? "bg-green-500 hover:bg-green-600"
+          : "bg-red-500 hover:bg-red-600"
+      }`}
+      title={`Click to ${row.QuoteSentStatus === 1 ? "Remove" : "Add"} quote sent status`}
+    >
+      {isLoading ? (
+        <div className="animate-spin border-t-2 border-white rounded-full w-2 h-2" />
+      ) : (
+        <FiCheckCircle className="text-white text-base" />
+      )}
+      <span>{row.QuoteSentStatus === 1 ? "Sent" : "Not Sent"}</span>
+    </span>
+}
+    <div className="flex flex-col items-start gap-1 mb-2">
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          statusColors[row.Status || "Convert"]
+        } hover:cursor-pointer hover:shadow-md transition-all duration-200`}
+        onClick={() => {
+          setCurrentLead(row);
+          setShowModal(true);
+          if (row.Lead_ID) {
+            setCurrentUpdate({
+              ...currentUpdate,
+              Status: row.Status || "Convert",
+              RejectionReason: row.RejectionReason,
+              NextFollowupDate: row.NextFollowupDate,
+              Remarks: row.Remarks,
+              HandledBy: row.HandledBy,
+              ProspectType: row.ProspectType,
+              IsUnreachable: row.IsUnreachable,
+              PreviousStatus: row.PreviousStatus,
+              QuoteSent: row.QuoteSentStatus,
+            });
+          }
+        }}
+      >
+        {row.Status || "Convert"}
+      </span>
+      {row.CSE && (
+        <div className="text-xs py-1 px-3 mt-1 inline-flex items-center text-orange-800 bg-orange-100 rounded-full ">
+          <FontAwesomeIcon icon={faUserCircle} className="mr-1" />
+          <p>{toTitleCase(row.CSE)}</p>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+        
 
         
 
