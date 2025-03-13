@@ -20,7 +20,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
 import SuccessToast from "@/app/components/SuccessToast";
-import { formatDBDateTime, normalizeDate } from "@/app/utils/commonFunctions";
+import { formatDate, formatDBDateTime, normalizeDate } from "@/app/utils/commonFunctions";
 import { useRouter } from "next/navigation";
 
 
@@ -856,31 +856,31 @@ export default function ExistingClientToLeads() {
       {/* Expanded Order Details Modal */}
       {showExpandedModal && currentLead && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg relative">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
               onClick={() => setShowExpandedModal(false)}
             >
               <AiOutlineClose className="text-2xl" />
             </button>
-            <div className="p-6">
+            <div className="p-4">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
                 Ad Details for client {currentLead.ClientName}
               </h3>
               <table className="w-full">
-                <thead>
+                <thead className="bg-gray-100 p-4">
                   <tr>
-                    <th className="text-left">Order Number</th>
-                    <th className="text-left">Type</th>
-                    <th className="text-left">Release Date</th>
+                    <th className="text-center">Order Number</th>
+                    <th className="text-center">Type</th>
+                    <th className="text-center">Release Date</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-center">
                   {orderHistory.length > 0 ? orderHistory.map((lead) => (
-                  <tr>
+                  <tr >
                     <td>{lead.OrderNumber}</td>
                     <td>{lead.AdType}</td>
-                    <td>{lead.DateOfLastRelease}</td>
+                    <td>{formatDate(lead.DateOfLastRelease)}</td>
                   </tr>
                   )) : <tr><td colSpan="3" className="text-center">No data found</td></tr>
                 }
