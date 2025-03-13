@@ -431,9 +431,9 @@ const ClientsData = () => {
         //   dispatch(resetClientData());
         //   dispatch(resetQuotesData());
         // }
-        if (!isDetails) {
-        dispatch(resetClientData());
-        }
+        // if (!isDetails) {
+        // dispatch(resetClientData());
+        // }
         // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
@@ -563,6 +563,7 @@ const ClientsData = () => {
 
   const handleClientContactPersonChange = (value) => {
     setClientContactPerson(value.target.value);
+    dispatch(setClientData({ clientContactPerson: value.target.value }));
     if (errors.clientContactPerson) {
       setErrors((prevErrors) => ({ ...prevErrors, clientContactPerson: undefined }));
     }
@@ -603,8 +604,9 @@ const ClientsData = () => {
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${clientAge}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
       
-      if (data === "Values Inserted Successfully!") {
+      if (data.message === "Values Inserted Successfully!") {
                 setSuccessMessage('Client Details Are Saved!');
+                dispatch(setClientData({ consultantId: data.CId }));
                 setTimeout(() => {
                 setSuccessMessage('');
                 if (isDetails) {
@@ -625,7 +627,7 @@ const ClientsData = () => {
           
           
         // setMessage(data.message);
-      } else if (data === "Duplicate Entry!"){
+      } else if (data.message  === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
           setSeverity('error');
           setToast(true);
@@ -633,7 +635,7 @@ const ClientsData = () => {
             setToast(false);
           }, 2000);
       } else {
-        alert(`The following error occurred while inserting data: ${data}`);
+        alert(`The following error occurred while inserting data: ${data.message }`);
       }
 
     } catch (error) {
@@ -671,8 +673,10 @@ const ClientsData = () => {
       const age = selectedOption.toLowerCase().includes('baby') || selectedOption.toLowerCase().includes('b/o.') ? months : clientAge;
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${loggedInUser}&JsonClientName=${clientName}&JsonClientEmail=${clientEmail}&JsonClientContact=${clientContact}&JsonSource=${clientSource}&JsonAge=${age}&JsonDOB=${DOB}&JsonAddress=${address}&JsonDBName=${companyName}&JsonTitle=${selectedOption}&JsonConsultantName=${consultantName}&JsonConsultantContact=${consultantNumber}&JsonConsultantPlace=${consultantPlace}&JsonClientGST=${clientGST}&JsonClientPAN=${clientPAN}&JsonIsNewClient=${isNewClient}&JsonClientID=${clientID}&JsonClientContactPerson=${clientContactPerson}&JsonGender=${gender}`)
       const data = await response.json();
-      if (data === "Values Inserted Successfully!") {
+
+      if (data.message === "Values Inserted Successfully!") {
         setSuccessMessage('Client Details Are Saved!');
+        dispatch(setClientData({ consultantId: data.CId }));
         setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
@@ -682,7 +686,7 @@ const ClientsData = () => {
           // window.location.reload();
         
         //setMessage(data.message);
-      } else if (data === "Duplicate Entry!"){
+      } else if (data.message === "Duplicate Entry!"){
         setToastMessage('Contact Number Already Exists!');
         setSeverity('error');
         setToast(true);
@@ -699,7 +703,7 @@ const ClientsData = () => {
       //   }, 2000);
 
     } else {
-      setToastMessage(data);
+      setToastMessage(data.message);
       setSeverity('error');
       setToast(true);
       setTimeout(() => {
@@ -1387,7 +1391,7 @@ const BMvalidateFields = () => {
 
               {selectedOption === 'Ms.' ? (
                 <div name="ClientContactPersonInput">
-                  <label className="block mb-1 text-black font-medium">Contact Person Name<span className="text-red-500">*</span></label>
+                  <label className="block mb-1 text-black font-medium">Contact Person Name</label>
                   <input
                     className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContactPerson ? 'border-red-400' : ''}`}
                     type="text"
