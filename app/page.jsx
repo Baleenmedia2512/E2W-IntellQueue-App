@@ -563,6 +563,7 @@ const ClientsData = () => {
 
   const handleClientContactPersonChange = (value) => {
     setClientContactPerson(value.target.value);
+    dispatch(setClientData({ clientContactPerson: value.target.value }));
     if (errors.clientContactPerson) {
       setErrors((prevErrors) => ({ ...prevErrors, clientContactPerson: undefined }));
     }
@@ -1390,7 +1391,7 @@ const BMvalidateFields = () => {
 
               {selectedOption === 'Ms.' ? (
                 <div name="ClientContactPersonInput">
-                  <label className="block mb-1 text-black font-medium">Contact Person Name<span className="text-red-500">*</span></label>
+                  <label className="block mb-1 text-black font-medium">Contact Person Name</label>
                   <input
                     className={`w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.clientContactPerson ? 'border-red-400' : ''}`}
                     type="text"
