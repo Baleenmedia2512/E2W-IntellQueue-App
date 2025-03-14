@@ -955,8 +955,6 @@ const elementsToHideList = () => {
 
 
 useEffect(() => {
-  //searching elements to Hide from database
-
   elementsToHide.forEach((name) => {
     const elements = document.getElementsByName(name);
     elements.forEach((element) => {
