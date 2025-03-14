@@ -931,6 +931,8 @@ const handlePostInsertActions = () => {
           } else if (elementsToHide.includes("OrderNumberText")) {
               SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
               if (isDownloadInvoiceChecked) sendDataToPdf();
+          } else if (elementsToHide.includes("FinanceSMS")) {
+              showToast("SMS Not Sent! Reason: No Template Found.", "warning");
           } else {
               showToast("SMS Not Sent! Reason: No Database Found.", "warning");
           }
