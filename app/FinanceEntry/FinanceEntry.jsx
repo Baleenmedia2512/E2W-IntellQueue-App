@@ -33,6 +33,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchFinanceSearchTerm } from '../api/FetchAPI';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
+import { GetInsertOrUpdate } from '../api/InsertUpdateAPI';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -72,11 +73,14 @@ const paymentModeOptions = [
 const FinanceData = () => {
   const orderData = useAppSelector(state => state.orderSlice);
   const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, rateWiseOrderNumber: nextRateWiseOrderNumber, remarks: orderRemarks } = orderData;
+  // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const amountRef = useRef(null);
   const orderNumberRef = useRef(null);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const billNumberRef = useRef(null);
+  // const dbName = "Grace Scans";
+  // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
@@ -258,7 +262,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
   const fetchInvoiceData = async () => {
     try {
-      const response = await fetch('https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php?JsonDBName=Grace Scans');
+      const response = await fetch(`https://orders.baleenmedia.com/API/Hospital-Form/FetchKeys.php?JsonDBName=${companyName}`);
       if (!response.ok) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
@@ -319,7 +323,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setRateName(clientDetails.rateName);
           setRateType(clientDetails.rateType);
           setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
-          // setCommissionAmount(clientDetails.commission);
+          setWaiverAmount(clientDetails.waiverAmount);
           setReceivableAmount(clientDetails.receivableAmount);
           setPreviousPaymentMode(clientDetails.previousPaymentMode);
           setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -433,11 +437,46 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
 
 
-  const handleOrderNumberChange = (event) => {
+  const handleOrderNumberChange = async(event) => {
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
-    
+    // const tdsPercent = await FetchTDSPercentage(companyName, newOrderNumber);
+    // setTDSPercentage(tdsPercent)
+
+    if(transactionType.value === 'Operational Expense' && expenseCategory.value === 'Project'){
+      const response = await GetInsertOrUpdate('FetchPayable', {OrderNumber: newOrderNumber, JsonDBName: companyName});
+      // Clear validation errors
+      if (errors.orderNumber) {
+        setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+      }
+
+      if(response.length > 0){
+        const clientDetails = response[0];
+          dispatch(setIsOrderExist(true));
+          //setRemarks(clientDetails.remarks);
+          setOrderAmount(clientDetails.balanceAmount);
+          console.log(clientDetails.balanceAmount);
+          clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);
+          setGSTPercentage(clientDetails.gstPercentage);
+          setClientName(clientDetails.clientName);
+          setClientNumber(clientDetails.clientContact);
+          setBalanceAmount(clientDetails.balanceAmount);
+          setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
+          setRateName(clientDetails.rateName);
+          setRateType(clientDetails.rateType);
+          setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+          setWaiverAmount(clientDetails.waiverAmount);
+          setReceivableAmount(clientDetails.receivableAmount);
+          setPreviousPaymentMode(clientDetails.previousPaymentMode);
+          setPreviousAmountPaid(clientDetails.previousAmountPaid);
+          setErrors({});       
+      } else {
+        dispatch(setIsOrderExist(false));
+      }
+      return;
+    }
+      
     {!billsOnly &&
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
@@ -447,7 +486,9 @@ const openChequeDate = Boolean(anchorElChequeDate);
       if (data.length > 0) {
         const clientDetails = data[0];
         dispatch(setIsOrderExist(true));
+        //setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
+        clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);  
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
         setClientNumber(clientDetails.clientContact);
@@ -456,10 +497,11 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setRateName(clientDetails.rateName);
         setRateType(clientDetails.rateType);
         setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+        setWaiverAmount(clientDetails.waiverAmount);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
-
+        
         setErrors({});
       } else {
         dispatch(setIsOrderExist(false));
@@ -468,14 +510,10 @@ const openChequeDate = Boolean(anchorElChequeDate);
     .catch((error) => {
       console.error(error);
     });
-    // Clear validation errors
-    if (errors.orderNumber) {
-      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-    }
   }
   };
 
-  const handleRateWiseOrderNumberChange = (event) => {
+  const handleRateWiseOrderNumberChange = async(event) => {
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
 
@@ -483,9 +521,11 @@ const openChequeDate = Boolean(anchorElChequeDate);
     {!billsOnly && axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingRateWiseOrderNumber.php?RateWiseOrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
     .then((response) => {
-      const clientDetails = response.data;
-      if (clientDetails) {
+      const data = response.data;
+      if (data.length > 0) {
+        const clientDetails = data[0];
         dispatch(setIsOrderExist(true));
+        setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
@@ -495,6 +535,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setRateName(clientDetails.rateName);
         setRateType(clientDetails.rateType);
         setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+        setWaiverAmount(clientDetails.waiverAmount);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -1049,7 +1090,7 @@ useEffect(() => {
     setRateName('');
     setRateType('');
     setAdjustedOrderAmount(0);
-    // setCommissionAmount(0);
+    setWaiverAmount(0);
     setReceivableAmount(0);
     setPreviousPaymentMode('');
     setPreviousAmountPaid(0);
@@ -1320,7 +1361,7 @@ useEffect(() => {
 
 const handleGSTChange = (e) => {
   const gstPer = parseFloat(e); // GST percentage
-  const gst = (orderAmount * gstPer) / 100; // Calculate GST amount
+  const gst = ((orderAmount /(100 + gstPer)) * gstPer).toFixed(2); // Calculate GST amount
   setGSTAmount(gst); // Update GST amount
 };
 
@@ -1881,7 +1922,8 @@ const handleGSTAmountChange = (gst) => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && (
+               
+               {taxType && taxType.value === 'GST'  && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
@@ -1912,7 +1954,7 @@ const handleGSTAmountChange = (gst) => {
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
                </div>
                     )}
-          {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && ( 
+          {taxType && taxType.value === 'GST' && ( 
           <div>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1923,7 +1965,8 @@ const handleGSTAmountChange = (gst) => {
                 name="GSTAmountInput" 
                 // required={!isEmpty} 
                 value={gstAmount}
-                onChange = {(e) => {setGSTAmount(e.target.value);
+                onChange = {(e) => {
+                  setGSTAmount(e.target.value);
                   if (errors.gstAmount) {
                     setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
                   }
