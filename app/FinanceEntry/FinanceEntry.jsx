@@ -444,8 +444,8 @@ const openChequeDate = Boolean(anchorElChequeDate);
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
-    const tdsPercent = await FetchTDSPercentage(companyName, newOrderNumber);
-    setTDSPercentage(tdsPercent)
+    // const tdsPercent = await FetchTDSPercentage(companyName, newOrderNumber);
+    // setTDSPercentage(tdsPercent)
 
     if(transactionType.value === 'Operational Expense' && expenseCategory.value === 'Project'){
       const response = await GetInsertOrUpdate('FetchPayable', {OrderNumber: newOrderNumber, JsonDBName: companyName});
@@ -479,7 +479,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
       }
       return;
     }
-    console.log("Enters the function")
       
     {!billsOnly &&
     axios
@@ -1366,7 +1365,7 @@ useEffect(() => {
 
 const handleGSTChange = (e) => {
   const gstPer = parseFloat(e); // GST percentage
-  const gst = (orderAmount * gstPer) / 100; // Calculate GST amount
+  const gst = ((orderAmount /(100 + gstPer)) * gstPer).toFixed(2); // Calculate GST amount
   setGSTAmount(gst); // Update GST amount
 };
 
