@@ -229,7 +229,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const data = items.map((item, i) => [
       (i + 1).toString(), 
       item.rateId, 
-      hasAdType ? (item.adType || 'NA') : null, 
+      // hasAdType ? (item.adType || 'NA') : null, 
       hasAdCategory ? (item.adCategory || 'NA') : null, 
       hasEdition ? (item.edition || 'NA') : null, 
       hasPosition ? (item.position || 'NA') : null, 
@@ -296,19 +296,19 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     let columnWidths = {
       'S.No.': 35,
       'Rate Card ID': 45,
-      'Rate Type': 62,
       'Rate Category': 80,
       'Edition': 50,
       'Package': 50,
       'Size': 50,
+      "Qty" : 50,
       'Service Duration': hasCampaignDuration ? 50 : 0,
-      'Unit Price (in Rs.)': 70,
+      'Unit Price (in Rs.)': 60,
       'Price (Excl. GST) (in Rs.)': 60,
       'Price (Incl. GST) (in Rs.)': 60,
       'Color or B/W': 45,
       'Highlights': 45,
       'Lead Days': 35,
-      'Remarks': 100
+      'Remarks': 120
     };
     
     // Map column names to their indices
