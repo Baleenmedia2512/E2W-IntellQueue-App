@@ -1003,7 +1003,6 @@ const financeColumns = [
   { field: 'TransactionDate', headerName: 'Transaction Date', width: isMobile ? 180 : 150 },
   { field: 'Amount', headerName: 'Amount(₹)', width: isMobile ? 140 : 100,
     sortComparator: (v1, v2) => {
-        // Handle empty or undefined values by treating them as 0
         const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
         const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
       
