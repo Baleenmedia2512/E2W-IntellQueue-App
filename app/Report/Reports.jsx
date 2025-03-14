@@ -980,13 +980,13 @@ const orderColumns = [
                 color="primary"
                 size="small"
                 onClick={() => handleDownloadInvoiceIconClick(params.row)}
-                disabled={params.row.invoiceDisabled}
+                // disabled={params.row.invoiceDisabled}
                 style={{ marginLeft: '12px',
                   backgroundColor: '#ff7f50',
                   color: 'white',
                   fontWeight: 'bold',
-                  opacity: params.row.invoiceDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
+                  // opacity: params.row.invoiceDisabled ? 0.5 : 1,
+                  // pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
                  }}  
             >  
                Download
