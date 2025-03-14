@@ -456,7 +456,6 @@ const openChequeDate = Boolean(anchorElChequeDate);
           dispatch(setIsOrderExist(true));
           //setRemarks(clientDetails.remarks);
           setOrderAmount(clientDetails.balanceAmount);
-          console.log(clientDetails.balanceAmount);
           clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);
           setGSTPercentage(clientDetails.gstPercentage);
           setClientName(clientDetails.clientName);
