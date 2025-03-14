@@ -73,11 +73,14 @@ const paymentModeOptions = [
 const FinanceData = () => {
   const orderData = useAppSelector(state => state.orderSlice);
   const { clientName: orderClientName, clientNumber: orderClientNumber ,maxOrderNumber: orderOrderNumber, rateWiseOrderNumber: nextRateWiseOrderNumber, remarks: orderRemarks } = orderData;
+  // const username = "Grace Scans"
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const amountRef = useRef(null);
   const orderNumberRef = useRef(null);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const billNumberRef = useRef(null);
+  // const dbName = "Grace Scans";
+  // const companyName = "Baleen Test";
   const username = useAppSelector(state => state.authSlice.userName);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [selectedTime, setSelectedTime] = useState(dayjs());
@@ -320,7 +323,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
           setRateName(clientDetails.rateName);
           setRateType(clientDetails.rateType);
           setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
-          // setCommissionAmount(clientDetails.commission);
+          setWaiverAmount(clientDetails.waiverAmount);
           setReceivableAmount(clientDetails.receivableAmount);
           setPreviousPaymentMode(clientDetails.previousPaymentMode);
           setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -483,6 +486,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
       if (data.length > 0) {
         const clientDetails = data[0];
         dispatch(setIsOrderExist(true));
+        //setRemarks(clientDetails.remarks);
         setOrderAmount(clientDetails.balanceAmount);
         clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);  
         setGSTPercentage(clientDetails.gstPercentage);
@@ -509,7 +513,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
   }
   };
 
-  const handleRateWiseOrderNumberChange = (event) => {
+  const handleRateWiseOrderNumberChange = async(event) => {
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
 
@@ -531,6 +535,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setRateName(clientDetails.rateName);
         setRateType(clientDetails.rateType);
         setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+        setWaiverAmount(clientDetails.waiverAmount);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
@@ -992,6 +997,8 @@ const elementsToHideList = () => {
 
 
 useEffect(() => {
+  //searching elements to Hide from database
+
   elementsToHide.forEach((name) => {
     const elements = document.getElementsByName(name);
     elements.forEach((element) => {
@@ -1083,7 +1090,7 @@ useEffect(() => {
     setRateName('');
     setRateType('');
     setAdjustedOrderAmount(0);
-    // setCommissionAmount(0);
+    setWaiverAmount(0);
     setReceivableAmount(0);
     setPreviousPaymentMode('');
     setPreviousAmountPaid(0);
@@ -1947,7 +1954,7 @@ const handleGSTAmountChange = (gst) => {
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
                </div>
                     )}
-          {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && ( 
+          {taxType && taxType.value === 'GST' && ( 
           <div>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">

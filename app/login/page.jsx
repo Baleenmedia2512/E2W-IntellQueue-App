@@ -262,7 +262,7 @@ const handleLogin = (event) => {
 
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Test Version 1.10.12 {/*Commenting for release */}
+                        Test Version 1.10.13 {/*Commenting for release */}
                     </div>
                 </div>
                 {/* Additional space with curved edges for pictures (visible on larger screens) */}
