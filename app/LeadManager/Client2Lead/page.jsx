@@ -392,7 +392,7 @@ export default function ExistingClientToLeads() {
         <input
           type="text"
           className="w-full p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          placeholder="Search by Client Name, Order Number, phone Number, Email, Source..."
+          placeholder="Search by Client Name, Order Number, phone Number, Email, Source, Remarks..."
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={e => e.target.select()}
         />
@@ -632,6 +632,15 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
             {row.Source || row.Platform}
           </div>
         </div>
+        {row.Remarks &&
+        <div className="flex items-baseline">
+        <div className="w-28 text-xs text-gray-500 uppercase font-medium">Remarks</div>
+        <div className="flex-1 text-gray-900 text-sm">
+          {row.Remarks || "NA"}
+        </div>
+      </div>
+      }
+        
       </div>
 
       {/* Follow-up Date Tab */}
@@ -690,8 +699,11 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
           </div>
         </div>
         )}
+        
       </div>
+      
     </div>
+    
   ))}
 </div>
 )}
