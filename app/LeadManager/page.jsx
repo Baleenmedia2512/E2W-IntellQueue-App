@@ -480,7 +480,6 @@ useEffect(() => {
         }
 
         const text = await response.text(); // Get raw response
-        console.log("Raw Response:", text); // Log to debug
 
         let data;
         try {
@@ -489,7 +488,7 @@ useEffect(() => {
             throw new Error(`Invalid JSON response: ${text}`);
         }
 
-        if (data === "Values Inserted Successfully!") {
+        if (data.message === "Values Inserted Successfully!") {
             setSuccessMessage('Client Details Are Saved!');
             setTimeout(() => {
                 setSuccessMessage('');
@@ -628,7 +627,7 @@ useEffect(() => {
 
   const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData) => {
     setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData });
-
+    setProspectType(rowData.ProspectType  === "Unknown" ? "" : rowData.ProspectType);
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
 
@@ -1075,6 +1074,7 @@ const handleStatusClick = async(row) => {
   setRemarks(row.Remarks);
   setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
   setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+  setProspectType(row.ProspectType  === "Unknown" ? "" : row.ProspectType);
   // setQuoteSentChecked(row.QuoteSent === "Yes")
   setSelectedStatus(row.Status);
 };

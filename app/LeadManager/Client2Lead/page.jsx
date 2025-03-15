@@ -90,10 +90,9 @@ export default function ExistingClientToLeads() {
   const {
     userName,
     appRights,
-    // "Baleen Media": UserCompanyName,
+    companyName: UserCompanyName,
   } = useAppSelector((state) => state.authSlice);
 
-  const UserCompanyName = "Baleen Media"
   const filteredRows = leadData
                         .filter(row => filters.statusFilter === "All" || (row.Status || "Convert") === filters.statusFilter )
                         .filter((row) => {
