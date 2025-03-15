@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose, AiOutlinePlus } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -424,7 +424,6 @@ const formatUnreachableTime = (timeStr) => {
         }
 
         const text = await response.text(); // Get raw response
-        console.log("Raw Response:", text); // Log to debug
 
         let data;
         try {
@@ -433,7 +432,7 @@ const formatUnreachableTime = (timeStr) => {
             throw new Error(`Invalid JSON response: ${text}`);
         }
 
-        if (data === "Values Inserted Successfully!") {
+        if (data.message === "Values Inserted Successfully!") {
             setSuccessMessage('Client Details Are Saved!');
             setTimeout(() => {
                 setSuccessMessage('');
@@ -572,7 +571,7 @@ const formatUnreachableTime = (timeStr) => {
 
   const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData) => {
     setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData });
-
+    setProspectType(rowData.ProspectType  === "Unknown" ? "" : rowData.ProspectType);
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
 
@@ -1027,7 +1026,7 @@ const handleStatusClick = async(row) => {
     {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
   </h2>
 
-      <div className="flex  space-x-4 ">
+      <div className="flex  space-x-4">
         {/* Sheet Button */}
         <button
           className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
@@ -1402,7 +1401,14 @@ const handleStatusClick = async(row) => {
             )}
 
       <div className="relative">
-            {/* "+" Button */}
+            
+            <button
+        onClick={toggleModal}
+        className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"
+      >
+        <AiOutlineInteraction size={24} />
+      </button>
+           {/* "+" Button */}
             <button
         onClick={toggleModal}
         className="fixed right-4 bottom-24 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-28 z-50"
