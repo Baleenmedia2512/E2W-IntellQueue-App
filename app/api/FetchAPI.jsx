@@ -364,7 +364,6 @@ export const elementsToHideList = async(DBName) => {
         }
       });
       LeadData = response.data;
-      
       // Sort based on DateOfLastRelease in descending order
       LeadData.sort((a, b) => new Date(b.DateOfLastRelease) - new Date(a.DateOfLastRelease));
     } catch (error) {
