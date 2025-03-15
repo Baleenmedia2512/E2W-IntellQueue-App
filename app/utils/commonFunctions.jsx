@@ -79,7 +79,8 @@ export const formatDBDate = (followupDate) => {
     Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
   };
 
-  const [day, month, year] = followupDate.split("-"); // Split "02-Dec-2024"
+  const isContainsDash = followupDate.includes("-");
+  const [day, month, year] = isContainsDash ? followupDate.split("-") : followupDate.split(" "); // Split "02-Dec-2024"
   return `${year}-${months[month]}-${day.padStart(2, "0")}`; // Format: yyyy-MM-dd
 };
 
