@@ -21,9 +21,6 @@ export const PostInsertOrUpdate = async (endpoint, data) => {
     }
 
     return result;
-<<<<<<< HEAD
-};
-=======
 };
 
 export const GetInsertOrUpdate = async (endpoint, queryParams = {}) => {
@@ -44,4 +41,3 @@ export const GetInsertOrUpdate = async (endpoint, queryParams = {}) => {
     return result;
   };
   
->>>>>>> 24e2e75fc2d575a15d4fbc0496c033d9b6f5e507
