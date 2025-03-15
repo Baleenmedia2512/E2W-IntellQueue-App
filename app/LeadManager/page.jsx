@@ -534,12 +534,12 @@ const formatUnreachableTime = (timeStr) => {
 
       const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
 
-    if (fetchedRows.length > 0) {
-      const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
-      setNextSNo(maxSlNo + 1);
-    } else {
-      console.log("No rows found to calculate max Sl. No.");
-    }
+    // if (fetchedRows.length > 0) {
+    //   const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
+    //   setNextSNo(maxSlNo + 1);
+    // } else {
+    //   console.log("No rows found to calculate max Sl. No.");
+    // }
     
       setRows(fetchedRows);
       fetchCSENames();
