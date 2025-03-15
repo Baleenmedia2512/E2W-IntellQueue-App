@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose, AiOutlinePlus } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -34,7 +34,7 @@ export const statusColors = {
   "Call Followup": "bg-yellow-200 text-yellow-800",
   Unqualified: "bg-orange-200 text-orange-800",
   "No Status": "bg-gray-200 text-gray-800",
-  "Available": "bg-green-200 text-green-800",
+  "Convert": "bg-green-200 text-green-800",
   "Ready for Quote": "bg-blue-200 text-blue-800",
 };
 
@@ -99,7 +99,7 @@ const EventCards = ({params, searchParams}) => {
   const [initialLeadStatus, setInitialLeadStatus] = useState("");
   const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
   const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
-  const [quoteSentChecked, setQuoteSentChecked] = useState("");
+  // const [quoteSentChecked, setQuoteSentChecked] = useState("");
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
@@ -119,7 +119,7 @@ const EventCards = ({params, searchParams}) => {
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [nextSNo, setNextSNo] = useState(0); 
+  // const [nextSNo, setNextSNo] = useState(0); 
   const [formData, setFormData] = useState({
     sNo: "",
     date: "",
@@ -134,7 +134,6 @@ const EventCards = ({params, searchParams}) => {
     handledBy: "",
   });
 
-  
   // console.log(rows)
   const toggleFilters = () => {
     dispatch(toggleFiltersVisible());
@@ -414,8 +413,9 @@ const formatUnreachableTime = (timeStr) => {
     // Extract only the 10-digit number
     const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
     const isNewClient = await checkIfNewClient(cleanedPhone)
+    console.log(isNewClient)
     try {
-        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiry.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${isNewClient}`;
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${isNewClient}`;
 
         const response = await fetch(url);
 
@@ -425,7 +425,6 @@ const formatUnreachableTime = (timeStr) => {
         }
 
         const text = await response.text(); // Get raw response
-        console.log("Raw Response:", text); // Log to debug
 
         let data;
         try {
@@ -439,7 +438,7 @@ const formatUnreachableTime = (timeStr) => {
             setTimeout(() => {
                 setSuccessMessage('');
             }, 2000);
-        } else if (data.message === "Duplicate Entry!") {
+        } else if (data === "Duplicate Entry!") {
             setToastMessage('Contact Number Already Exists!');
             setSeverity('error');
             setToast(true);
@@ -447,7 +446,7 @@ const formatUnreachableTime = (timeStr) => {
                 setToast(false);
             }, 2000);
         } else {
-            alert(`The following error occurred while inserting data: ${data.message}`);
+            alert(`The following error occurred while inserting data: ${data}`);
         }
     } catch (error) {
         console.error('Error while inserting data:', error);
@@ -526,6 +525,7 @@ const formatUnreachableTime = (timeStr) => {
 
   const fetchData = async () => {
     try {
+
       const filters = {
         leadDate: searchParams.leadDate || null,
         status: searchParams.status || "",
@@ -579,7 +579,7 @@ const formatUnreachableTime = (timeStr) => {
 
   const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData) => {
     setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData });
-
+    setProspectType(rowData.ProspectType  === "Unknown" ? "" : rowData.ProspectType);
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
 
@@ -843,13 +843,13 @@ const formatUnreachableTime = (timeStr) => {
     );
   }
 
-  if (!rows.length) {
-    return (
-      <div className="font-poppins text-center">
-        <h2>No Data Found</h2>
-      </div>
-    );
-  }
+  // if (!rows.length) {
+  //   return (
+  //     <div className="font-poppins text-center">
+  //       <h2>No Data Found</h2>
+  //     </div>
+  //   );
+  // }
 
   const toggleQuoteSent = async(sNo, status) => {
     var setValue = status === 'Yes' ? 'No' : 'Yes';
@@ -920,6 +920,23 @@ const formatUnreachableTime = (timeStr) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const filters = {
+      leadDate: searchParams.leadDate || null,
+      status: searchParams.status || "",
+      followupDate: searchParams.followupDate || null,
+    };
+
+    const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+    let nextSNo = 0;
+
+    if (fetchedRows.length > 0) {
+      nextSNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) + 1 || 0;
+    } else{
+      alert("Problem in network, please try again");
+      return;
+    }
+
     const dbCompanyName = encodeURIComponent(UserCompanyName);
     const payload = {
       sNo: nextSNo, // Use the incremented serial number
@@ -1004,7 +1021,7 @@ const handleStatusClick = async(row) => {
   setRemarks(row.Remarks);
   setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
   setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
-  setQuoteSentChecked(row.QuoteSent === "Yes")
+  // setQuoteSentChecked(row.QuoteSent === "Yes")
   setSelectedStatus(row.Status);
 };
 
@@ -1017,7 +1034,7 @@ const handleStatusClick = async(row) => {
     {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
   </h2>
 
-      <div className="flex  space-x-4 ">
+      <div className="flex  space-x-4">
         {/* Sheet Button */}
         <button
           className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
@@ -1392,7 +1409,14 @@ const handleStatusClick = async(row) => {
             )}
 
       <div className="relative">
-            {/* "+" Button */}
+            
+            <button
+        onClick={toggleModal}
+        className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"
+      >
+        <AiOutlineInteraction size={24} />
+      </button>
+           {/* "+" Button */}
             <button
         onClick={toggleModal}
         className="fixed right-4 bottom-24 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-28 z-50"
@@ -1521,7 +1545,7 @@ const handleStatusClick = async(row) => {
                     value={formData.adEnquiry}
                     onChange={handleInputChange}
                     className="w-full p-2 text-sm border border-gray-300 rounded-md"
-                    required
+                    // required
                   />
                 </div>
                 <div>
@@ -1637,7 +1661,7 @@ const handleStatusClick = async(row) => {
                 ))}
             </div>
             }
-              {selectedStatus === "Call Followup" && (
+              {/* {selectedStatus === "Call Followup" && (
                 <div>
                 <label className=" mb-2 flex items-center space-x-2 ">
                   <input
@@ -1649,7 +1673,7 @@ const handleStatusClick = async(row) => {
                   <span className="text-gray-800 font-medium">Quote Sent to Client</span>
                 </label>
                 </div> 
-              )}
+              )} */}
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">

@@ -140,7 +140,7 @@ export const UpdatePaymentMilestone = async(Stages, DBName) => {
         }
     }
 
-    return result;
+    return result; // Return full result object
 };
 
 export const FetchQuoteData = async(DBName, QuoteId) => {
@@ -334,3 +334,110 @@ export const elementsToHideList = async(DBName) => {
 
     return CSE;
   }
+
+  export const FetchExistingLeads = async (DBName, SearchTerm) => {
+    let LeadData = [];
+  
+    try {
+      const response = await api.get("FetchExistingLeadsTest.php/get", {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        params: {
+          JsonDBName: DBName,
+          JsonSearchTerm: SearchTerm
+        }
+      });
+      LeadData = response.data;
+      
+      // Sort based on DateOfLastRelease in descending order
+      LeadData.sort((a, b) => new Date(b.DateOfLastRelease) - new Date(a.DateOfLastRelease));
+    } catch (error) {
+      alert("Unable to Fetch Existing Leads Data");
+    }
+  
+    return LeadData;
+  };
+
+  export const FetchLeadsData = async (DBName, SearchTerm) => {
+    let LeadData = [];
+    try {
+      const response = await api.get("FetchLeadsData.php/get", {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        params: {
+          JsonDBName: DBName,
+          JsonSearchTerm: SearchTerm
+        }
+      });
+      LeadData = response.data;
+  
+      // Get today's date string in "YYYY-MM-DD" format
+      const today = new Date().toISOString().slice(0, 10);
+  
+      LeadData.sort((a, b) => {
+        // Check if each lead's NextFollowupDate (if available) equals today
+        const aHasToday = a.NextFollowupDate && a.NextFollowupDate.slice(0, 10) === today;
+        const bHasToday = b.NextFollowupDate && b.NextFollowupDate.slice(0, 10) === today;
+  
+        // If one lead's NextFollowupDate is today and the other is not, push the one with today's date on top.
+        if (aHasToday && !bHasToday) return -1;
+        if (!aHasToday && bHasToday) return 1;
+  
+        // For both leads (or neither) with NextFollowupDate today,
+        // sort descending based on CallFollowupDate.
+        // (Make sure that CallFollowupDate exists and is a valid date string)
+        const aCall = a.CallFollowupDate ? new Date(a.CallFollowupDate) : 0;
+        const bCall = b.CallFollowupDate ? new Date(b.CallFollowupDate) : 0;
+        return bCall - aCall;
+      });
+    } catch (error) {
+      console.error(error);
+    }
+    return LeadData;
+  };
+  
+
+  export const FetchTDSPercentage = async(DBName, OrderNumber) => {
+    let TDS = [];
+
+    try {
+        const response = await api.get("FetchTDSByOrderNumber.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                orderNumber: OrderNumber
+            }
+        });
+        TDS = response.data.tdsApplicabilityPercentage;
+    } catch (error) {
+        alert("Unable to Fetch Existing Leads Data")
+    }
+
+    return TDS;
+  }
+
+  export const FetchOrderHistory = async(DBName, OrderNumber) => { 
+    let OrderHistory = [];
+
+    try {
+        const response = await api.get("FetchClientOrderHistory.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                orderNumber: OrderNumber
+            }
+        });
+        OrderHistory = response.data;
+    }
+    catch (error) {
+        alert("Unable to Fetch Order History")
+    }
+
+    return OrderHistory;
+}

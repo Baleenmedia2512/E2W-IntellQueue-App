@@ -12,6 +12,7 @@ const initialState = {
   clientGST: "",
   clientPAN: "",
   consultantId: "",
+  consultantId: "",
   consultantName: "",
   consultantNumber: "",
   clientID: "",

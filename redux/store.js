@@ -46,13 +46,19 @@ const clientPersistConfig = {
 const quotePersistConfig = {
   key: "quote",
   storage: storage,
-  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "marginPercentage", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId", "previousPage", "history", "width", "qtySlab", "isEditMode", "editIndex", "editQuoteNumber", "isNewCartOnEdit"]
+  whitelist: ["selectedAdMedium", "selectedAdType", "selectedAdCategory", "selectedEdition", "selectedPosition", "currentPage", "quantity", "marginAmount", "marginPercentage", "campaignDuration", "ratePerUnit", "extraDiscount", "rateId", "previousPage", "history", "width", "qtySlab", "isEditMode", "editIndex", "editQuoteNumber", "isNewCartOnEdit", "checked"]
 }
 
 const cartPersistConfig = {
   key: "cart",
   storage: storage,
   whitelist: ["cart"]
+}
+
+const stagePersistConfig = {
+  key: "stages",
+  storage: storage,
+  whitelist: ["stages", "editMode"]
 }
 
 const ratePersistConfig = {
