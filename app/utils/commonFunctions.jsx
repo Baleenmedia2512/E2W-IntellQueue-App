@@ -105,6 +105,14 @@ export const formatDBTime = (followupTime) => {
   return `${hours.padStart(2, "0")}:${minutes}`; // Format: HH:mm
 };
 
+export const formatTime = (followupTime) => {
+  let [hours, minutes] = followupTime.split(":");
+  let modifier = hours >= 12 ? "PM" : "AM";
+
+  hours = hours % 12;
+  hours = hours === 0 ? 12 : hours; // Convert hour "0" to "12"
+   return `${hours}:${minutes} ${modifier}`; // Format: HH:mm AM/PM
+}
 /**
  * Converts a DB date string ("YYYY-MM-DD HH:MM:SS") into a readable date and time.
  *
