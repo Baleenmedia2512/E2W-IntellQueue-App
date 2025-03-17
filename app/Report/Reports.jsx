@@ -26,7 +26,10 @@ import { Margin } from '@mui/icons-material';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
 import dayjs from 'dayjs';
 import { CircularProgress } from '@mui/material';
-
+import { SaveAlt as SaveAltIcon } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -628,7 +631,7 @@ const handleRestoreClose = () => {
 const handleRestore = async (rateWiseOrderNum, orderNum, rateName, confirm = false) => {
   try {
     const response = await axios.get(
-      `https://orders.baleenmedia.com/API/Media/RestoreOrderTest.php`,
+      `https://orders.baleenmedia.com/API/Media/RestoreOrder.php`,
       {
         params: {
           JsonDBName: companyName,
@@ -1516,9 +1519,103 @@ const calculateRateStats = () => {
   setRateStats(stats); // Update state with new stats
 };
 
-  
+const handleExport = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const incomeSheet = workbook.addWorksheet('Income');
+  const expenseSheet = workbook.addWorksheet('Expense');
+
+  // Define header style
+  const headerStyle = {
+    font: { bold: true, color: { argb: 'FFFFFF' } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: '1976D2' } }
+  };
+
+  // Define border style
+  const borderStyle = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  // Function to remove ₹ symbol if present
+  const removeCurrencySymbol = value => {
+    if (typeof value === 'string') {
+      return value.replace(/₹|,/g, '').trim(); // Removes ₹ and commas
+    }
+    return value;
+  };
+
+  // Sort income data by Order Date (ascending)
+  const sortedIncomeData = [...orderDetails].sort((a, b) => new Date(a.OrderDate) - new Date(b.OrderDate));
+
+  // Sort expense data by Transaction Date (ascending)
+  const sortedExpenseData = [...financeDetails]
+    .filter(transaction => transaction.TransactionType?.toLowerCase().includes('expense'))
+    .sort((a, b) => new Date(a.TransactionDate) - new Date(b.TransactionDate));
 
 
+  // Income headers
+  const incomeHeaders = ['Order Date', 'Rate Wise Order Number', 'Service', 'Service Type', 'Client Name', 'Client Contact', 'Income', 'Payment Mode', 'Commission'];
+  const incomeHeaderRow = incomeSheet.addRow(incomeHeaders);
+  incomeHeaderRow.eachCell(cell => {
+    cell.style = { ...headerStyle, border: borderStyle };
+  });
+
+  // Income data
+  sortedIncomeData.forEach(order => {
+    const row = incomeSheet.addRow([
+      order.OrderDate,
+      order.RateWiseOrderNumber,
+      order.Card,
+      order.AdType,
+      order.ClientName,
+      order.ClientContact,
+      removeCurrencySymbol(order.TotalAmountReceived),
+      order.PaymentMode,
+      removeCurrencySymbol(order.Commission)
+    ]);
+    row.eachCell(cell => (cell.border = borderStyle));
+  });
+
+  // Expense headers
+  const expenseHeaders = ['Finance ID', 'Transaction Date', 'Remarks', 'Amount', 'Payment Mode'];
+  const expenseHeaderRow = expenseSheet.addRow(expenseHeaders);
+  expenseHeaderRow.eachCell(cell => {
+    cell.style = { ...headerStyle, border: borderStyle };
+  });
+
+  // Expense data
+  sortedExpenseData.forEach(transaction => {
+    const row = expenseSheet.addRow([
+      transaction.ID,
+      transaction.TransactionDate,
+      transaction.Remarks,
+      removeCurrencySymbol(transaction.Amount),
+      transaction.PaymentMode
+    ]);
+    row.eachCell(cell => (cell.border = borderStyle));
+  });
+
+  // Apply filters to headers
+  incomeSheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: incomeHeaders.length }
+  };
+
+  expenseSheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: expenseHeaders.length }
+  };
+
+  // Adjust column widths
+  incomeSheet.columns.forEach(col => (col.width = 20));
+  expenseSheet.columns.forEach(col => (col.width = 20));
+
+  // Generate file
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), `Report_${dateRange.startDate}_${dateRange.endDate}.xlsx`);
+};
 
   useEffect(() => {
     const filteredRows = orderDetails.filter((row) => {
@@ -1749,8 +1846,17 @@ const calculateRateStats = () => {
   
 </div>
 <hr className="border-t-1 border-gray-300 mb-3" />
-<div name="CloseDayButton" className="flex justify-end px-2">
+<div className="flex justify-end px-2">
   <button
+    className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-green-600 bg-white border-2 border-green-600 transition-all duration-300 ease-in-out hover:text-white hover:bg-green-600 hover:border-green-600 hover:scale-105`}
+    onClick={handleExport}
+    title="Export data to Excel"
+    >
+    <SaveAltIcon style={{ marginRight: '8px' }} />
+    Export to Excel
+  </button>
+  <button
+    name="CloseDayButton"
     className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
     onClick={handleCloseDay}
     disabled={isButtonDisabled}
