@@ -20,7 +20,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
 import SuccessToast from "@/app/components/SuccessToast";
-import { formatDate, formatDBDateTime, normalizeDate } from "@/app/utils/commonFunctions";
+import { formatDate, formatDateTime, formatDBDateTime, formatDBTime, formatTime, normalizeDate } from "@/app/utils/commonFunctions";
 import { useRouter } from "next/navigation";
 import { Yesteryear } from "next/font/google";
 
@@ -64,6 +64,7 @@ export default function ExistingClientToLeads() {
     fromDate: null,
     toDate: null,
     showFilters: false,
+    CSE: "All"
   });
 
   const updateFilter = (field, value) => {
@@ -84,6 +85,7 @@ export default function ExistingClientToLeads() {
       fromDate: null,
       toDate: null,
       showFilters: false,
+      CSE: "All"
     });
   };
 
@@ -113,7 +115,10 @@ export default function ExistingClientToLeads() {
                             return true; 
                           }
                           return false; 
-                        }) ; // Add additional filtering logic if needed
+                        })
+                        .filter(row => filters.CSE === "All" || (row.HandledBy || row.CSE) === filters.CSE);
+
+  const distinctCSE = [...new Set(leadData.map(row => row.HandledBy || row.CSE))];
 
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
@@ -137,10 +142,45 @@ export default function ExistingClientToLeads() {
     const today = new Date().toISOString().slice(0, 10);
 
     // Separate today's follow-up leads, existing leads, and other follow-up leads
-    const todaysLeads = allLeads.filter(lead => lead.NextFollowupDate && lead.NextFollowupDate.toISOString().slice(0, 10) === today);
-    const existingLeads = allLeads.filter(lead => lead.DateOfLastRelease);  // Assuming existing leads have DateOfLastRelease
-    const otherFollowupLeads = allLeads.filter(lead => lead.NextFollowupDate && lead.NextFollowupDate.toISOString().slice(0, 10) !== today);
+    // const todaysLeads = data.filter(lead => !lead.NextFollowupDate ? lead.NextFollowupDate.toISOString().slice(0, 10) === today : false);
+    // const existingLeads = response.filter(lead => lead.DateOfLastRelease);  // Assuming existing leads have DateOfLastRelease
+    // const otherFollowupLeads = data.filter(lead => !lead.NextFollowupDate ? lead.NextFollowupDate.toISOString().slice(0, 10) !== today : false);
 
+    let todaysLeads = data.filter(lead => {
+      if (!lead.NextFollowupDate) {
+        console.warn(`Missing NextFollowupDate for lead: ${lead.id || 'unknown'}`);
+        return false;
+      }
+      try {
+        const formattedDate = new Date(lead.NextFollowupDate).toISOString().slice(0, 10);
+        return formattedDate === today;
+      } catch (error) {
+        console.error("Error parsing NextFollowupDate for lead:", lead, error);
+        return false;
+      }
+    });
+    
+    let existingLeads = response.filter(lead => {
+      if (!lead.DateOfLastRelease) {
+        console.warn(`Missing DateOfLastRelease for lead: ${lead.Lead_ID || 'unknown'}`);
+        return false;
+      }
+      return true;
+    });
+    
+    let otherFollowupLeads = data.filter(lead => {
+      if (!lead.NextFollowupDate) {
+        console.warn(`Missing NextFollowupDate for lead: ${lead.id || 'unknown'}`);
+        return false;
+      }
+      try {
+        const formattedDate = new Date(lead.NextFollowupDate).toISOString().slice(0, 10);
+        return formattedDate !== today;
+      } catch (error) {
+        console.error("Error parsing NextFollowupDate for lead:", lead, error);
+        return false;
+      }
+    });
     // Sort other follow-up leads in ascending order of NextFollowupDate
     otherFollowupLeads.sort((a, b) => a.NextFollowupDate - b.NextFollowupDate);
 
@@ -334,6 +374,7 @@ export default function ExistingClientToLeads() {
 
     const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", isExistingLead ? updateFormData : formData);
     const enquiryResponse = await insertEnquiry();
+    console.log(leadResponse, enquiryResponse);
     if (
       enquiryResponse.message === "Values Inserted Successfully!" &&
       isExistingLead ? true : leadResponse.status === "success"
@@ -392,7 +433,7 @@ export default function ExistingClientToLeads() {
         <input
           type="text"
           className="w-full p-3 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          placeholder="Search by Client Name, Order Number, phone Number, Email, Source..."
+          placeholder="Search by Client Name, Order Number, phone Number, Email, Source, Remarks..."
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={e => e.target.select()}
         />
@@ -457,6 +498,24 @@ export default function ExistingClientToLeads() {
             />
           </div>
 
+          <div className="mb-4 md:mb-0">
+            <label className="block text-sm font-medium text-gray-700">
+              Handled By
+            </label>
+            <select
+              value={filters.CSE}
+              onChange={(e) => updateFilter("CSE", e.target.value)}
+              className="w-full text-black p-[9.4px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option key="All" value="All">All</option>
+              {distinctCSE.sort().map((user) => (
+                <option key={user} value={user}>
+                  {toTitleCase(user)}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* <div className="flex justify-end md:justify-start">
             <button
               onClick={() => toggleFilters()}
@@ -485,7 +544,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
   {filteredRows.map((row) => (
     <div
-      key={row.OrderNumber}
+      key={row.OrderNumber || row.Lead_ID}
       className="relative bg-white rounded-xl shadow-md hover:shadow-xl p-5 border-l-4 border-l-blue-500 transition-all duration-300"
       style={{ minHeight: "280px" }}
     >
@@ -497,8 +556,8 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
   {row.ClientName}
 </h3>
         {row.OrderNumber && (
-          <div className="text-sm text-gray-600 font-medium mb-1">
-            Order # {row.OrderNumber}
+          <div className="text-sm text-gray-600 font-medium mb-1 mt-2">
+            Order # {row.OrderNumber} ({formatDate(row.DateOfFirstRelease)})
           </div>
         )}
         {row.ClientCompanyName && row.ClientCompanyName !== row.ClientName && (
@@ -548,7 +607,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
     <span>{row.QuoteSentStatus === 1 ? "Sent" : "Not Sent"}</span>
   </span>
 }
-  <div className="flex flex-col items-start gap-1 mb-2">
+  <div className="flex flex-col items-end gap-1 mb-2">
     <span
       className={`px-3 py-1 rounded-full text-xs font-semibold ${
         statusColors[row.Status || "Convert"]
@@ -574,10 +633,10 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
     >
       {row.Status || "Convert"}
     </span>
-    {row.CSE && (
+    {(row.CSE || row.HandledBy)&& (
       <div className="text-xs py-1 px-3 mt-1 inline-flex items-center text-orange-800 bg-orange-100 rounded-full ">
         <FontAwesomeIcon icon={faUserCircle} className="mr-1" />
-        <p>{toTitleCase(row.CSE)}</p>
+        <p>{toTitleCase(row.CSE || row.HandledBy)}</p>
       </div>
     )}
   </div>
@@ -632,6 +691,15 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
             {row.Source || row.Platform}
           </div>
         </div>
+        {row.Remarks &&
+        <div className="flex items-baseline">
+        <div className="w-28 text-xs text-gray-500 uppercase font-medium">Remarks</div>
+        <div className="flex-1 text-gray-900 text-sm">
+          {row.Remarks || "NA"}
+        </div>
+      </div>
+      }
+        
       </div>
 
       {/* Follow-up Date Tab */}
@@ -686,12 +754,15 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
         >
           <div className="flex items-center whitespace-nowrap text-xs font-medium">
             <FiCalendar className="mr-1.5" />
-            {formatDBDateTime(row.NextFollowupDate.toISOString())}
+            {formatDate(row.NextFollowupDate) + " " + formatTime(row.NextFollowupTime)}
           </div>
         </div>
         )}
+        
       </div>
+      
     </div>
+    
   ))}
 </div>
 )}
@@ -888,7 +959,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
      {/* Expanded Order Details Modal */}
     {showExpandedModal && currentLead && (
       <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl relative text-black ">
+        <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl relative text-black max-h-[70%] overflow-y-auto">
           <button
             className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             onClick={() => setShowExpandedModal(false)}
@@ -899,7 +970,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
               History of {currentLead.ClientName}
             </h3>
-            <table className="w-full">
+            <table className="w-full ">
               <thead className="bg-gray-100 p-4">
                 <tr>
                   <th className="text-center">Order Number</th>
