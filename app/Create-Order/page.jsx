@@ -970,7 +970,6 @@ const CreateStages = async () => {
                 router.push('/FinanceEntry');
               }, 2000);
                 
-              //setMessage(data.message);
             } else {
               alert(`The following error occurred while inserting data: ${data}`);
               setIsButtonDisabled(false);
