@@ -1020,7 +1020,6 @@ const handleStatusClick = async(row) => {
   setRemarks(row.Remarks);
   setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
   setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
-  // setQuoteSentChecked(row.QuoteSent === "Yes")
   setSelectedStatus(row.Status);
 };
 
