@@ -308,18 +308,12 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
         const response = await fetch(`https://orders.baleenmedia.com/API/Media/CheckLeadsOfExistingClient.php?JsonClientContact=${clientContact}&JsonDBName=${companyName}`);
         const data = await response.json();
     
-        if (!data.SheetId) {
-          alert("Lead not found. Cannot proceed with PDF generation.");
-          isGeneratingPdf = false;
-          return;
-        }
-    
         // Check if SheetId exists
         if (!data || !data.SheetId) {
           console.log("no sheet data")
         }else{
           const SheetId = data.SheetId; // Store Lead ID
-          console.log("Lead Found. SheetId:", SheetId); // Log Lead ID
+          // console.log("Lead Found. SheetId:", SheetId); // Log Lead ID
           const payload = {
             sNo: data.SheetId,
             quoteSent: "Yes",

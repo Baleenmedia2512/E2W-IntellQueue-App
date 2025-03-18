@@ -1095,9 +1095,35 @@ var selectedRate = '';
           
         // } else {
           // If there are changes, proceed with the API call
-          const response = await fetch(
-            `https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?JsonRateId=${rateId}&JsonRateGST=${rateGST?.value || ''}&JsonRateName=${selectedValues.rateName.value}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits?.value || ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit?.value || ''}&JsonValidityDate=${validTill}&JsonAdType=${selectedValues.adType.value}&JsonAdCategory=${selectedValues.Location.value}${selectedValues.Package.value}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd.value}&JsonLocation=${selectedValues.Location?.value || ''}&JsonPackage=${selectedValues.Package?.value || ''}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}&JsonStartQty=${minSlab.StartQty}`
-          );
+          const paramsUpdate = new URLSearchParams();
+
+            paramsUpdate.set('JsonRateId', rateId);
+            paramsUpdate.set('JsonRateGST', rateGST?.value || '');
+            paramsUpdate.set('JsonRateName', selectedValues.rateName.value);
+            paramsUpdate.set('JsonVendorName', selectedValues.vendorName.value);
+            paramsUpdate.set('JsonCampaignDuration', campaignDuration);
+            paramsUpdate.set('JsonCampaignDurationUnit', selectedCampaignUnits?.value || '');
+            paramsUpdate.set('JsonLeadDays', leadDays);
+            paramsUpdate.set('JsonUnits', selectedUnit?.value || '');
+            paramsUpdate.set('JsonValidityDate', validTill);
+            paramsUpdate.set('JsonAdType', selectedValues.adType.value);
+
+            // For JsonAdCategory, adjust as needed. Here we simply concatenate Location and Package.
+            paramsUpdate.set('JsonAdCategory', selectedValues.Location.value + (selectedValues.Package.value));
+            paramsUpdate.set('JsonCampaignDurationVisibility', campaignDurationVisibility);
+            paramsUpdate.set('JsonDBName', companyName);
+            paramsUpdate.set('JsonTypeOfAd', selectedValues.typeOfAd.value);
+            paramsUpdate.set('JsonLocation', selectedValues.Location?.value || '');
+            paramsUpdate.set('JsonPackage', selectedValues.Package?.value || '');
+            paramsUpdate.set('JsonRatePerUnit', minSlab.UnitPrice);
+            paramsUpdate.set('JsonAgencyCommission', marginPercentage);
+            paramsUpdate.set('JsonWidth', minSlab.Width);
+            paramsUpdate.set('JsonStartQty', minSlab.StartQty);
+
+            const updateUrl = `https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?${paramsUpdate.toString()}`;
+
+            const response = await fetch(updateUrl);
+
   
           // Check response
           if (!response.ok) {
@@ -1555,7 +1581,40 @@ var selectedRate = '';
             return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
         }, combinedSlabData[0]);
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}`)
+              const params = new URLSearchParams();
+
+              // Set parameters with fallback values as needed
+              params.set('JsonRateGST', rateGST ? rateGST.value : '');
+              params.set('JsonEntryUser', username);
+              params.set('JsonRateName', adMediumEncoded);
+              params.set('JsonVendorName', selectedValues.vendorName.value);
+              params.set('JsonCampaignDuration', campaignDuration);
+              params.set('JsonCampaignDurationUnit', selectedCampaignUnits ? selectedCampaignUnits.value : '');
+              params.set('JsonLeadDays', leadDays);
+              params.set('JsonUnits', selectedUnit ? selectedUnit.value : '');
+              params.set('JsonValidityDate', validTill);
+              params.set('JsonAdType', adTypeEncoded);
+
+              // Build JsonAdCategory by combining Location and Package if available
+              const jsonAdCategory =
+                (selectedValues.Location ? locationEncoded : '') +
+                (selectedValues.Package ? ':' + packageEncoded : '');
+              params.set('JsonAdCategory', jsonAdCategory);
+
+              params.set('JsonCampaignDurationVisibility', campaignDurationVisibility);
+              params.set('JsonDBName', companyName);
+              params.set('JsonTypeOfAd', selectedValues.typeOfAd ? typeOfAdEncoded : '');
+              params.set('JsonQuantity', combinedSlabData[0].StartQty);
+              params.set('JsonLocation', selectedValues.Location ? selectedValues.Location.value : '');
+              params.set('JsonPackage', selectedValues.Package ? selectedValues.Package.value : '');
+              params.set('JsonRatePerUnit', combinedSlabData[0].UnitPrice);
+              params.set('JsonAgencyCommission', marginPercentage);
+              params.set('JsonWidth', minSlab.Width);
+
+              // Build the final URL
+              const url = `https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?${params.toString()}`;
+              const response = await fetch(url);
+
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage(`Rate Card #${maxRateID} Added Successfully!`);
@@ -1585,7 +1644,7 @@ const handleRateSearch = async(e) =>{
   setRatesSearchSuggestion(searchSuggestions);
 }
 
-const debouncedSearch = useRef(_.debounce(handleRateSearch, 300)).current;
+// const debouncedSearch = useRef(_.debounce(handleRateSearch, 300)).current;
 
 const updateSlabData = (qty, newUnitPrice, Width) => {
   console.log(tempSlabData.length, newUnitPrice, Width)
@@ -2018,7 +2077,7 @@ const handleBlur = (e) => {
           value={rateSearchTerm}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          onChange={e => debouncedSearch(e)}
+          onChange={e => handleRateSearch(e)}
         />
         <div className="px-3">
           <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
