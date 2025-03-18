@@ -1403,10 +1403,10 @@ const handleStatusClick = async(row) => {
       <div className="relative">
             
             <button
-        onClick={toggleModal}
+        onClick={() => router.push("/LeadManager/Client2Lead")}
         className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"
       >
-        <AiOutlineInteraction size={24} />
+        <AiOutlineTeam size={24} />
       </button>
            {/* "+" Button */}
             <button
