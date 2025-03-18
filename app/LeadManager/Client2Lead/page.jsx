@@ -312,7 +312,7 @@ export default function ExistingClientToLeads() {
     //Check if the lead is existing or not
     const isExistingLead = currentLead?.Lead_ID ? true : false;
 
-    setShowModal(false);
+    
     // Format the followup date and time if provided
     let formattedDate = "";
     let formattedTime = "";
@@ -359,11 +359,11 @@ export default function ExistingClientToLeads() {
       JsonIsUnreachable: currentUpdate.Status === "Unreachable" ? 1 : 0,
     };
 
-    const hasChanges = Object.keys(updateFormData).some(key => {
-      const originalValue = currentLead[key.replace("Json", "")];
-      const newValue = updateFormData[key];
+    const hasChanges = Object.keys(currentUpdate).some(key => {
+      const originalValue = currentUpdate[key] || currentLead[key];
+      const newValue = currentLead[key];
       return originalValue !== undefined && newValue !== originalValue;
-    });
+    }) && currentUpdate.Status !== "Convert";
     
     //check if the status is changed or not
     if (!hasChanges) {
@@ -371,10 +371,10 @@ export default function ExistingClientToLeads() {
       setIsLoading(false);
       return;
     }
-
+    setShowModal(false);
     const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", isExistingLead ? updateFormData : formData);
     const enquiryResponse = await insertEnquiry();
-    console.log(leadResponse, enquiryResponse);
+
     if (
       enquiryResponse.message === "Values Inserted Successfully!" &&
       isExistingLead ? true : leadResponse.status === "success"
