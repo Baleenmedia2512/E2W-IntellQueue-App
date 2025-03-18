@@ -660,7 +660,7 @@ const formatUnreachableTime = (timeStr) => {
         prospectType: prospectType || "",  // Include ProspectType
         handledBy: toTitleCase(userName),
         dbCompanyName: UserCompanyName || "Baleen Test",
-        quoteSent: quoteSentChecked === true ? "Yes" : initialQuoteStatus
+        quoteSent: initialQuoteStatus
       };
     }
   
@@ -952,7 +952,7 @@ const formatUnreachableTime = (timeStr) => {
       consultantNumber: formData.consultantNumber,
       dbCompanyName,
     };
-console.log("handle by",formData.handledBy)
+
     const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
     try {
       const response = await fetch(apiUrl, {
@@ -966,7 +966,6 @@ console.log("handle by",formData.handledBy)
       const data = await response.json(); 
       if (response.ok) {
         
-        console.log("Response from server:", data);
         alert("Lead added successfully!");
         setIsModalOpen(false);
         setFormData({
