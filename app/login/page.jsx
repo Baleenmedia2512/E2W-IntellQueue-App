@@ -89,7 +89,6 @@ const handleLogin = (event) => {
     if (validateFields()) {
         const encodedPassw = encodeURIComponent(password);
 
-        // Assuming companyName, userName, and encodedPassw are defined and used correctly
         fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
             .then(response => {
                 if (!response.ok) {
