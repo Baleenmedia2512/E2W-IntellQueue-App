@@ -19,10 +19,8 @@ import { AiOutlineClose } from "react-icons/ai";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
-import SuccessToast from "@/app/components/SuccessToast";
 import { formatDate, formatDateTime, formatDBDateTime, formatDBTime, formatTime, normalizeDate } from "@/app/utils/commonFunctions";
 import { useRouter } from "next/navigation";
-import { Yesteryear } from "next/font/google";
 
 
 const tomorrow = new Date();
@@ -248,16 +246,33 @@ export default function ExistingClientToLeads() {
       return;
     }
 
-    const filteredData = filteredRows.map((row) => ({
-      OrderNumber: row.OrderNumber,
-      ClientName: row.ClientName,
-      ClientAuthorizedPerson: row.ClientAuthorizedPerson,
+    const isLead = filteredRows.some(row => row.Lead_ID > 0);
+    const isOrder = filteredRows.some(row => row.OrderNumber > 0);
+    let filteredData = [];
+
+    filteredRows.forEach((row, index) => {
+      let commonData = {
+      "S No": index + 1,
+      "Client Name": row.ClientName,
+      "Client Contact": row.ClientContact,
+      "Client Email": row.ClientAuthorizedPerson || row.ClientEmail,
       Source: row.Source,
-      ClientContact: row.ClientContact,
-      CSE: toTitleCase(row.CSE),
-      DateOfLastRelease: row.DateOfLastRelease,
-      Status: row.Status || "Convert",
-    }));
+      "Handled By": row.CSE || row.HandledBy,
+      Status: row.Status || "Convert"
+      }
+
+      if (isOrder) {
+        commonData["Order No."] = row.OrderNumber || "N/A";
+      }
+  
+      if (isLead) {
+        commonData["Called On"] = row.LeadDate || "Not Called Yet";
+        commonData["Followup On"] = row.NextFollowupDate || "NA";
+        commonData["Remarks"] = row.Remarks || "";
+      }
+
+      filteredData.push(commonData)
+    });
 
     const ws = XLSX.utils.json_to_sheet(filteredData);
     const wb = XLSX.utils.book_new();
@@ -312,7 +327,7 @@ export default function ExistingClientToLeads() {
     //Check if the lead is existing or not
     const isExistingLead = currentLead?.Lead_ID ? true : false;
 
-    setShowModal(false);
+    
     // Format the followup date and time if provided
     let formattedDate = "";
     let formattedTime = "";
@@ -359,11 +374,11 @@ export default function ExistingClientToLeads() {
       JsonIsUnreachable: currentUpdate.Status === "Unreachable" ? 1 : 0,
     };
 
-    const hasChanges = Object.keys(updateFormData).some(key => {
-      const originalValue = currentLead[key.replace("Json", "")];
-      const newValue = updateFormData[key];
+    const hasChanges = Object.keys(currentUpdate).some(key => {
+      const originalValue = currentUpdate[key] || currentLead[key];
+      const newValue = currentLead[key];
       return originalValue !== undefined && newValue !== originalValue;
-    });
+    }) && currentUpdate.Status !== "Convert";
     
     //check if the status is changed or not
     if (!hasChanges) {
@@ -371,10 +386,10 @@ export default function ExistingClientToLeads() {
       setIsLoading(false);
       return;
     }
-
+    setShowModal(false);
     const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", isExistingLead ? updateFormData : formData);
     const enquiryResponse = await insertEnquiry();
-    console.log(leadResponse, enquiryResponse);
+
     if (
       enquiryResponse.message === "Values Inserted Successfully!" &&
       isExistingLead ? true : leadResponse.status === "success"
