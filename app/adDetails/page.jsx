@@ -334,7 +334,7 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
             if (!response.ok) throw new Error("Failed to update lead");
             console.log(response)
         } catch (error) {
-          console.error("Error updating lead:", error);
+          return;
         }
 
         }

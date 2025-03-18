@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
