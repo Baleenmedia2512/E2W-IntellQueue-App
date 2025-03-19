@@ -27,7 +27,6 @@ import { generateBillPdf } from '../generatePDF/generateBillPDF';
 import dayjs from 'dayjs';
 import { CircularProgress } from '@mui/material';
 import { SaveAlt as SaveAltIcon } from '@mui/icons-material';
-import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -444,7 +443,7 @@ const processCloseDay = async () => {
 
     const fetchOrderDetails = () => {
         axios
-            .get(`https://orders.baleenmedia.com/API/Media/OrdersListTest.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
+            .get(`https://orders.baleenmedia.com/API/Media/OrdersList.php?JsonDBName=${companyName}&JsonStartDate=${dateRange.startDate}&JsonEndDate=${dateRange.endDate}`)
             .then((response) => {
                 const data = response.data.map((order, index) => ({
                     ...order,
@@ -983,13 +982,13 @@ const orderColumns = [
                 color="primary"
                 size="small"
                 onClick={() => handleDownloadInvoiceIconClick(params.row)}
-                disabled={params.row.invoiceDisabled}
+                // disabled={params.row.invoiceDisabled}
                 style={{ marginLeft: '12px',
                   backgroundColor: '#ff7f50',
                   color: 'white',
                   fontWeight: 'bold',
-                  opacity: params.row.invoiceDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
+                  // opacity: params.row.invoiceDisabled ? 0.5 : 1,
+                  // pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
                  }}  
             >  
                Download
@@ -1566,22 +1565,25 @@ const handleExport = async () => {
     cell.style = { ...headerStyle, border: borderStyle };
   });
 
-  // Finance data
-  sortedFinanceData.forEach(transaction => {
-    const matchingOrder = orderDetails.find(order => order.OrderNumber === transaction.OrderNumber);
-    const row = financeSheet.addRow([
-      transaction.ID,
-      transaction.TransactionType,
-      formatDate(transaction.TransactionDate), // Format Transaction Date
-      transaction.RateWiseOrderNumber,
-      matchingOrder ? matchingOrder.ClientName : '',
-      matchingOrder ? matchingOrder.Card : '',
-      matchingOrder ? matchingOrder.AdType : '',
-      transaction.PaymentMode,
-      removeCurrencySymbol(transaction.Amount) // Add Amount without rupee symbol
-    ]);
-    row.eachCell(cell => (cell.border = borderStyle));
-  });
+  // Filter finance data to include only records where RateWiseOrderNumber >= 0
+  sortedFinanceData
+    .filter(transaction => transaction.RateWiseOrderNumber >= 0) // <-- Apply filter
+    .forEach(transaction => {
+      const matchingOrder = orderDetails.find(order => order.OrderNumber === transaction.OrderNumber);
+      const row = financeSheet.addRow([
+        transaction.ID,
+        transaction.TransactionType,
+        formatDate(transaction.TransactionDate), // Format Transaction Date
+        transaction.RateWiseOrderNumber,
+        transaction.ClientName ? transaction.ClientName : transaction.Remarks,
+        matchingOrder ? matchingOrder.Card : '',
+        matchingOrder ? matchingOrder.AdType : '',
+        transaction.PaymentMode,
+        removeCurrencySymbol(transaction.Amount) // Add Amount without rupee symbol
+      ]);
+      row.eachCell(cell => (cell.border = borderStyle));
+    });
+
 
   // Apply filters to headers
   financeSheet.autoFilter = {
