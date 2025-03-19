@@ -983,13 +983,13 @@ const orderColumns = [
                 color="primary"
                 size="small"
                 onClick={() => handleDownloadInvoiceIconClick(params.row)}
-                // disabled={params.row.invoiceDisabled}
+                disabled={params.row.invoiceDisabled}
                 style={{ marginLeft: '12px',
                   backgroundColor: '#ff7f50',
                   color: 'white',
                   fontWeight: 'bold',
-                  // opacity: params.row.invoiceDisabled ? 0.5 : 1,
-                  // pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
+                  opacity: params.row.invoiceDisabled ? 0.5 : 1,
+                  pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
                  }}  
             >  
                Download
@@ -1519,10 +1519,11 @@ const calculateRateStats = () => {
   setRateStats(stats); // Update state with new stats
 };
 
+
+
 const handleExport = async () => {
   const workbook = new ExcelJS.Workbook();
-  const incomeSheet = workbook.addWorksheet('Income');
-  const expenseSheet = workbook.addWorksheet('Expense');
+  const financeSheet = workbook.addWorksheet('Finance');
 
   // Define header style
   const headerStyle = {
@@ -1546,76 +1547,56 @@ const handleExport = async () => {
     return value;
   };
 
-  // Sort income data by Order Date (ascending)
-  const sortedIncomeData = [...orderDetails].sort((a, b) => new Date(a.OrderDate) - new Date(b.OrderDate));
+  // Function to format date to dd-mm-yyyy
+  const formatDate = dateStr => {
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
-  // Sort expense data by Transaction Date (ascending)
-  const sortedExpenseData = [...financeDetails]
-    .filter(transaction => transaction.TransactionType?.toLowerCase().includes('expense'))
-    .sort((a, b) => new Date(a.TransactionDate) - new Date(b.TransactionDate));
+  // Sort finance data by Transaction Date (ascending)
+  const sortedFinanceData = [...financeDetails].sort((a, b) => new Date(a.TransactionDate) - new Date(b.TransactionDate));
 
-
-  // Income headers
-  const incomeHeaders = ['Order Date', 'Rate Wise Order Number', 'Service', 'Service Type', 'Client Name', 'Client Contact', 'Income', 'Payment Mode', 'Commission'];
-  const incomeHeaderRow = incomeSheet.addRow(incomeHeaders);
-  incomeHeaderRow.eachCell(cell => {
+  // Finance headers
+  const financeHeaders = ['Finance ID', 'Type', 'Date', 'R.W.Order#', 'Client Name', 'Service', 'Service Type', 'Payment Mode', 'Amount'];
+  const financeHeaderRow = financeSheet.addRow(financeHeaders);
+  financeHeaderRow.eachCell(cell => {
     cell.style = { ...headerStyle, border: borderStyle };
   });
 
-  // Income data
-  sortedIncomeData.forEach(order => {
-    const row = incomeSheet.addRow([
-      order.OrderDate,
-      order.RateWiseOrderNumber,
-      order.Card,
-      order.AdType,
-      order.ClientName,
-      order.ClientContact,
-      removeCurrencySymbol(order.TotalAmountReceived),
-      order.PaymentMode,
-      removeCurrencySymbol(order.Commission)
-    ]);
-    row.eachCell(cell => (cell.border = borderStyle));
-  });
-
-  // Expense headers
-  const expenseHeaders = ['Finance ID', 'Transaction Date', 'Remarks', 'Amount', 'Payment Mode'];
-  const expenseHeaderRow = expenseSheet.addRow(expenseHeaders);
-  expenseHeaderRow.eachCell(cell => {
-    cell.style = { ...headerStyle, border: borderStyle };
-  });
-
-  // Expense data
-  sortedExpenseData.forEach(transaction => {
-    const row = expenseSheet.addRow([
+  // Finance data
+  sortedFinanceData.forEach(transaction => {
+    const matchingOrder = orderDetails.find(order => order.OrderNumber === transaction.OrderNumber);
+    const row = financeSheet.addRow([
       transaction.ID,
-      transaction.TransactionDate,
-      transaction.Remarks,
-      removeCurrencySymbol(transaction.Amount),
-      transaction.PaymentMode
+      transaction.TransactionType,
+      formatDate(transaction.TransactionDate), // Format Transaction Date
+      transaction.RateWiseOrderNumber,
+      matchingOrder ? matchingOrder.ClientName : '',
+      matchingOrder ? matchingOrder.Card : '',
+      matchingOrder ? matchingOrder.AdType : '',
+      transaction.PaymentMode,
+      removeCurrencySymbol(transaction.Amount) // Add Amount without rupee symbol
     ]);
     row.eachCell(cell => (cell.border = borderStyle));
   });
 
   // Apply filters to headers
-  incomeSheet.autoFilter = {
+  financeSheet.autoFilter = {
     from: { row: 1, column: 1 },
-    to: { row: 1, column: incomeHeaders.length }
-  };
-
-  expenseSheet.autoFilter = {
-    from: { row: 1, column: 1 },
-    to: { row: 1, column: expenseHeaders.length }
+    to: { row: 1, column: financeHeaders.length }
   };
 
   // Adjust column widths
-  incomeSheet.columns.forEach(col => (col.width = 20));
-  expenseSheet.columns.forEach(col => (col.width = 20));
+  financeSheet.columns.forEach(col => (col.width = 20));
 
   // Generate file
   const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), `Report_${dateRange.startDate}_${dateRange.endDate}.xlsx`);
+  saveAs(new Blob([buffer]), `Finance_Report_${dateRange.startDate}_${dateRange.endDate}.xlsx`);
 };
+
 
   useEffect(() => {
     const filteredRows = orderDetails.filter((row) => {
@@ -1847,14 +1828,7 @@ const handleExport = async () => {
 </div>
 <hr className="border-t-1 border-gray-300 mb-3" />
 <div className="flex justify-end px-2">
-  <button
-    className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-green-600 bg-white border-2 border-green-600 transition-all duration-300 ease-in-out hover:text-white hover:bg-green-600 hover:border-green-600 hover:scale-105`}
-    onClick={handleExport}
-    title="Export data to Excel"
-    >
-    <SaveAltIcon style={{ marginRight: '8px' }} />
-    Export to Excel
-  </button>
+
   <button
     name="CloseDayButton"
     className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
@@ -1934,48 +1908,43 @@ const handleExport = async () => {
 )}
 
         {value === 1 && (
-             <div style={{ width: '100%' }}>
-              <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
-              <hr className="border-t-1 border-gray-300 mb-4"/>
-             <div className="flex flex-grow text-black mb-4 px-4">
-    <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-    
-    <div className="flex flex-grow items-end ml-2 mb-4">
-  <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="button custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
-      Show Balance
-    </button>
-    {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="button consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
-        Cons. Report
+          <div style={{ width: '100%' }}>
+          <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
+          <hr className="border-t-1 border-gray-300 mb-4"/>
+          <div className="flex flex-grow text-black mb-4 px-4 items-end">
+  <DateRangePicker 
+    startDate={selectedRange.startDate} 
+    endDate={selectedRange.endDate} 
+    onDateChange={handleDateChange} 
+  />
+
+  <div className="flex flex-grow items-end ml-2">
+    <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
+      <button className="button custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+        Show Balance
       </button>
-    )}
-    {/* <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-      </svg>
-      Send CDR
-    </button> */}
+
+      {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
+        <button className="button consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+          Cons. Report
+        </button>
+      )}
+    </div>
+  </div>
+
+  {/* Export Button moved to bottom-right */}
+  <div className="ml-auto flex items-end">
+    <button
+      className="px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:text-white hover:bg-green-600 hover:border-green-600 hover:scale-105"
+      onClick={handleExport}
+      title="Export data to Excel"
+    >
+      <SaveAltIcon className="mr-2" />
+      Export to Excel
+    </button>
   </div>
 </div>
 
-    {/* <div className="flex flex-grow items-end ml-2 mb-4">
-      <div className="flex flex-col sm:flex-row">
-        <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
-          Show Balance
-        </button>
-        {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-        <button className="consultant-button" onClick={handleConsultantReportOpen}>
-          Consultant Report
-        </button>
-      )}
-
-
-      </div> */}
-    {/* </div> */}
-  </div>
-           
-           
              {/* Delete Transaction Confirmation */}
              <Dialog
   open={openConfirmDialog}
