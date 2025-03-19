@@ -97,6 +97,7 @@ const AdDetailsPage = () => {
   const marginAmountRef = useRef(null);
   const textAreaRef = useRef(null);
 
+
   // Constants
   const routers = useRouter();
   const dispatch = useDispatch();
