@@ -934,7 +934,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
                   Followup Date and Time
                 </label>
                 <DatePicker
-                  selected={new Date(currentUpdate.NextFollowupDate)}
+                  selected={new Date(currentUpdate.NextFollowupDate)} //use new Date for avoiding errors in the code
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa"
