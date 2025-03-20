@@ -225,7 +225,6 @@ export default function ExistingClientToLeads() {
   // Update the raw date object in currentUpdate
   const handleDateChange = (selectedDate) => {
     let chosenDate = new Date(selectedDate);
-    console.log("Selected Date:", selectedDate, typeof selectedDate, chosenDate);
     setCurrentUpdate((prev) => ({
       ...prev,
       NextFollowupDate: chosenDate,
@@ -935,7 +934,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
                   Followup Date and Time
                 </label>
                 <DatePicker
-                  selected={currentUpdate.NextFollowupDate}
+                  selected={new Date(currentUpdate.NextFollowupDate)}
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa"
