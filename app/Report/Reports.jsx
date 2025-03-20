@@ -1549,7 +1549,6 @@ const handleExport = async () => {
     { header: 'Finance ID', key: 'Finance ID', width: 15, type: 'number' },
     { header: 'Type', key: 'Type', width: 20, type: 'string' },
     { header: 'Date', key: 'Date', width: 15, type: 'date' },
-    { header: 'R.W.Order#', key: 'R.W.Order#', width: 15, type: 'number' },
     { header: 'Client Name', key: 'Client Name', width: 20, type: 'string' },
     { header: 'Service', key: 'Service', width: 20, type: 'string' },
     { header: 'Service Type', key: 'Service Type', width: 20, type: 'string' },
@@ -1578,8 +1577,7 @@ const handleExport = async () => {
     const row = financeSheet.addRow([
       Number(transaction.ID),
       transaction.TransactionType,
-      new Date(transaction.TransactionDate), // Ensure proper date format
-      Number(transaction.RateWiseOrderNumber),
+      new Date(transaction.TransactionDate),
       transaction.ClientName ? transaction.ClientName : transaction.Remarks,
       matchingOrder ? matchingOrder.Card : '',
       matchingOrder ? matchingOrder.AdType : '',
