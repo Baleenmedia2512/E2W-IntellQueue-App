@@ -1518,8 +1518,6 @@ const calculateRateStats = () => {
   setRateStats(stats); // Update state with new stats
 };
 
-
-
 const handleExport = async () => {
   const workbook = new ExcelJS.Workbook();
   const financeSheet = workbook.addWorksheet('Finance');
@@ -1546,58 +1544,63 @@ const handleExport = async () => {
     return value;
   };
 
-  // Function to format date to dd-mm-yyyy
-  const formatDate = dateStr => {
-    const date = new Date(dateStr);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
+  // Finance headers and column definitions
+  const financeHeaders = [
+    { header: 'Finance ID', key: 'Finance ID', width: 15, type: 'number' },
+    { header: 'Type', key: 'Type', width: 20, type: 'string' },
+    { header: 'Date', key: 'Date', width: 15, type: 'date' },
+    { header: 'R.W.Order#', key: 'R.W.Order#', width: 15, type: 'number' },
+    { header: 'Client Name', key: 'Client Name', width: 20, type: 'string' },
+    { header: 'Service', key: 'Service', width: 20, type: 'string' },
+    { header: 'Service Type', key: 'Service Type', width: 20, type: 'string' },
+    { header: 'Payment Mode', key: 'Payment Mode', width: 15, type: 'string' },
+    { header: 'Amount', key: 'Amount', width: 15, type: 'number' }
+  ];
+
+  // Apply column definitions
+  financeSheet.columns = financeHeaders;
+
+  // Apply header row styles
+  const financeHeaderRow = financeSheet.getRow(1);
+  financeHeaders.forEach((col, index) => {
+    const cell = financeHeaderRow.getCell(index + 1);
+    cell.value = col.header;
+    cell.style = { ...headerStyle, border: borderStyle };
+  });
+  financeHeaderRow.commit(); // Ensure row updates
 
   // Sort finance data by Transaction Date (ascending)
   const sortedFinanceData = [...financeDetails].sort((a, b) => new Date(a.TransactionDate) - new Date(b.TransactionDate));
 
-  // Finance headers
-  const financeHeaders = ['Finance ID', 'Type', 'Date', 'R.W.Order#', 'Client Name', 'Service', 'Service Type', 'Payment Mode', 'Amount'];
-  const financeHeaderRow = financeSheet.addRow(financeHeaders);
-  financeHeaderRow.eachCell(cell => {
-    cell.style = { ...headerStyle, border: borderStyle };
+  // Add finance data
+  sortedFinanceData.forEach(transaction => {
+    const matchingOrder = orderDetails.find(order => order.OrderNumber === transaction.OrderNumber);
+    const row = financeSheet.addRow([
+      Number(transaction.ID),
+      transaction.TransactionType,
+      new Date(transaction.TransactionDate), // Ensure proper date format
+      Number(transaction.RateWiseOrderNumber),
+      transaction.ClientName ? transaction.ClientName : transaction.Remarks,
+      matchingOrder ? matchingOrder.Card : '',
+      matchingOrder ? matchingOrder.AdType : '',
+      transaction.PaymentMode,
+      Number(removeCurrencySymbol(transaction.Amount))
+    ]);
+    row.eachCell(cell => (cell.border = borderStyle));
   });
 
-  // Filter finance data to include only records where RateWiseOrderNumber >= 0
-  sortedFinanceData
-    .filter(transaction => transaction.RateWiseOrderNumber >= 0) // <-- Apply filter
-    .forEach(transaction => {
-      const matchingOrder = orderDetails.find(order => order.OrderNumber === transaction.OrderNumber);
-      const row = financeSheet.addRow([
-        transaction.ID,
-        transaction.TransactionType,
-        formatDate(transaction.TransactionDate), // Format Transaction Date
-        transaction.RateWiseOrderNumber,
-        transaction.ClientName ? transaction.ClientName : transaction.Remarks,
-        matchingOrder ? matchingOrder.Card : '',
-        matchingOrder ? matchingOrder.AdType : '',
-        transaction.PaymentMode,
-        removeCurrencySymbol(transaction.Amount) // Add Amount without rupee symbol
-      ]);
-      row.eachCell(cell => (cell.border = borderStyle));
-    });
-
-
-  // Apply filters to headers
+  // Apply filters after populating data
   financeSheet.autoFilter = {
     from: { row: 1, column: 1 },
-    to: { row: 1, column: financeHeaders.length }
+    to: { row: financeSheet.rowCount, column: financeHeaders.length }
   };
 
-  // Adjust column widths
-  financeSheet.columns.forEach(col => (col.width = 20));
-
-  // Generate file
+  // Generate and save file
   const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), `Finance_Report_${dateRange.startDate}_${dateRange.endDate}.xlsx`);
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(blob, `Finance_Report_${dateRange.startDate}_${dateRange.endDate}.xlsx`);
 };
+
 
 
   useEffect(() => {
