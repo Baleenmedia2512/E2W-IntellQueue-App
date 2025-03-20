@@ -53,7 +53,22 @@ export default function ExistingClientToLeads() {
   const [orderHistory, setOrderHistory] = useState([]);
   // Combined state for lead update fields
   const [currentUpdate, setCurrentUpdate] = useState(initialCurrentUpdate);
-  const [currentCall, setCurrentCall] = useState(null);
+  const unqualifiedReasons = [
+    "Not required at the moment",
+    "Invalid Phone Number",
+    "Don't Call Again - Service was not good",
+    "Don't Call Again - Poor Ad Response",
+    "Don't Call Again - Customer has behavioural Issues",
+    "Don't Call Again - Customer will call in case of any need",
+  ];
+
+  const unreachableReasons = [
+    "RNR",
+    "Out of Service",
+    "Switched Off"
+  ];
+
+  const rejectionData = currentUpdate.Status === "Unreachable" ? unreachableReasons : unqualifiedReasons;
 
   // Combined filter state
   const [filters, setFilters] = useState({
@@ -705,6 +720,16 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
             {row.Source || row.Platform}
           </div>
         </div>
+
+        {(row.RejectionReason && row.Status === "Unreachable" && unreachableReasons.find( data => data === row.RejectionReason)) && ( //print reason of unreachable or unqualified. Unqualified won't be visible here
+          <div className="flex items-baseline">
+            <div className="w-28 text-xs text-gray-500 uppercase font-medium">Reason</div>
+            <div className="flex-1 text-gray-900 text-sm truncate">
+              {row.RejectionReason || "NA"}
+            </div>
+          </div>
+        )}
+
         {row.Remarks &&
         <div className="flex items-baseline">
         <div className="w-28 text-xs text-gray-500 uppercase font-medium">Remarks</div>
@@ -821,7 +846,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
     {/* Lead Details Modal */}
     {showModal && currentLead && (
       <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md  border border-gray-300">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md  border border-gray-300 max-h-[70%] overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-gray-900">Lead Details</h3>
             <button
@@ -893,10 +918,10 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
               ))}
             </div>)}
             {/* Not Interested Reason Dropdown */}
-            {!currentUpdate.FollowupOnly && currentUpdate.Status === "Unqualified" && (
+            {!currentUpdate.FollowupOnly && (currentUpdate.Status === "Unqualified" || currentUpdate.Status === "Unreachable") && (
               <div className="space-y-2">
                 <label className="block text-base font-medium text-gray-700">
-                  Select Unqualified Reason
+                  Select {currentUpdate.Status} Reason
                 </label>
                 <select
                   className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
@@ -911,14 +936,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
                   <option value="" disabled>
                     Select a reason
                   </option>
-                  {[
-                    "Not required at the moment",
-                    "Invalid Phone Number",
-                    "Don't Call Again - Service was not good",
-                    "Don't Call Again - Poor Ad Response",
-                    "Don't Call Again - Customer has behavioural Issues",
-                    "Don't Call Again - Customer will call in case of any need",
-                  ].map((reason, index) => (
+                  {rejectionData.map((reason, index) => (
                     <option key={index} value={reason}>
                       {reason}
                     </option>
