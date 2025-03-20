@@ -846,7 +846,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
     {/* Lead Details Modal */}
     {showModal && currentLead && (
       <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md  border border-gray-300">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md  border border-gray-300 max-h-[70%] overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-gray-900">Lead Details</h3>
             <button
