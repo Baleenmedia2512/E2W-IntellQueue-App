@@ -19,10 +19,8 @@ import { AiOutlineClose } from "react-icons/ai";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
-import SuccessToast from "@/app/components/SuccessToast";
 import { formatDate, formatDateTime, formatDBDateTime, formatDBTime, formatTime, normalizeDate } from "@/app/utils/commonFunctions";
 import { useRouter } from "next/navigation";
-import { Yesteryear } from "next/font/google";
 
 
 const tomorrow = new Date();
@@ -55,7 +53,22 @@ export default function ExistingClientToLeads() {
   const [orderHistory, setOrderHistory] = useState([]);
   // Combined state for lead update fields
   const [currentUpdate, setCurrentUpdate] = useState(initialCurrentUpdate);
-  const [currentCall, setCurrentCall] = useState(null);
+  const unqualifiedReasons = [
+    "Not required at the moment",
+    "Invalid Phone Number",
+    "Don't Call Again - Service was not good",
+    "Don't Call Again - Poor Ad Response",
+    "Don't Call Again - Customer has behavioural Issues",
+    "Don't Call Again - Customer will call in case of any need",
+  ];
+
+  const unreachableReasons = [
+    "RNR",
+    "Out of Service",
+    "Switched Off"
+  ];
+
+  const rejectionData = currentUpdate.Status === "Unreachable" ? unreachableReasons : unqualifiedReasons;
 
   // Combined filter state
   const [filters, setFilters] = useState({
@@ -227,7 +240,6 @@ export default function ExistingClientToLeads() {
   // Update the raw date object in currentUpdate
   const handleDateChange = (selectedDate) => {
     let chosenDate = new Date(selectedDate);
-    console.log("Selected Date:", selectedDate, typeof selectedDate, chosenDate);
     setCurrentUpdate((prev) => ({
       ...prev,
       NextFollowupDate: chosenDate,
@@ -248,16 +260,33 @@ export default function ExistingClientToLeads() {
       return;
     }
 
-    const filteredData = filteredRows.map((row) => ({
-      OrderNumber: row.OrderNumber,
-      ClientName: row.ClientName,
-      ClientAuthorizedPerson: row.ClientAuthorizedPerson,
+    const isLead = filteredRows.some(row => row.Lead_ID > 0);
+    const isOrder = filteredRows.some(row => row.OrderNumber > 0);
+    let filteredData = [];
+
+    filteredRows.forEach((row, index) => {
+      let commonData = {
+      "S No": index + 1,
+      "Client Name": row.ClientName,
+      "Client Contact": row.ClientContact,
+      "Client Email": row.ClientAuthorizedPerson || row.ClientEmail,
       Source: row.Source,
-      ClientContact: row.ClientContact,
-      CSE: toTitleCase(row.CSE),
-      DateOfLastRelease: row.DateOfLastRelease,
-      Status: row.Status || "Convert",
-    }));
+      "Handled By": row.CSE || row.HandledBy,
+      Status: row.Status || "Convert"
+      }
+
+      if (isOrder) {
+        commonData["Order No."] = row.OrderNumber || "N/A";
+      }
+  
+      if (isLead) {
+        commonData["Called On"] = row.LeadDate || "Not Called Yet";
+        commonData["Followup On"] = row.NextFollowupDate || "NA";
+        commonData["Remarks"] = row.Remarks || "";
+      }
+
+      filteredData.push(commonData)
+    });
 
     const ws = XLSX.utils.json_to_sheet(filteredData);
     const wb = XLSX.utils.book_new();
@@ -312,7 +341,7 @@ export default function ExistingClientToLeads() {
     //Check if the lead is existing or not
     const isExistingLead = currentLead?.Lead_ID ? true : false;
 
-    setShowModal(false);
+    
     // Format the followup date and time if provided
     let formattedDate = "";
     let formattedTime = "";
@@ -359,11 +388,11 @@ export default function ExistingClientToLeads() {
       JsonIsUnreachable: currentUpdate.Status === "Unreachable" ? 1 : 0,
     };
 
-    const hasChanges = Object.keys(updateFormData).some(key => {
-      const originalValue = currentLead[key.replace("Json", "")];
-      const newValue = updateFormData[key];
+    const hasChanges = Object.keys(currentUpdate).some(key => {
+      const originalValue = currentUpdate[key] || currentLead[key];
+      const newValue = currentLead[key];
       return originalValue !== undefined && newValue !== originalValue;
-    });
+    }) && currentUpdate.Status !== "Convert";
     
     //check if the status is changed or not
     if (!hasChanges) {
@@ -371,10 +400,10 @@ export default function ExistingClientToLeads() {
       setIsLoading(false);
       return;
     }
-
+    setShowModal(false);
     const leadResponse = await PostInsertOrUpdate("InsertLeadStatus", isExistingLead ? updateFormData : formData);
     const enquiryResponse = await insertEnquiry();
-    console.log(leadResponse, enquiryResponse);
+
     if (
       enquiryResponse.message === "Values Inserted Successfully!" &&
       isExistingLead ? true : leadResponse.status === "success"
@@ -691,6 +720,16 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
             {row.Source || row.Platform}
           </div>
         </div>
+
+        {(row.RejectionReason && row.Status === "Unreachable" && unreachableReasons.find( data => data === row.RejectionReason)) && ( //print reason of unreachable or unqualified. Unqualified won't be visible here
+          <div className="flex items-baseline">
+            <div className="w-28 text-xs text-gray-500 uppercase font-medium">Reason</div>
+            <div className="flex-1 text-gray-900 text-sm truncate">
+              {row.RejectionReason || "NA"}
+            </div>
+          </div>
+        )}
+
         {row.Remarks &&
         <div className="flex items-baseline">
         <div className="w-28 text-xs text-gray-500 uppercase font-medium">Remarks</div>
@@ -879,10 +918,10 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
               ))}
             </div>)}
             {/* Not Interested Reason Dropdown */}
-            {!currentUpdate.FollowupOnly && currentUpdate.Status === "Unqualified" && (
+            {!currentUpdate.FollowupOnly && (currentUpdate.Status === "Unqualified" || currentUpdate.Status === "Unreachable") && (
               <div className="space-y-2">
                 <label className="block text-base font-medium text-gray-700">
-                  Select Unqualified Reason
+                  Select {currentUpdate.Status} Reason
                 </label>
                 <select
                   className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
@@ -897,14 +936,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
                   <option value="" disabled>
                     Select a reason
                   </option>
-                  {[
-                    "Not required at the moment",
-                    "Invalid Phone Number",
-                    "Don't Call Again - Service was not good",
-                    "Don't Call Again - Poor Ad Response",
-                    "Don't Call Again - Customer has behavioural Issues",
-                    "Don't Call Again - Customer will call in case of any need",
-                  ].map((reason, index) => (
+                  {rejectionData.map((reason, index) => (
                     <option key={index} value={reason}>
                       {reason}
                     </option>
@@ -920,7 +952,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
                   Followup Date and Time
                 </label>
                 <DatePicker
-                  selected={currentUpdate.NextFollowupDate}
+                  selected={new Date(currentUpdate.NextFollowupDate)} //use new Date for avoiding errors in the code
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa"
