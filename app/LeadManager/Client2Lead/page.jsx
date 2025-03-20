@@ -53,7 +53,22 @@ export default function ExistingClientToLeads() {
   const [orderHistory, setOrderHistory] = useState([]);
   // Combined state for lead update fields
   const [currentUpdate, setCurrentUpdate] = useState(initialCurrentUpdate);
-  const [currentCall, setCurrentCall] = useState(null);
+  const unqualifiedReasons = [
+    "Not required at the moment",
+    "Invalid Phone Number",
+    "Don't Call Again - Service was not good",
+    "Don't Call Again - Poor Ad Response",
+    "Don't Call Again - Customer has behavioural Issues",
+    "Don't Call Again - Customer will call in case of any need",
+  ];
+
+  const unreachableReasons = [
+    "RNR",
+    "Out of Service",
+    "Switched Off"
+  ];
+
+  const rejectionData = currentUpdate.Status === "Unreachable" ? unreachableReasons : unqualifiedReasons;
 
   // Combined filter state
   const [filters, setFilters] = useState({
@@ -225,7 +240,6 @@ export default function ExistingClientToLeads() {
   // Update the raw date object in currentUpdate
   const handleDateChange = (selectedDate) => {
     let chosenDate = new Date(selectedDate);
-    console.log("Selected Date:", selectedDate, typeof selectedDate, chosenDate);
     setCurrentUpdate((prev) => ({
       ...prev,
       NextFollowupDate: chosenDate,
@@ -706,6 +720,16 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
             {row.Source || row.Platform}
           </div>
         </div>
+
+        {(row.RejectionReason && row.Status === "Unreachable" && unreachableReasons.find( data => data === row.RejectionReason)) && ( //print reason of unreachable or unqualified. Unqualified won't be visible here
+          <div className="flex items-baseline">
+            <div className="w-28 text-xs text-gray-500 uppercase font-medium">Reason</div>
+            <div className="flex-1 text-gray-900 text-sm truncate">
+              {row.RejectionReason || "NA"}
+            </div>
+          </div>
+        )}
+
         {row.Remarks &&
         <div className="flex items-baseline">
         <div className="w-28 text-xs text-gray-500 uppercase font-medium">Remarks</div>
@@ -894,10 +918,10 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
               ))}
             </div>)}
             {/* Not Interested Reason Dropdown */}
-            {!currentUpdate.FollowupOnly && currentUpdate.Status === "Unqualified" && (
+            {!currentUpdate.FollowupOnly && (currentUpdate.Status === "Unqualified" || currentUpdate.Status === "Unreachable") && (
               <div className="space-y-2">
                 <label className="block text-base font-medium text-gray-700">
-                  Select Unqualified Reason
+                  Select {currentUpdate.Status} Reason
                 </label>
                 <select
                   className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
@@ -912,14 +936,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
                   <option value="" disabled>
                     Select a reason
                   </option>
-                  {[
-                    "Not required at the moment",
-                    "Invalid Phone Number",
-                    "Don't Call Again - Service was not good",
-                    "Don't Call Again - Poor Ad Response",
-                    "Don't Call Again - Customer has behavioural Issues",
-                    "Don't Call Again - Customer will call in case of any need",
-                  ].map((reason, index) => (
+                  {rejectionData.map((reason, index) => (
                     <option key={index} value={reason}>
                       {reason}
                     </option>
@@ -935,7 +952,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
                   Followup Date and Time
                 </label>
                 <DatePicker
-                  selected={currentUpdate.NextFollowupDate}
+                  selected={new Date(currentUpdate.NextFollowupDate)} //use new Date for avoiding errors in the code
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa"
