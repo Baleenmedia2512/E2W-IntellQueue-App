@@ -26,7 +26,9 @@ import { Margin } from '@mui/icons-material';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
 import dayjs from 'dayjs';
 import { CircularProgress } from '@mui/material';
-
+import { SaveAlt as SaveAltIcon } from '@mui/icons-material';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -1003,6 +1005,7 @@ const financeColumns = [
   { field: 'TransactionDate', headerName: 'Transaction Date', width: isMobile ? 180 : 150 },
   { field: 'Amount', headerName: 'Amount(₹)', width: isMobile ? 140 : 100,
     sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
         const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
         const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
       
@@ -1515,7 +1518,86 @@ const calculateRateStats = () => {
   setRateStats(stats); // Update state with new stats
 };
 
-  
+const handleExport = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const financeSheet = workbook.addWorksheet('Finance');
+
+  // Define header style
+  const headerStyle = {
+    font: { bold: true, color: { argb: 'FFFFFF' } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: '1976D2' } }
+  };
+
+  // Define border style
+  const borderStyle = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  // Function to remove ₹ symbol if present
+  const removeCurrencySymbol = value => {
+    if (typeof value === 'string') {
+      return value.replace(/₹|,/g, '').trim(); // Removes ₹ and commas
+    }
+    return value;
+  };
+
+  // Finance headers and column definitions
+  const financeHeaders = [
+    { header: 'Finance ID', key: 'Finance ID', width: 15, type: 'number' },
+    { header: 'Type', key: 'Type', width: 20, type: 'string' },
+    { header: 'Date', key: 'Date', width: 15, type: 'date' },
+    { header: 'Client Name', key: 'Client Name', width: 20, type: 'string' },
+    { header: 'Service', key: 'Service', width: 20, type: 'string' },
+    { header: 'Service Type', key: 'Service Type', width: 20, type: 'string' },
+    { header: 'Payment Mode', key: 'Payment Mode', width: 15, type: 'string' },
+    { header: 'Amount', key: 'Amount', width: 15, type: 'number' }
+  ];
+
+  // Apply column definitions
+  financeSheet.columns = financeHeaders;
+
+  // Apply header row styles
+  const financeHeaderRow = financeSheet.getRow(1);
+  financeHeaders.forEach((col, index) => {
+    const cell = financeHeaderRow.getCell(index + 1);
+    cell.value = col.header;
+    cell.style = { ...headerStyle, border: borderStyle };
+  });
+  financeHeaderRow.commit(); // Ensure row updates
+
+  // Sort finance data by Transaction Date (ascending)
+  const sortedFinanceData = [...financeDetails].sort((a, b) => new Date(a.TransactionDate) - new Date(b.TransactionDate));
+
+  // Add finance data
+  sortedFinanceData.forEach(transaction => {
+    const matchingOrder = orderDetails.find(order => order.OrderNumber === transaction.OrderNumber);
+    const row = financeSheet.addRow([
+      Number(transaction.ID),
+      transaction.TransactionType,
+      new Date(transaction.TransactionDate),
+      transaction.ClientName ? transaction.ClientName : transaction.Remarks,
+      matchingOrder ? matchingOrder.Card : '',
+      matchingOrder ? matchingOrder.AdType : '',
+      transaction.PaymentMode,
+      Number(removeCurrencySymbol(transaction.Amount))
+    ]);
+    row.eachCell(cell => (cell.border = borderStyle));
+  });
+
+  // Apply filters after populating data
+  financeSheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: financeSheet.rowCount, column: financeHeaders.length }
+  };
+
+  // Generate and save file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(blob, `Finance_Report_${dateRange.startDate}_${dateRange.endDate}.xlsx`);
+};
 
 
 
@@ -1748,8 +1830,10 @@ const calculateRateStats = () => {
   
 </div>
 <hr className="border-t-1 border-gray-300 mb-3" />
-<div name="CloseDayButton" className="flex justify-end px-2">
+<div className="flex justify-end px-2">
+
   <button
+    name="CloseDayButton"
     className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
     onClick={handleCloseDay}
     disabled={isButtonDisabled}
@@ -1827,48 +1911,43 @@ const calculateRateStats = () => {
 )}
 
         {value === 1 && (
-             <div style={{ width: '100%' }}>
-              <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
-              <hr className="border-t-1 border-gray-300 mb-4"/>
-             <div className="flex flex-grow text-black mb-4 px-4">
-    <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-    
-    <div className="flex flex-grow items-end ml-2 mb-4">
-  <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="button custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
-      Show Balance
-    </button>
-    {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="button consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
-        Cons. Report
+          <div style={{ width: '100%' }}>
+          <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
+          <hr className="border-t-1 border-gray-300 mb-4"/>
+          <div className="flex flex-grow text-black mb-4 px-4 items-end">
+  <DateRangePicker 
+    startDate={selectedRange.startDate} 
+    endDate={selectedRange.endDate} 
+    onDateChange={handleDateChange} 
+  />
+
+  <div className="flex flex-grow items-end ml-2">
+    <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
+      <button className="button custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+        Show Balance
       </button>
-    )}
-    {/* <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-      </svg>
-      Send CDR
-    </button> */}
+
+      {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
+        <button className="button consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+          Cons. Report
+        </button>
+      )}
+    </div>
+  </div>
+
+  {/* Export Button moved to bottom-right */}
+  <div className="ml-auto flex items-end">
+    <button
+      className="px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:text-white hover:bg-green-600 hover:border-green-600 hover:scale-105"
+      onClick={handleExport}
+      title="Export data to Excel"
+    >
+      <SaveAltIcon className="mr-2" />
+      Export to Excel
+    </button>
   </div>
 </div>
 
-    {/* <div className="flex flex-grow items-end ml-2 mb-4">
-      <div className="flex flex-col sm:flex-row">
-        <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
-          Show Balance
-        </button>
-        {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-        <button className="consultant-button" onClick={handleConsultantReportOpen}>
-          Consultant Report
-        </button>
-      )}
-
-
-      </div> */}
-    {/* </div> */}
-  </div>
-           
-           
              {/* Delete Transaction Confirmation */}
              <Dialog
   open={openConfirmDialog}
@@ -2162,14 +2241,6 @@ const calculateRateStats = () => {
              </div>
              </div>
          </div>
-        //   <div style={{ width: '100%' }}>
-        //   <div style={{ height: 500 , width: '100%' }}>
-        //     <DataGrid
-        //       rows={financeDetails}
-        //       columns={financeColumns}
-        //     />
-        //   </div>
-        // </div>
         )}
       </Box>
       {successMessage && <SuccessToast message={successMessage} />}
