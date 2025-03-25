@@ -840,7 +840,7 @@ const items = [
                         (grossPerQty < 1 && effectiveQty > 0) ? setGrossPerQty(unitPrice + (marginCalculated / effectiveQuantity)) : null;
                         setChanging(true);
                       }}
-                      onFocus={(e) => e.target.select()}
+                      onFocus={(e) => {e.target.select(); e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}}
                     />
                     <label className="justify-center mt-2 ml-2 ">{unit ? unit : 'Unit'}</label>
                   </div>
@@ -878,7 +878,7 @@ const items = [
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
-                      onFocus={(e) => e.target.select()}
+                      onFocus={(e) => {e.target.select(); e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}}
                     />
                   </div>
                   <p className="text-red-700">{qty < qtySlab.Qty ? 'Minimum Quantity should be ' + qtySlab.Qty : ''}</p>
@@ -913,7 +913,7 @@ const items = [
                         setQtySlab(findMatchingQtySlab(e.target.value, true));
                         setChanging(true);
                       }}
-                      onFocus={(e) => e.target.select()}
+                      onFocus={(e) => {e.target.select(); e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}}
                     />
                   </div>
                   <p className="text-red-700">{width < qtySlab.Width ? 'Minimum Quantity should be ' + qtySlab.Width : ''}</p>
@@ -947,12 +947,12 @@ const items = [
 
                         let marginCalculated = grossPerQty < 1 ? calculateMarginAmount(qty, e.target.value  , unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0) : newMarginAmount;
 
-                        grossPerQty < 1 ? setGrossPerQty(unitPrice + (marginCalculated / effectiveQuantity)) : null;
+                        grossPerQty < 1 ? setGrossPerQty(unitPrice + (marginCalculated / effectiveQty)) : null;
 
                           dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: marginCalculated})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
-                        onFocus={(e) => e.target.select()}
+                        onFocus={(e) => {e.target.select(); e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}}
                       />
                       {/* <div className="relative"> */}
                       <label className="text-center mt-2 ml-2">{(leadDay && (leadDay.CampaignDurationUnit)) ? leadDay.CampaignDurationUnit : 'Day'}</label>
@@ -973,7 +973,7 @@ const items = [
                     ref={marginAmountRef}
                     onChange={e => handleMarginChange(e.target.value)}
                     onBlur={marginLostFocus}
-                    onFocus={(e) => e.target.select()}
+                    onFocus={(e) => {e.target.select(); e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}}
                   />
                   {errors.marginAmount && <p className="text-red-500 text-xs ml-3">{errors.marginAmount}</p>}
             
@@ -988,7 +988,7 @@ const items = [
                       placeholder="Ex: 15"
                       value={marginPercentage}
                       onChange={ e => handleMarginPercentageChange(e.target.value)}
-                      onFocus={(e) => e.target.select()}
+                      onFocus={(e) => {e.target.select(); e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}}
                     />
                     <p className="mt-1 font-bold ml-2">%</p></span>
                   </div>
@@ -1088,7 +1088,8 @@ const items = [
                         marginAmount: newMarginAmount,
                         marginPercentage: newMarginPercentage
                       }));
-                    }}                    
+                    }}     
+                    onFocus={e => {e.target.select(); e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}}               
                   />
                 </div>
                 </div>
