@@ -3,6 +3,7 @@ import "./globals.css";
 import dynamic from "next/dynamic";
 // import BottomBar from "./BottomBar";
 import BottomBar from "./BottomBar";
+import { CartProvider } from "./context/CartContext";
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
   ssr: false
@@ -31,10 +32,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${poppins.variable} ${montserrat.variable} ${inter.className}`}>
-        <ReduxProvider>
-           {children}
-           <div ><BottomBar /></div>
-           </ReduxProvider>
+      <ReduxProvider> 
+          <CartProvider> 
+            {children}
+            <div>
+              <BottomBar />
+            </div>
+          </CartProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
