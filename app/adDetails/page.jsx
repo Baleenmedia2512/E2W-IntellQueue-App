@@ -17,10 +17,12 @@ import useClickTracker from './Dashboard/useClickTracker';
 import { quoteIncrementCount, resetCount } from '/redux/features/count-slice';
 import useTimerTracker from './Dashboard/useTimerTracker';
 import { setTimeElapsed, resetTime } from '/redux/features/time-slice';
-
 export const AdDetails = () => {
   useClickTracker();
   useTimerTracker();
+  const { stopTimerOnPdfGeneration } = useTimerTracker();
+   const clickCount = useAppSelector((state) => state.countSlice.quoteClickCount);
+   const timeTaken  = useAppSelector((state) => state.timeSlice.timeElapsed);
   const routers = useRouter();
   const dispatch = useDispatch();
   // const clientNameRef = useRef(null);
@@ -183,15 +185,15 @@ export const AdDetails = () => {
 
     let AmountInclGST = Math.round(item.price * ((item.rateGST/100) + 1));
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonNextQuoteId=${quoteNumber}&JsonBold=${item.bold ? item.boldPercentage : -1}&JsonSemibold=${item.semibold ? item.semiboldPercentage : -1}&JsonColor=${item.color ? item.colorPercentage : -1}&JsonTick=${item.tick ? item.tickPercentage : -1}`)
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddItemToCartAndQuote.php/?JsonDBName=${companyName}&JsonEntryUser=${username}&JsonClientName=${clientName}&JsonClientContact=${clientContact}&JsonClientSource=${clientSource}&JsonClientGST=${clientGST}&JsonClientEmail=${clientEmail}&JsonLeadDays=${item.leadDay}&JsonRateName=${item.adMedium}&JsonAdType=${item.adCategory}&JsonAdCategory=${item.edition + (item.position ? (" : " + item.position) : "")}&JsonQuantity=${item.qty}&JsonWidth=1&JsonUnits=${item.unit ? item.unit : 'Unit '}&JsonRatePerUnit=${AmountExclGST / item.qty}&JsonAmountWithoutGST=${AmountExclGST}&JsonAmount=${AmountInclGST}&JsonGSTAmount=${AmountInclGST - AmountExclGST}&JsonGSTPercentage=${item.rateGST}&JsonRemarks=${item.remarks}&JsonCampaignDuration=${item.campaignDuration ? item.campaignDuration : 1}&JsonMinPrice=${AmountExclGST / item.qty}&JsonSpotsPerDay=${item.unit === 'Spot' ? item.campaignDuration : 1}&JsonSpotDuration=${item.unit === 'Sec' ? item.campaignDuration : 0}&JsonDiscountAmount=${item.extraDiscount}&JsonMargin=${item.margin}&JsonVendor=${item.selectedVendor}&JsonCampaignUnits=${item.leadDay?.CampaignDurationUnit}&JsonRateId=${item.rateId}&JsonNextQuoteId=${quoteNumber}&JsonBold=${item.bold ? item.boldPercentage : -1}&JsonSemibold=${item.semibold ? item.semiboldPercentage : -1}&JsonColor=${item.color ? item.colorPercentage : -1}&JsonTick=${item.tick ? item.tickPercentage : -1}`)
       
       const data = await response.json();
       if (!response.ok) {
-        alert(`The following error occurred while inserting data: ${data}`);
+        console.error(`The following error occurred while inserting data: ${data}`);
       }
       return data;
     } catch (error) {
-      alert('An unexpected error occured while inserting Quote:', error);
+      console.error('An unexpected error occured while inserting Quote:', error);
       return;
     }
   }
@@ -249,14 +251,15 @@ export const AdDetails = () => {
         }
         
       } catch (error) {
-        alert('An unexpected error occured while inserting Quote:', error);
+        console.error('An unexpected error occured while inserting Quote:', error);
         return;
       }
     }
     
   }
 
-  // Function to send tracking data to the API
+  
+// Function to send tracking data to the API
 const insertTrackingData = async (quoteID, cartItemsCount) => {
   try {
       const url = `https://www.orders.baleenmedia.com/API/Media/InsertModuleTracking.php?JsonEntryUser=${encodeURIComponent(username)}&JsonPageName=Quote Page&JsonModuleName=Quote Sender&JsonClickCount=${clickCount}&JsonTimeTaken=${timeTaken}&JsonQuoteID=${quoteID}&JsonEnquiryID=null&JsonCartItems=${cartItemsCount}&JsonDBName=${encodeURIComponent(companyName)}`;
@@ -274,14 +277,20 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
   }
 };
 
+
+  
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
+    // stopTimerOnPdfGeneration();
+    // dispatch(quoteIncrementCount()); 
+    // dispatch(setTimeElapsed()); 
     const quoteNumber = await fetchNextQuoteNumber(companyName);
 
     const selectedCartItems = cartItems.some(item => item.isSelected)
     ? cartItems.filter(item => item.isSelected) // Filter selected items
     : cartItems;
 
+    // Insert tracking data before PDF generation
     await insertTrackingData(quoteNumber, selectedCartItems.length);
 
     if (isGeneratingPdf) {
@@ -290,7 +299,7 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
         await Promise.all(promises);
         return; 
       } catch(error) {
-        alert('An unexpected error occured while inserting Quote:', error);
+        console.error('An unexpected error occured while inserting Quote:', error);
         return;
       }
       
@@ -308,12 +317,17 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
         const response = await fetch(`https://orders.baleenmedia.com/API/Media/CheckLeadsOfExistingClient.php?JsonClientContact=${clientContact}&JsonDBName=${companyName}`);
         const data = await response.json();
     
+        // if (!data.SheetId) {
+        //   alert("Lead not found. Cannot proceed with PDF generation.");
+        //   isGeneratingPdf = false;
+        //   return;
+        // }
+    
         // Check if SheetId exists
         if (!data || !data.SheetId) {
-          console.log("no sheet data")
+          console.log("Client not available in Leads")
         }else{
           const SheetId = data.SheetId; // Store Lead ID
-          // console.log("Lead Found. SheetId:", SheetId); // Log Lead ID
           const payload = {
             sNo: data.SheetId,
             quoteSent: "Yes",
@@ -334,7 +348,7 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
             if (!response.ok) throw new Error("Failed to update lead");
             console.log(response)
         } catch (error) {
-          return;
+          console.error("Error updating lead:", error);
         }
 
         }
@@ -351,11 +365,12 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
         setTimeout(() => {
           dispatch(resetQuotesData());
           dispatch(setQuotesData({ currentPage: "checkout" }));
-          dispatch(resetCount());
           dispatch(resetTime());
+          dispatch(resetCount());
+          
         }, 200);
       } catch (error) {
-        alert("An unexpected error occurred while processing the lead: " + error);
+        console.error("An unexpected error occurred while processing the lead: " + error);
         isGeneratingPdf = false;
         return;
       }
@@ -400,7 +415,7 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
         // dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
       },200)
       } catch(error){
-        alert('An unexpected error occured while inserting Quote:' + error);
+        console.error('An unexpected error occured while inserting Quote:' + error);
         return;
       }
       
@@ -621,3 +636,5 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
 };
 
 export default AdDetails;
+
+
