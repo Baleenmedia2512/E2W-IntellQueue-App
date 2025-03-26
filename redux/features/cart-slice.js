@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   cart: [],
+  selectedRows: [],
 };
 
 const cartSlice = createSlice({
@@ -50,8 +51,11 @@ const cartSlice = createSlice({
     removeEditModeItems: (state) => {
       state.cart = state.cart.filter(item => !(item.isEditMode && item.editQuoteNumber));
     },
+    setSelectedRows: (state, action) => {
+      state.selectedRows = action.payload;
+    },
   },
 });
 
-export const { addItemsToCart, removeItem, removeEditItem, resetCartItem, toggleItemSelection, removeEditModeItems } = cartSlice.actions;
+export const { addItemsToCart, removeItem, removeEditItem, resetCartItem, toggleItemSelection, removeEditModeItems, setSelectedRows } = cartSlice.actions;
 export const cartReducer = cartSlice.reducer;
