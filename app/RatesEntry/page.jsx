@@ -2334,7 +2334,7 @@ const handleBlur = (e) => {
                           }}
                     placeholder="Select Vendor"
                     value={selectedValues.vendorName}
-                    onChange={(selectedOption) => {handleSelectChange(selectedOption, 'vendorName'); setEditMode(true)}}
+                    onChange={(selectedOption) => {handleSelectChange(selectedOption, 'vendorName');}}
                     options={vendors}
                     required
                     optionLabel="label"
