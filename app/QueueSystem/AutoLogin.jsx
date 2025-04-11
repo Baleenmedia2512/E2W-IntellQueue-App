@@ -1,67 +1,71 @@
 'use client';
-import './styles.css';
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { decryptCompanyName } from '@/lib/encryption';
 import { useDispatch } from 'react-redux';
-import { login, setCompanyName, setDBName, setAppRights } from '@/redux/features/auth-slice';
-import { resetRatesData } from '@/redux/features/rate-slice';
-import { resetQuotesData } from '@/redux/features/quote-slice';
-import { resetClientData } from '@/redux/features/client-slice';
-import { resetOrderData } from '@/redux/features/order-slice';
-import { resetDateRange } from '@/redux/features/report-slice';
+import {
+  login,
+  setDBName,
+  setCompanyName,
+  setAppRights,
+  resetClientData,
+  resetQuotesData,
+  resetOrderData,
+  resetRatesData,
+  resetDateRange
+} from '@/redux/actions';
 
-const QueueSystemAutoLogin = () => {
+export default function QueueSystemAutoLogin() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const dispatch = useDispatch();
 
   useEffect(() => {
     const autoLogin = async () => {
-      const userName = searchParams.get('username');
-      const password = searchParams.get('password');
-      const companyName = searchParams.get('companyName');
+      const ref = searchParams.get('ref');
+      if (!ref) {
+        setError('Missing login token.');
+        setLoading(false);
+        return;
+      }
 
-      if (!userName || !password || !companyName) {
-        setError('Missing login parameters in the URL.');
+      let companyName;
+      try {
+        companyName = decryptCompanyName(ref);
+      } catch (err) {
+        setError('Invalid or tampered token.');
         setLoading(false);
         return;
       }
 
       try {
-        const encodedPassw = encodeURIComponent(password);
-        const response = await fetch(
-          `https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`
+        const res = await fetch(
+          `https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=admin_user&JsonPassword=super_secure_pass`
         );
 
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
+        if (!res.ok) throw new Error('Login failed');
 
-        const data = await response.json();
+        const data = await res.json();
 
         if (data.status === 'Login Successfully') {
-          // Dispatch Redux actions
           dispatch(setDBName(companyName));
           dispatch(setCompanyName(companyName));
-          dispatch(login(userName));
           dispatch(setAppRights(data.appRights));
           dispatch(resetClientData());
           dispatch(resetRatesData());
           dispatch(resetQuotesData());
           dispatch(resetOrderData());
           dispatch(resetDateRange());
-          sessionStorage.removeItem('unitPrices');
           sessionStorage.clear();
 
-          // Navigate to the waiting screen
           router.push('/QueueSystem/WaitingScreen');
         } else {
-          setError('Invalid credentials. Please check the URL parameters.');
+          setError('Invalid credentials.');
         }
       } catch (err) {
-        setError('Error during login: ' + err.message);
+        setError('Error: ' + err.message);
       } finally {
         setLoading(false);
       }
@@ -70,28 +74,9 @@ const QueueSystemAutoLogin = () => {
     autoLogin();
   }, [searchParams, dispatch, router]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="loader border-t-4 border-blue-500 rounded-full w-16 h-16 mb-4 animate-spin"></div>
-          <p className="text-gray-700 text-lg">Logging in, please wait...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <p className="text-red-500 text-lg">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-export default QueueSystemAutoLogin;
+  return (
+    <div className="p-4 text-center">
+      {loading ? 'Logging you in securely...' : error || 'Redirecting...'}
+    </div>
+  );
+}

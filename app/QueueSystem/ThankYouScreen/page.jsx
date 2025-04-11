@@ -1,15 +1,22 @@
 "use client";
+import { encryptCompanyName } from '@/lib/encryption';
 
 export default function ThankYouScreen() {
+
+  const ref = encryptCompanyName('baleen'); // 👈 Your actual company name
+  console.log(`Your permanent login URL: https://yourdomain.com/QueueSystemAutoLogin?ref=${ref}`);
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-4 space-y-6">
-      <div className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center">
-        <div className="mb-2">
-          <img src="https://via.placeholder.com/120x30" alt="Grace Scans Logo" className="w-30 h-auto object-contain" />
+    <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6">
+      <div className="w-full max-w-sm md:max-w-md lg:bg-white lg:rounded-2xl lg:shadow lg:p-8 flex flex-col items-center text-center">
+        <div className="mb-4">
+          <img src="/GS/GSTitleMidLogo600x200.png" alt="Grace Scans Logo" className="w-40 h-auto object-contain" />
         </div>
-        <h2 className="text-blue-500 text-2xl font-bold">Thank you!</h2>
-        <p className="text-sm text-gray-600 mt-2">We’d love to hear your thoughts! Kindly share your feedback on our services.</p>
-        <button className="mt-6 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold shadow-md">
+        <div className="mb-4">
+          <img src="/images/Thankyou.png" alt="Thank you" className="w-64 h-auto object-contain" />
+        </div>
+        <p className="text-gray-600 text-base mb-6">We’d love to hear your thoughts! Kindly share your feedback on our services.</p>
+        <button className="px-8 py-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md">
           Share your review!
         </button>
       </div>
