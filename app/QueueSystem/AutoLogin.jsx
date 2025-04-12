@@ -1,82 +1,56 @@
 'use client';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { decryptCompanyName } from '@/lib/encryption';
-import { useDispatch } from 'react-redux';
-import {
-  login,
-  setDBName,
-  setCompanyName,
-  setAppRights,
-  resetClientData,
-  resetQuotesData,
-  resetOrderData,
-  resetRatesData,
-  resetDateRange
-} from '@/redux/actions';
 
-export default function QueueSystemAutoLogin() {
+import React, { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+
+const QueueSystemAutoLogin = () => {
+  const [error, setError] = useState('');
+  const [companyName, setCompanyName] = useState('');
+
   const searchParams = useSearchParams();
   const router = useRouter();
-  const dispatch = useDispatch();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const autoLogin = async () => {
-      const ref = searchParams.get('ref');
-      if (!ref) {
-        setError('Missing login token.');
-        setLoading(false);
-        return;
-      }
+    const ref = searchParams.get('ref');
 
-      let companyName;
+    if (!ref) {
+      setError('Missing encrypted token in URL');
+      return;
+    }
+
+    const getCompanyName = async () => {
       try {
-        companyName = decryptCompanyName(ref);
-      } catch (err) {
-        setError('Invalid or tampered token.');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(
-          `https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=admin_user&JsonPassword=super_secure_pass`
-        );
-
-        if (!res.ok) throw new Error('Login failed');
+        const res = await fetch('/api/decrypt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: ref }),
+        });
 
         const data = await res.json();
 
-        if (data.status === 'Login Successfully') {
-          dispatch(setDBName(companyName));
-          dispatch(setCompanyName(companyName));
-          dispatch(setAppRights(data.appRights));
-          dispatch(resetClientData());
-          dispatch(resetRatesData());
-          dispatch(resetQuotesData());
-          dispatch(resetOrderData());
-          dispatch(resetDateRange());
-          sessionStorage.clear();
+        if (data.companyName) {
+          setCompanyName(data.companyName);
+          console.log('Decrypted company:', data.companyName);
 
-          router.push('/QueueSystem/WaitingScreen');
+          // 🔒 Now proceed with login using this companyName...
+          // router.push('/QueueSystem/WaitingScreen'); // Or wherever
         } else {
-          setError('Invalid credentials.');
+          setError('Invalid encrypted token');
         }
       } catch (err) {
-        setError('Error: ' + err.message);
-      } finally {
-        setLoading(false);
+        setError('Something went wrong: ' + err.message);
       }
     };
 
-    autoLogin();
-  }, [searchParams, dispatch, router]);
+    getCompanyName();
+  }, [searchParams]);
 
   return (
-    <div className="p-4 text-center">
-      {loading ? 'Logging you in securely...' : error || 'Redirecting...'}
+    <div>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {companyName && <p style={{ color: 'green' }}>Welcome '{companyName}'</p>}
     </div>
   );
-}
+};
+
+export default QueueSystemAutoLogin;
