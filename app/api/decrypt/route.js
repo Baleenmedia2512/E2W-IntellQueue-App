@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 const algorithm = 'aes-256-cbc';
-const secret = process.env.ENCRYPTION_SECRET || 'your_default_secret_here';
+const secret = process.env.ENCRYPTION_SECRET;
 const iv = Buffer.alloc(16, 0);
 
 export async function POST(req) {

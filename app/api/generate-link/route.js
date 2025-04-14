@@ -1,9 +1,8 @@
-// app/api/generate-link/route.js
 import { NextResponse } from 'next/server';
-import { encryptCompanyName } from '@/lib/encryption'; // adjust path if needed
+import { encryptCompanyName } from '@/lib/encryption';
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const companyName = searchParams.get('companyName');
 
   if (!companyName) {
@@ -11,7 +10,7 @@ export async function GET(request) {
   }
 
   const encrypted = encryptCompanyName(companyName);
-  const fullUrl = `https://yourdomain.com/QueueSystemAutoLogin?ref=${encrypted}`;
+  const fullUrl = `${origin}/QueueSystem?ref=${encrypted}`;
 
   return NextResponse.json({ encryptedUrl: fullUrl });
 }

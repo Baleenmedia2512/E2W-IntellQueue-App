@@ -441,3 +441,26 @@ export const elementsToHideList = async(DBName) => {
 
     return OrderHistory;
 }
+
+export const AutoLogin = async (companyName) => {
+    let result = [];
+  
+    try {
+      const response = await api.post('AutoLogin.php', 
+        { companyName },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          }
+        }
+      );
+      result = response.data;
+    } catch (error) {
+      alert("Auto Login failed");
+      console.error(error);
+    }
+  
+    return result;
+};
+  
