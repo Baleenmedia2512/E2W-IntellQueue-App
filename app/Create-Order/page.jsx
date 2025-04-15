@@ -888,6 +888,7 @@ const fetchRates = async () => {
           const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php?${params.toString()}`);
           
           const data = await response.json();
+          
             if (data === "Values Inserted Successfully!") {
                 setToast(false);
                 // dispatch(setIsOrderExist(true));
@@ -912,7 +913,6 @@ const fetchRates = async () => {
                 router.push('/FinanceEntry');
               }, 2000);
                 
-              //setMessage(data.message);
             } else {
               alert(`The following error occurred while inserting data: ${data}`);
               setIsButtonDisabled(false);

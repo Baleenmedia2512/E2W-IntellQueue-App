@@ -13,8 +13,16 @@ import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { removeEditModeItems, resetCartItem } from '@/redux/features/cart-slice';
 import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
-
+import useClickTracker from './Dashboard/useClickTracker';
+import { quoteIncrementCount, resetCount } from '/redux/features/count-slice';
+import useTimerTracker from './Dashboard/useTimerTracker';
+import { setTimeElapsed, resetTime } from '/redux/features/time-slice';
 export const AdDetails = () => {
+  useClickTracker();
+  useTimerTracker();
+  const { stopTimerOnPdfGeneration } = useTimerTracker();
+   const clickCount = useAppSelector((state) => state.countSlice.quoteClickCount);
+   const timeTaken  = useAppSelector((state) => state.timeSlice.timeElapsed);
   const routers = useRouter();
   const dispatch = useDispatch();
   // const clientNameRef = useRef(null);
@@ -251,13 +259,39 @@ export const AdDetails = () => {
   }
 
   
+// Function to send tracking data to the API
+const insertTrackingData = async (quoteID, cartItemsCount) => {
+  try {
+      const url = `https://www.orders.baleenmedia.com/API/Media/InsertModuleTracking.php?JsonEntryUser=${encodeURIComponent(username)}&JsonPageName=Quote Page&JsonModuleName=Quote Sender&JsonClickCount=${clickCount}&JsonTimeTaken=${timeTaken}&JsonQuoteID=${quoteID}&JsonEnquiryID=null&JsonCartItems=${cartItemsCount}&JsonDBName=${encodeURIComponent(companyName)}`;
+
+      console.log("Tracking Data URL:", url); // Log URL to check for missing values
+
+      const response = await fetch(url, {
+          method: "GET",
+      });
+
+      const result = await response.json();
+      console.log("Tracking Data Response:", result);
+  } catch (error) {
+      console.error("Error inserting tracking data:", error);
+  }
+};
+
+
+  
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
+    // stopTimerOnPdfGeneration();
+    // dispatch(quoteIncrementCount()); 
+    // dispatch(setTimeElapsed()); 
     const quoteNumber = await fetchNextQuoteNumber(companyName);
 
     const selectedCartItems = cartItems.some(item => item.isSelected)
     ? cartItems.filter(item => item.isSelected) // Filter selected items
     : cartItems;
+
+    // Insert tracking data before PDF generation
+    await insertTrackingData(quoteNumber, selectedCartItems.length);
 
     if (isGeneratingPdf) {
       try{
@@ -331,6 +365,9 @@ export const AdDetails = () => {
         setTimeout(() => {
           dispatch(resetQuotesData());
           dispatch(setQuotesData({ currentPage: "checkout" }));
+          dispatch(resetTime());
+          dispatch(resetCount());
+          
         }, 200);
       } catch (error) {
         console.error("An unexpected error occurred while processing the lead: " + error);
@@ -599,3 +636,5 @@ export const AdDetails = () => {
 };
 
 export default AdDetails;
+
+

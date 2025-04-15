@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
 // import BottomBar from "./BottomBar";
+import { CartProvider } from "./context/CartContext";
 import BottomBarWrapper from "./BottomBarWrapper"; // Import the new client component
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
@@ -19,10 +20,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ReduxProvider>
-          {children}
-          <BottomBarWrapper /> {/* Use the client component for conditional rendering */}
+      <body className={`${poppins.variable} ${montserrat.variable} ${inter.className}`}>
+      <ReduxProvider> 
+          <CartProvider> 
+            {children}
+            <div>
+              <BottomBarWrapper />
+            </div>
+          </CartProvider>
         </ReduxProvider>
       </body>
     </html>
