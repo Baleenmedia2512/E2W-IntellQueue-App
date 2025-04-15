@@ -19,8 +19,8 @@ import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
 import { addItemsToCart, toggleItemSelection, removeEditModeItems } from '@/redux/features/cart-slice';
-import useClickTracker from './Dashboard/useClickTracker';
-import useTimerTracker from './Dashboard/useTimerTracker';
+// import useClickTracker from './Dashboard/useClickTracker';
+// import useTimerTracker from './Dashboard/useTimerTracker';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
 import { setSelectedRows } from '@/redux/features/cart-slice'; 
@@ -39,7 +39,7 @@ export const formattedMargin = (number) => {
 
 const CheckoutPage = () => {
   // useClickTracker('cart');
-  useTimerTracker("cart");
+  // useTimerTracker("cart");
   const dispatch = useDispatch()
   const { isCleared, setIsCleared } = useCart();
   console.log(isCleared)

@@ -13,14 +13,14 @@ import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { removeEditModeItems, resetCartItem } from '@/redux/features/cart-slice';
 import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
-import useClickTracker from './Dashboard/useClickTracker';
-import { quoteIncrementCount, resetCount } from '/redux/features/count-slice';
-import useTimerTracker from './Dashboard/useTimerTracker';
-import { setTimeElapsed, resetTime } from '/redux/features/time-slice';
+// import useClickTracker from './Dashboard/useClickTracker';
+// import { quoteIncrementCount, resetCount } from '/redux/features/count-slice';
+// import useTimerTracker from './Dashboard/useTimerTracker';
+// import { setTimeElapsed, resetTime } from '/redux/features/time-slice';
 export const AdDetails = () => {
-  useClickTracker();
-  useTimerTracker();
-  const { stopTimerOnPdfGeneration } = useTimerTracker();
+  // useClickTracker();
+  // useTimerTracker();
+  // const { stopTimerOnPdfGeneration } = useTimerTracker();
    const clickCount = useAppSelector((state) => state.countSlice.quoteClickCount);
    const timeTaken  = useAppSelector((state) => state.timeSlice.timeElapsed);
   const routers = useRouter();
@@ -365,8 +365,8 @@ const insertTrackingData = async (quoteID, cartItemsCount) => {
         setTimeout(() => {
           dispatch(resetQuotesData());
           dispatch(setQuotesData({ currentPage: "checkout" }));
-          dispatch(resetTime());
-          dispatch(resetCount());
+          // dispatch(resetTime());
+          // dispatch(resetCount());
           
         }, 200);
       } catch (error) {

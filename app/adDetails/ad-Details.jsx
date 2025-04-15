@@ -23,8 +23,8 @@ import SuccessToast from '../components/SuccessToast';
 import { FetchAllValidRates, FetchQtySlab, FetchQuoteRemarks, FetchRateSeachTerm, FetchSpecificRateData } from '../api/FetchAPI';
 import './page.css';
 import { calculateMarginAmount, calculateMarginPercentage } from '../utils/commonFunctions';
-import useClickTracker from './Dashboard/useClickTracker'; 
-import useTimerTracker from './Dashboard/useTimerTracker';
+// import useClickTracker from './Dashboard/useClickTracker'; 
+// import useTimerTracker from './Dashboard/useTimerTracker';
 
 export const formattedMargin = (number) => {
   
