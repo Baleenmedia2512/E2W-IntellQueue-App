@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import { Inter, Poppins, Montserrat } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
 // import BottomBar from "./BottomBar";
@@ -10,6 +10,18 @@ const ReduxProvider = dynamic(() => import("@/redux/provider"), {
 });
 
 const inter = Inter({ subsets: ["latin"] });
+
+const poppins = Poppins({
+  weight: ['400', '700'],  // Choose the weights you want
+  subsets: ['latin'],      // Choose the subsets you need
+  variable: '--font-poppins',  // Variable for custom CSS
+});
+
+const montserrat = Montserrat({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-montserrat',
+});
 
 export const metadata = {
   title: 'Easy2Work(T)',
