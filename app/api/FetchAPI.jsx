@@ -442,25 +442,24 @@ export const elementsToHideList = async(DBName) => {
     return OrderHistory;
 }
 
-export const AutoLogin = async (companyName) => {
-    let result = [];
-  
-    try {
-      const response = await api.post('AutoLogin.php', 
-        { companyName },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-          }
-        }
-      );
-      result = response.data;
-    } catch (error) {
-      alert("Auto Login failed");
-      console.error(error);
+export async function AutoLogin(companyName) {
+  try {
+    const response = await fetch('https://orders.baleenmedia.com/API/Media/AutoLogin.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ JsonCompanyName: companyName }), // Ensure the key matches the API's expected format
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('AutoLogin API error response:', errorData); // Debugging log
+      throw new Error(errorData.error || `API responded with status ${response.status}`);
     }
-  
-    return result;
-};
-  
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error in AutoLogin API:', error.message);
+    throw error;
+  }
+}

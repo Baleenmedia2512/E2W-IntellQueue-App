@@ -10,7 +10,7 @@ export async function GET(request) {
   }
 
   const encrypted = encryptCompanyName(companyName);
-  const fullUrl = `${origin}/QueueSystem?ref=${encrypted}`;
+  const fullUrl = `${origin}/QueueSystem?ref=${encodeURIComponent(encrypted)}`; // Encode the encrypted token
 
   return NextResponse.json({ encryptedUrl: fullUrl });
 }

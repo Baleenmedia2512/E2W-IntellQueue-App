@@ -10,10 +10,11 @@ import { resetQuotesData } from '@/redux/features/quote-slice';
 import { resetClientData } from '@/redux/features/client-slice';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { resetDateRange } from "@/redux/features/report-slice";
-
+import { CircularProgress, Box, Typography } from '@mui/material'; // Import Material-UI components
 
 const QueueSystemAutoLogin = () => {
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true); // Add loading state
   const companyName = useAppSelector(state => state.authSlice.companyName);
 
   const searchParams = useSearchParams();
@@ -25,25 +26,32 @@ const QueueSystemAutoLogin = () => {
 
     if (!ref) {
       setError('Missing encrypted token in URL');
+      console.error('Missing encrypted token in URL');
       return;
     }
 
     const getCompanyName = async () => {
       try {
+        setLoading(true); // Set loading to true at the start
+        const decodedRef = decodeURIComponent(ref); // Decode the encrypted token
+
         const res = await fetch('/api/decrypt', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: ref }),
+          body: JSON.stringify({ encryptedData: decodedRef }), // Pass the decoded token
         });
 
-        const companyResult = await res.json();
-        console.log('Decrypted company result:', companyResult);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || `API responded with status ${res.status}`);
+        }
 
-        if (companyResult.companyName) {          
-          dispatch(setCompanyName(companyResult.companyName))
+        const { companyName } = await res.json(); // Extract companyName directly
 
-          const loginResult = await AutoLogin(companyResult.companyName);
-          console.log('Login result:', loginResult);
+        if (companyName) {
+          dispatch(setCompanyName(companyName));
+
+          const loginResult = await AutoLogin(companyName); // Pass the companyName directly
 
           if (loginResult.status === 'Login Successfully') {
             dispatch(setDBName(companyName));
@@ -56,19 +64,19 @@ const QueueSystemAutoLogin = () => {
             dispatch(resetDateRange());
             sessionStorage.removeItem("unitPrices");
             sessionStorage.clear();
+            router.push('/QueueSystem/WaitingScreen');
+          } else {
+            throw new Error('Invalid credentials. Please check your User Name, Password and Company Name.');
+          }
         } else {
-            setError('Invalid credentials. Please check your User Name, Password and Company Name.');
-            dispatch(logout());
-        }
-
-          // 🔒 Now proceed with login using this companyName...
-          router.push('/QueueSystem/WaitingScreen');
-        } else {
-          setError('Invalid encrypted token');
-          dispatch(logout());
+          throw new Error('Invalid encrypted token');
         }
       } catch (err) {
+        console.error('Error during auto-login:', err.message);
         setError('Something went wrong: ' + err.message);
+        dispatch(logout());
+      } finally {
+        setLoading(false); // Set loading to false after processing
       }
     };
 
@@ -76,10 +84,29 @@ const QueueSystemAutoLogin = () => {
   }, [searchParams]);
 
   return (
-    <div>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {companyName && <p style={{ color: 'green' }}>Welcome '{companyName}'</p>}
-    </div>
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      height="100vh"
+      bgcolor="#f5f5f5"
+    >
+      {loading ? (
+        <Box textAlign="center">
+          <CircularProgress />
+          <Typography variant="h6" mt={2} color="textSecondary">
+            Did you know? Medical scans like CTs help diagnose conditions early. Please wait...
+          </Typography>
+        </Box>
+      ) : (
+        error && (
+          <Typography variant="body1" color="error" textAlign="center">
+            {error}
+          </Typography>
+        )
+      )}
+    </Box>
   );
 };
 

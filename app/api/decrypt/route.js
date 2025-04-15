@@ -1,23 +1,28 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { decryptCompanyName } from '@/lib/encryption';
 
-const algorithm = 'aes-256-cbc';
-const secret = process.env.ENCRYPTION_SECRET;
-const iv = Buffer.alloc(16, 0);
-
-export async function POST(req) {
+export async function POST(request) {
   try {
-    const body = await req.json();
-    const { token } = body;
+    const { encryptedData } = await request.json();
 
-    const key = crypto.scryptSync(secret, 'salt', 32);
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(token, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+    if (!encryptedData) {
+      return NextResponse.json({ error: 'Missing encrypted data' }, { status: 400 });
+    }
 
-    return NextResponse.json({ companyName: decrypted });
-  } catch (err) {
-    console.error('Decryption failed:', err.message);
-    return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
+    try {
+      const companyName = decryptCompanyName(encryptedData);
+
+      if (!companyName) {
+        return NextResponse.json({ error: 'Invalid encrypted data' }, { status: 400 });
+      }
+
+      return NextResponse.json({ companyName });
+    } catch (error) {
+      console.error('Decryption error:', error.message);
+      return NextResponse.json({ error: 'Failed to decrypt data' }, { status: 400 });
+    }
+  } catch (error) {
+    console.error('Request processing error:', error.message);
+    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
   }
 }

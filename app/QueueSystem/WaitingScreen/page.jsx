@@ -7,14 +7,12 @@ export default function WaitingScreen() {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
-    const password = useAppSelector(state => state.authSlice.password);
     const appRights = useAppSelector(state => state.authSlice.appRights);
 
     console.log("WaitingScreen", {
         dbName,
         companyName,
         username,
-        password,
         appRights
     });
 
