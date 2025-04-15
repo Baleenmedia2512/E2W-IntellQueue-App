@@ -3,9 +3,6 @@ import { encryptCompanyName } from '@/lib/encryption';
 
 export default function ThankYouScreen() {
 
-  const ref = encryptCompanyName('baleen'); // 👈 Your actual company name
-  console.log(`Your permanent login URL: https://yourdomain.com/QueueSystemAutoLogin?ref=${ref}`);
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6">
       <div className="w-full max-w-sm md:max-w-md lg:bg-white lg:rounded-2xl lg:shadow lg:p-8 flex flex-col items-center text-center">
