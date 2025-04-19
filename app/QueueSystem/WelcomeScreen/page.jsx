@@ -1,8 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/redux/store";
 
 export default function WelcomeScreen() {
+    const companyName = useAppSelector((state) => state.authSlice.companyName);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!companyName) {
+            router.push('/QueueSystem/InvalidAccess');
+        }
+    }, [companyName, router]);
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-gradient-to-b from-[#FFFFFF] to-[#005EFF] p-6 space-y-6">
             <div className="w-full max-w-sm md:max-w-md lg:bg-white lg:rounded-2xl lg:shadow lg:p-8 flex flex-col items-center text-center">
@@ -18,7 +30,10 @@ export default function WelcomeScreen() {
                 <div className="my-10">
                     <Image src="/images/ScanMachine3D.png" alt="Scan Machine" width={500} height={500} className="object-contain" />
                 </div>
-                <button className="bg-blue-600 text-white font-semibold text-xl py-4 px-20 rounded-full shadow hover:bg-blue-700">
+                <button
+                    className="bg-blue-600 text-white font-semibold text-xl py-4 px-20 rounded-full shadow hover:bg-blue-700"
+                    onClick={() => router.push('/QueueSystem/OTPVerification/EnterNumber')}
+                >
                     Join the Queue!
                 </button>
             </div>

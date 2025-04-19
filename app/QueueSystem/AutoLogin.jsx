@@ -64,7 +64,7 @@ const QueueSystemAutoLogin = () => {
             dispatch(resetDateRange());
             sessionStorage.removeItem("unitPrices");
             sessionStorage.clear();
-            router.push('/QueueSystem/WaitingScreen');
+            router.push('/QueueSystem/WelcomeScreen'); // Redirect to the welcome screen
           } else {
             throw new Error('Invalid credentials. Please check your User Name, Password and Company Name.');
           }

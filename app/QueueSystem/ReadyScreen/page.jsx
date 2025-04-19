@@ -1,6 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/redux/store";
+
 export default function ReadyScreen() {
+    const companyName = useAppSelector((state) => state.authSlice.companyName);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!companyName) {
+            router.push('/QueueSystem/InvalidAccess');
+        }
+    }, [companyName, router]);
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">
             <div className="w-full max-w-sm md:max-w-md lg:bg-white lg:rounded-2xl lg:shadow lg:p-8 flex flex-col items-center text-center">

@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAppSelector } from '@/redux/store';
 
 export default function WaitingScreen() {
@@ -8,13 +10,13 @@ export default function WaitingScreen() {
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
+    const router = useRouter();
 
-    console.log("WaitingScreen", {
-        dbName,
-        companyName,
-        username,
-        appRights
-    });
+    useEffect(() => {
+        if (!companyName) {
+            router.push('/QueueSystem/InvalidAccess');
+        }
+    }, [companyName, router]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">
@@ -40,6 +42,5 @@ export default function WaitingScreen() {
             <p className="text-sm text-blue-600 underline">Visit our site</p>
           </div>
         </div>
-        
     );
 }

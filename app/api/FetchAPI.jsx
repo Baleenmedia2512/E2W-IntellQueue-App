@@ -463,3 +463,34 @@ export async function AutoLogin(companyName) {
     throw error;
   }
 }
+
+export const sendOTP = async (DBName, phoneNumber) => {
+    try {
+        const response = await api.post("SendOTPForQueueApp.php", {
+            JsonDBName: DBName,
+            JsonClientContact: phoneNumber,
+        }, {
+            headers: { "Content-Type": "application/json" },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error sending OTP:", error);
+        throw error;
+    }
+};
+
+export const verifyOTP = async (DBName, phoneNumber, otpCode) => {
+    try {
+        const response = await api.post("VerifyOTPForQueueApp.php", {
+            JsonDBName: DBName,
+            JsonClientContact: phoneNumber,
+            JsonOTP: otpCode,
+        }, {
+            headers: { "Content-Type": "application/json" },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error verifying OTP:", error);
+        throw error;
+    }
+};

@@ -1,46 +1,57 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAppSelector } from "@/redux/store";
+import { sendOTP, verifyOTP } from "@/app/api/FetchAPI";
 
 export default function EnterOTP() {
+    const companyName = useAppSelector((state) => state.authSlice.companyName);
+    const phoneNumber = useAppSelector((state) => state.queueSlice.phoneNumber);
     const [otp, setOtp] = useState(["", "", "", ""]);
-    const [countdown, setCountdown] = useState(30); // 30 seconds countdown for resend
+    const [countdown, setCountdown] = useState(30);
     const [isResendDisabled, setIsResendDisabled] = useState(true);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isIncorrect, setIsIncorrect] = useState(false); // Track incorrect OTP
+    const router = useRouter();
 
     useEffect(() => {
-        // Use setTimeout to ensure focus happens after rendering
+        if (!companyName) {
+            router.push('/QueueSystem/InvalidAccess');
+        }
+    }, [companyName, router]);
+
+    useEffect(() => {
         setTimeout(() => {
             const firstInput = document.getElementById("otp-0");
             firstInput?.focus();
-        }, 100); // Delay focus to ensure input is rendered first
+        }, 100);
 
-        // Start the countdown when the component mounts
         if (isResendDisabled) {
             const interval = setInterval(() => {
                 setCountdown((prev) => {
                     if (prev === 1) {
                         clearInterval(interval);
-                        setIsResendDisabled(false); // Enable resend button after 30 seconds
-                        return 30; // Reset countdown
+                        setIsResendDisabled(false);
+                        return 30;
                     }
                     return prev - 1;
                 });
             }, 1000);
-            
-            // Clean up the interval on component unmount
+
             return () => clearInterval(interval);
         }
     }, [isResendDisabled]);
 
     const handleChange = (e, index) => {
         const value = e.target.value;
-        if (/[^0-9]/.test(value)) return; // Allow only numbers
+        if (/[^0-9]/.test(value)) return;
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
+        setIsIncorrect(false); // Reset incorrect state on input change
 
-        // Move to the next field
         if (value && index < otp.length - 1) {
             const nextInput = document.getElementById(`otp-${index + 1}`);
             nextInput?.focus();
@@ -54,14 +65,46 @@ export default function EnterOTP() {
         }
     };
 
-    const handleResendOTP = () => {
-        if (isResendDisabled) return; // Prevent multiple clicks before cooldown
+    const handleResendOTP = async () => {
+        if (isResendDisabled) return;
 
-        // Simulate OTP resend (you should replace this with an actual API call)
-        alert("OTP has been resent!"); // Placeholder for sending OTP
+        try {
+            const response = await sendOTP(companyName, phoneNumber);
+            if (response.success) {
+                console.log(response);
+                alert("OTP resent successfully!");
+                setIsResendDisabled(true);
+                setCountdown(30); // Reset countdown
+            } else {
+                alert(response.message || "Failed to resend OTP.");
+            }
+        } catch (error) {
+            alert("An error occurred while resending OTP.");
+        }
+    };
 
-        // Disable the resend button and start the countdown
-        setIsResendDisabled(true);
+    const handleVerifyOTP = async () => {
+        const otpCode = otp.join("");
+        if (otpCode.length !== 4) {
+            alert("Please enter a valid 4-digit OTP.");
+            return;
+        }
+
+        setIsVerifying(true);
+        try {
+            const response = await verifyOTP(companyName, phoneNumber, otpCode);
+            if (response.success) {
+                alert("OTP verified successfully!");
+                router.push("/QueueSystem/OTPVerification/Verified");
+            } else {
+                setIsIncorrect(true); // Mark OTP as incorrect
+                alert(response.message || "Failed to verify OTP.");
+            }
+        } catch (error) {
+            alert("An error occurred while verifying OTP.");
+        } finally {
+            setIsVerifying(false);
+        }
     };
 
     return (
@@ -82,14 +125,15 @@ export default function EnterOTP() {
                             value={digit}
                             onChange={(e) => handleChange(e, index)}
                             onKeyDown={(e) => handleDelete(e, index)}
-                            inputMode="numeric"  // Ensures numeric keyboard on mobile
-                            pattern="[0-9]{1}"  // Validates the input to allow only numbers
+                            inputMode="numeric"
+                            pattern="[0-9]{1}"
                             autoComplete="one-time-code"
-                            autoFocus={index === 0} // Auto-focus on the first input
-                            className="w-12 h-12 text-center border border-gray-300 rounded-lg text-lg text-black outline-none focus:ring-2 focus:ring-blue-400 transition-transform duration-300 ease-in-out"
-                            style={{
-                                animation: digit ? "none" : "bounce 0.5s ease-in-out", // Apply bounce effect when input is empty
-                            }}
+                            autoFocus={index === 0}
+                            className={`w-12 h-12 text-center border rounded-lg text-lg text-black outline-none focus:ring-2 transition-transform duration-300 ease-in-out ${
+                                isIncorrect
+                                    ? "border-red-500 animate-shake"
+                                    : "border-gray-300 focus:ring-blue-400"
+                            }`}
                         />
                     ))}
                 </div>
@@ -103,19 +147,34 @@ export default function EnterOTP() {
                         {isResendDisabled ? `Resend in ${countdown}s` : "Resend"}
                     </span>
                 </p>
-                <button className="bg-blue-600 text-white font-semibold text-lg py-3 px-6 rounded-full shadow hover:bg-blue-700">
-                    Verify
+                <button
+                    onClick={handleVerifyOTP}
+                    disabled={isVerifying}
+                    className={`bg-blue-600 text-white font-semibold text-lg py-3 px-6 rounded-full shadow ${
+                        isVerifying ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+                    }`}
+                >
+                    {isVerifying ? "Verifying..." : "Verify"}
                 </button>
             </div>
 
             <style jsx>{`
-                @keyframes bounce {
+                @keyframes shake {
                     0%, 100% {
-                        transform: translateY(0);
+                        transform: translateX(0);
+                    }
+                    25% {
+                        transform: translateX(-5px);
                     }
                     50% {
-                        transform: translateY(-10px);
+                        transform: translateX(5px);
                     }
+                    75% {
+                        transform: translateX(-5px);
+                    }
+                }
+                .animate-shake {
+                    animation: shake 0.3s ease-in-out;
                 }
             `}</style>
         </div>
