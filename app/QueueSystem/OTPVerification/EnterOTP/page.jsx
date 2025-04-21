@@ -108,11 +108,13 @@ export default function EnterOTP() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">
-            <div className="w-full max-w-sm md:max-w-md flex flex-col items-center text-center">
-                <Image src="/images/LockIcon.png" alt="Lock Icon" width={100} height={100} className="mb-6" />
-                <h1 className="text-black font-bold text-2xl mb-4">OTP Verification</h1>
-                <p className="text-gray-600 text-lg mb-6">
+        <div className="flex flex-col items-center justify-between min-h-screen w-screen bg-white px-6 py-12">
+            <div className="w-full flex justify-center">
+                <Image src="/images/LockWithChat.png" alt="Lock Icon" width={200} height={200} className="mt-14" />
+            </div>
+            <div className="w-full max-w-sm md:max-w-md flex flex-col items-center text-center pb-24">
+                <h1 className="text-black font-bold text-2xl pb-6">OTP Verification</h1>
+                <p className="text-gray-600 text-base pb-12">
                     Enter the OTP sent to your WhatsApp.
                 </p>
                 <div className="flex justify-between w-full mb-6">
@@ -147,10 +149,12 @@ export default function EnterOTP() {
                         {isResendDisabled ? `Resend in ${countdown}s` : "Resend"}
                     </span>
                 </p>
+            </div>
+            <div className="w-full flex justify-center">
                 <button
                     onClick={handleVerifyOTP}
                     disabled={isVerifying}
-                    className={`bg-blue-600 text-white font-semibold text-lg py-3 px-6 rounded-full shadow ${
+                    className={`w-full max-w-sm bg-blue-600 text-white font-semibold text-lg py-3 rounded-full shadow ${
                         isVerifying ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
                     }`}
                 >

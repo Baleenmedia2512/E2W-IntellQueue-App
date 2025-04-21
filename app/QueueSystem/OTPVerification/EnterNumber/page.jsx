@@ -63,41 +63,50 @@ export default function EnterNumber() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">
-            <div className="w-full max-w-sm md:max-w-md flex flex-col items-center text-center">
-                <Image src="/images/LockIcon.png" alt="Lock Icon" width={100} height={100} className="mb-6" />
-                <h1 className="text-black font-bold text-2xl mb-4">OTP Verification</h1>
-                <p className="text-gray-600 text-lg mb-6">
+        <div className="flex flex-col items-center justify-between min-h-screen w-screen bg-white px-6 py-12">
+            <div className="w-full flex justify-center">
+                <Image src="/images/Lock.png" alt="Lock Icon" width={200} height={200} className="mt-14" />
+            </div>
+            <div className="w-full max-w-sm md:max-w-md flex flex-col items-center text-center pb-24">
+                <h1 className="text-black font-bold text-2xl pb-6">OTP Verification</h1>
+                <p className="text-gray-600 text-base pb-12">
                     We will send a one-time password to your WhatsApp number.
                 </p>
-                <div className="w-full flex items-center border border-gray-300 rounded-lg px-4 py-3 mb-6">
-                    <span className="text-gray-500 mr-2">+91</span>
-                    <input
-                        id="phone-input"
-                        type="text"
-                        placeholder="WhatsApp Number"
-                        value={phoneNumber}
-                        onChange={handleInputChange}
-                        className="flex-1 outline-none text-gray-700 text-lg"
-                    />
-                    <div
-                        className={`ml-2 w-8 h-8 flex items-center justify-center rounded-full transform transition-all duration-300 ${
-                            isValid
-                                ? "bg-green-500 scale-100 opacity-100"
-                                : phoneNumber.length > 0
-                                ? "bg-red-500 scale-100 opacity-100"
-                                : "scale-0 opacity-0"
-                        }`}
-                    >
-                        <span className="text-white text-lg font-bold">
-                            {isValid ? "✔" : "✖"}
-                        </span>
+                <div className="w-full flex flex-col items-start">
+                    <label htmlFor="phone-input" className="text-gray-600 text-sm mb-2">
+                        WhatsApp Number
+                    </label>
+                    <div className="w-full flex items-center border border-gray-300 rounded-2xl px-4 py-3">
+                        <span className="text-gray-500 mr-4">+91</span>
+                        <input
+                            id="phone-input"
+                            type="text"
+                            placeholder="Enter your number"
+                            value={phoneNumber}
+                            onChange={handleInputChange}
+                            className="flex-1 outline-none text-gray-700 text-base"
+                        />
+                        <div
+                            className={`ml-2 w-8 h-8 flex items-center justify-center rounded-full transform transition-all duration-300 ${
+                                isValid
+                                    ? "bg-green-500 scale-100 opacity-100"
+                                    : phoneNumber.length > 0
+                                    ? "bg-red-500 scale-100 opacity-100"
+                                    : "scale-0 opacity-0"
+                            }`}
+                        >
+                            <span className="text-white text-lg font-bold">
+                                {isValid ? "✔" : "✖"}
+                            </span>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div className="w-full flex justify-center">
                 <button
                     onClick={handleSendOTP}
                     disabled={isSending || !isValid}
-                    className={`bg-blue-600 text-white font-semibold text-lg py-3 px-6 rounded-full shadow ${
+                    className={`w-full max-w-sm bg-blue-600 text-white font-semibold text-lg py-3 rounded-full shadow ${
                         isSending || !isValid ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
                     }`}
                 >
