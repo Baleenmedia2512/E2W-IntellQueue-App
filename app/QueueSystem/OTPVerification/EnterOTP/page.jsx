@@ -56,23 +56,74 @@ export default function EnterOTP() {
         }
     }, [isResendDisabled]);
 
+    // Web OTP API integration for Android Chrome
+    useEffect(() => {
+        if ('OTPCredential' in window) {
+            const ac = new AbortController();
+    
+            navigator.credentials
+                .get({
+                    otp: { transport: ['sms'] },
+                    signal: ac.signal,
+                })
+                .then((otpCredential) => {
+                    if (otpCredential?.code) {
+                        const code = otpCredential.code;
+                        if (/^\d{4}$/.test(code)) {
+                            const splitOtp = code.split('');
+                            setOtp(splitOtp);
+                        }
+                    }
+                })
+                .catch((err) => {
+                    if (err.name !== "AbortError") {
+                        console.error("OTP auto-read error:", err);
+                    }
+                });
+    
+            return () => {
+                // Abort Web OTP API if the component unmounts
+                ac.abort();
+            };
+        }
+    }, []);
+        
+
     const handleChange = (e, index) => {
         const value = e.target.value;
         if (/[^0-9]/.test(value)) return;
+    
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
-        setIsIncorrect(false); // Reset incorrect state on input change
-
+        setIsIncorrect(false);
+    
         if (value && index < otp.length - 1) {
             const nextInput = document.getElementById(`otp-${index + 1}`);
             nextInput?.focus();
         }
     };
 
+    const handlePaste = (e) => {
+        const paste = e.clipboardData.getData("text");
+        if (/^\d{4}$/.test(paste)) {
+            const pasteArray = paste.split("");
+            setOtp(pasteArray);
+    
+            // Focus the last field to give a sense of completion
+            setTimeout(() => {
+                const lastInput = document.getElementById(`otp-3`);
+                lastInput?.focus();
+            }, 0);
+        }
+    };
+    
+
     const handleDelete = (e, index) => {
         if (e.key === "Backspace" && otp[index] === "") {
             const prevInput = document.getElementById(`otp-${index - 1}`);
+            prevInput?.classList.add("animate-bounce-up"); // Add bounce animation
+            setTimeout(() => prevInput?.classList.remove("animate-bounce-up"), 300); // Remove class after animation
             prevInput?.focus();
         }
     };
@@ -139,9 +190,11 @@ export default function EnterOTP() {
                                 value={digit}
                                 onChange={(e) => handleChange(e, index)}
                                 onKeyDown={(e) => handleDelete(e, index)}
+                                onPaste={handlePaste}
                                 inputMode="numeric"
                                 pattern="[0-9]{1}"
-                                autoComplete="one-time-code" // Enable OTP auto-fill
+                                name={index === 0 ? "otp" : undefined}
+                                autoComplete={index === 0 ? "one-time-code" : "off"}
                                 autoFocus={index === 0}
                                 className={`w-12 h-12 text-center border rounded-lg text-lg text-black outline-none focus:ring-2 transition-transform duration-300 ease-in-out ${
                                     isIncorrect
@@ -208,6 +261,26 @@ export default function EnterOTP() {
                     .animate-shake {
                         animation: shake 0.3s ease-in-out;
                         -webkit-animation: shake 0.3s ease-in-out; /* Add WebKit prefix */
+                    }
+
+                    .animate-backspace {
+                        animation: backspace 0.3s ease-in-out;
+                    }
+
+                    @keyframes bounce-up {
+                        0% {
+                            transform: translateY(0);
+                        }
+                        50% {
+                            transform: translateY(-10px);
+                        }
+                        100% {
+                            transform: translateY(0);
+                        }
+                    }
+
+                    .animate-bounce-up {
+                        animation: bounce-up 0.3s ease-in-out;
                     }
                 `}</style>
             </div>
