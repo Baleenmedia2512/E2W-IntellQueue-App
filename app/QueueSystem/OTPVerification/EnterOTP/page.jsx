@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAppSelector } from "@/redux/store";
@@ -19,6 +19,7 @@ export default function EnterOTP() {
     const [toastMessage, setToastMessage] = useState(null);
     const [toastType, setToastType] = useState(null);
     const router = useRouter();
+    const inputRefs = useRef([]);
 
     const showToast = (message, type) => {
         setToastMessage(message);
@@ -68,10 +69,13 @@ export default function EnterOTP() {
                 })
                 .then((otpCredential) => {
                     if (otpCredential?.code) {
-                        const code = otpCredential.code;
-                        if (/^\d{4}$/.test(code)) {
+                        const otpCode = otpCredential.code;
+                        // If OTP message contains "is your [company] login code"
+                        const otpMatch = otpCode.match(/\d{4}/); // Extract the 4-digit OTP
+                        if (otpMatch) {
+                            const code = otpMatch[0];
                             const splitOtp = code.split('');
-                            setOtp(splitOtp);
+                            setOtp(splitOtp); // Set OTP digits in input boxes
                         }
                     }
                 })
@@ -87,23 +91,38 @@ export default function EnterOTP() {
             };
         }
     }, []);
+    
         
 
     const handleChange = (e, index) => {
         const value = e.target.value;
-        if (/[^0-9]/.test(value)) return;
-
+    
+        // If user pastes or types multiple digits (e.g., 9829)
+        if (value.length > 1) {
+            const newOtp = [...otp];
+            for (let i = 0; i < value.length && i < otp.length; i++) {
+                newOtp[i] = value[i];
+            }
+            setOtp(newOtp);
+    
+            // Move focus to last filled input
+            const nextIndex = Math.min(value.length, otp.length - 1);
+            inputRefs.current[nextIndex]?.focus(); // Ensure nextIndex exists
+            return;
+        }
+    
+        // Normal single digit entry
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
-        setIsIncorrect(false);
-
-        if (value && index < otp.length - 1) {
-            const nextInput = document.getElementById(`otp-${index + 1}`);
-            nextInput?.focus();
+    
+        // Focus next input if exists
+        if (value && index < otp.length - 1 && inputRefs.current[index + 1]) {
+            inputRefs.current[index + 1].focus(); // Focus next input only if it exists
         }
     };
-
+  
+      
     const handlePaste = (e) => {
         e.preventDefault();
         const pasted = e.clipboardData.getData("text").trim();
@@ -184,10 +203,11 @@ export default function EnterOTP() {
                                 id={`otp-${index}`}
                                 type="text"
                                 maxLength="1"
-                                value={digit}
-                                onChange={(e) => handleChange(e, index)}
+                                value={digit}  // Correct this value reference
+                                onChange={(e) => handleChange(e, index)} // Keep this onChange
                                 onKeyDown={(e) => handleDelete(e, index)}
                                 onPaste={handlePaste}
+                                ref={(el) => (inputRefs.current[index] = el)} // Correct ref index
                                 inputMode="numeric"
                                 pattern="[0-9]{1}"
                                 name={index === 0 ? "otp" : undefined}
@@ -201,6 +221,7 @@ export default function EnterOTP() {
                             />
                         ))}
                     </div>
+
                     <p className="text-gray-500 text-sm mb-6">
                         Didn’t receive a code?{" "}
                         <span
