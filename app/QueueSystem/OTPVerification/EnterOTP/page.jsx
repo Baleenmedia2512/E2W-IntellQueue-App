@@ -92,12 +92,12 @@ export default function EnterOTP() {
     const handleChange = (e, index) => {
         const value = e.target.value;
         if (/[^0-9]/.test(value)) return;
-    
+
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
         setIsIncorrect(false);
-    
+
         if (value && index < otp.length - 1) {
             const nextInput = document.getElementById(`otp-${index + 1}`);
             nextInput?.focus();
@@ -105,16 +105,13 @@ export default function EnterOTP() {
     };
 
     const handlePaste = (e) => {
-        const paste = e.clipboardData.getData("text");
-        if (/^\d{4}$/.test(paste)) {
-            const pasteArray = paste.split("");
-            setOtp(pasteArray);
-    
-            // Focus the last field to give a sense of completion
-            setTimeout(() => {
-                const lastInput = document.getElementById(`otp-3`);
-                lastInput?.focus();
-            }, 0);
+        e.preventDefault();
+        const pasted = e.clipboardData.getData("text").trim();
+        if (/^\d{4}$/.test(pasted)) {
+            setOtp(pasted.split(""));
+            setIsIncorrect(false);
+            const lastInput = document.getElementById("otp-3");
+            lastInput?.focus();
         }
     };
     
