@@ -472,6 +472,7 @@ export const sendOTP = async (DBName, phoneNumber) => {
         }, {
             headers: { "Content-Type": "application/json" },
         });
+        console.log("OTP sent successfully:", response.data); // Debugging log
         return response.data;
     } catch (error) {
         console.error("Error sending OTP:", error);
@@ -491,6 +492,21 @@ export const verifyOTP = async (DBName, phoneNumber, otpCode) => {
         return response.data;
     } catch (error) {
         console.error("Error verifying OTP:", error);
+        throw error;
+    }
+};
+
+export const fetchQueueData = async (DBName, phoneNumber) => {
+    try {
+        const response = await api.get("FetchQueueData.php", {
+            headers: { "Content-Type": "application/json" },
+            params: { JsonDBName: DBName, JsonClientContact: phoneNumber }
+        });
+
+        const { position, totalOrders, estimatedTime, remainingTime } = response.data;
+        return { position, total: totalOrders, estimatedTime, remainingTime };
+    } catch (error) {
+        console.error("Error fetching queue data:", error);
         throw error;
     }
 };
