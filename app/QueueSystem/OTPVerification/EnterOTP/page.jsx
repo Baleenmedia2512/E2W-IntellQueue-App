@@ -141,7 +141,7 @@ export default function EnterOTP() {
                                 onKeyDown={(e) => handleDelete(e, index)}
                                 inputMode="numeric"
                                 pattern="[0-9]{1}"
-                                autoComplete="one-time-code"
+                                autoComplete="one-time-code" // Enable OTP auto-fill
                                 autoFocus={index === 0}
                                 className={`w-12 h-12 text-center border rounded-lg text-lg text-black outline-none focus:ring-2 transition-transform duration-300 ease-in-out ${
                                     isIncorrect
@@ -189,8 +189,25 @@ export default function EnterOTP() {
                             transform: translateX(-5px);
                         }
                     }
+
+                    @-webkit-keyframes shake { /* Add WebKit prefix */
+                        0%, 100% {
+                            -webkit-transform: translateX(0);
+                        }
+                        25% {
+                            -webkit-transform: translateX(-5px);
+                        }
+                        50% {
+                            -webkit-transform: translateX(5px);
+                        }
+                        75% {
+                            -webkit-transform: translateX(-5px);
+                        }
+                    }
+
                     .animate-shake {
                         animation: shake 0.3s ease-in-out;
+                        -webkit-animation: shake 0.3s ease-in-out; /* Add WebKit prefix */
                     }
                 `}</style>
             </div>

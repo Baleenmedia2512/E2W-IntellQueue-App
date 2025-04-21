@@ -128,9 +128,11 @@ export default function EnterNumber() {
                 <style jsx>{`
                     .scale-0 {
                         transform: scale(0);
+                        -webkit-transform: scale(0); /* Add WebKit prefix */
                     }
                     .scale-100 {
                         transform: scale(1);
+                        -webkit-transform: scale(1); /* Add WebKit prefix */
                     }
                     .opacity-0 {
                         opacity: 0;
