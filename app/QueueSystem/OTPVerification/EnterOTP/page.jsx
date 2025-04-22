@@ -150,7 +150,7 @@ export default function EnterOTP() {
                 </div>
                 <div className="w-full max-w-sm md:max-w-md flex flex-col items-center text-center pb-24">
                     <h1 className="text-black font-bold text-2xl pb-6">OTP Verification</h1>
-                    <p className="text-gray-600 text-base pb-12">Enter the OTP sent to your WhatsApp.</p>
+                    <p className="text-gray-600 text-base pb-12">Enter the OTP sent to your Phone Number.</p>
 
                     {/* Hidden input for Web OTP autofill */}
                     <div className="relative w-full max-w-xs mx-auto mb-6">

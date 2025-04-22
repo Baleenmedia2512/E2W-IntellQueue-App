@@ -81,11 +81,11 @@ export default function EnterNumber() {
                 <div className="w-full max-w-sm md:max-w-md flex flex-col items-center text-center pb-24">
                     <h1 className="text-black font-bold text-2xl pb-6">OTP Verification</h1>
                     <p className="text-gray-600 text-base pb-12">
-                        We will send a one-time password to your WhatsApp number.
+                        We will send a one-time password to your Phone Number.
                     </p>
                     <div className="w-full flex flex-col items-start">
                         <label htmlFor="phone-input" className="text-gray-600 text-sm mb-2">
-                            WhatsApp Number
+                        Phone Number
                         </label>
                         <div className="w-full flex items-center border border-gray-300 rounded-2xl px-4 py-3">
                             <span className="text-gray-500 mr-4">+91</span>
