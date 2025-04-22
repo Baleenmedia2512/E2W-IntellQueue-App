@@ -30,7 +30,9 @@ export default function ReadyScreen() {
                   <p className="text-sm text-right text-gray-400 mt-2">Your turn</p>
                 </div>
                 <p className="text-sm text-gray-500 mt-6">Want to learn more about our services?</p>
-                <p className="text-sm text-blue-600 underline">Visit our site</p>
+                <p className="text-sm text-blue-600 underline">
+                    <a href="https://gracescans.com/" target="_blank" rel="noopener noreferrer">Visit our site</a>
+                </p>
             </div>
         </div>
     );
