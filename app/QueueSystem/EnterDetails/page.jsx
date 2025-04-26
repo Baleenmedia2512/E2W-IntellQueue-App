@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setPhoneNumber } from "@/redux/features/queue-slice";
@@ -17,6 +17,7 @@ export default function EnterDetails() {
     const [error, setError] = useState(null);
     const router = useRouter();
     const dispatch = useDispatch();
+    const inputRef = useRef(null); // Reference for the input field
 
     useEffect(() => {
         if (!companyName) {
@@ -32,6 +33,10 @@ export default function EnterDetails() {
             setError(null); // Clear error when user starts typing
             console.log("Phone number updated:", value);
         }
+    };
+
+    const handleFocus = () => {
+        inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     };
 
     const handleSubmit = async () => {
@@ -108,7 +113,7 @@ export default function EnterDetails() {
     // };
 
     return (
-        <div className="flex flex-col items-center min-h-screen w-screen bg-white px-4 sm:px-6 md:px-8 py-8">
+        <div className="flex flex-col items-center min-h-screen w-screen bg-white px-4 sm:px-6 md:px-8 py-8 overflow-y-auto">
             {/* Logo at the top center */}
             <div className="absolute">
                 <img
@@ -140,6 +145,8 @@ export default function EnterDetails() {
                                 placeholder={language === "en" ? "Enter your number" : "உங்கள் எண்ணை உள்ளிடவும்"}
                                 value={phoneNumber}
                                 onChange={handlePhoneChange}
+                                onFocus={handleFocus} // Scroll input into view when focused
+                                ref={inputRef} // Attach reference to input
                                 className="flex-1 outline-none text-gray-700 text-sm sm:text-base"
                             />
                             <div
