@@ -3,17 +3,22 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
-import { encryptCompanyName } from '@/lib/encryption';
 
 export default function ThankYouScreen() {
     const companyName = useAppSelector((state) => state.authSlice.companyName);
+    const language = useAppSelector((state) => state.queueSlice.language);
     const router = useRouter();
 
     useEffect(() => {
         if (!companyName) {
+            console.warn("Company name is missing, redirecting...");
             router.push('/QueueSystem/InvalidAccess');
         }
     }, [companyName, router]);
+
+    if (!companyName) {
+        return null; // Prevent rendering if companyName is missing
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6">
@@ -24,9 +29,13 @@ export default function ThankYouScreen() {
                 <div className="mb-4">
                     <img src="/images/Thankyou.png" alt="Thank you" className="w-64 h-auto object-contain" />
                 </div>
-                <p className="text-gray-600 text-base mb-6">We’d love to hear your thoughts! Kindly share your feedback on our services.</p>
+                <p className="text-gray-600 text-base mb-6">
+                    {language === "en"
+                        ? "We’d love to hear your thoughts! Kindly share your feedback on our services."
+                        : "உங்கள் கருத்துகளை பகிர விரும்புகிறோம்! எங்கள் சேவைகள் குறித்த உங்கள் கருத்துகளை பகிரவும்."}
+                </p>
                 <button className="px-8 py-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md">
-                    Share your review!
+                    {language === "en" ? "Share your review!" : "உங்கள் மதிப்பீட்டை பகிரவும்!"}
                 </button>
             </div>
         </div>

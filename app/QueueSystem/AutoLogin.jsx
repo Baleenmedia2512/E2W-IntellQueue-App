@@ -11,6 +11,7 @@ import { resetClientData } from '@/redux/features/client-slice';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { resetDateRange } from "@/redux/features/report-slice";
 import { CircularProgress, Box, Typography } from '@mui/material'; // Import Material-UI components
+import { resetPhoneNumber, resetLanguage } from "@/redux/features/queue-slice";
 
 const QueueSystemAutoLogin = () => {
   const [error, setError] = useState('');
@@ -62,9 +63,11 @@ const QueueSystemAutoLogin = () => {
             dispatch(resetQuotesData());
             dispatch(resetOrderData());
             dispatch(resetDateRange());
+            dispatch(resetPhoneNumber());
+            dispatch(resetLanguage());
             sessionStorage.removeItem("unitPrices");
             sessionStorage.clear();
-            router.push('/QueueSystem/WelcomeScreen'); // Redirect to the welcome screen
+            router.push('/QueueSystem/LanguageSelection'); // Redirect to the welcome screen
           } else {
             throw new Error('Invalid credentials. Please check your User Name, Password and Company Name.');
           }

@@ -8,10 +8,12 @@ import { fetchQueueData } from "@/app/api/FetchAPI";
 export default function WaitingScreen() {
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const phoneNumber = useAppSelector(state => state.queueSlice.phoneNumber);
+    const language = useAppSelector(state => state.queueSlice.language);
     const router = useRouter();
     const [queuePosition, setQueuePosition] = useState(null);
     const [waitingTime, setWaitingTime] = useState(null);
     const [totalOrders, setTotalOrders] = useState(0);
+    console.log(queuePosition)
 
     useEffect(() => {
         if (!companyName || !phoneNumber) {
@@ -21,7 +23,7 @@ export default function WaitingScreen() {
 
         const fetchQueue = async () => {
             try {
-                const { position, total, remainingTime } = await fetchQueueData(companyName, phoneNumber);
+                const { position, total, estimatedTime, remainingTime  } = await fetchQueueData(companyName, phoneNumber);
                 setQueuePosition(position);
                 setTotalOrders(total);
                 setWaitingTime(remainingTime);
@@ -44,27 +46,45 @@ export default function WaitingScreen() {
                     <p className="text-blue-600 font-semibold text-4xl">
                         {waitingTime === null || waitingTime === undefined ? "--" : waitingTime}
                     </p>
-                    <p className="text-blue-500 text-xl">Mins</p>
+                    <p className="text-blue-500 text-xl">
+                        {language === "en" ? "Mins" : "நிமிடங்கள்"}
+                    </p>
                 </div>
-                <p className="text-gray-700 font-medium text-2xl mb-6">Approx. Waiting Time</p>
+                <p className="text-gray-700 font-medium text-2xl mb-6">
+                    {language === "en" ? "Approx. Waiting Time" : "தற்காலிக காத்திருப்பு நேரம்"}
+                </p>
                 <div className="my-8">
                     <img src="/images/WaitingImage.png" alt="Waiting" className="w-64 h-64 object-contain" />
                 </div>
-                <p className="text-black font-semibold text-2xl mb-4">You’re almost there!</p>
-                <p className="text-gray-500 text-lg mb-6">Relax, we’ll notify you when it’s your turn.</p>
+                <p className="text-black font-semibold text-2xl mb-4">
+                    {language === "en" ? "You’re almost there!" : "நீங்கள் அருகில் இருக்கிறீர்கள்!"}
+                </p>
+                <p className="text-gray-500 text-lg mb-6">
+                    {language === "en" ? "Relax, we’ll notify you when it’s your turn." : "தயவுசெய்து அமைதியாக இருங்கள், உங்கள் முறை வந்தவுடன் நாங்கள் உங்களை அறிவிப்போம்."}
+                </p>
                 <div className="w-full">
-                    <p className="text-lg text-gray-500 mb-2">{queuePosition !== null ? `${queuePosition} more ahead of you` : "Loading..."}</p>
+                    <p className="text-lg text-gray-500 mb-2">
+                        {queuePosition !== null
+                            ? `${queuePosition} ${language === "en" ? "more ahead of you" : "முன் உள்ளவர்கள்"}`
+                            : language === "en" ? "Loading..." : "ஏற்றுகிறது..."}
+                    </p>
                     <div className="w-full h-5 bg-gray-300 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-green-500 transition-all duration-500 ease-in-out"
                             style={{ width: `${queuePosition !== null ? ((totalOrders - queuePosition) / totalOrders) * 100 : 0}%` }}
                         ></div>
                     </div>
-                    <p className="text-sm text-right text-gray-400 mt-2">Your turn</p>
+                    <p className="text-sm text-right text-gray-400 mt-2">
+                        {language === "en" ? "Your turn" : "உங்கள் முறை"}
+                    </p>
                 </div>
-                <p className="text-sm text-gray-500 mt-6">Want to learn more about our services?</p>
+                <p className="text-sm text-gray-500 mt-6">
+                    {language === "en" ? "Want to learn more about our services?" : "எங்கள் சேவைகள் பற்றி மேலும் அறிய விரும்புகிறீர்களா?"}
+                </p>
                 <p className="text-sm text-blue-600 underline">
-                    <a href="https://gracescans.com/" target="_blank" rel="noopener noreferrer">Visit our site</a>
+                    <a href="https://gracescans.com/" target="_blank" rel="noopener noreferrer">
+                        {language === "en" ? "Visit our site" : "எங்கள் தளத்தை பார்வையிடவும்"}
+                    </a>
                 </p>
             </div>
         </div>

@@ -95,7 +95,7 @@ const filterPersistConfig = {
 const queuePersistConfig = {
   key: "queue",
   storage: storage,
-  whitelist: ["phoneNumber"],
+  whitelist: ["phoneNumber", "language"],
 };
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
