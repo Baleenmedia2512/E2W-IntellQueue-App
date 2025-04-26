@@ -26,6 +26,10 @@ export default function EnterDetails() {
         }
     }, [companyName, router]);
 
+    useEffect(() => {
+        inputRef.current?.focus(); // Automatically focus on the input field
+    }, []);
+
     const handlePhoneChange = (e) => {
         const value = e.target.value;
         if (/^\d{0,10}$/.test(value)) {
