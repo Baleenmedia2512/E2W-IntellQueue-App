@@ -975,16 +975,11 @@ useEffect(() => {
       followupDate: searchParams.followupDate || null,
     };
 
-    console.log(rows);
-
     const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
     let nextSNo = 0;
 
-    console.log(fetchedRows)
-
     if (fetchedRows.length > 0) {
       nextSNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) + 1 || 0;
-      console.log(nextSNo)
     } else{
       alert("Problem in network, please try again");
       return;

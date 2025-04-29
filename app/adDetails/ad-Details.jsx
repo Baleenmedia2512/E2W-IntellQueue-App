@@ -110,7 +110,7 @@ const AdDetailsPage = () => {
    // Extract or default values from leadDay
    const minimumCampaignDuration = leadDay['CampaignDuration(in Days)'] || 1;
    const campaignDurationVisibility = leadDay.campaignDurationVisibility || 0;
-   const ValidityDate = leadDay.ValidityDate || 0;
+   const ValidityDate = leadDay.ValidityDate && new Date(leadDay.ValidityDate) > new Date() || 0;
 
    // Calculate base cost
 let baseCost = (unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration);
@@ -1095,7 +1095,7 @@ const items = [
                 </div>
                 <div className="flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white items-center   mx-4 px-4 py-3 mt-4 mb-8 rounded-xl shadow-lg shadow-gray-300 border border-gray-300">
                   <p className="font-semibold text-lg text-gray-800 mt-1">
-                    Quote Valid till {ValidityDate ? formattedDate(ValidityDate) : "0000-00-00"}
+                    Quote Valid till {ValidityDate && new Date(ValidityDate) > new Date() ? formattedDate(ValidityDate) : "0000-00-00"}
                   </p>
                   <p className="font-medium text-gray-600 text-base mt-2 text-center">
                     Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher.
