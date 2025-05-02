@@ -504,8 +504,6 @@ export const fetchQueueData = async (DBName, phoneNumber) => {
         });
 
         const { position, totalOrders, estimatedTime, remainingTime } = response.data;
-        console.log("Queue data fetched successfully:", response);
-        console.log("data sent", DBName, phoneNumber) // Debugging log
         return { position, total: totalOrders, estimatedTime, remainingTime };
     } catch (error) {
         console.error("Error fetching queue data:", error);

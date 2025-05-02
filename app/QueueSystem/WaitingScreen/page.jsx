@@ -26,8 +26,7 @@ export default function WaitingScreen() {
                 const { position, total, estimatedTime, remainingTime  } = await fetchQueueData(companyName, phoneNumber);
                 setQueuePosition(position);
                 setTotalOrders(total);
-                setWaitingTime(remainingTime);
-                console.log("Queue Data:", { position, total, remainingTime });
+                setWaitingTime(estimatedTime);
             } catch (error) {
                 console.error("Error fetching queue data:", error);
             }
@@ -59,15 +58,15 @@ export default function WaitingScreen() {
                 <p className="text-black font-semibold text-2xl mb-4">
                     {language === "en" ? "You’re almost there!" : "நீங்கள் அருகில் இருக்கிறீர்கள்!"}
                 </p>
-                <p className="text-gray-500 text-lg mb-6">
+                {/* <p className="text-gray-500 text-lg mb-6">
                     {language === "en" ? "Relax, we’ll notify you when it’s your turn." : "தயவுசெய்து அமைதியாக இருங்கள், உங்கள் முறை வந்தவுடன் நாங்கள் உங்களை அறிவிப்போம்."}
-                </p>
+                </p> */}
                 <div className="w-full">
-                    <p className="text-lg text-gray-500 mb-2">
+                    {/* <p className="text-lg text-gray-500 mb-2">
                         {queuePosition !== null
                             ? `${queuePosition} ${language === "en" ? "more ahead of you" : "முன் உள்ளவர்கள்"}`
                             : language === "en" ? "Loading..." : "ஏற்றுகிறது..."}
-                    </p>
+                    </p> */}
                     <div className="w-full h-5 bg-gray-300 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-green-500 transition-all duration-500 ease-in-out"
