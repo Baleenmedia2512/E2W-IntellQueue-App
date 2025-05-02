@@ -35,7 +35,6 @@ export default function EnterDetails() {
         if (/^\d{0,10}$/.test(value)) {
             dispatch(setPhoneNumber(value)); // Update Redux state
             setError(null); // Clear error when user starts typing
-            console.log("Phone number updated:", value);
         }
     };
 
@@ -49,11 +48,8 @@ export default function EnterDetails() {
             return;
         }
 
-        console.log("Submitting phone number:", phoneNumber);
         try {
             const response = await checkAndRegisterQueue(companyName, phoneNumber, "");
-            console.log("Request sent with:", { companyName, phoneNumber });
-            console.log("Response from checkAndRegisterQueue:", response);
 
             if (response.status === "found" || response.status === "registered") {
                 setMessage({
@@ -62,7 +58,6 @@ export default function EnterDetails() {
                         ? `Welcome back<br />${response.ClientName}!`
                         : `மீண்டும் வருக<br />${response.ClientName}!`,
                 });
-                console.log("User found in the system:", response.ClientName);
                 setTimeout(() => router.push("/QueueSystem/WaitingScreen"), 2000);
             } else if (response.status === "not_found") {
                 setMessage({
