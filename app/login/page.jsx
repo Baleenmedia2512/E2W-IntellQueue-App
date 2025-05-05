@@ -121,6 +121,9 @@ const handleLogin = (event) => {
                     dispatch(resetDateRange());
                     sessionStorage.removeItem("unitPrices");
                     sessionStorage.clear();
+                    localStorage.removeItem("patients");
+                    localStorage.removeItem("history");
+                    localStorage.removeItem("currentStep");
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{

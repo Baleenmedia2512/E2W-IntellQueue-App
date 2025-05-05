@@ -13,6 +13,7 @@ import {
   WrenchIcon,
   ChartPieIcon,
   ChevronUpIcon,
+  Squares2X2Icon, // Import the icon for Queue Dashboard
 } from '@heroicons/react/24/outline';
 import { SupportIcon } from '@heroicons/react/outline';
 import './globals.css';
@@ -65,17 +66,6 @@ export default function BottomBarTest() {
   }, [elementsToHide]);
 
 
-
-  // useEffect(() => {
-  //   const fetchUsername = async () => {
-  //     const fetchedUsername = "GraceScans";
-  //     setUsername(fetchedUsername);
-  //   };
-  //   fetchUsername();
-  //   elementsToHideList()
-  // }, [currentPath]);
-
-
   useEffect(()=>{
     if(dbName){
       elementsToHideList();
@@ -110,8 +100,6 @@ export default function BottomBarTest() {
           setSelected('Finance');
           break;
         case '/Report':
-          // setValue(5);
-          // setActiveIndex(3);
           setSelected('report');
           break;
         case '/Employee':
@@ -126,11 +114,12 @@ export default function BottomBarTest() {
         case '/LeadManager':
           setSelected("LeadManager");
           break;        
+        case '/QueueDashboard':
+          setSelected("queueDashboard");
+          break;
         default:
           break;
       }
-    // Set the value state variable based on the current path
-    
   }, [currentPath]); 
 
   const handleChange = (event, newValue) => {
@@ -171,7 +160,10 @@ export default function BottomBarTest() {
         break; 
       case 11:
         router.push('/LeadManager');
-        break;         
+        break; 
+      case 12:
+        router.push('/QueueDashboard');
+        break;        
       default:
         break;
     }
@@ -307,7 +299,6 @@ export default function BottomBarTest() {
         strokeLinejoin="round"
         d="M10.75 15.25a4.5 4.5 0 0 0-5.5 0"
       />
-      {/* Checklist */}
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -361,6 +352,9 @@ export default function BottomBarTest() {
     </svg>
   );
   
+  const QueueDashboardIcon = () => (
+    <Squares2X2Icon className="h-5 w-5 text-gray-600" />
+  );
   
   const OrderManagerIcon = () => (
     <svg
@@ -422,29 +416,6 @@ export default function BottomBarTest() {
   };
   
 
-    // Determine if the circle should be visible
-  // const isCircleVisible = [0, 1, 2, 3].includes(activeIndex);
-
-  // useEffect(() => {
-  //   const handleResize = () => setWindowWidth(window.innerWidth);
-  //   window.addEventListener('resize', handleResize);
-  //   return () => window.removeEventListener('resize', handleResize);
-  // }, []);
-
-  // // Define translate values based on screen width and active index
-  // const getTranslateValue = () => {
-  //   if (windowWidth <= 320) {
-  //     return activeIndex === 0 ? '-125px' : activeIndex === 1 ? '-62px' : activeIndex === 2 ? '6px' : activeIndex === 3 ? '76px' : '300px';
-  //   } else if (windowWidth >= 370 && windowWidth <= 450) {
-  //     return activeIndex === 0 ? '-152px' : activeIndex === 1 ? '-70px' : activeIndex === 2 ? '10px' : activeIndex === 3 ? '76px' : '1300px';
-  //   } else if (windowWidth >= 460  && windowWidth <= 700) {
-  //     return activeIndex === 0 ? '-167px' : activeIndex === 1 ? '-77px' : activeIndex === 2 ? '13px' : activeIndex === 3 ? '100px' : '1300px';
-  //   } else {
-  //     return activeIndex === 0 ? '-207px' : activeIndex === 1 ? '-104px' : activeIndex === 2 ? '-3px' : activeIndex === 3 ? '102px' : '1300px';
-  //   }
-  // };
-
-  
   if (currentPath === '/login') {
     return null; // Conditionally return null
   }
@@ -454,15 +425,6 @@ export default function BottomBarTest() {
       {/* Main Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-20 z-50 bg-white  shadow-2xl" style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)' }}>
         <div className="flex justify-around  max-w-lg mx-auto relative ">
-      
-{/* {isCircleVisible && (
-            <span
-              className="bg-blue-500 duration-500 h-16 w-16 absolute -top-2 rounded-full transform transition-all"
-              style={{
-                transform: `translateX(${getTranslateValue()})`,
-              }}
-            ></span>
-          )} */}
 
           {Menus.map((menu, i) => (
             <div key={i} data-tag={menu.tag}>
@@ -470,7 +432,6 @@ export default function BottomBarTest() {
               key={i}
               icon={menu.icon}
               label={menu.name}
-              // onClick={() => setSelected(menu.name)}
               onClick={() => handleMenuChange(menu)}
               index={i} // Pass the index of the current item
               activeIndex={activeIndex} // Pass the active index
@@ -556,6 +517,17 @@ export default function BottomBarTest() {
             onClick={() => { setSelected('LeadManager'); setShowMoreOptions(false); {handleChange(null, 11)}; }}
             additionalClasses="hover:bg-blue-50"
             dataTag="LeadManager"
+          />
+          <SubNavItem
+            icon={<QueueDashboardIcon />}
+            label="Queue Dashboard"
+            onClick={() => {
+              setSelected("queueDashboard");
+              setShowMoreOptions(false);
+              handleChange(null, 12);
+            }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag="QueueDashboard"
           />
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
