@@ -18,7 +18,7 @@ import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
-import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
+import { GetInsertOrUpdate, PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
@@ -28,6 +28,7 @@ import { requestNotificationPermission, scheduleFollowupNotifications } from "..
 import { useDispatch } from "react-redux";
 import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 import { storeLeads, storeUsername } from "../utils/db";
+import { GetCRUD } from "./api/fetch-data";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -969,25 +970,29 @@ useEffect(() => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const filters = {
-      leadDate: searchParams.leadDate || null,
-      status: searchParams.status || "",
-      followupDate: searchParams.followupDate || null,
-    };
-
-    const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
-    let nextSNo = 0;
-
-    if (fetchedRows.length > 0) {
-      nextSNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) + 1 || 0;
-    } else{
-      alert("Problem in network, please try again");
+    // Validate email if provided
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      alert('Please enter a valid email address');
       return;
     }
 
-    const dbCompanyName = encodeURIComponent(UserCompanyName);
+    const nextSNoResponse  = await GetCRUD('https://leads.baleenmedia.com/api/fetchMaxSNo', {
+      dbCompanyName: UserCompanyName
+    }).catch(error => {
+      throw new Error(`Failed to fetch next ID: ${error.message}`);
+    });
+
+    // PROPER error check (fixed logic)
+    if (nextSNoResponse.error) {
+      throw new Error(nextSNoResponse.data.error);
+    }
+
+    if (nextSNoResponse.data.maxSNo === undefined || nextSNoResponse.data.maxSNo === null) {
+      throw new Error(`Invalid serial number format from server ${nextSNoResponse.error}`);
+    }
+
     const payload = {
-      sNo: nextSNo, // Use the incremented serial number
+      sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
       date: formData.date,
       time: formData.time,
       platform: formData.platform,
@@ -998,9 +1003,9 @@ useEffect(() => {
       handledBy: formData.handledBy,
       consultantName: formData.consultantName,
       consultantNumber: formData.consultantNumber,
-      dbCompanyName,
+      dbCompanyName: UserCompanyName
     };
-console.log("handle by",formData.handledBy)
+
     const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
     try {
       const response = await fetch(apiUrl, {
@@ -1014,7 +1019,6 @@ console.log("handle by",formData.handledBy)
       const data = await response.json(); 
       if (response.ok) {
         
-        console.log("Response from server:", data);
         alert("Lead added successfully!");
         setIsModalOpen(false);
         setFormData({
@@ -1030,14 +1034,23 @@ console.log("handle by",formData.handledBy)
         });
         fetchData();
       } else {
-       
-        console.error("Error response from server:", data.error || response.statusText);
         alert(data.error || "Error adding record");
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("Error adding record. Please try again.");
+      // ERROR CASE - Detailed error message
+      let errorMessage = error.message;
+    
+    // Handle specific error cases
+    if (error.message.includes('Network Error')) {
+      errorMessage = "Network error - Please check your internet connection";
+    } else if (error.message.includes('timeout')) {
+      errorMessage = "Request timeout - Please try again";
+    } else if (error.message.includes('Failed to get next ID')) {
+      errorMessage = "Couldn't generate a new ID - Please try again";
     }
+    
+    alert(`Failed to save lead:\n${errorMessage}`);
+  }
 };
   
 const handleStatusClick = async(row) => {
