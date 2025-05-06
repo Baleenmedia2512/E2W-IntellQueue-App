@@ -139,7 +139,7 @@ export default function QueueDashboard() {
         { id: "1", name: "Kumar", scanType: "Brain", scan: "CT", token: "7", inTime: "10:00 AM", contact: "9876543210", status: "In-Progress" },
         { id: "2", name: "Priya", scanType: "Pregnancy", scan: "USG", token: "3", inTime: "10:15 AM", contact: "9876543211", status: "Waiting" },
         { id: "3", name: "Vimal", scanType: "Abdomen and pelvis", scan: "CT", token: "82", inTime: "10:30 AM", contact: "9876543212", status: "Waiting" },
-        { id: "4", name: "Raena", scanType: "Pregnancy anomaly (5-6 months)", scan: "USG", token: "1", inTime: "10:45 AM", contact: "9876543213", status: "Waiting" },
+        { id: "4", name: "Raena", scanType: "Pregnancy anomaly", scan: "USG", token: "1", inTime: "10:45 AM", contact: "9876543213", status: "Waiting" },
         { id: "5", name: "Saranya", scanType: "Breast", scan: "X-Ray", token: "5", inTime: "11:00 AM", contact: "9876543214", status: "Waiting" },
         { id: "6", name: "Arjun", scanType: "LS Spine", scan: "X-Ray", token: "12", inTime: "11:15 AM", contact: "9876543215", status: "Waiting" },
         { id: "7", name: "Meera", scanType: "Fetal Echo", scan: "USG", token: "19", inTime: "11:30 AM", contact: "9876543216", status: "Waiting" },
@@ -323,7 +323,7 @@ export default function QueueDashboard() {
                     </div>
                 </div>
                 <div
-                    className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-transform duration-500 ${
+                    className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${
                         animationDirection === "slide-in-right"
                             ? "translate-x-full animate-slide-in-right"
                             : animationDirection === "slide-in-left"
