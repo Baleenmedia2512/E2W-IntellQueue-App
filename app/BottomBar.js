@@ -13,6 +13,7 @@ import {
   WrenchIcon,
   ChartPieIcon,
   ChevronUpIcon,
+  Squares2X2Icon, // Import the icon for Queue Dashboard
 } from '@heroicons/react/24/outline';
 import { SupportIcon } from '@heroicons/react/outline';
 import './globals.css';
@@ -65,17 +66,6 @@ export default function BottomBarTest() {
   }, [elementsToHide]);
 
 
-
-  // useEffect(() => {
-  //   const fetchUsername = async () => {
-  //     const fetchedUsername = "GraceScans";
-  //     setUsername(fetchedUsername);
-  //   };
-  //   fetchUsername();
-  //   elementsToHideList()
-  // }, [currentPath]);
-
-
   useEffect(()=>{
     if(dbName){
       elementsToHideList();
@@ -110,8 +100,6 @@ export default function BottomBarTest() {
           setSelected('Finance');
           break;
         case '/Report':
-          // setValue(5);
-          // setActiveIndex(3);
           setSelected('report');
           break;
         case '/Employee':
@@ -120,18 +108,19 @@ export default function BottomBarTest() {
         case '/ConsultantManager':
           setSelected('ConsultantManager');
           break;
-        case '/Payment-Milestone':
-          setSelected('paymentMilestone');
+        case '/AppointmentForm':
+          setSelected('appointmentManager');
           break;  
         case '/LeadManager':
           setSelected("LeadManager");
           break;        
+        case '/QueueDashboard':
+          setSelected("queueDashboard");
+          break;
         default:
           break;
       }
-    // Set the value state variable based on the current path
-    
-  }, [currentPath]); // Update useEffect dependency
+  }, [currentPath]); 
 
   const handleChange = (event, newValue) => {
     setValue(newValue); // Update the value state variable
@@ -167,11 +156,14 @@ export default function BottomBarTest() {
         router.push('/ConsultantManager');
         break;
       case 10:
-        router.push('/Payment-Milestone');
+        router.push('/AppointmentForm');
         break; 
       case 11:
         router.push('/LeadManager');
-        break;         
+        break; 
+      case 12:
+        router.push('/QueueDashboard');
+        break;        
       default:
         break;
     }
@@ -307,7 +299,6 @@ export default function BottomBarTest() {
         strokeLinejoin="round"
         d="M10.75 15.25a4.5 4.5 0 0 0-5.5 0"
       />
-      {/* Checklist */}
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -344,21 +335,25 @@ export default function BottomBarTest() {
     </svg>
 
   );
-  const PaymentMilestoneIcon = () => (
+  const AppointmentManagerIcon = () => ( 
     <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className="h-5 w-5"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 8.25h18M3 8.25c0-1.242.92-2.25 2.05-2.25h13.9c1.13 0 2.05 1.008 2.05 2.25M3 8.25v7.5c0 1.242.92 2.25 2.05 2.25h13.9c1.13 0 2.05-1.008 2.05-2.25v-7.5M3 15.75h18M9 12h6m-3-3v6"
-    />
-  </svg>
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="h-5 w-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 2v2M16 2v2M3 8h18M4 5h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM9 15l2 2 4-4"
+      />
+    </svg>
+  );
+  
+  const QueueDashboardIcon = () => (
+    <Squares2X2Icon className="h-5 w-5 text-gray-600" />
   );
   
   const OrderManagerIcon = () => (
@@ -394,7 +389,6 @@ export default function BottomBarTest() {
   }, [selected]);
   
 
-
   const handleMenuChange = (menu) => {
     setSelected(menu.name);
     let newValue;
@@ -422,29 +416,6 @@ export default function BottomBarTest() {
   };
   
 
-    // Determine if the circle should be visible
-  // const isCircleVisible = [0, 1, 2, 3].includes(activeIndex);
-
-  // useEffect(() => {
-  //   const handleResize = () => setWindowWidth(window.innerWidth);
-  //   window.addEventListener('resize', handleResize);
-  //   return () => window.removeEventListener('resize', handleResize);
-  // }, []);
-
-  // // Define translate values based on screen width and active index
-  // const getTranslateValue = () => {
-  //   if (windowWidth <= 320) {
-  //     return activeIndex === 0 ? '-125px' : activeIndex === 1 ? '-62px' : activeIndex === 2 ? '6px' : activeIndex === 3 ? '76px' : '300px';
-  //   } else if (windowWidth >= 370 && windowWidth <= 450) {
-  //     return activeIndex === 0 ? '-152px' : activeIndex === 1 ? '-70px' : activeIndex === 2 ? '10px' : activeIndex === 3 ? '76px' : '1300px';
-  //   } else if (windowWidth >= 460  && windowWidth <= 700) {
-  //     return activeIndex === 0 ? '-167px' : activeIndex === 1 ? '-77px' : activeIndex === 2 ? '13px' : activeIndex === 3 ? '100px' : '1300px';
-  //   } else {
-  //     return activeIndex === 0 ? '-207px' : activeIndex === 1 ? '-104px' : activeIndex === 2 ? '-3px' : activeIndex === 3 ? '102px' : '1300px';
-  //   }
-  // };
-
-  
   if (currentPath === '/login') {
     return null; // Conditionally return null
   }
@@ -454,15 +425,6 @@ export default function BottomBarTest() {
       {/* Main Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-20 z-50 bg-white  shadow-2xl" style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)' }}>
         <div className="flex justify-around  max-w-lg mx-auto relative ">
-      
-{/* {isCircleVisible && (
-            <span
-              className="bg-blue-500 duration-500 h-16 w-16 absolute -top-2 rounded-full transform transition-all"
-              style={{
-                transform: `translateX(${getTranslateValue()})`,
-              }}
-            ></span>
-          )} */}
 
           {Menus.map((menu, i) => (
             <div key={i} data-tag={menu.tag}>
@@ -470,7 +432,6 @@ export default function BottomBarTest() {
               key={i}
               icon={menu.icon}
               label={menu.name}
-              // onClick={() => setSelected(menu.name)}
               onClick={() => handleMenuChange(menu)}
               index={i} // Pass the index of the current item
               activeIndex={activeIndex} // Pass the active index
@@ -543,19 +504,30 @@ export default function BottomBarTest() {
             additionalClasses="hover:bg-blue-50"
             dataTag=""
           />
-          {/* <SubNavItem
-          icon={<PaymentMilestoneIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
-          label="Payment Milestone"
-          onClick={() => { setSelected('paymentMilestone'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
+          <SubNavItem
+          icon={<AppointmentManagerIcon className="h-5 w-5 text-gray-600" />} // Replace with the actual Payment Milestone icon
+          label="Appointment Manager"
+          onClick={() => { setSelected('appointmentManager'); setShowMoreOptions(false); handleChange(null, 10); }} // Ensure the value corresponds to the correct route
           additionalClasses="hover:bg-blue-50"
-          dataTag=""
-          /> */}
+          dataTag="appointmentManager"
+          />
           <SubNavItem
             icon={<LeadManagerIcon className="text-gray-600" />}
             label="Lead Manager"
             onClick={() => { setSelected('LeadManager'); setShowMoreOptions(false); {handleChange(null, 11)}; }}
             additionalClasses="hover:bg-blue-50"
             dataTag="LeadManager"
+          />
+          <SubNavItem
+            icon={<QueueDashboardIcon />}
+            label="Queue Dashboard"
+            onClick={() => {
+              setSelected("queueDashboard");
+              setShowMoreOptions(false);
+              handleChange(null, 12);
+            }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag="QueueDashboard"
           />
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}

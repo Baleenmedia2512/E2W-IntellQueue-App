@@ -140,7 +140,7 @@ export const UpdatePaymentMilestone = async(Stages, DBName) => {
         }
     }
 
-    return result;
+    return result; // Return full result object
 };
 
 export const FetchQuoteData = async(DBName, QuoteId) => {
@@ -178,7 +178,7 @@ export const FetchCommissionData = async(DBName, ConsultantName, rateName, rateT
                 JsonRateType: rateType
             }
         }); 
-        result = response.data.Commission;
+        result = response.data.Commission || 0;
 
     }catch(error){
         console.error(error);
@@ -313,3 +313,215 @@ export const elementsToHideList = async(DBName) => {
 
     return suggestions;
   }
+
+  export const FetchActiveCSE = async(DBName) => {
+    let CSE = [];
+
+    try {
+        const response = await api.get("FetchActiveCSEs.php/get",{
+            headers:{
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName
+            }
+        })
+
+        CSE = response.data;
+    } catch (error) {
+        alert("Unable to Fetch CSE Name")
+    }
+
+    return CSE;
+  }
+
+  export const FetchExistingLeads = async (DBName, SearchTerm) => {
+    let LeadData = [];
+  
+    try {
+      const response = await api.get("FetchExistingLeadsTest.php/get", {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        params: {
+          JsonDBName: DBName,
+          JsonSearchTerm: SearchTerm
+        }
+      });
+      LeadData = response.data;
+      
+      // Sort based on DateOfLastRelease in descending order
+      LeadData.sort((a, b) => new Date(b.DateOfLastRelease) - new Date(a.DateOfLastRelease));
+    } catch (error) {
+      alert("Unable to Fetch Existing Leads Data");
+    }
+  
+    return LeadData;
+  };
+
+  export const FetchLeadsData = async (DBName, SearchTerm) => {
+    let LeadData = [];
+    try {
+      const response = await api.get("FetchLeadsData.php/get", {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        params: {
+          JsonDBName: DBName,
+          JsonSearchTerm: SearchTerm
+        }
+      });
+      LeadData = response.data;
+  
+      // Get today's date string in "YYYY-MM-DD" format
+      const today = new Date().toISOString().slice(0, 10);
+  
+      LeadData.sort((a, b) => {
+        // Check if each lead's NextFollowupDate (if available) equals today
+        const aHasToday = a.NextFollowupDate && a.NextFollowupDate.slice(0, 10) === today;
+        const bHasToday = b.NextFollowupDate && b.NextFollowupDate.slice(0, 10) === today;
+  
+        // If one lead's NextFollowupDate is today and the other is not, push the one with today's date on top.
+        if (aHasToday && !bHasToday) return -1;
+        if (!aHasToday && bHasToday) return 1;
+  
+        // For both leads (or neither) with NextFollowupDate today,
+        // sort descending based on CallFollowupDate.
+        // (Make sure that CallFollowupDate exists and is a valid date string)
+        const aCall = a.CallFollowupDate ? new Date(a.CallFollowupDate) : 0;
+        const bCall = b.CallFollowupDate ? new Date(b.CallFollowupDate) : 0;
+        return bCall - aCall;
+      });
+    } catch (error) {
+      console.error(error);
+    }
+    return LeadData;
+  };
+  
+
+  export const FetchTDSPercentage = async(DBName, OrderNumber) => {
+    let TDS = [];
+
+    try {
+        const response = await api.get("FetchTDSByOrderNumber.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                orderNumber: OrderNumber
+            }
+        });
+        TDS = response.data.tdsApplicabilityPercentage;
+    } catch (error) {
+        alert("Unable to Fetch Existing Leads Data")
+    }
+
+    return TDS;
+  }
+
+  export const FetchOrderHistory = async(DBName, OrderNumber) => { 
+    let OrderHistory = [];
+
+    try {
+        const response = await api.get("FetchClientOrderHistory.php/get",{
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params:{
+                JsonDBName: DBName,
+                orderNumber: OrderNumber
+            }
+        });
+        OrderHistory = response.data;
+    }
+    catch (error) {
+        alert("Unable to Fetch Order History")
+    }
+
+    return OrderHistory;
+}
+
+export async function AutoLogin(companyName) {
+  try {
+    const response = await fetch('https://orders.baleenmedia.com/API/Media/AutoLogin.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ JsonCompanyName: companyName }), // Ensure the key matches the API's expected format
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('AutoLogin API error response:', errorData); // Debugging log
+      throw new Error(errorData.error || `API responded with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error in AutoLogin API:', error.message);
+    throw error;
+  }
+}
+
+export const sendOTP = async (DBName, phoneNumber) => {
+    try {
+        const response = await api.post("SendOTPForQueueApp.php", {
+            JsonDBName: DBName,
+            JsonClientContact: phoneNumber,
+        }, {
+            headers: { "Content-Type": "application/json" },
+        });
+        console.log("OTP sent successfully:", response.data); // Debugging log
+        return response.data;
+    } catch (error) {
+        console.error("Error sending OTP:", error);
+        throw error;
+    }
+};
+
+export const verifyOTP = async (DBName, phoneNumber, otpCode) => {
+    try {
+        const response = await api.post("VerifyOTPForQueueApp.php", {
+            JsonDBName: DBName,
+            JsonClientContact: phoneNumber,
+            JsonOTP: otpCode,
+        }, {
+            headers: { "Content-Type": "application/json" },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error verifying OTP:", error);
+        throw error;
+    }
+};
+
+export const fetchQueueData = async (DBName, phoneNumber) => {
+    try {
+        const response = await api.get("FetchQueueData.php", {
+            headers: { "Content-Type": "application/json" },
+            params: { JsonDBName: DBName, JsonClientContact: phoneNumber }
+        });
+
+        const { position, totalOrders, estimatedTime, remainingTime } = response.data;
+        return { position, total: totalOrders, estimatedTime, remainingTime };
+    } catch (error) {
+        console.error("Error fetching queue data:", error);
+        throw error;
+    }
+};
+
+export const checkAndRegisterQueue = async (DBName, ClientContact, ClientName) => {
+    try {
+        const response = await api.post("CheckAndRegisterQueue.php", {
+            JsonDBName: DBName,
+            JsonClientContact: ClientContact,
+            JsonClientName: ClientName,
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        throw error;
+    }
+};

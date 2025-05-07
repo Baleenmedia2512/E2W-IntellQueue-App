@@ -25,7 +25,10 @@ import { setDateRange, resetDateRange } from "@/redux/features/report-slice";
 import { Margin } from '@mui/icons-material';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
 import dayjs from 'dayjs';
-
+import { CircularProgress } from '@mui/material';
+import { SaveAlt as SaveAltIcon } from '@mui/icons-material';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
@@ -84,30 +87,29 @@ const Report = () => {
   const [displayOrderDetails, setDisplayOrderDetails] = useState([]);
   const [displayFinanceDetails, setDisplayFinanceDetails] = useState([]);
   const [invoiceData, setInvoiceData] = useState([]);
+  const [isDIRSentToday, setIsDIRSentToday] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
-const checkIfSMSSentToday = () => {
-  axios
-    .get(`https://orders.baleenmedia.com/API/Media/CheckCDRSmsCount.php?JsonDBName=${companyName}`)
-    .then((response) => {
-      const { count } = response.data;
+  const checkIfDIRSentToday = async (companyName) => {
+    try {
+      const response = await axios.get(
+        `https://orders.baleenmedia.com/API/Media/CheckDIRCount.php?JsonDBName=${companyName}`
+      );
       
-      if (count > 0) {
-        setIsButtonDisabled(true);
-      } else {
-        setIsButtonDisabled(false);
-      }
-    })
-    .catch((error) => {
-      console.error('Error checking SMS count:', error);
-    });
-};
-
+      const count = response.data.count || 0; // Ensure count is a number
+      return count > 0; // Return true if count > 0, otherwise false
+    } catch (error) {
+      console.error("Error checking SMS count:", error);
+      return false; // In case of an error, return false
+    }
+  };
+  
 
 
 // Call this function when the component is loaded
-useEffect(() => {
-  checkIfSMSSentToday();
-}, []);
+// useEffect(() => {
+//   checkIfDIRSentToday();
+// }, []);
 
   const handleDropdownChange = (event) => {
     setSelectedChart(event.target.value);
@@ -116,6 +118,70 @@ useEffect(() => {
   
   const handleConsultantReportOpen = () => {
     router.push('/Report/ConsultantReport');
+};
+
+
+const handleCloseDay = async () => {
+  setIsButtonDisabled(true);
+
+  const resultDIR = await checkIfDIRSentToday(companyName);
+  setIsDIRSentToday(resultDIR);
+
+  if (resultDIR) {
+    // Show confirmation dialog if DIR has already been sent
+    setShowConfirmationDialog(true);
+    setIsButtonDisabled(false);
+    return;
+  }
+
+  processCloseDay(); // Proceed if no confirmation is needed
+};
+
+// Function to handle closing after confirmation
+const processCloseDay = async () => {
+  setToastMessage(
+    <span>
+      <CircularProgress size={20} style={{ marginRight: "8px" }} />
+      {`Processing`}
+    </span>
+  );
+  setSeverity("warning");
+  setToast(true);
+
+  try {
+    const response = await axios.get(
+      `https://orders.baleenmedia.com/API/Media/DailyReportWhatsapp.php?JsonDBName=${companyName}`
+    );
+
+    const resultData = response.data;
+
+    if (resultData[0]?.success) {
+      setToastMessage("");
+      setSeverity("");
+      setToast(false);
+
+      setSuccessMessage("The Day is Closed And Report is sent.");
+      setIsButtonDisabled(false);
+
+      // await checkIfDIRSentToday(companyName);
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } else {
+      setToastMessage(resultData.message || "An error occurred.");
+      setIsButtonDisabled(false);
+      setSeverity("warning");
+      setToast(true);
+
+      setTimeout(() => {
+        setToast(false);
+      }, 3000);
+    }
+  } catch (error) {
+    console.error("Error checking SMS count:", error);
+    setIsButtonDisabled(false);
+  }
 };
 
 
@@ -178,15 +244,26 @@ useEffect(() => {
     },[])
     
     useEffect(() => {
-        fetchMarginAmount();
-        fetchOrderDetails();
-        fetchFinanceDetails();
-        fetchSumOfFinance();
-        fetchRateBaseIncome();
-        fetchSumOfOrders();
-        FetchCurrentBalanceAmount();
-        fetchAmounts();
-    }, [dateRange.startDate, dateRange.endDate]);
+      const fetchData = async () => {
+          try {
+              await Promise.all([
+                  fetchMarginAmount(),
+                  fetchOrderDetails(),
+                  fetchFinanceDetails(),
+                  fetchSumOfFinance(),
+                  fetchRateBaseIncome(),
+                  // fetchSumOfOrders(),
+                  FetchCurrentBalanceAmount(),
+                  // fetchAmounts()
+              ]);
+          } catch (error) {
+              console.error("Error fetching data:", error);
+          }
+      };
+  
+      fetchData();
+  }, [dateRange.startDate, dateRange.endDate]);
+  
 
 
     useEffect(() => {
@@ -373,7 +450,7 @@ useEffect(() => {
                     id: order.ID ,
                     Receivable: `₹ ${order.Receivable}`,
                     AdjustedOrderAmount: `₹ ${order.AdjustedOrderAmount}`,
-                    TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : '',
+                    TotalAmountReceived: (order.TotalAmountReceived !== undefined && order.TotalAmountReceived !== null) ? `₹ ${order.TotalAmountReceived}` : `₹ 0`,
                     AmountDifference: order.RateWiseOrderNumber < 0 ? `₹ 0` : `₹ ${order.AmountDifference}`,
                     markInvalidDisabled: order.RateWiseOrderNumber < 0,
                     restoreDisabled: order.RateWiseOrderNumber > 0,
@@ -381,6 +458,7 @@ useEffect(() => {
                     editDisabled: order.RateWiseOrderNumber < 0,
                     Commission: `₹ ${order.Commission}`,
                     invoiceDisabled: order.TotalAmountReceived === undefined || order.TotalAmountReceived === null || order.TotalAmountReceived === '',
+                    Gender: (order.ClientGender !== undefined && order.ClientGender !== null) ? order.ClientGender : '',
                 }));
                 setOrderDetails(data);
             })
@@ -473,7 +551,7 @@ useEffect(() => {
                     setSuccessMessage('');
                 }, 2000);
                 fetchOrderDetails();
-                fetchAmounts();
+                // fetchAmounts();
             }
         })
         .catch((error) => {
@@ -498,9 +576,10 @@ const handleTransactionDelete = (id, RateWiseOrderNum) => {
               setSuccessMessage('');
             }, 2000);
             fetchFinanceDetails();
-            fetchAmounts();
+            // fetchAmounts();
             fetchSumOfFinance();
             fetchRateBaseIncome();
+            fetchMarginAmount();
           } else {
             setToastMessage(data.message);
             setSeverity('error');
@@ -548,32 +627,55 @@ const handleRestoreClose = () => {
   setRestoreDialogOpen(false);
 };
 
-const handleRestore = async (rateWiseOrderNum, orderNum, rateName) => {
+const handleRestore = async (rateWiseOrderNum, orderNum, rateName, confirm = false) => {
   try {
-      const response = await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${rateWiseOrderNum}&OrderNumber=${orderNum}&Action=restore`);
-      
-      if (response.data.conflict) {
-          // Fetch next available RateWiseOrderNumber
-          const fetchResponse = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`);
-          const data = await fetchResponse.json();
-          setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
-          setOrderNum(orderNum);
-          setRestoreDialogOpen(true);
-      } else {
-          // Successful restore
-          setSuccessMessage('Order Restored!');
-          setTimeout(() => setSuccessMessage(''), 2000);
-          fetchOrderDetails();
-          fetchAmounts();
+    const response = await axios.get(
+      `https://orders.baleenmedia.com/API/Media/RestoreOrder.php`,
+      {
+        params: {
+          JsonDBName: companyName,
+          JsonRateWiseOrderNumber: rateWiseOrderNum,
+          OrderNumber: orderNum,
+          RateCard: rateName,
+          CheckRateWiseOrderNumber: !confirm, // Check conflict only if not confirming
+        },
       }
-  } catch (error) {
-      console.error('Error during restore operation:', error);
-      setToastMessage(`Failed to restore. Error: ${error.message}`);
-      setSeverity('error');
+    );
+
+    if (response.data.conflict && !confirm) {
+      // Conflict found, fetch next available RateWiseOrderNumber
+      const fetchResponse = await fetch(
+        `https://www.orders.baleenmedia.com/API/Media/FetchMaxOrderNumber.php?JsonDBName=${companyName}&JsonRateName=${rateName}`
+      );
+      const data = await fetchResponse.json();
+      
+      setNewRateWiseOrderNumber(data.nextRateWiseOrderNumber);
+      setOrderNum(orderNum);
+      setRestoreDialogOpen(true);
+    } else if (response.data.success) {
+      // Successful restore
+      setSuccessMessage(confirm ? "Order Restored with new number!" : "Order Restored!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+      fetchOrderDetails();
+    } else {
+      setToastMessage("Failed to restore order.");
+      setSeverity("error");
       setToast(true);
       setTimeout(() => setToast(false), 2000);
+    }
+  } catch (error) {
+    console.error("Restore failed:", error);
+    setToastMessage(`Failed to restore. Error: ${error.message}`);
+    setSeverity("error");
+    setToast(true);
+    setTimeout(() => setToast(false), 2000);
+  }
+
+  if (confirm) {
+    setRestoreDialogOpen(false);
   }
 };
+
 
 const handleFinanceRestore = (id, RateWiseOrderNumber) => {
   axios
@@ -586,9 +688,10 @@ const handleFinanceRestore = (id, RateWiseOrderNumber) => {
           setSuccessMessage('');
         }, 2000);
         fetchFinanceDetails();
-        fetchAmounts();
+        // fetchAmounts();
         fetchSumOfFinance();
         fetchRateBaseIncome();
+        fetchMarginAmount();
       } else {
         setToastMessage(data.message);
         setSeverity('error');
@@ -610,21 +713,21 @@ const handleFinanceRestore = (id, RateWiseOrderNumber) => {
 };
 
 
-const handleConfirm = async () => {
-  try {
-      await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
-      setSuccessMessage('Order Restored with new number!');
-      setTimeout(() => setSuccessMessage(''), 2000);
-      fetchOrderDetails();
-  } catch (error) {
-      console.error('Restore failed:', error);
-      setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => setToast(false), 2000);
-  }
-  setRestoreDialogOpen(false);
-};
+// const handleConfirm = async () => {
+//   try {
+//       await axios.get(`https://orders.baleenmedia.com/API/Media/RestoreOrder.php?JsonDBName=${companyName}&JsonRateWiseOrderNumber=${newRateWiseOrderNumber}&OrderNumber=${orderNum}`);
+//       setSuccessMessage('Order Restored with new number!');
+//       setTimeout(() => setSuccessMessage(''), 2000);
+//       fetchOrderDetails();
+//   } catch (error) {
+//       console.error('Restore failed:', error);
+//       setToastMessage(`Failed to restore with new number. Error: ${error.message}`);
+//       setSeverity('error');
+//       setToast(true);
+//       setTimeout(() => setToast(false), 2000);
+//   }
+//   setRestoreDialogOpen(false);
+// };
 
   const fetchMarginAmount = () => {
     axios
@@ -753,18 +856,68 @@ const orderColumns = [
     { field: 'ClientName', headerName: 'Client Name', width: isMobile ? 150 : 120 },
     { field: 'ClientContact', headerName: 'Client Contact', width: isMobile ? 160 : 120 },
     { field: 'ClientAge', headerName: 'Client Age', width: isMobile ? 120 : 90 },
+    { field: 'Gender', headerName: 'Client Gender', width: isMobile ? 120 : 90 },
     { field: 'Card', headerName: 'Rate Name', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
     { field: 'AdType', headerName: 'Rate Type', width: isMobile ? 120 : 90, renderCell: (params) => <div>{params.value}</div> },
-    { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90 },
-    { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, renderCell: (params) => <div>{params.value}</div> },
-    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 200 : 150 },
-    { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100 },
-    { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100 },
-    { field: 'Commission', headerName: 'Commission Amount(₹)', width: 100 },
+    { field: 'Margin', headerName: 'Margin', width: isMobile ? 120 : 90,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+      },
+    { field: 'Receivable', headerName: 'Order Value(₹)', width: isMobile ? 170 : 120, 
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+      renderCell: (params) => <div>{params.value}</div> },
+    { field: 'AdjustedOrderAmount', headerName: 'Adjustment/Discount(₹)', width: isMobile ? 200 : 150,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+     },
+    { field: 'TotalAmountReceived', headerName: 'Income(₹)', width: isMobile ? 140 : 100,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },      
+     },
+    { field: 'AmountDifference', headerName: 'Difference(₹)', width: isMobile ? 160 : 100,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+     },
+    { field: 'Commission', headerName: 'Commission Amount(₹)', width: 100,
+      sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+     },
     { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 120 },
     { field: 'CombinedRemarks', headerName: 'Finance Remarks', width: isMobile ? 190 : 130 },
     { field: 'Remarks', headerName: 'Order Remarks', width: isMobile ? 180 : 160 },
     { field: 'ConsultantName', headerName: 'Consultant Name', width: isMobile ? 180 : 150 },
+    { field: 'ConsultantPlace', headerName: 'Consultant Place', width: isMobile ? 180 : 150 },
     {
       field: 'actions',
       headerName: 'Actions',
@@ -829,13 +982,13 @@ const orderColumns = [
                 color="primary"
                 size="small"
                 onClick={() => handleDownloadInvoiceIconClick(params.row)}
-                disabled={params.row.invoiceDisabled}
+                // disabled={params.row.invoiceDisabled}
                 style={{ marginLeft: '12px',
                   backgroundColor: '#ff7f50',
                   color: 'white',
                   fontWeight: 'bold',
-                  opacity: params.row.invoiceDisabled ? 0.5 : 1,
-                  pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
+                  // opacity: params.row.invoiceDisabled ? 0.5 : 1,
+                  // pointerEvents: params.row.invoiceDisabled ? 'none' : 'auto'
                  }}  
             >  
                Download
@@ -850,8 +1003,24 @@ const financeColumns = [
   { field: 'ID', headerName: 'Finance ID', width: isMobile ? 140 : 130 },
   { field: 'TransactionType', headerName: 'Transaction Type', width: isMobile ? 180 : 150 },
   { field: 'TransactionDate', headerName: 'Transaction Date', width: isMobile ? 180 : 150 },
-  { field: 'Amount', headerName: 'Amount(₹)', width: isMobile ? 140 : 100 },
-  { field: 'OrderValue', headerName: 'Order Value(₹)', width: isMobile ? 180 : 100 },
+  { field: 'Amount', headerName: 'Amount(₹)', width: isMobile ? 140 : 100,
+    sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+   },
+  { field: 'OrderValue', headerName: 'Order Value(₹)', width: isMobile ? 180 : 100,
+    sortComparator: (v1, v2) => {
+        // Handle empty or undefined values by treating them as 0
+        const num1 = v1 ? parseFloat(v1.replace(/₹\s?/g, '').trim()) || 0 : 0;
+        const num2 = v2 ? parseFloat(v2.replace(/₹\s?/g, '').trim()) || 0 : 0;
+      
+        return num1 - num2;
+      },
+   },
   { field: 'PaymentMode', headerName: 'Payment Mode', width: isMobile ? 170 : 100 },
   { field: 'OrderNumber', headerName: 'Order#', width: isMobile ? 120 : 100 },
   { field: 'RateWiseOrderNumber', headerName: 'R.Order#', width: isMobile ? 130 : 80 },
@@ -1071,13 +1240,13 @@ const incomeOptions = [
           height: '440px', // Adjust height as needed
           background: '#ffffff',
           borderRadius: '12px',
-          boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)', // Gray shadow for 3D effect
           marginBottom: '20px',
           display: 'flex',
           justifyContent: 'center', // Center horizontally
           alignItems: 'center', // Center vertically
           flexDirection: 'column', // Column direction for title and chart
-        },
+          border: '1px solid #ccc', // Add border color
+        },        
         slideContainer: {
           display: 'flex',
           width: '100%',
@@ -1349,7 +1518,86 @@ const calculateRateStats = () => {
   setRateStats(stats); // Update state with new stats
 };
 
-  
+const handleExport = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const financeSheet = workbook.addWorksheet('Finance');
+
+  // Define header style
+  const headerStyle = {
+    font: { bold: true, color: { argb: 'FFFFFF' } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: '1976D2' } }
+  };
+
+  // Define border style
+  const borderStyle = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  // Function to remove ₹ symbol if present
+  const removeCurrencySymbol = value => {
+    if (typeof value === 'string') {
+      return value.replace(/₹|,/g, '').trim(); // Removes ₹ and commas
+    }
+    return value;
+  };
+
+  // Finance headers and column definitions
+  const financeHeaders = [
+    { header: 'Finance ID', key: 'Finance ID', width: 15, type: 'number' },
+    { header: 'Type', key: 'Type', width: 20, type: 'string' },
+    { header: 'Date', key: 'Date', width: 15, type: 'date' },
+    { header: 'Client Name', key: 'Client Name', width: 20, type: 'string' },
+    { header: 'Service', key: 'Service', width: 20, type: 'string' },
+    { header: 'Service Type', key: 'Service Type', width: 20, type: 'string' },
+    { header: 'Payment Mode', key: 'Payment Mode', width: 15, type: 'string' },
+    { header: 'Amount', key: 'Amount', width: 15, type: 'number' }
+  ];
+
+  // Apply column definitions
+  financeSheet.columns = financeHeaders;
+
+  // Apply header row styles
+  const financeHeaderRow = financeSheet.getRow(1);
+  financeHeaders.forEach((col, index) => {
+    const cell = financeHeaderRow.getCell(index + 1);
+    cell.value = col.header;
+    cell.style = { ...headerStyle, border: borderStyle };
+  });
+  financeHeaderRow.commit(); // Ensure row updates
+
+  // Sort finance data by Transaction Date (ascending)
+  const sortedFinanceData = [...financeDetails].sort((a, b) => new Date(a.TransactionDate) - new Date(b.TransactionDate));
+
+  // Add finance data
+  sortedFinanceData.forEach(transaction => {
+    const matchingOrder = orderDetails.find(order => order.OrderNumber === transaction.OrderNumber);
+    const row = financeSheet.addRow([
+      Number(transaction.ID),
+      transaction.TransactionType,
+      new Date(transaction.TransactionDate),
+      transaction.ClientName ? transaction.ClientName : transaction.Remarks,
+      matchingOrder ? matchingOrder.Card : '',
+      matchingOrder ? matchingOrder.AdType : '',
+      transaction.PaymentMode,
+      Number(removeCurrencySymbol(transaction.Amount))
+    ]);
+    row.eachCell(cell => (cell.border = borderStyle));
+  });
+
+  // Apply filters after populating data
+  financeSheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: financeSheet.rowCount, column: financeHeaders.length }
+  };
+
+  // Generate and save file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(blob, `Finance_Report_${dateRange.startDate}_${dateRange.endDate}.xlsx`);
+};
 
 
 
@@ -1440,6 +1688,34 @@ const calculateRateStats = () => {
   </DialogActions>
 </Dialog>
 
+{/* DIR Confirmation Dialog */}
+<Dialog
+      open={showConfirmationDialog}
+      onClose={() => setShowConfirmationDialog(false)}
+    >
+      <DialogTitle>Confirmation</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          A Daily Report has already been sent today. Are you sure you want to close the day again?
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setShowConfirmationDialog(false)} color="secondary">
+          Cancel
+        </Button>
+        <Button
+          onClick={() => {
+            setShowConfirmationDialog(false);
+            processCloseDay();
+          }}
+          color="primary"
+          autoFocus
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+
 {/* CDR confirmation */}
 {/* <Dialog open={openCDR} onClose={handleCloseCDR}>
         <DialogTitle>SMS Confirmation</DialogTitle>
@@ -1468,26 +1744,27 @@ const calculateRateStats = () => {
       </Dialog> */}
 
 
-            <Box className="px-3">
+            <Box>
             {value === 0 && (
               <div style={{ width: '100%' }}>
   <div>
     <RestoreOrderDialog
       open={restoredialogOpen}
       onClose={handleRestoreClose}
-      onConfirm={handleConfirm}
+      onConfirm={() => handleRestore(newRateWiseOrderNumber, orderNum, "", true)}
       newRateWiseOrderNumber={newRateWiseOrderNumber}
     />
   </div>
-  <h1 className="md:text-xl lg:text-2xl sm:text-base font-bold my-2 ml-2 text-start text-blue-500">
+  <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">
     Reports
   </h1>
+<hr className="border-t-1 border-gray-300 mb-4" />
 
 {/* Sticky Container */}
-<div className="sticky top-0 z-10 bg-white p-2 shadow-md">
+<div className="sticky top-0 z-10 bg-white px-4">
   <div className="flex flex-nowrap overflow-x-auto">
     {/* DateRangePicker and Spacer */}
-    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
+    <div className="w-fit h-auto rounded-lg p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 text-black">
       <DateRangePicker
         startDate={selectedRange.startDate}
         endDate={selectedRange.endDate}
@@ -1496,7 +1773,7 @@ const calculateRateStats = () => {
     </div>
 
     {/* Combined Total Orders and Amounts box */}
-    <div className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
+    <div className="w-fit h-auto rounded-lg p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0">
       <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
         {formatIndianNumber(sumOfOrders)}
       </div>
@@ -1524,7 +1801,7 @@ const calculateRateStats = () => {
     {Object.keys(rateStats).map((rateName) => (
       <div
         key={rateName}
-        className="w-fit h-auto rounded-lg shadow-md p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
+        className="w-fit h-auto rounded-lg  p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0"
       >
         <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
           {formatIndianNumber(rateStats[rateName].orderCount)}
@@ -1550,11 +1827,27 @@ const calculateRateStats = () => {
       </div>
     ))}
   </div>
+  
 </div>
+<hr className="border-t-1 border-gray-300 mb-3" />
+<div className="flex justify-end px-2">
 
+  <button
+    name="CloseDayButton"
+    className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
+    onClick={handleCloseDay}
+    disabled={isButtonDisabled}
+    title={isButtonDisabled ? "The day is closed" : "Click to close the day"}
+  >
+    Close Day
+  </button>
 
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px' }}>
-    <div style={{ flex: 1, width: '100%', boxShadow: '0px 4px 8px rgba(128, 128, 128, 0.4)' }}>
+  </div>
+
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '15px' }}>
+    
+    
+    <div style={{ flex: 1, width: '100%'}}>
       <DataGrid
          rows={filteredData.length > 0 ? filteredData : orderDetails}
         columns={orderColumns}
@@ -1618,47 +1911,43 @@ const calculateRateStats = () => {
 )}
 
         {value === 1 && (
-             <div style={{ width: '100%' }}>
-              <h1 className='text-2xl font-bold ml-2 text-start text-blue-500'>Reports</h1>
-             <div className="flex flex-grow text-black mb-4">
-    <DateRangePicker startDate={selectedRange.startDate} endDate={selectedRange.endDate} onDateChange={handleDateChange} />
-    
-    <div className="flex flex-grow items-end ml-2 mb-4">
-  <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
-    <button className="custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
-      Show Balance
-    </button>
-    {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-      <button className="consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
-        Cons. Report
+          <div style={{ width: '100%' }}>
+          <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
+          <hr className="border-t-1 border-gray-300 mb-4"/>
+          <div className="flex flex-grow text-black mb-4 px-4 items-end">
+  <DateRangePicker 
+    startDate={selectedRange.startDate} 
+    endDate={selectedRange.endDate} 
+    onDateChange={handleDateChange} 
+  />
+
+  <div className="flex flex-grow items-end ml-2">
+    <div className="flex flex-col md:flex-row sm:flex-col sm:items-start md:items-end">
+      <button className="button custom-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleClickOpen}>
+        Show Balance
       </button>
-    )}
-    {/* <button className="consultant-sms-button" onClick={handleOpenCDR} disabled={isButtonDisabled}>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-      </svg>
-      Send CDR
-    </button> */}
+
+      {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
+        <button className="button consultant-button mb-2 md:mb-0 sm:mr-0 md:mr-2" onClick={handleConsultantReportOpen}>
+          Cons. Report
+        </button>
+      )}
+    </div>
+  </div>
+
+  {/* Export Button moved to bottom-right */}
+  <div className="ml-auto flex items-end">
+    <button
+      className="px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:text-white hover:bg-green-600 hover:border-green-600 hover:scale-105"
+      onClick={handleExport}
+      title="Export data to Excel"
+    >
+      <SaveAltIcon className="mr-2" />
+      Export to Excel
+    </button>
   </div>
 </div>
 
-    {/* <div className="flex flex-grow items-end ml-2 mb-4">
-      <div className="flex flex-col sm:flex-row">
-        <button className="custom-button mb-2 sm:mb-0 sm:mr-2" onClick={handleClickOpen}>
-          Show Balance
-        </button>
-        {(appRights.includes('Administrator') || appRights.includes('Finance') || appRights.includes('Leadership') || appRights.includes('Admin')) && (
-        <button className="consultant-button" onClick={handleConsultantReportOpen}>
-          Consultant Report
-        </button>
-      )}
-
-
-      </div> */}
-    {/* </div> */}
-  </div>
-           
-           
              {/* Delete Transaction Confirmation */}
              <Dialog
   open={openConfirmDialog}
@@ -1755,7 +2044,7 @@ const calculateRateStats = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+            <div className='px-4'>
             <div style={styles.chartContainer}>
       <div style={styles.slideContainer}>
         {/* Income Breakdown Chart */}
@@ -1870,6 +2159,7 @@ const calculateRateStats = () => {
         </div>
       </div>
     </div>
+    </div>
             {/* <div>
              <div style={styles.chartContainer}>
              {isPieEmpty ? (
@@ -1908,7 +2198,8 @@ const calculateRateStats = () => {
       )} */}
       {/* </div>
       </div> */}
-             <div style={{width: '100%', boxShadow: '0px 4px 8px rgba(128, 0, 128, 0.4)', marginBottom: '54px' }}>
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '0 15px' }}>
+             <div style={{ flex: 1, width: '100%'}}>
                  <DataGrid
                      rows={filteredFinanceDetails}
                      columns={financeColumns}
@@ -1948,15 +2239,8 @@ const calculateRateStats = () => {
                     
                  />
              </div>
+             </div>
          </div>
-        //   <div style={{ width: '100%' }}>
-        //   <div style={{ height: 500 , width: '100%' }}>
-        //     <DataGrid
-        //       rows={financeDetails}
-        //       columns={financeColumns}
-        //     />
-        //   </div>
-        // </div>
         )}
       </Box>
       {successMessage && <SuccessToast message={successMessage} />}

@@ -23,6 +23,8 @@ import SuccessToast from '../components/SuccessToast';
 import { FetchAllValidRates, FetchQtySlab, FetchQuoteRemarks, FetchRateSeachTerm, FetchSpecificRateData } from '../api/FetchAPI';
 import './page.css';
 import { calculateMarginAmount, calculateMarginPercentage } from '../utils/commonFunctions';
+// import useClickTracker from './Dashboard/useClickTracker'; 
+// import useTimerTracker from './Dashboard/useTimerTracker';
 
 export const formattedMargin = (number) => {
   
@@ -58,6 +60,7 @@ const AdDetailsPage = () => {
     editIndex,
     editQuoteNumber,
     isNewCartOnEdit,
+    checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
   const cartItems = useAppSelector((state) => state.cartSlice.cart);
 
@@ -77,6 +80,16 @@ const AdDetailsPage = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [changing, setChanging] = useState(false);
+  const [checked, setChecked] = useState({
+    bold: false,
+    semibold: false,
+    color: false,
+    tick: false,
+    boldPercentage: -1,
+    semiboldPercentage: -1,
+    colorPercentage: -1,
+    tickPercentage: -1
+  })
 
   // Refs
   const marginAmountRef = useRef(null);
@@ -97,6 +110,26 @@ const AdDetailsPage = () => {
    const minimumCampaignDuration = leadDay['CampaignDuration(in Days)'] || 1;
    const campaignDurationVisibility = leadDay.campaignDurationVisibility || 0;
    const ValidityDate = leadDay.ValidityDate || 0;
+
+   // Calculate base cost
+let baseCost = (unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration);
+
+// Add additional feature costs to base cost
+if (checked.bold) {
+  baseCost += baseCost * (checked.boldPercentage / 100);
+}
+if (checked.semibold) {
+  baseCost += baseCost * (checked.semiboldPercentage / 100);
+}
+if (checked.color) {
+  baseCost += baseCost * (checked.colorPercentage / 100);
+}
+if (checked.tick) {
+  baseCost += baseCost * (checked.tickPercentage / 100);
+}
+
+// Calculate base price by adding margin to base cost
+const basePrice = baseCost + margin;
 
   // Helper to format dates
   const formattedDate = (date) => {
@@ -222,16 +255,38 @@ const AdDetailsPage = () => {
       if (qty === 1) {
         dispatch(setQuotesData({ quantity: firstSelectedSlab.StartQty }));
       }
+      
+      const hasChecked =
+        isChecked.bold === true ||
+        isChecked.semibold === true ||
+        isChecked.tick === true ||  
+        isChecked.color === true;
+      
+      if(hasChecked){
+        setChecked(isChecked)
+      }
+
+      if(adMedium !== "Newspaper"){
+        setChecked({
+          bold: false,
+          semibold: false,
+          color: false,
+          tick: false,
+          boldPercentage: -1,
+          semiboldPercentage: -1,
+          colorPercentage: -1,
+          tickPercentage: -1
+        })
+      }
+
     } catch (error) {
       console.error("Error in Loding form data: ", error);
     }
   };
 
-  const 
-  handleQtySlabChange = () => {
+  const handleQtySlabChange = () => {
     const selectedSlab = datas.slabData?.find(item => item.StartQty === qtySlab.Qty);
     const widthSelectedSlab = datas.slabData?.find(item => item.Width === qtySlab.Width);
-    console.log(datas.slabData, qtySlab, selectedSlab)
 
     if (!selectedSlab) {
       console.error("No matching slab data found.");
@@ -314,7 +369,7 @@ const AdDetailsPage = () => {
     const newMarginAmount = parseInt(marginValue);
 
     // calculate margin percentage
-    const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount);
+    const newMarginPercentage = calculateMarginPercentage(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newMarginAmount, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
     
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({marginAmount: newMarginAmount, marginPercentage: newMarginPercentage}));
@@ -328,7 +383,7 @@ const AdDetailsPage = () => {
     const newPercentage = parseFloat(marginPercent);
   
     // calculate margin amount
-    const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage);
+    const newMarginAmount = calculateMarginAmount(qty, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, newPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0);
   
     // Update both marginAmount and marginPercentage
     dispatch(setQuotesData({ marginAmount: newMarginAmount, marginPercentage: newPercentage }));
@@ -339,7 +394,21 @@ const AdDetailsPage = () => {
   };
 
   const marginLostFocus = () => {
-    const cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+    let cost = parseInt((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+
+    if (checked.color) {
+      cost += cost * (checked.colorPercentage / 100);
+    }
+    if (checked.tick) {
+      cost += cost * (checked.tickPercentage / 100);
+    }
+    if (checked.bold) {
+      cost += cost * (checked.boldPercentage / 100);
+    }
+    if (checked.semibold) {
+      cost += cost * (checked.semiboldPercentage / 100);
+    }
+
     const newMarginPercentage = ((margin / (cost + margin)) * 100).toFixed(1);
 
     // Ensure consistent update when margin field loses focus
@@ -390,33 +459,33 @@ const AdDetailsPage = () => {
     return matchingValue;
   };
 
-
-  const items = [
-    {
-      content: [
-        {
-          label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)) + formattedMargin(margin) )}`
-        },
-        {
-          label: 'Cost',
-          value: ` ₹${formattedRupees((((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration))))}`
-        }
-      ]
-    },
-    {
-      content: [
-        {
-          label: 'Price',
-          value: ` ₹${formattedRupees(((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration)+ formattedMargin(margin)) * ((rateGST/100) + 1)) }`
-        },
-        {
-          label: 'Cost',
-          value: ` ₹${formattedRupees(((((unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration))) * ((rateGST/100) + 1)))}`
-        }
-      ]
-    }
-  ];
+// Apply GST to both price and cost
+const items = [
+  {
+    content: [
+      {
+        label: 'Price',
+        value: ` ₹${formattedRupees(basePrice)}`
+      },
+      {
+        label: 'Cost',
+        value: ` ₹${formattedRupees(baseCost)}`
+      }
+    ]
+  },
+  {
+    content: [
+      {
+        label: 'Price',
+        value: ` ₹${formattedRupees(basePrice * (1 + rateGST / 100))}`
+      },
+      {
+        label: 'Cost',
+        value: ` ₹${formattedRupees(baseCost * (1 + rateGST / 100))}`
+      }
+    ]
+  }
+];
 
   const StyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -438,7 +507,11 @@ const AdDetailsPage = () => {
         CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
         leadDay: leadDay ? leadDay.LeadDays : "", 
         minimumCampaignDuration, ValidityDate, rateGST, width, 
-        campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false
+        campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false,
+        bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, 
+        semiboldPercentage: checked.semiboldPercentage, color: checked.color, 
+        colorPercentage: checked.colorPercentage, tick: checked.tick, 
+        tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost
       };
   
       // Find the existing item with the same editIndex
@@ -597,7 +670,7 @@ const AdDetailsPage = () => {
 </div>
 
               {/* <div className="mb-3 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 27rem)' }}> */}
-              <div className="mb-3 overflow-y-auto h-full" > 
+              <div className="mb-4 overflow-y-auto h-full" > 
               <span className='flex flex-row mb-2 justify-center'>
   <div className="flex flex-col mr-2 items-center justify-center">
     <button
@@ -617,14 +690,14 @@ const AdDetailsPage = () => {
               let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
               if (result) {
                 const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
+                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost }]));
                 // setSuccessMessage("Item added to Cart");
                 setTimeout(() => { setSuccessMessage(''); }, 2000);
               }
               return;
             }
             const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false }]));
+            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost  }]));
             setSuccessMessage("Item added to Cart");
             setTimeout(() => { setSuccessMessage(''); }, 2000);
           } else {
@@ -656,7 +729,79 @@ const AdDetailsPage = () => {
                   </button>
               </div>
               </span>
+              {adMedium === "Newspaper" &&
+              <div className='grid grid-cols-4 gap-3 my-6'>
+              <div className="flex flex-col items-center justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.bold}
+            onChange={() => setChecked({...checked, bold: !checked.bold})}
+          />
+          <span className="ml-2 text-sm font-medium">Bold</span>
+        </label>
+        {checked.bold && <div className='flex mt-2'>
+          <input disabled={!checked.bold} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1 ' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.boldPercentage} onChange={(e) => setChecked({...checked, boldPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      <div className="flex items-center flex-col justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.semibold}
+            onChange={() => setChecked({...checked, semibold: !checked.semibold})}
+          />
+          <span className="ml-2 text-sm font-medium">Semi Bold</span>
+        </label>
+        {checked.semibold && <div className='flex mt-2'>
+          <input disabled={!checked.semibold} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.semiboldPercentage} onChange={(e) => setChecked({...checked, semiboldPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      <div className="flex flex-col items-center justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.color}
+            onChange={() => setChecked({...checked, color: !checked.color})}
+          />
+          <span className="ml-2 text-sm font-medium">Color</span>
+        </label>
+        {checked.color && <div className='flex mt-2'>
+          <input disabled={!checked.color} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.colorPercentage} onChange={(e) => setChecked({...checked, colorPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      <div className="flex items-center flex-col justify-center text-black">
+        <label className="flex items-center cursor-pointer">
+          <input
+            // ref={checkboxRef}
+            type="checkbox"
+            className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            checked={checked.tick}
+            onChange={() => setChecked({...checked, tick: !checked.tick})}
+          />
+          <span className="ml-2 text-sm font-medium">Tick</span>
+        </label>
+        {checked.tick && <div className='flex mt-2'>
+          <input disabled={!checked.tick} className='ml-2 max-w-14 max-h-7 rounded-sm border border-blue-500 p-1' onFocus={(e) => e.target.select()} placeholder='Ex: 15' value={checked.tickPercentage} onChange={(e) => setChecked({...checked, tickPercentage: e.target.value})}/> 
+          <p className='text-black ml-1 font-bold'>%</p>
+        </div>
+        }
+      </div>
+      </div>}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
+                
                  { unit !== 'SCM' ? (
                   <div className="mb-4 flex flex-col ">
                    <label className="font-bold mb-1 ml-2">Quantity</label>
@@ -668,7 +813,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
@@ -690,7 +835,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, false));
                         setChanging(true);
                       }}
@@ -710,7 +855,7 @@ const AdDetailsPage = () => {
                       min={qtySlab.Width}
                       value={width}
                       onChange={(e) => {
-                        dispatch(setQuotesData({width: e.target.value, marginAmount: calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage)}));
+                        dispatch(setQuotesData({width: e.target.value, marginAmount: calculateMarginAmount(qty, e.target.value  , unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
                         setQtySlab(findMatchingQtySlab(e.target.value, true));
                         setChanging(true);
                       }}
@@ -734,7 +879,7 @@ const AdDetailsPage = () => {
                         // defaultValue={campaignDuration}
                         value={campaignDuration}
                         onChange={(e) => {
-                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: calculateMarginAmount(qty, width, unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage)})); 
+                          dispatch(setQuotesData({campaignDuration: e.target.value, marginAmount: calculateMarginAmount(qty, width, unit, unitPrice, e.target.value, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)})); 
                           //setMargin(formattedMargin(((qty * unitPrice * e.target.value * marginPercentage) / 100)))
                         }}
                         onFocus={(e) => e.target.select()}

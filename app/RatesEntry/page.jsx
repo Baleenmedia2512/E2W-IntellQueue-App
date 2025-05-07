@@ -9,9 +9,10 @@ import { TextField } from '@mui/material';
 // import Snackbar from '@mui/material/Snackbar';
 // import MuiAlert from '@mui/material/Alert';
 import DatePicker from 'react-datepicker';
+import _ from 'lodash';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FetchRateSeachTerm } from '../api/FetchAPI';
-import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll} from "react-icons/md";
+import { MdDeleteOutline , MdOutlineSave, MdAddCircle, MdOutlineClearAll, MdModeEditOutline } from "react-icons/md";
 import { formattedMargin } from '../adDetails/ad-Details';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./page.css"
@@ -95,12 +96,14 @@ const AdDetailsPage = () => {
   const [newRateType, setNewRateType] = useState("");
   const [newRateName, setNewRateName] = useState("");
   const [minimumPrice, setMinimumPrice] = useState("");
+  const [isUpdateRateName, setIsUpdateRateName] = useState(false);
   // const [rateGST, setRateGST] = useState("");
   const [tempSlabData, setTempSlabData] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
   const [initialState, setInitialState] = useState({ validityDays: '', rateGST: "" });
   const [maxRateID, setMaxRateID] = useState("");
   const [elementsToHide, setElementsToHide] = useState([])
+  const [ratePerSCM, setRatePerSCM] = useState(0);
   const [elementsToShow, setElementsToShow] = useState([]);
   const [isUnitsSelected, setIsUnitsSelected] = useState(false);
   const [isQty, setIsQty] = useState(false);
@@ -133,16 +136,30 @@ const AdDetailsPage = () => {
     package: []
   });
 
-  // const [selectedValues, setSelectedValues] = useState({
-  //   rateName: "",
-  //   typeOfAd: "",
-  //   adType: "",
-  //   Location: "",
-  //   vendorName: "",
-  //   Package: ""
-  // });
+  useEffect(() => {
+    if (newRateModel) {
+      switch (newRateType) {
+        case 'Rate Card Name':
+          setNewRateName(selectedValues.rateName?.label || '');
+          break;
+        case 'Type':
+          setNewRateName(selectedValues.adType?.label || '');
+          break;
+        case 'Category':
+          setNewRateName(selectedValues.typeOfAd?.label || '');
+          break;
+        case 'Location':
+          setNewRateName(selectedValues.Location?.label || '');
+          break;
+        case 'Package':
+          setNewRateName(selectedValues.Package?.label || '');
+          break;
+        default:
+          setNewRateName('');
+      }
+    }
+  }, [newRateModel, newRateType, selectedValues]);
 
-  // Function to toggle the modal
   const toggleModal = () => {
       setModal((prevState) => !prevState);
   }
@@ -156,8 +173,6 @@ const AdDetailsPage = () => {
       validityDays !== initialState.validityDays || 
       rateGST !== initialState.rateGST;
     setIsFormChanged(isChanged);
-    
-   
   }, [validityDays, rateGST, initialState]);
   
   const GSTOptions = ['0','5', '18'].map(option => ({value: option, label: option}))
@@ -167,6 +182,13 @@ const AdDetailsPage = () => {
     setToastMessage(toastMessageContent)
     setToast(true)
   }
+
+  // const isDuplicate = combinedSlabData.some((slab) => 
+  //   selectedUnit.value === "SCM" 
+  //     ? slab.StartQty === qty && slab.Width === width 
+  //     : slab.StartQty === qty
+  // );
+
   useEffect(() => {
      
      // If no username is found, redirect to the login page
@@ -217,7 +239,11 @@ const AdDetailsPage = () => {
     if (!isNaN(price)) {
       setTempSlabData((prevSlabData) => {
         // Check if a slab with the same StartQty already exists
-        const existingSlabIndex = prevSlabData.findIndex((slab) => slab.StartQty === Qty);
+        const existingSlabIndex = prevSlabData.findIndex((slab) => 
+          selectedUnit.value === "SCM" 
+            ? slab.StartQty === Qty && slab.Width === Width 
+            : slab.StartQty === Qty
+        );
     
         if (existingSlabIndex !== -1) {
           // Update the existing slab with the new UnitPrice
@@ -231,26 +257,6 @@ const AdDetailsPage = () => {
       });
       toggleModal();
       setIsSlabAvailable(true);
-    // if (isNewRate) {
-     
-    //   setIsSlabAvailable(true);
-    // }
-    
-    // if(newUnitPrice > 0){
-    //   console.log(tempSlabData.Qty, tempSlabData.newUnitPrice)
-    //   try{
-    //     if(!startQty.includes(Number(Qty))){
-    //       await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${tempSlabData.Qty}&JsonUnitPrice=${tempSlabData.newUnitPrice}&JsonUnit=${selectedUnit.label}&DBName=${username}`)
-    //       fetchQtySlab();
-    //       setQty(0)
-    //       toggleModal();
-    //       setNewUnitPrice("");
-    //     } else{
-    //       updateQtySlab()
-    //     }
-    //   }catch(error){
-    //     console.error(error)
-    //   }
     } else {
       // showToastMessage("error", "Enter valid Unit Price!")
       setToastMessage('Enter valid Unit Price!');
@@ -268,59 +274,13 @@ const AdDetailsPage = () => {
       elementsToShowList("Show");
     }
   },[combinedSlabData])
-//   const insertQtySlab = async() => {
-//   if (isNewRate) {
-//     const price = parseFloat(newUnitPrice);
-//     if (!isNaN(price)) {
-//       setTempSlabData([...tempSlabData, { qty, newUnitPrice: price }]);
-//     }
-//     setIsSlabAvailable(true);
-//     toggleModal();
-//   }
-
-//   if (newUnitPrice > 0) {
-//     try {
-//       const slabsData = tempSlabData.map(({ qty, newUnitPrice }) => ({
-//         Qty: qty,
-//         UnitPrice: newUnitPrice
-//       }));
-
-//       const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php`, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify({
-//           slabs: slabsData,
-//           JsonEntryUser: username,
-//           DBName: username,
-//           JsonUnit: selectedUnit.label
-//         })
-//       });
-
-//       const { message, RateId } = await response.json(); // Assuming the PHP script returns the message and RateId
-
-//       fetchQtySlab();
-//       setQty(0);
-//       toggleModal();
-//       setNewUnitPrice("");
-
-//       console.log(message); // Log the success message
-//       console.log("RateId:", RateId); // Log the returned RateId
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   } else {
-//     showToastMessage("error", "Enter valid Unit Price!");
-//   }
-// }
   
   const addQtySlab = async(StartQty, Width, UnitPrice) => {
 
     try{
         try{
           //console.log("Function here")
-          const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${StartQty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}&JsonWidth=${Width}`);
+          const response = await fetch(`https://orders.baleenmedia.com/API/Media/AddQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonQty=${StartQty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}&JsonWidth=${Width ? Width : 1}`);
           const result = await response.json();
           if(result === "Failed to Insert" || result === "Failed to Update"){
             // showToastMessage("Error", "Error while updating data")
@@ -354,7 +314,7 @@ const AdDetailsPage = () => {
   const updateQtySlab = async(startQty, Width, UnitPrice) => {
    
       try {
-            const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${startQty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}&JsonWidth=${Width}`);
+            const response = await fetch(`https://orders.baleenmedia.com/API/Media/UpdateQtySlab.php/?JsonEntryUser=${username}&JsonRateId=${rateId}&JsonQty=${startQty}&JsonUnitPrice=${UnitPrice}&JsonUnit=${selectedUnit.label}&JsonDBName=${companyName}&JsonWidth=${Width ? Width : 1}`);
             if (!response.ok) {
               throw new Error(`Error: ${response.statusText}`);
             }
@@ -388,9 +348,10 @@ const AdDetailsPage = () => {
             dispatch(setSlabData([]));
         }
     } else {
+      
         const response = await fetch(`https://orders.baleenmedia.com/API/Media/RemoveQtySlab.php/?JsonRateId=${rateId}&JsonQty=${Qty}&JsonDBName=${companyName}&JsonWidth=${Width ? Width : 1}`);
         const data = await response.json();
-
+        console.log(data)
         if (data === 'No rows updated') {
             if (selectedUnit.value !== "SCM") {
                 setCombinedSlabData(prevData => prevData.filter((_, i) => i !== index));
@@ -438,7 +399,7 @@ const AdDetailsPage = () => {
       // Clear the previous slabData to avoid showing old data
       dispatch(setSlabData([]));
 
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonDBName=${companyName}`);
+      const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId === "" ? maxRateID : rateId}&JsonDBName=${companyName}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -474,6 +435,12 @@ const AdDetailsPage = () => {
     fetchQtySlab();
   }, [rateId]);
 
+  // useEffect(() => {
+  //   if (isDuplicate) {
+  //     showToastMessage("error", "Duplicate slab!");
+  //     return;
+  //   }
+  // },[isDuplicate]);
   const fetchCampaignUnits = async() => {
     const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchCampaignUnits.php/`);
     if (!response.ok) {
@@ -659,8 +626,9 @@ const AdDetailsPage = () => {
 
   // Function to handle dropdown selection
   const handleSelectChange = (selectedOption, filterKey) => {
-    dispatch(setRateId(""));
+    dispatch(setRateId(0));
     setIsNewRate(true);
+    
     if (filterKey === 'rateName'){
       dispatch(setSelectedValues({
         [filterKey]: selectedOption,
@@ -757,6 +725,13 @@ var selectedRate = '';
           item.Package === selectedOption.value 
         );}
 
+        if (filterKey === 'vendorName' && selectedOption) {
+          selectedRate = ratesData.find(item =>
+            
+          item.vendorName === selectedOption.value 
+        );}
+
+
     if (selectedRate) {
       dispatch(setRateId(selectedRate.RateID));
       setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
@@ -772,9 +747,9 @@ var selectedRate = '';
       setMarginPercentage(selectedRate.AgencyCommission);
     }
   
-  if (filterKey !== 'vendorName'){
-    setIsNewRate(false)
-  }
+  // if (filterKey !== 'vendorName'){
+    setIsNewRate(false);
+  // }
   }
   useEffect(() => {
     invalidRates ? setRatesData(invalidRatesData) : setRatesData(validRatesData)
@@ -827,11 +802,19 @@ var selectedRate = '';
     }
   };
 
-
+  const [initialValues, setInitialValues] = useState({
+    rateName: '',
+    adType: '',
+    typeOfAd: '',
+    Location: '',
+    Package: '',
+    vendorName: ''
+  });
   const handleRateId = async (selectedRateId) => {
+    console.log(selectedRateId)
     if(selectedRateId > 0){
     try {
-      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendor.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchAdMediumTypeCategoryVendorTest.php/?JsonRateId=${selectedRateId}&JsonDBName=${companyName}`);
       
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -845,6 +828,10 @@ var selectedRate = '';
         // if (validityDate < currentDate){
         //   return
         // }
+        // Update relevant fields for the dialogs
+        // setNewRateName(data.rateName); // Update field in new rate dialog
+        // setMinimumPrice(data.minimumCost); // Set for minimum cost dialog
+        // setStartQty(data.startQty); // Example, update this if needed
         // var locationValues = data.location;
         // var packageValues = data.package;
         // const colonIndex = data.adCategory.indexOf(':');
@@ -852,6 +839,16 @@ var selectedRate = '';
         //   locationValues = data.location.split(':')[0].trim()
         //   packageValues = data.packages.split(':')[1].trim()
         // } 
+         // Set initial values for comparison later
+         setInitialValues({
+          rateName: data.rateName,
+          adType: data.adType,
+          typeOfAd: data.typeOfAd,
+          Location: data.Location,
+          Package: data.Package,
+          vendorName: data.vendorName
+        });
+
         dispatch(setSelectedValues({
           rateName: {
             label:  data.rateName ,
@@ -887,6 +884,8 @@ var selectedRate = '';
         setShowCampaignDuration(false)
       }
       setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
+
+      
       // setRateGST({label: data.rategst, value: data.rategst})
       dispatch(setRateGST({label: data.rategst, value: data.rategst}));
       setLeadDays(data.LeadDays);
@@ -918,6 +917,9 @@ var selectedRate = '';
   }
   };
 
+
+
+
   const calculateDifference = () => {
   
     const parsedDate1 = new Date(validTill);
@@ -937,101 +939,247 @@ var selectedRate = '';
     setValidityDays(differenceInDays);
   };
 
-  const updateRates = async (e) => {
-    e.preventDefault()
-    if(editMode){
-      if (selectedUnit.value === "SCM") {
-        const existingSlab = combinedSlabData.find(
-            slab => slab.StartQty === slabData.StartQty && slab.Width === slabData.Width
-        );
-        if (existingSlab) {
-            updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
-        } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
-            // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
-        }
-    } else {
-        const existingSlab = combinedSlabData.find(
-            slab => slab.StartQty === slabData.StartQty
-        );
-        if (existingSlab) {
-            updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
-        } else {
-          combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
-            // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
-        }
-    }
+  // const updateRates = async (e) => {
+  //   e.preventDefault()
+  //   if(editMode){
+  //     if (selectedUnit.value === "SCM") {
+  //       const existingSlab = combinedSlabData.find(
+  //           slab => slab.StartQty === slabData.StartQty && slab.Width === slabData.Width
+  //       );
+  //       if (existingSlab) {
+  //           updateQtySlab(existingSlab.StartQty, existingSlab.Width, existingSlab.UnitPrice);
+  //       } else {
+  //         combinedSlabData.map(item => addQtySlab(item.StartQty, item.Width, item.UnitPrice));
+  //           // addQtySlab(combinedSlabData.StartQty, combinedSlabData.Width, combinedSlabData.UnitPrice);
+  //       }
+  //   } else {
+  //       const existingSlab = combinedSlabData.find(
+  //           slab => slab.StartQty === slabData.StartQty
+  //       );
+  //       if (existingSlab) {
+  //           updateQtySlab(existingSlab.StartQty, 1, existingSlab.UnitPrice);
+  //       } else {
+  //         combinedSlabData.map(item => addQtySlab(item.StartQty, 1, item.UnitPrice));
+  //           // addQtySlab(combinedSlabData.StartQty, 1, combinedSlabData.UnitPrice);
+  //       }
+  //   }
 
-      if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
-        setIsLeadDays(true)
-      } else if(selectedUnit === ""){
-        setIsUnitsSelected(true)
-      } else if(combinedSlabData.length === 0){
-        setIsQtySlab(true)
-      }else if(validityDays <= 0) {
-        setIsValidityDays(true);
-      }else{
-      if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
-        const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
-      try {
+  //     if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
+  //       setIsLeadDays(true)
+  //     } else if(selectedUnit === ""){
+  //       setIsUnitsSelected(true)
+  //     } else if(combinedSlabData.length === 0){
+  //       setIsQtySlab(true)
+  //     }else if(validityDays <= 0) {
+  //       setIsValidityDays(true);
+  //     }else{
+  //     if(selectedValues.rateName && selectedValues.adType && validityDays > 0){
+  //       const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0
+  //     try {
 
-        const minSlab = combinedSlabData.reduce((min, current) => {
-          return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
-      }, combinedSlabData[0]);
+  //       const minSlab = combinedSlabData.reduce((min, current) => {
+  //         return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
+  //     }, combinedSlabData[0]);
 
-        const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}&JsonWidth=${minSlab.Width}`);
+  //       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateRatesData.php/?JsonRateId=${rateId}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignUnit=${selectedCampaignUnits.value}&JsonLeadDays=${leadDays}&JsonValidityDate=${validTill}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonRateGST=${rateGST.value}&JsonDBName=${companyName}&JsonUnit=${selectedUnit.label}&JsonAgencyCommission=${marginPercentage}&JsonRatePerUnit=${minSlab.UnitPrice}&JsonStartQty=${minSlab.StartQty}&JsonWidth=${minSlab.Width}`);
         
-        // Check if the response is ok (status in the range 200-299)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+  //       // Check if the response is ok (status in the range 200-299)
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //       }
     
-        const data = await response.json();
-        // console.log(minSlab.StartQty, data)
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        setEditMode(false);
-        // showToastMessage('success', 'Updated Successfully!');
-        setSuccessMessage('Updated Successfully! ');
-          setTimeout(() => {
-        setSuccessMessage('');
-      }, 2000);
+  //       const data = await response.json();
+  //       // console.log(minSlab.StartQty, data)
+  //       if (data.error) {
+  //         throw new Error(data.error);
+  //       }
+  //       setEditMode(false);
+  //       // showToastMessage('success', 'Updated Successfully!');
+  //       setSuccessMessage('Updated Successfully! ');
+  //         setTimeout(() => {
+  //       setSuccessMessage('');
+  //     }, 2000);
       
-      // window.location.reload();
-    } catch (error) {
-      console.error('Error:', error);
-      // showToastMessage('error', error.message);
-      setToastMessage(error.message);
-      setSeverity('error');
-      setToast(true);
+  //     // window.location.reload();
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     // showToastMessage('error', error.message);
+  //     setToastMessage(error.message);
+  //     setSeverity('error');
+  //     setToast(true);
       
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
-  } else{
-    if(validityDays < 1){
-      setIsValidityDays(true)
-    }else{
-      // showToastMessage('warning', 'Please fill all the necessary fields to Update!')
-      setToastMessage('Please fill the necessary fields to Update!.');
-      setSeverity('error');
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
-  }}}else{
-      setToastMessage("No changes to update!")
-      setSeverity('warning')
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-  }
-  };
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
+  // } else{
+  //   if(validityDays < 1){
+  //     setIsValidityDays(true)
+  //   }else{
+  //     // showToastMessage('warning', 'Please fill all the necessary fields to Update!')
+  //     setToastMessage('Please fill the necessary fields to Update!.');
+  //     setSeverity('error');
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
+  // }}}else{
+  //     setToastMessage("No changes to update!")
+  //     setSeverity('warning')
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  // }
+  // };
   
+
+  const updateRates = async (e) => {
+    e.preventDefault();
+  
+    if (editMode) {
+      // Validation checks
+      if (!selectedValues.rateName || !selectedValues.adType) {
+        setToastMessage('Rate Name and Ad Type are required.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      if (combinedSlabData.length === 0) {
+        setIsQtySlab(true);
+        setToastMessage('Quantity Slab Data is required.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      if (validityDays <= 0) {
+        setIsValidityDays(true);
+        setToastMessage('Validity Days must be greater than 0.');
+        setSeverity('error');
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+        return;
+      }
+  
+      try {
+        const campaignDurationVisibility = showCampaignDuration ? 1 : 0;
+  
+        // Find the minimum slab for pricing
+        const minSlab = combinedSlabData.reduce((min, current) => {
+          return selectedUnit.label === "SCM"
+            ? current.StartQty * current.Width < min.StartQty * min.Width
+              ? current
+              : min
+            : current.StartQty < min.StartQty
+            ? current
+            : min;
+        }, combinedSlabData[0]);
+  
+        console.log('Selected Values before API Call:', selectedValues);
+  
+        // Check if there were any changes made by comparing current selectedValues with initialValues
+        // const isChanged = Object.keys(selectedValues).some((key) => {
+        //   return selectedValues[key].value !== initialValues[key]; // Compare selected values with initial values
+        // });
+  
+        // if (!isChanged) {
+        //   setToastMessage('No changes have been made!');
+        //   setSeverity('warning');
+        //   setToast(true);
+        //   setTimeout(() => setToast(false), 2000);
+          
+        // } else {
+          // If there are changes, proceed with the API call
+          const paramsUpdate = new URLSearchParams();
+
+            paramsUpdate.set('JsonRateId', rateId);
+            paramsUpdate.set('JsonRateGST', rateGST?.value || '');
+            paramsUpdate.set('JsonRateName', selectedValues.rateName.value);
+            paramsUpdate.set('JsonVendorName', selectedValues.vendorName.value);
+            paramsUpdate.set('JsonCampaignDuration', campaignDuration);
+            paramsUpdate.set('JsonCampaignDurationUnit', selectedCampaignUnits?.value || '');
+            paramsUpdate.set('JsonLeadDays', leadDays);
+            paramsUpdate.set('JsonUnits', selectedUnit?.value || '');
+            paramsUpdate.set('JsonValidityDate', validTill);
+            paramsUpdate.set('JsonAdType', selectedValues.adType.value);
+
+            // For JsonAdCategory, adjust as needed. Here we simply concatenate Location and Package.
+            paramsUpdate.set('JsonAdCategory', selectedValues.Location.value + (selectedValues.Package.value));
+            paramsUpdate.set('JsonCampaignDurationVisibility', campaignDurationVisibility);
+            paramsUpdate.set('JsonDBName', companyName);
+            paramsUpdate.set('JsonTypeOfAd', selectedValues.typeOfAd.value);
+            paramsUpdate.set('JsonLocation', selectedValues.Location?.value || '');
+            paramsUpdate.set('JsonPackage', selectedValues.Package?.value || '');
+            paramsUpdate.set('JsonRatePerUnit', minSlab.UnitPrice);
+            paramsUpdate.set('JsonAgencyCommission', marginPercentage);
+            paramsUpdate.set('JsonWidth', minSlab.Width);
+            paramsUpdate.set('JsonStartQty', minSlab.StartQty);
+
+            const updateUrl = `https://www.orders.baleenmedia.com/API/Media/UpdateRatesDataTest.php/?${paramsUpdate.toString()}`;
+
+            const response = await fetch(updateUrl);
+
+  
+          // Check response
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+  
+          const data = await response.json();
+          if (data.error) {
+            throw new Error(data.error);
+          }
+  
+          // Insert or update slab data
+          for (const slab of slabData) {
+
+            if (slab) {
+              await updateQtySlab(slab.StartQty, slab.Width , slab.UnitPrice);
+            } else {
+              setToastMessage("No Slab data to Update!");
+              setSeverity('warning');
+              setToast(true);
+            }
+          }
+
+          for (const slab of tempSlabData) {
+            if (slab) {
+              await addQtySlab(slab.StartQty, slab.Width, slab.UnitPrice);
+            }
+          }
+
+          for (const slab of slabData) {
+            if (slab){
+              await updateQtySlab(slab.StartQty, slab.Width, slab.UnitPrice);
+            }
+          }
+          // Success message
+          // setEditMode(false);
+          setSuccessMessage('Updated Successfully!');
+          setTimeout(() => setSuccessMessage(''), 2000);
+          // setRateSearchTerm("");
+          // setIsNewRate(true);
+          fetchRates();
+          // handleEditMode();
+        // }
+      } catch (error) {
+        console.error('Error:', error);
+        setToastMessage(error.message);
+        setSeverity('error');
+        setToast(true);
+      }
+    } else {
+      setToastMessage('No changes to update!');
+      setSeverity('warning');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+    }
+  };
 
   const rejectRates = async(e, rateID) => {
     e.preventDefault()
@@ -1216,12 +1364,103 @@ var selectedRate = '';
     }));
     // Close the newRateModel modal
     setIsNewRate(true);
-    // dispatch(setRateId(""));
+
+    // dispatch(setRateId(0));
     setNewRateName("");
     setIsQtySlab(false);
     elementsToShowList("Show")
     setNewRateModel(false);
-  };  
+  };
+  
+  
+
+  const handleUpdateNewRateName = () => {
+    let updatedOptions = [];
+    let changedRate = "";
+
+    switch (newRateType) {
+      case 'Rate Card Name':
+        updatedOptions = [
+          ...getDistinctValues('rateName').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "rateName";
+        break;
+
+      case 'Type':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('adType').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "adType";
+        break;
+
+      case 'Category':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('typeOfAd').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "typeOfAd";
+        break;
+
+      case 'Location':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('Location').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "Location";
+        break;
+
+      case 'Package':
+        if (!selectedValues.rateName) {
+          showToastMessage('Select a valid Rate Name or add a new Rate Name', 'error');
+          return;
+        }
+        updatedOptions = [
+          ...getDistinctValues('Package').map(value => ({ value, label: value })),
+          { value: newRateName, label: newRateName },
+        ];
+        changedRate = "Package";
+        break;
+
+      default:
+        return;
+    }
+
+    // Update state and dispatch actions
+    setFilters({
+      ...filters,
+      [changedRate]: newRateName,
+    });
+
+    dispatch(setSelectedValues({
+      ...selectedValues,
+      [changedRate]: { label: newRateName, value: newRateName },
+    }));
+
+    setEditMode(true);
+    setIsUpdateRateName(true); // Enable update mode
+    setNewRateModel(false); // Close modal
+    setNewRateName(""); // Reset newRateName directly
+    setSuccessMessage(`${newRateType} updated successfully`, 'success');
+        setTimeout(() => {
+      setSuccessMessage('');
+    }, 2000);
+};
+
+
 
   useEffect(() => {
     const setVendor = () => {
@@ -1328,26 +1567,60 @@ var selectedRate = '';
         } else if(selectedUnit === ""){
           setIsUnitsSelected(true)
         } else if(combinedSlabData.length === 0){
+          qtyRef.current.focus();
           setIsQtySlab(true);
         }else if (validityDays <= 0) {
+          validityRef.current.focus();
             setIsValidityDays(true);
           } else if(!elementsToHide.includes("RatesLeadDaysTextField") && leadDays <= 0){
+            ldRef.current.focus();
             setIsLeadDays(true)
         }else { 
           const campaignDurationVisibility = showCampaignDuration === true ? 1 : 0;
           const minSlab = combinedSlabData.reduce((min, current) => {
             return selectedUnit.label === "SCM" ? current.StartQty * current.Width < min.StartQty * min.Width ? current : min : current.StartQty < min.StartQty ? current : min;
         }, combinedSlabData[0]);
-
             try {
-              const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?JsonRateGST=${rateGST ? rateGST.value : ''}&JsonEntryUser=${username}&JsonRateName=${adMediumEncoded}&JsonVendorName=${selectedValues.vendorName.value}&JsonCampaignDuration=${campaignDuration}&JsonCampaignDurationUnit=${selectedCampaignUnits ? selectedCampaignUnits.value : ''}&JsonLeadDays=${leadDays}&JsonUnits=${selectedUnit ? selectedUnit.value : ''}&JsonValidityDate=${validTill}&JsonAdType=${adTypeEncoded}&JsonAdCategory=${selectedValues.Location ? locationEncoded : ''}${selectedValues.Package ? ':' + packageEncoded : ''}&JsonCampaignDurationVisibility=${campaignDurationVisibility}&JsonDBName=${companyName}&JsonTypeOfAd=${selectedValues.typeOfAd ? typeOfAdEncoded : ''}&JsonQuantity=${combinedSlabData[0].StartQty}&JsonLocation=${selectedValues.Location ? selectedValues.Location.value : ''}&JsonPackage=${selectedValues.Package ? selectedValues.Package.value : ''}&JsonRatePerUnit=${combinedSlabData[0].UnitPrice}&JsonAgencyCommission=${marginPercentage}&JsonWidth=${minSlab.Width}`)
+              const params = new URLSearchParams();
+
+              // Set parameters with fallback values as needed
+              params.set('JsonRateGST', rateGST ? rateGST.value : '');
+              params.set('JsonEntryUser', username);
+              params.set('JsonRateName', adMediumEncoded);
+              params.set('JsonVendorName', selectedValues.vendorName.value);
+              params.set('JsonCampaignDuration', campaignDuration);
+              params.set('JsonCampaignDurationUnit', selectedCampaignUnits ? selectedCampaignUnits.value : '');
+              params.set('JsonLeadDays', leadDays);
+              params.set('JsonUnits', selectedUnit ? selectedUnit.value : '');
+              params.set('JsonValidityDate', validTill);
+              params.set('JsonAdType', adTypeEncoded);
+
+              // Build JsonAdCategory by combining Location and Package if available
+              const jsonAdCategory =
+                (selectedValues.Location ? locationEncoded : '') +
+                (selectedValues.Package ? ':' + packageEncoded : '');
+              params.set('JsonAdCategory', jsonAdCategory);
+
+              params.set('JsonCampaignDurationVisibility', campaignDurationVisibility);
+              params.set('JsonDBName', companyName);
+              params.set('JsonTypeOfAd', selectedValues.typeOfAd ? typeOfAdEncoded : '');
+              params.set('JsonQuantity', combinedSlabData[0].StartQty);
+              params.set('JsonLocation', selectedValues.Location ? selectedValues.Location.value : '');
+              params.set('JsonPackage', selectedValues.Package ? selectedValues.Package.value : '');
+              params.set('JsonRatePerUnit', combinedSlabData[0].UnitPrice);
+              params.set('JsonAgencyCommission', marginPercentage);
+              params.set('JsonWidth', minSlab.Width);
+
+              // Build the final URL
+              const url = `https://www.orders.baleenmedia.com/API/Media/AddNewRates.php/?${params.toString()}`;
+              const response = await fetch(url);
+
                 const data = await response.json();
                 // showToastMessage('success', 'Inserted Successfully!');
                 setSuccessMessage(`Rate Card #${maxRateID} Added Successfully!`);
                 setTimeout(() => {
                 setSuccessMessage('');
               }, 2000);
-
                 // Setting the new Rate into Old Rate
                 setIsNewRate(true);
                 fetchMaxRateID()
@@ -1371,13 +1644,17 @@ const handleRateSearch = async(e) =>{
   setRatesSearchSuggestion(searchSuggestions);
 }
 
+// const debouncedSearch = useRef(_.debounce(handleRateSearch, 300)).current;
+
 const updateSlabData = (qty, newUnitPrice, Width) => {
-  //console.log(tempSlabData.length)
+  console.log(tempSlabData.length, newUnitPrice, Width)
   if(tempSlabData.length > 0){
   const updatedData = tempSlabData.map((data) => {
     if (data.StartQty === qty && selectedUnit.value !== "SCM") {
+      console.log(data.StartQty, qty, data.Width, Width, "In SCM Templ Slab Data")
       return { ...data, UnitPrice: newUnitPrice };
     } else if(data.StartQty === qty && data.Width === Width){
+      console.log(data.StartQty, qty, data.Width, Width, "In Templ Slab Data")
       return { ...data, UnitPrice: newUnitPrice };
     }
     
@@ -1388,9 +1665,10 @@ const updateSlabData = (qty, newUnitPrice, Width) => {
 } else {
   const updatedData = slabData.map((data) => {
     if (data.StartQty === qty && selectedUnit.value !== "SCM") {
+      console.log(data.StartQty, qty, data.Width, Width, "In SCM Slab Data")
       return { ...data, UnitPrice: newUnitPrice };
     } else if(data.StartQty === qty && data.Width === Width){
-      
+      console.log(data.StartQty, qty, data.Width, Width, "In Slab Data")
       return { ...data, UnitPrice: newUnitPrice };
     }
     return data;
@@ -1502,7 +1780,7 @@ setEditModal(false);
           return updatedSlabData;
         } else {
           // Add the new slab
-          return [...prevSlabData, { StartQty: startQty, UnitPrice: price, Width: width }];
+          return [...prevSlabData, { StartQty: startQty, UnitPrice: price, Width: width, isTemp: true }];
         }
       });
       setSCMModel(false);
@@ -1667,13 +1945,13 @@ const handleBlur = (e) => {
           </DialogActions>
       </Dialog>
       <Dialog open={newRateModel} onClose={() => setNewRateModel(!newRateModel)} fullWidth={true} maxWidth='sm'>
-        <DialogTitle>Add New Rate</DialogTitle>
+        <DialogTitle>{!isNewRate ? "Add Rate" : "Add New Rate"}</DialogTitle>
         <DialogContent>
           <div className="relative">
-            <h3 className='normal-label mb-4 text-black'>Enter new {newRateType}</h3>
+            <h3 className='normal-label mb-4 text-black'>{!isNewRate ? `Enter ${newRateType}` : `Enter new ${newRateType}`}</h3>
             <TextField 
               id="newRateType" 
-              defaultValue={newRateName} 
+              value={newRateName} 
               label={newRateType} 
               variant="outlined" 
               size='small' 
@@ -1684,7 +1962,14 @@ const handleBlur = (e) => {
             </div>
             </DialogContent>
             <DialogActions className='mb-4'>
+            {isNewRate ? (
               <Button color = 'primary' variant="contained" onClick={() => handleSetNewRateName()}>Submit</Button>
+            ) : (
+              <>
+              <Button color='primary' variant="contained" onClick={() => handleSetNewRateName()}>Add</Button>
+              <Button color='secondary' variant="contained" onClick={() => handleUpdateNewRateName()}>Update</Button>
+            </>
+          )}
             </DialogActions>
       </Dialog>
       <Dialog open={openSCMModel} onClose={() => setSCMModel(!openSCMModel)} fullWidth={true} maxWidth='sm'>
@@ -1698,8 +1983,20 @@ const handleBlur = (e) => {
               label="Minimum Cost"
               variant="outlined" 
               size='small' 
-              className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`} 
-              onChange={e => setMinimumPrice(e.target.value)}
+              className={`w-full px-4 py-2 gap-y-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`} 
+              onChange={e => {setMinimumPrice(e.target.value); setRatePerSCM(e.target.value/(startQty * width))}}
+              onFocus={event => event.target.select()}
+            />
+             <h3 className='normal-label my-4 text-black'>(Or)</h3>
+             <h3 className='normal-label mb-4 text-black'>Enter Rate Per Unit for {startQty * width}+ Quantities</h3>
+            <TextField
+              id="ratePerSCMBox" 
+              value={ratePerSCM} 
+              label="Rate Per SCM"
+              variant="outlined" 
+              size='small' 
+              className={`w-full px-4 py-2 mt-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`} 
+              onChange={e => {setRatePerSCM(e.target.value); setMinimumPrice(e.target.value * (startQty * width))}}
               onFocus={event => event.target.select()}
             />
             </div>
@@ -1709,62 +2006,56 @@ const handleBlur = (e) => {
             </DialogActions>
       </Dialog>
             <div className="w-full max-w-6xl">
-            <div className="flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center   ">
   <div className="w-full max-w-6xl relative">
-    {/* Flex container for heading and buttons */}
-    <div className="flex justify-between items-center relative z-10 px-2">
-      {/* Heading on the far left */}
+    {/* Header Section */}
+    <div className="flex justify-between items-center relative z-10 space-y-4  ">
+      {/* Heading Section */}
       <div>
-        <h2 className="text-xl w-24 sm:w-full sm:text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">
-          Rates Manager
-        </h2>
-        <div className="border-2 w-10 mt-1 pl-2 border-blue-500"></div>
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-500">Rates Manager</h2>
+        <div className="border-2 w-10 mt-1 border-blue-500"></div>
       </div>
-      
-      {/* Buttons on the far right */}
-      <div className="flex space-x-2 sm:mt-20">
-      {isNewRate ? (
-  <button 
-    className="Add-button" 
-    onClick={insertNewRate}
-  >
-    Add
-  </button>
-) : (
-  rateValidity ? (
-    <>
-      <button 
-        className="Update-button" 
-        onClick={updateRates}
-        disabled={!isFormChanged}
-      >
-        Update
-      </button>
-      <button 
-        className="Delete-button" 
-        onClick={(e) => rejectRates(e, rateId)}
-      >
-        Remove
-      </button>
-    </>
-  ) : (
-    <button 
-      className="Add-button" 
-      onClick={(e) => restoreRates(e, rateId)}
-    >
-      Restore
-    </button>
-  )
-)}
 
-
-
+      {/* Buttons Section */}
+      <div className="flex gap-2 justify-center sm:justify-end">
+        {isNewRate || rateId === 0 ? (
+          <button 
+            className="Add-button px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            onClick={insertNewRate}
+          >
+            Add
+          </button>
+        ) : rateValidity && rateId > 0 ? (
+          <>
+            <button 
+              className="Update-button px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              onClick={updateRates}
+              disabled={!isFormChanged}
+            >
+              Update
+            </button>
+            <button 
+              className="Delete-button px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              onClick={(e) => rejectRates(e, rateId)}
+            >
+              Remove
+            </button>
+          </>
+        ) : (
+          <button 
+            className="Add-button px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            onClick={(e) => restoreRates(e, rateId)}
+          >
+            Restore
+          </button>
+        )}
       </div>
     </div>
-    
-    {/* Search bar positioned on top of heading and buttons section */}
-    <div className="absolute top-4 sm:-top-8 w-full left-0 md:left-72 sm:left-72 sm:w-1/2 mt-[70px] sm:mt-20 z-20">
-      <div className="mb-2 flex items-center text-black">
+
+    {/* Search Bar and Checkbox Section */}
+    <div className=" mt-6 flex flex-col gap-4">
+      {/* Checkbox */}
+      <div className="flex items-center justify-start text-black">
         <label className="flex items-center cursor-pointer">
           <input
             ref={checkboxRef}
@@ -1777,7 +2068,8 @@ const handleBlur = (e) => {
         </label>
       </div>
 
-      <div className="flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
+      {/* Search Input */}
+      <div className="flex-grow flex items-center border rounded-lg overflow-hidden border-gray-400 focus-within:border-blue-400">
         <input
           className="w-full px-4 py-2 text-black focus:outline-none"
           type="text"
@@ -1785,44 +2077,45 @@ const handleBlur = (e) => {
           value={rateSearchTerm}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          // onFocus={(e) => { e.target.select(); }}
-          onChange={handleRateSearch}
+          onChange={e => handleRateSearch(e)}
         />
         <div className="px-3">
           <FontAwesomeIcon icon={faSearch} className="text-blue-500" />
         </div>
       </div>
-      
-      {/* Search Suggestions */}
-      <div className="relative" ref={suggestionsRef}>
-        {isFocused && Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
-          <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
-            {ratesSearchSuggestion.map((name, index) => {
-              const isInvalid = name.ApprovedStatus === "Rejected";
-              return (
-                <li key={index}>
-                  <button
-                    type="button"
-                    className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
-                    onClick={handleRateSelection}
-                    onTouchStart={() => handleTouchStart(name.RateID, isInvalid)}
-                    onTouchEnd={handleTouchEnd} 
-                    onMouseDown={() => handleMouseDown(name.RateID, isInvalid)} 
-                    onMouseUp={handleTouchEnd}
-                    onMouseLeave={handleMouseLeave}
-                    value={name.SearchTerm}
-                  >
-                    {name.SearchTerm}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+    </div>
+
+    {/* Search Suggestions */}
+    <div className="relative mt-4" ref={suggestionsRef}>
+      {isFocused && Array.isArray(ratesSearchSuggestion) && ratesSearchSuggestion.length > 0 && rateSearchTerm !== '' && (
+        <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+          {ratesSearchSuggestion.map((name, index) => {
+            const isInvalid = name.ApprovedStatus === "Rejected";
+            return (
+              <li key={index}>
+                <button
+                  type="button"
+                  className={`block w-full text-left px-4 py-2 text-sm ${isInvalid ? 'text-red-600 bg-red-100' : 'text-gray-800'} hover:bg-gray-100 focus:outline-none`}
+                  onClick={handleRateSelection}
+                  onTouchStart={() => handleTouchStart(name.RateID, isInvalid)}
+                  onTouchEnd={handleTouchEnd}
+                  onMouseDown={() => handleMouseDown(name.RateID, isInvalid)}
+                  onMouseUp={handleTouchEnd}
+                  onMouseLeave={handleMouseLeave}
+                  value={name.SearchTerm}
+                >
+                  {name.SearchTerm}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   </div>
 </div>
+
+
 
     {/* MUI Dialog for long press actions */}
     <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
@@ -1867,13 +2160,13 @@ const handleBlur = (e) => {
             </div>
           </div>
       )} */}
-      <div className="flex items-center justify-center mt-24 sm:mt-6">
+      <div className="flex items-center justify-center md:mt-6 mt-4">
         
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-6xl">
       <form className="space-y-4">
       {/* <h3 className="text-lg md:text-lg lg:text-xl font-bold text-blue-500">Add or Edit your Rates here</h3> */}
       {/* { rateId > 0 && <h5 className="text-lg md:text-lg lg:text-lg text-blue-500">Rate ID: {rateId}</h5>}  */}
-      {rateId > 0 && rateValidity && (
+      {rateId > 0 && rateValidity && !isNewRate && (
   <div className="w-fit bg-blue-50 border border-blue-200 rounded-lg mb-4 flex items-center shadow-md -ml-2 sm:ml-0">
     <button 
       className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
@@ -1921,7 +2214,11 @@ const handleBlur = (e) => {
                           name='AddRateNameButton'
                           disabled={!rateValidity}
                         >
-                          <MdAddCircle size={28}/>
+                          {isNewRate || rateId === 0 ?(
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1948,7 +2245,11 @@ const handleBlur = (e) => {
                       />
                       <button className='justify-center text-blue-500 ml-6' onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Category");}}
                         disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                         {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -1979,7 +2280,11 @@ const handleBlur = (e) => {
                       name='AddAdCategoryButton'
                       onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Type");}}
                       disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                        {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -2011,7 +2316,11 @@ const handleBlur = (e) => {
                       name='AddLocationButton'
                       onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Location");}}
                       disabled={!rateValidity}>
-                        <MdAddCircle size={28}/>
+                         {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                       </button>
                     </div>
                   </div>
@@ -2044,7 +2353,11 @@ const handleBlur = (e) => {
                     name='AddPackageButton'
                     onClick={(e) => {e.preventDefault(); setNewRateModel(true); setNewRateType("Package");}}
                     disabled={!rateValidity}>
-                      <MdAddCircle size={28}/>
+                       {isNewRate || rateId === 0 ? (
+                            <MdAddCircle size={28} />
+                          ) : (
+                            <MdModeEditOutline size={28} />
+                          )}
                     </button>
                   </div>
                 </div>
@@ -2080,7 +2393,7 @@ const handleBlur = (e) => {
                           }}
                     placeholder="Select Vendor"
                     value={selectedValues.vendorName}
-                    onChange={(selectedOption) => {handleSelectChange(selectedOption, 'vendorName'); setEditMode(true)}}
+                    onChange={(selectedOption) => {handleSelectChange(selectedOption, 'vendorName');}}
                     options={vendors}
                     required
                     optionLabel="label"
@@ -2222,11 +2535,11 @@ const handleBlur = (e) => {
                     {combinedSlabData.length > 0 ? <h2 className='block mb-4 text-black font-bold'>Rate-Slab</h2> : <p className='block mb-4 text-black font-bold '>No Rate-Slab currently available</p>}
                     <ul className='mb-4 text-black'>
                     {combinedSlabData.map((data, index) => (
-                      <div key={selectedUnit === "SCM" ? data.StartQty : data.StartQty * data.Width} className='flex justify-center'>
+                      <div key={`${data.StartQty}-${data.Width}`} className='flex justify-center'>
                         {data.isTemp ? (
                           <span onClick={() => handleItemClick(data)}>{(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit.value} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit.value}</span>
                         ) : (
-                          <option key={selectedUnit === "SCM" ? data.StartQty : data.StartQty * data.Width} className="mt-1.5" 
+                          <option key={`${data.StartQty}-${data.Width}`} className="mt-1.5" 
                             onClick={() => handleItemClick(data)} disabled={!rateValidity}
                           >
                             {(selectedUnit && selectedUnit.value !== "SCM") ? data.StartQty : data.StartQty * data.Width} {selectedUnit ? selectedUnit.value : ''} - ₹{parseFloat(data.UnitPrice).toFixed(2)} per {selectedUnit ? selectedUnit.value : ''}
@@ -2361,19 +2674,20 @@ const handleBlur = (e) => {
                     {isValidityDays && <p className='text-red-500 font-medium'>Validity Days should be more than 0</p>}
                 </div>
 
-                <div className='mr-9 mt-4' name="RateGSTSelect">
+                <div className='mr-9' name="RateGSTSelect">
                   <label className="block mb-2 text-gray-700 font-semibold">Rate GST%</label>
                   <CreatableSelect
-                                        className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
-                                          // className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
-                                          styles={{
-                                            control: (provided) => ({
-                                              ...provided,
-                                              minHeight: '40px',
-                                            }),
-                                          }}
+                    className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300`}
+                      // className="p-0 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md "
+                      styles={{
+                        control: (provided) => ({
+                          ...provided,
+                          minHeight: '40px',
+                        }),
+                      }}
                     id="29"
                     instanceId="RateGST"
+                    menuPlacement='top'
                     placeholder="Select Rate GST%"
                     value={rateGST}
                     onChange={(selectedOption) => {dispatch(setRateGST(selectedOption)); setEditMode(true)}}
@@ -2383,7 +2697,7 @@ const handleBlur = (e) => {
                   />
 </div>
                 </div>
-                
+                {isNewRate && (
                <div className="flex items-center justify-center mb-8 mt-11 sm:mt-5 sm:mr-0">
                  <button 
                   className="Createorder-button flex items-center justify-center space-x-2 sm:flex-col sm:space-x-0 sm:space-y-2"
@@ -2420,6 +2734,7 @@ const handleBlur = (e) => {
                   }}>
                  <ControlPointRoundedIcon className="mr-2" />Create Order</button>
                  </div> 
+                 )}
                 </form>
               </div>
               </div>

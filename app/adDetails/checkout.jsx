@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,9 +19,13 @@ import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
 import { addItemsToCart, toggleItemSelection, removeEditModeItems } from '@/redux/features/cart-slice';
-
+// import useClickTracker from './Dashboard/useClickTracker';
+// import useTimerTracker from './Dashboard/useTimerTracker';
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
+import { setSelectedRows } from '@/redux/features/cart-slice'; 
+import { PostInsertOrUpdate } from '../api/InsertUpdateAPI';
+import { useCart } from "../context/CartContext";
 
 export const formattedMargin = (number) => {
 
@@ -34,14 +38,21 @@ export const formattedMargin = (number) => {
 };
 
 const CheckoutPage = () => {
+  // useClickTracker('cart');
+  // useTimerTracker("cart");
   const dispatch = useDispatch()
-
+  const { isCleared, setIsCleared } = useCart();
+  console.log(isCleared)
   const [datas, setDatas] = useState([]);
   const [nextQuoteNumber, setNextQuoteNumber] = useState([]);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   
   const clientDetails = useAppSelector(state => state.clientSlice)
-  const cartItems = useAppSelector(state => state.cartSlice.cart);
+  // const cartReduxItems = useAppSelector(state => state.cartSlice.cart);
+  // console.log(cartReduxItems)
+  const [cartItems, setCartItems] = useState([]);
+  // const cartItems = useContext(CartContext)
+  console.log(cartItems)
   const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
@@ -55,8 +66,34 @@ const CheckoutPage = () => {
   const [quoteSearchSuggestion, setQuoteSearchSuggestion] = useState([]);
   const [quoteSearchTerm, setQuoteSearchTerm] = useState("")
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const selectedRows = useAppSelector((state) => state.cartSlice.selectedRows);
 
+  useEffect(() => {
+    if (isCleared) {
+      fetchCartData();
+      setIsCleared(false); 
+    }
+  }, [isCleared]);
+
+
+  const handleRowClick = (CartID) => {
+    const updatedSelectedRows = selectedRows.includes(CartID)
+      ? selectedRows.filter((id) => id !== CartID) // Deselect if already selected
+      : [...selectedRows, CartID]; // Select new row
+  
+    dispatch(setSelectedRows(updatedSelectedRows)); // Store in Redux
+    // dispatch(addItemsToCart(cartItems));
+    // const selectedItem = cartItems.find(item => item.CartID === CartID);
+    // if (selectedItem) {
+    //   dispatch(addItemsToCart([selectedItem])); // Add selected item to Redux cart
+    // }
+    
+    console.log("reduxxxx selected",updatedSelectedRows)
+    console.log("reduxxxx cart",cartItems)
+  };
+
+
+  
   // const qty = useAppSelector(state => state.quoteSlice.quantity);
   // const unit = useAppSelector(state => state.quoteSlice.unit);
   // const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
@@ -82,40 +119,44 @@ const CheckoutPage = () => {
 
   const routers = useRouter();
 
-  const handleRemoveRateId = (index, editMode, newCartOnEdit) => {
+  // const handleRemoveRateId = (index, editMode, newCartOnEdit) => {
 
-    if (editMode) {
-      if(newCartOnEdit) {
-        dispatch(removeItem(index));
-      } else {
-        dispatch(removeEditItem(index));
-      }
-    } else {
-      dispatch(removeItem(index));
-    }
-    
-  };
+  //   if (editMode) {
+  //     if(newCartOnEdit) {
+  //       dispatch(removeItem(index));
+  //     } else {
+  //       dispatch(removeEditItem(index));
+  //     }
+  //   } else {
+  //     dispatch(removeItem(index));
+  //   }
+
+  //   if(!cartItems){
+  //     dispatch(setQuotesData({isEditMode: false, isNewCartOnEdit: false}))
+  //   }
+  // };
   const handleEditRow = (item) => {
+    console.log("Editing item:", item);
     dispatch(setQuotesData({ 
-    selectedAdMedium: item.adMedium,
+    selectedAdMedium: item.AdMedium,
     selectedAdType: item.adType,
     selectedAdCategory: item.adCategory,
-    selectedEdition: item.edition,
-    selectedPosition: item.position,
+    selectedEdition: item.Edition,
+    selectedPosition: item.Package,
     selectedVendor: {label: item.selectedVendor, value: item.selectedVendor},
     // selectedSlab: "",
-    quantity: item.qty,
-    width: item.width,
-    ratePerUnit: item.unitPrice,
+    quantity: item.Quantity,
+    width: item.Width,
+    ratePerUnit: parseInt(item.AmountwithoutGst)/parseInt(item.Quantity)*parseInt(item.Width),
     unit: item.unit,
-    rateId: item.rateId,
+    rateId: item.RateId,
     validityDate: item.formattedDate,
     leadDays: item.leadDay,
     minimumUnit: item.minimumCampaignDuration,
     campaignDuration: item.campaignDuration,
     marginAmount: item.margin,
     // extraDiscount: 0,
-    remarks: item.remarks,
+    remarks: item.Remarks,
     currentPage: "adDetails",
     // validRates: [],
     isDetails: true,
@@ -128,9 +169,18 @@ const CheckoutPage = () => {
     // }
     isEditMode: true,
     editIndex: item.index,
-    editQuoteNumber: item.editQuoteNumber
+    editQuoteNumber: item.editQuoteNumber,
+    checked: {
+      bold: item.bold,
+      semibold: item.semibold,
+      color: item.color,
+      tick: item.tick,
+      boldPercentage: item.boldPercentage,
+      semiboldPercentage: item.semiboldPercentage,
+      colorPercentage: item.colorPercentage,
+      tickPercentage: item.tickPercentage
+    }
   }));
-  console.log(item);
   };
   
 
@@ -230,7 +280,15 @@ const CheckoutPage = () => {
           campaignDurationVisibility: item.campaignDurationVisibility || 0,
           editQuoteNumber: item.QuoteID || '',
           isEditMode: true,
-          cartId: item.CartId
+          cartId: item.CartId,
+          bold: item.Bold >= 0 ? true: false,
+          semibold: item.SemiBold >= 0 ? true: false,
+          color: item.Color >= 0 ? true: false,
+          tick: item.Tick >= 0 ? true: false,
+          boldPercentage: item.Bold,
+          semiboldPercentage: item.SemiBold,
+          colorPercentage: item.Color,
+          tickPercentage: item.Tick
         }]));
         {dispatch(setClientData({
           clientName: item.ClientName ,
@@ -243,221 +301,459 @@ const CheckoutPage = () => {
       console.error("Error in handleQuoteSelection:", error);
     }
   };
-
+  console.log(cartItems)
   const hasRemarks = cartItems.some(item => item.remarks);
   const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
   const editQuoteItem = cartItems.find(item => item.editQuoteNumber);
+  const hasChecked = cartItems.find(
+    (item) =>
+      (item.bold && parseInt(item.boldPercentage) > -1) ||
+      (item.semibold && parseInt(item.semiboldPercentage) > -1) ||
+      (item.tick && parseInt(item.tickPercentage) > -1) ||
+      (item.color && parseInt(item.colorPercentage) > -1)
+  ) !== undefined;
   const ratesSearchSuggestion = [];
 
-  const handleUndoRemove = (index) => {
-    const updatedCartItems = cartItems.map(item =>
-      item.index === index ? { ...item, isCartRemoved: false } : item
-    );
-    dispatch(addItemsToCart(updatedCartItems)); 
+  // const handleUndoRemove = (index) => {
+  //   const updatedCartItems = cartItems.map(item =>
+  //     item.index === index ? { ...item, isCartRemoved: false } : item
+  //   );
+  //   dispatch(addItemsToCart(updatedCartItems)); 
+  // };
+  const fetchCartData = async () => {
+      const params={
+              JsonDBName: companyName,
+              JsonEntryUser: username,
+            }
+      const response = await PostInsertOrUpdate('FetchCartItems',params)
+      // console.log(response.data, companyName, username, response)
+      setCartItems(response.data || []);
   };
+
+  const handleRemoveRateId = async (index) => {
+  const itemToUpdate = cartItems.find(item => item.index === index);
   
+  if (!itemToUpdate) {
+    console.error("Item not found in cart.");
+    return;
+  }
+
+  const requestData = {
+    JsonCartId: itemToUpdate.CartID,
+    JsonEntryUser: username,
+    JsonDBName: companyName,
+    JsonValidStatus: "Invalid"  
+  };
+console.log(itemToUpdate.CartID)
+  try {
+    const response = await fetch("https://www.orders.baleenmedia.com/API/Media/UpdateCart.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      console.log("Cart item marked as Invalid:", data.message);
+      fetchCartData();
+    } else {
+      console.error("Failed to update cart item:", data.message);
+    }
+  } catch (error) {
+    console.error("Error updating cart status:", error);
+  }
+};
+
+
+  useEffect(() => {
+    fetchCartData();
+  }, []);
+
+
   return (
     <div className="text-black w-full items-center px-3">
-      <h1 className='text-2xl font-bold text-center mb-4 text-blue-500'>Cart</h1>
-    <div className='justify-center relative mb-4'>
-    
-                <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
-              <input
-          className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
-          // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
-          type="text"
-          id="QuoteSearchInput"
-          name='QuoteSearchInput'
-          placeholder="Ex: 2540 Tony Bus"
-          value={quoteSearchTerm}
-          disabled = {editQuoteItem?.editQuoteNumber ? true : false}
-          onChange = {handleQuoteSearch}
-          onFocus={(e) => {e.target.select()}}
-        /><div className="px-3">
-        <FontAwesomeIcon icon={faSearch} className="text-blue-500 " />
-      </div></div>
-      {(quoteSearchSuggestion.length > 0 && quoteSearchTerm !== "") && (
-              <ul className="absolute mt-1 w-full bg-white border text-black border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
-                {quoteSearchSuggestion.map((name, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
-                      onClick={handleQuoteSelection}
-                      value={name}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            </div>
-        <div>
+      <h1 className="text-2xl font-bold text-center mb-4 text-blue-500">
+        Cart
+      </h1>
+      <div className="justify-center relative mb-4">
+        <div className="flex items-center w-full border rounded-lg border-gray-400 focus:border-blue-300 focus:ring focus:ring-blue-300">
+          <input
+            className={`w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:shadow-outline border-0`}
+            // className="p-2 glass text-black shadow-2xl w-64 focus:border-solid focus:border-[1px] border-[#b7e0a5] border-[1px] rounded-md mr-3 max-h-10"
+            type="text"
+            id="QuoteSearchInput"
+            name="QuoteSearchInput"
+            placeholder="Ex: 2540 Tony Bus"
+            value={quoteSearchTerm}
+            disabled={editQuoteItem?.editQuoteNumber ? true : false}
+            onChange={handleQuoteSearch}
+            onFocus={(e) => {
+              e.target.select();
+            }}
+          />
+          <div className="px-3">
+            <FontAwesomeIcon icon={faSearch} className="text-blue-500 " />
+          </div>
+        </div>
+        {quoteSearchSuggestion.length > 0 && quoteSearchTerm !== "" && (
+          <ul className="absolute mt-1 w-full bg-white border text-black border-gray-200 rounded-md shadow-lg overflow-y-auto max-h-48">
+            {quoteSearchSuggestion.map((name, index) => (
+              <li key={index}>
+                <button
+                  type="button"
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none"
+                  onClick={handleQuoteSelection}
+                  value={name}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div>
         {cartItems.length >= 1 ? (
           <div>
-            
             {editQuoteItem ? (
-            <div className='mb-4'>
-            <div className="w-fit sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-1 flex items-center shadow-md sm:mr-4">
-              <button
-                className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
-                onClick={(e) => {
-                  e.preventDefault()
-                  setQuoteSearchTerm("");
-                  dispatch(removeEditModeItems());
-                  dispatch(resetClientData());
-                  // dispatch(resetQuotesData());
-                  // dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails'}));
-                }}
-              >
-                Exit Edit
-              </button>
-              <div className="flex flex-row text-left text-sm md:text-base pr-2">
-                <p className="text-gray-600 font-semibold">#{editQuoteItem.editQuoteNumber}</p>
-                <p className="text-gray-600 font-semibold mx-1">-</p>
-                <p className="text-gray-600 font-semibold">{clientName}</p>
-                {/* <p className="text-gray-600 font-semibold mx-1">-</p>
+              <div className="mb-4">
+                <div className="w-fit sm:w-fit bg-blue-50 border border-blue-200 rounded-lg mb-1 flex items-center shadow-md sm:mr-4">
+                  <button
+                    className="bg-blue-500 text-white font-medium text-sm md:text-base px-3 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 mr-2 text-nowrap"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setQuoteSearchTerm("");
+                      dispatch(removeEditModeItems());
+                      dispatch(resetClientData());
+                      // dispatch(resetQuotesData());
+                      // dispatch(setQuotesData({currentPage: 'checkout', previousPage: 'adDetails'}));
+                    }}
+                  >
+                    Exit Edit
+                  </button>
+                  <div className="flex flex-row text-left text-sm md:text-base pr-2">
+                    <p className="text-gray-600 font-semibold">
+                      #{editQuoteItem.editQuoteNumber}
+                    </p>
+                    <p className="text-gray-600 font-semibold mx-1">-</p>
+                    <p className="text-gray-600 font-semibold">{clientName}</p>
+                    {/* <p className="text-gray-600 font-semibold mx-1">-</p>
                 <p className="text-gray-600 font-semibold">₹{cartItems[0].unitPrice}</p> */}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 italic mt-1">
+                  Q.No - Client Name
+                </p>
               </div>
-            </div>
-            <p className="text-xs text-gray-400 italic mt-1">Q.No - Client Name</p>
-            </div> 
-          ) : ''}
-          <div className='flex flex-col justify-center w-full'>
-            
-            <div>
-              
-              {/* <h1 className='mb-4 font-bold text-center'>AD Details</h1> */}
-                <div className='overflow-x-auto max-h-[40vh]'>
-              <table className='mb-8 w-full border-collapse border border-gray-200 table-auto'>
-        <thead>
-          <tr>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Card ID</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quote No.</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Medium</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Type</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Rate Category</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Edition</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Package</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Quantity</th>
-            {hasCampaignDuration && <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Campaign Duration</th>}
-            {hasRemarks && <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remarks</th>}
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Unit Price</th>
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Price (excl. GST)</th>
-            {/* <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th> */}
-            <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cartItems.map((item, index) => (
-            <tr 
-            key={index}
-            className={item.isCartRemoved ? 'opacity-50 bg-gray-100' : item.isSelected ? 'bg-blue-100' : ''}
-            
-            >
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.rateId}</td>
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{!editQuoteItem ? nextQuoteNumber : editQuoteItem.editQuoteNumber}</td>
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.adMedium}</td>
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.adType}</td>
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.adCategory}</td>
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.edition}</td>
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.position}</td>
-              <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.unit === "SCM" ? item.width + "W" + " x " + item.qty + "H" : item.qty} {item.unit}</td>
-              {hasCampaignDuration && <td className='p-1.5 border border-gray-200' onClick={() => dispatch(toggleItemSelection(item.index))}>{(item.campaignDuration && (item.CampaignDurationUnit)) ? item.campaignDuration + " " + item.CampaignDurationUnit : 'NA'}</td>}
-              {hasRemarks && <td className='p-1.5 border border-gray-200 text-nowrap' onClick={() => dispatch(toggleItemSelection(item.index))}>{item.remarks}</td>}
-              <td className='p-1.5 border border-gray-200 w-fit text-nowrap' onClick={() => dispatch(toggleItemSelection(item.index))}>
-                ₹ {formattedRupees(
-                    (
-                      (item.unit === "SCM" ? item.qty * item.width : item.qty) *
-                      item.unitPrice *
-                      (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
-                      (parseInt(item.margin) ? parseInt(item.margin) : 0) 
-                    ) / (item.unit === "SCM" ? item.qty * item.width : item.qty)
-                )} per {item.unit}
-              </td>
-              <td className='p-1.5 border border-gray-200 text-nowrap' onClick={() => dispatch(toggleItemSelection(item.index))}>
-                ₹ {formattedRupees(
-                  Math.round(
-                    (item.unit === "SCM" ? item.qty * item.width : item.qty) *
-                    item.unitPrice *
-                    (item.minimumCampaignDuration > 0 ? item.campaignDuration / item.minimumCampaignDuration : 1) +
-                    (parseInt(item.margin) ? parseInt(item.margin) : 0) 
-                  )
-                )}
-              </td>
+            ) : (
+              ""
+            )}
+            <div className="flex flex-col justify-center w-full">
+              <div>
+                {/* <h1 className='mb-4 font-bold text-center'>AD Details</h1> */}
+                <div className="overflow-x-auto max-h-[40vh]">
+                  <table className="mb-8 w-full border-collapse border border-gray-200 table-auto">
+                    <thead>
+                      <tr>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Rate Card ID
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Quote No.
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Rate Medium
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Rate Type
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Rate Category
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Edition
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Package
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Quantity
+                        </th>
+                        {hasCampaignDuration && (
+                          <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                            Campaign Duration
+                          </th>
+                        )}
+                        {hasRemarks && (
+                          <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                            Remarks
+                          </th>
+                        )}
+                         {hasChecked && (
+                          <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Extras
+                        </th>
+                         )}
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Unit Price
+                        </th>
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Price (excl. GST)
+                        </th>
+                        {/* <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th> */}
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {cartItems.map((item) => (
+            <tr
+              key={item.CartId}
+              className={`cursor-pointer ${
+                selectedRows.includes(item.CartID) ? "bg-blue-200" : "hover:bg-gray-100"
+              }`}
+              onClick={() => handleRowClick(item.CartID)}
+                        >
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              handleRowClick(item.CartID)
+                            }
+                          >
+                            {item.RateId}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              handleRowClick(item.CartID)
+                            }
+                          >
+                            {!editQuoteItem
+                              ? nextQuoteNumber
+                              : editQuoteItem.editQuoteNumber}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              handleRowClick(item.CartId)
+                            }
+                          >
+                            {item.AdMedium}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              dispatch(toggleItemSelection(item.CartId))
+                            }
+                          >
+                            {item.adType}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              dispatch(toggleItemSelection(item.CartId))
+                            }
+                          >
+                            {item.adCategory}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              dispatch(toggleItemSelection(item.CartId))
+                            }
+                          >
+                            {item.Edition}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              dispatch(toggleItemSelection(item.CartId))
+                            }
+                          >
+                            {item.Package}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200"
+                            onClick={() =>
+                              dispatch(toggleItemSelection(item.CartId))
+                            }
+                          >
+                            {item.unit === "SCM"
+                              ? item.Width + "W" + " x " + item.Quantity + "H"
+                              : item.Quantity}{" "}
+                            {item.unit}
+                          </td>
+                          {hasCampaignDuration && (
+                            <td
+                              className="p-1.5 border border-gray-200"
+                              onClick={() =>
+                                dispatch(toggleItemSelection(item.CartId))
+                              }
+                            >
+                              {item.campaignDuration &&
+                              item.CampaignDurationUnit
+                                ? item.campaignDuration +
+                                  " " +
+                                  item.CampaignDurationUnit
+                                : "NA"}
+                            </td>
+                          )}
+                          {hasRemarks && (
+                            <td
+                              className="p-1.5 border border-gray-200 text-nowrap"
+                              onClick={() =>
+                                dispatch(toggleItemSelection(item.CartId))
+                              }
+                            >
+                              {item.remarks}
+                            </td>
+                          )}
+                          {hasChecked && (
+                            <td
+                              className="p-1.5 border border-gray-200"
+                              onClick={() =>
+                                dispatch(toggleItemSelection(item.CartId))
+                              }
+                            >
+                              {(item.bold  && parseInt(item.boldPercentage) > -1) && "Bold: " + item.boldPercentage + "%\n" }
+                              {(item.semibold && parseInt(item.semiboldPercentage) > -1) && "Semibold: " + item.semiboldPercentage + "%\n"}
+                              {(item.color && parseInt(item.colorPercentage) > -1) && "Color: " + item.colorPercentage + "%\n"}
+                              {(item.tick && parseInt(item.tickPercentage) > -1) && "Tick: " + item.tickPercentage + "%\n"}
+                            </td>
+                          )}
+                          <td
+                            className="p-1.5 border border-gray-200 w-fit text-nowrap"
+                            onClick={() =>
+                              dispatch(toggleItemSelection(item.CartId))
+                            }
+                          >
+                            ₹{" "}
+                            {formattedRupees(
+                              (item.AmountwithoutGst) /
+                                (item.unit === "SCM"
+                                  ? item.Quantity * item.Width
+                                  : item.Quantity)
+                            )}{" "}
+                            per {item.unit}
+                          </td>
+                          <td
+                            className="p-1.5 border border-gray-200 text-nowrap"
+                            onClick={() =>
+                              dispatch(toggleItemSelection(item.CartId))
+                            }
+                          >
+                            ₹{" "}
+                            {formattedRupees(
+                              Math.round(
+                                item.AmountwithoutGst
+                              )
+                            )}
+                          </td>
 
-              <td className='p-1.5 border border-gray-200'>
-              <div className="flex space-x-3 items-center">
-                <IconButton 
-                  aria-label="Edit" 
-                  className='m-0 h-full'
-                  onClick={() => handleEditRow(item)}
-                  disabled={item.isCartRemoved}
-                  // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
-                >
-                  <EditIcon className='text-blue-500 hover:text-blue-700' fontSize='small'/>
-                </IconButton>
-                {/* Remove or Undo Button */}
-                {item.isCartRemoved ? (
-                  <IconButton
-                    aria-label="Undo"
-                    className='m-0 h-full'
-                    onClick={() => handleUndoRemove(item.index)}
-                  >
-                    <UndoIcon className='text-green-500 hover:text-green-700 opacity-100' fontSize='small' />
-                  </IconButton>
-                ) : (
-                  <IconButton
-                    aria-label="Remove"
-                    className='m-0 h-full'
-                    onClick={() => handleRemoveRateId(item.index, item.isEditMode, item.isNewCart)}
-                  >
-                    <RemoveCircleOutline className='text-red-500 hover:text-red-700' fontSize='small' />
-                  </IconButton>
-                )}
-              </div>
-            </td>
+                          <td className="p-1.5 border border-gray-200">
+                            <div className="flex space-x-3 items-center">
+                              <IconButton
+                                aria-label="Edit"
+                                className="IconButton m-0 h-full"
+                                onClick={() => handleEditRow(item)}
+                                disabled={item.isCartRemoved}
+                                // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
+                              >
+                                <EditIcon
+                                  className="text-blue-500 hover:text-blue-700"
+                                  fontSize="small"
+                                />
+                              </IconButton>
+                              {/* Remove or Undo Button */}
+                              {item.isCartRemoved ? (
+                                <IconButton
+                                  aria-label="Undo"
+                                  className="IconButton m-0 h-full"
+                                  onClick={() => handleUndoRemove(item.CartId)}
+                                >
+                                  <UndoIcon
+                                    className="text-green-500 hover:text-green-700 opacity-100"
+                                    fontSize="small"
+                                  />
+                                </IconButton>
+                              ) : (
+                                <IconButton
+                                  aria-label="Remove"
+                                  className="IconButton m-0 h-full"
+                                  onClick={() =>
+                                    handleRemoveRateId(
+                                      item.index,
+                                    )
+                                  }
+                                >
+                                  <RemoveCircleOutline
+                                    className="text-red-500 hover:text-red-700"
+                                    fontSize="small"
+                                  />
+                                </IconButton>
+                              )}
+                            </div>
+                          </td>
 
-
-              {/* <td className='p-1.5 border border-gray-200'>
+                          {/* <td className='p-1.5 border border-gray-200'>
                 <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
                   onClick={() => handleRemoveRateId(item.index)}
                 >
                   <RemoveCircleOutline color='primary' fontSize='small'/>
                 </IconButton>
               </td> */}
-            </tr>
-          ))}
-        </tbody>    
-      </table>
-      {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
-      </div>
-      <div className='flex justify-center mt-4'>
-        <button className='rounded-xl border bg-blue-500 px-2 py-2 text-white'
-        onClick={() => {
-          // Reset quotes data
-          dispatch(resetQuotesData());
-      
-          // Set quotes data
-          dispatch(setQuotesData({
-              currentPage: 'adDetails',
-              previousPage: "checkout",
-              isEditMode: cartItems.length > 0 ? cartItems[0].isEditMode : false,
-              editQuoteNumber: cartItems.length > 0 ? cartItems[0].editQuoteNumber : 0,
-              isNewCartOnEdit: cartItems.length > 0 && cartItems[0].isEditMode ? true : false
-          }));
-      }}
-      ><FontAwesomeIcon icon={faPlusCircle} className='text-white mr-1 text-lg'/> Add More</button>
-      </div>       
-        </div>
-      </div>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
+                </div>
+                <div className="flex justify-center mt-4">
+                  <button
+                    className="rounded-xl border bg-blue-500 px-2 py-2 text-white"
+                    onClick={() => {
+                      // Reset quotes data
+                      dispatch(resetQuotesData());
+
+                      // Set quotes data
+                      dispatch(
+                        setQuotesData({
+                          currentPage: "adDetails",
+                          previousPage: "checkout",
+                          isEditMode:
+                            cartItems.length > 0
+                              ? cartItems[0].isEditMode
+                              : false,
+                          editQuoteNumber:
+                            cartItems.length > 0
+                              ? cartItems[0].editQuoteNumber
+                              : 0,
+                          isNewCartOnEdit:
+                            cartItems.length > 0 && cartItems[0].isEditMode
+                              ? true
+                              : false,
+                        })
+                      );
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faPlusCircle}
+                      className="text-white mr-1 text-lg"
+                    />{" "}
+                    Add More
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        ):(
+        ) : (
           <div>
-          {/* <div className="flex flex-row justify-between mt-8"> */}
-          
-          {/* <div className="mb-8 flex items-center">
+            {/* <div className="flex flex-row justify-between mt-8"> */}
+
+            {/* <div className="mb-8 flex items-center">
 
               <button
                  className="mr-8 hover:scale-110 text-blue-500 hover:animate-pulse font-semibold border-blue-500 shadow-md shadow-blue-500 border px-2 py-1 rounded-lg "
@@ -472,37 +768,37 @@ const CheckoutPage = () => {
               <button disabled className='border px-2 py-2 h-fit bg-gray-500 text-white rounded-xl cursor-not-allowed'>Clear All</button>
               </>
           </div> */}
-          {/* <h1 className='text-2xl mt-2 font-bold text-center mb-4 text-blue-500'>Cart</h1> */}
-          <div className="flex flex-col items-center justify-center space-y-1 py-12 px-4 sm:px-6 md:px-8">
-            <label className="text-xl sm:text-2xl font-semibold text-gray-800">
-              Looks like your cart is empty.
-            </label>
-            
-            <span className="flex items-center space-x-2 text-sm sm:text-base text-gray-600">
-              <label className="text-lg sm:text-xl">
-                <button 
-                  className="text-blue-600 font-semibold underline hover:text-blue-800 transition duration-300 ease-in-out"
-                  onClick={() => dispatch(setQuotesData({currentPage: "adDetails", previousPage: "checkout"}))}
-                >
-                  Add Items
-                </button>
-                &nbsp;in cart to generate quote
+            {/* <h1 className='text-2xl mt-2 font-bold text-center mb-4 text-blue-500'>Cart</h1> */}
+            <div className="flex flex-col items-center justify-center space-y-1 py-12 px-4 sm:px-6 md:px-8">
+              <label className="text-xl sm:text-2xl font-semibold text-gray-800">
+                Looks like your cart is empty.
               </label>
-            </span>
-          </div>
 
-
-          
+              <span className="flex items-center space-x-2 text-sm sm:text-base text-gray-600">
+                <label className="text-lg sm:text-xl">
+                  <button
+                    className="text-blue-600 font-semibold underline hover:text-blue-800 transition duration-300 ease-in-out"
+                    onClick={() =>
+                      dispatch(
+                        setQuotesData({
+                          currentPage: "adDetails",
+                          previousPage: "checkout",
+                        })
+                      )
+                    }
+                  >
+                    Add Items
+                  </button>
+                  &nbsp;in cart to generate quote
+                </label>
+              </span>
+            </div>
           </div>
         )}
-        
-        </div>       
-      <div className="bg-surface-card p-8 rounded-2xl mb-4">
-                
-              </div>
-              
+      </div>
+      <div className="bg-surface-card p-8 rounded-2xl mb-4"></div>
     </div>
-  )
+  );
 
 }
 export default CheckoutPage;

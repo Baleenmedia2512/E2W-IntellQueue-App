@@ -1,6 +1,7 @@
 'use client';
 import './page.css';
 import React, { useState, useEffect, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import { useRouter } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
 import { CircularProgress, TextField } from '@mui/material';
@@ -32,6 +33,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchFinanceSearchTerm } from '../api/FetchAPI';
 import { generateBillPdf } from '../generatePDF/generateBillPDF';
+import { GetInsertOrUpdate } from '../api/InsertUpdateAPI';
 
 const transactionOptions = [
   { value: 'Income', label: 'Income' },
@@ -432,11 +434,45 @@ const openChequeDate = Boolean(anchorElChequeDate);
 
 
 
-  const handleOrderNumberChange = (event) => {
+  const handleOrderNumberChange = async(event) => {
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
     setOrderNumber(newOrderNumber);
-    
+    // const tdsPercent = await FetchTDSPercentage(companyName, newOrderNumber);
+    // setTDSPercentage(tdsPercent)
+
+    if(transactionType.value === 'Operational Expense' && expenseCategory.value === 'Project'){
+      const response = await GetInsertOrUpdate('FetchPayable', {OrderNumber: newOrderNumber, JsonDBName: companyName});
+      // Clear validation errors
+      if (errors.orderNumber) {
+        setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
+      }
+
+      if(response.length > 0){
+        const clientDetails = response[0];
+          dispatch(setIsOrderExist(true));
+          //setRemarks(clientDetails.remarks);
+          setOrderAmount(clientDetails.balanceAmount);
+          clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);
+          setGSTPercentage(clientDetails.gstPercentage);
+          setClientName(clientDetails.clientName);
+          setClientNumber(clientDetails.clientContact);
+          setBalanceAmount(clientDetails.balanceAmount);
+          setRateWiseOrderNumber(clientDetails.rateWiseOrderNumber);
+          setRateName(clientDetails.rateName);
+          setRateType(clientDetails.rateType);
+          setAdjustedOrderAmount(clientDetails.adjustedOrderAmount);
+          setWaiverAmount(clientDetails.waiverAmount);
+          setReceivableAmount(clientDetails.receivableAmount);
+          setPreviousPaymentMode(clientDetails.previousPaymentMode);
+          setPreviousAmountPaid(clientDetails.previousAmountPaid);
+          setErrors({});       
+      } else {
+        dispatch(setIsOrderExist(false));
+      }
+      return;
+    }
+      
     {!billsOnly &&
     axios
     .get(`https://orders.baleenmedia.com/API/Media/FetchClientDetailsFromOrderTableUsingOrderNumber.php?OrderNumber=${newOrderNumber}&JsonDBName=${companyName}`)
@@ -447,6 +483,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         const clientDetails = data[0];
         dispatch(setIsOrderExist(true));
         setOrderAmount(clientDetails.balanceAmount);
+        clientDetails.gstPercentage > 0 ? setTaxType(taxTypeOptions[0]) : setTaxType(taxTypeOptions[2]);  
         setGSTPercentage(clientDetails.gstPercentage);
         setClientName(clientDetails.clientName);
         setClientNumber(clientDetails.clientContact);
@@ -458,7 +495,7 @@ const openChequeDate = Boolean(anchorElChequeDate);
         setReceivableAmount(clientDetails.receivableAmount);
         setPreviousPaymentMode(clientDetails.previousPaymentMode);
         setPreviousAmountPaid(clientDetails.previousAmountPaid);
-
+        
         setErrors({});
       } else {
         dispatch(setIsOrderExist(false));
@@ -467,14 +504,10 @@ const openChequeDate = Boolean(anchorElChequeDate);
     .catch((error) => {
       console.error(error);
     });
-    // Clear validation errors
-    if (errors.orderNumber) {
-      setErrors((prevErrors) => ({ ...prevErrors, orderNumber: undefined }));
-    }
   }
   };
 
-  const handleRateWiseOrderNumberChange = (event) => {
+  const handleRateWiseOrderNumberChange = async(event) => {
     
     const newOrderNumber = event.target.value.replace(/[^\d,]/g, '');
 
@@ -931,6 +964,8 @@ const handlePostInsertActions = () => {
           } else if (elementsToHide.includes("OrderNumberText")) {
               SendSMSViaNetty(clientNumber, clientName, orderAmount, paymentMode.value);
               if (isDownloadInvoiceChecked) sendDataToPdf();
+          } else if (elementsToHide.includes("FinanceSMS")) {
+              showToast("SMS Not Sent! Reason: No Template Found.", "warning");
           } else {
               showToast("SMS Not Sent! Reason: No Database Found.", "warning");
           }
@@ -953,8 +988,6 @@ const elementsToHideList = () => {
 
 
 useEffect(() => {
-  //searching elements to Hide from database
-
   elementsToHide.forEach((name) => {
     const elements = document.getElementsByName(name);
     elements.forEach((element) => {
@@ -1317,7 +1350,7 @@ useEffect(() => {
 
 const handleGSTChange = (e) => {
   const gstPer = parseFloat(e); // GST percentage
-  const gst = (orderAmount * gstPer) / 100; // Calculate GST amount
+  const gst = ((orderAmount /(100 + gstPer)) * gstPer).toFixed(2); // Calculate GST amount
   setGSTAmount(gst); // Update GST amount
 };
 
@@ -1878,7 +1911,8 @@ const handleGSTAmountChange = (gst) => {
               />
                {/* {errors.taxType && <span className="text-red-500 text-sm">{errors.taxType}</span>} */}
                </div>
-               {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && (
+               
+               {taxType && taxType.value === 'GST'  && (
               <div>
                <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST %<span className="text-red-500">*</span></label>
           <div className="w-full flex gap-3">
@@ -1909,7 +1943,7 @@ const handleGSTAmountChange = (gst) => {
           {errors.gstPercentage && <span className="text-red-500 text-sm">{errors.gstPercentage}</span>}
                </div>
                     )}
-          {taxType && taxType.value === 'GST' && transactionType.value === 'Operational Expense' && ( 
+          {taxType && taxType.value === 'GST' && ( 
           <div>
             <label className='block mb-2 mt-5 text-gray-700 font-semibold'>GST Amount<span className="text-red-500">*</span></label>
             <div className="w-full flex gap-3">
@@ -1920,7 +1954,8 @@ const handleGSTAmountChange = (gst) => {
                 name="GSTAmountInput" 
                 // required={!isEmpty} 
                 value={gstAmount}
-                onChange = {(e) => {setGSTAmount(e.target.value);
+                onChange = {(e) => {
+                  setGSTAmount(e.target.value);
                   if (errors.gstAmount) {
                     setErrors((prevErrors) => ({ ...prevErrors, gstAmount: undefined }));
                   }

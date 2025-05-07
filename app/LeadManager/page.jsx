@@ -1,31 +1,41 @@
 'use client'
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
 import { motion } from 'framer-motion';
 import { FaFilter, FaTimes } from "react-icons/fa";
+import LoadingComponent from "./progress";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
-import LoadingComponent from "./progress";
+import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { FaFileAlt } from "react-icons/fa";
+import { Timer } from "@mui/icons-material";
+import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
+import { FetchActiveCSE } from "../api/FetchAPI";
+import { useRouter } from "next/navigation";
+// import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
+import { useDispatch } from "react-redux";
+import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 
-const statusColors = {
+export const statusColors = {
   New: "bg-green-200 text-green-800",
   Unreachable: "bg-red-200 text-red-800",
   "Call Followup": "bg-yellow-200 text-yellow-800",
   Unqualified: "bg-orange-200 text-orange-800",
   "No Status": "bg-gray-200 text-gray-800",
+  "Convert": "bg-green-200 text-green-800",
+  "Ready for Quote": "bg-blue-200 text-blue-800",
 };
 
 const availableStatuses = [
@@ -36,7 +46,7 @@ const availableStatuses = [
   "No Status",
 ];
 
-function toTitleCase(str) {
+export function toTitleCase(str) {
   return str
     .toLowerCase()
     .split(" ")
@@ -65,10 +75,14 @@ const parseFollowupDate = (dateStr) => {
 
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
+  const notificationSent = useRef(new Set())
   const [loading, setLoading] = useState(true);
+  const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
+  const {statusFilter, prospectTypeFilter, quoteSentFilter, CSEFilter, fromDate, toDate, filtersVisible, searchQuery} = useAppSelector(state => state.filterSlice)
+  const router = useRouter()
+  const dispatch = useDispatch()
   const [showModal, setShowModal] = useState(false);
-  const userName = useAppSelector(state => state.authSlice.userName);
-  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "" });
+  const [currentCall, setCurrentCall] = useState({ phone: "", name: "", sNo: "", Platform: "", Enquiry: "", LeadDateTime: "", quoteSent: "", rowData: []});
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [remarks, setRemarks] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -77,6 +91,7 @@ const EventCards = ({params, searchParams}) => {
   const [hideOtherStatus, setHideOtherStatus] = useState(false);
   const [followupOnly, setFollowpOnly] = useState(false);
   const [initialSelectedStatus, setInitialSelectedStatus] = useState(selectedStatus);
+  const [selectedUser, setSelectedUser] = useState('')
   const [initialFollowupDate, setInitialFollowupDate] = useState(followupDate);
   const [initialFollowupTime, setInitialFollowupTime] = useState(followupTime);
   const [initialCompanyName, setInitialCompanyName] = useState(companyName);
@@ -84,36 +99,52 @@ const EventCards = ({params, searchParams}) => {
   const [initialLeadStatus, setInitialLeadStatus] = useState("");
   const [initialQuoteStatus, setInitialQuoteStatus] = useState("");
   const [selectedLeadStatus, setSelectedLeadStatus] = useState("");
+  // const [quoteSentChecked, setQuoteSentChecked] = useState("");
   const [prospectType, setProspectType] = useState("");
   const [isLoading, setIsLoading] = useState(false); // State to track the loading status
   const [hasSaved, setHasSaved] = useState(false); 
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filtersVisible, setFiltersVisible] = useState(false);
-  const [fromDate, setFromDate] = useState(null); // Use null for default empty date
-  const [toDate, setToDate] = useState(null); // Use null for default empty date
+  // const [statusFilter, setStatusFilter] = useState("All");
+  // const [prospectTypeFilter, setProspectTypeFilter] = useState("All");
+  // const [quoteSentFilter, setQuoteSentFilter] = useState("All");
+  // const [CSEFilter, setCSEFilter] = useState("All");
+  // const [searchQuery, setSearchQuery] = useState('');
+  // const [filtersVisible, setFiltersVisible] = useState(false);
+  // const [fromDate, setFromDate] = useState(null); // Use null for default empty date
+  // const [toDate, setToDate] = useState(null); // Use null for default empty date
   const [timers, setTimers] = useState("");
   const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isHandledByChange, setIsHandledByChange] = useState('');
+  const [CSENames, setCSENames] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [nextSNo, setNextSNo] = useState(0); 
+  const [formData, setFormData] = useState({
+    sNo: "",
+    date: "",
+    time: "",
+    platform: "",
+    name: "",
+    phoneNo: "",
+    email: "", 
+    adEnquiry: "",
+    consultantNumber: "",
+    consultantName: "",
+    handledBy: "",
+  });
 
   // console.log(rows)
   const toggleFilters = () => {
-    setFiltersVisible((prev) => !prev);
+    dispatch(toggleFiltersVisible());
   };
 
   const handleSearch = (query) => {
-    setSearchQuery(query.toLowerCase());
+    dispatch(setSearchQuery(query.toLowerCase()));
   };
   
   const clearFilters = () => {
-    setStatusFilter('All');
-    setProspectTypeFilter('All');
-    setFromDate(null);
-    setToDate(null);
-    setSearchQuery('');
+    dispatch(resetFilters());
   };
 
   const prospectTypes = [
@@ -129,6 +160,14 @@ const EventCards = ({params, searchParams}) => {
   )
   .filter((row) =>
     prospectTypeFilter === 'All' || row.ProspectType === prospectTypeFilter
+  )
+  .filter((row) => 
+    quoteSentFilter === 'All' || 
+        (quoteSentFilter === 'Quote Sent' && row.QuoteSent === 'Yes' && row.Status === 'Call Followup') ||
+        (quoteSentFilter === 'Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
+  )
+  .filter((row) =>
+    CSEFilter === 'All' || row.HandledBy === CSEFilter
   )
   .filter((row) =>
     [row.Phone, row.Enquiry, row.Name, row.CompanyName, row.Remarks, row.FollowupDate, row.LeadDate]
@@ -157,7 +196,173 @@ const EventCards = ({params, searchParams}) => {
     return false; 
   });
 
+  const fetchCSENames = async () => {
+    let data = await FetchActiveCSE(UserCompanyName);
+    setCSENames(data)
+  };
+
   const isNoDataFound = filteredRows.length === 0;
+
+//-------------------------------------------------------------------------------------------------------------
+useEffect(() => {
+  if (isModalOpen) {
+    const now = new Date();
+    const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const formattedTime = now.toTimeString().slice(0, 5); // HH:MM
+
+    setFormData((prev) => ({
+      ...prev,
+      date: formattedDate,
+      time: formattedTime,
+    }));
+  }
+}, [isModalOpen]);
+
+useEffect(() => {
+  // Get the current date and time
+  const now = new Date();
+  let newDate;
+  let newTime;
+
+  // If the status is "Call Followup" and there’s a valid followup date in currentCall,
+  // then use that value directly.
+  if (
+    selectedStatus === "Call Followup" &&
+    currentCall?.rowData?.FollowupDate &&
+    currentCall.rowData.FollowupDate !== "No Followup Date"
+  ) {
+    newDate = currentCall.rowData.FollowupDate;
+    newTime = currentCall.rowData.FollowupTime;
+  } else {
+    // Otherwise, start with the current date as the default
+    const defaultDate = new Date(now);
+    if (selectedStatus === "Unreachable") {
+      // For "Unreachable", set the default date to 1 hour ahead.
+      defaultDate.setHours(defaultDate.getHours() + 1);
+    } else if (selectedStatus === "Call Followup") {
+      // For "Call Followup" (when no valid date is present),
+      // move to tomorrow while keeping the current time.
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      defaultDate.setDate(defaultDate.getDate() + 1);
+      defaultDate.setHours(
+        Math.floor(currentTimeMinutes / 60),
+        currentTimeMinutes % 60,
+        0
+      );
+    }
+    
+    // Format the date and time based on the updated defaultDate.
+    newDate = defaultDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    newTime = defaultDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  // Update state with the new followup date and time
+  setFollowupDate(newDate);
+  setFollowupTime(newTime);
+
+}, [selectedStatus, showModal]); //Triggers when selected status or current call is called  
+
+const checkAndUpdateStatus = async (rowsData) => {
+  if (!rowsData || rowsData.length === 0) return;
+
+  const currentTime = new Date();
+  const hours24 = 24 * 60 * 60 * 1000;
+
+  const updatePromises = rowsData
+    .filter(row => row.Status === "Unreachable" && row.FollowupDate && row.FollowupTime)
+    .map(async (row) => {
+      const formattedDate = formatDate(row.FollowupDate);
+      const formattedTime = formatUnreachableTime(row.FollowupTime);
+      const followupDateTime = new Date(`${formattedDate}T${formattedTime}`);
+      
+      if (currentTime - followupDateTime >= hours24) {
+        const payload = {
+          sNo: row.SNo,
+          status: "New",
+          isUnreachable: "Yes",
+          dbCompanyName: UserCompanyName,
+          followupDate: "",
+          followupTime: "",
+        };
+
+        try {
+          const response = await fetch("https://leads.baleenmedia.com/api/updateLeads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (response.ok) {
+            console.log(`Status for row ${row.SNo} updated to "New" after 24 hours`);
+            return { sNo: row.SNo, status: "New" };
+          } else {
+            throw new Error("Failed to update lead");
+          }
+        } catch (error) {
+          console.error("Error updating lead:", error);
+        }
+      }
+    });
+
+  const updatedStatuses = await Promise.all(updatePromises);
+
+  setSelectedStatus((prevStatuses) => {
+    const newStatuses = { ...prevStatuses };
+    updatedStatuses.forEach((item) => {
+      if (item) newStatuses[item.sNo] = item.status;
+    });
+    return newStatuses;
+  });
+};
+
+
+const formatDate = (dateStr) => {
+  const months = {
+    Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
+    Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12"
+  };
+
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, "0");
+    const month = months[parts[1]];
+    const year = parts[2];
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return "";
+};
+
+const formatUnreachableTime = (timeStr) => {
+  const timeParts = timeStr.match(/(\d+):(\d+) (\w{2})/);
+  if (!timeParts) return "00:00:00";
+
+  let [_, hours, minutes, period] = timeParts;
+  hours = parseInt(hours, 10);
+
+  if (period.toLowerCase() === "pm" && hours !== 12) {
+    hours += 12;
+  } else if (period.toLowerCase() === "am" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
+};
+
+
+
+//==============================================================================================================
+
+
 
   useEffect(() => {
     const intervals = {};
@@ -201,7 +406,88 @@ const EventCards = ({params, searchParams}) => {
       Object.values(intervals).forEach(clearInterval);
     };
   }, [rows]);
-  
+
+
+  const insertEnquiry = async () => {
+    let row = currentCall.rowData;
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
+    const isNewClient = await checkIfNewClient(cleanedPhone)
+    console.log(isNewClient)
+    try {
+        const url = `https://www.orders.baleenmedia.com/API/Media/InsertNewEnquiryTest.php/?JsonUserName=${toTitleCase(userName)}&JsonClientName=${row.Name}&JsonClientEmail=${row.Email}&JsonClientContact=${cleanedPhone}&JsonSource=${row.Platform}&JsonDBName=${alternateCompanyName}&JsonIsNewClient=${isNewClient}`;
+
+        const response = await fetch(url);
+
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const text = await response.text(); // Get raw response
+
+        let data;
+        try {
+            data = JSON.parse(text); // Attempt to parse JSON
+        } catch (jsonError) {
+            throw new Error(`Invalid JSON response: ${text}`);
+        }
+
+        if (data.message === "Values Inserted Successfully!") {
+            setSuccessMessage('Client Details Are Saved!');
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 2000);
+        } else if (data === "Duplicate Entry!") {
+            setToastMessage('Contact Number Already Exists!');
+            setSeverity('error');
+            setToast(true);
+            setTimeout(() => {
+                setToast(false);
+            }, 2000);
+        } else {
+            alert(`The following error occurred while inserting data: ${data}`);
+        }
+    } catch (error) {
+        console.error('Error while inserting data:', error);
+        alert(`Error: ${error.message}`);
+    }
+};
+
+
+  const insertLeadToDB = async () => {
+    let row = currentCall.rowData;
+
+    // Extract only the 10-digit number
+    const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
+
+    const leadData = {
+        JsonDBName: alternateCompanyName,
+        JsonEntryUser: toTitleCase(userName),
+        JsonLeadDate: formatDBDate(row.LeadDate),
+        JsonLeadTime: formatDBTime(row.LeadTime),
+        JsonPlatform: row.Platform,
+        JsonClientName: row.Name,
+        JsonClientContact: cleanedPhone,
+        JsonClientEmail: row.Email,
+        JsonDescription: row.Enquiry,
+        JsonStatus: selectedStatus,
+        JsonLeadType: "New",
+        JsonPreviousStatus: "",
+        JsonNextFollowupDate: formatDBDate(followupDate),
+        JsonNextFollowupTime: formatDBTime(followupTime),
+        JsonClientCompanyName: companyName,
+        JsonRemarks: remarks,
+        JsonHandledBy: toTitleCase(userName),
+        JsonProspectType: prospectType,
+        JsonIsUnreachable: 0,
+        JsonSheetId: row.SNo
+    };
+
+    const response = await PostInsertOrUpdate("InsertLeadStatus", leadData);
+    const anotherResponse = await insertEnquiry()
+    return response && anotherResponse
+};
 
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 86400); // 86400 seconds in a day
@@ -213,25 +499,50 @@ const EventCards = ({params, searchParams}) => {
     if (days > 0) {
       return `${days}d ${hrs}:${mins}:${secs}`;
     }
-  
+      
     return `${hrs}:${mins}:${secs}`;
   };
   
   
-  const handleCheckboxChange = () => {
-    setHasSaved(true); // Set hasSaved to true when checkbox is checked
-  };	
+  // const handleCheckboxChange = () => {
+  //   setHasSaved(true); // Set hasSaved to true when checkbox is checked
+  // };	
+
+  const checkIfNewClient = async (clientContact) => {
+    try {
+      const response = await fetch(
+        `https://orders.baleenmedia.com/API/Media/CheckClientContact.php?ClientContact=${clientContact}&JsonDBName=${UserCompanyName}`
+      );
+      
+      const data = await response.json();
+      console.log(data, data.isNewUser)
+      return data.isNewUser ? true : false; // Returns true if new user, false if existing
+    } catch (error) {
+      console.error("Error checking contact number:", error);
+      return false; // Default to false in case of an error
+    }
+  };
 
   const fetchData = async () => {
     try {
+
       const filters = {
         leadDate: searchParams.leadDate || null,
         status: searchParams.status || "",
         followupDate: searchParams.followupDate || null,
       };
 
-      const fetchedRows = await fetchDataFromAPI(params.id, filters);
+      const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+
+    // if (fetchedRows.length > 0) {
+    //   const maxSlNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) || 0; 
+    //   setNextSNo(maxSlNo + 1);
+    // } else {
+    //   console.log("No rows found to calculate max Sl. No.");
+    // }
+    
       setRows(fetchedRows);
+      fetchCSENames();
       // console.log(fetchedRows)
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -241,12 +552,19 @@ const EventCards = ({params, searchParams}) => {
   };
 
   useEffect(() => {
-    if (!userName) return;
+    if (!userName || UserCompanyName === "") 
+      {
+        router.push("/login")
+      };
     fetchData();
   }, [params.id, searchParams]);
 
-
+  useEffect(() => {
+    if (!userName) return;
+    checkAndUpdateStatus(rows)
+  }, [rows]);
   
+
   useEffect(() => {
     if (showModal) {
       // Set initial values when the modal is opened
@@ -258,10 +576,10 @@ const EventCards = ({params, searchParams}) => {
       setInitialLeadStatus(selectedLeadStatus);
     }
   }, [showModal]); // Runs when the modal opens
-  
-  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent) => {
-    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent });
 
+  const handleCallButtonClick = async (phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData) => {
+    setCurrentCall({phone, name, sNo, Platform, Enquiry, LeadDateTime, quoteSent, rowData });
+    setProspectType(rowData.ProspectType  === "Unknown" ? "" : rowData.ProspectType);
     // Trigger a call using `tel:` protocol
     window.location.href = `tel:${phone}`;
 
@@ -271,7 +589,7 @@ const EventCards = ({params, searchParams}) => {
     }, 3000);
   };
 
-  const handleSave = async (Sno, quoteSent, sendQuoteOnly) => {
+  const handleSave = async (Sno, quoteSent, sendQuoteOnly, user) => {
 
     // const initialQuoteStatus = currentCall?.quoteSent || "";
     setIsLoading(true);
@@ -297,40 +615,57 @@ const EventCards = ({params, searchParams}) => {
         return;
       }
       
-
+      if (selectedStatus === "Call Followup" && !prospectType) {
+        setToastMessage("Please select a Prospect Type before saving.");
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => {
+          setToast(false);
+        }, 2000);
+        setIsLoading(false);
+        return;
+      }
     let payload = {};
-  
+
     // Prepare payload based on context
-    if (sendQuoteOnly) {
+    if (sendQuoteOnly === "Quote Sent") {
       payload = {
         sNo: Sno,
         quoteSent: quoteSent,
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
     } else if (followupOnly) {
       payload = {
         sNo: currentCall.sNo,
         followupDate: followupDate || "", // Ensure followupDate is a string or empty
         followupTime: followupTime || "", // Ensure followupTime is a string or empty
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test"
       };
-    } else {
+    } else if (sendQuoteOnly === "Handled By") {
+      payload = {
+        sNo: Sno,
+        handledBy: toTitleCase(user),
+        dbCompanyName: UserCompanyName || "Baleen Test"
+      };
+    }else {
       payload = {
         sNo: currentCall.sNo,
         status: selectedStatus,
         companyName: companyName || "", // Default to an empty string if undefined
         followupDate: followupDate || "",
         followupTime: followupTime || "",
-        quoteSent: initialQuoteStatus || "",
         remarks: remarks || "",
         prospectType: prospectType || "",  // Include ProspectType
-        handledBy: toTitleCase(userName)
+        handledBy: toTitleCase(userName),
+        dbCompanyName: UserCompanyName || "Baleen Test",
+        quoteSent: initialQuoteStatus
       };
     }
   
     
     try {
-      console.log("Payload before update:", payload); // Debug log
       const response = await fetch(
         "https://leads.baleenmedia.com/api/updateLeads",
         {
@@ -343,6 +678,7 @@ const EventCards = ({params, searchParams}) => {
       );
   
       if (!response.ok) throw new Error("Failed to update lead");
+      console.log(response)
       fetchData();
       if (!sendQuoteOnly) {
         setSuccessMessage('Lead updated successfully!');
@@ -350,13 +686,21 @@ const EventCards = ({params, searchParams}) => {
           setSuccessMessage('');
         }, 3000); // 3000 milliseconds = 3 seconds
       }
-      if (hasSaved) {
+      if (selectedStatus === "Call Followup") {
         const contact = {
           name: currentCall?.name,
           phone: currentCall?.phone,
           email: currentCall?.email || "",
         };
         downloadContact(contact); // Download the contact vCard
+        try {
+          if(initialSelectedStatus !== "Call Followup"){
+            insertLeadToDB()
+          }
+        } catch (error) {
+          alert("Error while inserting data: " + error)
+        }
+        
       }
     } catch (error) {
       console.error("Error updating lead:", error);
@@ -367,6 +711,24 @@ const EventCards = ({params, searchParams}) => {
         setToast(false);
       }, 2000);
     } finally {
+      const now = new Date(); // Get the current date and time
+
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+
+    // Format tomorrow's date as dd-MMM-yyyy
+    const formattedDate = tomorrow.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    // Format the current time as hh:mm AM/PM
+    const formattedTime = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
       setIsLoading(false);
       setShowModal(false);
       setHideOtherStatus(false);
@@ -374,6 +736,12 @@ const EventCards = ({params, searchParams}) => {
       setSelectedStatus("");
       setRemarks("");
       setSelectedLeadStatus("");
+      if (selectedStatus === "Unreachable") {
+        setFollowupDate(false);
+      } else {
+        setFollowupDate(formattedDate);
+        setFollowupTime(formattedTime);
+      }
     }
   };  
 
@@ -475,17 +843,17 @@ const EventCards = ({params, searchParams}) => {
     );
   }
 
-  if (!rows.length) {
-    return (
-      <div className="font-poppins text-center">
-        <h2>No Data Found</h2>
-      </div>
-    );
-  }
+  // if (!rows.length) {
+  //   return (
+  //     <div className="font-poppins text-center">
+  //       <h2>No Data Found</h2>
+  //     </div>
+  //   );
+  // }
 
   const toggleQuoteSent = async(sNo, status) => {
     var setValue = status === 'Yes' ? 'No' : 'Yes';
-    await handleSave(sNo, setValue, true);
+    await handleSave(sNo, setValue, "Quote Sent");
     // status !== 'Yes' ? alert("Marked as Quote Sent!") : alert("Marked as Quote Not Sent");
     const successMessage = status !== 'Yes' 
         ? "Marked as Quote Sent!" 
@@ -524,13 +892,147 @@ const EventCards = ({params, searchParams}) => {
     e.target.select();
   };
 
+  const handleHandledByChange = (user, sNo) => {
+    setIsHandledByChange(!isHandledByChange);
+    setSelectedUser(user);
+    setCurrentCall({sNo: sNo})
+  }
+
+  const handleUserChange = async(user) => {
+    setSelectedUser(toTitleCase(user));
+    console.log(user, currentCall.sNo)
+    await handleSave(currentCall?.sNo, 'No', "Handled By", user);
+    setIsHandledByChange(false);
+  }
+
+
+  const toggleModal = () => setIsModalOpen(!showModal);
+
+  // Handle form changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const filters = {
+      leadDate: searchParams.leadDate || null,
+      status: searchParams.status || "",
+      followupDate: searchParams.followupDate || null,
+    };
+
+    const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
+    let nextSNo = 0;
+
+    if (fetchedRows.length > 0) {
+      nextSNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) + 1 || 0;
+    } else{
+      alert("Problem in network, please try again");
+      return;
+    }
+
+    const dbCompanyName = encodeURIComponent(UserCompanyName);
+    const payload = {
+      sNo: nextSNo, // Use the incremented serial number
+      date: formData.date,
+      time: formData.time,
+      platform: formData.platform,
+      name: formData.name,
+      phoneNo: formData.phoneNo,
+      email: formData.email,
+      adEnquiry: formData.adEnquiry,
+      handledBy: formData.handledBy,
+      consultantName: formData.consultantName,
+      consultantNumber: formData.consultantNumber,
+      dbCompanyName,
+    };
+
+    const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload), 
+      });
+
+      const data = await response.json(); 
+      if (response.ok) {
+        
+        alert("Lead added successfully!");
+        setIsModalOpen(false);
+        setFormData({
+          date: "",
+          time: "",
+          platform: "",
+          name: "",
+          phoneNo: "",
+          email: "",
+          adEnquiry: "",
+          consultantNumber: "",
+          consultantName: "",
+        });
+        fetchData();
+      } else {
+       
+        console.error("Error response from server:", data.error || response.statusText);
+        alert(data.error || "Error adding record");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error adding record. Please try again.");
+    }
+};
+  
+const handleStatusClick = async(row) => {
+  setShowModal(true);
+
+  // Set followup date and time if available
+  if (row.FollowupDate !== "No Followup Date") {
+    console.log("Followup date and time is updated: " + row.FollowupDate + row.FollowupTime)
+    setFollowupDate(row.FollowupDate);
+    setFollowupTime(row.FollowupTime);
+  }else{
+    console.log("Followup date time is skipped " + row.FollowupDate)
+  }
+
+  // Update the current call information
+  setCurrentCall({
+    phone: row.Phone,
+    name: row.Name,
+    sNo: row.SNo,
+    Platform: row.Platform,
+    Enquiry: row.Enquiry,
+    LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
+    quoteSent: row.QuoteSent,
+    rowData: row,
+  });
+
+  // Set various status and remarks values
+  
+  setRemarks(row.Remarks);
+  setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
+  setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+  setSelectedStatus(row.Status);
+};
 
   return (
+
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-      <h2 className="text-xl font-semibold text-blue-500">Lead Manager</h2>
-      <div className="flex  space-x-4 ">
+    <h2 className="text-xl font-semibold text-blue-500">
+    {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
+  </h2>
+
+      <div className="flex  space-x-4">
         {/* Sheet Button */}
         <button
           className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
@@ -541,14 +1043,14 @@ const EventCards = ({params, searchParams}) => {
         </button>
         
         {/* Report Button */}
-        <a href="/LeadManager/Report">
+         <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
           >
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a>
+        </a> 
       </div>
 
     </div>
@@ -569,7 +1071,7 @@ const EventCards = ({params, searchParams}) => {
         />
        <button
         onClick={() => {
-          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate) {
+          if (statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All") {
             clearFilters(); // If any filters or search query is active, clear them
           } else {
             toggleFilters(); // Otherwise, toggle filter visibility
@@ -577,7 +1079,7 @@ const EventCards = ({params, searchParams}) => {
         }}
         className="ml-2 p-2 sm:p-3 bg-blue-500 text-white rounded-lg focus:outline-none hover:bg-blue-600"
       >
-        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate ? (
+        {statusFilter !== 'All' || prospectTypeFilter !== 'All' || fromDate || toDate || quoteSentFilter !== "All" || CSEFilter !== "All" ? (
           <FaTimes size={20} /> // Clear icon if any filter or search query is active
         ) : (
           <FaFilter size={20} /> // Filter icon if no filter or search query is active
@@ -588,14 +1090,14 @@ const EventCards = ({params, searchParams}) => {
 
        {/* Filters */}
        {filtersVisible && (
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:flex-nowrap gap-2 sm:gap-4">
           {/* Status Filter Buttons */}
           <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
             {["All", "New", "Call Followup", "Unreachable"].map((status, index) => (
               <motion.button
                 key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                onClick={() => dispatch(setStatusFilter(status))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   statusFilter === status
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -610,12 +1112,12 @@ const EventCards = ({params, searchParams}) => {
           </div>
 
           {/* Prospect Type Filter */}
-          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 md:max-w-[20%] overflow-x-scroll">
             {prospectTypes.map((item, index) => (
               <motion.button
                 key={item.type}
-                onClick={() => setProspectTypeFilter(item.type)}
-                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                onClick={() => dispatch(setProspectTypeFilter(item.type))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
                   prospectTypeFilter === item.type
                     ? "bg-white text-gray-700"
                     : "bg-gray-200 text-gray-700"
@@ -624,7 +1126,48 @@ const EventCards = ({params, searchParams}) => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                {item.icon ? item.icon : item.type}
+                {item.type}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Status Filter Buttons */}
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg p-1 overflow-x-auto">
+            {["All", "Quote Sent", "Yet To Send"].map((status, index) => (
+              <motion.button
+                key={status}
+                onClick={() => dispatch(setQuoteSentFilter(status))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base text-nowrap ${
+                  quoteSentFilter === status
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {status}
+              </motion.button>
+            ))}
+          </div>
+          
+          <div className="flex gap-1 sm:gap-4 bg-gray-200 w-fit rounded-lg md:max-w-[20%] max-w-[100%] p-1 overflow-x-scroll">
+            {[
+              { username: "All" }, // Add "All" at the beginning
+              ...CSENames].map((status, index) => (
+              <motion.button
+                key={status.username}
+                onClick={() => dispatch(setCSEFilter(toTitleCase(status.username)))}
+                className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-base ${
+                  CSEFilter === toTitleCase(status.username)
+                    ? "bg-white text-gray-700"
+                    : "bg-gray-200 text-gray-700"
+                } hover:bg-gray-300`}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {toTitleCase(status.username)}
               </motion.button>
             ))}
           </div>
@@ -634,7 +1177,7 @@ const EventCards = ({params, searchParams}) => {
             {/* From Date Picker */}
             <DatePicker
               selected={fromDate}
-              onChange={(date) => setFromDate(date)}
+              onChange={(date) => dispatch(setFromDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="From Date"
               dateFormat="dd-MMM-yyyy"
@@ -642,13 +1185,14 @@ const EventCards = ({params, searchParams}) => {
             {/* To Date Picker */}
             <DatePicker
               selected={toDate}
-              onChange={(date) => setToDate(date)}
+              onChange={(date) => dispatch(setToDate(date))}
               className="px-2 py-1 sm:px-6 sm:py-3 w-32 sm:w-40 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholderText="To Date"
               dateFormat="dd-MMM-yyyy"
             />
           </div>
         </div>
+        
       )}
     </div>
 
@@ -666,19 +1210,25 @@ const EventCards = ({params, searchParams}) => {
 
           <div
             key={row.SNo}
-            className="relative bg-white rounded-lg p-4 border-2 border-gray-200  hover:shadow-lg hover:-translate-y-2 hover:transition-all"
+            className={`relative rounded-lg p-4 border-2 hover:shadow-lg hover:-translate-y-2 bg-white hover:transition-all border-gray-200 
+              ${timers[row.SNo] > 86400 ? " animate-pulse bg-green-600`" : ""}
+            `}
             style={{ minHeight: "240px" }}
           >
+
             {/* Status at Top Right */}
             <div className="absolute top-2 right-2">
               <span
-                onClick={() => {setShowModal(true); setCurrentCall({phone: row.Phone, name: row.Name, sNo: row.SNo, Platform: row.Platform, Enquiry: row.Enquiry, LeadDateTime: row.LeadDate + " " + row.LeadTime, quoteSent: row.QuoteSent}); setSelectedStatus(row.Status); setRemarks(row.Remarks); setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : ''); setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType)}}
+                onClick={() => {handleStatusClick(row)}}
                 className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusColors[row.Status]} hover:cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:transition-all`}
               >
                 {row.Status}
               </span>
               {row.HandledBy && (
-              <div className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row ">
+              <div 
+                className="text-xs mt-2 p-1 sm: mb-2 justify-start px-3 hover: cursor-pointer text-orange-800 bg-orange-100 rounded-full flex flex-row "
+                onClick={() => handleHandledByChange(row.HandledBy, row.SNo)}
+              >
                 <FontAwesomeIcon icon={faUserCircle} className="mr-1 mt-[0.1rem]"/>
                 <p className="font-poppins">
                   {row.HandledBy}
@@ -688,27 +1238,28 @@ const EventCards = ({params, searchParams}) => {
             </div>
 
             <div className="absolute top-2 left-2 flex flex-row">
-             {row.Status === 'Call Followup' &&
+            {row.Status === 'Call Followup' && (
             <span
               onClick={() => {
                 if (!isLoading) {
                   toggleQuoteSent(row.SNo, row.QuoteSent); // Only toggle when not loading
                 }
               }}
-              className={`inline-block rounded-full p-1 ${
+              className={`flex items-center gap-2 rounded-lg px-3 py-1 text-white text-xs sm:text-sm font-medium shadow-md transition-all duration-300 cursor-pointer ${
                 row.QuoteSent === "Yes"
-                  ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md hover:opacity-90"
-                  : "bg-gray-200"
-              } hover:cursor-pointer`}
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
               title={`Click to ${row.QuoteSent === "Yes" ? "remove" : "add"} quote sent status`}
             >
               {isLoading ? (
-                <div className="animate-spin border-t-2 border-white rounded-full w-5 h-5" />
+                <div className="animate-spin border-t-2 border-white rounded-full w-4 h-4" />
               ) : (
-                <FiCheckCircle className="text-white text-lg" />
+                <FiCheckCircle className="text-white text-base" />
               )}
+              <span>{row.QuoteSent === "Yes" ? "Sent" : "Not Sent"}</span>
             </span>
-          }
+          )}
             
             <span className="inline-block ml-2 px-3 py-1 rounded-full text-xs font-bold text-gray-500 bg-gradient-to-r border border-gray-500">
                 {row.Platform || "Unknown Platform"}
@@ -726,32 +1277,20 @@ const EventCards = ({params, searchParams}) => {
                     : "border-white"
                 }`}
               >
-                {row.ProspectType === "Hot" && (
-                  <GiCampfire className="inline-block text-red-500 " size={15} />
-                )}
-                {row.ProspectType === "Warm" && (
-                  <MdOutlineWbSunny className="inline-block text-yellow-500 " size={15} />
-                )}
-                {row.ProspectType === "Cold" && (
-                  <FaRegSnowflake className="inline-block text-blue-500 " size={15} />
-                )}
+                {row.ProspectType !== "Unknown" && row.ProspectType}
+                
               </span>
             )}
           </div>
 
             {/* Platform at Top Left */}
             <div className="absolute top-40 right-3">
-            {row.Status === "New" && (
-            <div className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full">
-              {formatTime(timers[row.SNo] || 0)}
+            
             </div>
-          )}
-            </div>
-
           
             {/* Name and Company */}
             <div className="mb-2 mt-8">
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-gray-900 max-w-[75%] capitalize">
                 {row.Name}
                 {row.CompanyName && row.CompanyName !== "No Company Name"
                   ? ` - ${row.CompanyName}`
@@ -769,14 +1308,14 @@ const EventCards = ({params, searchParams}) => {
                 Phone:
                 <a
                   // href={`tel:${row.Phone}`}
-                  onClick={() => handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedStatus(row.Status); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
                   className="text-blue-600 hover:underline ml-1"
                 >
                   <strong>{row.Phone}</strong>
                 </a>
                 <button
                   className="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks)}}
+                  onClick={() => {handleCallButtonClick(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent, row); setCompanyName(row.CompanyName !== 'No Company Name' ? row.CompanyName : ''); setRemarks(row.Remarks); setSelectedStatus(row.Status); setSelectedLeadStatus(row.ProspectType !== "Unknown" ? row.ProspectType : "")}}
                   title="Call"
                 >
                   <FiPhoneCall className="text-lg" />
@@ -794,10 +1333,23 @@ const EventCards = ({params, searchParams}) => {
                 <span className="flex flex-row"><FiCalendar className="text-lg mr-2" /> {row.FollowupDate} {row.FollowupTime}</span>
                 </p>
                 <p onClick={() => {handleRemoveFollowup(row.SNo);}} className="mt-2 text-red-500 underline hover:cursor-pointer">Remove Followup</p>
+    
               </div>
+              
             ) : (
-              <div className="text-sm max-w-fit mt-4">
+              <div className="text-sm mt-4 flex flex-row justify-between items-center w-full">
                 <button className="text-red-500 border font-semibold border-red-500 p-1.5 rounded-full" onClick={() => {addNewFollowup(row.Phone, row.Name, row.SNo, row.Platform, row.Enquiry, row.LeadDate + " " + row.LeadTime, row.QuoteSent)}}>+ Add Followup</button>
+                {row.Status === "New" && (
+                  <div className={`${timers[row.SNo] > 86400 ? "bg-red-100 text-red-500 animate-bounce" : "bg-blue-100 text-blue-500"} relative group border font-semibold p-2 rounded-md justify-self-end hover:cursor-wait hover:bg-blue-500 hover:text-white `}>
+                    <Timer className="mr-2"/>
+                    {formatTime(timers[row.SNo] || 0)}
+                    {/* Helper text that appears on hover */}
+                    <div className="absolute top-full mt-1 left-0 w-max bg-gray-800 text-white text-xs px-2 py-1 rounded-md hidden group-hover:block">
+                      Every Second Counts <br/>
+                      Take Action Now
+                    </div>
+                  </div>
+                )}
               </div>
             )}
              {/* Remarks */}
@@ -808,10 +1360,254 @@ const EventCards = ({params, searchParams}) => {
                 </p>
               </div>
             )}
+            
           </div>
         ))}
+        
       </div>
       )}
+
+      {/*Modal for Assignee Change*/}
+      {isHandledByChange && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-auto max-w-md mb-16 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Change who can Handle the lead</h3>
+              <button onClick={() => {setIsHandledByChange(false)}}>
+                <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
+              </button>
+            </div>
+            
+            {/* Floating Radio Buttons for Status */}
+            {(!hideOtherStatus && !followupOnly) &&
+            <div className="mb-4 flex flex-wrap gap-1 justify-center">
+              {CSENames.map(
+                (user) => (
+                  <label
+                    key={user.username}
+                    className={`cursor-pointer border py-1 px-3 text-sm rounded-full ${
+                      selectedUser === toTitleCase(user.username) ? "bg-blue-500 text-white" : "bg-transparent border border-gray-500"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="user"
+                      value={user.username}
+                      checked={selectedUser === user.username}
+                      onChange={() => handleUserChange(user.username)}
+                      className="hidden"
+                    />
+                    {toTitleCase(user.username)}
+                  </label>
+                ))}
+            </div>
+            }
+            </div>
+            </div>
+            )}
+
+      <div className="relative">
+            
+            <button
+        onClick={() => router.push("/LeadManager/Client2Lead")}
+        className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"
+      >
+        <AiOutlineTeam size={24} />
+      </button>
+           {/* "+" Button */}
+            <button
+        onClick={toggleModal}
+        className="fixed right-4 bottom-24 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-28 z-50"
+      >
+        <AiOutlinePlus size={24} />
+      </button>
+
+      {/* Modal Form */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-4 sm:p-6 rounded-lg w-5/6 sm:w-96 lg:w-96 h-[60vh] sm:h-auto max-w-lg 
+                   max-h-[90vh] overflow-y-auto relative shadow-lg mb-10 md:mb-0">
+            {/* Flex container for title and close button */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-blue-500">Add New Lead</h2>
+              <button
+                className="text-black hover:text-red-500 text-3xl sm:text-4xl"
+                onClick={() => setIsModalOpen(false)} // Close modal when clicked
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
+                {/* Input Fields */}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Date:</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Time:</label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={formData.time}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                  <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">
+                    Client Platform:
+                  </label>
+                  <select
+                    name="platform"
+                    value={formData.platform}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Platform</option>
+                    <option value="JustDial">JustDial</option>
+                    <option value="IndiaMart">IndiaMart</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Sulekha">Sulekha</option>
+                    <option value="LG">LG</option>
+                    <option value="Consultant">Consultant</option>
+                    <option value="Own">Own</option>
+                    <option value="WebApp DB">Web App DB</option>
+                    <option value="Online">Online</option>
+                    <option value="Self">Self</option>
+                    <option value="Friends/Relatives">Friends/Relatives</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Name:</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                {formData.platform === 'Consultant' && (
+                  <>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Name:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantName"
+                      value={formData.consultantName}
+                      onChange={handleInputChange}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm md:text-base font-medium text-gray-700">
+                      Consultant Number:
+                    </label>
+                    <input
+                      type="text"
+                      name="consultantNumber"
+                      value={formData.consultantNumber}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                        if (numericValue.length <= 10) {
+                          handleInputChange({ target: { name: "consultantNumber", value: numericValue } });
+                        }
+                      }}
+                      className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                    />
+                  </div>
+                  </>
+              )}
+                <div>
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Ad Enquiry:</label>
+                  <input
+                    type="text"
+                    name="adEnquiry"
+                    value={formData.adEnquiry}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                    // required
+                  />
+                </div>
+                <div>
+                <label className="block text-sm md:text-base font-medium text-gray-700">Client Contact:</label>
+                <input
+                  type="tel"
+                  name="phoneNo"
+                  value={formData.phoneNo}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                    if (numericValue.length <= 10) {
+                      handleInputChange({ target: { name: "phoneNo", value: numericValue } });
+                    }
+                  }}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  required
+                />
+              </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Client Email Address:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm md:text-base font-medium text-gray-700">Handled By:</label>
+                  <select
+                    name="handledBy"
+                    value={formData.handledBy}
+                    onChange={handleInputChange}
+                    className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-2 text-xs md:text-base border border-gray-300 rounded-md h-10 md:h-10 overflow-y-auto"
+                    required
+                  >
+                    <option value="">Select a Handled By</option>
+                    {CSENames.map((user) => (
+                      <option key={user.username} value={toTitleCase(user.username)}>
+                        {toTitleCase(user.username)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full mt-4 p-3 bg-blue-500 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+    </div>
+
 
       {/* Modal for Call Status */}
       {showModal && (
@@ -819,7 +1615,7 @@ const EventCards = ({params, searchParams}) => {
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-lg w-auto max-w-md mb-16 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Lead Status</h3>
-              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(false); setFollowupTime(false)}}>
+              <button onClick={() => {setShowModal(false); setHideOtherStatus(false); setFollowpOnly(false); setFollowupDate(followupDate); setFollowupTime(followupTime)}}>
                 <AiOutlineClose className="text-gray-500 hover:text-gray-700 text-2xl" />
               </button>
             </div>
@@ -827,7 +1623,7 @@ const EventCards = ({params, searchParams}) => {
             <p className="mb-2">
             Lead Info: <strong>{currentCall.name} - {currentCall.Platform} - {currentCall.Enquiry}</strong> 
             </p>
-            <div>
+            {/* <div>
             <label className=" mb-2 flex items-center space-x-2 ">
               <input
                 className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
@@ -838,7 +1634,7 @@ const EventCards = ({params, searchParams}) => {
               />
               <span className="text-gray-800 font-medium">Save the contact</span>
             </label>
-            </div>
+            </div> */}
             {/* Floating Radio Buttons for Status */}
             {(!hideOtherStatus && !followupOnly) &&
             <div className="mb-4 flex flex-wrap gap-1 justify-center">
@@ -863,22 +1659,26 @@ const EventCards = ({params, searchParams}) => {
                 ))}
             </div>
             }
-             
+              {/* {selectedStatus === "Call Followup" && (
+                <div>
+                <label className=" mb-2 flex items-center space-x-2 ">
+                  <input
+                    className="form-checkbox h-4 w-4 text-blue-600 transition-transform duration-300 transform hover:scale-110"
+                    type="checkbox"
+                    checked={quoteSentChecked}
+                    onChange={() => setQuoteSentChecked((prev) => !prev)}
+                  />
+                  <span className="text-gray-800 font-medium">Quote Sent to Client</span>
+                </label>
+                </div> 
+              )} */}
             {(selectedStatus === "Call Followup" || selectedStatus === "Unreachable") && (
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Followup Date and Time
                 </label>
                 <DatePicker
-                  selected={
-                    followupDate
-                      ? new Date(`${followupDate} ${followupTime}`) // If a date is selected, use it
-                      : selectedStatus === "Unreachable" // Only for "Unreachable"
-                      ? new Date(new Date().getTime() + 60 * 60 * 1000) // Set time 1 hour ahead
-                      : selectedStatus === "Call Followup" // For "Call Followup", set the date to tomorrow
-                      ? new Date(new Date().setDate(new Date().getDate() + 1)) // Set to tomorrow
-                      : new Date() // For other statuses, default to the current date
-                  }
+                 selected={new Date(`${followupDate} ${followupTime}`)}
                   onChange={handleDateChange}
                   showTimeSelect
                   timeFormat="h:mm aa" // Sets the format for time (12-hour format with AM/PM)
@@ -904,7 +1704,6 @@ const EventCards = ({params, searchParams}) => {
               </div> 
             }
             
-
             {/* Remarks */}
             {!followupOnly &&
             <div className="mb-4">
@@ -919,6 +1718,7 @@ const EventCards = ({params, searchParams}) => {
             </div>
             }
             {/* Lead Status Buttons */}
+            {selectedStatus === "Call Followup" && (
             <div className="mb-4 flex justify-center gap-4">
               {[
                 { label: "Hot", icon: <GiCampfire />, color: "red" },
@@ -929,8 +1729,8 @@ const EventCards = ({params, searchParams}) => {
                   key={label}
                   value={prospectType}
                   onClick={() => {
-                    setSelectedLeadStatus(label); 
-                    setProspectType(label); // Set the prospect type
+                    setSelectedLeadStatus((prev) => (prev === label ? "" : label)); 
+                    setProspectType((prev) => (prev === label ? "" : label)); 
                   }}
                   className={`flex items-center gap-1 px-3 py-1 border rounded-full transition-transform duration-300 text-sm ${
                     selectedLeadStatus === label
@@ -951,7 +1751,7 @@ const EventCards = ({params, searchParams}) => {
                 </button>
               ))}
             </div>
-
+            )}
 
             <div className="flex justify-end">
             <button
@@ -959,7 +1759,7 @@ const EventCards = ({params, searchParams}) => {
                 isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
               }`}
               onClick={handleSave}
-              disabled={!selectedStatus || isLoading} // Disable button during loading
+              disabled={!selectedStatus || isLoading} // Disable button during loading..
             >
               {isLoading ? (
                 <span>Loading...</span> // Change text when loading
@@ -981,21 +1781,16 @@ const EventCards = ({params, searchParams}) => {
   );
 };
 
-
-async function fetchDataFromAPI(queryId, filters) {
+async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
-  const response = await fetch(apiUrl, {
+  const urlWithParams = `${apiUrl}?dbCompanyName=${encodeURIComponent(dbCompanyName)}`;
+
+  const response = await fetch(urlWithParams, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-    },
-    params: {
-      id: queryId,
-      leadDate: filters.leadDate || "",
-      status: filters.status || "",
-      followupDate: filters.followupDate || "",
-    },
+    }
   });
 
   if (!response.ok) {
@@ -1007,7 +1802,12 @@ async function fetchDataFromAPI(queryId, filters) {
   const today = new Date().toDateString();
 
   const filteredData = data.rows.filter(
-    (lead) => lead.Status !== "Unqualified" && lead.Status !== "Won" && lead.Status !== "Lost"
+    (lead) =>
+      (lead.Status !== "Unqualified" &&
+       lead.Status !== "Won" &&
+       lead.Status !== "Lost") &&
+      (appRights === "Leadership" || 
+       (!lead['HandledBy'] || lead['HandledBy'].toLowerCase() === userName.toLowerCase()))
   );
 
   const sortedRows = filteredData.sort((a, b) => {
@@ -1076,45 +1876,6 @@ async function fetchDataFromAPI(queryId, filters) {
 
 
 export default function Page({ params, searchParams }) {
-  // const [rows, setRows] = useState([]);
-  // const [loading, setLoading] = useState(true);
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const filters = {
-  //         leadDate: searchParams.leadDate || null,
-  //         status: searchParams.status || "",
-  //         followupDate: searchParams.followupDate || null,
-  //       };
-
-  //       const fetchedRows = await fetchDataFromAPI(params.id, filters);
-  //       setRows(fetchedRows);
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [params.id, searchParams]);
-
-  // if (loading) {
-  //   return (
-  //     <div className="font-poppins text-center">
-  //       <h2>Loading...</h2>
-  //     </div>
-  //   );
-  // }
-
-  // if (!rows.length) {
-  //   return (
-  //     <div className="font-poppins text-center">
-  //       <h2>No Data Found</h2>
-  //     </div>
-  //   );
-  // }
 
   return (
     <article>

@@ -23,7 +23,8 @@ export const authSlice = createSlice({
     logout: (state) => {
       state.userName = ""; // Reset userName to an empty string
       state.appRights = "";
-      state.dbName = ""
+      state.dbName = "";
+      state.companyName = "";
     },
     setDBName: (state, action) => {
       state.dbName = action.payload;

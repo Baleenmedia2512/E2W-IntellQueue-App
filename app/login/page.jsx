@@ -89,8 +89,7 @@ const handleLogin = (event) => {
     if (validateFields()) {
         const encodedPassw = encodeURIComponent(password);
 
-        // Assuming companyName, userName, and encodedPassw are defined and used correctly
-        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${'Baleen Test'}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(response.statusText);
@@ -111,7 +110,7 @@ const handleLogin = (event) => {
 
                     // Dispatch actions and navigate based on conditions
                     
-                    // dispatch(setCompanyName('Baleen Test'))
+                    dispatch(setCompanyName('Baleen Test'))
                     dispatch(login(userName));
                     
                     dispatch(setAppRights(data.appRights));
@@ -122,6 +121,9 @@ const handleLogin = (event) => {
                     dispatch(resetDateRange());
                     sessionStorage.removeItem("unitPrices");
                     sessionStorage.clear();
+                    localStorage.removeItem("patients");
+                    localStorage.removeItem("history");
+                    localStorage.removeItem("currentStep");
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{
@@ -258,7 +260,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.9.0 {/*Commenting for release */}
+                        Version 1.10.21 {/*Commenting for release */}
                     </div>
                 </div>
                 <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">

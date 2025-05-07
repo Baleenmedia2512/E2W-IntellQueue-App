@@ -21,6 +21,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { FaCheck, FaTimes, FaWindowClose, FaFilter } from 'react-icons/fa';
 import Tippy from '@tippyjs/react'; // Tooltip library
 import 'tippy.js/dist/tippy.css'; // Import Tippy's default CSS
+import { generateReferralPdf } from '../../generatePDF/generateConsultantSlipPDF';
 
 const matchModes = [
     { label: 'Contains', value: 'contains' },
@@ -49,7 +50,9 @@ export default function GroupedRowsDemo() {
     const [startDate, setStartDate] = useState(sessionStartDate || format(currentStartDate, 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(sessionEndDate || format(currentEndDate, 'yyyy-MM-dd'));
     const defaultFilters = {
+        orderNumber: { value: null, matchMode: 'contains' },
         consultant: { value: null, matchMode: 'contains' },
+        client: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
     };
@@ -73,18 +76,23 @@ export default function GroupedRowsDemo() {
     const [matchMode, setMatchMode] = useState('contains');
     const [showIcProcessedConsultantsOnly, setShowIcProcessedConsultantsOnly] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
     const sessionFilterValues = sessionStorage.getItem('filterValues')
     ? JSON.parse(sessionStorage.getItem('filterValues'))
     : null;
     const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
+        rateWiseOrderNumber: '',
         consultant: '',
+        client: '',
         rateCard: '',
         rateType: '',
     });
 
     const activeFilters = {
+        rateWiseOrderNumber: filters.rateWiseOrderNumber ? filters.rateWiseOrderNumber.value : '',
         rateCard: filters.rateCard ? filters.rateCard.value : '',
         consultant: filters.consultant ? filters.consultant.value : '',
+        client: filters.client ? filters.client.value : '',
         rateType: filters.rateType ? filters.rateType.value : ''
     };
 
@@ -145,6 +153,7 @@ export default function GroupedRowsDemo() {
 
     const fetchConsultants = async () => {
         const data = await getConsultants(companyName, startDate, endDate, showIcProcessedConsultantsOnly);
+        
         const groupedData = groupConsultants(data);
         setConsultants(groupedData);
     };
@@ -272,7 +281,6 @@ const saveConsultant = async (event) => {
 };
 
 
-
 const handleMarkAsUnprocessed = async () => {
     if (selectedRows && selectedRows.length > 0) {
         setLoading(true);
@@ -333,9 +341,11 @@ const handleMarkAsUnprocessed = async () => {
         const groupedData = [];
     
         data.forEach((consultant) => {
-            let existingConsultant = groupedData.find(group => group.name === consultant.name);
+            let existingConsultant = groupedData.find(group => group.id === consultant.ConsultantId);
+    
             if (!existingConsultant) {
                 existingConsultant = {
+                    id: consultant.ConsultantId,
                     name: consultant.name,
                     rates: [],
                     totalCount: 0,
@@ -348,7 +358,9 @@ const handleMarkAsUnprocessed = async () => {
                 rateCard: consultant.rateCard,
                 rateType: consultant.rateType,
                 price: consultant.price ? parseFloat(consultant.price) : 0,
-                orderNumber: consultant.orderNumber
+                orderNumber: consultant.orderNumber,
+                client: consultant.clientName,
+                rateWiseOrderNumber: consultant.rateWiseOrderNumber
             });
     
             existingConsultant.totalCount++;
@@ -357,6 +369,7 @@ const handleMarkAsUnprocessed = async () => {
     
         return groupedData;
     };
+    
 
     const renderGroupedData = (consultants) => {
         const rows = [];
@@ -364,23 +377,29 @@ const handleMarkAsUnprocessed = async () => {
         consultants.forEach((consultant, consultantIndex) => {
             consultant.rates.forEach((rate, rateIndex) => {
                 rows.push({
-                    id: `${consultant.name}-${rateIndex}`,
+                    id: `${consultant.id}-${consultant.name}-${rateIndex}`,
                     consultant: consultant.name,
+                    client: rate.client,
                     rateCard: rate.rateCard,
                     rateType: rate.rateType,
                     price: rate.price,
-                    orderNumber: rate.orderNumber
+                    orderNumber: rate.orderNumber,
+                    rateWiseOrderNumber: rate.rateWiseOrderNumber,
+                    consultantId: consultant.id
                 });
             });
     
             // Add a total row for the consultant
             rows.push({
-                id: `total-${consultant.name}`,
+                id: `${consultant.id}-${consultant.name}-total`,
                 consultant: "",
+                client: "",
                 rateCard: "Total",
                 rateType: consultant.totalCount,
                 price: consultant.totalPrice,
-                orderNumber: ""
+                orderNumber: "",
+                rateWiseOrderNumber: "", 
+                consultantId: ""
             });
         });
     
@@ -396,9 +415,16 @@ const handleMarkAsUnprocessed = async () => {
         return <span>₹{rowData.price}</span>; // Ensure this displays properly if it's a number
     };
 
-    const nameBodyTemplate = (rowData) => {
+    const consultantBodyTemplate = (rowData) => {
         if (rowData.consultant) {
             return <span className="font-bold ml-2">{rowData.consultant}</span>;
+        }
+        return null;
+    };
+
+    const clientBodyTemplate = (rowData) => {
+        if (rowData.consultant) {
+            return <span className="ml-2">{rowData.client}</span>;
         }
         return null;
     };
@@ -408,6 +434,15 @@ const handleMarkAsUnprocessed = async () => {
             return <span className="font-bold text-blue-500">{rowData.rateCard}</span>;
         } else if (rowData.rateCard) {
             return <span className="font-bold">{rowData.rateCard}</span>;
+        }
+        return null;
+    };
+
+    const rateWiseOrderNumberBodyTemplate = (rowData) => {
+        if (rowData.rateCard === 'Total') {
+            return <span className="text-blue-500">{rowData.rateWiseOrderNumber}</span>;
+        } else if (rowData.rateCard) {
+            return <span>#{rowData.rateWiseOrderNumber}</span>;
         }
         return null;
     };
@@ -480,9 +515,10 @@ const filteredNameRows = rowsToCalucalate.map(row => {
     return row;
 });
 
-const numberOfConsultants = new Set(filteredNameRows
-    .map(row => row.consultant)
-    .filter(consultant => consultant) // This filters out null and empty string values
+const numberOfConsultants = new Set(
+    filteredNameRows
+        .map(row => row.consultantId) // Use consultantId instead of name
+        .filter(consultantId => consultantId) // Ensure no null or empty values
 ).size;
 
 // Total No. Of Orders Calculation
@@ -496,7 +532,46 @@ const totalCount = rowsToCalucalate.reduce((accumulator, row) => {
 const numberOfScans = totalCount;
 
 
+// const handleExport = () => {
+//     // Filter out rows where the rateCard field is 'Total'
+//     const filteredData = groupedData.filter(row => row.rateCard !== 'Total');
+//     const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
+
+//     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
+//     // Prepare the data for export
+//     const exportData = rowsToExport.map(row => ({
+//         rateWiseOrderNumber: row.rateWiseOrderNumber,
+//         Consultant: row.consultant,
+//         Client: row.client,
+//         RateCard: row.rateCard,
+//         RateType: row.rateType,
+//         Price: row.price
+//     }));
+
+//     // Create a worksheet from the data
+//     const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+//     // Create a workbook and add the worksheet
+//     const workbook = XLSX.utils.book_new();
+//     XLSX.utils.book_append_sheet(workbook, worksheet, 'Consultant Report');
+
+//     // Generate a binary string representation of the workbook
+//     const excelBuffer = XLSX.write(workbook, {
+//         bookType: 'xlsx',
+//         type: 'array'
+//     });
+
+//     // Create a Blob from the buffer and trigger a download
+//     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+//     saveAs(blob, 'Consultant_Report.xlsx');
+// };
+
 const handleExport = () => {
+    setExportDialogOpen(true);
+};
+
+// Add these new functions for export options
+const handleDetailedExport = () => {
     // Filter out rows where the rateCard field is 'Total'
     const filteredData = groupedData.filter(row => row.rateCard !== 'Total');
     const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
@@ -504,11 +579,18 @@ const handleExport = () => {
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
     // Prepare the data for export
     const exportData = rowsToExport.map(row => ({
-        Consultant: row.consultant, // Default to an empty string if name is null
+        rateWiseOrderNumber: row.rateWiseOrderNumber,
+        Consultant: row.consultant,
+        Client: row.client,
         RateCard: row.rateCard,
         RateType: row.rateType,
         Price: row.price
     }));
+
+    // Format date range for filename
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+    const dateRangeForFilename = `${formattedStartDate} to ${formattedEndDate}`;
 
     // Create a worksheet from the data
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -525,7 +607,85 @@ const handleExport = () => {
 
     // Create a Blob from the buffer and trigger a download
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    saveAs(blob, 'Consultant_Report.xlsx');
+    saveAs(blob,  `Consultant_Report_Detailed (${dateRangeForFilename}).xlsx`);
+    
+    setExportDialogOpen(false);
+};
+
+const handleGroupedExport = () => {
+    const filteredRows = selectedRows.length > 0 
+        ? selectedRows.filter(row => row.rateCard !== "Total")
+        : groupedData.filter(row => row.rateCard !== "Total");
+  
+    const groupedData = filteredRows.reduce((acc, row) => {
+        const { consultantId, consultant, rateCard, price, rateType } = row;
+      
+        if (!acc[consultantId]) {
+            acc[consultantId] = { consultant, data: {} };
+        }
+      
+        if (!acc[consultantId].data[rateCard]) {
+            acc[consultantId].data[rateCard] = {};
+        }
+      
+        if (!acc[consultantId].data[rateCard][price]) {
+            acc[consultantId].data[rateCard][price] = { count: 0, totalPrice: 0, rateTypes: new Set() };
+        }
+      
+        acc[consultantId].data[rateCard][price].count += 1;
+        acc[consultantId].data[rateCard][price].totalPrice += price;
+      
+        if (rateType) {
+            acc[consultantId].data[rateCard][price].rateTypes.add(rateType.trim());
+        }
+      
+        return acc;
+    }, {});
+      
+    // Sort consultants by name (alphabetical order)
+    const sortedConsultants = Object.values(groupedData).sort((a, b) => a.consultant.localeCompare(b.consultant));
+
+    // Convert to an array format for Excel export
+    const exportData = [];
+    sortedConsultants.forEach(({ consultant, data }) => {
+        for (const rateCard in data) {
+            for (const price in data[rateCard]) {
+                const { count, totalPrice, rateTypes } = data[rateCard][price];
+                exportData.push({
+                    Consultant: consultant,
+                    RateCard: rateCard,
+                    RateType: [...rateTypes].join(", "),
+                    Price: price,
+                    Count: count,
+                    TotalAmount: totalPrice
+                });
+            }
+        }
+    });
+
+    // Format date range for filename
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+    const dateRangeForFilename = `${formattedStartDate} to ${formattedEndDate}`;
+      
+    // Create a worksheet from the data
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Create a workbook and add the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Consultant Report');
+
+    // Generate a binary string representation of the workbook
+    const excelBuffer = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array'
+    });
+
+    // Create a Blob from the buffer and trigger a download
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, `Consultant_Report_Grouped (${dateRangeForFilename}).xlsx`);
+    
+    setExportDialogOpen(false);
 };
 
 const handleSelectionChange = (e) => {
@@ -562,39 +722,55 @@ const handleSelectionChange = (e) => {
     setSelectedRows(newSelection); // Update selected rows
 };
 
-
 const filterHeaderTemplate = (column, filterField) => {
     
     const handleApplyFilter = () => {
         let newFilters = { ...filters };
-        let combinedFilteredRows = [...groupedData]; // Start with the entire dataset
-    
-    
+        let combinedFilteredRows = [...groupedData]; 
+        
         // Apply filters based on each filter field
         for (const key in tempFilterValues) {
-            // if (tempFilterValues[key] !== '') {
+            if (tempFilterValues[key] !== '') {
                 newFilters[key] = { value: tempFilterValues[key], matchMode: 'contains' };
+    
                 // Apply the filter on the combinedFilteredRows
                 combinedFilteredRows = combinedFilteredRows.filter(row => {
                     const fieldValue = row[key]; // Dynamically access the field based on key
-                    
+    
                     // Handle null or undefined values
                     if (fieldValue === null || fieldValue === undefined) {
                         return false; // Skip rows with null/undefined values for filtering
                     }
-                    
-                    if (typeof fieldValue === 'string') {
-                        return fieldValue.toLowerCase().includes(tempFilterValues[key].toLowerCase());
+    
+                    let formattedFilterValue = tempFilterValues[key];
+    
+                    // If filter value starts with #, remove it for filtering
+                    if (formattedFilterValue && formattedFilterValue.startsWith("#")) {
+                        formattedFilterValue = formattedFilterValue.slice(1); // Remove #
                     }
-                    return false; // Handle other cases if necessary
+    
+                    // If fieldValue is a string, compare it after converting both to lowercase
+                    if (typeof fieldValue === 'string') {
+                        return fieldValue.toLowerCase().includes(formattedFilterValue.toLowerCase());
+                    }
+    
+                    // If fieldValue is a number (like orderNumber), compare it directly
+                    if (typeof fieldValue === 'number') {
+                        return fieldValue.toString().includes(formattedFilterValue); // Ensure to convert to string for comparison
+                    }
+    
+                    return false; // Return false for unsupported types
                 });
-            // }
+            }
         }
 
+    
+        // Update session storage and filters
         sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters);
         setSelectedRows(combinedFilteredRows); // Automatically select the filtered rows
     };
+    
 
     const handleClearFilter = () => {
         let newFilters = { ...filters };
@@ -626,18 +802,17 @@ const filterHeaderTemplate = (column, filterField) => {
                 });
             }
         }
-
+    
         sessionStorage.setItem('filters', JSON.stringify(newFilters));
         setFilters(newFilters); // Update filters without the cleared filter
     
         // Reset selectedRows when all filters are cleared
         if (Object.values(newFilters).every(filter => filter.value === null || filter.value === '')) {
-            setSelectedRows(groupedData); // Clear selected rows when all filters are empty
+            setSelectedRows([...groupedData]); // Ensure to reset selected rows to the full dataset
         } else {
             setSelectedRows(combinedFilteredRows); // Update selected rows based on remaining active filters
         }
     };
-
 
     return (
         <div>
@@ -714,9 +889,127 @@ const handleCheckboxChange = () => {
     setShowIcProcessedConsultantsOnly((prev) => !prev);
 };
 
+const handleSlipGeneration = () => {
+    const filteredRows = selectedRows.filter(row => row.rateCard !== "Total");
+  
+    const groupedData = filteredRows.reduce((acc, row) => {
+        const { consultantId, consultant, rateCard, price, rateType } = row;
+      
+        if (!acc[consultantId]) {
+            acc[consultantId] = { consultant, data: {} };
+        }
+      
+        if (!acc[consultantId].data[rateCard]) {
+            acc[consultantId].data[rateCard] = {};
+        }
+      
+        if (!acc[consultantId].data[rateCard][price]) {
+            acc[consultantId].data[rateCard][price] = { count: 0, totalPrice: 0, rateTypes: {} };
+        }
+      
+        acc[consultantId].data[rateCard][price].count += 1;
+        acc[consultantId].data[rateCard][price].totalPrice += price;
+      
+        if (rateType) {
+            const trimmedRateType = rateType.trim();
+            acc[consultantId].data[rateCard][price].rateTypes[trimmedRateType] =
+                (acc[consultantId].data[rateCard][price].rateTypes[trimmedRateType] || 0) + 1;
+        }
+      
+        return acc;
+    }, {});
+      
+    // Sort consultants by name (alphabetical order)
+    const sortedConsultants = Object.values(groupedData).sort((a, b) => a.consultant.localeCompare(b.consultant));
+
+    // Convert to an array format for PDF generation
+    const summaryByConsultant = [];
+    sortedConsultants.forEach(({ consultant, data }) => {
+        summaryByConsultant.push({ consultant, isHeader: true });
+
+        for (const rateCard in data) {
+            for (const price in data[rateCard]) {
+                const { count, totalPrice, rateTypes } = data[rateCard][price];
+
+                // Format rate types with their count in brackets
+                const rateTypeSummary = Object.entries(rateTypes)
+                    .map(([type, count]) => `${type} (${count})`)
+                    .join(", ");
+
+                summaryByConsultant.push({
+                    consultant,
+                    rateCard,
+                    price,
+                    count,
+                    totalPrice,
+                    dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+                    rateType: rateTypeSummary, // Updated field with count in brackets
+                });
+            }
+        }
+    });
+      
+    generateReferralPdf(summaryByConsultant);      
+};
+
+  const formatDate = (dateString) => {
+    const months = [
+      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+    ];
+  
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+  
+    return `${day}-${month}-${year}`;
+  };
 
     return (
         <div className="relative min-h-screen mb-20">
+            {/* Export Options Dialog */}
+            <Dialog 
+                open={exportDialogOpen} 
+                onClose={() => setExportDialogOpen(false)} 
+                className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            >
+                <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg sm:max-w-md">
+                    <DialogTitle className="text-lg font-semibold text-gray-900 text-center sm:text-left">
+                        Export Options
+                    </DialogTitle>
+                    <DialogContent className="mt-2">
+                        <DialogContentText className="text-gray-600 text-sm text-center sm:text-left">
+                            Please select how you would like to export the data:
+                        </DialogContentText>
+                        <div className="mt-4 space-y-3">
+                            <div 
+                                className="p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition"
+                                onClick={handleDetailedExport}
+                            >
+                                <h3 className="font-medium text-gray-800">Detailed Export</h3>
+                                <p className="text-sm text-gray-600">Export all individual records with complete details</p>
+                            </div>
+                            <div 
+                                className="p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition"
+                                onClick={handleGroupedExport}
+                            >
+                                <h3 className="font-medium text-gray-800">Grouped Export</h3>
+                                <p className="text-sm text-gray-600">Export data grouped by consultant, rate card, and price</p>
+                            </div>
+                        </div>
+                    </DialogContent>
+                    <DialogActions className="flex flex-col sm:flex-row justify-center sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4">
+                        <button
+                            onClick={() => setExportDialogOpen(false)}
+                            className="w-full sm:w-auto px-5 py-2 text-gray-700 bg-gray-200 rounded-full font-medium hover:bg-gray-300 transition duration-200 ease-in-out shadow-sm active:scale-95 focus:ring-2 focus:ring-gray-400"
+                        >
+                            Cancel
+                        </button>
+                    </DialogActions>
+                </div>
+            </Dialog>
+
             {/* Background colors */}
             <div className="absolute inset-0 bg-blue-600 h-96"></div>
             {/* <div className="absolute inset-x-0 bottom-0 bg-white h-52"></div> */}
@@ -743,7 +1036,7 @@ const handleCheckboxChange = () => {
                           {numberOfConsultants}
                         </div>
                         <div className="text-xs sm:text-base lg:text-lg text-blue-100">
-                          Consultants
+                          Payable Consultants
                         </div>
                     </div>
                     <div className="w-fit lg:w-32 h-auto rounded-lg shadow-lg p-4 mb-5 flex flex-col border border-gray-300 flex-shrink-0 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
@@ -776,6 +1069,15 @@ const handleCheckboxChange = () => {
                 </div>
 
         <div className="mt-auto flex justify-end gap-2 flex-wrap">
+        <button
+        onClick={() => handleSlipGeneration()}
+        className="bg-orange-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-orange-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
+        >
+        <i className="pi pi-download mr-1 sm:mr-2"></i>
+        Generate Slip
+        </button>
+
+
         <button
           onClick={handleExport}
           className="bg-green-500 h-fit text-white py-1.5 px-3 rounded shadow hover:bg-green-600 flex items-center text-sm sm:text-base md:text-sm lg:text-base"
@@ -867,17 +1169,30 @@ const handleCheckboxChange = () => {
                             paginator
                             rows={20}
                             filters={filters}
-                            globalFilterFields={['consultant', 'rateCard', 'rateType']}
+                            globalFilterFields={['rateWiseOrderNumber','consultant','client', 'rateCard', 'rateType']}
                             
-            
                         >
                         
                             <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} headerClassName="bg-gray-100" body={selectionBodyTemplate}></Column>
-                            <Column field="consultant" header="Consultant"  headerStyle={{ width: '13rem' }} body={nameBodyTemplate} 
+                            
+                            <Column field="rateWiseOrderNumber" header="RO#" headerStyle={{ width: '1rem' }} body={rateWiseOrderNumberBodyTemplate} headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.orderNumber?.value ? 'text-blue-600' : 'text-gray-800'}`} className="bg-white p-2 w-50 text-nowrap"
+                             filter
+                             filterElement={filterHeaderTemplate({ header: 'Rate Wise Order Number' }, 'rateWiseOrderNumber')}
+                             showFilterMatchModes={false}
+                            ></Column>
+                            <Column field="consultant" header="Consultant" headerStyle={{ width: '13rem' }} body={consultantBodyTemplate} 
                             headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.consultant?.value ? 'text-blue-600' : 'text-gray-800'}`} 
                             className="bg-white p-2 w-fit text-nowrap"
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant' }, 'consultant')}
+                            showFilterMatchModes={false}
+                            
+                            ></Column>
+                            <Column field="client" header="Client"  headerStyle={{ width: '13rem' }} body={clientBodyTemplate} 
+                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.client?.value ? 'text-blue-600' : 'text-gray-800'}`} 
+                            className="bg-white p-2 w-fit text-nowrap"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Client' }, 'client')}
                             showFilterMatchModes={false}
                             
                             ></Column>

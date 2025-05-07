@@ -84,10 +84,11 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const today = new Date();
-    const proposedDay = ('0' + today.getDate()).slice(-2); // Ensure two digits for day
-    const proposedMonth = months[today.getMonth()]; // Get month abbreviation from the array
+    const proposedDay = ('0' + today.getDate()).slice(-2);
+    const proposedMonth = months[today.getMonth()];
     const proposedYear = today.getFullYear();
     const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
+
 
     textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
     xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
@@ -197,6 +198,8 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     if(index > 0){
       pdf.addPage();
     }
+
+    
     
     addHeader();
 
@@ -208,6 +211,13 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const hasPosition = items.some(item => item.position && item.position !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
     const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA");
+    const hasColor = items.some(item => (item.color && parseInt(item.colorPercentage) > -1))
+    const hasChecked = items.some(
+      (item) =>
+        (item.bold && parseInt(item.boldPercentage) > -1) ||
+        (item.semibold && parseInt(item.semiboldPercentage) > -1) ||
+        (item.tick && parseInt(item.tickPercentage) > -1)
+    );
     
     //Getting GST value
     const gstPercentage = calculateGstPercentage(items);
@@ -217,43 +227,93 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     pdf.setFontSize(14);
     pdf.text(`${adMedium} Campaign (GST@${gstPercentage})`, 10, 230);
 
-    const data = items.map((item, i) => [
-      (i + 1).toString(), 
-      item.rateId, 
-      hasAdType ? (item.adType || 'NA') : null, 
-      hasAdCategory ? (item.adCategory || 'NA') : null, 
-      hasEdition ? (item.edition || 'NA') : null, 
-      hasPosition ? (item.position || 'NA') : null, 
-      item.qtyUnit === "SCM" 
-        ? `${item.width}W x ${item.qty}H (${item.qtyUnit})` 
-        : `${item.qty} ${item.qtyUnit}`, 
-      hasCampaignDuration 
-        ? (item.campaignDuration 
-          ? `${item.campaignDuration} ${(item.CampaignDurationUnit || '')}` 
-          : 'NA') 
-        : null, 
-      `${item.ratePerQty} Per ${item.qtyUnit}`, 
-      item.amountExclGst, 
-      item.amountInclGst, 
-      item.leadDays || 2, 
-      hasRemarks ? (item.remarks || 'NA') : null
-    ].filter(Boolean));
+    const data = items.map((item, i) => {
+      // Build the combined "Ad Info" column
+      const adInfoParts = [];
+      if (hasAdType) adInfoParts.push(item.adType || 'NA');
+      if (hasAdCategory) adInfoParts.push(item.adCategory || 'NA');
+      if (hasEdition) adInfoParts.push(item.edition || 'NA'); // edition used as location/service location
+      if (hasPosition) adInfoParts.push(item.position || 'NA'); // package or position
+      const combinedAdInfo = adInfoParts.join(" | ");
     
+      // Build the Qty/Size column
+      const qtyOrSizeStr =
+        item.qtyUnit === "SCM"
+          ? `${item.width}W x ${item.qty}H (${item.qtyUnit})`
+          : `${item.qty} ${item.qtyUnit}`;
+    
+      // Build the Service Duration column (if applicable)
+      const serviceDuration = hasCampaignDuration
+        ? (item.campaignDuration ? `${item.campaignDuration} ${item.CampaignDurationUnit || ''}` : 'NA')
+        : '';
+    
+      // Build the Unit Price
+      const unitPrice = `${item.ratePerQty} Per ${item.qtyUnit}`;
+    
+      // Build Lead Days
+      const leadDays = item.leadDays || 2;
+    
+      // Build Remarks column
+      const remarks = hasRemarks ? (item.remarks || 'NA') : '';
+    
+      // Build Color or B/W column (if newspaper)
+      const colorOrBW = isNewspaper
+        ? (hasColor ? `Color(${item.colorPercentage}%)` : 'B/W')
+        : '';
+    
+      // Build Highlights column
+      const highlights = hasChecked
+        ? [
+            item.bold && parseInt(item.boldPercentage) > -1
+              ? `Bold(${item.boldPercentage}%)`
+              : null,
+            item.semibold && parseInt(item.semiboldPercentage) > -1
+              ? `Semibold(${item.semiboldPercentage}%)`
+              : null,
+            item.tick && parseInt(item.tickPercentage) > -1
+              ? `Tick(${item.tickPercentage}%)`
+              : null
+          ]
+              .filter(Boolean)
+              .join('\n')
+        : '';
+    
+        // Construct the row array in order
+  const rowArray = [
+    (i + 1).toString(),
+    item.rateId,
+    combinedAdInfo,
+    qtyOrSizeStr,
+    hasCampaignDuration ? serviceDuration : null,
+    unitPrice,
+    item.amountExclGst,
+    item.amountInclGst,
+    leadDays,
+    hasRemarks ? remarks : null,
+    isNewspaper ? colorOrBW : null,
+    hasChecked ? highlights : null
+  ];
+
+  // Remove any null values (from conditional columns)
+  return rowArray.filter(val => val !== null);
+});
+
+    const qtyOrSize = isNewspaper ? 'Size' : 'Qty';
+
     const headerColumns = [
       [
-        'S.No.', 
-        'Rate Card ID', 
-        hasAdType ? 'Rate Type' : null, 
-        hasAdCategory ? 'Rate Category' : null, 
-        hasEdition ? (isNewspaper ? 'Edition' : 'Service Location') : null, 
-        hasPosition ? 'Package' : null, 
-        isNewspaper ? 'Size' : 'Qty', 
-        hasCampaignDuration ? 'Service Duration' : null, 
-        'Unit Price (in Rs.)', 
-        'Price (Excl. GST) (in Rs.)', 
-        'Price (Incl. GST) (in Rs.)', 
-        'Lead Days', 
-        hasRemarks ? 'Remarks' : null
+        'S.No.',
+        'Rate Card ID',
+        'Ad Info',
+        qtyOrSize,
+        hasCampaignDuration ? 'Service Duration' : null,
+        'Unit Price (in Rs.)',
+        'Price (Excl. GST) (in Rs.)',
+        'Price (Incl. GST) (in Rs.)',
+        'Lead Days',
+        hasRemarks ? 'Remarks' : null,
+        isNewspaper ? "Color or B/W" : null,
+        hasChecked ? 'Highlights' : null
       ].filter(Boolean)
     ];
     
@@ -264,62 +324,72 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     // const headerColumns = [['S.No.', 'Rate Card ID', hasAdType ? 'Rate Type' : null, hasAdCategory ? 'Rate Category' : null, isNewspaper ? 'Edition' : 'Service Location', hasPosition ? 'Package' : null, isNewspaper ? 'Size' :'Qty', hasCampaignDuration ? 'Service Duration' : null, `Unit Price (in Rs.)`, 'Price (Excl. GST) (in Rs.)', "Price (Incl. GST) (in Rs.)", "Lead Days", hasRemarks ? "Remarks" : null].filter(Boolean)];
 
 
-    let columnWidths = {
-      'S.No.': 45,
+    const columnWidths = {
+      'S.No.': 35,
       'Rate Card ID': 45,
-      // 'Rate Type': 60,
-      'Rate Category': 80,
-      // 'Edition': 60,
-      // 'Package': 60,
-      'Size': 60,
-      // 'Campaign Duration': hasCampaignDuration ? 80 : 0,
-      'Unit Price (in Rs.)': 80,
-      'Price (Excl. GST) (in Rs.)': 80,
-      'Price (Incl. GST) (in Rs.)': 80,
-      // 'Lead Days': 50,
-      // 'Remarks': 60
+      'Ad Info': 150,           // Wider for combined info
+      [qtyOrSize]: 50,
+      'Service Duration': hasCampaignDuration ? 50 : 0,
+      'Unit Price (in Rs.)': 70,
+      'Price (Excl. GST) (in Rs.)': 65,
+      'Price (Incl. GST) (in Rs.)': 65,
+      'Lead Days': 35,
+      'Remarks': 150,           // More spacious remarks column
     };
     
-    // Map column names to their indices
+    if (isNewspaper) {
+      columnWidths["Color or B/W"] = 45;
+    }
+    if (hasChecked) {
+      columnWidths["Highlights"] = 45;
+    }
+
+    // Map header columns to their indices
     let headerMap = {};
     headerColumns[0].forEach((header, index) => {
       headerMap[header] = index;
     });
 
+    // Determine right align columns (if any)
     const rightAlignColumns = ['Unit Price (in Rs.)', 'Price (Excl. GST) (in Rs.)', 'Price (Incl. GST) (in Rs.)'];
-   // Convert column names to indices and assign column widths
+
+    // Generate columnStyles from columnWidths
     let columnStyles = {};
     Object.keys(columnWidths).forEach(columnName => {
       let columnIndex = headerMap[columnName];
       if (columnIndex !== undefined) {
-          columnStyles[columnIndex] = { 
-            cellWidth: columnWidths[columnName], 
-            halign: rightAlignColumns.includes(columnName) ? 'right' : columnName === 'Lead Days' ? 'center' : 'left'
-          };
+        columnStyles[columnIndex] = {
+          cellWidth: columnWidths[columnName],
+          halign: rightAlignColumns.includes(columnName)
+            ? 'right'
+            : columnName === 'Lead Days'
+            ? 'center'
+            : 'left'
+        };
       }
     });
 
-    // Create a table
-    autoTable(pdf, {
-      head: headerColumns,
-      body: data,
-      styles: {
-        fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
-        lineColor: [0, 0, 0],
-        lineWidth: 0.5,
-        valign: "middle",
-        overflow: 'linebreak', // This will wrap long text into multiple lines.
-        cellPadding: 3
-      },
-      headStyles: {
-        textColor: [255, 255, 255],
-        fillColor: [50, 50, 50]
-      },
-      margin: {top: 245, left: 10},
-      columnStyles: columnStyles,
-      tableWidth: 'auto'
-    })
+   // Create the table using autoTable
+  autoTable(pdf, {
+    head: headerColumns,
+    body: data,
+    styles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5,
+      valign: "middle",
+      overflow: 'linebreak',
+      cellPadding: 3
+    },
+    headStyles: {
+      textColor: [255, 255, 255],
+      fillColor: [50, 50, 50]
+    },
+    margin: { top: 245, left: 10 },
+    columnStyles: columnStyles,
+    tableWidth: 'auto'
+  });
   
   const yPosition = pdf.lastAutoTable.finalY + 20;
 
