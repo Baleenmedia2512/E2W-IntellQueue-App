@@ -89,6 +89,7 @@ const Report = () => {
   const [invoiceData, setInvoiceData] = useState([]);
   const [isDIRSentToday, setIsDIRSentToday] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  const [distinctOrderValueStats, setDistinctOrderValueStats] = useState({});
 
   const checkIfDIRSentToday = async (companyName) => {
     try {
@@ -1622,9 +1623,52 @@ const handleExport = async () => {
     applyFilters(); 
   }, [filterModel, orderDetails]); // Reapply filters on change
 
+  const calculateDistinctOrderValueStats = () => {
+    const stats = {};
+  
+    // Filter out rows where RateWiseOrderNumber <= 0
+    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+  
+    // Iterate over the filtered rows to calculate the stats
+    filteredRows.forEach(order => {
+      const orderValue = Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0;
+      const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+  
+      // Calculate the distinct order value (Order Value +/- Adjustment)
+      const distinctOrderValue = Math.round(orderValue + adjustedOrderAmount);
+      
+      // Format the distinct order value as a key
+      const distinctValueKey = distinctOrderValue.toString();
+  
+      const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0);
+
+      const adjustedValue = 
+        adjustedOrderAmount >= 0 
+          ? orderValue + adjustedOrderAmount 
+          : orderValue - Math.abs(adjustedOrderAmount);
+  
+      if (stats[distinctValueKey]) {
+        stats[distinctValueKey].orderCount += 1;
+        stats[distinctValueKey].totalOrderValue += adjustedValue;
+        stats[distinctValueKey].totalIncome += income;
+      } else {
+        stats[distinctValueKey] = {
+          orderCount: 1,
+          distinctValue: distinctOrderValue,
+          totalOrderValue: adjustedValue,
+          totalIncome: income,
+        };
+      }
+    });
+  
+    setDistinctOrderValueStats(stats);
+  };
+
   useEffect(() => {
     calculateRateStats();
+    calculateDistinctOrderValueStats();
   }, [filteredData]); // Recalculate when filteredData changes
+  
 
     return (
       
@@ -1826,6 +1870,45 @@ const handleExport = async () => {
         </div>
       </div>
     ))}
+    {/* Distinct Order Value Stats Box - Only shown when filters are applied */}
+{filterModel.items.length > 0 && Object.keys(distinctOrderValueStats).length > 0 && (
+  <>
+      {Object.keys(distinctOrderValueStats)
+        .sort((a, b) => distinctOrderValueStats[b].orderCount - distinctOrderValueStats[a].orderCount)
+        .map((valueKey) => (
+          <div
+            key={valueKey}
+            className="w-fit h-auto rounded-lg p-4 mb-5 flex flex-col border border-gray-300 mr-2 flex-shrink-0 bg-gray-50"
+          >
+            <div className="text-2xl sm:text-3xl lg:text-4xl text-black font-bold">
+              {formatIndianNumber(distinctOrderValueStats[valueKey].orderCount)}
+            </div>
+            <div className="text-sm sm:text-base lg:text-lg text-gray-600 text-opacity-80">
+              Orders at ₹
+              <span className="font-bold">
+                {formatIndianNumber(distinctOrderValueStats[valueKey].distinctValue)}
+              </span>
+            </div>
+
+
+            <div className="flex mt-4 w-fit">
+              <div className="flex-1 text-base sm:text-xl lg:text-xl mr-5 text-black font-bold">
+                ₹{formatIndianNumber(Number(distinctOrderValueStats[valueKey].totalOrderValue))}
+                <div className="text-xs sm:text-sm lg:text-base text-green-600 text-opacity-80 font-normal w-fit text-nowrap">
+                  Order Value
+                </div>
+              </div>
+              <div className="flex-1 text-base sm:text-xl lg:text-xl text-black font-bold">
+                ₹{formatIndianNumber(Number(distinctOrderValueStats[valueKey].totalIncome))}
+                <div className="text-xs sm:text-sm lg:text-base text-sky-500 text-opacity-80 font-normal text-nowrap">
+                  Total Income
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+  </>
+)}
   </div>
   
 </div>
