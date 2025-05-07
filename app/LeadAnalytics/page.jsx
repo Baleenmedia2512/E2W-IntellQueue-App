@@ -527,7 +527,7 @@ export default function LeadAnalytics() {
       </TabPanel>
       
       <TabPanel value={value} index={1}>
-        <RegionalInsights data={mockData} />
+        <RegionalInsights data={analyticsData?.regionalData || mockData.regionalData} />
       </TabPanel>
       
       <TabPanel value={value} index={2}>
