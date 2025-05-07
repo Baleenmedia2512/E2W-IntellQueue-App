@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam, AiOutlineApi } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -1423,6 +1423,14 @@ const handleStatusClick = async(row) => {
       <div className="relative">
             
             <button
+        onClick={() => router.push("/LeadManager/LeadIntegration")}
+        className="fixed right-4 bottom-56 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-60 z-50"
+        title="Multi-Platform Lead Integration"
+      >
+        <AiOutlineApi size={24} />
+      </button>
+            
+            <button
         onClick={() => router.push("/LeadManager/Client2Lead")}
         className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"
       >
@@ -1768,20 +1776,16 @@ const handleStatusClick = async(row) => {
             )}
 
             <div className="flex justify-end">
-            <button
-              className={`px-4 py-2 rounded-md text-white ${
-                isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
-              }`}
-              onClick={handleSave}
-              disabled={!selectedStatus || isLoading} // Disable button during loading..
-            >
-              {isLoading ? (
-                <span>Loading...</span> // Change text when loading
-              ) : (
-                "Save"
-              )}
-            </button>
-          </div>
+              <button
+                onClick={() => handleSave(currentCall?.sNo)}
+                className={`px-4 py-2 rounded-md text-white ${
+                  isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
 
           </div>
           {toast && <ToastMessage message={toastMessage} type="error"/>}
