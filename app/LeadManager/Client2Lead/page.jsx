@@ -1012,7 +1012,7 @@ isLoading ?  (<div className="flex items-center justify-center h-64">
               </thead>
               <tbody className="text-center">
                 {orderHistory.length > 0 ? orderHistory.map((lead) => (
-                <tr >
+                <tr key={lead.OrderNumber}>
                   <td>{lead.OrderNumber}</td>
                   <td>{lead.AdType}</td>
                   <td>{formatDate(lead.DateOfLastRelease)}</td>

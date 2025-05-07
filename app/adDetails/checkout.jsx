@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,13 +19,9 @@ import { setClientData, resetClientData } from '@/redux/features/client-slice';
 import { FetchQuoteSearchTerm, FetchQuoteData } from '../api/FetchAPI';
 import EditIcon from '@mui/icons-material/Edit';
 import { addItemsToCart, toggleItemSelection, removeEditModeItems } from '@/redux/features/cart-slice';
-// import useClickTracker from './Dashboard/useClickTracker';
-// import useTimerTracker from './Dashboard/useTimerTracker';
+
 // import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid';
 //const minimumUnit = Cookies.get('minimumunit');
-import { setSelectedRows } from '@/redux/features/cart-slice'; 
-import { PostInsertOrUpdate } from '../api/InsertUpdateAPI';
-import { useCart } from "../context/CartContext";
 
 export const formattedMargin = (number) => {
 
@@ -38,21 +34,14 @@ export const formattedMargin = (number) => {
 };
 
 const CheckoutPage = () => {
-  // useClickTracker('cart');
-  // useTimerTracker("cart");
   const dispatch = useDispatch()
-  const { isCleared, setIsCleared } = useCart();
-  console.log(isCleared)
+
   const [datas, setDatas] = useState([]);
   const [nextQuoteNumber, setNextQuoteNumber] = useState([]);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   
   const clientDetails = useAppSelector(state => state.clientSlice)
-  // const cartReduxItems = useAppSelector(state => state.cartSlice.cart);
-  // console.log(cartReduxItems)
-  const [cartItems, setCartItems] = useState([]);
-  // const cartItems = useContext(CartContext)
-  console.log(cartItems)
+  const cartItems = useAppSelector(state => state.cartSlice.cart);
   const {clientName, clientContact, clientEmail, clientSource, clientTitle, clientGST} = clientDetails;
   const username = useAppSelector(state => state.authSlice.userName);
   const adMedium = useAppSelector(state => state.quoteSlice.selectedAdMedium);
@@ -66,34 +55,8 @@ const CheckoutPage = () => {
   const [quoteSearchSuggestion, setQuoteSearchSuggestion] = useState([]);
   const [quoteSearchTerm, setQuoteSearchTerm] = useState("")
   const [isEditMode, setIsEditMode] = useState(false);
-  const selectedRows = useAppSelector((state) => state.cartSlice.selectedRows);
-
-  useEffect(() => {
-    if (isCleared) {
-      fetchCartData();
-      setIsCleared(false); 
-    }
-  }, [isCleared]);
-
-
-  const handleRowClick = (CartID) => {
-    const updatedSelectedRows = selectedRows.includes(CartID)
-      ? selectedRows.filter((id) => id !== CartID) // Deselect if already selected
-      : [...selectedRows, CartID]; // Select new row
   
-    dispatch(setSelectedRows(updatedSelectedRows)); // Store in Redux
-    // dispatch(addItemsToCart(cartItems));
-    // const selectedItem = cartItems.find(item => item.CartID === CartID);
-    // if (selectedItem) {
-    //   dispatch(addItemsToCart([selectedItem])); // Add selected item to Redux cart
-    // }
-    
-    console.log("reduxxxx selected",updatedSelectedRows)
-    console.log("reduxxxx cart",cartItems)
-  };
 
-
-  
   // const qty = useAppSelector(state => state.quoteSlice.quantity);
   // const unit = useAppSelector(state => state.quoteSlice.unit);
   // const unitPrice = useAppSelector(state => state.quoteSlice.ratePerUnit);
@@ -119,44 +82,43 @@ const CheckoutPage = () => {
 
   const routers = useRouter();
 
-  // const handleRemoveRateId = (index, editMode, newCartOnEdit) => {
+  const handleRemoveRateId = (index, editMode, newCartOnEdit) => {
 
-  //   if (editMode) {
-  //     if(newCartOnEdit) {
-  //       dispatch(removeItem(index));
-  //     } else {
-  //       dispatch(removeEditItem(index));
-  //     }
-  //   } else {
-  //     dispatch(removeItem(index));
-  //   }
+    if (editMode) {
+      if(newCartOnEdit) {
+        dispatch(removeItem(index));
+      } else {
+        dispatch(removeEditItem(index));
+      }
+    } else {
+      dispatch(removeItem(index));
+    }
 
-  //   if(!cartItems){
-  //     dispatch(setQuotesData({isEditMode: false, isNewCartOnEdit: false}))
-  //   }
-  // };
+    if(!cartItems){
+      dispatch(setQuotesData({isEditMode: false, isNewCartOnEdit: false}))
+    }
+  };
   const handleEditRow = (item) => {
-    console.log("Editing item:", item);
     dispatch(setQuotesData({ 
-    selectedAdMedium: item.AdMedium,
+    selectedAdMedium: item.adMedium,
     selectedAdType: item.adType,
     selectedAdCategory: item.adCategory,
-    selectedEdition: item.Edition,
-    selectedPosition: item.Package,
+    selectedEdition: item.edition,
+    selectedPosition: item.position,
     selectedVendor: {label: item.selectedVendor, value: item.selectedVendor},
     // selectedSlab: "",
-    quantity: item.Quantity,
-    width: item.Width,
-    ratePerUnit: parseInt(item.AmountwithoutGst)/parseInt(item.Quantity)*parseInt(item.Width),
+    quantity: item.qty,
+    width: item.width,
+    ratePerUnit: item.unitPrice,
     unit: item.unit,
-    rateId: item.RateId,
+    rateId: item.rateId,
     validityDate: item.formattedDate,
     leadDays: item.leadDay,
     minimumUnit: item.minimumCampaignDuration,
     campaignDuration: item.campaignDuration,
     marginAmount: item.margin,
     // extraDiscount: 0,
-    remarks: item.Remarks,
+    remarks: item.remarks,
     currentPage: "adDetails",
     // validRates: [],
     isDetails: true,
@@ -301,7 +263,7 @@ const CheckoutPage = () => {
       console.error("Error in handleQuoteSelection:", error);
     }
   };
-  console.log(cartItems)
+
   const hasRemarks = cartItems.some(item => item.remarks);
   const hasCampaignDuration = cartItems.some(item => item.campaignDurationVisibility);
   const editQuoteItem = cartItems.find(item => item.editQuoteNumber);
@@ -314,64 +276,13 @@ const CheckoutPage = () => {
   ) !== undefined;
   const ratesSearchSuggestion = [];
 
-  // const handleUndoRemove = (index) => {
-  //   const updatedCartItems = cartItems.map(item =>
-  //     item.index === index ? { ...item, isCartRemoved: false } : item
-  //   );
-  //   dispatch(addItemsToCart(updatedCartItems)); 
-  // };
-  const fetchCartData = async () => {
-      const params={
-              JsonDBName: companyName,
-              JsonEntryUser: username,
-            }
-      const response = await PostInsertOrUpdate('FetchCartItems',params)
-      // console.log(response.data, companyName, username, response)
-      setCartItems(response.data || []);
+  const handleUndoRemove = (index) => {
+    const updatedCartItems = cartItems.map(item =>
+      item.index === index ? { ...item, isCartRemoved: false } : item
+    );
+    dispatch(addItemsToCart(updatedCartItems)); 
   };
-
-  const handleRemoveRateId = async (index) => {
-  const itemToUpdate = cartItems.find(item => item.index === index);
   
-  if (!itemToUpdate) {
-    console.error("Item not found in cart.");
-    return;
-  }
-
-  const requestData = {
-    JsonCartId: itemToUpdate.CartID,
-    JsonEntryUser: username,
-    JsonDBName: companyName,
-    JsonValidStatus: "Invalid"  
-  };
-console.log(itemToUpdate.CartID)
-  try {
-    const response = await fetch("https://www.orders.baleenmedia.com/API/Media/UpdateCart.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-    });
-
-    const data = await response.json();
-    if (data.success) {
-      console.log("Cart item marked as Invalid:", data.message);
-      fetchCartData();
-    } else {
-      console.error("Failed to update cart item:", data.message);
-    }
-  } catch (error) {
-    console.error("Error updating cart status:", error);
-  }
-};
-
-
-  useEffect(() => {
-    fetchCartData();
-  }, []);
-
-
   return (
     <div className="text-black w-full items-center px-3">
       <h1 className="text-2xl font-bold text-center mb-4 text-blue-500">
@@ -509,26 +420,29 @@ console.log(itemToUpdate.CartID)
                       </tr>
                     </thead>
                     <tbody>
-                    {cartItems.map((item) => (
-            <tr
-              key={item.CartId}
-              className={`cursor-pointer ${
-                selectedRows.includes(item.CartID) ? "bg-blue-200" : "hover:bg-gray-100"
-              }`}
-              onClick={() => handleRowClick(item.CartID)}
+                      {cartItems.map((item, index) => (
+                        <tr
+                          key={index}
+                          className={
+                            item.isCartRemoved
+                              ? "opacity-50 bg-gray-100"
+                              : item.isSelected
+                              ? "bg-blue-100"
+                              : ""
+                          }
                         >
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              handleRowClick(item.CartID)
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
-                            {item.RateId}
+                            {item.rateId}
                           </td>
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              handleRowClick(item.CartID)
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
                             {!editQuoteItem
@@ -538,15 +452,15 @@ console.log(itemToUpdate.CartID)
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              handleRowClick(item.CartId)
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
-                            {item.AdMedium}
+                            {item.adMedium}
                           </td>
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
                             {item.adType}
@@ -554,7 +468,7 @@ console.log(itemToUpdate.CartID)
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
                             {item.adCategory}
@@ -562,35 +476,35 @@ console.log(itemToUpdate.CartID)
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
-                            {item.Edition}
+                            {item.edition}
                           </td>
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
-                            {item.Package}
+                            {item.position}
                           </td>
                           <td
                             className="p-1.5 border border-gray-200"
                             onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
                             {item.unit === "SCM"
-                              ? item.Width + "W" + " x " + item.Quantity + "H"
-                              : item.Quantity}{" "}
+                              ? item.width + "W" + " x " + item.qty + "H"
+                              : item.qty}{" "}
                             {item.unit}
                           </td>
                           {hasCampaignDuration && (
                             <td
                               className="p-1.5 border border-gray-200"
                               onClick={() =>
-                                dispatch(toggleItemSelection(item.CartId))
+                                dispatch(toggleItemSelection(item.index))
                               }
                             >
                               {item.campaignDuration &&
@@ -605,7 +519,7 @@ console.log(itemToUpdate.CartID)
                             <td
                               className="p-1.5 border border-gray-200 text-nowrap"
                               onClick={() =>
-                                dispatch(toggleItemSelection(item.CartId))
+                                dispatch(toggleItemSelection(item.index))
                               }
                             >
                               {item.remarks}
@@ -615,7 +529,7 @@ console.log(itemToUpdate.CartID)
                             <td
                               className="p-1.5 border border-gray-200"
                               onClick={() =>
-                                dispatch(toggleItemSelection(item.CartId))
+                                dispatch(toggleItemSelection(item.index))
                               }
                             >
                               {(item.bold  && parseInt(item.boldPercentage) > -1) && "Bold: " + item.boldPercentage + "%\n" }
@@ -627,28 +541,28 @@ console.log(itemToUpdate.CartID)
                           <td
                             className="p-1.5 border border-gray-200 w-fit text-nowrap"
                             onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
                             ₹{" "}
                             {formattedRupees(
-                              (item.AmountwithoutGst) /
+                              (item.price) /
                                 (item.unit === "SCM"
-                                  ? item.Quantity * item.Width
-                                  : item.Quantity)
+                                  ? item.qty * item.width
+                                  : item.qty)
                             )}{" "}
                             per {item.unit}
                           </td>
                           <td
                             className="p-1.5 border border-gray-200 text-nowrap"
                             onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
+                              dispatch(toggleItemSelection(item.index))
                             }
                           >
                             ₹{" "}
                             {formattedRupees(
                               Math.round(
-                                item.AmountwithoutGst
+                                item.price
                               )
                             )}
                           </td>
@@ -657,7 +571,7 @@ console.log(itemToUpdate.CartID)
                             <div className="flex space-x-3 items-center">
                               <IconButton
                                 aria-label="Edit"
-                                className="IconButton m-0 h-full"
+                                className="m-0 h-full"
                                 onClick={() => handleEditRow(item)}
                                 disabled={item.isCartRemoved}
                                 // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
@@ -671,8 +585,8 @@ console.log(itemToUpdate.CartID)
                               {item.isCartRemoved ? (
                                 <IconButton
                                   aria-label="Undo"
-                                  className="IconButton m-0 h-full"
-                                  onClick={() => handleUndoRemove(item.CartId)}
+                                  className="m-0 h-full"
+                                  onClick={() => handleUndoRemove(item.index)}
                                 >
                                   <UndoIcon
                                     className="text-green-500 hover:text-green-700 opacity-100"
@@ -682,10 +596,12 @@ console.log(itemToUpdate.CartID)
                               ) : (
                                 <IconButton
                                   aria-label="Remove"
-                                  className="IconButton m-0 h-full"
+                                  className="m-0 h-full"
                                   onClick={() =>
                                     handleRemoveRateId(
                                       item.index,
+                                      item.isEditMode,
+                                      item.isNewCart
                                     )
                                   }
                                 >
