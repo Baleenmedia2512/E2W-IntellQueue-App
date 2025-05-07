@@ -20,7 +20,6 @@ import {
 } from '@mui/material';
 import {
   LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -127,7 +126,6 @@ const yoyGrowth = {
   'General Surgery': -2.3
 };
 
-import React from 'react';
 import { Line } from 'react-chartjs-2';
 
 export default function TimeBasedTrends({ data }) {
