@@ -21,16 +21,16 @@ import {
   Select,
   MenuItem,
   Tooltip,
+  LinearProgress,
   IconButton,
   TextField,
-  InputAdornment,
-  LinearProgress,
-  Switch,
-  FormControlLabel,
-  Avatar,
-  Badge,
-  Stack,
-  Pagination
+  Slider,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Avatar
 } from '@mui/material';
 import {
   BarChart,
@@ -49,984 +49,871 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  ScatterChart, 
+  Treemap,
   Scatter,
+  ScatterChart,
   ZAxis
 } from 'recharts';
 import { 
   TrendingUp, 
   TrendingDown, 
   InfoOutlined, 
-  Search,
-  Sort,
-  FilterList,
-  PersonOutline,
-  Person,
-  PersonAdd,
-  MonetizationOn,
-  StarOutline,
+  BarChart as BarChartIcon,
+  PieChart as PieChartIcon,
+  DonutLarge,
+  Edit,
+  Save,
+  RestartAlt,
+  Check,
+  Close,
   Star,
   StarHalf,
-  AccessTime,
-  RotateLeft,
-  RotateRight,
-  AccountBox,
-  Business,
-  Edit,
-  ArrowUpward,
-  ArrowDownward,
-  LocalHospital,
-  DragHandle,
-  ExpandMore,
-  ExpandLess,
-  ArrowForward,
-  AddCircleOutline
+  StarOutline,
+  Person,
+  BusinessCenter,
+  Schedule,
+  MonetizationOn,
+  SettingsApplications,
+  ShowChart,
+  Speed
 } from '@mui/icons-material';
 
-// Color scheme for charts and UI elements
-const COLORS = [
-  '#1976d2', '#f44336', '#4caf50', '#ff9800', '#9c27b0', 
-  '#2196f3', '#ff5722', '#673ab7', '#009688', '#3f51b5'
+// ML model settings for lead scoring
+const mlModelSettings = {
+  name: "Logistic Regression",
+  parameters: {
+    C: 1.0,
+    penalty: 'l2',
+    solver: 'lbfgs',
+    max_iter: 100,
+    multi_class: 'ovr',
+    class_weight: 'balanced'
+  },
+  performance: {
+    accuracy: 0.86,
+    precision: 0.83,
+    recall: 0.88,
+    f1_score: 0.85,
+    roc_auc: 0.91
+  }
+};
+
+// Feature importance from ML model
+const featureImportance = [
+  { name: "Last Contact Recency", importance: 0.24 },
+  { name: "Demographic Match", importance: 0.21 },
+  { name: "Website Engagement", importance: 0.18 },
+  { name: "Budget Alignment", importance: 0.16 },
+  { name: "Previous Conversions", importance: 0.12 },
+  { name: "Email Open Rate", importance: 0.09 }
 ];
 
-// Scoring weights configuration 
-const scoringWeights = {
-  demographic: 0.25,
-  budget: 0.20,
-  engagement: 0.20,
-  history: 0.15,
-  timing: 0.10,
-  specialty: 0.10
+// Lead distribution by score ranges
+const leadDistribution = [
+  { name: "90-100", value: 15, label: "Excellent", color: "#4caf50" },
+  { name: "80-89", value: 23, label: "Very Good", color: "#8bc34a" },
+  { name: "70-79", value: 31, label: "Good", color: "#cddc39" },
+  { name: "60-69", value: 18, label: "Average", color: "#ffeb3b" },
+  { name: "50-59", value: 12, label: "Below Average", color: "#ffc107" },
+  { name: "0-49", value: 9, label: "Poor", color: "#ff9800" }
+];
+
+// Generated lead insights for tooltip content
+const leadInsights = {
+  "Raj Patel": "High-value prospect with recent engagement on cardiology services pages. Budget approved, ready for immediate follow-up.",
+  "Priya Singh": "Demonstrated interest in pediatric services, multiple website visits. Previous patient with positive feedback.",
+  "Amit Kumar": "Looking for orthopedic services for corporate health program. Medium budget but potential for volume.",
+  "Sneha Gupta": "Early-stage research on dermatology services. Budget uncertain, longer sales cycle expected.",
+  "Vikram Reddy": "Ready to finalize ENT package for family. High budget approval, requires specialist consultation."
 };
 
-// Example factor descriptions for tooltip explanations
-const factorDescriptions = {
-  demographic: "Match with target demographic profile based on age, location, specialty interest, and other attributes",
-  budget: "Likelihood to have budget based on practice size, history, and estimated financial capacity",
-  engagement: "Level of interaction with marketing content, website visits, email opens, etc.",
-  history: "Previous conversion history and customer relationship",
-  timing: "Timeliness of needs and alignment with buying cycles",
-  specialty: "Match with highest converting medical specialties"
-};
+// Historical score thresholds
+const scoreThresholds = [
+  { month: "Jan", threshold: 65 },
+  { month: "Feb", threshold: 67 },
+  { month: "Mar", threshold: 70 },
+  { month: "Apr", threshold: 68 },
+  { month: "May", threshold: 72 },
+  { month: "Jun", threshold: 75 },
+  { month: "Jul", threshold: 78 },
+  { month: "Aug", threshold: 75 },
+  { month: "Sep", threshold: 73 },
+  { month: "Oct", threshold: 76 },
+  { month: "Nov", threshold: 80 },
+  { month: "Dec", threshold: 82 }
+];
 
-// Priority level thresholds
-const priorityThresholds = {
-  high: 80,
-  medium: 60,
-  low: 0
-};
+// Demographic attributes and their weights
+const demographicAttributes = [
+  { name: "Age Range", weight: 0.25, options: ["18-30", "31-45", "46-60", "60+"] },
+  { name: "Income Level", weight: 0.30, options: ["Low", "Medium", "High", "Premium"] },
+  { name: "Geographic Location", weight: 0.25, options: ["Urban", "Suburban", "Rural", "Remote"] },
+  { name: "Family Size", weight: 0.10, options: ["Single", "Couple", "Small Family", "Large Family"] },
+  { name: "Education Level", weight: 0.10, options: ["High School", "Undergraduate", "Graduate", "Post-Graduate"] }
+];
 
-// Get color based on score
-const getScoreColor = (score) => {
-  if (score >= priorityThresholds.high) return '#4caf50';
-  if (score >= priorityThresholds.medium) return '#ff9800';
-  return '#f44336';
-};
-
-// Get priority label based on score
-const getPriorityLabel = (score) => {
-  if (score >= priorityThresholds.high) return 'High';
-  if (score >= priorityThresholds.medium) return 'Medium';
-  return 'Low';
-};
-
-// Get star rating display based on score (out of 5 stars)
-const getStarRating = (score) => {
-  const stars = [];
-  const fullStars = Math.floor(score / 20); // 100/5 = 20 per star
-  const hasHalfStar = score % 20 >= 10;
-  
-  for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(<Star key={i} fontSize="small" sx={{ color: 'gold' }} />);
-    } else if (i === fullStars && hasHalfStar) {
-      stars.push(<StarHalf key={i} fontSize="small" sx={{ color: 'gold' }} />);
-    } else {
-      stars.push(<StarOutline key={i} fontSize="small" sx={{ color: 'text.disabled' }} />);
-    }
-  }
-  
-  return <Box display="flex">{stars}</Box>;
-};
+// Engagement attributes and their weights
+const engagementAttributes = [
+  { name: "Website Visits", weight: 0.20, options: ["1-2", "3-5", "6-10", "10+"] },
+  { name: "Email Opens", weight: 0.15, options: ["None", "Low", "Medium", "High"] },
+  { name: "Content Downloads", weight: 0.20, options: ["None", "1-2", "3-5", "6+"] },
+  { name: "Form Submissions", weight: 0.25, options: ["None", "Inquiry", "Detailed Form", "Multiple Forms"] },
+  { name: "Call Duration", weight: 0.20, options: ["None", "<5min", "5-15min", "15min+"] }
+];
 
 const LeadScoringEngine = ({ data }) => {
-  const [leads, setLeads] = useState([]);
-  const [filteredLeads, setFilteredLeads] = useState([]);
-  const [scoringFactors, setScoringFactors] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('score');
-  const [sortDirection, setSortDirection] = useState('desc');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('All');
-  const [showWeightCustomization, setShowWeightCustomization] = useState(false);
-  const [customWeights, setCustomWeights] = useState({...scoringWeights});
+  const [scoringModel, setScoringModel] = useState({});
+  const [recentLeads, setRecentLeads] = useState([]);
+  const [selectedView, setSelectedView] = useState('overview');
   const [selectedLead, setSelectedLead] = useState(null);
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [filterPriority, setFilterPriority] = useState('All');
+  const [editingWeights, setEditingWeights] = useState(false);
+  const [customWeights, setCustomWeights] = useState({
+    demographic: 0.25,
+    engagement: 0.30,
+    budget: 0.25,
+    timeframe: 0.20
+  });
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [selectedFactor, setSelectedFactor] = useState('demographic');
+  const [showMlDetails, setShowMlDetails] = useState(false);
 
   useEffect(() => {
     if (data) {
-      if (data.leads) {
-        setLeads(data.leads);
-        setFilteredLeads(data.leads);
+      if (data.scoringModel) {
+        setScoringModel(data.scoringModel);
       }
-      if (data.scoringFactors) {
-        setScoringFactors(data.scoringFactors);
+      if (data.recentLeads) {
+        setRecentLeads(data.recentLeads);
       }
     }
   }, [data]);
 
-  useEffect(() => {
-    // Apply filtering and sorting whenever relevant state changes
-    let filtered = [...leads];
-    
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(lead => 
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        lead.company?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    // Apply specialty filter
-    if (selectedSpecialty !== 'All') {
-      filtered = filtered.filter(lead => lead.specialty === selectedSpecialty);
-    }
-    
-    // Apply priority filter
-    if (filterPriority !== 'All') {
-      const minThreshold = priorityThresholds[filterPriority.toLowerCase()];
-      const maxThreshold = filterPriority === 'High' ? 101 : // Above high threshold
-                           filterPriority === 'Medium' ? priorityThresholds.high : // Between medium and high
-                           priorityThresholds.medium; // Between low and medium
-      
-      filtered = filtered.filter(lead => {
-        const score = calculateLeadScore(lead);
-        return score >= minThreshold && score < maxThreshold;
-      });
-    }
-    
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let valA, valB;
-      
-      if (sortBy === 'score') {
-        valA = calculateLeadScore(a);
-        valB = calculateLeadScore(b);
-      } else if (sortBy === 'name') {
-        valA = a.name;
-        valB = b.name;
-        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      } else if (sortBy === 'lastContact') {
-        valA = new Date(a.lastContact).getTime();
-        valB = new Date(b.lastContact).getTime();
-      } else {
-        valA = a[sortBy] || 0;
-        valB = b[sortBy] || 0;
-      }
-      
-      return sortDirection === 'asc' ? valA - valB : valB - valA;
-    });
-    
-    setFilteredLeads(filtered);
-  }, [leads, searchTerm, sortBy, sortDirection, selectedSpecialty, filterPriority, customWeights]);
-
-  const calculateLeadScore = (lead) => {
-    if (!lead) return 0;
-    
-    // Calculate weighted score
-    let weightedScore = 
-      (lead.demographicFit * customWeights.demographic) +
-      (lead.budgetScore * customWeights.budget) +
-      (lead.engagementScore * customWeights.engagement) +
-      (lead.historyScore * customWeights.history) +
-      (lead.timingScore * customWeights.timing) +
-      (lead.specialtyScore * customWeights.specialty);
-    
-    // Convert to 0-100 scale
-    return Math.round(weightedScore * 100);
-  };
-
-  const handleSortChange = (event) => {
-    setSortBy(event.target.value);
-  };
-
-  const handleSortDirectionToggle = () => {
-    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-  };
-
-  const handleSpecialtyChange = (event) => {
-    setSelectedSpecialty(event.target.value);
-  };
-
-  const handlePriorityFilterChange = (event) => {
-    setFilterPriority(event.target.value);
-  };
-
-  const handleWeightChange = (factor, value) => {
-    // Ensure the value is between 0 and 1
-    const newValue = Math.max(0, Math.min(1, parseFloat(value)));
-    
-    setCustomWeights(prev => ({
-      ...prev,
-      [factor]: newValue
-    }));
-  };
-
-  const handleResetWeights = () => {
-    setCustomWeights({...scoringWeights});
-  };
-
-  const handlePageChange = (event, newPage) => {
-    setPage(newPage);
+  const handleViewChange = (event) => {
+    setSelectedView(event.target.value);
   };
 
   const handleLeadSelect = (lead) => {
     setSelectedLead(lead);
   };
 
-  // Prepare data for score distribution chart
-  const getScoreDistributionData = () => {
-    const scoreRanges = [
-      { name: '90-100', range: [90, 100], count: 0 },
-      { name: '80-89', range: [80, 89], count: 0 },
-      { name: '70-79', range: [70, 79], count: 0 },
-      { name: '60-69', range: [60, 69], count: 0 },
-      { name: '50-59', range: [50, 59], count: 0 },
-      { name: '0-49', range: [0, 49], count: 0 }
-    ];
-    
-    leads.forEach(lead => {
-      const score = calculateLeadScore(lead);
-      const matchedRange = scoreRanges.find(range => 
-        score >= range.range[0] && score <= range.range[1]
-      );
-      
-      if (matchedRange) {
-        matchedRange.count++;
-      }
-    });
-    
-    return scoreRanges.map(range => ({
-      name: range.name,
-      count: range.count,
-      color: range.name === '90-100' || range.name === '80-89' ? '#4caf50' :
-             range.name === '70-79' || range.name === '60-69' ? '#ff9800' : '#f44336'
-    }));
-  };
-
-  // Prepare data for specialty scoring chart
-  const getSpecialtyScoreData = () => {
-    const specialtyMap = {};
-    
-    leads.forEach(lead => {
-      if (!lead.specialty) return;
-      
-      if (!specialtyMap[lead.specialty]) {
-        specialtyMap[lead.specialty] = {
-          name: lead.specialty,
-          avgScore: 0,
-          count: 0,
-          totalScore: 0
-        };
-      }
-      
-      specialtyMap[lead.specialty].count++;
-      specialtyMap[lead.specialty].totalScore += calculateLeadScore(lead);
-    });
-    
-    return Object.values(specialtyMap)
-      .map(specialty => ({
-        ...specialty,
-        avgScore: Math.round(specialty.totalScore / specialty.count)
-      }))
-      .sort((a, b) => b.avgScore - a.avgScore);
-  };
-
-  // Prepare data for factor radar chart
-  const getFactorRadarData = (lead) => {
-    if (!lead) return [];
-    
-    return [
-      { factor: 'Demographic', value: lead.demographicFit * 100 },
-      { factor: 'Budget', value: lead.budgetScore * 100 },
-      { factor: 'Engagement', value: lead.engagementScore * 100 },
-      { factor: 'History', value: lead.historyScore * 100 },
-      { factor: 'Timing', value: lead.timingScore * 100 },
-      { factor: 'Specialty', value: lead.specialtyScore * 100 }
-    ];
-  };
-
-  // Get count by priority
-  const getPriorityCountData = () => {
-    const counts = { High: 0, Medium: 0, Low: 0 };
-    
-    leads.forEach(lead => {
-      const score = calculateLeadScore(lead);
-      const priority = getPriorityLabel(score);
-      counts[priority]++;
-    });
-    
-    return [
-      { name: 'High', value: counts.High, color: '#4caf50' },
-      { name: 'Medium', value: counts.Medium, color: '#ff9800' },
-      { name: 'Low', value: counts.Low, color: '#f44336' }
-    ];
-  };
-
-  // Calculate optimal factors for improvement
-  const getImprovementSuggestions = (lead) => {
-    if (!lead) return [];
-    
-    // Find the lowest scoring factors
-    const factors = [
-      { name: 'demographic', label: 'Demographic Fit', value: lead.demographicFit, weight: customWeights.demographic },
-      { name: 'budget', label: 'Budget Qualification', value: lead.budgetScore, weight: customWeights.budget },
-      { name: 'engagement', label: 'Engagement Level', value: lead.engagementScore, weight: customWeights.engagement },
-      { name: 'history', label: 'Conversion History', value: lead.historyScore, weight: customWeights.history },
-      { name: 'timing', label: 'Timing & Urgency', value: lead.timingScore, weight: customWeights.timing },
-      { name: 'specialty', label: 'Specialty Alignment', value: lead.specialtyScore, weight: customWeights.specialty }
-    ];
-    
-    // Sort by weighted opportunity (low score * weight = high potential gain)
-    return factors
-      .sort((a, b) => (a.value * a.weight) - (b.value * b.weight))
-      .slice(0, 3)
-      .map(factor => ({
-        name: factor.name,
-        label: factor.label,
-        value: factor.value,
-        suggestion: getSuggestionForFactor(factor.name, lead)
-      }));
-  };
-
-  // Get specific suggestion based on factor
-  const getSuggestionForFactor = (factor, lead) => {
-    switch (factor) {
-      case 'demographic':
-        return 'Verify practice size and location details. Consider targeted messaging based on specialty.';
-      case 'budget':
-        return 'Provide ROI calculations and financing options. Discuss budget concerns directly.';
-      case 'engagement':
-        return 'Send personalized content about their specialty. Schedule a follow-up call within 3 days.';
-      case 'history':
-        return 'Review past interactions and address previous objections. Highlight new benefits.';
-      case 'timing':
-        return 'Determine current timeline needs and urgent pain points. Offer time-limited incentives.';
-      case 'specialty':
-        return `Focus on success stories from other ${lead.specialty} practices. Share specialty-specific benefits.`;
-      default:
-        return 'Further qualification needed. Schedule discovery call.';
+  const toggleEditWeights = () => {
+    setEditingWeights(!editingWeights);
+    if (editingWeights) {
+      recalculateScores();
     }
   };
 
-  // Get formatted date string
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const handleWeightChange = (factor, value) => {
+    setCustomWeights({
+      ...customWeights,
+      [factor]: parseFloat(value)
+    });
   };
 
-  // Get days since last contact
-  const getDaysSinceContact = (dateString) => {
-    const contactDate = new Date(dateString);
-    const today = new Date();
-    const diffTime = Math.abs(today - contactDate);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const recalculateScores = () => {
+    setIsRecalculating(true);
+    
+    // Simulate API call for recalculating scores
+    setTimeout(() => {
+      // Normally this would be done on the backend
+      const updatedLeads = recentLeads.map(lead => {
+        const newScore = Math.round(
+          lead.factors.demographic * customWeights.demographic * 100 +
+          lead.factors.engagement * customWeights.engagement * 100 +
+          lead.factors.budget * customWeights.budget * 100 +
+          lead.factors.timeframe * customWeights.timeframe * 100
+        ) / (customWeights.demographic + customWeights.engagement + customWeights.budget + customWeights.timeframe);
+        
+        return {
+          ...lead,
+          score: Math.min(Math.max(newScore, 0), 100),
+          probability: newScore / 100
+        };
+      });
+      
+      setRecentLeads(updatedLeads);
+      setIsRecalculating(false);
+    }, 1500);
   };
 
-  // Pagination calculations
-  const paginatedLeads = filteredLeads.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-  const pageCount = Math.ceil(filteredLeads.length / rowsPerPage);
-  
-  // Get unique specialties for filter dropdown
-  const specialties = ['All', ...new Set(leads.map(lead => lead.specialty).filter(Boolean))];
-  
+  const resetWeights = () => {
+    setCustomWeights({
+      demographic: 0.25,
+      engagement: 0.30,
+      budget: 0.25,
+      timeframe: 0.20
+    });
+  };
+
+  const handleFactorChange = (event) => {
+    setSelectedFactor(event.target.value);
+  };
+
+  const toggleMlDetails = () => {
+    setShowMlDetails(!showMlDetails);
+  };
+
+  // Get data for lead score distribution chart
+  const getScoreDistribution = () => {
+    const distribution = {};
+    recentLeads.forEach(lead => {
+      const scoreRange = lead.score >= 90 ? "90-100" :
+                        lead.score >= 80 ? "80-89" :
+                        lead.score >= 70 ? "70-79" :
+                        lead.score >= 60 ? "60-69" :
+                        lead.score >= 50 ? "50-59" : "0-49";
+      distribution[scoreRange] = (distribution[scoreRange] || 0) + 1;
+    });
+    
+    return leadDistribution.map(range => ({
+      ...range,
+      value: distribution[range.name] || 0
+    }));
+  };
+
+  // Format data for factor radar chart
+  const getFactorRadarData = () => {
+    if (!selectedLead) return [];
+    
+    return [
+      { factor: "Demographic", value: selectedLead.factors.demographic * 100 },
+      { factor: "Engagement", value: selectedLead.factors.engagement * 100 },
+      { factor: "Budget", value: selectedLead.factors.budget * 100 },
+      { factor: "Timeframe", value: selectedLead.factors.timeframe * 100 }
+    ];
+  };
+
+  // Get factor details based on selected factor
+  const getFactorDetails = () => {
+    switch(selectedFactor) {
+      case 'demographic':
+        return demographicAttributes;
+      case 'engagement':
+        return engagementAttributes;
+      default:
+        return demographicAttributes;
+    }
+  };
+
+  // Get color based on score
+  const getScoreColor = (score) => {
+    if (score >= 90) return '#4caf50';
+    if (score >= 80) return '#8bc34a';
+    if (score >= 70) return '#cddc39';
+    if (score >= 60) return '#ffeb3b';
+    if (score >= 50) return '#ffc107';
+    return '#ff9800';
+  };
+
+  // Calculate score label
+  const getScoreLabel = (score) => {
+    if (score >= 90) return 'Excellent';
+    if (score >= 80) return 'Very Good';
+    if (score >= 70) return 'Good';
+    if (score >= 60) return 'Average';
+    if (score >= 50) return 'Below Average';
+    return 'Poor';
+  };
+
+  // Format data for scatter plot
+  const getScatterData = () => {
+    return recentLeads.map(lead => ({
+      x: lead.factors.demographic * 100, // x-axis: demographic fit
+      y: lead.factors.engagement * 100,  // y-axis: engagement level
+      z: lead.probability * 100,         // z-axis (size): conversion probability
+      name: lead.name,
+      score: lead.score
+    }));
+  };
+
   return (
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h5" component="h2" gutterBottom>
           Lead Scoring Engine
-          <Tooltip title="AI-powered lead scoring system that evaluates leads based on demographic fit, budget, engagement, history, timing, and specialty alignment.">
+          <Tooltip title="Machine learning-based lead scoring system that predicts conversion potential based on demographics, engagement, budget, and timeframe.">
             <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
           </Tooltip>
         </Typography>
         
         <Box display="flex" alignItems="center">
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showWeightCustomization}
-                onChange={(e) => setShowWeightCustomization(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Customize Scoring"
-            sx={{ mr: 2 }}
-          />
+          <FormControl variant="outlined" size="small" sx={{ minWidth: 150, mr: 2 }}>
+            <InputLabel>View</InputLabel>
+            <Select value={selectedView} onChange={handleViewChange} label="View">
+              <MenuItem value="overview">Score Overview</MenuItem>
+              <MenuItem value="factors">Factor Analysis</MenuItem>
+              <MenuItem value="model">ML Model</MenuItem>
+              <MenuItem value="distribution">Score Distribution</MenuItem>
+              <MenuItem value="thresholds">Score Thresholds</MenuItem>
+            </Select>
+          </FormControl>
           
-          <Button 
-            variant="contained" 
-            color="primary" 
-            startIcon={<PersonAdd />}
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<SettingsApplications />}
+            onClick={toggleEditWeights}
+            color={editingWeights ? "success" : "primary"}
           >
-            New Lead
+            {editingWeights ? "Save Weights" : "Customize Weights"}
           </Button>
         </Box>
       </Box>
 
       <Grid container spacing={3}>
-        {/* Scoring customization panel */}
-        {showWeightCustomization && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 2, mb: 3 }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">
-                  Customize Scoring Weights
-                </Typography>
-                <Button 
-                  variant="outlined" 
-                  size="small" 
-                  startIcon={<RotateLeft />}
-                  onClick={handleResetWeights}
-                >
-                  Reset to Default
-                </Button>
-              </Box>
-              
-              <Grid container spacing={3}>
-                {Object.entries(customWeights).map(([factor, weight]) => (
-                  <Grid item xs={12} sm={6} md={4} lg={2} key={factor}>
-                    <Box>
-                      <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                          {factor}
-                          <Tooltip title={factorDescriptions[factor] || ''}>
-                            <InfoOutlined fontSize="small" sx={{ ml: 0.5, fontSize: 14, verticalAlign: 'middle' }} />
-                          </Tooltip>
-                        </Typography>
-                        <Typography variant="body2" fontWeight="medium">
-                          {Math.round(weight * 100)}%
-                        </Typography>
-                      </Box>
-                      
-                      <Box display="flex" alignItems="center" mt={1}>
-                        <TextField
-                          type="range"
-                          value={weight}
-                          onChange={(e) => handleWeightChange(factor, e.target.value)}
-                          inputProps={{
-                            min: 0,
-                            max: 1,
-                            step: 0.05
-                          }}
-                          sx={{ 
-                            width: '100%',
-                            '& input': { 
-                              padding: 0,
-                              height: 24
-                            }
-                          }}
-                        />
-                      </Box>
+        {/* Main visualization area */}
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 2, height: '100%' }}>
+            {/* Score Overview */}
+            {selectedView === 'overview' && (
+              <Box height={400}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                    Lead Score Overview
+                  </Typography>
+                  {isRecalculating && (
+                    <Box display="flex" alignItems="center">
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        Recalculating scores...
+                      </Typography>
                     </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </Grid>
-        )}
-
-        {/* Filters and search */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={4} md={5}>
-                <TextField
-                  placeholder="Search leads..."
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              
-              <Grid item xs={6} sm={3} md={2}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Specialty</InputLabel>
-                  <Select
-                    value={selectedSpecialty}
-                    onChange={handleSpecialtyChange}
-                    label="Specialty"
-                  >
-                    {specialties.map((specialty) => (
-                      <MenuItem key={specialty} value={specialty}>
-                        {specialty}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={6} sm={3} md={2}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Priority</InputLabel>
-                  <Select
-                    value={filterPriority}
-                    onChange={handlePriorityFilterChange}
-                    label="Priority"
-                  >
-                    <MenuItem value="All">All Leads</MenuItem>
-                    <MenuItem value="High">High Priority</MenuItem>
-                    <MenuItem value="Medium">Medium Priority</MenuItem>
-                    <MenuItem value="Low">Low Priority</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={6} sm={2} md={2}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Sort By</InputLabel>
-                  <Select
-                    value={sortBy}
-                    onChange={handleSortChange}
-                    label="Sort By"
-                  >
-                    <MenuItem value="score">Score</MenuItem>
-                    <MenuItem value="name">Name</MenuItem>
-                    <MenuItem value="lastContact">Last Contact</MenuItem>
-                    <MenuItem value="budgetScore">Budget</MenuItem>
-                    <MenuItem value="engagementScore">Engagement</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={6} sm={1}>
-                <IconButton 
-                  onClick={handleSortDirectionToggle}
-                  sx={{ border: '1px solid rgba(0,0,0,0.23)', borderRadius: 1 }}
-                >
-                  {sortDirection === 'asc' ? <ArrowUpward /> : <ArrowDownward />}
-                </IconButton>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Lead scoring dashboard */}
-        <Grid item xs={12} md={selectedLead ? 8 : 12}>
-          <Paper sx={{ p: 2 }}>
-            <Box mb={2} display="flex" justifyContent="space-between" alignItems="center">
-              <Box display="flex" alignItems="center">
-                <Typography variant="h6" component="h3">
-                  Scored Leads ({filteredLeads.length})
-                </Typography>
-                {filteredLeads.length !== leads.length && (
-                  <Chip 
-                    label={`Filtered from ${leads.length}`} 
-                    size="small"
-                    variant="outlined"
-                    sx={{ ml: 1 }}
-                  />
-                )}
-              </Box>
-              <Box>
-                <Button 
-                  size="small" 
-                  startIcon={<AddCircleOutline />}
-                  sx={{ mr: 1 }}
-                >
-                  Add Note
-                </Button>
-                <Button 
-                  size="small" 
-                  startIcon={<ArrowForward />}
-                >
-                  Assign
-                </Button>
-              </Box>
-            </Box>
-            
-            <TableContainer sx={{ maxHeight: selectedLead ? 'calc(100vh - 340px)' : 'auto' }}>
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Lead</TableCell>
-                    <TableCell>Specialty</TableCell>
-                    <TableCell align="center">Score</TableCell>
-                    <TableCell align="center">Priority</TableCell>
-                    <TableCell>Budget</TableCell>
-                    <TableCell>Engagement</TableCell>
-                    <TableCell>Last Contact</TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {paginatedLeads.map((lead) => {
-                    const score = calculateLeadScore(lead);
-                    const priority = getPriorityLabel(score);
-                    const scoreColor = getScoreColor(score);
-                    const daysSince = getDaysSinceContact(lead.lastContact);
-                    
-                    return (
-                      <TableRow 
-                        key={lead.id}
-                        hover
-                        onClick={() => handleLeadSelect(lead)}
-                        sx={{ 
-                          cursor: 'pointer',
-                          backgroundColor: selectedLead?.id === lead.id ? 'rgba(0, 0, 0, 0.04)' : 'inherit'
-                        }}
-                      >
-                        <TableCell>
-                          <Box display="flex" alignItems="center">
-                            <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: scoreColor }}>
-                              {lead.name.charAt(0)}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" fontWeight={500}>
+                  )}
+                </Box>
+                
+                <TableContainer sx={{ maxHeight: 350, overflowY: 'auto' }}>
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Name</TableCell>
+                        <TableCell align="center">Score</TableCell>
+                        <TableCell align="center">Probability</TableCell>
+                        <TableCell align="right">Demographic</TableCell>
+                        <TableCell align="right">Engagement</TableCell>
+                        <TableCell align="right">Budget</TableCell>
+                        <TableCell align="right">Timeframe</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {recentLeads.map((lead) => (
+                        <TableRow 
+                          key={lead.id} 
+                          hover
+                          onClick={() => handleLeadSelect(lead)}
+                          sx={{ 
+                            cursor: 'pointer',
+                            backgroundColor: selectedLead?.id === lead.id ? 'rgba(25, 118, 210, 0.08)' : 'inherit'
+                          }}
+                        >
+                          <TableCell component="th" scope="row">
+                            <Tooltip title={leadInsights[lead.name] || "Lead details"}>
+                              <Typography variant="body2" fontWeight={selectedLead?.id === lead.id ? 'medium' : 'regular'}>
                                 {lead.name}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {lead.company}
-                              </Typography>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Box display="flex" alignItems="center" justifyContent="center">
+                              <Chip
+                                label={lead.score}
+                                size="small"
+                                sx={{
+                                  bgcolor: getScoreColor(lead.score),
+                                  color: lead.score >= 70 ? 'white' : 'rgba(0, 0, 0, 0.87)',
+                                  fontWeight: 'medium',
+                                  minWidth: 45
+                                }}
+                              />
                             </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={lead.specialty} 
-                            size="small" 
-                            variant="outlined"
-                            icon={<LocalHospital fontSize="small" />}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Typography 
-                            variant="body2" 
-                            fontWeight="medium" 
-                            color={scoreColor}
-                          >
-                            {score}
-                          </Typography>
-                          <Box mt={0.5}>
-                            {getStarRating(score)}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip 
-                            label={priority} 
-                            size="small"
-                            sx={{ 
-                              bgcolor: scoreColor,
-                              color: 'white'
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={lead.budgetScore * 100} 
-                            sx={{ 
-                              height: 6, 
-                              borderRadius: 3,
-                              bgcolor: 'rgba(0,0,0,0.1)',
-                              width: 70
-                            }} 
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={lead.engagementScore * 100} 
-                            sx={{ 
-                              height: 6, 
-                              borderRadius: 3,
-                              bgcolor: 'rgba(0,0,0,0.1)',
-                              width: 70
-                            }} 
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {formatDate(lead.lastContact)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {daysSince} days ago
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton size="small">
-                            <DragHandle fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            
-            <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="body2" color="text.secondary">
-                Showing {Math.min(rowsPerPage, filteredLeads.length)} of {filteredLeads.length} leads
-              </Typography>
-              
-              <Pagination 
-                count={pageCount} 
-                page={page} 
-                onChange={handlePageChange}
-                color="primary" 
-                size="small"
-              />
-            </Box>
-          </Paper>
-        </Grid>
+                          </TableCell>
+                          <TableCell align="center">
+                            {(lead.probability * 100).toFixed(0)}%
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box display="flex" alignItems="center" justifyContent="flex-end">
+                              <Typography variant="body2" width={30}>
+                                {(lead.factors.demographic * 100).toFixed(0)}
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={lead.factors.demographic * 100}
+                                sx={{
+                                  ml: 1,
+                                  width: 40,
+                                  height: 4,
+                                  borderRadius: 1
+                                }}
+                              />
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box display="flex" alignItems="center" justifyContent="flex-end">
+                              <Typography variant="body2" width={30}>
+                                {(lead.factors.engagement * 100).toFixed(0)}
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={lead.factors.engagement * 100}
+                                sx={{
+                                  ml: 1,
+                                  width: 40,
+                                  height: 4,
+                                  borderRadius: 1
+                                }}
+                              />
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box display="flex" alignItems="center" justifyContent="flex-end">
+                              <Typography variant="body2" width={30}>
+                                {(lead.factors.budget * 100).toFixed(0)}
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={lead.factors.budget * 100}
+                                sx={{
+                                  ml: 1,
+                                  width: 40,
+                                  height: 4,
+                                  borderRadius: 1
+                                }}
+                              />
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box display="flex" alignItems="center" justifyContent="flex-end">
+                              <Typography variant="body2" width={30}>
+                                {(lead.factors.timeframe * 100).toFixed(0)}
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={lead.factors.timeframe * 100}
+                                sx={{
+                                  ml: 1,
+                                  width: 40,
+                                  height: 4,
+                                  borderRadius: 1
+                                }}
+                              />
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
 
-        {/* Selected lead details */}
-        {selectedLead && (
-          <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2 }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">
-                  Lead Details
-                </Typography>
-                <IconButton size="small">
-                  <Edit fontSize="small" />
-                </IconButton>
-              </Box>
-              
-              <Box display="flex" alignItems="center" mb={3}>
-                <Avatar sx={{ width: 48, height: 48, mr: 2, bgcolor: getScoreColor(calculateLeadScore(selectedLead)) }}>
-                  {selectedLead.name.charAt(0)}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6">
-                    {selectedLead.name}
+            {/* Factor Analysis */}
+            {selectedView === 'factors' && (
+              <Box height={400}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                    Scoring Factor Analysis
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedLead.title} | {selectedLead.company}
-                  </Typography>
+                  <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
+                    <InputLabel>Factor</InputLabel>
+                    <Select value={selectedFactor} onChange={handleFactorChange} label="Factor">
+                      <MenuItem value="demographic">Demographic Fit</MenuItem>
+                      <MenuItem value="engagement">Engagement Level</MenuItem>
+                      <MenuItem value="budget">Budget Range</MenuItem>
+                      <MenuItem value="timeframe">Decision Timeframe</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
-              </Box>
-              
-              <Divider sx={{ my: 2 }} />
-              
-              <Box mb={3}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Lead Score: {calculateLeadScore(selectedLead)}/100
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={calculateLeadScore(selectedLead)} 
-                  sx={{ 
-                    height: 8, 
-                    borderRadius: 3,
-                    bgcolor: 'rgba(0,0,0,0.1)',
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: getScoreColor(calculateLeadScore(selectedLead))
-                    }
-                  }} 
-                />
-              </Box>
-              
-              <Typography variant="subtitle2" gutterBottom>
-                Scoring Factors
-              </Typography>
-              
-              <Box height={220} mb={3}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart outerRadius={90} data={getFactorRadarData(selectedLead)}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="factor" />
-                    <PolarRadiusAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                    <Radar 
-                      name="Factor Score" 
-                      dataKey="value" 
-                      stroke="#8884d8" 
-                      fill="#8884d8" 
-                      fillOpacity={0.6} 
-                    />
-                    <RechartsTooltip formatter={(value) => [`${value}%`, 'Score']} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </Box>
-              
-              <Box mb={3}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Contact Information
-                </Typography>
-                <Grid container spacing={1}>
-                  <Grid item xs={12}>
-                    <Typography variant="body2">
-                      <strong>Email:</strong> {selectedLead.email}
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      {selectedFactor === 'demographic' ? 'Demographic Fit Attributes' :
+                       selectedFactor === 'engagement' ? 'Engagement Level Attributes' :
+                       selectedFactor === 'budget' ? 'Budget Range Attributes' : 'Decision Timeframe Attributes'}
                     </Typography>
+                    <TableContainer sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Attribute</TableCell>
+                            <TableCell align="center">Weight</TableCell>
+                            <TableCell>Possible Values</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {getFactorDetails().map((attribute) => (
+                            <TableRow key={attribute.name}>
+                              <TableCell>{attribute.name}</TableCell>
+                              <TableCell align="center">{(attribute.weight * 100).toFixed(0)}%</TableCell>
+                              <TableCell>
+                                <Box display="flex" flexWrap="wrap" gap={0.5}>
+                                  {attribute.options.map((option, idx) => (
+                                    <Chip 
+                                      key={idx} 
+                                      label={option} 
+                                      size="small" 
+                                      variant="outlined" 
+                                      sx={{ fontSize: '0.7rem' }}
+                                    />
+                                  ))}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
                   </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="body2">
-                      <strong>Phone:</strong> {selectedLead.phone}
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Factor Impact on Lead Score
                     </Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="body2">
-                      <strong>Last Contact:</strong> {formatDate(selectedLead.lastContact)} ({getDaysSinceContact(selectedLead.lastContact)} days ago)
-                    </Typography>
+                    <Box height={300}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={featureImportance}
+                          layout="vertical"
+                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            type="number" 
+                            domain={[0, 0.3]} 
+                            tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+                          />
+                          <YAxis dataKey="name" type="category" />
+                          <RechartsTooltip formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Importance']} />
+                          <Bar 
+                            dataKey="importance" 
+                            fill="#8884d8"
+                            background={{ fill: '#eee' }}
+                          >
+                            {featureImportance.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={`hsl(${index * 30 + 120}, 70%, 50%)`} 
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Box>
                   </Grid>
                 </Grid>
               </Box>
-              
-              <Divider sx={{ my: 2 }} />
-              
-              <Typography variant="subtitle2" gutterBottom>
-                Improvement Recommendations
-              </Typography>
-              
-              <Box>
-                {getImprovementSuggestions(selectedLead).map((suggestion, index) => (
-                  <Card variant="outlined" sx={{ mb: 1, borderLeft: '3px solid #8884d8' }} key={index}>
-                    <CardContent sx={{ py: 1, px: 2, '&:last-child': { pb: 1 } }}>
+            )}
+
+            {/* ML Model */}
+            {selectedView === 'model' && (
+              <Box height={400}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                    Machine Learning Model Performance
+                    <Tooltip title="Our ML model analyzes lead behavior and attributes to predict conversion probability">
+                      <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
+                    </Tooltip>
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={toggleMlDetails}
+                  >
+                    {showMlDetails ? 'Hide Model Details' : 'Show Model Details'}
+                  </Button>
+                </Box>
+                
+                {showMlDetails && (
+                  <Box sx={{ mb: 3, p: 1.5, bgcolor: 'rgba(25, 118, 210, 0.08)', borderRadius: 1 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Model: {mlModelSettings.name}
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" gutterBottom>
+                          <strong>Parameters:</strong>
+                        </Typography>
+                        <Typography variant="body2">
+                          C: {mlModelSettings.parameters.C}, 
+                          penalty: {mlModelSettings.parameters.penalty}, 
+                          solver: {mlModelSettings.parameters.solver}, 
+                          max_iter: {mlModelSettings.parameters.max_iter}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" gutterBottom>
+                          <strong>Performance Metrics:</strong>
+                        </Typography>
+                        <Grid container spacing={1}>
+                          <Grid item xs={6}>
+                            <Typography variant="body2">
+                              Accuracy: {mlModelSettings.performance.accuracy.toFixed(2)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="body2">
+                              Precision: {mlModelSettings.performance.precision.toFixed(2)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="body2">
+                              Recall: {mlModelSettings.performance.recall.toFixed(2)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="body2">
+                              F1 Score: {mlModelSettings.performance.f1_score.toFixed(2)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="body2">
+                              ROC AUC: {mlModelSettings.performance.roc_auc.toFixed(2)}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+                
+                <Box height={showMlDetails ? 280 : 340}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Lead Conversion Prediction Matrix
+                  </Typography>
+                  <ResponsiveContainer width="100%" height="90%">
+                    <ScatterChart
+                      margin={{ top: 20, right: 20, bottom: 10, left: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        type="number" 
+                        dataKey="x" 
+                        name="Demographic Fit" 
+                        domain={[0, 100]} 
+                        label={{ value: 'Demographic Fit Score', position: 'insideBottomRight', offset: -5 }} 
+                      />
+                      <YAxis 
+                        type="number" 
+                        dataKey="y" 
+                        name="Engagement Level" 
+                        domain={[0, 100]} 
+                        label={{ value: 'Engagement Level Score', angle: -90, position: 'insideLeft' }} 
+                      />
+                      <ZAxis 
+                        type="number" 
+                        dataKey="z" 
+                        range={[50, 400]} 
+                        name="Conversion Probability" 
+                      />
+                      <RechartsTooltip 
+                        cursor={{ strokeDasharray: '3 3' }} 
+                        formatter={(value, name, props) => {
+                          if (name === 'Conversion Probability') return [`${props.payload.z.toFixed(1)}%`, name];
+                          return [value, name];
+                        }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div style={{ 
+                                backgroundColor: '#fff', 
+                                border: '1px solid #ccc',
+                                padding: '10px',
+                                borderRadius: '3px'
+                              }}>
+                                <p style={{ fontWeight: 'bold', margin: '0 0 5px' }}>{data.name}</p>
+                                <p style={{ margin: '0' }}>Lead Score: <span style={{ fontWeight: 'bold' }}>{data.score}</span></p>
+                                <p style={{ margin: '0' }}>Demographic Fit: {data.x.toFixed(1)}%</p>
+                                <p style={{ margin: '0' }}>Engagement Level: {data.y.toFixed(1)}%</p>
+                                <p style={{ margin: '0' }}>Conversion Probability: {data.z.toFixed(1)}%</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Scatter 
+                        name="Leads" 
+                        data={getScatterData()} 
+                        fill="#8884d8"
+                      >
+                        {getScatterData().map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={getScoreColor(entry.score)} 
+                          />
+                        ))}
+                      </Scatter>
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            )}
+
+            {/* Score Distribution */}
+            {selectedView === 'distribution' && (
+              <Box height={400}>
+                <Typography variant="h6" gutterBottom>
+                  Lead Score Distribution
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Box height={350}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={getScoreDistribution()}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={true}
+                            outerRadius={120}
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {getScoreDistribution().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip formatter={(value, name, props) => [value, `${props.payload.label} (${name})`]} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Score Classifications
+                    </Typography>
+                    <TableContainer sx={{ maxHeight: 330, overflowY: 'auto' }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Score Range</TableCell>
+                            <TableCell>Classification</TableCell>
+                            <TableCell align="right">Count</TableCell>
+                            <TableCell align="right">Percentage</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {getScoreDistribution().map((range) => {
+                            const total = getScoreDistribution().reduce((sum, r) => sum + r.value, 0);
+                            const percentage = (range.value / total) * 100;
+                            
+                            return (
+                              <TableRow key={range.name}>
+                                <TableCell>
+                                  <Box display="flex" alignItems="center">
+                                    <Box 
+                                      sx={{ 
+                                        width: 12, 
+                                        height: 12, 
+                                        borderRadius: '50%', 
+                                        bgcolor: range.color,
+                                        mr: 1
+                                      }} 
+                                    />
+                                    {range.name}
+                                  </Box>
+                                </TableCell>
+                                <TableCell>{range.label}</TableCell>
+                                <TableCell align="right">{range.value}</TableCell>
+                                <TableCell align="right">{percentage.toFixed(1)}%</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                    
+                    <Box mt={3}>
                       <Typography variant="subtitle2" gutterBottom>
-                        Improve {suggestion.label} ({Math.round(suggestion.value * 100)}%)
+                        Score Distribution Insights
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" paragraph>
+                        {getScoreDistribution()[0].value + getScoreDistribution()[1].value} leads ({((getScoreDistribution()[0].value + getScoreDistribution()[1].value) / recentLeads.length * 100).toFixed(0)}%) 
+                        have an excellent or very good score, indicating high conversion potential.
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {suggestion.suggestion}
+                        {getScoreDistribution()[5].value} leads ({(getScoreDistribution()[5].value / recentLeads.length * 100).toFixed(0)}%) 
+                        have a poor score and may require special nurturing or reprioritization.
                       </Typography>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </Box>
+                  </Grid>
+                </Grid>
               </Box>
-              
-              <Box display="flex" justifyContent="flex-end" mt={3}>
-                <Button 
-                  variant="contained" 
-                  color="primary"
-                  size="small"
-                  sx={{ mr: 1 }}
-                >
-                  Contact Lead
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  size="small"
-                >
-                  Create Task
-                </Button>
-              </Box>
-            </Paper>
-          </Grid>
-        )}
+            )}
 
-        {/* Dashboard charts */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Lead Score Distribution
-            </Typography>
-            <Box height={300}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getScoreDistributionData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <RechartsTooltip 
-                    formatter={(value, name, props) => [value, 'Leads']} 
-                    labelFormatter={(value) => `Score Range: ${value}`}
-                  />
-                  <Bar dataKey="count" name="Leads">
-                    {getScoreDistributionData().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Priority Distribution
-            </Typography>
-            <Box height={300} display="flex" alignItems="center" justifyContent="center">
-              <Box width="70%" height="100%">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={getPriorityCountData()}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={110}
-                      fill="#8884d8"
-                      dataKey="value"
+            {/* Score Thresholds */}
+            {selectedView === 'thresholds' && (
+              <Box height={400}>
+                <Typography variant="h6" gutterBottom>
+                  Historical Score Thresholds
+                  <Tooltip title="The minimum score required for a lead to be considered high-quality over time">
+                    <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
+                  </Tooltip>
+                </Typography>
+                
+                <Box height={350}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={scoreThresholds}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
-                      {getPriorityCountData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip 
-                      formatter={(value, name, props) => [value, 'Leads']} 
-                      labelFormatter={(value) => `${value} Priority`}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis domain={[50, 90]} label={{ value: 'Score Threshold', angle: -90, position: 'insideLeft' }} />
+                      <RechartsTooltip />
+                      <Line 
+                        type="monotone" 
+                        dataKey="threshold" 
+                        stroke="#8884d8" 
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
               </Box>
-            </Box>
+            )}
           </Paper>
         </Grid>
 
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Specialty Score Analysis
-            </Typography>
-            <Box height={300}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={getSpecialtyScoreData()}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45} 
-                    textAnchor="end"
-                    height={70}
-                    interval={0}
-                  />
-                  <YAxis 
-                    domain={[0, 100]}
-                    label={{ value: 'Average Score', angle: -90, position: 'insideLeft' }} 
-                  />
-                  <RechartsTooltip 
-                    formatter={(value, name) => {
-                      if (name === 'avgScore') return [`${value}/100`, 'Average Score'];
-                      return [value, name === 'count' ? 'Lead Count' : name];
-                    }} 
-                  />
-                  <Legend />
-                  <Bar dataKey="avgScore" name="Average Score" fill="#8884d8">
-                    {getSpecialtyScoreData().map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={getScoreColor(entry.avgScore)} 
-                      />
-                    ))}
-                  </Bar>
-                  <Bar dataKey="count" name="Lead Count" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
+        {/* Sidebar */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, height: '100%' }}>
+            {editingWeights ? (
+              // Weight editing panel
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  Customize Scoring Weights
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Adjust the importance of each factor in the lead scoring algorithm.
+                </Typography>
+                
+                {/* Weight sliders would go here */}
+                {/* Adding more controls here */}
+              </Box>
+            ) : (
+              // Lead details panel
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  Lead Details
+                  {selectedLead ? `: ${selectedLead.name}` : ''}
+                </Typography>
+                
+                {selectedLead ? (
+                  <>
+                    {/* Lead details content would go here */}
+                  </>
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80%', flexDirection: 'column' }}>
+                    <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 2 }}>
+                      Select a lead from the table to view detailed information
+                    </Typography>
+                    <Person sx={{ fontSize: 60, color: 'text.disabled', opacity: 0.3 }} />
+                  </Box>
+                )}
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>

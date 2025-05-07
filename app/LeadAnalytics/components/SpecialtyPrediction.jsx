@@ -56,127 +56,111 @@ import {
   TrendingDown, 
   InfoOutlined, 
   MedicalServices,
-  Bloodtype,
-  Psychology,
-  LocalHospital,
-  BioTech,
-  Science,
-  Analytics,
+  BarChart as BarChartIcon,
+  PieChart as PieChartIcon,
+  DonutLarge,
+  BubbleChart,
+  Radar as RadarIcon,
+  TrendingFlat,
   Search,
   Refresh,
-  BarChartOutlined,
-  BubbleChart,
+  Analytics,
+  Timeline
 } from '@mui/icons-material';
 
-// Color scheme for charts
-const SPECIALTY_COLORS = [
-  '#1976d2', '#f44336', '#4caf50', '#ff9800', '#9c27b0', 
-  '#2196f3', '#ff5722', '#673ab7', '#009688', '#3f51b5'
-];
-
-// Simulated ML model output for specialty metrics
-const specialtyMetrics = {
-  'Cardiology': { demographics: 0.85, competition: 0.70, growth: 0.78, profitability: 0.90 },
-  'Dermatology': { demographics: 0.75, competition: 0.55, growth: 0.92, profitability: 0.82 },
-  'Orthopedics': { demographics: 0.82, competition: 0.68, growth: 0.64, profitability: 0.87 },
-  'Neurology': { demographics: 0.72, competition: 0.76, growth: 0.59, profitability: 0.79 },
-  'ENT': { demographics: 0.65, competition: 0.72, growth: 0.65, profitability: 0.72 },
-  'Ophthalmology': { demographics: 0.68, competition: 0.64, growth: 0.61, profitability: 0.71 },
-  'Pediatrics': { demographics: 0.78, competition: 0.58, growth: 0.73, profitability: 0.67 },
-  'Dentistry': { demographics: 0.80, competition: 0.82, growth: 0.76, profitability: 0.75 },
-  'Gynecology': { demographics: 0.77, competition: 0.62, growth: 0.68, profitability: 0.80 },
-  'General Surgery': { demographics: 0.73, competition: 0.79, growth: 0.55, profitability: 0.69 }
-};
-
-// Simulated NLP analysis of specialty trend keywords
-const nlpAnalysis = {
-  'Cardiology': ['heart disease prevention', 'home monitoring', 'non-invasive procedures'],
-  'Dermatology': ['telehealth consultations', 'minimally invasive', 'cosmetic procedures'],
-  'Orthopedics': ['sports medicine', 'joint replacement', 'rehabilitation services'],
-  'Neurology': ['sleep disorders', 'headache treatment', 'cognitive therapy'],
-  'ENT': ['allergy testing', 'sinus treatment', 'hearing aids'],
-  'Ophthalmology': ['laser surgery', 'vision therapy', 'diabetic eye care'],
-  'Pediatrics': ['developmental screening', 'vaccination', 'behavioral health'],
-  'Dentistry': ['cosmetic dentistry', 'preventive care', 'implants'],
-  'Gynecology': ['wellness exams', 'fertility', 'menopause management'],
-  'General Surgery': ['laparoscopic procedures', 'outpatient surgery', 'hernia repair']
-};
-
-// Seasonal trends for specialties
-const seasonalTrends = {
-  'Cardiology': { winter: 0.72, spring: 0.68, summer: 0.65, fall: 0.70 },
-  'Dermatology': { winter: 0.58, spring: 0.65, summer: 0.85, fall: 0.68 },
-  'Orthopedics': { winter: 0.74, spring: 0.68, summer: 0.62, fall: 0.66 },
-  'Neurology': { winter: 0.70, spring: 0.69, summer: 0.68, fall: 0.72 },
-  'ENT': { winter: 0.78, spring: 0.82, summer: 0.60, fall: 0.75 },
-  'Ophthalmology': { winter: 0.68, spring: 0.72, summer: 0.70, fall: 0.69 },
-  'Pediatrics': { winter: 0.80, spring: 0.68, summer: 0.65, fall: 0.76 },
-  'Dentistry': { winter: 0.65, spring: 0.70, summer: 0.72, fall: 0.68 },
-  'Gynecology': { winter: 0.65, spring: 0.68, summer: 0.72, fall: 0.69 },
-  'General Surgery': { winter: 0.66, spring: 0.64, summer: 0.63, fall: 0.65 }
-};
-
-// Decision tree influencing factors (simplified representation)
-const decisionTreeFactors = [
-  { 
-    name: 'Demographics', 
-    children: [
-      { name: 'Age Distribution', importance: 0.22 },
-      { name: 'Income Level', importance: 0.18 },
-      { name: 'Insurance Coverage', importance: 0.15 }
-    ],
-    importance: 0.28
+// Mock ML model data for specialty prediction using XGBoost and Decision Trees
+const decisionTreeData = {
+  model: {
+    algorithm: "XGBoost",
+    parameters: {
+      max_depth: 5,
+      learning_rate: 0.1,
+      n_estimators: 100,
+      objective: 'binary:logistic'
+    },
+    metrics: {
+      accuracy: 0.86,
+      precision: 0.83,
+      recall: 0.85,
+      f1_score: 0.84,
+      auc: 0.91
+    }
   },
-  { 
-    name: 'Market Factors', 
-    children: [
-      { name: 'Competitive Density', importance: 0.20 },
-      { name: 'Growth Rate', importance: 0.16 },
-      { name: 'Reimbursement Rates', importance: 0.15 }
+  featureImportance: [
+    { feature: 'Patient Demographics', importance: 0.26 },
+    { feature: 'Geographic Location', importance: 0.18 },
+    { feature: 'Insurance Coverage', importance: 0.22 },
+    { feature: 'Past Engagement', importance: 0.14 },
+    { feature: 'Seasonal Factors', importance: 0.12 },
+    { feature: 'Competitive Index', importance: 0.08 }
+  ],
+  decisionPath: {
+    nodes: [
+      { id: 0, condition: 'Insurance Coverage > 75%', samples: 1000, value: [300, 700] },
+      { id: 1, condition: 'Demographics: Age > 50', samples: 700, value: [150, 550] },
+      { id: 2, condition: 'Season: Summer', samples: 550, value: [100, 450] },
+      { id: 3, condition: 'Geographic: Urban', samples: 450, value: [50, 400] },
+      { id: 4, leaf: true, class: 'High Conversion', samples: 400, probability: 0.90 }
     ],
-    importance: 0.24
-  },
-  { 
-    name: 'Patient Needs', 
-    children: [
-      { name: 'Prevalence of Conditions', importance: 0.19 },
-      { name: 'Treatment Urgency', importance: 0.16 },
-      { name: 'Seasonal Variation', importance: 0.14 }
-    ],
-    importance: 0.22
-  },
-  { 
-    name: 'Provider Factors', 
-    children: [
-      { name: 'Technology Level', importance: 0.17 },
-      { name: 'Specialist Availability', importance: 0.16 },
-      { name: 'Procedure Complexity', importance: 0.14 }
-    ],
-    importance: 0.20
-  },
-  { 
-    name: 'Operational', 
-    children: [
-      { name: 'Cost Structure', importance: 0.17 },
-      { name: 'Patient Volume', importance: 0.15 },
-      { name: 'Facility Requirements', importance: 0.14 }
-    ],
-    importance: 0.18
+    edges: [
+      { from: 0, to: 1, condition: 'True' },
+      { from: 1, to: 2, condition: 'True' },
+      { from: 2, to: 3, condition: 'True' },
+      { from: 3, to: 4, condition: 'True' }
+    ]
   }
-];
+};
 
-// Icons for specialties
-const specialtyIcons = {
-  'Cardiology': <Bloodtype fontSize="small" />,
-  'Dermatology': <BioTech fontSize="small" />,
-  'Orthopedics': <LocalHospital fontSize="small" />,
-  'Neurology': <Psychology fontSize="small" />,
-  'ENT': <MedicalServices fontSize="small" />,
-  'Ophthalmology': <Science fontSize="small" />,
-  'Pediatrics': <LocalHospital fontSize="small" />,
-  'Dentistry': <MedicalServices fontSize="small" />,
-  'Gynecology': <LocalHospital fontSize="small" />,
-  'General Surgery': <MedicalServices fontSize="small" />
+// NLP Analysis results for each specialty
+const nlpAnalysis = {
+  'Cardiology': ['heart health', 'cardiac wellness', 'cholesterol management', 'blood pressure', 'arrhythmia'],
+  'Dermatology': ['skin care', 'acne treatment', 'anti-aging', 'skin cancer', 'eczema relief'],
+  'Orthopedics': ['joint pain', 'sports medicine', 'arthritis treatment', 'spine health', 'fracture care'],
+  'Neurology': ['headache relief', 'stroke prevention', 'memory enhancement', 'sleep disorders', 'epilepsy management'],
+  'ENT': ['sinus care', 'hearing solutions', 'allergy treatment', 'voice disorders', 'sleep apnea'],
+  'Ophthalmology': ['vision correction', 'cataract surgery', 'glaucoma treatment', 'eye exam', 'retina care'],
+  'Pediatrics': ['child wellness', 'developmental milestones', 'immunization', 'growth tracking', 'adolescent care'],
+  'Dentistry': ['teeth whitening', 'preventive dental care', 'emergency dental', 'cosmetic dental', 'orthodontics'],
+  'Gynecology': ['women\'s health', 'prenatal care', 'fertility treatment', 'menopause management', 'breast health'],
+  'General Surgery': ['minimally invasive', 'outpatient procedures', 'hernia repair', 'gallbladder removal', 'appendectomy']
+};
+
+// LDA Topic model results for detecting trends
+const ldaTopicModel = {
+  topics: [
+    {
+      id: 1,
+      name: "Preventive Care",
+      keywords: ["prevention", "screening", "early detection", "check-up", "wellness"],
+      trending: true,
+      growth: 0.32,
+      relatedSpecialties: ["Cardiology", "Gynecology", "Dermatology"]
+    },
+    {
+      id: 2,
+      name: "Minimally Invasive",
+      keywords: ["outpatient", "quick recovery", "minimal scarring", "same-day", "laparoscopic"],
+      trending: true,
+      growth: 0.28,
+      relatedSpecialties: ["General Surgery", "Orthopedics", "Gynecology"]
+    },
+    {
+      id: 3,
+      name: "Telemedicine",
+      keywords: ["virtual visit", "online consultation", "remote monitoring", "digital health", "telehealth"],
+      trending: true,
+      growth: 0.45,
+      relatedSpecialties: ["Dermatology", "Psychiatry", "General Practice"]
+    },
+    {
+      id: 4,
+      name: "Aesthetic Procedures",
+      keywords: ["cosmetic", "appearance", "rejuvenation", "beauty", "enhancement"],
+      trending: false,
+      growth: 0.08,
+      relatedSpecialties: ["Dermatology", "Dentistry", "Plastic Surgery"]
+    }
+  ]
 };
 
 const SpecialtyPrediction = ({ data }) => {
@@ -189,6 +173,9 @@ const SpecialtyPrediction = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSeason, setSelectedSeason] = useState('all');
   const [showDecisionTree, setShowDecisionTree] = useState(false);
+  const [showMlDetails, setShowMlDetails] = useState(false);
+  const [showNlpAnalysis, setShowNlpAnalysis] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState(ldaTopicModel.topics[0]);
 
   useEffect(() => {
     if (data && data.specialties) {
@@ -333,6 +320,22 @@ const SpecialtyPrediction = ({ data }) => {
     setSelectedSpecialty(event.target.value);
   };
 
+  // Toggle ML model details
+  const toggleMlDetails = () => {
+    setShowMlDetails(!showMlDetails);
+  };
+
+  // Toggle NLP analysis section
+  const toggleNlpAnalysis = () => {
+    setShowNlpAnalysis(!showNlpAnalysis);
+  };
+
+  // Handle topic selection
+  const handleTopicChange = (event) => {
+    const topic = ldaTopicModel.topics.find(t => t.id === parseInt(event.target.value));
+    if (topic) setSelectedTopic(topic);
+  };
+
   // Sort the specialties based on the selected metric
   const sortedSpecialties = [...filteredSpecialties].sort((a, b) => {
     if (sortBy === 'score') {
@@ -356,26 +359,14 @@ const SpecialtyPrediction = ({ data }) => {
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h5" component="h2" gutterBottom>
-          Medical Specialty Conversion Analysis
-          <Tooltip title="Analysis of which medical specialties have the highest conversion potential using decision trees, XGBoost, and NLP trend analysis.">
+          Medical Specialty Conversion Potential
+          <Tooltip title="ML-powered analysis of medical specialties with the highest conversion potential based on multiple factors.">
             <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
           </Tooltip>
         </Typography>
         
-        <Box display="flex" alignItems="center">
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showAdvancedInsights}
-                onChange={(e) => setShowAdvancedInsights(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Advanced ML Insights"
-            sx={{ mr: 2 }}
-          />
-          
-          <FormControl variant="outlined" size="small" sx={{ minWidth: 120, mr: 2 }}>
+        <Box>
+          <FormControl variant="outlined" size="small" sx={{ minWidth: 150, mr: 2 }}>
             <InputLabel>View</InputLabel>
             <Select value={selectedView} onChange={handleViewChange} label="View">
               <MenuItem value="potential">Conversion Potential</MenuItem>
@@ -384,6 +375,7 @@ const SpecialtyPrediction = ({ data }) => {
               <MenuItem value="radar">Multi-factor Analysis</MenuItem>
               <MenuItem value="seasonal">Seasonal Trends</MenuItem>
               <MenuItem value="decision">Decision Tree Model</MenuItem>
+              <MenuItem value="lda">LDA Topic Analysis</MenuItem>
             </Select>
           </FormControl>
           
@@ -660,382 +652,472 @@ const SpecialtyPrediction = ({ data }) => {
 
             {selectedView === 'decision' && (
               <Box height={400}>
-                <Typography variant="h6" gutterBottom>
-                  ML Decision Model: {showDecisionTree ? 'Key Decision Factors' : 'Feature Importance'}
-                  <Tooltip title="Visualization of our machine learning model's decision making process for specialty predictions">
-                    <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
-                  </Tooltip>
-                </Typography>
-                
-                {showDecisionTree ? (
-                  <Box p={2} height={340} sx={{ overflowY: 'auto' }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                    XGBoost Decision Tree Model
+                    <Tooltip title="Advanced machine learning model that predicts specialty conversion potential using multiple features">
+                      <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
+                    </Tooltip>
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={toggleMlDetails}
+                  >
+                    {showMlDetails ? 'Hide ML Details' : 'Show ML Details'}
+                  </Button>
+                </Box>
+
+                {showMlDetails && (
+                  <Box sx={{ mb: 3, p: 1.5, bgcolor: 'rgba(25, 118, 210, 0.08)', borderRadius: 1 }}>
                     <Typography variant="subtitle2" gutterBottom>
-                      Decision Tree Branches for Specialty Prediction
+                      Model Performance Metrics:
                     </Typography>
-                    <Box p={2}>
-                      {decisionTreeFactors.map((factor, index) => (
-                        <Box key={index} mb={3}>
-                          <Typography variant="subtitle1" fontWeight="medium">
-                            {factor.name} ({(factor.importance * 100).toFixed(1)}%)
-                          </Typography>
-                          <Box pl={2} pt={1}>
-                            {factor.children.map((child, childIndex) => (
-                              <Box key={childIndex} display="flex" alignItems="center" mb={1}>
-                                <Box width={12} height={12} bgcolor={SPECIALTY_COLORS[index]} borderRadius="50%" mr={1} />
-                                <Box width="100%">
-                                  <Box display="flex" justifyContent="space-between">
-                                    <Typography variant="body2">
-                                      {child.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {(child.importance * 100).toFixed(1)}%
-                                    </Typography>
-                                  </Box>
-                                  <LinearProgress 
-                                    variant="determinate" 
-                                    value={child.importance * 100} 
-                                    sx={{ 
-                                      mt: 0.5, 
-                                      height: 4, 
-                                      borderRadius: 2,
-                                      backgroundColor: 'rgba(0,0,0,0.05)',
-                                      '& .MuiLinearProgress-bar': {
-                                        backgroundColor: SPECIALTY_COLORS[index]
-                                      }
-                                    }} 
-                                  />
-                                </Box>
-                              </Box>
-                            ))}
-                          </Box>
-                        </Box>
-                      ))}
-                    </Box>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6} md={2}>
+                        <Typography variant="body2">
+                          <strong>Accuracy:</strong> {decisionTreeData.model.metrics.accuracy.toFixed(2)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6} md={2}>
+                        <Typography variant="body2">
+                          <strong>Precision:</strong> {decisionTreeData.model.metrics.precision.toFixed(2)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6} md={2}>
+                        <Typography variant="body2">
+                          <strong>Recall:</strong> {decisionTreeData.model.metrics.recall.toFixed(2)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6} md={2}>
+                        <Typography variant="body2">
+                          <strong>F1:</strong> {decisionTreeData.model.metrics.f1_score.toFixed(2)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6} md={3}>
+                        <Typography variant="body2">
+                          <strong>AUC:</strong> {decisionTreeData.model.metrics.auc.toFixed(2)}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                    <Divider sx={{ my: 1 }} />
+                    <Typography variant="subtitle2" gutterBottom>
+                      XGBoost Parameters:
+                    </Typography>
+                    <Typography variant="body2">
+                      max_depth: {decisionTreeData.model.parameters.max_depth}, 
+                      learning_rate: {decisionTreeData.model.parameters.learning_rate}, 
+                      estimators: {decisionTreeData.model.parameters.n_estimators}, 
+                      objective: {decisionTreeData.model.parameters.objective}
+                    </Typography>
                   </Box>
-                ) : (
-                  <ResponsiveContainer width="100%" height="90%">
+                )}
+
+                <Box height={showMlDetails ? 280 : 340}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={decisionTreeFactors}
+                      data={decisionTreeData.featureImportance}
                       layout="vertical"
-                      margin={{ top: 20, right: 30, left: 150, bottom: 5 }}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" domain={[0, 0.35]} tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} />
-                      <YAxis dataKey="name" type="category" width={140} />
+                      <XAxis 
+                        type="number" 
+                        domain={[0, 0.3]} 
+                        tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+                      />
+                      <YAxis 
+                        dataKey="feature" 
+                        type="category"
+                        width={120}
+                      />
                       <RechartsTooltip formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Feature Importance']} />
-                      <Bar dataKey="importance">
-                        {decisionTreeFactors.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SPECIALTY_COLORS[index % SPECIALTY_COLORS.length]} />
+                      <Bar 
+                        dataKey="importance" 
+                        fill="#8884d8"
+                      >
+                        {decisionTreeData.featureImportance.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={`hsl(${index * 30 + 120}, 70%, 50%)`} 
+                          />
                         ))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
+                </Box>
+              </Box>
+            )}
+
+            {selectedView === 'lda' && (
+              <Box height={400}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                    LDA Topic Analysis
+                    <Tooltip title="Latent Dirichlet Allocation topic modeling to identify emerging trends in healthcare">
+                      <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
+                    </Tooltip>
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={toggleNlpAnalysis}
+                    startIcon={showNlpAnalysis ? <BarChartIcon /> : <Timeline />}
+                  >
+                    {showNlpAnalysis ? 'Show Topic Growth' : 'Show NLP Keywords'}
+                  </Button>
+                </Box>
+                
+                <FormControl variant="outlined" size="small" sx={{ minWidth: 200, mb: 2 }}>
+                  <InputLabel>Topic</InputLabel>
+                  <Select 
+                    value={selectedTopic.id} 
+                    onChange={handleTopicChange} 
+                    label="Topic"
+                  >
+                    {ldaTopicModel.topics.map((topic) => (
+                      <MenuItem key={topic.id} value={topic.id}>
+                        {topic.name} 
+                        {topic.trending && (
+                          <TrendingUp fontSize="small" color="primary" sx={{ ml: 1 }} />
+                        )}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                {showNlpAnalysis ? (
+                  <Box mt={2}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Key Phrases for {selectedTopic.name}:
+                    </Typography>
+                    <Grid container spacing={1} sx={{ mt: 1 }}>
+                      {selectedTopic.keywords.map((keyword, index) => (
+                        <Grid item key={index}>
+                          <Chip 
+                            label={keyword} 
+                            variant="outlined" 
+                            color="primary"
+                            size="small"
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                    
+                    <Typography variant="subtitle2" gutterBottom sx={{ mt: 3 }}>
+                      Related Specialties:
+                    </Typography>
+                    <Grid container spacing={1} sx={{ mt: 1 }}>
+                      {selectedTopic.relatedSpecialties.map((specialty, index) => (
+                        <Grid item key={index}>
+                          <Chip 
+                            label={specialty} 
+                            color="secondary"
+                            size="small"
+                            icon={<MedicalServices fontSize="small" />}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                    
+                    <Box sx={{ mt: 4 }}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        NLP Keyword Analysis for {selectedTopic.relatedSpecialties[0]}:
+                      </Typography>
+                      <TableContainer sx={{ mt: 1, maxHeight: 180 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Keyword</TableCell>
+                              <TableCell align="right">Relevance</TableCell>
+                              <TableCell align="right">Trend</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {nlpAnalysis[selectedTopic.relatedSpecialties[0]].map((keyword, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{keyword}</TableCell>
+                                <TableCell align="right">
+                                  {(0.9 - (index * 0.1)).toFixed(2)}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {index < 2 ? (
+                                    <TrendingUp fontSize="small" color="success" />
+                                  ) : index < 4 ? (
+                                    <TrendingFlat fontSize="small" color="primary" />
+                                  ) : (
+                                    <TrendingDown fontSize="small" color="error" />
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box height={300}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={ldaTopicModel.topics}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="name" 
+                          angle={-45} 
+                          textAnchor="end" 
+                          height={70}
+                          interval={0}
+                        />
+                        <YAxis 
+                          domain={[0, 0.5]} 
+                          tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+                          label={{ value: 'Topic Growth Rate', angle: -90, position: 'insideLeft' }}
+                        />
+                        <RechartsTooltip formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Growth Rate']} />
+                        <Bar 
+                          dataKey="growth" 
+                          fill="#8884d8"
+                          animationDuration={1500}
+                        >
+                          {ldaTopicModel.topics.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.trending ? '#4caf50' : '#ff9800'} 
+                              fillOpacity={0.8}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
                 )}
               </Box>
             )}
           </Paper>
         </Grid>
 
-        {/* Right sidebar with top specialties and insights */}
+        {/* Sidebar with specialty details */}
         <Grid item xs={12} md={4}>
-          <Grid container spacing={2} direction="column">
-            <Grid item>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  AI-Selected Top Specialties
-                </Typography>
-                <Box>
-                  {topSpecialties.map((specialty, index) => (
-                    <Card variant="outlined" key={index} sx={{ mb: 2, borderLeft: `4px solid ${SPECIALTY_COLORS[index]}` }}>
-                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                          <Box display="flex" alignItems="center">
-                            {specialtyIcons[specialty.name] || <MedicalServices fontSize="small" />}
-                            <Typography variant="subtitle1" sx={{ ml: 1, fontWeight: 'medium' }}>
-                              {specialty.name}
-                            </Typography>
-                          </Box>
-                          <Chip 
-                            label={`${getOverallScore(specialty)}% ML Score`} 
-                            size="small"
-                            sx={{ 
-                              bgcolor: SPECIALTY_COLORS[index],
-                              color: 'white',
-                              fontWeight: 'bold'
-                            }} 
-                          />
-                        </Box>
-                        
-                        <Box mt={1}>
+          <Paper sx={{ p: 2, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Top Specialties by {sortBy === 'conversionPotential' ? 'Conversion Potential' : 
+                               sortBy === 'growth' ? 'Growth Rate' : 
+                               sortBy === 'leadCount' ? 'Lead Count' : 
+                               'ML Score'}
+            </Typography>
+            
+            <FormControlLabel
+              control={
+                <Switch 
+                  checked={showAdvancedInsights} 
+                  onChange={(e) => setShowAdvancedInsights(e.target.checked)} 
+                  color="primary"
+                />
+              }
+              label="Show Advanced ML Insights"
+              sx={{ mb: 2 }}
+            />
+            
+            <Grid container spacing={2}>
+              {topSpecialties.map((specialty, index) => (
+                <Grid item xs={12} key={specialty.name}>
+                  <Card 
+                    variant="outlined" 
+                    sx={{ 
+                      mb: 2, 
+                      borderColor: SPECIALTY_COLORS[index % SPECIALTY_COLORS.length],
+                      borderWidth: 2
+                    }}
+                  >
+                    <CardContent>
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6" color="primary">
+                          {specialty.name}
+                        </Typography>
+                        <Chip 
+                          label={`Rank #${index + 1}`} 
+                          size="small"
+                          sx={{ 
+                            bgcolor: SPECIALTY_COLORS[index % SPECIALTY_COLORS.length],
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }}
+                        />
+                      </Box>
+                      
+                      <Divider sx={{ my: 1.5 }} />
+                      
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
                           <Typography variant="body2" color="text.secondary">
-                            Conversion Potential:
+                            Conversion Rate
                           </Typography>
                           <Box display="flex" alignItems="center">
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={specialty.conversionPotential * 100} 
-                              sx={{ 
-                                flexGrow: 1, 
-                                mr: 1, 
-                                height: 8, 
-                                borderRadius: 2,
-                                backgroundColor: 'rgba(0,0,0,0.1)',
-                                '& .MuiLinearProgress-bar': {
-                                  backgroundColor: SPECIALTY_COLORS[index]
-                                }
-                              }} 
-                            />
-                            <Typography variant="body2">
+                            <Typography variant="h6" component="span">
                               {(specialty.conversionPotential * 100).toFixed(1)}%
                             </Typography>
+                            {specialty.conversionTrend > 0 ? (
+                              <TrendingUp fontSize="small" color="success" sx={{ ml: 1 }} />
+                            ) : (
+                              <TrendingDown fontSize="small" color="error" sx={{ ml: 1 }} />
+                            )}
                           </Box>
-                        </Box>
-                        
-                        <Box mt={1}>
+                        </Grid>
+                        <Grid item xs={6}>
                           <Typography variant="body2" color="text.secondary">
-                            Growth Rate:
+                            Growth Rate
                           </Typography>
                           <Box display="flex" alignItems="center">
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={specialty.growth * 100} 
-                              sx={{ 
-                                flexGrow: 1, 
-                                mr: 1, 
-                                height: 8, 
-                                borderRadius: 2,
-                                backgroundColor: 'rgba(0,0,0,0.1)',
-                                '& .MuiLinearProgress-bar': {
-                                  backgroundColor: '#4caf50'
-                                }
-                              }} 
-                            />
-                            <Typography variant="body2">
+                            <Typography variant="h6" component="span">
                               {(specialty.growth * 100).toFixed(1)}%
                             </Typography>
+                            {specialty.growth > 0.10 ? (
+                              <TrendingUp fontSize="small" color="success" sx={{ ml: 1 }} />
+                            ) : (
+                              <TrendingFlat fontSize="small" color="primary" sx={{ ml: 1 }} />
+                            )}
                           </Box>
-                        </Box>
-                        
-                        <Box mt={1}>
+                        </Grid>
+                        <Grid item xs={6}>
                           <Typography variant="body2" color="text.secondary">
-                            Best Season:
+                            Lead Count
+                          </Typography>
+                          <Typography variant="h6">
+                            {specialty.leadCount.toLocaleString()}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">
+                            ML Score
                           </Typography>
                           <Box display="flex" alignItems="center">
-                            {(() => {
-                              const trends = seasonalTrends[specialty.name];
-                              if (!trends) return 'N/A';
-                              
-                              const seasons = ['Winter', 'Spring', 'Summer', 'Fall'];
-                              const values = [trends.winter, trends.spring, trends.summer, trends.fall];
-                              const maxIndex = values.indexOf(Math.max(...values));
-                              
-                              const seasonColors = {
-                                'Winter': '#b3e5fc',
-                                'Spring': '#c8e6c9',
-                                'Summer': '#ffecb3',
-                                'Fall': '#ffccbc'
-                              };
-                              
-                              return (
-                                <Chip 
-                                  label={seasons[maxIndex]} 
-                                  size="small" 
-                                  sx={{ 
-                                    bgcolor: seasonColors[seasons[maxIndex]],
-                                  }} 
-                                />
-                              );
-                            })()}
+                            <Typography variant="h6" component="span">
+                              {getOverallScore(specialty)}
+                            </Typography>
+                            {getOverallScore(specialty) >= 75 ? (
+                              <Analytics fontSize="small" color="success" sx={{ ml: 1 }} />
+                            ) : (
+                              <Analytics fontSize="small" color="warning" sx={{ ml: 1 }} />
+                            )}
                           </Box>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
-              </Paper>
-            </Grid>
-            
-            <Grid item>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Trending Keywords
-                  <Tooltip title="NLP analysis of trending keywords for medical specialties">
-                    <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
-                  </Tooltip>
-                </Typography>
-                <Box my={1}>
-                  <Typography variant="subtitle2" color="success.main" sx={{ display: 'flex', alignItems: 'center' }}>
-                    <TrendingUp fontSize="small" sx={{ mr: 0.5 }} /> Rising Trends
-                  </Typography>
-                  <Box mt={1}>
-                    {trendData.rising && trendData.rising.map((keyword, index) => (
-                      <Chip 
-                        key={index} 
-                        label={keyword}
-                        size="small"
-                        sx={{ m: 0.5, bgcolor: 'rgba(76, 175, 80, 0.1)' }}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-                
-                <Divider sx={{ my: 2 }} />
-                
-                <Box>
-                  <Typography variant="subtitle2" color="error.main" sx={{ display: 'flex', alignItems: 'center' }}>
-                    <TrendingDown fontSize="small" sx={{ mr: 0.5 }} /> Declining Trends
-                  </Typography>
-                  <Box mt={1}>
-                    {trendData.falling && trendData.falling.map((keyword, index) => (
-                      <Chip 
-                        key={index} 
-                        label={keyword}
-                        size="small"
-                        sx={{ m: 0.5, bgcolor: 'rgba(244, 67, 54, 0.1)' }}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              </Paper>
-            </Grid>
-          </Grid>
-        </Grid>
-
-        {/* Advanced ML Insights Section */}
-        {showAdvancedInsights && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Advanced ML Insights & NLP Analysis
-                <Tooltip title="Insights derived from our machine learning models and natural language processing of market data">
-                  <InfoOutlined fontSize="small" sx={{ ml: 1, cursor: 'pointer', verticalAlign: 'middle' }} />
-                </Tooltip>
-              </Typography>
-              
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Specialty-Specific Keyword Analysis
-                  </Typography>
-                  <TableContainer component={Box}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Specialty</TableCell>
-                          <TableCell>Trending Keywords (NLP Analysis)</TableCell>
-                          <TableCell align="right">ML Confidence</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {topSpecialties.map((specialty, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <Box display="flex" alignItems="center">
-                                {specialtyIcons[specialty.name] || <MedicalServices fontSize="small" />}
-                                <Typography variant="body2" sx={{ ml: 1 }}>
-                                  {specialty.name}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              <Box display="flex" flexWrap="wrap">
-                                {(nlpAnalysis[specialty.name] || []).map((keyword, kidx) => (
-                                  <Chip 
-                                    key={kidx} 
-                                    label={keyword} 
-                                    size="small" 
-                                    sx={{ 
-                                      m: 0.3, 
-                                      bgcolor: `${SPECIALTY_COLORS[index]}20`
-                                    }} 
+                        </Grid>
+                      </Grid>
+                      
+                      {showAdvancedInsights && (
+                        <>
+                          <Divider sx={{ my: 1.5 }} />
+                          
+                          <Typography variant="subtitle2" gutterBottom>
+                            ML Insights
+                          </Typography>
+                          
+                          <Typography variant="body2" paragraph>
+                            {specialty.mlInsights || `${specialty.name} shows ${specialty.conversionPotential > 0.75 ? 'excellent' : specialty.conversionPotential > 0.6 ? 'good' : 'moderate'} conversion potential based on demographic match and historical performance. ${specialty.growth > 0.15 ? 'Strong growth trend indicates expanding market.' : specialty.growth > 0.1 ? 'Steady growth indicates market stability.' : 'Moderate growth suggests mature market.'}`}
+                          </Typography>
+                          
+                          <Typography variant="subtitle2" gutterBottom>
+                            Key Factors
+                          </Typography>
+                          
+                          <Grid container spacing={1}>
+                            {[
+                              { name: 'Demographics', value: specialtyMetrics[specialty.name]?.demographics || 0.6 },
+                              { name: 'Competition', value: 1 - (specialtyMetrics[specialty.name]?.competition || 0.4) },
+                              { name: 'Seasonality', value: getCombinedSeasonality(specialty.name) || 0.7 }
+                            ].map((factor, idx) => (
+                              <Grid item xs={12} key={factor.name}>
+                                <Box display="flex" alignItems="center" justifyContent="space-between">
+                                  <Typography variant="body2" width={100}>
+                                    {factor.name}
+                                  </Typography>
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={factor.value * 100}
+                                    sx={{
+                                      width: '60%',
+                                      height: 8,
+                                      borderRadius: 5,
+                                      bgcolor: 'rgba(0,0,0,0.1)',
+                                      '& .MuiLinearProgress-bar': {
+                                        bgcolor: SPECIALTY_COLORS[index % SPECIALTY_COLORS.length]
+                                      }
+                                    }}
                                   />
-                                ))}
-                              </Box>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography variant="body2" fontWeight="medium">
-                                {getOverallScore(specialty)}%
-                              </Typography>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                                  <Typography variant="body2" width={40}>
+                                    {(factor.value * 100).toFixed(0)}%
+                                  </Typography>
+                                </Box>
+                              </Grid>
+                            ))}
+                          </Grid>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
                 </Grid>
-                
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                    ML Model-Generated Recommendations
-                  </Typography>
-                  <Box mb={3}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={4}>
-                        <Card variant="outlined">
-                          <CardContent>
-                            <Box display="flex" alignItems="center" mb={1}>
-                              <Analytics color="primary" sx={{ mr: 1 }} />
-                              <Typography variant="h6" color="primary">
-                                Strategic Recommendation
-                              </Typography>
-                            </Box>
-                            <Typography variant="body2" paragraph>
-                              Focus marketing resources on {topSpecialties[0]?.name} and {topSpecialties[1]?.name} for highest conversion potential in the next quarter.
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-                              ML Confidence: 92%
-                            </Typography>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                      
-                      <Grid item xs={12} md={4}>
-                        <Card variant="outlined">
-                          <CardContent>
-                            <Box display="flex" alignItems="center" mb={1}>
-                              <Analytics color="secondary" sx={{ mr: 1 }} />
-                              <Typography variant="h6" color="secondary">
-                                Content Strategy
-                              </Typography>
-                            </Box>
-                            <Typography variant="body2" paragraph>
-                              Create targeted content around keywords "{nlpAnalysis[topSpecialties[0]?.name]?.[0]}" and "{nlpAnalysis[topSpecialties[0]?.name]?.[1]}" for higher engagement.
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-                              ML Confidence: 87%
-                            </Typography>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                      
-                      <Grid item xs={12} md={4}>
-                        <Card variant="outlined">
-                          <CardContent>
-                            <Box display="flex" alignItems="center" mb={1}>
-                              <Analytics color="error" sx={{ mr: 1 }} />
-                              <Typography variant="h6" color="error">
-                                Risk Assessment
-                              </Typography>
-                            </Box>
-                            <Typography variant="body2" paragraph>
-                              Reduce focus on "General Surgery" as conversion rates are trending downward and competition is increasing rapidly.
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-                              ML Confidence: 83%
-                            </Typography>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-        )}
+              ))}
+            </Grid>
+          </Paper>
+        </Grid>
       </Grid>
     </Box>
   );
+};
+
+// Dummy color palette for specialties
+const SPECIALTY_COLORS = [
+  '#1976d2', // blue
+  '#388e3c', // green
+  '#d32f2f', // red
+  '#f57c00', // orange
+  '#7b1fa2', // purple
+  '#0097a7', // cyan
+  '#c2185b', // pink
+  '#fbc02d', // yellow
+  '#455a64', // blue-grey
+  '#5d4037', // brown
+];
+
+// Dummy specialty metrics
+const specialtyMetrics = {
+  'Cardiology': { demographics: 0.85, competition: 0.65, growth: 0.78, profitability: 0.82 },
+  'Dermatology': { demographics: 0.75, competition: 0.45, growth: 0.82, profitability: 0.88 },
+  'Orthopedics': { demographics: 0.80, competition: 0.70, growth: 0.65, profitability: 0.75 },
+  'Neurology': { demographics: 0.65, competition: 0.55, growth: 0.60, profitability: 0.70 },
+  'ENT': { demographics: 0.70, competition: 0.50, growth: 0.65, profitability: 0.75 },
+  'Ophthalmology': { demographics: 0.75, competition: 0.60, growth: 0.60, profitability: 0.80 },
+  'Pediatrics': { demographics: 0.90, competition: 0.80, growth: 0.70, profitability: 0.65 },
+  'Gynecology': { demographics: 0.85, competition: 0.60, growth: 0.75, profitability: 0.78 },
+  'Urology': { demographics: 0.70, competition: 0.50, growth: 0.65, profitability: 0.72 },
+  'Psychiatry': { demographics: 0.60, competition: 0.40, growth: 0.85, profitability: 0.70 }
+};
+
+// Dummy seasonal trends
+const seasonalTrends = {
+  'Cardiology': { winter: 0.75, spring: 0.65, summer: 0.60, fall: 0.70 },
+  'Dermatology': { winter: 0.60, spring: 0.75, summer: 0.85, fall: 0.70 },
+  'Orthopedics': { winter: 0.80, spring: 0.75, summer: 0.65, fall: 0.70 },
+  'Neurology': { winter: 0.70, spring: 0.65, summer: 0.60, fall: 0.75 },
+  'ENT': { winter: 0.85, spring: 0.70, summer: 0.60, fall: 0.80 },
+  'Ophthalmology': { winter: 0.65, spring: 0.75, summer: 0.70, fall: 0.65 },
+  'Pediatrics': { winter: 0.80, spring: 0.75, summer: 0.60, fall: 0.85 },
+  'Gynecology': { winter: 0.70, spring: 0.80, summer: 0.75, fall: 0.70 },
+  'Urology': { winter: 0.65, spring: 0.70, summer: 0.75, fall: 0.65 },
+  'Psychiatry': { winter: 0.70, spring: 0.65, summer: 0.60, fall: 0.80 }
+};
+
+// Helper function to get combined seasonality score
+const getCombinedSeasonality = (specialty) => {
+  const trends = seasonalTrends[specialty];
+  if (!trends) return 0.7;
+  
+  // Get average of highest two seasons
+  const values = Object.values(trends);
+  values.sort((a, b) => b - a);
+  return (values[0] + values[1]) / 2;
 };
 
 export default SpecialtyPrediction;

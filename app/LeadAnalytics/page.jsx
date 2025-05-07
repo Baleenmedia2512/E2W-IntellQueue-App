@@ -8,7 +8,7 @@ import TimeBasedTrends from './components/TimeBasedTrends';
 import CompetitiveIntelligence from './components/CompetitiveIntelligence';
 import LeadScoringEngine from './components/LeadScoringEngine';
 import LeadPrioritization from './components/LeadPrioritization';
-import Dashboard from './components/Dashboard';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import { 
   Tabs, 
   Tab, 
@@ -376,7 +376,7 @@ export default function LeadAnalytics() {
         <Box sx={{ py: 3 }}>
           {/* Dashboard View */}
           {value === 0 && analyticsData && (
-            <Dashboard data={analyticsData} />
+            <AnalyticsDashboard data={analyticsData} />
           )}
           
           {/* Regional Insights */}
@@ -516,48 +516,62 @@ export default function LeadAnalytics() {
       
       {/* Tabs Navigation */}
       
-      {/* Tab Panels */}
-      <TabPanel value={value} index={0}>
-        <Typography variant="h5" gutterBottom>
-          Analytics Overview
-        </Typography>
-        <Typography variant="body1" paragraph>
-          Welcome to your Lead Analytics Dashboard. Use the tabs above to explore different aspects of your lead analytics.
-        </Typography>
-      </TabPanel>
-      
-      <TabPanel value={value} index={1}>
-        <RegionalInsights data={mockData} />
-      </TabPanel>
-      
-      <TabPanel value={value} index={2}>
-        <Typography variant="h5" gutterBottom>
-          Medical Specialty Conversion Potential
-        </Typography>
-        <Typography variant="body1" paragraph>
-          Identify which medical specialties have the highest conversion potential based on machine learning analysis.
-        </Typography>
-        {/* Placeholder for Specialty Prediction component */}
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography>Specialty Prediction Component</Typography>
+      {/* Tab Panels - Removing redundant TabPanel content since we're using components above */}
+      {/* Only keeping summary cards in index 0 view */}
+      {value === 0 && (
+        <Box sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card elevation={2}>
+                <CardContent>
+                  <Typography color="text.secondary" variant="overline">
+                    Total Leads
+                  </Typography>
+                  <Typography variant="h4" component="div">
+                    {overallStats.totalLeads.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Across {overallStats.regionsCovered} regions
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card elevation={2}>
+                <CardContent>
+                  <Typography color="text.secondary" variant="overline">
+                    Avg. Conversion Rate
+                  </Typography>
+                  <Typography variant="h4" component="div">
+                    {overallStats.avgConversionRate}%
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
+                      +2.5% from last month
+                    </Typography>
+                    <TrendingUp fontSize="small" color="success" />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card elevation={2}>
+                <CardContent>
+                  <Typography color="text.secondary" variant="overline">
+                    High Priority Leads
+                  </Typography>
+                  <Typography variant="h4" component="div">
+                    {overallStats.highPriorityLeads}
+                  </Typography>
+                  <Typography variant="body2" color="error.main" sx={{ mt: 1 }}>
+                    Require immediate attention
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         </Box>
-      </TabPanel>
-      
-      <TabPanel value={value} index={3}>
-        <TimeBasedTrends data={mockData} />
-      </TabPanel>
-      
-      <TabPanel value={value} index={4}>
-        <CompetitiveIntelligence data={mockData} />
-      </TabPanel>
-      
-      <TabPanel value={value} index={5}>
-        <LeadScoringEngine data={mockData} />
-      </TabPanel>
-      
-      <TabPanel value={value} index={6}>
-        <LeadPrioritization data={mockData} />
-      </TabPanel>
+      )}
     </Container>
   );
 }

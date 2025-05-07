@@ -1423,11 +1423,29 @@ const handleStatusClick = async(row) => {
       <div className="relative">
             
             <button
-        onClick={() => router.push("/LeadManager/LeadIntegration")}
-        className="fixed right-4 bottom-56 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-60 z-50"
-        title="Multi-Platform Lead Integration"
+        onClick={() => router.push("/LeadManager/PredictiveDemographicTargeting")}
+        className="fixed right-4 bottom-72 p-3 bg-purple-500 text-white rounded-full flex items-center justify-center hover:bg-purple-700 lg:right-8 lg:bottom-76 z-50"
+        title="Predictive Demographic Targeting"
       >
-        <AiOutlineApi size={24} />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="h-6 w-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+          />
+        </svg>
       </button>
             
             <button
