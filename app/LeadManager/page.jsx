@@ -1427,7 +1427,7 @@ const handleStatusClick = async(row) => {
         className="fixed right-4 bottom-56 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-60 z-50"
         title="Multi-Platform Lead Integration"
       >
-        <AiOutlineApi size={24} />
+        <AiOutlineApi size={24} /> {/*Lead integration icon */}
       </button>
             
             <button
