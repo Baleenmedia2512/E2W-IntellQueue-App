@@ -58,8 +58,6 @@ import {
   Search,
   Sort,
   Check,
-  HighPriority,
-  LowPriority,
   PriorityHigh,
   Email,
   Phone,
@@ -72,7 +70,9 @@ import {
   Autorenew,
   LocalHospital,
   MonetizationOn,
-  Edit
+  Edit,
+  ArrowDownward as HighPriority,
+  ArrowDownward as LowPriority
 } from '@mui/icons-material';
 
 // Mock data for lead prioritization
