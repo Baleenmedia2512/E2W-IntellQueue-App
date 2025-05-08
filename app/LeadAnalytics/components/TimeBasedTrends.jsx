@@ -37,8 +37,6 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
   Area,
   AreaChart,
   Scatter,
