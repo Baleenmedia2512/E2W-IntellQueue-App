@@ -253,18 +253,18 @@ const CompetitiveIntelligence = ({ data }) => {
     return [
       {
         metric: 'Ad Spend',
-        competitor: selectedComp.adSpend,
-        yourCompany: yourCompany.adSpend,
+        competitor: selectedComp?.adSpend,
+        yourCompany: yourCompany?.adSpend,
       },
       {
         metric: 'Web Traffic',
-        competitor: selectedComp.webTraffic,
-        yourCompany: yourCompany.webTraffic,
+        competitor: selectedComp?.webTraffic,
+        yourCompany: yourCompany?.webTraffic,
       },
       {
         metric: 'Keywords',
-        competitor: selectedComp.keywords,
-        yourCompany: yourCompany.keywords,
+        competitor: selectedComp?.keywords,
+        yourCompany: yourCompany?.keywords,
       }
     ];
   };
@@ -432,12 +432,12 @@ const CompetitiveIntelligence = ({ data }) => {
                               <TableCell align="right">
                                 {row.metric === 'Ad Spend' 
                                   ? `$${(row.yourCompany / 1000).toFixed(0)}k` 
-                                  : row.yourCompany.toLocaleString()}
+                                  : ""}
                               </TableCell>
                               <TableCell align="right">
                                 {row.metric === 'Ad Spend' 
                                   ? `$${(row.competitor / 1000).toFixed(0)}k` 
-                                  : row.competitor.toLocaleString()}
+                                  : ""}
                               </TableCell>
                               <TableCell 
                                 align="right"
