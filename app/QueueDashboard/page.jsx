@@ -34,7 +34,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message }) {
     );
 }
 
-function DraggableTile({ patient, index, moveTile, closeToken, completeToken }) {
+function DraggableTile({ patient, index, moveTile, closeToken, completeToken, doneAndHold, callNext, continueToken }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
         item: { index },
@@ -54,17 +54,42 @@ function DraggableTile({ patient, index, moveTile, closeToken, completeToken }) 
     });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [actionType, setActionType] = useState("");
 
-    const handleAction = () => {
+    const handleAction = (type) => {
+        setActionType(type);
         setIsModalOpen(true);
     };
 
     const handleConfirm = () => {
         setIsModalOpen(false);
-        if (patient.status === "In-Progress") {
+        if (actionType === "complete") {
             completeToken(index);
-        } else {
+        } else if (actionType === "close") {
             closeToken(index);
+        } else if (actionType === "doneAndHold") {
+            doneAndHold(index);
+        } else if (actionType === "callNext") {
+            callNext(index);
+        } else if (actionType === "continue") {
+            continueToken(index);
+        }
+    };
+
+    const getActionMessage = () => {
+        switch (actionType) {
+            case "complete":
+                return `Are you sure you want to complete the token for ${patient.name}?`;
+            case "close":
+                return `Are you sure you want to close the token for ${patient.name}?`;
+            case "doneAndHold":
+                return `Are you sure you want to mark as done and hold the next token for ${patient.name}?`;
+            case "callNext":
+                return `Are you sure you want to call the next patient?`;
+            case "continue":
+                return `Are you sure you want to continue the token for ${patient.name}?`;
+            default:
+                return "";
         }
     };
 
@@ -82,6 +107,8 @@ function DraggableTile({ patient, index, moveTile, closeToken, completeToken }) 
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
                             patient.status === "In-Progress"
                                 ? "bg-green-100 text-green-600"
+                                : patient.status === "On-Hold"
+                                ? "bg-yellow-100 text-yellow-600"
                                 : "bg-gray-100 text-gray-600"
                         }`}
                     >
@@ -103,31 +130,61 @@ function DraggableTile({ patient, index, moveTile, closeToken, completeToken }) 
                         <p className="text-gray-500 text-xs">Scan Type</p>
                         <p className="text-gray-800 text-sm font-semibold">{patient.scanType || "N/A"}</p>
                     </div>
-                    <button
-                        onClick={handleAction}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center relative group ${
-                            patient.status === "In-Progress"
-                                ? "bg-green-100 text-green-600 hover:bg-green-200"
-                                : "bg-red-100 text-red-600 hover:bg-red-200"
-                        }`}
-                    >
-                        {patient.status === "In-Progress" ? "✔" : "✖"}
-                        <span className="absolute bottom-full mb-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-3 py-1 shadow-lg">
-                            {patient.status === "In-Progress" ? "Complete Token" : "Close Token"}
-                            <span className="absolute bottom-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span>
-                        </span>
-                    </button>
                 </div>
+                {patient.status === "In-Progress" && (
+                    <div className="flex justify-between mt-4 space-x-2">
+                        <button
+                            onClick={() => handleAction("doneAndHold")}
+                            className="flex-1 flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-blue-100"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Done & Hold</span>
+                        </button>
+                        <button
+                            onClick={() => handleAction("callNext")}
+                            className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-green-100"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                            <span>Call Next</span>
+                        </button>
+                    </div>
+                )}
+                {patient.status === "On-Hold" && (
+                    <div className="mt-4">
+                        <button
+                            onClick={() => handleAction("continue")}
+                            className="w-full flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-4 text-sm font-medium transition-colors border border-blue-100"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                            </svg>
+                            <span>Continue</span>
+                        </button>
+                    </div>
+                )}
+                {patient.status === "Waiting" && (
+                    <div className="flex justify-end mt-4">
+                        <button
+                            onClick={() => handleAction("close")}
+                            className="flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-3 text-sm font-medium transition-colors border border-red-100"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span>Close</span>
+                        </button>
+                    </div>
+                )}
             </div>
             <ConfirmationModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleConfirm}
-                message={
-                    patient.status === "In-Progress"
-                        ? `Are you sure you want to complete the token for ${patient.name}?`
-                        : `Are you sure you want to close the token for ${patient.name}?`
-                }
+                message={getActionMessage()}
             />
         </>
     );
@@ -182,7 +239,11 @@ export default function QueueDashboard() {
         updatedPatients.splice(toIndex, 0, movedPatient);
 
         updatedPatients.forEach((patient, index) => {
-            patient.status = index === 0 ? "In-Progress" : "Waiting";
+            if (index === 0) {
+                patient.status = "In-Progress";
+            } else if (patient.status !== "On-Hold") {
+                patient.status = "Waiting";
+            }
         });
 
         setPatients(updatedPatients);
@@ -195,7 +256,11 @@ export default function QueueDashboard() {
     const closeToken = (index) => {
         const updatedPatients = patients.filter((_, i) => i !== index);
         updatedPatients.forEach((patient, i) => {
-            patient.status = i === 0 ? "In-Progress" : "Waiting";
+            if (i === 0) {
+                patient.status = "In-Progress";
+            } else if (patient.status !== "On-Hold") {
+                patient.status = "Waiting";
+            }
         });
         setPatients(updatedPatients);
 
@@ -207,8 +272,58 @@ export default function QueueDashboard() {
     const completeToken = (index) => {
         const updatedPatients = patients.filter((_, i) => i !== index);
         updatedPatients.forEach((patient, i) => {
-            patient.status = i === 0 ? "In-Progress" : "Waiting";
+            if (i === 0) {
+                patient.status = "In-Progress";
+            } else if (patient.status !== "On-Hold") {
+                patient.status = "Waiting";
+            }
         });
+        setPatients(updatedPatients);
+
+        const newHistory = history.slice(0, currentStep + 1);
+        setHistory([...newHistory, updatedPatients]);
+        setCurrentStep(newHistory.length);
+    };
+
+    const doneAndHold = (index) => {
+        const updatedPatients = [...patients];
+        // Remove the current in-progress patient
+        updatedPatients.splice(index, 1);
+        
+        // Mark the next patient as On-Hold if exists
+        if (updatedPatients.length > 0) {
+            updatedPatients[0].status = "On-Hold";
+        }
+        
+        setPatients(updatedPatients);
+
+        const newHistory = history.slice(0, currentStep + 1);
+        setHistory([...newHistory, updatedPatients]);
+        setCurrentStep(newHistory.length);
+    };
+
+    const callNext = (index) => {
+        const updatedPatients = [...patients];
+        // Remove the current in-progress patient
+        updatedPatients.splice(index, 1);
+        
+        // Mark the next patient as In-Progress if exists
+        if (updatedPatients.length > 0) {
+            updatedPatients[0].status = "In-Progress";
+        }
+        
+        setPatients(updatedPatients);
+
+        const newHistory = history.slice(0, currentStep + 1);
+        setHistory([...newHistory, updatedPatients]);
+        setCurrentStep(newHistory.length);
+    };
+
+    const continueToken = (index) => {
+        const updatedPatients = [...patients];
+        // Change the status of the on-hold patient to In-Progress
+        updatedPatients[index].status = "In-Progress";
+        
         setPatients(updatedPatients);
 
         const newHistory = history.slice(0, currentStep + 1);
@@ -220,7 +335,11 @@ export default function QueueDashboard() {
         if (currentStep > 0) {
             const previousPatients = history[currentStep - 1];
             previousPatients.forEach((patient, index) => {
-                patient.status = index === 0 ? "In-Progress" : "Waiting";
+                if (index === 0) {
+                    patient.status = "In-Progress";
+                } else if (patient.status !== "On-Hold") {
+                    patient.status = "Waiting";
+                }
             });
             setCurrentStep(currentStep - 1);
             setPatients(previousPatients);
@@ -231,7 +350,11 @@ export default function QueueDashboard() {
         if (currentStep < history.length - 1) {
             const nextPatients = history[currentStep + 1];
             nextPatients.forEach((patient, index) => {
-                patient.status = index === 0 ? "In-Progress" : "Waiting";
+                if (index === 0) {
+                    patient.status = "In-Progress";
+                } else if (patient.status !== "On-Hold") {
+                    patient.status = "Waiting";
+                }
             });
             setCurrentStep(currentStep + 1);
             setPatients(nextPatients);
@@ -255,7 +378,7 @@ export default function QueueDashboard() {
         return filter === "All" || patient.status === filter;
     });
 
-    const statuses = ["All", "In-Progress", "Waiting"];
+    const statuses = ["All", "In-Progress", "On-Hold", "Waiting"];
 
     const currentDate = new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -339,6 +462,9 @@ export default function QueueDashboard() {
                             moveTile={moveTile}
                             closeToken={closeToken}
                             completeToken={completeToken}
+                            doneAndHold={doneAndHold}
+                            callNext={callNext}
+                            continueToken={continueToken}
                         />
                     ))}
                 </div>
