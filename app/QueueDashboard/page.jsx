@@ -49,25 +49,50 @@ function EquipmentIcon({ equipmentName }) {
 
 
 // --- Confirmation Modal (Unchanged) ---
-function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confirmation" }) {
+function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confirmation", color = "blue" }) {
   if (!isOpen) return null;
+  // Color classes
+  const colorMap = {
+    blue: {
+      border: "border-blue-300",
+      text: "text-blue-700",
+      bg: "bg-blue-600",
+      hover: "hover:bg-blue-700",
+      ring: "focus:ring-blue-400"
+    },
+    green: {
+      border: "border-green-300",
+      text: "text-green-700",
+      bg: "bg-green-600",
+      hover: "hover:bg-green-700",
+      ring: "focus:ring-green-400"
+    },
+    red: {
+      border: "border-red-300",
+      text: "text-red-700",
+      bg: "bg-red-600",
+      hover: "hover:bg-red-700",
+      ring: "focus:ring-red-400"
+    }
+  };
+  const c = colorMap[color] || colorMap.blue;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade">
       <div className="bg-white rounded-xl shadow-xl p-8 w-96 text-center">
-        <div className="border-b border-gray-200 pb-4 mb-4">
-          <h2 className="text-xl font-semibold text-blue-700">{title}</h2>
+        <div className={`border-b pb-4 mb-4 ${c.border}`}>
+          <h2 className={`text-xl font-semibold ${c.text}`}>{title}</h2>
         </div>
         <p className="text-gray-700 text-lg mb-6">{message}</p>
         <div className="flex justify-center space-x-4">
           <button
             onClick={onClose}
-            className="px-6 py-3 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 font-medium transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+            className={`px-6 py-3 border ${c.border} ${c.text} rounded-lg hover:bg-gray-50 font-medium transition duration-200 focus:outline-none focus:ring-2 ${c.ring} focus:ring-opacity-50`}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+            className={`px-6 py-3 ${c.bg} text-white rounded-lg ${c.hover} font-medium transition duration-200 focus:outline-none focus:ring-2 ${c.ring} focus:ring-opacity-50`}
           >
             Confirm
           </button>
@@ -123,6 +148,17 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
         }
     };
 
+    const getActionColor = () => {
+        switch (actionType) {
+            case "complete": return "green";
+            case "close": return "red";
+            case "doneAndHold": return "blue";
+            case "callNext": return "green";
+            case "continue": return "green";
+            default: return "blue";
+        }
+    };
+
     return (
         <>
             <div
@@ -165,7 +201,7 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
                     <div className="flex justify-end mt-4"><button onClick={() => handleAction("close")} className="flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-3 text-sm font-medium transition-colors border border-red-100"><FiXCircle /> <span>Close</span></button></div>
                 )}
             </div>
-            <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirm} message={getActionMessage()} />
+            <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirm} message={getActionMessage()} color={getActionColor()} />
         </>
     );
 }
@@ -539,25 +575,38 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
 
 // --- Equipment Selection Page ---
 function EquipmentSelectionPage({ onSelectEquipment }) {
+    // Map equipment to image and label
+    const equipmentImages = {
+        "CT-1": { src: "/GS/CTImage.png", label: "CT-1" },
+        "USG-1": { src: "/GS/USGImage.jpg", label: "USG-1" },
+        "USG-2": { src: "/GS/USGImage.jpg", label: "USG-2" },
+        "X-Ray-1": { src: "/GS/XRayImage.jpg", label: "X-Ray-1" },
+    };
     return (
         <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-gray-900">
             <div className="text-center mb-12">
                 <h1 className="text-5xl font-extrabold mb-3 tracking-tight text-blue-700">Radiology Queue System</h1>
                 <p className="text-xl text-gray-600">Please select an equipment queue to manage.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl">
                 {EQUIPMENT_LIST.map((eq) => (
                     <button
                         key={eq}
                         onClick={() => onSelectEquipment(eq)}
-                        className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-semibold py-8 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="relative group bg-white border border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-all duration-200 rounded-2xl overflow-hidden shadow-lg hover:scale-105 focus:outline-none min-h-[220px] p-0 transform transition-transform"
+                        style={{ minHeight: 220 }}
                     >
-                        <div className="flex items-center justify-center text-3xl mb-3">
-                            {eq.includes("USG") && <FiMic size={40} className="text-blue-500" />}
-                            {eq.includes("CT") && <FiChevronsRight size={40} className="text-green-500" />}
-                            {eq.includes("X-Ray") && <FiPauseCircle size={40} className="text-purple-500" />}
-                        </div>
-                        <span className="text-2xl tracking-wide">{eq}</span>
+                        <img
+                            src={equipmentImages[eq]?.src}
+                            alt={eq}
+                            className="w-full h-48 object-cover object-center rounded-2xl"
+                        />
+                        {/* Pill badge at bottom center, outside the image */}
+                        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
+                            <span className="transition-colors duration-200 bg-black/70 group-hover:bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                                {equipmentImages[eq]?.label}
+                            </span>
+                        </span>
                     </button>
                 ))}
             </div>
@@ -574,6 +623,21 @@ export default function QueueSystem() {
     const [history, setHistory] = useState({});
     const [currentStep, setCurrentStep] = useState({});
     const [isInitialized, setIsInitialized] = useState(false);
+
+    // Persist selectedEquipment to localStorage
+    useEffect(() => {
+        if (selectedEquipment) {
+            localStorage.setItem("selectedEquipment", selectedEquipment);
+        }
+    }, [selectedEquipment]);
+
+    // On mount, load selectedEquipment from localStorage if present
+    useEffect(() => {
+        const savedEquipment = localStorage.getItem("selectedEquipment");
+        if (savedEquipment) {
+            setSelectedEquipment(savedEquipment);
+        }
+    }, []);
 
     // Function to apply status rules (one "In-Progress" per equipment queue head)
     const applyInitialStatusRules = (patientsList) => {
