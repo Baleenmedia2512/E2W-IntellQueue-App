@@ -231,6 +231,24 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         return allPatients.filter(p => p.equipment === selectedEquipment);
     }, [allPatients, selectedEquipment]);
 
+    // Calculate counts for each status
+    const statusCounts = useMemo(() => {
+        const counts = {
+            "All": displayedPatients.length,
+            "In-Progress": 0,
+            "On-Hold": 0,
+            "Waiting": 0
+        };
+
+        displayedPatients.forEach(patient => {
+            if (patient.status === "In-Progress") counts["In-Progress"]++;
+            else if (patient.status === "On-Hold") counts["On-Hold"]++;
+            else if (patient.status === "Waiting") counts["Waiting"]++;
+        });
+
+        return counts;
+    }, [displayedPatients]);
+
     const moveTile = (fromDisplayedIndex, toDisplayedIndex) => {
         const currentEqQueue = [...allPatients.filter(p => p.equipment === selectedEquipment)];
         const [movedItem] = currentEqQueue.splice(fromDisplayedIndex, 1);
@@ -403,7 +421,26 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
                 </div>
                 <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-6">
                     <div className="flex flex-wrap items-center border border-gray-300 rounded-xl p-2">
-                        {statuses.map((status) => (<button key={status} onClick={() => handleFilterChange(status)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === status ? "bg-blue-600 text-white shadow" : "text-gray-600 hover:bg-blue-100"}`}>{status}</button>))}
+                        {statuses.map((status) => (
+                            <button 
+                                key={status} 
+                                onClick={() => handleFilterChange(status)} 
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-2 ${
+                                    filter === status 
+                                        ? "bg-blue-600 text-white shadow" 
+                                        : "text-gray-600 hover:bg-blue-100"
+                                }`}
+                            >
+                                <span>{status}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                    filter === status 
+                                        ? "bg-blue-500 text-white" 
+                                        : "bg-gray-200 text-gray-600"
+                                }`}>
+                                    {statusCounts[status]}
+                                </span>
+                            </button>
+                        ))}
                     </div>
                 </div>
                 <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}>
