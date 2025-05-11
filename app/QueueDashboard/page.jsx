@@ -221,9 +221,16 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
 
 
         setAllPatients(finalProcessedList);
-        const newHistory = history.slice(0, currentStep + 1);
-        setHistory([...newHistory, finalProcessedList]);
-        setCurrentStep(newHistory.length);
+        // Update only selected equipment's history/step
+        const eq = selectedEquipment;
+        const eqQueue = finalProcessedList.filter(p => p.equipment === eq);
+        const newHistory = { ...history };
+        const newStep = { ...currentStep };
+        newHistory[eq] = (history[eq] || []).slice(0, (currentStep[eq] ?? 0) + 1);
+        newHistory[eq].push(eqQueue);
+        newStep[eq] = newHistory[eq].length - 1;
+        setHistory(newHistory);
+        setCurrentStep(newStep);
     };
     
     // Derived state for displayed patients based on selected equipment
@@ -369,17 +376,45 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
     };
 
     const undo = () => {
-        if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
-            setAllPatients(history[currentStep - 1]); // History stores the full global state
+        if (
+            !history[selectedEquipment] ||
+            typeof currentStep[selectedEquipment] !== 'number' ||
+            currentStep[selectedEquipment] <= 0
+        ) {
+            return;
         }
+        const newStep = { ...currentStep, [selectedEquipment]: currentStep[selectedEquipment] - 1 };
+        setCurrentStep(newStep);
+        // Only update selected equipment's queue
+        const newAllPatients = allPatients.map(p =>
+            p.equipment === selectedEquipment ? null : p
+        ).filter(Boolean);
+        const eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
+        setAllPatients([
+            ...newAllPatients,
+            ...(eqQueue || [])
+        ]);
     };
 
     const redo = () => {
-        if (currentStep < history.length - 1) {
-            setCurrentStep(currentStep + 1);
-            setAllPatients(history[currentStep + 1]);
+        if (
+            !history[selectedEquipment] ||
+            typeof currentStep[selectedEquipment] !== 'number' ||
+            currentStep[selectedEquipment] >= history[selectedEquipment].length - 1
+        ) {
+            return;
         }
+        const newStep = { ...currentStep, [selectedEquipment]: currentStep[selectedEquipment] + 1 };
+        setCurrentStep(newStep);
+        // Only update selected equipment's queue
+        const newAllPatients = allPatients.map(p =>
+            p.equipment === selectedEquipment ? null : p
+        ).filter(Boolean);
+        const eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
+        setAllPatients([
+            ...newAllPatients,
+            ...(eqQueue || [])
+        ]);
     };
 
     const handleFilterChange = (status) => {
@@ -415,8 +450,46 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
                         </div>
                     </div>
                     <div className="flex space-x-2">
-                        <button onClick={undo} disabled={currentStep <= 0} className={`w-10 h-10 rounded-full flex items-center justify-center group relative ${currentStep > 0 ? "bg-gray-200 hover:bg-gray-300" : "bg-gray-100 cursor-not-allowed"}`}><FaUndo className={`text-gray-600 ${currentStep <= 0 ? "opacity-50" : ""}`} /><span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Undo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span></button>
-                        <button onClick={redo} disabled={currentStep >= history.length - 1} className={`w-10 h-10 rounded-full flex items-center justify-center group relative ${currentStep < history.length - 1 ? "bg-gray-200 hover:bg-gray-300" : "bg-gray-100 cursor-not-allowed"}`}><FaRedo className={`text-gray-600 ${currentStep >= history.length - 1 ? "opacity-50" : ""}`} /><span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Redo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span></button>
+                        <button 
+                            onClick={undo} 
+                            disabled={
+                                !history[selectedEquipment] ||
+                                typeof currentStep[selectedEquipment] !== 'number' ||
+                                currentStep[selectedEquipment] <= 0
+                            }
+                            className={`w-10 h-10 rounded-full flex items-center justify-center group relative ${
+                                history[selectedEquipment] && typeof currentStep[selectedEquipment] === 'number' && currentStep[selectedEquipment] > 0
+                                    ? "bg-gray-200 hover:bg-gray-300"
+                                    : "bg-gray-100 cursor-not-allowed"
+                            }`}
+                        >
+                            <FaUndo className={`text-gray-600 ${
+                                !history[selectedEquipment] || typeof currentStep[selectedEquipment] !== 'number' || currentStep[selectedEquipment] <= 0
+                                    ? "opacity-50"
+                                    : ""
+                            }`} />
+                            <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Undo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
+                        </button>
+                        <button 
+                            onClick={redo} 
+                            disabled={
+                                !history[selectedEquipment] ||
+                                typeof currentStep[selectedEquipment] !== 'number' ||
+                                currentStep[selectedEquipment] >= (history[selectedEquipment]?.length ?? 0) - 1
+                            }
+                            className={`w-10 h-10 rounded-full flex items-center justify-center group relative ${
+                                history[selectedEquipment] && typeof currentStep[selectedEquipment] === 'number' && currentStep[selectedEquipment] < (history[selectedEquipment]?.length ?? 0) - 1
+                                    ? "bg-gray-200 hover:bg-gray-300"
+                                    : "bg-gray-100 cursor-not-allowed"
+                            }`}
+                        >
+                            <FaRedo className={`text-gray-600 ${
+                                !history[selectedEquipment] || typeof currentStep[selectedEquipment] !== 'number' || currentStep[selectedEquipment] >= (history[selectedEquipment]?.length ?? 0) - 1
+                                    ? "opacity-50"
+                                    : ""
+                            }`} />
+                            <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Redo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
+                        </button>
                     </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-6">
@@ -497,10 +570,10 @@ function EquipmentSelectionPage({ onSelectEquipment }) {
 export default function QueueSystem() {
     const [selectedEquipment, setSelectedEquipment] = useState(null);
     const [allPatients, setAllPatients] = useState([]);
-    const [history, setHistory] = useState([]);
-    const [currentStep, setCurrentStep] = useState(0);
-     const [isInitialized, setIsInitialized] = useState(false);
-
+    // Refactor: history and currentStep are now objects keyed by equipment
+    const [history, setHistory] = useState({});
+    const [currentStep, setCurrentStep] = useState({});
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // Function to apply status rules (one "In-Progress" per equipment queue head)
     const applyInitialStatusRules = (patientsList) => {
@@ -528,7 +601,6 @@ export default function QueueSystem() {
         return Object.values(patientsByEquipment).flat().sort((a,b) => patientsList.indexOf(a) - patientsList.indexOf(b)); // Re-flatten and attempt to restore original sort
     };
 
-
     // Load initial data and set initial statuses
     useEffect(() => {
         const savedPatients = localStorage.getItem("allPatientsGlobal");
@@ -536,34 +608,39 @@ export default function QueueSystem() {
         if (savedPatients) {
             loadedPatients = JSON.parse(savedPatients);
         }
-        
         const initialProcessedPatients = applyInitialStatusRules(loadedPatients);
         setAllPatients(initialProcessedPatients);
 
+        // Refactor: load per-equipment history and step
         const savedHistory = localStorage.getItem("historyGlobal");
         const savedStep = localStorage.getItem("currentStepGlobal");
-
         if (savedHistory && savedStep) {
             setHistory(JSON.parse(savedHistory));
             setCurrentStep(JSON.parse(savedStep));
         } else {
-            setHistory([initialProcessedPatients]);
-            setCurrentStep(0);
+            // Initialize history and step for each equipment
+            const initialHistory = {};
+            const initialStep = {};
+            EQUIPMENT_LIST.forEach(eq => {
+                initialHistory[eq] = [initialProcessedPatients.filter(p => p.equipment === eq)];
+                initialStep[eq] = 0;
+            });
+            setHistory(initialHistory);
+            setCurrentStep(initialStep);
         }
         setIsInitialized(true);
     }, []);
 
     // Save to localStorage whenever allPatients, history, or currentStep changes
     useEffect(() => {
-        if (!isInitialized) return; // Don't save during initial load effect
+        if (!isInitialized) return;
         localStorage.setItem("allPatientsGlobal", JSON.stringify(allPatients));
         localStorage.setItem("historyGlobal", JSON.stringify(history));
         localStorage.setItem("currentStepGlobal", JSON.stringify(currentStep));
     }, [allPatients, history, currentStep, isInitialized]);
 
-
     if (!isInitialized) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-xl">Loading Dashboard...</p></div>; // Or a proper loader
+        return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-xl">Loading Dashboard...</p></div>;
     }
 
     if (!selectedEquipment) {

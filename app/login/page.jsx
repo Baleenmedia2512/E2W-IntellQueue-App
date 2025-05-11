@@ -124,6 +124,7 @@ const handleLogin = (event) => {
                     localStorage.removeItem("patients");
                     localStorage.removeItem("history");
                     localStorage.removeItem("currentStep");
+                    localStorage.clear();
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{
