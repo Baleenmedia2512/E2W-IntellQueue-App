@@ -82,7 +82,12 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
         <div className={`border-b pb-4 mb-4 ${c.border}`}>
           <h2 className={`text-xl font-semibold ${c.text}`}>{title}</h2>
         </div>
-        <p className="text-gray-700 text-lg mb-6">{message}</p>
+        <p 
+          className="text-gray-700 text-lg mb-6"
+          dangerouslySetInnerHTML={{
+            __html: message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          }}
+        />
         <div className="flex justify-center space-x-4">
           <button
             onClick={onClose}
@@ -103,7 +108,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
 }
 
 // --- Draggable Tile (Modified to show equipment icon) ---
-function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken, completeToken, doneAndHold, callNext, continueToken }) {
+function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
         item: { index: displayedPatIndex }, // Use index from the displayed (filtered) list
@@ -135,15 +140,17 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
         else if (actionType === "doneAndHold") doneAndHold(displayedPatIndex);
         else if (actionType === "callNext") callNext(displayedPatIndex);
         else if (actionType === "continue") continueToken(displayedPatIndex);
+        else if (actionType === "startQueue") handleStartQueue();
     };
 
     const getActionMessage = () => {
         switch (actionType) {
-            case "complete": return `Are you sure you want to complete the token for ${patient.name}?`;
-            case "close": return `Are you sure you want to close the token for ${patient.name}?`;
-            case "doneAndHold": return `Are you sure you want to mark as done and hold for ${patient.name}?`;
-            case "callNext": return `Are you sure you want to call the next patient after ${patient.name}?`;
-            case "continue": return `Are you sure you want to continue the token for ${patient.name}?`;
+            case "complete": return `Are you sure you want to **complete** the token for **${patient.name}**?`;
+            case "close": return `Are you sure you want to **close** the token for **${patient.name}**?`;
+            case "doneAndHold": return `Are you sure you want to mark as **done and hold** for **${patient.name}**?`;
+            case "callNext": return `Are you sure you want to call the **next** patient after **${patient.name}**?`;
+            case "continue": return `Are you sure you want to **continue** the token for **${patient.name}**?`;
+            case "startQueue": return `Are you sure you want to **start** the queue for **${patient.equipment}**?`;
             default: return "";
         }
     };
@@ -155,6 +162,7 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
             case "doneAndHold": return "blue";
             case "callNext": return "green";
             case "continue": return "green";
+            case "startQueue": return "green";
             default: return "blue";
         }
     };
@@ -188,6 +196,28 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
                     <div><p className="text-gray-500 text-xs">Scan</p><p className="text-gray-800 text-sm font-semibold">{patient.scan || "N/A"}</p></div>
                     <div><p className="text-gray-500 text-xs">Scan Type</p><p className="text-gray-800 text-sm font-semibold">{patient.scanType || "N/A"}</p></div>
                 </div>
+                {(displayedPatIndex === 0 && !queueStarted) || patient.status === "Waiting" ? (
+                    <div className="flex justify-between mt-4 space-x-2">
+                        {displayedPatIndex === 0 && !queueStarted && (
+                            <button 
+                                onClick={() => handleAction("startQueue")}
+                                className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg py-2 px-4 text-sm font-medium transition-colors border border-green-100"
+                            >
+                                <FiPlayCircle /> 
+                                <span>Start the Queue</span>
+                            </button>
+                        )}
+                        {patient.status === "Waiting" && (
+                            <button 
+                                onClick={() => handleAction("close")} 
+                                className="flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-3 text-sm font-medium transition-colors border border-red-100"
+                            >
+                                <FiXCircle /> 
+                                <span>Close</span>
+                            </button>
+                        )}
+                    </div>
+                ) : null}
                 {patient.status === "In-Progress" && (
                     <div className="flex justify-between mt-4 space-x-2">
                         <button onClick={() => handleAction("doneAndHold")} className="flex-1 flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-blue-100"><FiCheckCircle /> <span>Done & Hold</span></button>
@@ -196,9 +226,6 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
                 )}
                 {patient.status === "On-Hold" && (
                     <div className="mt-4"><button onClick={() => handleAction("continue")} className="w-full flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-4 text-sm font-medium transition-colors border border-blue-100"><FiPlayCircle /> <span>Continue</span></button></div>
-                )}
-                {patient.status === "Waiting" && (
-                    <div className="flex justify-end mt-4"><button onClick={() => handleAction("close")} className="flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-3 text-sm font-medium transition-colors border border-red-100"><FiXCircle /> <span>Close</span></button></div>
                 )}
             </div>
             <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirm} message={getActionMessage()} color={getActionColor()} />
@@ -474,19 +501,6 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
                         </div>
                     </div>
                     <div className="flex space-x-2 items-center">
-                        {/* Start the Queue Button */}
-                        <button
-                            onClick={handleStartQueue}
-                            disabled={queueStarted[selectedEquipment]}
-                            className={`w-auto h-10 rounded-lg flex items-center justify-center px-4 font-semibold text-white transition-colors ${
-                                queueStarted[selectedEquipment]
-                                    ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-blue-600 hover:bg-blue-700"
-                            }`}
-                            title="Start the queue for today"
-                        >
-                            Start the Queue
-                        </button>
                         <button 
                             onClick={undo} 
                             disabled={
@@ -576,6 +590,8 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
                             doneAndHold={doneAndHold}
                             callNext={callNext}
                             continueToken={continueToken}
+                            queueStarted={queueStarted[selectedEquipment]} // Add these new props
+                            handleStartQueue={handleStartQueue}
                         />
                     ))}
                 </div>
