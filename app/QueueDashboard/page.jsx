@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FaUndo, FaRedo, FaChevronLeft } from "react-icons/fa";
-import { FiUsers, FiMic, FiPauseCircle, FiPlayCircle, FiXCircle, FiCheckCircle, FiChevronsRight } from 'react-icons/fi'; // Example icons
+import { FiUsers, FiMic, FiPauseCircle, FiPlayCircle, FiXCircle, FiCheckCircle, FiChevronsRight, FiActivity as CTIcon, FiRadio as XRayIcon, FiWifi as USGIcon } from 'react-icons/fi'; // Example icons
 
 const ItemType = "PATIENT";
 
@@ -602,38 +602,92 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
 }
 
 // --- Equipment Selection Page ---
+function useEquipmentStatus() {
+    const [counts, setCounts] = useState(() => {
+        // Initialize counts from initialPatientsMaster
+        const equipmentCounts = {};
+        EQUIPMENT_LIST.forEach(eq => {
+            equipmentCounts[eq] = initialPatientsMaster.filter(p => p.equipment === eq).length;
+        });
+        return equipmentCounts;
+    });
+
+    // No need for polling effect since we're using actual data
+    return counts;
+}
+
+// Replace EquipmentSelectionPage with enhanced version
 function EquipmentSelectionPage({ onSelectEquipment }) {
-    // Map equipment to label
-    const equipmentLabels = {
-        "CT-1": "CT-1",
-        "USG-1": "USG-1",
-        "USG-2": "USG-2",
-        "X-Ray-1": "X-Ray-1",
+    const queueCounts = useEquipmentStatus();
+    
+    // Equipment config with icons
+    const equipmentConfig = {
+        "CT-1": { icon: CTIcon, label: "CT Scanner" },
+        "USG-1": { icon: USGIcon, label: "Ultrasound 1" },
+        "USG-2": { icon: USGIcon, label: "Ultrasound 2" },
+        "X-Ray-1": { icon: XRayIcon, label: "X-Ray Room" },
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col items-center justify-center p-6 text-gray-900">
-            <div className="text-center mb-12">
-                <h1 className="text-6xl font-extrabold mb-4 tracking-tight text-blue-800">Client Queue System</h1>
-                <p className="text-lg text-gray-700">Select an equipment queue to manage</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
-                {EQUIPMENT_LIST.map((eq) => (
-                    <button
-                        key={eq}
-                        onClick={() => onSelectEquipment(eq)}
-                        className="relative group bg-white border border-gray-300 hover:border-blue-500 focus:border-blue-600 transition-all duration-300 rounded-xl shadow-md hover:shadow-lg hover:scale-105 focus:outline-none transform flex items-center justify-center p-8"
-                    >
-                        <span className="text-3xl font-bold text-blue-700 group-hover:text-blue-800 transition-colors">
-                            {equipmentLabels[eq]}
-                        </span>
-                    </button>
-                ))}
+        <div className="relative min-h-screen overflow-hidden">
+            {/* Radial gradient overlay */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/0 via-white/20 to-white/0" />
+            
+            {/* Main content */}
+            <div className="relative min-h-screen bg-gradient-to-b from-white to-blue-50 flex flex-col items-center justify-center p-6">
+                <div className="text-center mb-16">
+                    <h1 className="text-6xl font-extrabold mb-4 tracking-tight text-blue-800 drop-shadow-sm">
+                        Client Queue System
+                    </h1>
+                    <p className="text-lg text-gray-700">
+                        Select an equipment queue to manage
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
+                    {EQUIPMENT_LIST.map((eq) => {
+                        const Icon = equipmentConfig[eq].icon;
+                        return (
+                            <button
+                                key={eq}
+                                onClick={() => onSelectEquipment(eq)}
+                                className="relative group bg-white border border-gray-200 rounded-lg p-6 shadow-lg 
+                                         hover:shadow-2xl hover:border-blue-200 focus:border-blue-300 
+                                         transition-all duration-300 transform hover:-translate-y-1"
+                            >
+                                <div className="flex items-center space-x-4">
+                                    <Icon className="w-8 h-8 text-blue-600" />
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-2xl font-bold text-gray-800">
+                                            {eq}
+                                        </span>
+                                        <span className="text-sm text-gray-500">
+                                            {equipmentConfig[eq].label}
+                                        </span>
+                                    </div>
+                                    <div className="ml-auto">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            In-Queue: {queueCounts[eq]}
+                                        </span>
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Floating bottom nav */}
+                <div className="fixed bottom-0 inset-x-0 p-4">
+                    <div className="max-w-4xl mx-auto backdrop-blur bg-white/50 rounded-2xl shadow-lg p-4">
+                        <p className="text-center text-sm text-gray-600">
+                            Select any equipment above to manage its queue
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );
 }
-
 
 // --- Main Application Component ---
 export default function QueueSystem() {
