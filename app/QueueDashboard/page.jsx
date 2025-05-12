@@ -575,37 +575,29 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
 
 // --- Equipment Selection Page ---
 function EquipmentSelectionPage({ onSelectEquipment }) {
-    // Map equipment to image and label
-    const equipmentImages = {
-        "CT-1": { src: "/GS/CTImage.png", label: "CT-1" },
-        "USG-1": { src: "/GS/USGImage.jpg", label: "USG-1" },
-        "USG-2": { src: "/GS/USGImage.jpg", label: "USG-2" },
-        "X-Ray-1": { src: "/GS/XRayImage.jpg", label: "X-Ray-1" },
+    // Map equipment to label
+    const equipmentLabels = {
+        "CT-1": "CT-1",
+        "USG-1": "USG-1",
+        "USG-2": "USG-2",
+        "X-Ray-1": "X-Ray-1",
     };
+
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-gray-900">
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col items-center justify-center p-6 text-gray-900">
             <div className="text-center mb-12">
-                <h1 className="text-5xl font-extrabold mb-3 tracking-tight text-blue-700">Radiology Queue System</h1>
-                <p className="text-xl text-gray-600">Please select an equipment queue to manage.</p>
+                <h1 className="text-6xl font-extrabold mb-4 tracking-tight text-blue-800">Client Queue System</h1>
+                <p className="text-lg text-gray-700">Select an equipment queue to manage</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
                 {EQUIPMENT_LIST.map((eq) => (
                     <button
                         key={eq}
                         onClick={() => onSelectEquipment(eq)}
-                        className="relative group bg-white border border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-all duration-200 rounded-2xl overflow-hidden shadow-lg hover:scale-105 focus:outline-none min-h-[220px] p-0 transform transition-transform"
-                        style={{ minHeight: 220 }}
+                        className="relative group bg-white border border-gray-300 hover:border-blue-500 focus:border-blue-600 transition-all duration-300 rounded-xl shadow-md hover:shadow-lg hover:scale-105 focus:outline-none transform flex items-center justify-center p-8"
                     >
-                        <img
-                            src={equipmentImages[eq]?.src}
-                            alt={eq}
-                            className="w-full h-48 object-cover object-center rounded-2xl"
-                        />
-                        {/* Pill badge at bottom center, outside the image */}
-                        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
-                            <span className="transition-colors duration-200 bg-black/70 group-hover:bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                                {equipmentImages[eq]?.label}
-                            </span>
+                        <span className="text-3xl font-bold text-blue-700 group-hover:text-blue-800 transition-colors">
+                            {equipmentLabels[eq]}
                         </span>
                     </button>
                 ))}
