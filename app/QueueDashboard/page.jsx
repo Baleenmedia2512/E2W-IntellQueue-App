@@ -10,24 +10,24 @@ const ItemType = "PATIENT";
 // --- Initial Data with Equipment ---
 const initialPatientsMaster = [
     // USG-1
-    { id: "2", name: "Priya", scanType: "Pregnancy", scan: "USG", token: "3", inTime: "10:15 AM", contact: "9876543211", status: "Waiting", equipment: "USG-1" },
-    { id: "7", name: "Meera", scanType: "Fetal Echo", scan: "USG", token: "19", inTime: "11:30 AM", contact: "9876543216", status: "Waiting", equipment: "USG-1" },
-    { id: "12", name: "Karthik", scanType: "Venous (per limb)", scan: "USG", token: "67", inTime: "12:45 PM", contact: "9876543221", status: "Waiting", equipment: "USG-1" },
-    { id: "15", name: "Sneha", scanType: "Anomaly", scan: "USG", token: "90", inTime: "1:30 PM", contact: "9876543224", status: "Waiting", equipment: "USG-1" },
+    { id: "2", name: "Priya", scanType: "Pregnancy", scan: "USG", orderNumber: "2500001", inTime: "10:15 AM", contact: "9876543211", status: "Waiting", equipment: "USG-1" },
+    { id: "7", name: "Meera", scanType: "Fetal Echo", scan: "USG", orderNumber: "2500002", inTime: "11:30 AM", contact: "9876543216", status: "Waiting", equipment: "USG-1" },
+    { id: "12", name: "Karthik", scanType: "Venous (per limb)", scan: "USG", orderNumber: "2500003", inTime: "12:45 PM", contact: "9876543221", status: "Waiting", equipment: "USG-1" },
+    { id: "15", name: "Sneha", scanType: "Anomaly", scan: "USG", orderNumber: "2500004", inTime: "1:30 PM", contact: "9876543224", status: "Waiting", equipment: "USG-1" },
     // USG-2
-    { id: "4", name: "Raena", scanType: "Pregnancy anomaly", scan: "USG", token: "1", inTime: "10:45 AM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
-    { id: "9", name: "Anjali", scanType: "Pregnancy Face", scan: "USG", token: "34", inTime: "12:00 PM", contact: "9876543218", status: "Waiting", equipment: "USG-2" },
-    { id: "14", name: "Manoj", scanType: "Review Scan", scan: "USG", token: "89", inTime: "1:15 PM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
+    { id: "4", name: "Raena", scanType: "Pregnancy anomaly", scan: "USG", orderNumber: "2500005", inTime: "10:45 AM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
+    { id: "9", name: "Anjali", scanType: "Pregnancy Face", scan: "USG", orderNumber: "2500006", inTime: "12:00 PM", contact: "9876543218", status: "Waiting", equipment: "USG-2" },
+    { id: "14", name: "Manoj", scanType: "Review Scan", scan: "USG", orderNumber: "2500007", inTime: "1:15 PM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
     // CT-1
-    { id: "1", name: "Kumar", scanType: "Brain", scan: "CT", token: "7", inTime: "10:00 AM", contact: "9876543210", status: "Waiting", equipment: "CT-1" },
-    { id: "3", name: "Vimal", scanType: "Abdomen and pelvis", scan: "CT", token: "82", inTime: "10:30 AM", contact: "9876543212", status: "Waiting", equipment: "CT-1" },
-    { id: "10", name: "Suresh", scanType: "Thorax", scan: "CT", token: "45", inTime: "12:15 PM", contact: "9876543219", status: "Waiting", equipment: "CT-1" },
-    { id: "13", name: "Lakshmi", scanType: "Paranasal Sinuses", scan: "CT", token: "78", inTime: "1:00 PM", contact: "9876543222", status: "Waiting", equipment: "CT-1" },
+    { id: "1", name: "Kumar", scanType: "Brain", scan: "CT", orderNumber: "250001", inTime: "10:00 AM", contact: "9876543210", status: "Waiting", equipment: "CT-1" },
+    { id: "3", name: "Vimal", scanType: "Abdomen and pelvis", scan: "CT", orderNumber: "250002", inTime: "10:30 AM", contact: "9876543212", status: "Waiting", equipment: "CT-1" },
+    { id: "10", name: "Suresh", scanType: "Thorax", scan: "CT", orderNumber: "250003", inTime: "12:15 PM", contact: "9876543219", status: "Waiting", equipment: "CT-1" },
+    { id: "13", name: "Lakshmi", scanType: "Paranasal Sinuses", scan: "CT", orderNumber: "250004", inTime: "1:00 PM", contact: "9876543222", status: "Waiting", equipment: "CT-1" },
     // X-Ray-1
-    { id: "5", name: "Saranya", scanType: "Breast", scan: "X-Ray", token: "5", inTime: "11:00 AM", contact: "9876543214", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "6", name: "Arjun", scanType: "LS Spine", scan: "X-Ray", token: "12", inTime: "11:15 AM", contact: "9876543215", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "8", name: "Ravi", scanType: "Knee Joint", scan: "X-Ray", token: "23", inTime: "11:45 AM", contact: "9876543217", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "11", name: "Divya", scanType: "Hysterosalphingogram", scan: "X-Ray", token: "56", inTime: "12:30 PM", contact: "9876543220", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "5", name: "Saranya", scanType: "Breast", scan: "X-Ray", orderNumber: "250001", inTime: "11:00 AM", contact: "9876543214", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "6", name: "Arjun", scanType: "LS Spine", scan: "X-Ray", orderNumber: "250002", inTime: "11:15 AM", contact: "9876543215", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "8", name: "Ravi", scanType: "Knee Joint", scan: "X-Ray", orderNumber: "250003", inTime: "11:45 AM", contact: "9876543217", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "11", name: "Divya", scanType: "Hysterosalphingogram", scan: "X-Ray", orderNumber: "250004", inTime: "12:30 PM", contact: "9876543220", status: "Waiting", equipment: "X-Ray-1" },
 ];
 
 const EQUIPMENT_LIST = ["USG-1", "USG-2", "CT-1", "X-Ray-1"];
@@ -168,7 +168,7 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
                 }`}
             >
                 <div className="flex justify-between items-start mb-2">
-                    <span className="text-gray-500 text-sm font-medium">#{patient.token}</span>
+                    <span className="text-gray-500 text-sm font-medium">#{patient.orderNumber}</span>
                 </div>
                  <span
                         className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold ${
