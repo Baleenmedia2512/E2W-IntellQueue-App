@@ -207,59 +207,49 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
 }
 
 // --- Queue Dashboard Component ---
-function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, history, setHistory, currentStep, setCurrentStep, onBackToSelection }) {
+function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, history, setHistory, currentStep, setCurrentStep, onBackToSelection, queueStarted, setQueueStarted }) {
     const [filter, setFilter] = useState("All");
     const [animationDirection, setAnimationDirection] = useState("");
 
     // This function processes the master patient list and applies status rules.
     // Rule: One "In-Progress" patient at the head of each equipment's queue, unless "On-Hold".
-    const processAndCommitPatientList = (updatedList) => {
+    const processAndCommitPatientList = (updatedList, forceAllWaiting = false) => {
         let newMasterList = updatedList.map(p => ({ ...p }));
-
-        const patientsByEquipment = {};
-        newMasterList.forEach(p => {
-            if (!patientsByEquipment[p.equipment]) {
-                patientsByEquipment[p.equipment] = [];
-            }
-            patientsByEquipment[p.equipment].push(p);
-        });
-
-        for (const eq in patientsByEquipment) {
-            const queue = patientsByEquipment[eq];
-            let inProgressSet = false;
-            queue.forEach((patient, idx) => {
-                if (idx === 0 && patient.status !== "On-Hold") {
-                    patient.status = "In-Progress";
-                    inProgressSet = true;
-                } else if (patient.status !== "On-Hold") {
-                    patient.status = "Waiting";
-                }
-                // "On-Hold" status is preserved
-            });
-        }
+        const equipmentToProcess = selectedEquipment;
         
-        // Reconstruct the master list from the processed equipment queues,
-        // maintaining the original relative order of patients as much as possible.
-        const finalProcessedList = [];
-        const tempMasterCopy = updatedList.map(p => p.id); // Get IDs in original order
-
-        tempMasterCopy.forEach(id => {
-            for (const eq in patientsByEquipment) {
-                const patientInEq = patientsByEquipment[eq].find(p => p.id === id);
-                if (patientInEq) {
-                    finalProcessedList.push(patientInEq);
-                    // Remove from patientsByEquipment to avoid duplicates if logic is flawed
-                    patientsByEquipment[eq] = patientsByEquipment[eq].filter(p => p.id !== id);
-                    break;
-                }
+        // Only process patients for selected equipment
+        newMasterList = newMasterList.map(patient => {
+            if (patient.equipment !== equipmentToProcess) {
+                return patient; // Leave other equipment's patients unchanged
             }
+
+            // Process only selected equipment's patients
+            if (forceAllWaiting) {
+                return { ...patient, status: "Waiting" };
+            }
+
+            // Get all patients for this equipment to determine position
+            const eqPatients = newMasterList.filter(p => p.equipment === equipmentToProcess);
+            const patientIndex = eqPatients.findIndex(p => p.id === patient.id);
+
+            if (patientIndex === 0) {
+                // First position can be In-Progress or On-Hold
+                if (patient.status !== "On-Hold" && patient.status !== "In-Progress") {
+                    return { ...patient, status: "In-Progress" };
+                }
+            } else {
+                // All other positions must be Waiting
+                return { ...patient, status: "Waiting" };
+            }
+            
+            return patient;
         });
 
-
-        setAllPatients(finalProcessedList);
+        setAllPatients(newMasterList);
+        
         // Update only selected equipment's history/step
         const eq = selectedEquipment;
-        const eqQueue = finalProcessedList.filter(p => p.equipment === eq);
+        const eqQueue = newMasterList.filter(p => p.equipment === eq);
         const newHistory = { ...history };
         const newStep = { ...currentStep };
         newHistory[eq] = (history[eq] || []).slice(0, (currentStep[eq] ?? 0) + 1);
@@ -268,7 +258,7 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         setHistory(newHistory);
         setCurrentStep(newStep);
     };
-    
+
     // Derived state for displayed patients based on selected equipment
     const displayedPatients = useMemo(() => {
         return allPatients.filter(p => p.equipment === selectedEquipment);
@@ -292,45 +282,17 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         return counts;
     }, [displayedPatients]);
 
+    // Move tile logic: Update statuses based on new positions
     const moveTile = (fromDisplayedIndex, toDisplayedIndex) => {
-        const currentEqQueue = [...allPatients.filter(p => p.equipment === selectedEquipment)];
-        const [movedItem] = currentEqQueue.splice(fromDisplayedIndex, 1);
-        currentEqQueue.splice(toDisplayedIndex, 0, movedItem);
+        const masterCopy = [...allPatients];
+        const itemsOfSelectedEquipment = masterCopy.filter(p => p.equipment === selectedEquipment);
+        const otherItems = masterCopy.filter(p => p.equipment !== selectedEquipment);
 
-        // Reconstruct allPatients
-        const updatedAllPatients = allPatients.map(p => {
-            if (p.equipment === selectedEquipment) return undefined; // Placeholder
-            return p;
-        }).filter(Boolean); // Remove placeholders
-
-        let currentEqQueueIdx = 0;
-        const finalNewAllPatients = [];
-        // This reconstruction needs to be careful to maintain original order of other equipment patients
-        
-        // A simpler way: create a new list by iterating original allPatients
-        // If patient belongs to selectedEquipment, take from reordered currentEqQueue
-        // Otherwise, take from original allPatients
-        const masterCopy = [...allPatients]; // Operate on a copy
-        const patientsFromOtherEquipments = masterCopy.filter(p => p.equipment !== selectedEquipment);
-        
-        // Rebuild the list ensuring order
-        const newFullList = [];
-        let otherEqIdx = 0;
-        let currentEqIdx = 0;
-
-        // This is tricky; easier to update the master list by replacing its segment
-        const newMasterList = masterCopy.filter(p => p.equipment !== selectedEquipment);
-        newMasterList.splice(0,0, ...currentEqQueue); // This just adds to start. Not right.
-
-        // Correct approach for moveTile:
-        let masterListCopy = [...allPatients];
-        const itemsOfSelectedEquipment = masterListCopy.filter(p => p.equipment === selectedEquipment);
-        const otherItems = masterListCopy.filter(p => p.equipment !== selectedEquipment);
-
+        // Move the item in the array
         const [movedPatientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
         itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedPatientObj);
-        
-        // Reconstruct masterListCopy carefully based on original positions of otherItems
+
+        // Reconstruct master list
         let finalReorderedMasterList = [];
         let itemsOfSelectedEquipmentPtr = 0;
         let otherItemsPtr = 0;
@@ -338,23 +300,17 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         allPatients.forEach(originalPatient => {
             if (originalPatient.equipment === selectedEquipment) {
                 if (itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr]) {
-                     finalReorderedMasterList.push(itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr++]);
+                    finalReorderedMasterList.push(itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr++]);
                 }
             } else {
-                 if (otherItems[otherItemsPtr]) {
+                if (otherItems[otherItemsPtr]) {
                     finalReorderedMasterList.push(otherItems[otherItemsPtr++]);
-                 }
+                }
             }
         });
-        // Ensure all items are added if lengths differ (should not happen if logic is correct)
-         while(itemsOfSelectedEquipmentPtr < itemsOfSelectedEquipment.length) {
-            finalReorderedMasterList.push(itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr++]);
-        }
-        while(otherItemsPtr < otherItems.length) {
-            finalReorderedMasterList.push(otherItems[otherItemsPtr++]);
-        }
 
-        processAndCommitPatientList(finalReorderedMasterList);
+        // Process list to update statuses
+        processAndCommitPatientList(finalReorderedMasterList, !queueStarted[selectedEquipment]);
     };
 
     const modifyPatientList = (action) => {
@@ -411,6 +367,7 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         });
     };
 
+    // Undo: If undoing to step 0, also reset queueStarted in localStorage
     const undo = () => {
         if (
             !history[selectedEquipment] ||
@@ -430,8 +387,20 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
             ...newAllPatients,
             ...(eqQueue || [])
         ]);
+        // If undoing to step 0 for all equipment, allow "Start the Queue" again
+        if (Object.values(newStep).every(step => step === 0)) {
+            setQueueStarted(false);
+            localStorage.removeItem("queueStartedDate");
+        }
+        // If undoing to step 0, reset queue started for this equipment only
+        if (newStep[selectedEquipment] === 0) {
+            const newQueueStarted = { ...queueStarted, [selectedEquipment]: false };
+            setQueueStarted(newQueueStarted);
+            localStorage.removeItem(`queueStartedDate_${selectedEquipment}`);
+        }
     };
 
+    // Redo: If redoing from step 0 to 1, set queueStarted for this equipment
     const redo = () => {
         if (
             !history[selectedEquipment] ||
@@ -442,6 +411,7 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         }
         const newStep = { ...currentStep, [selectedEquipment]: currentStep[selectedEquipment] + 1 };
         setCurrentStep(newStep);
+        
         // Only update selected equipment's queue
         const newAllPatients = allPatients.map(p =>
             p.equipment === selectedEquipment ? null : p
@@ -451,6 +421,14 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
             ...newAllPatients,
             ...(eqQueue || [])
         ]);
+
+        // If redoing from step 0 to 1, set queue started for this equipment
+        if (currentStep[selectedEquipment] === 0 && newStep[selectedEquipment] === 1) {
+            const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
+            setQueueStarted(newQueueStarted);
+            const today = new Date().toISOString().slice(0, 10);
+            localStorage.setItem(`queueStartedDate_${selectedEquipment}`, today);
+        }
     };
 
     const handleFilterChange = (status) => {
@@ -464,6 +442,16 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
     const patientsForDisplayGrid = useMemo(() => {
         return displayedPatients.filter(patient => filter === "All" || patient.status === filter);
     }, [displayedPatients, filter]);
+
+    // Start the queue handler
+    const handleStartQueue = () => {
+        processAndCommitPatientList(allPatients, false);
+        const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
+        setQueueStarted(newQueueStarted);
+        // Persist start for today for this equipment
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(`queueStartedDate_${selectedEquipment}`, today);
+    };
 
     const statuses = ["All", "In-Progress", "On-Hold", "Waiting"];
     const currentDate = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -485,7 +473,20 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
                             <p className="text-sm text-gray-500 mt-1">{currentDate}</p>
                         </div>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 items-center">
+                        {/* Start the Queue Button */}
+                        <button
+                            onClick={handleStartQueue}
+                            disabled={queueStarted[selectedEquipment]}
+                            className={`w-auto h-10 rounded-lg flex items-center justify-center px-4 font-semibold text-white transition-colors ${
+                                queueStarted[selectedEquipment]
+                                    ? "bg-gray-300 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700"
+                            }`}
+                            title="Start the queue for today"
+                        >
+                            Start the Queue
+                        </button>
                         <button 
                             onClick={undo} 
                             disabled={
@@ -622,10 +623,10 @@ function EquipmentSelectionPage({ onSelectEquipment }) {
 export default function QueueSystem() {
     const [selectedEquipment, setSelectedEquipment] = useState(null);
     const [allPatients, setAllPatients] = useState([]);
-    // Refactor: history and currentStep are now objects keyed by equipment
     const [history, setHistory] = useState({});
     const [currentStep, setCurrentStep] = useState({});
     const [isInitialized, setIsInitialized] = useState(false);
+    const [queueStarted, setQueueStarted] = useState({}); // Changed to object to track per equipment
 
     // Persist selectedEquipment to localStorage
     useEffect(() => {
@@ -642,8 +643,21 @@ export default function QueueSystem() {
         }
     }, []);
 
+    // On mount, check if queue has started for today for each equipment
+    useEffect(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const queueStartStatus = {};
+        
+        EQUIPMENT_LIST.forEach(equipment => {
+            const startedDate = localStorage.getItem(`queueStartedDate_${equipment}`);
+            queueStartStatus[equipment] = startedDate === today;
+        });
+        
+        setQueueStarted(queueStartStatus);
+    }, []);
+
     // Function to apply status rules (one "In-Progress" per equipment queue head)
-    const applyInitialStatusRules = (patientsList) => {
+    const applyInitialStatusRules = (patientsList, forceAllWaiting = false) => {
         let newMasterList = patientsList.map(p => ({ ...p }));
         const patientsByEquipment = {};
         newMasterList.forEach(p => {
@@ -655,15 +669,23 @@ export default function QueueSystem() {
 
         for (const eq in patientsByEquipment) {
             const queue = patientsByEquipment[eq];
-            let inProgressSet = false;
-            queue.forEach((patient, idx) => {
-                if (idx === 0 && patient.status !== "On-Hold") {
-                    patient.status = "In-Progress";
-                    inProgressSet = true;
-                } else if (patient.status !== "On-Hold") {
-                    patient.status = "Waiting";
-                }
-            });
+            if (forceAllWaiting) {
+                queue.forEach(patient => {
+                    if (patient.status !== "On-Hold") {
+                        patient.status = "Waiting";
+                    }
+                });
+            } else {
+                let inProgressSet = false;
+                queue.forEach((patient, idx) => {
+                    if (idx === 0 && patient.status !== "On-Hold") {
+                        patient.status = "In-Progress";
+                        inProgressSet = true;
+                    } else if (patient.status !== "On-Hold") {
+                        patient.status = "Waiting";
+                    }
+                });
+            }
         }
         return Object.values(patientsByEquipment).flat().sort((a,b) => patientsList.indexOf(a) - patientsList.indexOf(b)); // Re-flatten and attempt to restore original sort
     };
@@ -675,7 +697,11 @@ export default function QueueSystem() {
         if (savedPatients) {
             loadedPatients = JSON.parse(savedPatients);
         }
-        const initialProcessedPatients = applyInitialStatusRules(loadedPatients);
+        // Check if queue started for today
+        const today = new Date().toISOString().slice(0, 10);
+        const startedDate = localStorage.getItem("queueStartedDate");
+        const forceAllWaiting = startedDate !== today;
+        const initialProcessedPatients = applyInitialStatusRules(loadedPatients, forceAllWaiting);
         setAllPatients(initialProcessedPatients);
 
         // Refactor: load per-equipment history and step
@@ -724,6 +750,8 @@ export default function QueueSystem() {
             currentStep={currentStep}
             setCurrentStep={setCurrentStep}
             onBackToSelection={() => setSelectedEquipment(null)}
+            queueStarted={queueStarted}
+            setQueueStarted={setQueueStarted}
         />
     );
 }
