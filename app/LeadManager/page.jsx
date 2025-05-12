@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam, AiOutlineApi } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 // import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
 import { useDispatch } from "react-redux";
 import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
+import { GetCRUD } from "./api/fetch-data";
 
 export const statusColors = {
   New: "bg-green-200 text-green-800",
@@ -75,7 +76,6 @@ const parseFollowupDate = (dateStr) => {
 
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
-  const notificationSent = useRef(new Set())
   const [loading, setLoading] = useState(true);
   const {userName, appRights, dbName: UserCompanyName, companyName: alternateCompanyName} = useAppSelector(state => state.authSlice);
   const {statusFilter, prospectTypeFilter, quoteSentFilter, CSEFilter, fromDate, toDate, filtersVisible, searchQuery} = useAppSelector(state => state.filterSlice)
@@ -118,6 +118,7 @@ const EventCards = ({params, searchParams}) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isHandledByChange, setIsHandledByChange] = useState('');
   const [CSENames, setCSENames] = useState([]);
+  // const notificationSent = useRef(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
   // const [nextSNo, setNextSNo] = useState(0); 
   const [formData, setFormData] = useState({
@@ -921,25 +922,29 @@ const formatUnreachableTime = (timeStr) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const filters = {
-      leadDate: searchParams.leadDate || null,
-      status: searchParams.status || "",
-      followupDate: searchParams.followupDate || null,
-    };
-
-    const fetchedRows = await fetchDataFromAPI(params.id, filters, userName, UserCompanyName, appRights);
-    let nextSNo = 0;
-
-    if (fetchedRows.length > 0) {
-      nextSNo = Math.max(...fetchedRows.map((lead) => lead.SNo)) + 1 || 0;
-    } else{
-      alert("Problem in network, please try again");
+    // Validate email if provided
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      alert('Please enter a valid email address');
       return;
     }
 
-    const dbCompanyName = encodeURIComponent(UserCompanyName);
+    const nextSNoResponse  = await GetCRUD('https://leads.baleenmedia.com/api/fetchMaxSNo', {
+      dbCompanyName: UserCompanyName
+    }).catch(error => {
+      throw new Error(`Failed to fetch next ID: ${error.message}`);
+    });
+
+    // PROPER error check (fixed logic)
+    if (nextSNoResponse.error) {
+      throw new Error(nextSNoResponse.data.error);
+    }
+
+    if (nextSNoResponse.data.maxSNo === undefined || nextSNoResponse.data.maxSNo === null) {
+      throw new Error(`Invalid serial number format from server ${nextSNoResponse.error}`);
+    }
+
     const payload = {
-      sNo: nextSNo, // Use the incremented serial number
+      sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
       date: formData.date,
       time: formData.time,
       platform: formData.platform,
@@ -950,7 +955,7 @@ const formatUnreachableTime = (timeStr) => {
       handledBy: formData.handledBy,
       consultantName: formData.consultantName,
       consultantNumber: formData.consultantNumber,
-      dbCompanyName,
+      dbCompanyName: UserCompanyName
     };
 
     const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
@@ -981,14 +986,23 @@ const formatUnreachableTime = (timeStr) => {
         });
         fetchData();
       } else {
-       
-        console.error("Error response from server:", data.error || response.statusText);
         alert(data.error || "Error adding record");
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("Error adding record. Please try again.");
+      // ERROR CASE - Detailed error message
+      let errorMessage = error.message;
+    
+    // Handle specific error cases
+    if (error.message.includes('Network Error')) {
+      errorMessage = "Network error - Please check your internet connection";
+    } else if (error.message.includes('timeout')) {
+      errorMessage = "Request timeout - Please try again";
+    } else if (error.message.includes('Failed to get next ID')) {
+      errorMessage = "Couldn't generate a new ID - Please try again";
     }
+    
+    alert(`Failed to save lead:\n${errorMessage}`);
+  }
 };
   
 const handleStatusClick = async(row) => {
@@ -1409,6 +1423,38 @@ const handleStatusClick = async(row) => {
       <div className="relative">
             
             <button
+        onClick={() => router.push("/LeadManager/LeadIntegration")}
+        className="fixed right-4 bottom-56 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-60 z-50"
+        title="Multi-Platform Lead Integration"
+      >
+        <AiOutlineApi size={24} /> {/*Lead integration icon */}
+      </button>
+      <button
+        onClick={() => router.push("/LeadManager/PredictiveDemographicTargeting")}
+        className="fixed right-4 bottom-72 p-3 bg-purple-500 text-white rounded-full flex items-center justify-center hover:bg-purple-700 lg:right-8 lg:bottom-76 z-50"
+        title="Predictive Demographic Targeting"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="h-6 w-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+          />
+        </svg>
+      </button>
+            <button
         onClick={() => router.push("/LeadManager/Client2Lead")}
         className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"
       >
@@ -1754,20 +1800,16 @@ const handleStatusClick = async(row) => {
             )}
 
             <div className="flex justify-end">
-            <button
-              className={`px-4 py-2 rounded-md text-white ${
-                isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
-              }`}
-              onClick={handleSave}
-              disabled={!selectedStatus || isLoading} // Disable button during loading..
-            >
-              {isLoading ? (
-                <span>Loading...</span> // Change text when loading
-              ) : (
-                "Save"
-              )}
-            </button>
-          </div>
+              <button
+                onClick={() => handleSave(currentCall?.sNo)}
+                className={`px-4 py-2 rounded-md text-white ${
+                  isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
 
           </div>
           {toast && <ToastMessage message={toastMessage} type="error"/>}

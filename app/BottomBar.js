@@ -519,6 +519,13 @@ export default function BottomBarTest() {
             dataTag="LeadManager"
           />
           <SubNavItem
+            icon={<DemographicTargetingIcon className="text-gray-600" />}
+            label="Predictive Targeting"
+            onClick={() => { setSelected('PredictiveDemographicTargeting'); setShowMoreOptions(false); router.push('/LeadManager/PredictiveDemographicTargeting'); }}
+            additionalClasses="hover:bg-blue-50"
+            dataTag="PredictiveDemographicTargeting"
+          />
+          <SubNavItem
             icon={<QueueDashboardIcon />}
             label="Queue Dashboard"
             onClick={() => {
@@ -592,3 +599,55 @@ function SubNavItem({ icon, label, onClick, additionalClasses, dataTag }) {
     </div>
   );
 }
+
+// Add LeadAnalyticsIcon component
+const LeadAnalyticsIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="h-5 w-5"
+  >
+    {/* Chart Base */}
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"
+    />
+    {/* Data points */}
+    <circle cx="7.5" cy="14.25" r="0.5" fill="currentColor" />
+    <circle cx="10.5" cy="12" r="0.5" fill="currentColor" />
+    <circle cx="13.5" cy="9.75" r="0.5" fill="currentColor" />
+    <circle cx="16.5" cy="7.5" r="0.5" fill="currentColor" />
+  </svg>
+);
+
+// Add DemographicTargetingIcon component
+const DemographicTargetingIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="h-5 w-5"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+    />
+  </svg>
+);
