@@ -526,6 +526,17 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
                             }`} />
                             <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Redo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
                         </button>
+                        <button 
+                            onClick={() => {
+                                localStorage.clear();
+                                window.location.reload();
+                            }} 
+                            className="w-10 h-10 rounded-full flex items-center justify-center group relative bg-red-200 hover:bg-red-300"
+                            title="Reset"
+                        >
+                            <FaUndo className="text-red-600" />
+                            <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Reset<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
+                        </button>
                     </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-6">
