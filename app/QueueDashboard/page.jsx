@@ -47,7 +47,6 @@ function EquipmentIcon({ equipmentName }) {
     );
 }
 
-
 // --- Confirmation Modal (Unchanged) ---
 function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confirmation", color = "blue" }) {
   if (!isOpen) return null;
