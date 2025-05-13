@@ -110,7 +110,7 @@ const handleLogin = (event) => {
 
                     // Dispatch actions and navigate based on conditions
                     
-                    dispatch(setCompanyName(companyName))
+                    // dispatch(setCompanyName(companyName))
                     dispatch(login(userName));
                     
                     dispatch(setAppRights(data.appRights));
