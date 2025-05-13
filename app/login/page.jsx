@@ -100,7 +100,7 @@ const handleLogin = (event) => {
                 if (data.status === 'Login Successfully') {
                     setSuccessMessage('Login Successful!');
                     // dispatch(setDBName(companyName));
-                    // dispatch(setCompanyName('Baleen Test'))
+                    dispatch(setCompanyName('Baleen Test'))
                     // dispatch(login(userName));
                     dispatch(setDBName(companyName));
                     setTimeout(() => {
