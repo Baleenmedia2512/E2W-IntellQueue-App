@@ -1549,11 +1549,11 @@ var selectedRate = '';
 
   const insertNewRate = async (e) => {
     e.preventDefault();
-    const typeOfAdEncoded = encodeURIComponent(selectedValues.typeOfAd.value);
-    const adTypeEncoded = encodeURIComponent(selectedValues.adType.value);
-    const locationEncoded = encodeURIComponent(selectedValues.Location.value);
-    const packageEncoded = encodeURIComponent(selectedValues.Package.value);
-    const adMediumEncoded = encodeURIComponent(selectedValues.rateName.value);
+    const typeOfAdEncoded = selectedValues.typeOfAd.value;
+    const adTypeEncoded = selectedValues.adType.value;
+    const locationEncoded = selectedValues.Location.value;
+    const packageEncoded = selectedValues.Package.value;
+    const adMediumEncoded = selectedValues.rateName.value;
   
     try {
         if (selectedValues.rateName === null || selectedValues.adType === null || selectedValues.vendorName === null) {
