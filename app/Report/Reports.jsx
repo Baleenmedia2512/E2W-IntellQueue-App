@@ -1871,7 +1871,7 @@ const handleExport = async () => {
       </div>
     ))}
     {/* Distinct Order Value Stats Box - Only shown when filters are applied */}
-{filterModel.items.length > 0 && Object.keys(distinctOrderValueStats).length > 0 && (
+{filterModel.items.length > 0 && filterModel.items.some(item => item.value) && Object.keys(distinctOrderValueStats).length > 0 && (
   <>
       {Object.keys(distinctOrderValueStats)
         .sort((a, b) => distinctOrderValueStats[b].orderCount - distinctOrderValueStats[a].orderCount)
