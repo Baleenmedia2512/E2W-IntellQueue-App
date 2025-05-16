@@ -5,29 +5,29 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { FaUndo, FaRedo, FaChevronLeft } from "react-icons/fa";
 import { FiUsers, FiMic, FiPauseCircle, FiPlayCircle, FiXCircle, FiCheckCircle, FiChevronsRight, FiActivity as CTIcon, FiRadio as XRayIcon, FiWifi as USGIcon } from 'react-icons/fi'; // Example icons
 
-const ItemType = "PATIENT";
+const ItemType = "CLIENT";
 
 // --- Initial Data with Equipment ---
-const initialPatientsMaster = [
+const initialClientsMaster = [
     // USG-1
-    { id: "2", name: "Priya", scanType: "Pregnancy", scan: "USG", orderNumber: "2500001", inTime: "10:15 AM", contact: "9876543211", status: "Waiting", equipment: "USG-1" },
-    { id: "7", name: "Meera", scanType: "Fetal Echo", scan: "USG", orderNumber: "2500002", inTime: "11:30 AM", contact: "9876543216", status: "Waiting", equipment: "USG-1" },
-    { id: "12", name: "Karthik", scanType: "Venous (per limb)", scan: "USG", orderNumber: "2500003", inTime: "12:45 PM", contact: "9876543221", status: "Waiting", equipment: "USG-1" },
-    { id: "15", name: "Sneha", scanType: "Anomaly", scan: "USG", orderNumber: "2500004", inTime: "1:30 PM", contact: "9876543224", status: "Waiting", equipment: "USG-1" },
+    { id: "2", name: "Priya", rateType: "Pregnancy", rateCard: "USG", queueIndex: 1, inTime: "10:15 AM", contact: "9876543211", status: "Waiting", equipment: "USG-1" },
+    { id: "7", name: "Meera", rateType: "Fetal Echo", rateCard: "USG", queueIndex: 2, inTime: "11:30 AM", contact: "9876543216", status: "Waiting", equipment: "USG-1" },
+    { id: "12", name: "Karthik", rateType: "Venous (per limb)", rateCard: "USG", queueIndex: 3, inTime: "12:45 PM", contact: "9876543221", status: "Waiting", equipment: "USG-1" },
+    { id: "15", name: "Sneha", rateType: "Anomaly", rateCard: "USG", queueIndex: 4, inTime: "1:30 PM", contact: "9876543224", status: "Waiting", equipment: "USG-1" },
     // USG-2
-    { id: "4", name: "Raena", scanType: "Pregnancy anomaly", scan: "USG", orderNumber: "2500005", inTime: "10:45 AM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
-    { id: "9", name: "Anjali", scanType: "Pregnancy Face", scan: "USG", orderNumber: "2500006", inTime: "12:00 PM", contact: "9876543218", status: "Waiting", equipment: "USG-2" },
-    { id: "14", name: "Manoj", scanType: "Review Scan", scan: "USG", orderNumber: "2500007", inTime: "1:15 PM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
+    { id: "4", name: "Raena", rateType: "Pregnancy anomaly", rateCard: "USG", queueIndex: 1, inTime: "10:45 AM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
+    { id: "9", name: "Anjali", rateType: "Pregnancy Face", rateCard: "USG", queueIndex: 2, inTime: "12:00 PM", contact: "9876543218", status: "Waiting", equipment: "USG-2" },
+    { id: "14", name: "Manoj", rateType: "Review Scan", rateCard: "USG", queueIndex: 3, inTime: "1:15 PM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
     // CT-1
-    { id: "1", name: "Kumar", scanType: "Brain", scan: "CT", orderNumber: "250001", inTime: "10:00 AM", contact: "9876543210", status: "Waiting", equipment: "CT-1" },
-    { id: "3", name: "Vimal", scanType: "Abdomen and pelvis", scan: "CT", orderNumber: "250002", inTime: "10:30 AM", contact: "9876543212", status: "Waiting", equipment: "CT-1" },
-    { id: "10", name: "Suresh", scanType: "Thorax", scan: "CT", orderNumber: "250003", inTime: "12:15 PM", contact: "9876543219", status: "Waiting", equipment: "CT-1" },
-    { id: "13", name: "Lakshmi", scanType: "Paranasal Sinuses", scan: "CT", orderNumber: "250004", inTime: "1:00 PM", contact: "9876543222", status: "Waiting", equipment: "CT-1" },
+    { id: "1", name: "Kumar", rateType: "Brain", rateCard: "CT", queueIndex: 1, inTime: "10:00 AM", contact: "9876543210", status: "Waiting", equipment: "CT-1" },
+    { id: "3", name: "Vimal", rateType: "Abdomen and pelvis", rateCard: "CT", queueIndex: 2, inTime: "10:30 AM", contact: "9876543212", status: "Waiting", equipment: "CT-1" },
+    { id: "10", name: "Suresh", rateType: "Thorax", rateCard: "CT", queueIndex: 3, inTime: "12:15 PM", contact: "9876543219", status: "Waiting", equipment: "CT-1" },
+    { id: "13", name: "Lakshmi", rateType: "Paranasal Sinuses", rateCard: "CT", queueIndex: 4, inTime: "1:00 PM", contact: "9876543222", status: "Waiting", equipment: "CT-1" },
     // X-Ray-1
-    { id: "5", name: "Saranya", scanType: "Breast", scan: "X-Ray", orderNumber: "250001", inTime: "11:00 AM", contact: "9876543214", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "6", name: "Arjun", scanType: "LS Spine", scan: "X-Ray", orderNumber: "250002", inTime: "11:15 AM", contact: "9876543215", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "8", name: "Ravi", scanType: "Knee Joint", scan: "X-Ray", orderNumber: "250003", inTime: "11:45 AM", contact: "9876543217", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "11", name: "Divya", scanType: "Hysterosalphingogram", scan: "X-Ray", orderNumber: "250004", inTime: "12:30 PM", contact: "9876543220", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "5", name: "Saranya", rateType: "Breast", rateCard: "X-Ray", queueIndex: 1, inTime: "11:00 AM", contact: "9876543214", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "6", name: "Arjun", rateType: "LS Spine", rateCard: "X-Ray", queueIndex: 2, inTime: "11:15 AM", contact: "9876543215", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "8", name: "Ravi", rateType: "Knee Joint", rateCard: "X-Ray", queueIndex: 3, inTime: "11:45 AM", contact: "9876543217", status: "Waiting", equipment: "X-Ray-1" },
+    { id: "11", name: "Divya", rateType: "Hysterosalphingogram", rateCard: "X-Ray", queueIndex: 4, inTime: "12:30 PM", contact: "9876543220", status: "Waiting", equipment: "X-Ray-1" },
 ];
 
 const EQUIPMENT_LIST = ["USG-1", "USG-2", "CT-1", "X-Ray-1"];
@@ -107,19 +107,19 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
 }
 
 // --- Draggable Tile (Modified to show equipment icon) ---
-function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue }) {
+function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
-        item: { index: displayedPatIndex }, // Use index from the displayed (filtered) list
+        item: { index: displayedClientIndex }, // Use index from the displayed (filtered) list
         collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     });
 
     const [, drop] = useDrop({
         accept: ItemType,
         hover: (draggedItem) => {
-            if (draggedItem.index !== displayedPatIndex) {
-                moveTile(draggedItem.index, displayedPatIndex);
-                draggedItem.index = displayedPatIndex;
+            if (draggedItem.index !== displayedClientIndex) {
+                moveTile(draggedItem.index, displayedClientIndex);
+                draggedItem.index = displayedClientIndex;
             }
         },
     });
@@ -134,22 +134,22 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
 
     const handleConfirm = () => {
         setIsModalOpen(false);
-        if (actionType === "complete") completeToken(displayedPatIndex);
-        else if (actionType === "close") closeToken(displayedPatIndex);
-        else if (actionType === "doneAndHold") doneAndHold(displayedPatIndex);
-        else if (actionType === "callNext") callNext(displayedPatIndex);
-        else if (actionType === "continue") continueToken(displayedPatIndex);
+        if (actionType === "complete") completeToken(displayedClientIndex);
+        else if (actionType === "close") closeToken(displayedClientIndex);
+        else if (actionType === "doneAndHold") doneAndHold(displayedClientIndex);
+        else if (actionType === "callNext") callNext(displayedClientIndex);
+        else if (actionType === "continue") continueToken(displayedClientIndex);
         else if (actionType === "startQueue") handleStartQueue();
     };
 
     const getActionMessage = () => {
         switch (actionType) {
-            case "complete": return `Are you sure you want to **complete** the token for **${patient.name}**?`;
-            case "close": return `Are you sure you want to **close** the token for **${patient.name}**?`;
-            case "doneAndHold": return `Are you sure you want to mark as **done and hold** for **${patient.name}**?`;
-            case "callNext": return `Are you sure you want to call the **next** patient after **${patient.name}**?`;
-            case "continue": return `Are you sure you want to **continue** the token for **${patient.name}**?`;
-            case "startQueue": return `Are you sure you want to **start** the queue for **${patient.equipment}**?`;
+            case "complete": return `Are you sure you want to **complete** the token for **${client.name}**?`;
+            case "close": return `Are you sure you want to **close** the token for **${client.name}**?`;
+            case "doneAndHold": return `Are you sure you want to mark as **done and hold** for **${client.name}**?`;
+            case "callNext": return `Are you sure you want to call the **next** client after **${client.name}**?`;
+            case "continue": return `Are you sure you want to **continue** the token for **${client.name}**?`;
+            case "startQueue": return `Are you sure you want to **start** the queue for **${client.equipment}**?`;
             default: return "";
         }
     };
@@ -175,29 +175,29 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
                 }`}
             >
                 <div className="flex justify-between items-start mb-2">
-                    <span className="text-gray-500 text-sm font-medium">#{patient.orderNumber}</span>
+                    <span className="text-gray-500 text-sm font-medium">#{client.queueIndex}</span>
                 </div>
                  <span
                         className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold ${
-                            patient.status === "In-Progress"
+                            client.status === "In-Progress"
                                 ? "bg-green-100 text-green-600"
-                                : patient.status === "On-Hold"
+                                : client.status === "On-Hold"
                                 ? "bg-yellow-100 text-yellow-600"
                                 : "bg-gray-100 text-gray-600"
                         }`}
                     >
-                        {patient.status}
+                        {client.status}
                     </span>
-                <h2 className="text-lg font-bold text-gray-800 mt-1">{patient.name}</h2>
-                <p className="text-gray-500 text-sm mb-2">{patient.contact}</p>
+                <h2 className="text-lg font-bold text-gray-800 mt-1">{client.name}</h2>
+                <p className="text-gray-500 text-sm mb-2">{client.contact}</p>
                 <div className="flex justify-between items-center mt-4">
-                    <div><p className="text-gray-500 text-xs">In-Time</p><p className="text-gray-800 text-sm font-semibold">{patient.inTime}</p></div>
-                    <div><p className="text-gray-500 text-xs">Scan</p><p className="text-gray-800 text-sm font-semibold">{patient.scan || "N/A"}</p></div>
-                    <div><p className="text-gray-500 text-xs">Scan Type</p><p className="text-gray-800 text-sm font-semibold">{patient.scanType || "N/A"}</p></div>
+                    <div><p className="text-gray-500 text-xs">In-Time</p><p className="text-gray-800 text-sm font-semibold">{client.inTime}</p></div>
+                    <div><p className="text-gray-500 text-xs">Rate Card</p><p className="text-gray-800 text-sm font-semibold">{client.rateCard || "N/A"}</p></div>
+                    <div><p className="text-gray-500 text-xs">Rate Type</p><p className="text-gray-800 text-sm font-semibold">{client.rateType || "N/A"}</p></div>
                 </div>
-                {(displayedPatIndex === 0 && !queueStarted) || patient.status === "Waiting" ? (
+                {(displayedClientIndex === 0 && !queueStarted) || client.status === "Waiting" ? (
                     <div className="flex justify-between mt-4 space-x-2">
-                        {displayedPatIndex === 0 && !queueStarted && (
+                        {displayedClientIndex === 0 && !queueStarted && (
                             <button 
                                 onClick={() => handleAction("startQueue")}
                                 className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg py-2 px-4 text-sm font-medium transition-colors border border-green-100"
@@ -206,7 +206,7 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
                                 <span>Start the Queue</span>
                             </button>
                         )}
-                        {patient.status === "Waiting" && (
+                        {client.status === "Waiting" && (
                             <button 
                                 onClick={() => handleAction("close")} 
                                 className="flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-3 text-sm font-medium transition-colors border border-red-100"
@@ -217,13 +217,13 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
                         )}
                     </div>
                 ) : null}
-                {patient.status === "In-Progress" && (
+                {client.status === "In-Progress" && (
                     <div className="flex justify-between mt-4 space-x-2">
                         <button onClick={() => handleAction("doneAndHold")} className="flex-1 flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-blue-100"><FiCheckCircle /> <span>Done & Hold</span></button>
                         <button onClick={() => handleAction("callNext")} className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-green-100"><FiChevronsRight /> <span>Call Next</span></button>
                     </div>
                 )}
-                {patient.status === "On-Hold" && (
+                {client.status === "On-Hold" && (
                     <div className="mt-4"><button onClick={() => handleAction("continue")} className="w-full flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-4 text-sm font-medium transition-colors border border-blue-100"><FiPlayCircle /> <span>Continue</span></button></div>
                 )}
             </div>
@@ -233,49 +233,49 @@ function DraggableTile({ patient, index, moveTile, displayedPatIndex, closeToken
 }
 
 // --- Queue Dashboard Component ---
-function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, history, setHistory, currentStep, setCurrentStep, onBackToSelection, queueStarted, setQueueStarted }) {
+function QueueDashboard({ selectedEquipment, allClients, setAllClients, history, setHistory, currentStep, setCurrentStep, onBackToSelection, queueStarted, setQueueStarted }) {
     const [filter, setFilter] = useState("All");
     const [animationDirection, setAnimationDirection] = useState("");
 
-    // This function processes the master patient list and applies status rules.
-    // Rule: One "In-Progress" patient at the head of each equipment's queue, unless "On-Hold".
-    const processAndCommitPatientList = (updatedList, forceAllWaiting = false) => {
-        let newMasterList = updatedList.map(p => ({ ...p }));
+    // This function processes the master client list and applies status rules.
+    // Rule: One "In-Progress" client at the head of each equipment's queue, unless "On-Hold".
+    const processAndCommitClientList = (updatedList, forceAllWaiting = false) => {
+        let newMasterList = updatedList.map(c => ({ ...c }));
         const equipmentToProcess = selectedEquipment;
         
-        // Only process patients for selected equipment
-        newMasterList = newMasterList.map(patient => {
-            if (patient.equipment !== equipmentToProcess) {
-                return patient; // Leave other equipment's patients unchanged
+        // Only process clients for selected equipment
+        newMasterList = newMasterList.map(client => {
+            if (client.equipment !== equipmentToProcess) {
+                return client; // Leave other equipment's clients unchanged
             }
 
-            // Process only selected equipment's patients
+            // Process only selected equipment's clients
             if (forceAllWaiting) {
-                return { ...patient, status: "Waiting" };
+                return { ...client, status: "Waiting" };
             }
 
-            // Get all patients for this equipment to determine position
-            const eqPatients = newMasterList.filter(p => p.equipment === equipmentToProcess);
-            const patientIndex = eqPatients.findIndex(p => p.id === patient.id);
+            // Get all clients for this equipment to determine position
+            const eqClients = newMasterList.filter(c => c.equipment === equipmentToProcess);
+            const clientIndex = eqClients.findIndex(c => c.id === client.id);
 
-            if (patientIndex === 0) {
+            if (clientIndex === 0) {
                 // First position can be In-Progress or On-Hold
-                if (patient.status !== "On-Hold" && patient.status !== "In-Progress") {
-                    return { ...patient, status: "In-Progress" };
+                if (client.status !== "On-Hold" && client.status !== "In-Progress") {
+                    return { ...client, status: "In-Progress" };
                 }
             } else {
                 // All other positions must be Waiting
-                return { ...patient, status: "Waiting" };
+                return { ...client, status: "Waiting" };
             }
             
-            return patient;
+            return client;
         });
 
-        setAllPatients(newMasterList);
+        setAllClients(newMasterList);
         
         // Update only selected equipment's history/step
         const eq = selectedEquipment;
-        const eqQueue = newMasterList.filter(p => p.equipment === eq);
+        const eqQueue = newMasterList.filter(c => c.equipment === eq);
         const newHistory = { ...history };
         const newStep = { ...currentStep };
         newHistory[eq] = (history[eq] || []).slice(0, (currentStep[eq] ?? 0) + 1);
@@ -285,46 +285,51 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         setCurrentStep(newStep);
     };
 
-    // Derived state for displayed patients based on selected equipment
-    const displayedPatients = useMemo(() => {
-        return allPatients.filter(p => p.equipment === selectedEquipment);
-    }, [allPatients, selectedEquipment]);
+    // Derived state for displayed clients based on selected equipment
+    const displayedClients = useMemo(() => {
+        return allClients.filter(c => c.equipment === selectedEquipment);
+    }, [allClients, selectedEquipment]);
 
     // Calculate counts for each status
     const statusCounts = useMemo(() => {
         const counts = {
-            "All": displayedPatients.length,
+            "All": displayedClients.length,
             "In-Progress": 0,
             "On-Hold": 0,
             "Waiting": 0
         };
 
-        displayedPatients.forEach(patient => {
-            if (patient.status === "In-Progress") counts["In-Progress"]++;
-            else if (patient.status === "On-Hold") counts["On-Hold"]++;
-            else if (patient.status === "Waiting") counts["Waiting"]++;
+        displayedClients.forEach(client => {
+            if (client.status === "In-Progress") counts["In-Progress"]++;
+            else if (client.status === "On-Hold") counts["On-Hold"]++;
+            else if (client.status === "Waiting") counts["Waiting"]++;
         });
 
         return counts;
-    }, [displayedPatients]);
+    }, [displayedClients]);
 
     // Move tile logic: Update statuses based on new positions
     const moveTile = (fromDisplayedIndex, toDisplayedIndex) => {
-        const masterCopy = [...allPatients];
-        const itemsOfSelectedEquipment = masterCopy.filter(p => p.equipment === selectedEquipment);
-        const otherItems = masterCopy.filter(p => p.equipment !== selectedEquipment);
+        const masterCopy = [...allClients];
+        const itemsOfSelectedEquipment = masterCopy.filter(c => c.equipment === selectedEquipment);
+        const otherItems = masterCopy.filter(c => c.equipment !== selectedEquipment);
 
         // Move the item in the array
-        const [movedPatientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
-        itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedPatientObj);
+        const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
+        itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
+
+        // Update queueIndex for all clients of this equipment based on their new order
+        itemsOfSelectedEquipment.forEach((client, idx) => {
+            client.queueIndex = idx + 1;
+        });
 
         // Reconstruct master list
         let finalReorderedMasterList = [];
         let itemsOfSelectedEquipmentPtr = 0;
         let otherItemsPtr = 0;
 
-        allPatients.forEach(originalPatient => {
-            if (originalPatient.equipment === selectedEquipment) {
+        allClients.forEach(originalClient => {
+            if (originalClient.equipment === selectedEquipment) {
                 if (itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr]) {
                     finalReorderedMasterList.push(itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr++]);
                 }
@@ -336,59 +341,59 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         });
 
         // Process list to update statuses
-        processAndCommitPatientList(finalReorderedMasterList, !queueStarted[selectedEquipment]);
+        processAndCommitClientList(finalReorderedMasterList, !queueStarted[selectedEquipment]);
     };
 
-    const modifyPatientList = (action) => {
-        let updatedAllPatients = [...allPatients];
-        action(updatedAllPatients); // The action should modify updatedAllPatients in place or return new
-        processAndCommitPatientList(updatedAllPatients);
+    const modifyClientList = (action) => {
+        let updatedAllClients = [...allClients];
+        action(updatedAllClients); // The action should modify updatedAllClients in place or return new
+        processAndCommitClientList(updatedAllClients);
     };
     
-    const findPatientAndPerform = (displayedIndex, operation) => {
-        const patientIdToActOn = displayedPatients[displayedIndex].id;
-        let newAllPatients = [...allPatients];
-        const patientGlobalIndex = newAllPatients.findIndex(p => p.id === patientIdToActOn);
+    const findClientAndPerform = (displayedIndex, operation) => {
+        const clientIdToActOn = displayedClients[displayedIndex].id;
+        let newAllClients = [...allClients];
+        const clientGlobalIndex = newAllClients.findIndex(c => c.id === clientIdToActOn);
 
-        if (patientGlobalIndex !== -1) {
-            operation(newAllPatients, patientGlobalIndex, patientIdToActOn);
+        if (clientGlobalIndex !== -1) {
+            operation(newAllClients, clientGlobalIndex, clientIdToActOn);
         }
-        processAndCommitPatientList(newAllPatients);
+        processAndCommitClientList(newAllClients);
     };
 
     const closeToken = (displayedIndex) => {
-        findPatientAndPerform(displayedIndex, (list, globalIdx, patientId) => {
+        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
             list.splice(globalIdx, 1);
         });
     };
 
     const completeToken = (displayedIndex) => { // Same as close for now
-        findPatientAndPerform(displayedIndex, (list, globalIdx, patientId) => {
+        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
             list.splice(globalIdx, 1);
         });
     };
 
     const doneAndHold = (displayedIndex) => {
-        findPatientAndPerform(displayedIndex, (list, globalIdx, patientId) => {
+        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
             list.splice(globalIdx, 1); // Remove completed
             // Find next for selectedEquipment and set to On-Hold
-            const currentEqQueue = list.filter(p => p.equipment === selectedEquipment);
+            const currentEqQueue = list.filter(c => c.equipment === selectedEquipment);
             if (currentEqQueue.length > 0) {
-                 const nextPatientInQueueId = currentEqQueue[0].id;
-                 const nextPatientGlobalIndex = list.findIndex(p => p.id === nextPatientInQueueId);
-                 if (nextPatientGlobalIndex !== -1) list[nextPatientGlobalIndex].status = "On-Hold";
+                 const nextClientInQueueId = currentEqQueue[0].id;
+                 const nextClientGlobalIndex = list.findIndex(c => c.id === nextClientInQueueId);
+                 if (nextClientGlobalIndex !== -1) list[nextClientGlobalIndex].status = "On-Hold";
             }
         });
     };
     
     const callNext = (displayedIndex) => {
-         findPatientAndPerform(displayedIndex, (list, globalIdx, patientId) => {
+         findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
             list.splice(globalIdx, 1); // Remove completed, status update will handle next In-Progress
         });
     };
 
     const continueToken = (displayedIndex) => {
-         findPatientAndPerform(displayedIndex, (list, globalIdx, patientId) => {
+         findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
             list[globalIdx].status = "In-Progress"; // Will be finalized by processAndCommit
         });
     };
@@ -405,12 +410,14 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         const newStep = { ...currentStep, [selectedEquipment]: currentStep[selectedEquipment] - 1 };
         setCurrentStep(newStep);
         // Only update selected equipment's queue
-        const newAllPatients = allPatients.map(p =>
-            p.equipment === selectedEquipment ? null : p
+        const newAllClients = allClients.map(c =>
+            c.equipment === selectedEquipment ? null : c
         ).filter(Boolean);
-        const eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
-        setAllPatients([
-            ...newAllPatients,
+        let eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
+        // Update queueIndex for this equipment's clients
+        eqQueue = eqQueue.map((client, idx) => ({ ...client, queueIndex: idx + 1 }));
+        setAllClients([
+            ...newAllClients,
             ...(eqQueue || [])
         ]);
         // If undoing to step 0 for all equipment, allow "Start the Queue" again
@@ -437,17 +444,17 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         }
         const newStep = { ...currentStep, [selectedEquipment]: currentStep[selectedEquipment] + 1 };
         setCurrentStep(newStep);
-        
         // Only update selected equipment's queue
-        const newAllPatients = allPatients.map(p =>
-            p.equipment === selectedEquipment ? null : p
+        const newAllClients = allClients.map(c =>
+            c.equipment === selectedEquipment ? null : c
         ).filter(Boolean);
-        const eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
-        setAllPatients([
-            ...newAllPatients,
+        let eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
+        // Update queueIndex for this equipment's clients
+        eqQueue = eqQueue.map((client, idx) => ({ ...client, queueIndex: idx + 1 }));
+        setAllClients([
+            ...newAllClients,
             ...(eqQueue || [])
         ]);
-
         // If redoing from step 0 to 1, set queue started for this equipment
         if (currentStep[selectedEquipment] === 0 && newStep[selectedEquipment] === 1) {
             const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
@@ -465,13 +472,13 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
         setFilter(status);
     };
 
-    const patientsForDisplayGrid = useMemo(() => {
-        return displayedPatients.filter(patient => filter === "All" || patient.status === filter);
-    }, [displayedPatients, filter]);
+    const clientsForDisplayGrid = useMemo(() => {
+        return displayedClients.filter(client => filter === "All" || client.status === filter);
+    }, [displayedClients, filter]);
 
     // Start the queue handler
     const handleStartQueue = () => {
-        processAndCommitPatientList(allPatients, false);
+        processAndCommitClientList(allClients, false);
         const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
         setQueueStarted(newQueueStarted);
         // Persist start for today for this equipment
@@ -578,11 +585,11 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
                     </div>
                 </div>
                 <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}>
-                    {patientsForDisplayGrid.map((patient, index) => (
+                    {clientsForDisplayGrid.map((client, index) => (
                         <DraggableTile
-                            key={patient.id}
-                            patient={patient}
-                            displayedPatIndex={index} // This is the index within patientsForDisplayGrid
+                            key={client.id}
+                            client={client}
+                            displayedClientIndex={index} // This is the index within clientsForDisplayGrid
                             moveTile={moveTile}
                             closeToken={closeToken}
                             completeToken={completeToken}
@@ -603,10 +610,10 @@ function QueueDashboard({ selectedEquipment, allPatients, setAllPatients, histor
 // --- Equipment Selection Page ---
 function useEquipmentStatus() {
     const [counts, setCounts] = useState(() => {
-        // Initialize counts from initialPatientsMaster
+        // Initialize counts from initialClientsMaster
         const equipmentCounts = {};
         EQUIPMENT_LIST.forEach(eq => {
-            equipmentCounts[eq] = initialPatientsMaster.filter(p => p.equipment === eq).length;
+            equipmentCounts[eq] = initialClientsMaster.filter(c => c.equipment === eq).length;
         });
         return equipmentCounts;
     });
@@ -691,7 +698,7 @@ function EquipmentSelectionPage({ onSelectEquipment }) {
 // --- Main Application Component ---
 export default function QueueSystem() {
     const [selectedEquipment, setSelectedEquipment] = useState(null);
-    const [allPatients, setAllPatients] = useState([]);
+    const [allClients, setAllClients] = useState([]);
     const [history, setHistory] = useState({});
     const [currentStep, setCurrentStep] = useState({});
     const [isInitialized, setIsInitialized] = useState(false);
@@ -726,52 +733,52 @@ export default function QueueSystem() {
     }, []);
 
     // Function to apply status rules (one "In-Progress" per equipment queue head)
-    const applyInitialStatusRules = (patientsList, forceAllWaiting = false) => {
-        let newMasterList = patientsList.map(p => ({ ...p }));
-        const patientsByEquipment = {};
-        newMasterList.forEach(p => {
-            if (!patientsByEquipment[p.equipment]) {
-                patientsByEquipment[p.equipment] = [];
+    const applyInitialStatusRules = (clientsList, forceAllWaiting = false) => {
+        let newMasterList = clientsList.map(c => ({ ...c }));
+        const clientsByEquipment = {};
+        newMasterList.forEach(c => {
+            if (!clientsByEquipment[c.equipment]) {
+                clientsByEquipment[c.equipment] = [];
             }
-            patientsByEquipment[p.equipment].push(p);
+            clientsByEquipment[c.equipment].push(c);
         });
 
-        for (const eq in patientsByEquipment) {
-            const queue = patientsByEquipment[eq];
+        for (const eq in clientsByEquipment) {
+            const queue = clientsByEquipment[eq];
             if (forceAllWaiting) {
-                queue.forEach(patient => {
-                    if (patient.status !== "On-Hold") {
-                        patient.status = "Waiting";
+                queue.forEach(client => {
+                    if (client.status !== "On-Hold") {
+                        client.status = "Waiting";
                     }
                 });
             } else {
                 let inProgressSet = false;
-                queue.forEach((patient, idx) => {
-                    if (idx === 0 && patient.status !== "On-Hold") {
-                        patient.status = "In-Progress";
+                queue.forEach((client, idx) => {
+                    if (idx === 0 && client.status !== "On-Hold") {
+                        client.status = "In-Progress";
                         inProgressSet = true;
-                    } else if (patient.status !== "On-Hold") {
-                        patient.status = "Waiting";
+                    } else if (client.status !== "On-Hold") {
+                        client.status = "Waiting";
                     }
                 });
             }
         }
-        return Object.values(patientsByEquipment).flat().sort((a,b) => patientsList.indexOf(a) - patientsList.indexOf(b)); // Re-flatten and attempt to restore original sort
+        return Object.values(clientsByEquipment).flat().sort((a,b) => clientsList.indexOf(a) - clientsList.indexOf(b)); // Re-flatten and attempt to restore original sort
     };
 
     // Load initial data and set initial statuses
     useEffect(() => {
-        const savedPatients = localStorage.getItem("allPatientsGlobal");
-        let loadedPatients = initialPatientsMaster;
-        if (savedPatients) {
-            loadedPatients = JSON.parse(savedPatients);
+        const savedClients = localStorage.getItem("allClientsGlobal");
+        let loadedClients = initialClientsMaster;
+        if (savedClients) {
+            loadedClients = JSON.parse(savedClients);
         }
         // Check if queue started for today
         const today = new Date().toISOString().slice(0, 10);
         const startedDate = localStorage.getItem("queueStartedDate");
         const forceAllWaiting = startedDate !== today;
-        const initialProcessedPatients = applyInitialStatusRules(loadedPatients, forceAllWaiting);
-        setAllPatients(initialProcessedPatients);
+        const initialProcessedClients = applyInitialStatusRules(loadedClients, forceAllWaiting);
+        setAllClients(initialProcessedClients);
 
         // Refactor: load per-equipment history and step
         const savedHistory = localStorage.getItem("historyGlobal");
@@ -784,7 +791,7 @@ export default function QueueSystem() {
             const initialHistory = {};
             const initialStep = {};
             EQUIPMENT_LIST.forEach(eq => {
-                initialHistory[eq] = [initialProcessedPatients.filter(p => p.equipment === eq)];
+                initialHistory[eq] = [initialProcessedClients.filter(c => c.equipment === eq)];
                 initialStep[eq] = 0;
             });
             setHistory(initialHistory);
@@ -793,13 +800,13 @@ export default function QueueSystem() {
         setIsInitialized(true);
     }, []);
 
-    // Save to localStorage whenever allPatients, history, or currentStep changes
+    // Save to localStorage whenever allClients, history, or currentStep changes
     useEffect(() => {
         if (!isInitialized) return;
-        localStorage.setItem("allPatientsGlobal", JSON.stringify(allPatients));
+        localStorage.setItem("allClientsGlobal", JSON.stringify(allClients));
         localStorage.setItem("historyGlobal", JSON.stringify(history));
         localStorage.setItem("currentStepGlobal", JSON.stringify(currentStep));
-    }, [allPatients, history, currentStep, isInitialized]);
+    }, [allClients, history, currentStep, isInitialized]);
 
     if (!isInitialized) {
         return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-xl">Loading Dashboard...</p></div>;
@@ -812,8 +819,8 @@ export default function QueueSystem() {
     return (
         <QueueDashboard
             selectedEquipment={selectedEquipment}
-            allPatients={allPatients}
-            setAllPatients={setAllPatients}
+            allClients={allClients}
+            setAllClients={setAllClients}
             history={history}
             setHistory={setHistory}
             currentStep={currentStep}
