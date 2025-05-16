@@ -30,7 +30,9 @@ const initialClientsMaster = [
     { id: "11", name: "Divya", rateType: "Hysterosalphingogram", rateCard: "X-Ray", queueIndex: 4, inTime: "12:30 PM", contact: "9876543220", status: "Waiting", equipment: "X-Ray-1" },
 ];
 
-const EQUIPMENT_LIST = ["USG-1", "USG-2", "CT-1", "X-Ray-1"];
+const EQUIPMENT_LIST = [
+    ...Array.from(new Set(initialClientsMaster.map(c => c.rateCard)))
+];
 
 // --- Helper: Equipment Icon ---
 function EquipmentIcon({ equipmentName }) {
@@ -243,19 +245,19 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
         let newMasterList = updatedList.map(c => ({ ...c }));
         const equipmentToProcess = selectedEquipment;
         
-        // Only process clients for selected equipment
+        // Only process clients for selected rateCard
         newMasterList = newMasterList.map(client => {
-            if (client.equipment !== equipmentToProcess) {
-                return client; // Leave other equipment's clients unchanged
+            if (client.rateCard !== equipmentToProcess) {
+                return client; // Leave other rateCard's clients unchanged
             }
 
-            // Process only selected equipment's clients
+            // Process only selected rateCard's clients
             if (forceAllWaiting) {
                 return { ...client, status: "Waiting" };
             }
 
-            // Get all clients for this equipment to determine position
-            const eqClients = newMasterList.filter(c => c.equipment === equipmentToProcess);
+            // Get all clients for this rateCard to determine position
+            const eqClients = newMasterList.filter(c => c.rateCard === equipmentToProcess);
             const clientIndex = eqClients.findIndex(c => c.id === client.id);
 
             if (clientIndex === 0) {
@@ -271,11 +273,18 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
             return client;
         });
 
+        // Always reassign queueIndexes for the selected rateCard queue to be sequential starting from 1
+        const eqClients = newMasterList.filter(c => c.rateCard === equipmentToProcess);
+        eqClients.sort((a, b) => a.queueIndex - b.queueIndex); // Sort by current queueIndex for stability
+        eqClients.forEach((client, idx) => {
+            client.queueIndex = idx + 1;
+        });
+
         setAllClients(newMasterList);
         
-        // Update only selected equipment's history/step
+        // Update only selected rateCard's history/step
         const eq = selectedEquipment;
-        const eqQueue = newMasterList.filter(c => c.equipment === eq);
+        const eqQueue = newMasterList.filter(c => c.rateCard === eq);
         const newHistory = { ...history };
         const newStep = { ...currentStep };
         newHistory[eq] = (history[eq] || []).slice(0, (currentStep[eq] ?? 0) + 1);
@@ -287,7 +296,8 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
 
     // Derived state for displayed clients based on selected equipment
     const displayedClients = useMemo(() => {
-        return allClients.filter(c => c.equipment === selectedEquipment);
+        // Only show clients that are not Completed or Deleted
+        return allClients.filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted");
     }, [allClients, selectedEquipment]);
 
     // Calculate counts for each status
@@ -311,17 +321,38 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
     // Move tile logic: Update statuses based on new positions
     const moveTile = (fromDisplayedIndex, toDisplayedIndex) => {
         const masterCopy = [...allClients];
-        const itemsOfSelectedEquipment = masterCopy.filter(c => c.equipment === selectedEquipment);
-        const otherItems = masterCopy.filter(c => c.equipment !== selectedEquipment);
+        const itemsOfSelectedEquipment = masterCopy.filter(c => c.rateCard === selectedEquipment);
+        const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
 
         // Move the item in the array
         const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
+        // Save the queueIndex of the target position (if exists)
+        const targetQueueIndex = itemsOfSelectedEquipment[toDisplayedIndex]?.queueIndex;
         itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
 
-        // Update queueIndex for all clients of this equipment based on their new order
-        itemsOfSelectedEquipment.forEach((client, idx) => {
-            client.queueIndex = idx + 1;
-        });
+        // If there is a target, assign its queueIndex to the moved tile
+        if (typeof targetQueueIndex !== 'undefined') {
+            movedClientObj.queueIndex = targetQueueIndex;
+        } else {
+            // If dropped at the end, assign the last queueIndex + 1
+            movedClientObj.queueIndex = itemsOfSelectedEquipment.length;
+        }
+
+        // Now, adjust queueIndexes for all other clients to keep them unique and ordered
+        // We'll sort by queueIndex, then assign 1,2,3... except for the moved tile
+        let usedIndexes = new Set([movedClientObj.queueIndex]);
+        let nextIndex = 1;
+        for (let i = 0; i < itemsOfSelectedEquipment.length; i++) {
+            const client = itemsOfSelectedEquipment[i];
+            if (client === movedClientObj) continue;
+            // Skip the moved tile's queueIndex
+            while (usedIndexes.has(nextIndex)) nextIndex++;
+            client.queueIndex = nextIndex;
+            usedIndexes.add(nextIndex);
+            nextIndex++;
+        }
+        // Sort by queueIndex for display and status logic
+        itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
 
         // Reconstruct master list
         let finalReorderedMasterList = [];
@@ -329,7 +360,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
         let otherItemsPtr = 0;
 
         allClients.forEach(originalClient => {
-            if (originalClient.equipment === selectedEquipment) {
+            if (originalClient.rateCard === selectedEquipment) {
                 if (itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr]) {
                     finalReorderedMasterList.push(itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr++]);
                 }
@@ -363,7 +394,8 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
 
     const closeToken = (displayedIndex) => {
         findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            list.splice(globalIdx, 1);
+            // Instead of removing, set status to Deleted
+            list[globalIdx].status = "Deleted";
         });
     };
 
@@ -375,20 +407,23 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
 
     const doneAndHold = (displayedIndex) => {
         findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            list.splice(globalIdx, 1); // Remove completed
+            // Instead of removing, set status to Completed
+            list[globalIdx].status = "Completed";
             // Find next for selectedEquipment and set to On-Hold
-            const currentEqQueue = list.filter(c => c.equipment === selectedEquipment);
+            const currentEqQueue = list.filter(c => c.rateCard === selectedEquipment && c.status !== "Completed");
             if (currentEqQueue.length > 0) {
-                 const nextClientInQueueId = currentEqQueue[0].id;
-                 const nextClientGlobalIndex = list.findIndex(c => c.id === nextClientInQueueId);
-                 if (nextClientGlobalIndex !== -1) list[nextClientGlobalIndex].status = "On-Hold";
+                const nextClientInQueueId = currentEqQueue[0].id;
+                const nextClientGlobalIndex = list.findIndex(c => c.id === nextClientInQueueId);
+                if (nextClientGlobalIndex !== -1) list[nextClientGlobalIndex].status = "On-Hold";
             }
         });
     };
     
     const callNext = (displayedIndex) => {
-         findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            list.splice(globalIdx, 1); // Remove completed, status update will handle next In-Progress
+        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
+            // Instead of removing, set status to Completed
+            list[globalIdx].status = "Completed";
+            // Status update will handle next In-Progress
         });
     };
 
@@ -411,7 +446,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
         setCurrentStep(newStep);
         // Only update selected equipment's queue
         const newAllClients = allClients.map(c =>
-            c.equipment === selectedEquipment ? null : c
+            c.rateCard === selectedEquipment ? null : c
         ).filter(Boolean);
         let eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
         // Update queueIndex for this equipment's clients
@@ -446,7 +481,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
         setCurrentStep(newStep);
         // Only update selected equipment's queue
         const newAllClients = allClients.map(c =>
-            c.equipment === selectedEquipment ? null : c
+            c.rateCard === selectedEquipment ? null : c
         ).filter(Boolean);
         let eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
         // Update queueIndex for this equipment's clients
@@ -613,7 +648,7 @@ function useEquipmentStatus() {
         // Initialize counts from initialClientsMaster
         const equipmentCounts = {};
         EQUIPMENT_LIST.forEach(eq => {
-            equipmentCounts[eq] = initialClientsMaster.filter(c => c.equipment === eq).length;
+            equipmentCounts[eq] = initialClientsMaster.filter(c => c.rateCard === eq).length;
         });
         return equipmentCounts;
     });
@@ -622,23 +657,21 @@ function useEquipmentStatus() {
     return counts;
 }
 
-// Replace EquipmentSelectionPage with enhanced version
-function EquipmentSelectionPage({ onSelectEquipment }) {
+// Replace EquipmentSelectionPage with RateCardSelectionPage
+function RateCardSelectionPage({ onSelectRateCard }) {
     const queueCounts = useEquipmentStatus();
-    
+    // Only show rateCards that exist in the initial data
+    const availableRateCards = EQUIPMENT_LIST;
     // Equipment config with icons
     const equipmentConfig = {
-        "CT-1": { icon: CTIcon, label: "CT Scanner" },
-        "USG-1": { icon: USGIcon, label: "Ultrasound 1" },
-        "USG-2": { icon: USGIcon, label: "Ultrasound 2" },
-        "X-Ray-1": { icon: XRayIcon, label: "X-Ray Room" },
+        "CT": { icon: CTIcon, label: "CT Scanner" },
+        "USG": { icon: USGIcon, label: "Ultrasound" },
+        "X-Ray": { icon: XRayIcon, label: "X-Ray Room" },
     };
-
     return (
         <div className="relative min-h-screen overflow-hidden">
             {/* Radial gradient overlay */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/0 via-white/20 to-white/0" />
-            
             {/* Main content */}
             <div className="relative min-h-screen bg-gradient-to-b from-white to-blue-50 flex flex-col items-center justify-center p-6">
                 <div className="text-center mb-16">
@@ -646,34 +679,33 @@ function EquipmentSelectionPage({ onSelectEquipment }) {
                         Client Queue System
                     </h1>
                     <p className="text-lg text-gray-700">
-                        Select an equipment queue to manage
+                        Select a rate card queue to manage
                     </p>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
-                    {EQUIPMENT_LIST.map((eq) => {
-                        const Icon = equipmentConfig[eq].icon;
+                    {availableRateCards.map((rateCard) => {
+                        const Icon = (equipmentConfig[rateCard] && equipmentConfig[rateCard].icon) || FiUsers;
                         return (
                             <button
-                                key={eq}
-                                onClick={() => onSelectEquipment(eq)}
-                                className="relative group bg-white border border-gray-200 rounded-lg p-6 shadow-lg 
-                                         hover:shadow-2xl hover:border-blue-200 focus:border-blue-300 
+                                key={rateCard}
+                                onClick={() => onSelectRateCard(rateCard)}
+                                className="relative group bg-white border border-gray-200 rounded-lg p-6 shadow-lg \
+                                         hover:shadow-2xl hover:border-blue-200 focus:border-blue-300 \
                                          transition-all duration-300 transform hover:-translate-y-1"
                             >
                                 <div className="flex items-center space-x-4">
                                     <Icon className="w-8 h-8 text-blue-600" />
                                     <div className="flex flex-col items-start">
                                         <span className="text-2xl font-bold text-gray-800">
-                                            {eq}
+                                            {rateCard}
                                         </span>
                                         <span className="text-sm text-gray-500">
-                                            {equipmentConfig[eq].label}
+                                            {(equipmentConfig[rateCard] && equipmentConfig[rateCard].label) || rateCard}
                                         </span>
                                     </div>
                                     <div className="ml-auto">
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            In-Queue: {queueCounts[eq]}
+                                            In-Queue: {queueCounts[rateCard]}
                                         </span>
                                     </div>
                                 </div>
@@ -681,12 +713,11 @@ function EquipmentSelectionPage({ onSelectEquipment }) {
                         );
                     })}
                 </div>
-
                 {/* Floating bottom nav */}
                 <div className="fixed bottom-0 inset-x-0 p-4">
                     <div className="max-w-4xl mx-auto backdrop-blur bg-white/50 rounded-2xl shadow-lg p-4">
                         <p className="text-center text-sm text-gray-600">
-                            Select any equipment above to manage its queue
+                            Select any rate card above to manage its queue
                         </p>
                     </div>
                 </div>
@@ -791,7 +822,7 @@ export default function QueueSystem() {
             const initialHistory = {};
             const initialStep = {};
             EQUIPMENT_LIST.forEach(eq => {
-                initialHistory[eq] = [initialProcessedClients.filter(c => c.equipment === eq)];
+                initialHistory[eq] = [initialProcessedClients.filter(c => c.rateCard === eq)];
                 initialStep[eq] = 0;
             });
             setHistory(initialHistory);
@@ -813,7 +844,7 @@ export default function QueueSystem() {
     }
 
     if (!selectedEquipment) {
-        return <EquipmentSelectionPage onSelectEquipment={setSelectedEquipment} />;
+        return <RateCardSelectionPage onSelectRateCard={setSelectedEquipment} />;
     }
 
     return (
