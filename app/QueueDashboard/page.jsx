@@ -261,7 +261,9 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     // Derived state for displayed clients based on selected equipment
     const displayedClients = useMemo(() => {
         // Only show clients that are not Completed or Deleted
-        return allClients.filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted");
+        return allClients
+            .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+            .sort((a, b) => a.queueIndex - b.queueIndex); // Sort by queueIndex in ascending order
     }, [allClients, selectedEquipment]);
 
     // Calculate counts for each status
