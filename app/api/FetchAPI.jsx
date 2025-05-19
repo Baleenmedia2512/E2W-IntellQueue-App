@@ -525,3 +525,21 @@ export const checkAndRegisterQueue = async (DBName, ClientContact, ClientName) =
         throw error;
     }
 };
+
+export const FetchQueueDashboardData = async (DBName = 'Baleen Test') => {
+    try {
+        const response = await api.get("FetchQueueDashboardData.php", {
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            params: { JsonDBName: DBName }
+        });
+        // API returns { success: true, data: [...] }
+        if (response.data && response.data.success) {
+            return response.data.data;
+        } else {
+            throw new Error(response.data?.message || 'Failed to fetch queue dashboard data');
+        }
+    } catch (error) {
+        console.error("Error fetching queue dashboard data:", error);
+        throw error;
+    }
+};

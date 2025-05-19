@@ -4,35 +4,9 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FaUndo, FaRedo, FaChevronLeft } from "react-icons/fa";
 import { FiUsers, FiMic, FiPauseCircle, FiPlayCircle, FiXCircle, FiCheckCircle, FiChevronsRight, FiActivity as CTIcon, FiRadio as XRayIcon, FiWifi as USGIcon } from 'react-icons/fi'; // Example icons
+import { FetchQueueDashboardData } from "../api/FetchAPI";
 
 const ItemType = "CLIENT";
-
-// --- Initial Data with Equipment ---
-const initialClientsMaster = [
-    // USG-1
-    { id: "2", name: "Priya", rateType: "Pregnancy", rateCard: "USG", queueIndex: 1, inTime: "10:15 AM", contact: "9876543211", status: "Waiting", equipment: "USG-1" },
-    { id: "7", name: "Meera", rateType: "Fetal Echo", rateCard: "USG", queueIndex: 2, inTime: "11:30 AM", contact: "9876543216", status: "Waiting", equipment: "USG-1" },
-    { id: "12", name: "Karthik", rateType: "Venous (per limb)", rateCard: "USG", queueIndex: 3, inTime: "12:45 PM", contact: "9876543221", status: "Waiting", equipment: "USG-1" },
-    { id: "15", name: "Sneha", rateType: "Anomaly", rateCard: "USG", queueIndex: 4, inTime: "1:30 PM", contact: "9876543224", status: "Waiting", equipment: "USG-1" },
-    // USG-2
-    { id: "4", name: "Raena", rateType: "Pregnancy anomaly", rateCard: "USG", queueIndex: 1, inTime: "10:45 AM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
-    { id: "9", name: "Anjali", rateType: "Pregnancy Face", rateCard: "USG", queueIndex: 2, inTime: "12:00 PM", contact: "9876543218", status: "Waiting", equipment: "USG-2" },
-    { id: "14", name: "Manoj", rateType: "Review Scan", rateCard: "USG", queueIndex: 3, inTime: "1:15 PM", contact: "9876543213", status: "Waiting", equipment: "USG-2" },
-    // CT-1
-    { id: "1", name: "Kumar", rateType: "Brain", rateCard: "CT", queueIndex: 1, inTime: "10:00 AM", contact: "9876543210", status: "Waiting", equipment: "CT-1" },
-    { id: "3", name: "Vimal", rateType: "Abdomen and pelvis", rateCard: "CT", queueIndex: 2, inTime: "10:30 AM", contact: "9876543212", status: "Waiting", equipment: "CT-1" },
-    { id: "10", name: "Suresh", rateType: "Thorax", rateCard: "CT", queueIndex: 3, inTime: "12:15 PM", contact: "9876543219", status: "Waiting", equipment: "CT-1" },
-    { id: "13", name: "Lakshmi", rateType: "Paranasal Sinuses", rateCard: "CT", queueIndex: 4, inTime: "1:00 PM", contact: "9876543222", status: "Waiting", equipment: "CT-1" },
-    // X-Ray-1
-    { id: "5", name: "Saranya", rateType: "Breast", rateCard: "X-Ray", queueIndex: 1, inTime: "11:00 AM", contact: "9876543214", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "6", name: "Arjun", rateType: "LS Spine", rateCard: "X-Ray", queueIndex: 2, inTime: "11:15 AM", contact: "9876543215", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "8", name: "Ravi", rateType: "Knee Joint", rateCard: "X-Ray", queueIndex: 3, inTime: "11:45 AM", contact: "9876543217", status: "Waiting", equipment: "X-Ray-1" },
-    { id: "11", name: "Divya", rateType: "Hysterosalphingogram", rateCard: "X-Ray", queueIndex: 4, inTime: "12:30 PM", contact: "9876543220", status: "Waiting", equipment: "X-Ray-1" },
-];
-
-const EQUIPMENT_LIST = [
-    ...Array.from(new Set(initialClientsMaster.map(c => c.rateCard)))
-];
 
 // --- Helper: Equipment Icon ---
 function EquipmentIcon({ equipmentName }) {
@@ -643,25 +617,28 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
 }
 
 // --- Equipment Selection Page ---
-function useEquipmentStatus() {
+function useEquipmentStatus(equipmentList, allClients) {
     const [counts, setCounts] = useState(() => {
-        // Initialize counts from initialClientsMaster
         const equipmentCounts = {};
-        EQUIPMENT_LIST.forEach(eq => {
-            equipmentCounts[eq] = initialClientsMaster.filter(c => c.rateCard === eq).length;
+        equipmentList.forEach(eq => {
+            equipmentCounts[eq] = allClients.filter(c => c.rateCard === eq).length;
         });
         return equipmentCounts;
     });
-
-    // No need for polling effect since we're using actual data
+    useEffect(() => {
+        const equipmentCounts = {};
+        equipmentList.forEach(eq => {
+            equipmentCounts[eq] = allClients.filter(c => c.rateCard === eq).length;
+        });
+        setCounts(equipmentCounts);
+    }, [equipmentList, allClients]);
     return counts;
 }
 
-// Replace EquipmentSelectionPage with RateCardSelectionPage
-function RateCardSelectionPage({ onSelectRateCard }) {
-    const queueCounts = useEquipmentStatus();
+function RateCardSelectionPage({ onSelectRateCard, equipmentList, allClients }) {
+    const queueCounts = useEquipmentStatus(equipmentList, allClients);
     // Only show rateCards that exist in the initial data
-    const availableRateCards = EQUIPMENT_LIST;
+    const availableRateCards = equipmentList;
     // Equipment config with icons
     const equipmentConfig = {
         "CT": { icon: CTIcon, label: "CT Scanner" },
@@ -705,7 +682,7 @@ function RateCardSelectionPage({ onSelectRateCard }) {
                                     </div>
                                     <div className="ml-auto">
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            In-Queue: {queueCounts[rateCard]}
+                                            In-Queue: {queueCounts[rateCard] || 0}
                                         </span>
                                     </div>
                                 </div>
@@ -734,6 +711,7 @@ export default function QueueSystem() {
     const [currentStep, setCurrentStep] = useState({});
     const [isInitialized, setIsInitialized] = useState(false);
     const [queueStarted, setQueueStarted] = useState({}); // Changed to object to track per equipment
+    const [equipmentList, setEquipmentList] = useState([]);
 
     // Persist selectedEquipment to localStorage
     useEffect(() => {
@@ -754,26 +732,23 @@ export default function QueueSystem() {
     useEffect(() => {
         const today = new Date().toISOString().slice(0, 10);
         const queueStartStatus = {};
-        
-        EQUIPMENT_LIST.forEach(equipment => {
+        equipmentList.forEach(equipment => {
             const startedDate = localStorage.getItem(`queueStartedDate_${equipment}`);
             queueStartStatus[equipment] = startedDate === today;
         });
-        
         setQueueStarted(queueStartStatus);
-    }, []);
+    }, [equipmentList]);
 
     // Function to apply status rules (one "In-Progress" per equipment queue head)
     const applyInitialStatusRules = (clientsList, forceAllWaiting = false) => {
         let newMasterList = clientsList.map(c => ({ ...c }));
         const clientsByEquipment = {};
         newMasterList.forEach(c => {
-            if (!clientsByEquipment[c.equipment]) {
-                clientsByEquipment[c.equipment] = [];
+            if (!clientsByEquipment[c.rateCard]) {
+                clientsByEquipment[c.rateCard] = [];
             }
-            clientsByEquipment[c.equipment].push(c);
+            clientsByEquipment[c.rateCard].push(c);
         });
-
         for (const eq in clientsByEquipment) {
             const queue = clientsByEquipment[eq];
             if (forceAllWaiting) {
@@ -794,41 +769,39 @@ export default function QueueSystem() {
                 });
             }
         }
-        return Object.values(clientsByEquipment).flat().sort((a,b) => clientsList.indexOf(a) - clientsList.indexOf(b)); // Re-flatten and attempt to restore original sort
+        return Object.values(clientsByEquipment).flat().sort((a,b) => clientsList.indexOf(a) - clientsList.indexOf(b));
     };
 
     // Load initial data and set initial statuses
     useEffect(() => {
-        const savedClients = localStorage.getItem("allClientsGlobal");
-        let loadedClients = initialClientsMaster;
-        if (savedClients) {
-            loadedClients = JSON.parse(savedClients);
+        async function fetchInitialClients() {
+            try {
+                const apiClients = await FetchQueueDashboardData();
+                setAllClients(apiClients);
+                // Generate equipment list from API data
+                const eqList = Array.from(new Set(apiClients.map(c => c.rateCard)));
+                setEquipmentList(eqList);
+                // Set up history and step for each equipment
+                const today = new Date().toISOString().slice(0, 10);
+                const startedDate = localStorage.getItem("queueStartedDate");
+                const forceAllWaiting = startedDate !== today;
+                const initialProcessedClients = applyInitialStatusRules(apiClients, forceAllWaiting);
+                setAllClients(initialProcessedClients);
+                // Initialize history and step for each equipment
+                const initialHistory = {};
+                const initialStep = {};
+                eqList.forEach(eq => {
+                    initialHistory[eq] = [initialProcessedClients.filter(c => c.rateCard === eq)];
+                    initialStep[eq] = 0;
+                });
+                setHistory(initialHistory);
+                setCurrentStep(initialStep);
+                setIsInitialized(true);
+            } catch (error) {
+                setIsInitialized(true);
+            }
         }
-        // Check if queue started for today
-        const today = new Date().toISOString().slice(0, 10);
-        const startedDate = localStorage.getItem("queueStartedDate");
-        const forceAllWaiting = startedDate !== today;
-        const initialProcessedClients = applyInitialStatusRules(loadedClients, forceAllWaiting);
-        setAllClients(initialProcessedClients);
-
-        // Refactor: load per-equipment history and step
-        const savedHistory = localStorage.getItem("historyGlobal");
-        const savedStep = localStorage.getItem("currentStepGlobal");
-        if (savedHistory && savedStep) {
-            setHistory(JSON.parse(savedHistory));
-            setCurrentStep(JSON.parse(savedStep));
-        } else {
-            // Initialize history and step for each equipment
-            const initialHistory = {};
-            const initialStep = {};
-            EQUIPMENT_LIST.forEach(eq => {
-                initialHistory[eq] = [initialProcessedClients.filter(c => c.rateCard === eq)];
-                initialStep[eq] = 0;
-            });
-            setHistory(initialHistory);
-            setCurrentStep(initialStep);
-        }
-        setIsInitialized(true);
+        fetchInitialClients();
     }, []);
 
     // Save to localStorage whenever allClients, history, or currentStep changes
@@ -844,7 +817,7 @@ export default function QueueSystem() {
     }
 
     if (!selectedEquipment) {
-        return <RateCardSelectionPage onSelectRateCard={setSelectedEquipment} />;
+        return <RateCardSelectionPage onSelectRateCard={setSelectedEquipment} equipmentList={equipmentList} allClients={allClients} />;
     }
 
     return (
