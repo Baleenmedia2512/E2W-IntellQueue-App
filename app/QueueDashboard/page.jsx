@@ -83,7 +83,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
 }
 
 // --- Draggable Tile (Modified to show equipment icon) ---
-function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue }) {
+function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
         item: { index: displayedClientIndex }, // Use index from the displayed (filtered) list
@@ -142,6 +142,13 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         }
     };
 
+    // Determine if all clients for this rateCard are 'Waiting'
+    const allWaiting = useMemo(() => {
+        return allClients
+            .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+            .every(c => c.status === "Waiting");
+    }, [allClients, selectedEquipment]);
+
     return (
         <>
             <div
@@ -171,9 +178,9 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
                     <div><p className="text-gray-500 text-xs">Rate Card</p><p className="text-gray-800 text-sm font-semibold">{client.rateCard || "N/A"}</p></div>
                     <div><p className="text-gray-500 text-xs">Rate Type</p><p className="text-gray-800 text-sm font-semibold">{client.rateType || "N/A"}</p></div>
                 </div>
-                {(displayedClientIndex === 0 && !queueStarted) || client.status === "Waiting" ? (
+                {(displayedClientIndex === 0 && allWaiting) || client.status === "Waiting" ? (
                     <div className="flex justify-between mt-4 space-x-2">
-                        {displayedClientIndex === 0 && !queueStarted && (
+                        {displayedClientIndex === 0 && allWaiting && (
                             <button 
                                 onClick={() => handleAction("startQueue")}
                                 className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg py-2 px-4 text-sm font-medium transition-colors border border-green-100"
@@ -284,41 +291,37 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         return counts;
     }, [displayedClients]);
 
-    // Move tile logic: Update statuses based on new positions
+    // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
     const moveTile = async (fromDisplayedIndex, toDisplayedIndex) => {
+        if (fromDisplayedIndex === toDisplayedIndex) return;
         const masterCopy = [...allClients];
         const itemsOfSelectedEquipment = masterCopy.filter(c => c.rateCard === selectedEquipment);
         const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
 
-        // Move the item in the array
+        // Remove the dragged item
         const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
-        // Save the queueIndex of the target position (if exists)
-        const targetQueueIndex = itemsOfSelectedEquipment[toDisplayedIndex]?.queueIndex;
+        // Insert it at the new position
         itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
 
-        // If there is a target, assign its queueIndex to the moved tile
-        if (typeof targetQueueIndex !== 'undefined') {
-            movedClientObj.queueIndex = targetQueueIndex;
-        } else {
-            // If dropped at the end, assign the last queueIndex + 1
-            movedClientObj.queueIndex = itemsOfSelectedEquipment.length;
-        }
+        // Always reassign queueIndex and status for all items, starting from 1
+        itemsOfSelectedEquipment.forEach((client, idx) => {
+            client.queueIndex = idx + 1;
+            if (idx === 0) {
+                // First position: In-Progress unless On-Hold
+                if (client.status !== "On-Hold") {
+                    client.status = "In-Progress";
+                }
+            } else {
+                client.status = "Waiting";
+            }
+        });
 
-        // Now, adjust queueIndexes for all other clients to keep them unique and ordered
-        // We'll sort by queueIndex, then assign 1,2,3... except for the moved tile
-        let usedIndexes = new Set([movedClientObj.queueIndex]);
-        let nextIndex = 1;
-        for (let i = 0; i < itemsOfSelectedEquipment.length; i++) {
-            const client = itemsOfSelectedEquipment[i];
-            if (client === movedClientObj) continue;
-            // Skip the moved tile's queueIndex
-            while (usedIndexes.has(nextIndex)) nextIndex++;
-            client.queueIndex = nextIndex;
-            usedIndexes.add(nextIndex);
-            nextIndex++;
-        }
-        // Sort by queueIndex for display and status logic
-        itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
+        // Build the new optimistic state
+        const newAllClients = [...otherItems, ...itemsOfSelectedEquipment];
+
+        // Optimistically update UI
+        setAllClients(newAllClients);
+        console.log("Optimistically updated clients:", newAllClients);
 
         // Prepare new queue order for backend
         const queueOrder = itemsOfSelectedEquipment.map(client => ({
@@ -329,10 +332,35 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Call backend to update order
         await UpdateQueueOrder(companyName, selectedEquipment, queueOrder);
 
-        // Fetch latest data after action and set it directly from DB
+        // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
+        console.log("API Clients:", apiClients);
+        // Only update UI if backend data differs from optimistic state (for selected rateCard only)
+        const getQueue = (clients) =>
+            clients
+                .filter(c => c.rateCard === selectedEquipment)
+                .sort((a, b) => a.queueIndex - b.queueIndex)
+                .map(c => ({ id: c.id, queueIndex: c.queueIndex, status: c.status }));
+
+        const optimisticQueue = getQueue(newAllClients);
+        const backendQueue = getQueue(apiClients);
+
+        const isDifferent = (a, b) => {
+            if (a.length !== b.length) return true;
+            for (let i = 0; i < a.length; i++) {
+                if (a[i].id !== b[i].id || a[i].queueIndex !== b[i].queueIndex || a[i].status !== b[i].status) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        if (isDifferent(backendQueue, optimisticQueue)) {
+            console.log("Data mismatch, updating...");
+            setAllClients(apiClients);
+        }
     };
+
+    console.log('allClients', allClients)
 
     const modifyClientList = (action) => {
         let updatedAllClients = [...allClients];
@@ -499,6 +527,8 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                             continueToken={continueToken}
                             queueStarted={queueStarted[selectedEquipment]} // Add these new props
                             handleStartQueue={handleStartQueue}
+                            allClients={allClients}
+                            selectedEquipment={selectedEquipment}
                         />
                     ))}
                 </div>
