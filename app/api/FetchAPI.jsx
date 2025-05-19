@@ -543,3 +543,21 @@ export const FetchQueueDashboardData = async (DBName = 'Baleen Test') => {
         throw error;
     }
 };
+
+export const UpdateQueueOrder = async (DBName, rateCard, queueOrder) => {
+    const response = await api.post("UpdateQueueOrder.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        JsonQueueOrder: queueOrder
+    });
+    return response.data;
+};
+
+export const QueueDashboardAction = async (DBName, action, params = {}) => {
+    const response = await api.post("QueueDashboardAction.php", {
+        JsonDBName: DBName,
+        JsonAction: action,
+        ...params
+    });
+    return response.data;
+};

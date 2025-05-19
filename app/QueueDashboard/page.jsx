@@ -4,10 +4,10 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FaUndo, FaRedo, FaChevronLeft } from "react-icons/fa";
 import { FiUsers, FiMic, FiPauseCircle, FiPlayCircle, FiXCircle, FiCheckCircle, FiChevronsRight, FiActivity as CTIcon, FiRadio as XRayIcon, FiWifi as USGIcon } from 'react-icons/fi'; // Example icons
-import { FetchQueueDashboardData } from "../api/FetchAPI";
+import { FetchQueueDashboardData, QueueDashboardAction, UpdateQueueOrder } from "../api/FetchAPI";
+import { useAppSelector } from '@/redux/store';
 
 const ItemType = "CLIENT";
-
 // --- Helper: Equipment Icon ---
 function EquipmentIcon({ equipmentName }) {
     let icon = <FiUsers className="w-4 h-4 text-gray-500" />; // Default
@@ -125,7 +125,7 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
             case "doneAndHold": return `Are you sure you want to mark as **done and hold** for **${client.name}**?`;
             case "callNext": return `Are you sure you want to call the **next** client after **${client.name}**?`;
             case "continue": return `Are you sure you want to **continue** the token for **${client.name}**?`;
-            case "startQueue": return `Are you sure you want to **start** the queue for **${client.equipment}**?`;
+            case "startQueue": return `Are you sure you want to **start** the queue for **${client.rateCard}**?`;
             default: return "";
         }
     };
@@ -209,7 +209,8 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
 }
 
 // --- Queue Dashboard Component ---
-function QueueDashboard({ selectedEquipment, allClients, setAllClients, history, setHistory, currentStep, setCurrentStep, onBackToSelection, queueStarted, setQueueStarted }) {
+function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackToSelection, queueStarted, setQueueStarted }) {
+    const companyName = useAppSelector(state => state.authSlice.companyName);
     const [filter, setFilter] = useState("All");
     const [animationDirection, setAnimationDirection] = useState("");
 
@@ -255,17 +256,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
         });
 
         setAllClients(newMasterList);
-        
-        // Update only selected rateCard's history/step
-        const eq = selectedEquipment;
-        const eqQueue = newMasterList.filter(c => c.rateCard === eq);
-        const newHistory = { ...history };
-        const newStep = { ...currentStep };
-        newHistory[eq] = (history[eq] || []).slice(0, (currentStep[eq] ?? 0) + 1);
-        newHistory[eq].push(eqQueue);
-        newStep[eq] = newHistory[eq].length - 1;
-        setHistory(newHistory);
-        setCurrentStep(newStep);
     };
 
     // Derived state for displayed clients based on selected equipment
@@ -293,7 +283,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
     }, [displayedClients]);
 
     // Move tile logic: Update statuses based on new positions
-    const moveTile = (fromDisplayedIndex, toDisplayedIndex) => {
+    const moveTile = async (fromDisplayedIndex, toDisplayedIndex) => {
         const masterCopy = [...allClients];
         const itemsOfSelectedEquipment = masterCopy.filter(c => c.rateCard === selectedEquipment);
         const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
@@ -328,25 +318,18 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
         // Sort by queueIndex for display and status logic
         itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
 
-        // Reconstruct master list
-        let finalReorderedMasterList = [];
-        let itemsOfSelectedEquipmentPtr = 0;
-        let otherItemsPtr = 0;
+        // Prepare new queue order for backend
+        const queueOrder = itemsOfSelectedEquipment.map(client => ({
+            id: client.id,
+            queueIndex: client.queueIndex
+        }));
 
-        allClients.forEach(originalClient => {
-            if (originalClient.rateCard === selectedEquipment) {
-                if (itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr]) {
-                    finalReorderedMasterList.push(itemsOfSelectedEquipment[itemsOfSelectedEquipmentPtr++]);
-                }
-            } else {
-                if (otherItems[otherItemsPtr]) {
-                    finalReorderedMasterList.push(otherItems[otherItemsPtr++]);
-                }
-            }
-        });
+        // Call backend to update order
+        await UpdateQueueOrder(companyName, selectedEquipment, queueOrder);
 
-        // Process list to update statuses
-        processAndCommitClientList(finalReorderedMasterList, !queueStarted[selectedEquipment]);
+        // Fetch latest data after action and set it directly from DB
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
     };
 
     const modifyClientList = (action) => {
@@ -366,111 +349,44 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
         processAndCommitClientList(newAllClients);
     };
 
-    const closeToken = (displayedIndex) => {
-        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            // Instead of removing, set status to Deleted
-            list[globalIdx].status = "Deleted";
-        });
+    const closeToken = async (displayedIndex) => {
+        const clientId = displayedClients[displayedIndex].id;
+        await QueueDashboardAction(companyName, 'closeToken', { JsonClientId: clientId });
+        // Fetch latest data after action
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
     };
 
-    const completeToken = (displayedIndex) => { // Same as close for now
-        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            list.splice(globalIdx, 1);
-        });
+    const completeToken = async (displayedIndex) => {
+        const clientId = displayedClients[displayedIndex].id;
+        await QueueDashboardAction(companyName, 'completeToken', { JsonClientId: clientId });
+        // Fetch latest data after action
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
     };
 
-    const doneAndHold = (displayedIndex) => {
-        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            // Instead of removing, set status to Completed
-            list[globalIdx].status = "Completed";
-            // Find next for selectedEquipment and set to On-Hold
-            const currentEqQueue = list.filter(c => c.rateCard === selectedEquipment && c.status !== "Completed");
-            if (currentEqQueue.length > 0) {
-                const nextClientInQueueId = currentEqQueue[0].id;
-                const nextClientGlobalIndex = list.findIndex(c => c.id === nextClientInQueueId);
-                if (nextClientGlobalIndex !== -1) list[nextClientGlobalIndex].status = "On-Hold";
-            }
-        });
+    const doneAndHold = async (displayedIndex) => {
+        const clientId = displayedClients[displayedIndex].id;
+        await QueueDashboardAction(companyName, 'doneAndHold', { JsonClientId: clientId });
+        // Fetch latest data after action
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
     };
     
-    const callNext = (displayedIndex) => {
-        findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            // Instead of removing, set status to Completed
-            list[globalIdx].status = "Completed";
-            // Status update will handle next In-Progress
-        });
+    const callNext = async (displayedIndex) => {
+        const clientId = displayedClients[displayedIndex].id;
+        await QueueDashboardAction(companyName, 'callNext', { JsonClientId: clientId });
+        // Fetch latest data after action
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
     };
 
-    const continueToken = (displayedIndex) => {
-         findClientAndPerform(displayedIndex, (list, globalIdx, clientId) => {
-            list[globalIdx].status = "In-Progress"; // Will be finalized by processAndCommit
-        });
-    };
-
-    // Undo: If undoing to step 0, also reset queueStarted in localStorage
-    const undo = () => {
-        if (
-            !history[selectedEquipment] ||
-            typeof currentStep[selectedEquipment] !== 'number' ||
-            currentStep[selectedEquipment] <= 0
-        ) {
-            return;
-        }
-        const newStep = { ...currentStep, [selectedEquipment]: currentStep[selectedEquipment] - 1 };
-        setCurrentStep(newStep);
-        // Only update selected equipment's queue
-        const newAllClients = allClients.map(c =>
-            c.rateCard === selectedEquipment ? null : c
-        ).filter(Boolean);
-        let eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
-        // Update queueIndex for this equipment's clients
-        eqQueue = eqQueue.map((client, idx) => ({ ...client, queueIndex: idx + 1 }));
-        setAllClients([
-            ...newAllClients,
-            ...(eqQueue || [])
-        ]);
-        // If undoing to step 0 for all equipment, allow "Start the Queue" again
-        if (Object.values(newStep).every(step => step === 0)) {
-            setQueueStarted(false);
-            localStorage.removeItem("queueStartedDate");
-        }
-        // If undoing to step 0, reset queue started for this equipment only
-        if (newStep[selectedEquipment] === 0) {
-            const newQueueStarted = { ...queueStarted, [selectedEquipment]: false };
-            setQueueStarted(newQueueStarted);
-            localStorage.removeItem(`queueStartedDate_${selectedEquipment}`);
-        }
-    };
-
-    // Redo: If redoing from step 0 to 1, set queueStarted for this equipment
-    const redo = () => {
-        if (
-            !history[selectedEquipment] ||
-            typeof currentStep[selectedEquipment] !== 'number' ||
-            currentStep[selectedEquipment] >= history[selectedEquipment].length - 1
-        ) {
-            return;
-        }
-        const newStep = { ...currentStep, [selectedEquipment]: currentStep[selectedEquipment] + 1 };
-        setCurrentStep(newStep);
-        // Only update selected equipment's queue
-        const newAllClients = allClients.map(c =>
-            c.rateCard === selectedEquipment ? null : c
-        ).filter(Boolean);
-        let eqQueue = history[selectedEquipment][newStep[selectedEquipment]];
-        // Update queueIndex for this equipment's clients
-        eqQueue = eqQueue.map((client, idx) => ({ ...client, queueIndex: idx + 1 }));
-        setAllClients([
-            ...newAllClients,
-            ...(eqQueue || [])
-        ]);
-        // If redoing from step 0 to 1, set queue started for this equipment
-        if (currentStep[selectedEquipment] === 0 && newStep[selectedEquipment] === 1) {
-            const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
-            setQueueStarted(newQueueStarted);
-            const today = new Date().toISOString().slice(0, 10);
-            localStorage.setItem(`queueStartedDate_${selectedEquipment}`, today);
-        }
+    const continueToken = async (displayedIndex) => {
+        const clientId = displayedClients[displayedIndex].id;
+        await QueueDashboardAction(companyName, 'continueToken', { JsonClientId: clientId });
+        // Fetch latest data after action
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
     };
 
     const handleFilterChange = (status) => {
@@ -486,17 +402,26 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
     }, [displayedClients, filter]);
 
     // Start the queue handler
-    const handleStartQueue = () => {
-        processAndCommitClientList(allClients, false);
+    const handleStartQueue = async () => {
+        // Find the first client id for the selected equipment
+        const firstClient = displayedClients[0];
+        if (!firstClient) return;
+        await QueueDashboardAction(companyName, 'startQueue', { JsonClientId: firstClient.id });
+        // Fetch latest data after action
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
         const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
         setQueueStarted(newQueueStarted);
-        // Persist start for today for this equipment
-        const today = new Date().toISOString().slice(0, 10);
-        localStorage.setItem(`queueStartedDate_${selectedEquipment}`, today);
     };
 
     const statuses = ["All", "In-Progress", "On-Hold", "Waiting"];
     const currentDate = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+    // Undo/Redo placeholders (disabled, for future implementation)
+    const undo = () => {};
+    const redo = () => {};
+
+    // console.log(allClients);
 
     return (
         <DndProvider backend={HTML5Backend}>
@@ -517,55 +442,20 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, history,
                     </div>
                     <div className="flex space-x-2 items-center">
                         <button 
-                            onClick={undo} 
-                            disabled={
-                                !history[selectedEquipment] ||
-                                typeof currentStep[selectedEquipment] !== 'number' ||
-                                currentStep[selectedEquipment] <= 0
-                            }
-                            className={`w-10 h-10 rounded-full flex items-center justify-center group relative ${
-                                history[selectedEquipment] && typeof currentStep[selectedEquipment] === 'number' && currentStep[selectedEquipment] > 0
-                                    ? "bg-gray-200 hover:bg-gray-300"
-                                    : "bg-gray-100 cursor-not-allowed"
-                            }`}
+                            disabled
+                            className="w-10 h-10 rounded-full flex items-center justify-center group relative bg-red-200 opacity-60 cursor-not-allowed"
+                            title="Undo (coming soon)"
                         >
-                            <FaUndo className={`text-gray-600 ${
-                                !history[selectedEquipment] || typeof currentStep[selectedEquipment] !== 'number' || currentStep[selectedEquipment] <= 0
-                                    ? "opacity-50"
-                                    : ""
-                            }`} />
+                            <FaUndo className="text-red-600" />
                             <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Undo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
                         </button>
                         <button 
-                            onClick={redo} 
-                            disabled={
-                                !history[selectedEquipment] ||
-                                typeof currentStep[selectedEquipment] !== 'number' ||
-                                currentStep[selectedEquipment] >= (history[selectedEquipment]?.length ?? 0) - 1
-                            }
-                            className={`w-10 h-10 rounded-full flex items-center justify-center group relative ${
-                                history[selectedEquipment] && typeof currentStep[selectedEquipment] === 'number' && currentStep[selectedEquipment] < (history[selectedEquipment]?.length ?? 0) - 1
-                                    ? "bg-gray-200 hover:bg-gray-300"
-                                    : "bg-gray-100 cursor-not-allowed"
-                            }`}
+                            disabled
+                            className="w-10 h-10 rounded-full flex items-center justify-center group relative bg-blue-200 opacity-60 cursor-not-allowed"
+                            title="Redo (coming soon)"
                         >
-                            <FaRedo className={`text-gray-600 ${
-                                !history[selectedEquipment] || typeof currentStep[selectedEquipment] !== 'number' || currentStep[selectedEquipment] >= (history[selectedEquipment]?.length ?? 0) - 1
-                                    ? "opacity-50"
-                                    : ""
-                            }`} />
+                            <FaRedo className="text-blue-600" />
                             <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Redo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
-                        </button>
-                        <button 
-                            onClick={() => {
-                                localStorage.clear();
-                                window.location.reload();
-                            }} 
-                            className="w-10 h-10 rounded-full flex items-center justify-center group relative bg-red-200 hover:bg-red-300"
-                            title="Reset"
-                        >
-                            <FaUndo className="text-red-600" />
-                            <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Reset<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
                         </button>
                     </div>
                 </div>
@@ -707,72 +597,11 @@ function RateCardSelectionPage({ onSelectRateCard, equipmentList, allClients }) 
 export default function QueueSystem() {
     const [selectedEquipment, setSelectedEquipment] = useState(null);
     const [allClients, setAllClients] = useState([]);
-    const [history, setHistory] = useState({});
-    const [currentStep, setCurrentStep] = useState({});
-    const [isInitialized, setIsInitialized] = useState(false);
-    const [queueStarted, setQueueStarted] = useState({}); // Changed to object to track per equipment
     const [equipmentList, setEquipmentList] = useState([]);
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [queueStarted, setQueueStarted] = useState({});
 
-    // Persist selectedEquipment to localStorage
-    useEffect(() => {
-        if (selectedEquipment) {
-            localStorage.setItem("selectedEquipment", selectedEquipment);
-        }
-    }, [selectedEquipment]);
-
-    // On mount, load selectedEquipment from localStorage if present
-    useEffect(() => {
-        const savedEquipment = localStorage.getItem("selectedEquipment");
-        if (savedEquipment) {
-            setSelectedEquipment(savedEquipment);
-        }
-    }, []);
-
-    // On mount, check if queue has started for today for each equipment
-    useEffect(() => {
-        const today = new Date().toISOString().slice(0, 10);
-        const queueStartStatus = {};
-        equipmentList.forEach(equipment => {
-            const startedDate = localStorage.getItem(`queueStartedDate_${equipment}`);
-            queueStartStatus[equipment] = startedDate === today;
-        });
-        setQueueStarted(queueStartStatus);
-    }, [equipmentList]);
-
-    // Function to apply status rules (one "In-Progress" per equipment queue head)
-    const applyInitialStatusRules = (clientsList, forceAllWaiting = false) => {
-        let newMasterList = clientsList.map(c => ({ ...c }));
-        const clientsByEquipment = {};
-        newMasterList.forEach(c => {
-            if (!clientsByEquipment[c.rateCard]) {
-                clientsByEquipment[c.rateCard] = [];
-            }
-            clientsByEquipment[c.rateCard].push(c);
-        });
-        for (const eq in clientsByEquipment) {
-            const queue = clientsByEquipment[eq];
-            if (forceAllWaiting) {
-                queue.forEach(client => {
-                    if (client.status !== "On-Hold") {
-                        client.status = "Waiting";
-                    }
-                });
-            } else {
-                let inProgressSet = false;
-                queue.forEach((client, idx) => {
-                    if (idx === 0 && client.status !== "On-Hold") {
-                        client.status = "In-Progress";
-                        inProgressSet = true;
-                    } else if (client.status !== "On-Hold") {
-                        client.status = "Waiting";
-                    }
-                });
-            }
-        }
-        return Object.values(clientsByEquipment).flat().sort((a,b) => clientsList.indexOf(a) - clientsList.indexOf(b));
-    };
-
-    // Load initial data and set initial statuses
+    // On mount, fetch initial data from backend
     useEffect(() => {
         async function fetchInitialClients() {
             try {
@@ -781,21 +610,6 @@ export default function QueueSystem() {
                 // Generate equipment list from API data
                 const eqList = Array.from(new Set(apiClients.map(c => c.rateCard)));
                 setEquipmentList(eqList);
-                // Set up history and step for each equipment
-                const today = new Date().toISOString().slice(0, 10);
-                const startedDate = localStorage.getItem("queueStartedDate");
-                const forceAllWaiting = startedDate !== today;
-                const initialProcessedClients = applyInitialStatusRules(apiClients, forceAllWaiting);
-                setAllClients(initialProcessedClients);
-                // Initialize history and step for each equipment
-                const initialHistory = {};
-                const initialStep = {};
-                eqList.forEach(eq => {
-                    initialHistory[eq] = [initialProcessedClients.filter(c => c.rateCard === eq)];
-                    initialStep[eq] = 0;
-                });
-                setHistory(initialHistory);
-                setCurrentStep(initialStep);
                 setIsInitialized(true);
             } catch (error) {
                 setIsInitialized(true);
@@ -803,14 +617,6 @@ export default function QueueSystem() {
         }
         fetchInitialClients();
     }, []);
-
-    // Save to localStorage whenever allClients, history, or currentStep changes
-    useEffect(() => {
-        if (!isInitialized) return;
-        localStorage.setItem("allClientsGlobal", JSON.stringify(allClients));
-        localStorage.setItem("historyGlobal", JSON.stringify(history));
-        localStorage.setItem("currentStepGlobal", JSON.stringify(currentStep));
-    }, [allClients, history, currentStep, isInitialized]);
 
     if (!isInitialized) {
         return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-xl">Loading Dashboard...</p></div>;
@@ -825,10 +631,6 @@ export default function QueueSystem() {
             selectedEquipment={selectedEquipment}
             allClients={allClients}
             setAllClients={setAllClients}
-            history={history}
-            setHistory={setHistory}
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
             onBackToSelection={() => setSelectedEquipment(null)}
             queueStarted={queueStarted}
             setQueueStarted={setQueueStarted}
