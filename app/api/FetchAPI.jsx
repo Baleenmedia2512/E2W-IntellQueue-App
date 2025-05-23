@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from './api-config';
 
 export const api = axios.create({
-    baseURL: "https://orders.baleenmedia.com/API/Media/"
+    baseURL: API_BASE_URL
 })    
 
 export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
