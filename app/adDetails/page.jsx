@@ -1,5 +1,5 @@
 'use client'
-import {useEffect, useRef, useState } from 'react';
+import {useEffect, useRef, useState, createContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/redux/store';
 import AdDetailsPage from './ad-Details';
@@ -13,8 +13,21 @@ import { generatePdf } from '../generatePDF/generatePDF';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { removeEditModeItems, resetCartItem } from '@/redux/features/cart-slice';
 import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
+// import useClickTracker from './Dashboard/useClickTracker';
+import { resetQuoteCount, resetCartCount } from '/redux/features/count-slice';
+// import useTimerTracker from './Dashboard/useTimerTracker';
+import { resetQuotePageTime, resetCartPageTime } from '/redux/features/time-slice';
+import { PostInsertOrUpdate } from '../api/InsertUpdateAPI';
+import { useCart } from "../context/CartContext"; 
+
+export const CartContext = createContext()
 
 export const AdDetails = () => {
+  
+  useTimerTracker('cart');
+  // const { quoteClickCount, cartClickCount } = useAppSelector((state) => state.countSlice);
+  // const { quotePageTime, cartPageTime } = useAppSelector((state) => state.timeSlice);
+  const { setIsCleared } = useCart();
   const routers = useRouter();
   const dispatch = useDispatch();
   // const clientNameRef = useRef(null);
@@ -36,12 +49,24 @@ export const AdDetails = () => {
   const adType = useAppSelector(state => state.quoteSlice.selectedAdType);
   const adCategory = useAppSelector(state => state.quoteSlice.selectedAdCategory);
   const rateId = useAppSelector(state => state.quoteSlice.rateId);
-  const cartItems = useAppSelector(state => state.cartSlice.cart);
+  // const cartItems = useAppSelector(state => state.cartSlice.cart);
+  
+  const selectedRows = useAppSelector(state => state.cartSlice.selectedRows);
+
+  const [cartItems, setCartItems] = useState([]);
+
+  const [selectedRecord, setSelectedRecord] = useState(null);
   const edition = useAppSelector(state => state.quoteSlice.selectedEdition);
   const position = useAppSelector(state => state.quoteSlice.selectedPosition);
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
   //const previousPage = useAppSelector(state => state.quoteSlice.previousPage)
   const editQuoteItem = cartItems.find(item => item.editQuoteNumber);
+
+
+  useEffect(() => {
+    fetchCartData();
+  }, [])
+  
 
   useEffect(() => {
     if (!username || dbName === "") {
@@ -131,32 +156,31 @@ export const AdDetails = () => {
     // console.log(item.rateGST)
     const unitPrice = (item.price/(item.unit === "SCM" ? item.qty * item.width : item.qty)).toFixed(2)
     return {
-      adMedium: item.adMedium,
+      adMedium: item.AdMedium,
       adCategory: item.adCategory,
-      edition: item.edition,
-      position: item.position,
-      qty: item.qty,
+      edition: item.Edition,
+      position: item.Package,
+      qty: item.Quantity,
       campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
-      ratePerQty: formattedRupees(unitPrice),
-      amountExclGst: formattedRupees(item.price),
-      gst: item.rateGST + "%",
-      amountInclGst: formattedRupees(AmountInclGST),
+      ratePerQty: item.rateperunit,
+      amountExclGst: formattedRupees(item.AmountwithoutGst),
+      gst: item['GST%'].toString() + '%',
+      amountInclGst: formattedRupees(item.Amount),
       leadDays: item.leadDay,
-      // durationUnit: item.campaignDurationVisibility === 1 ? (item.leadDay.CampaignDurationUnit ? item.leadDay.CampaignDurationUnit : 'Day') : '',
       CampaignDurationUnit: item.campaignDurationVisibility === 1 ? item.CampaignDurationUnit : '',
       qtyUnit: item.unit ? item.unit : 'Unit',
       adType: item.adType,
       formattedDate: item.formattedDate,
-      remarks: item.remarks,
-      width: item.width,
-      rateId: item.rateId,
-      color: item.color,
+      remarks: item.Remarks,
+      width: item.Width,
+      rateId: item.RateId,
+      color: item.Color,
       colorPercentage: item.colorPercentage,
-      bold: item.bold,
+      bold: item.Bold,
       boldPercentage: item.boldPercentage,
       semibold: item.semibold,
       semiboldPercentage: item.semiboldPercentage,
-      tick: item.tick,
+      tick: item.Tick,
       tickPercentage: item.tickPercentage
     };
   };
@@ -255,98 +279,80 @@ export const AdDetails = () => {
     e.preventDefault();
     const quoteNumber = await fetchNextQuoteNumber(companyName);
 
-    const selectedCartItems = cartItems.some(item => item.isSelected)
-    ? cartItems.filter(item => item.isSelected) // Filter selected items
-    : cartItems;
+    // Fetch cart items
+    const params = {
+        JsonDBName: companyName,
+        JsonEntryUser: username,
+    };
+    const cartResponse = await PostInsertOrUpdate('FetchCartItems', params);
+    const allCartItems = cartResponse.data; // All cart items from the response
 
-    if (isGeneratingPdf) {
-      try{
-        const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
-        await Promise.all(promises);
-        return; 
-      } catch(error) {
-        console.error('An unexpected error occured while inserting Quote:', error);
+    // Filter cart items based on selectedRows (CartID)
+    const selectedCartItems = selectedRows.length > 0
+        ? allCartItems?.filter(item => selectedRows.includes(item.CartID)) // If user selected, filter only matching CartIDs
+        : allCartItems; // If no selection, use all fetched cart items
+
+    if (!selectedCartItems || selectedCartItems.length === 0) {
+        console.warn("No matching cart items found for PDF generation.");
         return;
-      }
-      
     }
 
-    isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
-    
-    const TnC = await getTnC(companyName);
-    let grandTotalAmount = calculateGrandTotal();
-    grandTotalAmount = grandTotalAmount.replace('₹', '');
+    // Insert tracking data before PDF generation
+    await insertTrackingData(quoteNumber, selectedCartItems.length);
 
-    // if(clientName !== ""){
-      try {
-        // Step 1: Check if the lead exists and fetch the SheetId (Lead ID)
+    if (isGeneratingPdf) return; // Prevent duplicate processing
+
+    isGeneratingPdf = true;
+
+    const TnC = await getTnC(companyName);
+    let grandTotalAmount = calculateGrandTotal().replace('₹', '');
+
+    try {
         const response = await fetch(`https://orders.baleenmedia.com/API/Media/CheckLeadsOfExistingClient.php?JsonClientContact=${clientContact}&JsonDBName=${companyName}`);
         const data = await response.json();
-    
-        // if (!data.SheetId) {
-        //   alert("Lead not found. Cannot proceed with PDF generation.");
-        //   isGeneratingPdf = false;
-        //   return;
-        // }
-    
-        // Check if SheetId exists
+
         if (!data || !data.SheetId) {
-          console.log("Client not available in Leads")
-        }else{
-          const SheetId = data.SheetId; // Store Lead ID
-          const payload = {
-            sNo: data.SheetId,
-            quoteSent: "Yes",
-            dbCompanyName: companyName
-          };
-          try {
-            const response = await fetch(
-              "https://leads.baleenmedia.com/api/updateLeads",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-              }
-            );
-        
-            if (!response.ok) throw new Error("Failed to update lead");
-            console.log(response)
-        } catch (error) {
-          console.error("Error updating lead:", error);
+            console.log("Client not available in Leads");
+        } else {
+            const payload = {
+                sNo: data.SheetId,
+                quoteSent: "Yes",
+                dbCompanyName: companyName,
+            };
+
+            try {
+                const updateResponse = await fetch(
+                    "https://leads.baleenmedia.com/api/updateLeads",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    }
+                );
+
+                if (!updateResponse.ok) throw new Error("Failed to update lead");
+                console.log(updateResponse);
+            } catch (error) {
+                console.error("Error updating lead:", error);
+            }
         }
 
-        }
-        
-    
-        // Step 2: Proceed with PDF Generation
+        // Generate PDFs for the selected cart items
         const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
-    
-        // Step 3: Save Quote Data
-        const promises = selectedCartItems.map(item => addQuoteToDB(item, quoteNumber));
-        await Promise.all(promises);
-    
+
         setTimeout(() => {
           dispatch(resetQuotesData());
           dispatch(setQuotesData({ currentPage: "checkout" }));
         }, 200);
-      } catch (error) {
-        console.error("An unexpected error occurred while processing the lead: " + error);
+    } catch (error) {
+        console.error("An unexpected error occurred while processing the lead:", error);
+    } finally {
         isGeneratingPdf = false;
-        return;
-      }
-      
-    // } else{
-    //   if(clientName === ""){
-    //     // setIsClientName(false)
-    //   }else if(clientContact === ""){
-    //     // setIsClientContact(false)
-    //   }
-    // }
-  };
-  
+    }
+};
+
+
   const handleUpdateAndDownloadQuote = async (e) => {
     e.preventDefault();
     isGeneratingPdf = true; // Set flag to indicate PDF generation is in progress
@@ -391,10 +397,51 @@ export const AdDetails = () => {
     // }
   };
 
+  const handleClearAll = async () => {
+    if (cartItems.length === 0) return;
+  
+    try {
+      const requests = cartItems.map(async (item) => {
+        const requestData = {
+          JsonCartId: item.CartID,
+          JsonEntryUser: username,
+          JsonDBName: companyName,
+          JsonValidStatus: "Invalid",
+        };
+  console.log(item.CartId)
+        const response = await fetch("https://www.orders.baleenmedia.com/API/Media/UpdateCart.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        });
+  
+        const data = await response.json();
+        if (!data.success) {
+          console.error("Failed to update cart item:", data.message);
+        }
+      });
+  
+      await Promise.all(requests);
+      setIsCleared(true);
+      console.log("All cart items marked as Invalid");
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartData()
+  }, [currentPage])
+  
+  
   function showCurrentPage(){
     let showPage = '' 
+    useClickTracker(currentPage);
+    // useTimerTracker(currentPage);
     if(currentPage === "checkout"){
-      showPage = <CheckoutPage />
+      showPage = <CheckoutPage cartItems={cartItems}/>
     } else{
       showPage = <AdDetailsPage />
     }
@@ -482,12 +529,16 @@ export const AdDetails = () => {
                 </button>
               )}
               <button
-                className={`ml-2 ${cartItems.length > 0 ? 'Clearall-button' : 'Clearallafter-button'}`}
-                disabled={cartItems.length > 0 ? false : true}
-                onClick={() => dispatch(resetCartItem())}
-              >
-                Clear All
-              </button>
+              className={`ml-2 ${cartItems.length > 0 ? 'Clearall-button' : 'Clearallafter-button'}`}
+              disabled={cartItems.length > 0 ? false : true}
+              onClick={() => {
+                handleClearAll();
+                dispatch(resetCartItem());
+              }}
+            >
+              Clear All
+            </button>
+
             </div>
           ) : (
             <></>
@@ -530,67 +581,69 @@ export const AdDetails = () => {
         <br />
   
         {/* Form and Current Page Content */}
-        <div className={`bg-gray-100 flex flex-col justify-center items-center overflow-y-scroll sm:overflow-y-hidden`}>
-        <form className={`bg-white p-6 rounded-lg shadow-lg w-full flex max-w-6xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8 mb-[20vh]'} ${currentPage === 'checkout' ? 'h-fit':'h-fit '} overflow-hidden mx-2 justify-center items-center`}>
-          {showCurrentPage()}
-        </form>
-        {currentPage === "checkout" && (
-          <form className='bg-white rounded-3xl shadow-lg pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
-          <h1 className='mb-4 font-semibold text-center text-blue-500 text-lg mt-4'>Client Details</h1>
+        {/* <CartContext.Provider value={cartItems}> */}
+            <div className={`bg-gray-100 flex flex-col justify-center items-center overflow-y-scroll sm:overflow-y-hidden`}>
+              <form className={`bg-white p-6 rounded-lg shadow-lg w-full flex max-w-6xl ${currentPage === 'checkout' ? 'pb-0' : 'pb-8 mb-[20vh]'} ${currentPage === 'checkout' ? 'h-fit' : 'h-fit '} overflow-hidden mx-2 justify-center items-center`}>
+                {showCurrentPage()}
+              </form>
+              {currentPage === "checkout" && (
+                <form className='bg-white rounded-3xl shadow-lg pb-4 mt-4 h-fit w-full max-w-6xl justify-center mx-2 mb-[20vh]'>
+                  <h1 className='mb-4 font-semibold text-center text-blue-500 text-lg mt-4'>Client Details</h1>
 
-          <table className='mb-6 ml-4'>
-            <tr>
-              <td className='py-1 text-blue-600 font-semibold'>Name</td>
-              <td>:</td>
-              <td> 
-                <input 
-                  placeholder="Ex: Tony" 
-                  // ref={clientNameRef} 
-                  onFocus={() => setIsClientNameFocus(true)} 
-                  onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)} 
-                  className={`w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7`}
-                  value = {clientName} 
-                  onChange={handleSearchTermChange} 
-                ></input>
-              {/* {!isClientName && <label className='text-red-500'>Please enter client name</label>} */}
-              {clientNameSuggestions.length > 0 && isClientNameFocus && (
-                <ul className="absolute z-10 mt-1 w-auto bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
-                {clientNameSuggestions.map((name, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      className=" z-10 text-left px-2 py-1 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none ml-2"
-                      onClick={handleClientNameSelection}
-                      value={name}
-                    >
-                        {name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                  <table className='mb-6 ml-4'>
+                    <tr>
+                      <td className='py-1 text-blue-600 font-semibold'>Name</td>
+                      <td>:</td>
+                      <td>
+                        <input
+                          placeholder="Ex: Tony"
+                          // ref={clientNameRef} 
+                          onFocus={() => setIsClientNameFocus(true)}
+                          onBlur={() => setTimeout(() => setIsClientNameFocus(false), 200)}
+                          className={`w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7`}
+                          value={clientName}
+                          onChange={handleSearchTermChange}
+                        ></input>
+                        {/* {!isClientName && <label className='text-red-500'>Please enter client name</label>} */}
+                        {clientNameSuggestions.length > 0 && isClientNameFocus && (
+                          <ul className="absolute z-10 mt-1 w-auto bg-white border border-gray-200 rounded-md shadow-lg overflow-y-scroll max-h-48">
+                            {clientNameSuggestions.map((name, index) => (
+                              <li key={index}>
+                                <button
+                                  type="button"
+                                  className=" z-10 text-left px-2 py-1 text-sm text-gray-800 hover:bg-gray-100 focus:outline-none ml-2"
+                                  onClick={handleClientNameSelection}
+                                  value={name}
+                                >
+                                  {name}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className='py-1 text-blue-600 font-semibold'>Contact Number</td>
+                      <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" maxLength={10} className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => { dispatch(setClientData({ clientContact: e.target.value })); setIsClientContact(true) }}></input>
+                        {/* {!isClientContact && clientContact.length === 0 && <label className='text-red-500'>Please enter client contact</label>} */}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className='py-1 text-blue-600 font-semibold'>E-Mail</td>
+                      <td>:</td><td> <input type="email" placeholder="Ex: client@email.com" className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientEmail} onChange={(e) => dispatch(setClientData({ clientEmail: e.target.value }))}></input></td>
+                    </tr>
+                    <tr>
+                      <td className='py-1 text-blue-600 font-semibold'>Source</td>
+                      <td>:</td><td> <select className='py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value={clientSource} onChange={(e) => dispatch(setClientData({ clientSource: e.target.value }))}>{bmsources.map((item, index) => (
+                        <option key={index}>{item}</option>
+                      ))}</select></td>
+                    </tr>
+                  </table>
+                </form>
               )}
-              </td>
-            </tr>
-            <tr>
-              <td className='py-1 text-blue-600 font-semibold'>Contact Number</td>
-              <td>:</td><td>  <input placeholder="Ex: 0000000000" type="number" maxLength={10} className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientContact} onChange={(e) => {dispatch(setClientData({clientContact: e.target.value})); setIsClientContact(true)}}></input>
-              {/* {!isClientContact && clientContact.length === 0 && <label className='text-red-500'>Please enter client contact</label>} */}
-              </td>
-            </tr>
-            <tr>
-              <td className='py-1 text-blue-600 font-semibold'>E-Mail</td>
-              <td>:</td><td> <input type="email" placeholder="Ex: client@email.com" className='w-full py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7' value={clientEmail} onChange={(e) => dispatch(setClientData({clientEmail: e.target.value}))}></input></td>
-            </tr>
-            <tr>
-              <td className='py-1 text-blue-600 font-semibold'>Source</td>
-              <td>:</td><td> <select className='py-1 px-2 border-gray-500 shadow-md focus:border-blue-500 focus:drop-shadow-md border rounded-lg ml-2 h-7 w-full' value={clientSource} onChange={(e) => dispatch(setClientData({clientSource: e.target.value}))}>{bmsources.map((item, index) => (
-                <option key={index}>{item}</option>
-              ))}</select></td>
-            </tr>
-          </table>
-          </form>
-        )}
-        </div>
+            </div>
+            {/* </CartContext.Provider> */}
       </div>
 }
     </div>
