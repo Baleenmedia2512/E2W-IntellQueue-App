@@ -24,7 +24,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchOrderSeachTerm, FetchCommissionData } from '../api/FetchAPI';
 import { CircularProgress } from '@mui/material';
-import { getApiUrl } from '../api/api-config';
 
 const CreateOrder = () => {
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
@@ -226,21 +225,20 @@ const fetchAllVendor = async() => {
 const fetchUnits = async () => {
   try {
     if (selectedValues.rateName && selectedValues.adType) {
-      const response = await fetch(getApiUrl('FetchUnits.php') + 
-        `?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}&JsonDBName=${companyName}`);
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonAdMedium=${selectedValues.rateName.label}&JsonAdType=${selectedValues.adType.label}&JsonDBName=${companyName}`);
       if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
       setUnits(data);
-    } else {
-      const response = await fetch(getApiUrl('FetchUnits.php') + `?JsonDBName=${companyName}`);
+  }else{
+      const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchUnits.php/?JsonDBName=${companyName}`);
       if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
       setUnits(data);
-    }
+  }
   } catch (error) {
     console.error(error);
   }
@@ -1233,6 +1231,7 @@ function parseDateFromDB(dateString) {
   const [year, month, day] = dateString.split('-');
   return new Date(year, month - 1, day);
 }
+
 
 // const formattedOrderDate = format(new Date(orderDate), 'dd-MMM-yyyy').toUpperCase();
 const formattedOrderDate = orderDate && isValid(new Date(orderDate))
