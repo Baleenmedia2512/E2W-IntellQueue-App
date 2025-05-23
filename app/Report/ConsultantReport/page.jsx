@@ -52,6 +52,7 @@ export default function GroupedRowsDemo() {
     const defaultFilters = {
         orderNumber: { value: null, matchMode: 'contains' },
         consultant: { value: null, matchMode: 'contains' },
+        place: { value: null, matchMode: 'contains' },
         client: { value: null, matchMode: 'contains' },
         rateCard: { value: null, matchMode: 'contains' },
         rateType: { value: null, matchMode: 'contains' },
@@ -79,19 +80,20 @@ export default function GroupedRowsDemo() {
     const [exportDialogOpen, setExportDialogOpen] = useState(false);
     const sessionFilterValues = sessionStorage.getItem('filterValues')
     ? JSON.parse(sessionStorage.getItem('filterValues'))
-    : null;
+    : null;    
     const [tempFilterValues, setTempFilterValues] = useState(sessionFilterValues || {
         rateWiseOrderNumber: '',
         consultant: '',
+        place: '',
         client: '',
         rateCard: '',
         rateType: '',
-    });
-
+    });    
     const activeFilters = {
         rateWiseOrderNumber: filters.rateWiseOrderNumber ? filters.rateWiseOrderNumber.value : '',
         rateCard: filters.rateCard ? filters.rateCard.value : '',
         consultant: filters.consultant ? filters.consultant.value : '',
+        place: filters.place ? filters.place.value : '',
         client: filters.client ? filters.client.value : '',
         rateType: filters.rateType ? filters.rateType.value : ''
     };
@@ -115,7 +117,7 @@ export default function GroupedRowsDemo() {
 
     const getConsultants = async (companyName, startDate, endDate, showIcProcessedConsultantsOnly) => {
         try {
-            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReport.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
+            const response = await axios.get(`https://orders.baleenmedia.com/API/Media/FetchConsultantReportTest.php?JsonDBName=${companyName}&JsonStartDate=${startDate}&JsonEndDate=${endDate}&JsonShowIcProcessedConsultantsOnly=${showIcProcessedConsultantsOnly}`);
             const constData = response.data;
             if (constData.error === "No orders found.") {
                 setGroupedData([]);
@@ -347,6 +349,7 @@ const handleMarkAsUnprocessed = async () => {
                 existingConsultant = {
                     id: consultant.ConsultantId,
                     name: consultant.name,
+                    place: consultant.ConsultantPlace, // Add place
                     rates: [],
                     totalCount: 0,
                     totalPrice: 0,
@@ -379,6 +382,7 @@ const handleMarkAsUnprocessed = async () => {
                 rows.push({
                     id: `${consultant.id}-${consultant.name}-${rateIndex}`,
                     consultant: consultant.name,
+                    place: consultant.place, // Add place
                     client: rate.client,
                     rateCard: rate.rateCard,
                     rateType: rate.rateType,
@@ -393,6 +397,7 @@ const handleMarkAsUnprocessed = async () => {
             rows.push({
                 id: `${consultant.id}-${consultant.name}-total`,
                 consultant: "",
+                place: "", // Add empty place for total row
                 client: "",
                 rateCard: "Total",
                 rateType: consultant.totalCount,
@@ -413,6 +418,13 @@ const handleMarkAsUnprocessed = async () => {
             return <span className="font-bold text-blue-500">₹{rowData.price}</span>;
         }
         return <span>₹{rowData.price}</span>; // Ensure this displays properly if it's a number
+    };
+
+    const placeBodyTemplate = (rowData) => {
+        if (rowData.consultant) {
+            return <span className="ml-2">{rowData.place}</span>;
+        }
+        return null;
     };
 
     const consultantBodyTemplate = (rowData) => {
@@ -577,10 +589,11 @@ const handleDetailedExport = () => {
     const filteredRows = selectedRows.filter(row => row.rateCard !== 'Total');
 
     const rowsToExport = filteredRows.length > 0 ? filteredRows : filteredData;
-    // Prepare the data for export
+    // Prepare the data for export    
     const exportData = rowsToExport.map(row => ({
         rateWiseOrderNumber: row.rateWiseOrderNumber,
         Consultant: row.consultant,
+        Place: row.place,
         Client: row.client,
         RateCard: row.rateCard,
         RateType: row.rateType,
@@ -618,10 +631,10 @@ const handleGroupedExport = () => {
         : groupedData.filter(row => row.rateCard !== "Total");
   
     const groupedData = filteredRows.reduce((acc, row) => {
-        const { consultantId, consultant, rateCard, price, rateType } = row;
+        const { consultantId, consultant, place, rateCard, price, rateType } = row;
       
         if (!acc[consultantId]) {
-            acc[consultantId] = { consultant, data: {} };
+            acc[consultantId] = { consultant, place, data: {} };
         }
       
         if (!acc[consultantId].data[rateCard]) {
@@ -646,13 +659,13 @@ const handleGroupedExport = () => {
     const sortedConsultants = Object.values(groupedData).sort((a, b) => a.consultant.localeCompare(b.consultant));
 
     // Convert to an array format for Excel export
-    const exportData = [];
-    sortedConsultants.forEach(({ consultant, data }) => {
+    const exportData = [];    sortedConsultants.forEach(({ consultant, place, data }) => {
         for (const rateCard in data) {
             for (const price in data[rateCard]) {
                 const { count, totalPrice, rateTypes } = data[rateCard][price];
                 exportData.push({
                     Consultant: consultant,
+                    Place: place,
                     RateCard: rateCard,
                     RateType: [...rateTypes].join(", "),
                     Price: price,
@@ -1186,7 +1199,13 @@ const handleSlipGeneration = () => {
                             filter
                             filterElement={filterHeaderTemplate({ header: 'Consultant' }, 'consultant')}
                             showFilterMatchModes={false}
-                            
+                            ></Column>
+                            <Column field="place" header="Place" headerStyle={{ width: '13rem' }} body={placeBodyTemplate} 
+                            headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.place?.value ? 'text-blue-600' : 'text-gray-800'}`} 
+                            className="bg-white p-2 w-fit text-nowrap"
+                            filter
+                            filterElement={filterHeaderTemplate({ header: 'Place' }, 'place')}
+                            showFilterMatchModes={false}
                             ></Column>
                             <Column field="client" header="Client"  headerStyle={{ width: '13rem' }} body={clientBodyTemplate} 
                             headerClassName={`bg-gray-100 pt-5 pb-5 pl-3 pr-2 border-r-2 ${filters.client?.value ? 'text-blue-600' : 'text-gray-800'}`} 
