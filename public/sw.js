@@ -76,26 +76,4 @@ define(['./workbox-e43f5367'], function (workbox) {
     plugins: []
   }), 'GET');
 
-  // ✅ Firebase Messaging INIT
-  firebase.initializeApp({
-    apiKey: "AIzaSyDrqkBnx4Xf4bDl8017B-6zLTExsh00kew",
-    authDomain: "easy2work-c470d.firebaseapp.com",
-    projectId: "easy2work-c470d",
-    storageBucket: "easy2work-c470d.firebasestorage.app",
-    messagingSenderId: "159467588074",
-    appId: "1:159467588074:web:7a869cc9c27dafc230ca93",
-    measurementId: "G-JM8JD4LPQQ"
-  });
-
-  const messaging = firebase.messaging();
-
-  messaging.onBackgroundMessage(payload => {
-    const { title, body } = payload.notification || {};
-    if (title) {
-      self.registration.showNotification(title || "Notification", { 
-        body: body || "You have a new message",
-        icon: "/icon-192x192.png",
-      });
-    }
-  });
 });
