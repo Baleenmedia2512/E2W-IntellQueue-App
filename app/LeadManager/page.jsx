@@ -950,21 +950,6 @@ const formatUnreachableTime = (timeStr) => {
       return;
     }
 
-    const nextSNoResponse  = await GetCRUD('https://leads.baleenmedia.com/api/fetchMaxSNo', {
-      dbCompanyName: UserCompanyName
-    }).catch(error => {
-      throw new Error(`Failed to fetch next ID: ${error.message}`);
-    });
-
-    // PROPER error check (fixed logic)
-    if (nextSNoResponse.error) {
-      throw new Error(nextSNoResponse.data.error);
-    }
-
-    if (nextSNoResponse.data.maxSNo === undefined || nextSNoResponse.data.maxSNo === null) {
-      throw new Error(`Invalid serial number format from server ${nextSNoResponse.error}`);
-    }
-
     const payload = {
       sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
       sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
@@ -978,7 +963,6 @@ const formatUnreachableTime = (timeStr) => {
       handledBy: formData.handledBy,
       consultantName: formData.consultantName,
       consultantNumber: formData.consultantNumber,
-      dbCompanyName: UserCompanyName
       dbCompanyName: UserCompanyName
     };
 
@@ -1860,7 +1844,6 @@ const handleStatusClick = async(row) => {
       
     </div>
   );
-};
 
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
