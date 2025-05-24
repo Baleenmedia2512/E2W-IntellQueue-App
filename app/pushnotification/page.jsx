@@ -18,7 +18,7 @@ export default function PushNotificationPage() {
 
       if (permission === 'granted') {
         const currentToken = await getToken(messaging, {
-          vapidKey: 'BNk2qYm9G1dP5jEmt4ODc3c3f882iEY0i5v9RCowvKUlp-MzPgGGAjtmbn-QBXh1-YhK3M-a1JW_c9F5il90VPs',
+          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
           serviceWorkerRegistration: await navigator.serviceWorker.register('/sw.js'), // adjust to your SW path
         });
 
@@ -51,7 +51,7 @@ export default function PushNotificationPage() {
   };
 
   return (
-    <main style={{ padding: 32 }}>
+    <main style={{ padding: 32, color: 'black' }}>
       <h1>Test FCM Push Notification</h1>
       <button onClick={handleFCMRegister} style={{ padding: 10 }}>
         Enable Notifications
