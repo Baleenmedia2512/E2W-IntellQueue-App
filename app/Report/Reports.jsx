@@ -1915,14 +1915,20 @@ const handleExport = async () => {
 <hr className="border-t-1 border-gray-300 mb-3" />
 <div className="flex justify-end px-2">
 
-  <button
-    name="CloseDayButton"
+  <button    name="CloseDayButton"
     className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
     onClick={handleCloseDay}
     disabled={isButtonDisabled}
     title={isButtonDisabled ? "The day is closed" : "Click to close the day"}
   >
     Close Day
+  </button>
+
+  <button
+    className="md:mb-0 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-green-500 hover:border-green-500 hover:text-white hover:scale-105 ml-2"
+    onClick={() => router.push('/Report/DetailedIncomeBreakdown')}
+  >
+    Detailed Income Breakdown
   </button>
 
   </div>
