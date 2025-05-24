@@ -1793,7 +1793,7 @@ const handleStatusClick = async(row) => {
       
     </div>
   );
-
+}
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
