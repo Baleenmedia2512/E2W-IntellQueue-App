@@ -14,9 +14,9 @@ import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { removeEditModeItems, resetCartItem } from '@/redux/features/cart-slice';
 import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, FetchQuoteData, getTnC } from '../api/FetchAPI';
 // import useClickTracker from './Dashboard/useClickTracker';
-import { resetQuoteCount, resetCartCount } from '/redux/features/count-slice';
+// import { resetQuoteCount, resetCartCount } from '/redux/features/count-slice';
 // import useTimerTracker from './Dashboard/useTimerTracker';
-import { resetQuotePageTime, resetCartPageTime } from '/redux/features/time-slice';
+// import { resetQuotePageTime, resetCartPageTime } from '/redux/features/time-slice';
 import { PostInsertOrUpdate } from '../api/InsertUpdateAPI';
 import { useCart } from "../context/CartContext"; 
 
@@ -24,7 +24,7 @@ export const CartContext = createContext()
 
 export const AdDetails = () => {
   
-  useTimerTracker('cart');
+  // useTimerTracker('cart');
   // const { quoteClickCount, cartClickCount } = useAppSelector((state) => state.countSlice);
   // const { quotePageTime, cartPageTime } = useAppSelector((state) => state.timeSlice);
   const { setIsCleared } = useCart();
@@ -274,7 +274,16 @@ export const AdDetails = () => {
     
   }
 
-  
+   const fetchCartData = async () => {
+      const params={
+              JsonDBName: companyName,
+              JsonEntryUser: username,
+            }
+      const response = await PostInsertOrUpdate('FetchCartItems',params)
+      console.log(response.data, companyName, username, response)
+      setCartItems(response.data || []);
+  };
+
   const handlePdfGeneration = async (e) => {
     e.preventDefault();
     const quoteNumber = await fetchNextQuoteNumber(companyName);
@@ -298,7 +307,7 @@ export const AdDetails = () => {
     }
 
     // Insert tracking data before PDF generation
-    await insertTrackingData(quoteNumber, selectedCartItems.length);
+    // await insertTrackingData(quoteNumber, selectedCartItems.length);
 
     if (isGeneratingPdf) return; // Prevent duplicate processing
 
@@ -438,7 +447,7 @@ export const AdDetails = () => {
   
   function showCurrentPage(){
     let showPage = '' 
-    useClickTracker(currentPage);
+    // useClickTracker(currentPage);
     // useTimerTracker(currentPage);
     if(currentPage === "checkout"){
       showPage = <CheckoutPage cartItems={cartItems}/>
