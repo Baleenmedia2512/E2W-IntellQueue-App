@@ -1,0 +1,72 @@
+
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'Source' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'Source' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12345' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12350' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'EntryUser' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'OrderDate' cannot be null
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')' at line 9
+Error inserting order data: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')' at line 9
+Error inserting order data: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')' at line 9
+Error inserting order data: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')' at line 9
+Error inserting order data: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')' at line 9
+Error inserting order data: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')' at line 9
+Error inserting order data: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1
+Error inserting order data: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1
+Error inserting order data: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1
+Error inserting order data: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'ConsultantName' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'ConsultantName' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'Card' cannot be null
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12349' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12349' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '564' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '565' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '570' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12404' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12406' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12406' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12406' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12406' for key 'PRIMARY'
+Error inserting order data: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '12406' for key 'PRIMARY'

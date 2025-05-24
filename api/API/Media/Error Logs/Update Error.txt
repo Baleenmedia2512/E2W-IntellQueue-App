@@ -1,0 +1,11 @@
+Error while updating data: Call to a member function prepare() on nullError while updating data: Call to a member function prepare() on nullError updating data: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Error updating data: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'ClientEmail` = 'loguloganatha@logmail.com', `ClientContact` = '7010198963', `...' at line 1
+Error updating data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error updating data: SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens
+Error updating data: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Error updating data: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Error updating data: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Error updating data: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Error updating data: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+Error while updating data: Configuration for Baleen not found.
+Error while updating data: Configuration for $ not found.
