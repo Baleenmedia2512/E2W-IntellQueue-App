@@ -23,6 +23,7 @@ import SuccessToast from '../components/SuccessToast';
 import { FetchAllValidRates, FetchQtySlab, FetchQuoteRemarks, FetchRateSeachTerm, FetchSpecificRateData } from '../api/FetchAPI';
 import './page.css';
 import { calculateMarginAmount, calculateMarginPercentage } from '../utils/commonFunctions';
+import { PostInsertOrUpdate } from '../api/InsertUpdateAPI';
 
 export const formattedMargin = (number) => {
   
@@ -35,7 +36,7 @@ export const formattedMargin = (number) => {
 };
 
 const AdDetailsPage = () => {
-
+  // useClickTracker('quote');
   const { companyName, userName } = useAppSelector((state) => state.authSlice);
   const {
     selectedAdMedium: adMedium,
@@ -60,8 +61,8 @@ const AdDetailsPage = () => {
     isNewCartOnEdit,
     checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
-  const cartItems = useAppSelector((state) => state.cartSlice.cart);
-
+  // const cartItems = useAppSelector((state) => state.cartSlice.cart);
+  const [cartItems, setCartItems] = useState([]);
   // Local state variables
   const [errors, setErrors] = useState({});
   const [datas, setDatas] = useState({
@@ -328,6 +329,16 @@ const basePrice = baseCost + parseInt(margin);
   },[])
 
   useEffect(() => {
+  if (isQuoteEditMode) {
+    console.log("Loading edit data...", { adMedium, adType, adCategory, rateId, selectedVendor, qty });
+    dispatch(setQuotesData({ 
+      selectedVendor: { label: selectedVendor, value: selectedVendor } 
+    }));
+  }
+}, [isQuoteEditMode]);
+
+
+  useEffect(() => {
     // dispatch(setQuotesData({marginAmount: 0}));
     if (rateId) {
       LoadFormData();
@@ -495,74 +506,175 @@ const items = [
     },
   }));
 
-  const handleCompleteEdit = () => {
-    if (validateFields()) {
-      // Prepare the updated item
-      const updatedItem = {
-        index: editIndex,
-        adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
-        campaignDuration, margin, remarks, rateId, 
-        CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
-        leadDay: leadDay ? leadDay.LeadDays : "", 
-        minimumCampaignDuration, formattedDate: formattedDate(ValidityDate), rateGST, width, 
-        campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false,
-        bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, 
-        semiboldPercentage: checked.semiboldPercentage, color: checked.color, 
-        colorPercentage: checked.colorPercentage, tick: checked.tick, 
-        tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost
-      };
+  // const handleCompleteEdit = () => {
+  //   if (validateFields()) {
+  //     // Prepare the updated item
+  //     const updatedItem = {
+  //       index: editIndex,
+  //       adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, 
+  //       campaignDuration, margin, remarks, rateId, 
+  //       CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", 
+  //       leadDay: leadDay ? leadDay.LeadDays : "", 
+  //       minimumCampaignDuration, ValidityDate, rateGST, width, 
+  //       campaignDurationVisibility, editQuoteNumber, isEditMode: editQuoteNumber ? true : false,
+  //       bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, 
+  //       semiboldPercentage: checked.semiboldPercentage, color: checked.color, 
+  //       colorPercentage: checked.colorPercentage, tick: checked.tick, 
+  //       tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost
+  //     };
   
-      // Find the existing item with the same editIndex
-      const existingItem = cartItems.find(item => item.index === editIndex);
+  //     // Find the existing item with the same editIndex
+  //     const existingItem = cartItems.find(item => item.index === editIndex);
   
-      let updatedCartItems = [...cartItems]; // Default to the current cartItems
-      let isItemUpdated = false; // Track whether an update occurred
+  //     let updatedCartItems = [...cartItems]; // Default to the current cartItems
+  //     let isItemUpdated = false; // Track whether an update occurred
   
-      if (existingItem) {
-        // Compare existing item with the updated item
-        isItemUpdated = Object.keys(updatedItem).some(key =>
-          isValueChanged(updatedItem[key], existingItem[key])
-        );
+  //     if (existingItem) {
+  //       // Compare existing item with the updated item
+  //       isItemUpdated = Object.keys(updatedItem).some(key =>
+  //         isValueChanged(updatedItem[key], existingItem[key])
+  //       );
   
-        if (isItemUpdated) {
-          updatedCartItems = cartItems.map(item =>
-            item.index === editIndex ? { ...item, ...updatedItem } : item
-          );
-          setSuccessMessage("Item edited successfully.");
-        } else {
-          setToastMessage("No Changes Detected.");
+  //       if (isItemUpdated) {
+  //         updatedCartItems = cartItems.map(item =>
+  //           item.index === editIndex ? { ...item, ...updatedItem } : item
+  //         );
+  //         setSuccessMessage("Item edited successfully.");
+  //       } else {
+  //         setToastMessage("No Changes Detected.");
+  //         setSeverity("error");
+  //         setToast(true);
+  //         setTimeout(() => {
+  //           setToast(false);
+  //         }, 2000);
+  //       }
+  //     } else {
+  //       // Add new item if not existing
+  //       const newItem = { ...updatedItem, index: cartItems.length, isNewCart: true}; // Ensure unique index
+  //       updatedCartItems = [...cartItems, newItem];
+  //       isItemUpdated = true; // Treat as updated since it's a new addition
+  //       // setSuccessMessage("Item added to Cart");
+  //     }
+  
+  //     // Dispatch only if there is a change
+  //     if (isItemUpdated) {
+  //       dispatch(addItemsToCart(updatedCartItems));
+  
+  //       // Reset messages after a delay
+  //       dispatch(resetQuotesData());
+  //       dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
+  //     }
+  //   } else {
+  //     // Show error if validation fails
+  //     setToastMessage("Quantity should not be less than " + qtySlab.Qty);
+  //     setSeverity("error");
+  //     setToast(true);
+  //     setTimeout(() => {
+  //       setToast(false);
+  //     }, 2000);
+  //   }
+  // };
+    const fetchCartData = async () => {
+        const params={
+                JsonDBName: companyName,
+                JsonEntryUser: userName,
+              }
+        const response = await PostInsertOrUpdate('FetchCartItems',params)
+        // console.log(response.data, companyName, username, response)
+        setCartItems(response.data || []);
+    };
+  
+    useEffect(() => {
+      fetchCartData();
+    }, []);
+  
+
+    const handleCompleteEdit = async () => {
+      if (validateFields()) {
+        // Find the CartID corresponding to the selected item
+        const cartItem = cartItems.find(item => item.CartID); 
+        const cartID = cartItem ? cartItem.CartID : null; 
+    
+        if (!cartID) {
+          setToastMessage("CartID not found.");
           setSeverity("error");
           setToast(true);
-          setTimeout(() => {
-            setToast(false);
-          }, 2000);
+          setTimeout(() => setToast(false), 2000);
+          return;
+        }
+    
+        // Prepare the updated item
+        const updatedItem = {
+          JsonDBName: companyName,
+          JsonEntryUser: userName,
+          JsonCartID: cartID, // Replaced JsonRateId with JsonCartID
+          JsonAdMedium: adMedium,
+          JsonAdType: adType,
+          JsonAdCategory: adCategory,
+          JsonEdition: edition,
+          JsonPackage: position,
+          JsonVendor: selectedVendor.value,
+          JsonQuantity: qty,
+          JsonWidth: width,
+          JsonUnits: unit,
+          JsonRatePerUnit: unitPrice,
+          JsonAmountWithoutGST: basePrice,
+          JsonAmount: baseCost,
+          JsonGSTAmount: rateGST,
+          JsonGSTPercentage: rateGST ? (rateGST / baseCost) * 100 : 0,
+          JsonCampaignDurationUnits: campaignDurationVisibility,
+          JsonBold: checked.bold ? 1 : 0,
+          JsonSemiBold: checked.semibold ? 1 : 0,
+          JsonColor: checked.color ? 1 : 0,
+          JsonTick: checked.tick ? 1 : 0,
+          JsonRemarks: remarks
+        };
+    
+        try {
+          const response = await fetch("https://www.orders.baleenmedia.com/API/Media/UpdateCartItem.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedItem),
+          });
+    
+          const data = await response.json();
+          if (data.success) {
+            console.log("Cart item updated successfully:", data.message);
+    
+            // Update Redux state if the API request is successful
+            const updatedCartItems = cartItems.map(item =>
+              item.CartID === cartID ? { ...item, ...updatedItem } : item
+            );
+    
+            // dispatch(addItemsToCart(updatedCartItems));
+            dispatch(resetQuotesData());
+            dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
+    
+            setSuccessMessage("Item edited successfully.");
+          } else {
+            setToastMessage(data.message || "Failed to update item.");
+            setSeverity("error");
+            setToast(true);
+            setTimeout(() => setToast(false), 2000);
+          }
+        } catch (error) {
+          console.error("Error updating cart item:", error);
+          setToastMessage("Error updating cart item.");
+          setSeverity("error");
+          setToast(true);
+          setTimeout(() => setToast(false), 2000);
         }
       } else {
-        // Add new item if not existing
-        const newItem = { ...updatedItem, index: cartItems.length, isNewCart: true}; // Ensure unique index
-        updatedCartItems = [...cartItems, newItem];
-        isItemUpdated = true; // Treat as updated since it's a new addition
-        // setSuccessMessage("Item added to Cart");
+        // Show error if validation fails
+        setToastMessage("Quantity should not be less than " + qtySlab.Qty);
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
       }
-  
-      // Dispatch only if there is a change
-      if (isItemUpdated) {
-        dispatch(addItemsToCart(updatedCartItems));
-  
-        // Reset messages after a delay
-        dispatch(resetQuotesData());
-        dispatch(setQuotesData({ currentPage: "checkout", previousPage: "adDetails" }));
-      }
-    } else {
-      // Show error if validation fails
-      setToastMessage("Quantity should not be less than " + qtySlab.Qty);
-      setSeverity("error");
-      setToast(true);
-      setTimeout(() => {
-        setToast(false);
-      }, 2000);
-    }
-  };
+    };
+    
   
   // Function to compare values and detect changes
   const isValueChanged = (newValue, oldValue) => {
@@ -589,6 +701,74 @@ const items = [
     }
   };
 
+
+  const addToCart = async () => {
+
+    const [edition, packagedata] = adCategory.includes(":") || adCategory.includes("-")  
+    ? adCategory.split(/[:\-]/).map(str => str.trim())  
+    : [adCategory, ""]; // Default to adCategory if no ":" or "-" is present
+
+    const cartData = {
+      JsonRateName: adMedium,
+      JsonAdType: adType,
+      JsonAdCategory: adCategory,
+      JsonQuantity: qty,
+      JsonWidth: width,
+      JsonUnits: unit,
+      JsonScheme: "1 + 0",
+      JsonBold: checked.bold ? 1 : 0,
+      JsonSemibold: checked.semibold ? 1 : 0,
+      JsonTick: checked.tick ? 1 : 0,
+      JsonColor: checked.color ? 1 : 0,
+      JsonAmountWithoutGST: basePrice,
+      JsonAmount: (basePrice * (1 + rateGST / 100)).toFixed(2),
+      JsonGSTAmount: ((rateGST / 100) * basePrice).toFixed(2),
+      JsonGSTPercentage: rateGST,
+      JsonEntryUser: userName, // Replace with actual user
+      JsonRatePerUnit: unitPrice,
+      JsonRemarks: remarks,
+      JsonCampaignDuration: campaignDuration,
+      JsonSpotsPerDay: null, // Add if applicable
+      JsonSpotDuration: null, // Add if applicable
+      JsonDiscountAmount: 0,
+      JsonMargin: margin,
+      JsonVendor: selectedVendor,
+      JsonCampaignUnits: leadDay.CampaignDurationUnit,
+      JsonRateId: rateId,
+      JsonEdition: edition,
+      JsonPackage: packagedata,
+      JsonDBName: companyName
+    };
+  
+    try {
+      const response = await fetch("https://www.orders.baleenmedia.com/API/Media/InsertIntoCart.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cartData),
+      });
+  
+      const data = await response.json();
+      if (data.success) {
+        setSuccessMessage("Item added to Cart");
+        setTimeout(() => setSuccessMessage(""), 2000);
+      } else {
+        setToastMessage(data.message);
+        setSeverity("error");
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      setToastMessage("Server error. Please try again.");
+      setSeverity("error");
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+    }
+  };
+
+  
   return (
     
     <div className="text-black justify-center flex w-full">    
@@ -671,45 +851,71 @@ const items = [
               <div className="mb-4 overflow-y-auto h-full" > 
               <span className='flex flex-row mb-2 justify-center'>
   <div className="flex flex-col mr-2 items-center justify-center">
-    <button
-      className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
-      disabled={rateId > 0 ? false : true}
-      onClick={(e) => {
-        e.preventDefault();
-        if (isQuoteEditMode) {
-          // Complete Edit functionality
-          handleCompleteEdit();
-          
-        } else {
-          // Add to Cart functionality
-          if (validateFields()) {
-            const isDuplicate = cartItems.some(item => item.rateId === rateId && item.qty === qty);
-            if (isDuplicate) {
-              let result = window.confirm("This item is already in the cart. Do you want to still Proceed?");
-              if (result) {
-                const index = cartItems.length;
-                dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost, formattedDate: formattedDate(ValidityDate) }]));
-                // setSuccessMessage("Item added to Cart");
-                setTimeout(() => { setSuccessMessage(''); }, 2000);
-              }
-              return;
-            }
-            const index = cartItems.length;
-            dispatch(addItemsToCart([{ index, adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit, unitPrice, campaignDuration, margin, remarks, rateId, CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "", leadDay: leadDay ? leadDay.LeadDays : "", minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility, isNewCart: true, isSelected: false, bold: checked.bold, boldPercentage: checked.boldPercentage, semibold: checked.semibold, semiboldPercentage: checked.semiboldPercentage, color: checked.color, colorPercentage: checked.colorPercentage, tick: checked.tick, tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost, formattedDate: formattedDate(ValidityDate)  }]));
-            setSuccessMessage("Item added to Cart");
-            setTimeout(() => { setSuccessMessage(''); }, 2000);
-          } else {
-            setToastMessage("Quantity should not be less than " + qtySlab.Qty);
-            setSeverity('error');
-            setToast(true);
-            setTimeout(() => { setToast(false); }, 2000);
-          }
+  <button
+  className={`${rateId > 0 ? 'Addtocartafter-button' : 'Addtocart-button'} text-white px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-md`}
+  disabled={rateId <= 0}
+  onClick={(e) => {
+    e.preventDefault();
+    
+    if (isQuoteEditMode) {
+      handleCompleteEdit();
+      return;
+    }
+
+    if (!validateFields()) {
+      setToastMessage(`Quantity should not be less than ${qtySlab.Qty}`);
+      setSeverity('error');
+      setToast(true);
+      setTimeout(() => setToast(false), 2000);
+      return;
+    }
+
+    // Check if the item already exists in the current cart state (cartItems) or the state update (prevCart)
+    const alreadyExists = cartItems.some(item => item.rateId === rateId);
+
+    if (alreadyExists) {
+      let result = window.confirm("This item is already in the cart. Do you want to still proceed?");
+      if (!result) {
+        return; // Do NOT add the item if user cancels
+      }
+    }
+
+    setCartItems((prevCart) => {
+      // Double-check again within `setCartItems` (in case cartItems was not fully updated)
+      const existsInPrevCart = prevCart.some(item => item.rateId === rateId);
+      if (existsInPrevCart) return prevCart; // Do NOT add again
+
+      return [
+        ...prevCart,
+        {
+          rateId, 
+          index: prevCart.length,
+          adMedium, adType, adCategory, edition, position, selectedVendor, qty, unit,
+          unitPrice, campaignDuration, margin, remarks, 
+          CampaignDurationUnit: leadDay ? leadDay.CampaignDurationUnit : "",
+          leadDay: leadDay ? leadDay.LeadDays : "",
+          minimumCampaignDuration, ValidityDate, rateGST, width, campaignDurationVisibility,
+          isNewCart: true, isSelected: false, bold: checked.bold,
+          boldPercentage: checked.boldPercentage, semibold: checked.semibold,
+          semiboldPercentage: checked.semiboldPercentage, color: checked.color,
+          colorPercentage: checked.colorPercentage, tick: checked.tick,
+          tickPercentage: checked.tickPercentage, price: basePrice, cost: baseCost
         }
-      }}
-    >
-      <ShoppingCartIcon className='text-white mr-2'/>
-      {isQuoteEditMode && !isNewCartOnEdit ? "Complete Edit" : "Add to Cart"}
-    </button>
+      ];
+    });
+
+    setTimeout(() => {
+      addToCart();
+    }, 500); // Delay fetching to ensure state updates first
+
+    setSuccessMessage("Item added to Cart");
+    setTimeout(() => setSuccessMessage(''), 2000);
+  }}
+>
+  <ShoppingCartIcon className='text-white mr-2' />
+  {isQuoteEditMode && !isNewCartOnEdit ? "Complete Edit" : "Add to Cart"}
+</button>
+
   </div>
 
                 <div className="flex flex-col ml-2 items-center justify-center">
@@ -811,10 +1017,23 @@ const items = [
                       min={qtySlab.Qty}
                       value={qty}
                       onChange={(e) => {
-                        dispatch(setQuotesData({quantity: e.target.value, marginAmount: calculateMarginAmount(e.target.value, width, unit, unitPrice, campaignDuration, minimumCampaignDuration, marginPercentage, checked.color ? checked.colorPercentage : 0, checked.tick ? checked.tickPercentage : 0, checked.bold ? checked.boldPercentage : 0, checked.semibold ? checked.semiboldPercentage : 0)}));
-                        setQtySlab(findMatchingQtySlab(e.target.value, false));
+                        const newQty = parseInt(e.target.value);
+                        const marginPerUnit = margin / qty; // Calculate margin per 1 quantity
+                        const newTotalPrice = (unitPrice / 2 + marginPerUnit) * newQty; 
+                        const newMarginAmount = marginPerUnit * newQty; // Recalculate total margin
+                        const newMarginPercentage = ((newMarginAmount / newTotalPrice) * 100).toFixed(2);
+                    
+                        dispatch(setQuotesData({
+                            quantity: newQty, 
+                            totalPrice: newTotalPrice,
+                            marginAmount: marginPerUnit * newQty,
+                            marginPercentage: newMarginPercentage
+                        }));
+                    
+                        setQtySlab(findMatchingQtySlab(newQty, false));
                         setChanging(true);
-                      }}
+                    }}
+                    
                       onFocus={(e) => e.target.select()}
                     />
                     <label className="justify-center mt-2 ml-2 ">{unit ? unit : 'Unit'}</label>
@@ -958,7 +1177,7 @@ const items = [
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Vendor</label>
                   <Dropdown
-                  className={`w-[80%] mt-1 ml-2 border border-gray-400 rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
+                  className={`dropdown-class w-[80%] mt-1 ml-2 border border-gray-400 rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300`}  
                     value={selectedVendor}
                     onChange={(selectedOption) => dispatch(setQuotesData({ selectedVendor: selectedOption ? selectedOption.value : '' }))}
                     options={vendorOptions}
@@ -967,7 +1186,7 @@ const items = [
                 <div className="mb-4 flex flex-col">
                   <label className="font-bold mb-1 ml-2">Quantity Slab Wise Cost</label>
                   <Dropdown
-                   className={`w-[80%] ml-2 mt-1  border border-gray-400 rounded-lg  text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
+                   className={`dropdown-class w-[80%] ml-2 mt-1  border border-gray-400 rounded-lg  text-black focus:outline-none focus:shadow-outline focus:border-gray-300`}
                     value={JSON.stringify(qtySlab)}
                     onChange={(e) => {
                       const selectedValue = JSON.parse(e.target.value);
