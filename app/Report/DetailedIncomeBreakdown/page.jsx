@@ -13,6 +13,12 @@ export default function DetailedIncomeBreakdown() {
   const { dateRange } = useAppSelector(state => state.reportSlice);
   const [activeTab, setActiveTab] = useState('rateCard'); // 'rateCard' or 'paymentMode'
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   useEffect(() => {
     fetchBreakdownData();
   }, [dateRange.startDate, dateRange.endDate]);
@@ -363,19 +369,30 @@ export default function DetailedIncomeBreakdown() {
   return (
     <main className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Header and Navigation */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-blue-600 mb-4">Detailed Income Breakdown</h1>
-          
+        {/* Header and Navigation */}        
+        <div className="mb-6">          
           <Link 
             href="/Report"
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-2"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-6"
           >
             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             Back to Reports
           </Link>
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+            <h1 className="text-2xl font-bold text-blue-600">Detailed Income Breakdown</h1>
+            
+            {/* Date Range Display - Below title on mobile, right-aligned on desktop */}
+            <div className="text-sm text-gray-600 mt-2 md:mt-0">
+              {dateRange.startDate && dateRange.endDate && (
+                <p>
+                  {formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}
+                </p>
+              )}
+            </div>
+          </div>
 
           <div className="flex mt-4 border-b">
             <button

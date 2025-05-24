@@ -1913,22 +1913,26 @@ const handleExport = async () => {
   
 </div>
 <hr className="border-t-1 border-gray-300 mb-3" />
-<div className="flex justify-end px-2">
-
-  <button    name="CloseDayButton"
-    className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
+<div className="flex justify-end gap-2 px-2 py-2">  <button    
+    name="CloseDayButton"
+    className={`flex-1 min-w-[110px] max-w-[120px] flex items-center justify-center px-2 py-2.5 rounded-lg font-medium text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/20 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/40 hover:transform hover:-translate-y-0.5 active:shadow-sm ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50 grayscale' : ''}`}
     onClick={handleCloseDay}
     disabled={isButtonDisabled}
     title={isButtonDisabled ? "The day is closed" : "Click to close the day"}
   >
-    Close Day
+    <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+    <span className="whitespace-nowrap">Close Day</span>
   </button>
-
   <button
-    className="md:mb-0 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-green-500 hover:border-green-500 hover:text-white hover:scale-105 ml-2"
+    className="flex-1 min-w-[120px] max-w-[170px] flex items-center justify-center px-2 py-2.5 rounded-lg font-medium text-xs sm:text-sm bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/20 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-emerald-500/40 hover:transform hover:-translate-y-0.5 active:shadow-sm"
     onClick={() => router.push('/Report/DetailedIncomeBreakdown')}
   >
-    Detailed Income Breakdown
+    <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+    <span className="whitespace-nowrap">Income Breakdown</span>
   </button>
 
   </div>
