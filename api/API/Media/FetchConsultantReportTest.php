@@ -25,50 +25,48 @@ if ($start_date && $end_date) {
         $queryBase .= "SELECT 
                         ROW_NUMBER() OVER (ORDER BY o.ConsultantName, o.Card, o.AdType) AS id, 
                         o.ConsultantName AS name, 
-                        c.ConsultantPlace AS place, 
                         o.Card AS rateCard, 
                         o.AdType AS rateType,
                         o.Commission AS price,
                         o.OrderNumber AS orderNumber,
                         o.ClientName AS clientName,
                         o.RateWiseOrderNumber AS rateWiseOrderNumber,
-                        o.ConsultantId
-                    FROM order_table o
-                    LEFT JOIN consultant_table c ON o.ConsultantId = c.CId
-                    WHERE o.OrderDate BETWEEN :startDate AND :endDate
-                        AND o.ConsultantName != ''
-                        AND o.OrderNumber > 0
-                        AND o.CancelFlag = 0
-                        AND o.Commission != 0
-                        AND o.IncentiveProcessedOn != '0000-00-00'
-                    GROUP BY o.OrderNumber
-                    ORDER BY name, rateCard, rateType;
-                    ";
+                        o.ConsultantId,
+                        c.ConsultantPlace
+                   FROM order_table o
+                   LEFT JOIN consultant_table c ON o.ConsultantId = c.CId
+                   WHERE o.OrderDate BETWEEN :startDate AND :endDate
+                     AND o.ConsultantName != ''
+                     AND o.OrderNumber > 0
+                     AND o.CancelFlag = 0
+                     AND o.Commission != 0
+                     AND o.IncentiveProcessedOn != '0000-00-00'
+                   GROUP BY o.OrderNumber
+                   ORDER BY name, rateCard, rateType;";
     } else {
         $queryBase .= "SELECT 
                         ROW_NUMBER() OVER (ORDER BY o.ConsultantName, o.Card, o.AdType) AS id, 
                         o.ConsultantName AS name, 
-                        c.ConsultantPlace AS place, 
                         o.Card AS rateCard, 
                         o.AdType AS rateType,
                         o.Commission AS price,
                         o.OrderNumber AS orderNumber,
                         o.ClientName AS clientName,
                         o.RateWiseOrderNumber AS rateWiseOrderNumber,
-                        o.ConsultantId
-                    FROM order_table o
-                    JOIN financial_transaction_table ftt ON o.OrderNumber = ftt.OrderNumber
-                    LEFT JOIN consultant_table c ON o.ConsultantId = c.CId
-                    WHERE o.OrderDate BETWEEN :startDate AND :endDate
-                        AND o.ConsultantName != ''
-                        AND o.OrderNumber > 0
-                        AND o.CancelFlag = 0
-                        AND o.Commission != 0
-                        AND o.IncentiveProcessedOn = '0000-00-00'
-                        AND ftt.ValidStatus = 'Valid'
-                    GROUP BY o.OrderNumber
-                    ORDER BY name, rateCard, rateType;
-                    ";
+                        o.ConsultantId,
+                        c.ConsultantPlace
+                   FROM order_table o
+                   JOIN financial_transaction_table ftt ON o.OrderNumber = ftt.OrderNumber
+                   LEFT JOIN consultant_table c ON o.ConsultantId = c.CId
+                   WHERE o.OrderDate BETWEEN :startDate AND :endDate
+                     AND o.ConsultantName != ''
+                     AND o.OrderNumber > 0
+                     AND o.CancelFlag = 0
+                     AND o.Commission != 0
+                     AND o.IncentiveProcessedOn = '0000-00-00'
+                     AND ftt.ValidStatus = 'Valid'
+                   GROUP BY o.OrderNumber
+                   ORDER BY name, rateCard, rateType;";
     }
 
     $stmt = $pdo->prepare($queryBase);
