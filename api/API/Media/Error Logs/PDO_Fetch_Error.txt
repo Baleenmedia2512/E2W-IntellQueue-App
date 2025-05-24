@@ -1,0 +1,119 @@
+Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'qt.NextFollowupDate' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.GSTPercent' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'qt.LeadDate' in 'field list'Error Fetching Quotes: Configuration for  not found.Error Fetching Quotes: Configuration for  not found.Error Fetching Quotes: Configuration for  not found.Error Fetching Quotes: Configuration for  not found.Error Fetching Quotes: Configuration for Baleen  not found.Error Fetching Quotes: Configuration for Baleen  not found.Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountwithoutGst, 
+            ct.Amount, 
+            ct.GS...' at line 16Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '  
+            ct.Units, 
+            ct.Amount, 
+            ct.GSTAmount, 
+...' at line 17Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '  
+            ct.Units, 
+            ct.Amount, 
+            ct.GSTAmount, 
+...' at line 17Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.Paid' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.Paid' in 'field list'Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '
+            ct.Units, 
+            qcm.NextFollowupDate,
+            qcm.Map...' at line 19Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '
+            ct.Units, 
+            qcm.NextFollowupDate,
+            qcm.Map...' at line 19Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.Valid_Status' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.Valid_Status' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.ValidStatus' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.ValidStatus' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.Valid' in 'field list'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ct.Valid' in 'field list'Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '-10' at line 45Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '-10' at line 45Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '-10' at line 45Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '-10' at line 45Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.Units,
+            ct.Bold, 
+            ct.SemiBold, 
+            ct.Tick,
+...' at line 14Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.Units,
+            ct.Bold, 
+            ct.SemiBold, 
+            ct.Tick,
+...' at line 14Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.Units,
+            ct.Bold, 
+            ct.SemiBold, 
+            ct.Tick,
+...' at line 14Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.Units,
+            ct.Bold, 
+            ct.SemiBold, 
+            ct.Tick,
+...' at line 14Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.Units,
+            ct.Bold, 
+            ct.SemiBold, 
+            ct.Tick,
+...' at line 14Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.Units,
+            ct.Bold, 
+            ct.SemiBold, 
+            ct.Tick,
+...' at line 14Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountWithoutGST, 
+            ct.Amount, 
+            ct.GS...' at line 26Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountWithoutGST, 
+            ct.Amount, 
+            ct.GS...' at line 26Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountWithoutGST, 
+            ct.Amount, 
+            ct.GS...' at line 26Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountWithoutGST, 
+            ct.Amount, 
+            ct.GS...' at line 26Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountWithoutGST, 
+            ct.Amount, 
+            ct.GS...' at line 26Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' 
+            ct.AmountWithoutGST, 
+            ct.Amount, 
+            ct.GS...' at line 26Error in DB Cart: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'QuoteID' in 'where clause'Error in DB Quotes: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.rateName' in 'field list'Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.`GST%`, 
+            c.`RateId`
+        FROM 
+            cart_table AS c 
+ ...' at line 8Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.`GST%`, 
+            c.`RateId`
+        FROM 
+            cart_table AS c 
+ ...' at line 8Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.`GST%`, 
+            c.`RateId`
+        FROM 
+            cart_table AS c 
+ ...' at line 8Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.`GST%`, 
+            c.`RateId`
+        FROM 
+            cart_table AS c 
+ ...' at line 8Error in DB Quotes: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.`GST%`, 
+            c.`RateId`
+        FROM 
+            cart_table AS c 
+ ...' at line 8

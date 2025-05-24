@@ -18,7 +18,7 @@ import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
-import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
+import { GetInsertOrUpdate, PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
@@ -944,7 +944,14 @@ const formatUnreachableTime = (timeStr) => {
       throw new Error(`Invalid serial number format from server ${nextSNoResponse.error}`);
     }
 
+    // Validate email if provided
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
     const payload = {
+      sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
       sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
       date: formData.date,
       time: formData.time,
@@ -958,6 +965,7 @@ const formatUnreachableTime = (timeStr) => {
       consultantNumber: formData.consultantNumber,
       dbCompanyName: UserCompanyName
     };
+
 
     const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
     try {
@@ -990,6 +998,20 @@ const formatUnreachableTime = (timeStr) => {
         alert(data.error || "Error adding record");
       }
     } catch (error) {
+      // ERROR CASE - Detailed error message
+      let errorMessage = error.message;
+    
+    // Handle specific error cases
+    if (error.message.includes('Network Error')) {
+      errorMessage = "Network error - Please check your internet connection";
+    } else if (error.message.includes('timeout')) {
+      errorMessage = "Request timeout - Please try again";
+    } else if (error.message.includes('Failed to get next ID')) {
+      errorMessage = "Couldn't generate a new ID - Please try again";
+    }
+    
+    alert(`Failed to save lead:\n${errorMessage}`);
+  }
       // ERROR CASE - Detailed error message
       let errorMessage = error.message;
     
@@ -1822,7 +1844,6 @@ const handleStatusClick = async(row) => {
       
     </div>
   );
-};
 
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
