@@ -1,0 +1,2 @@
+[2024-11-20 16:05:56] Error while inserting: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+[2024-11-20 16:10:24] Error while inserting: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'FileName' in 'field list'
