@@ -263,7 +263,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         });
 
         setAllClients(newMasterList);
-        console.log('[allClients] set in processAndCommitClientList:', newMasterList);
     };
 
     // Derived state for displayed clients based on selected equipment
@@ -295,25 +294,24 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
     const moveTile = async (fromDisplayedIndex, toDisplayedIndex) => {
         if (fromDisplayedIndex === toDisplayedIndex) return;
-        const itemsOfSelectedEquipment = allClients.filter(c => c.rateCard === selectedEquipment);
-        const otherItems = allClients.filter(c => c.rateCard !== selectedEquipment);
+        const masterCopy = [...allClients];
+        const itemsOfSelectedEquipment = masterCopy.filter(c => c.rateCard === selectedEquipment);
+        const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
+
+        // Sort by queueIndex to get the current order
+        itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
+        // Save the current queueIndex and status order
+        const prevOrder = itemsOfSelectedEquipment.map(c => ({ queueIndex: c.queueIndex, status: c.status }));
 
         // Remove the dragged item
         const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
         // Insert it at the new position
         itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
 
-        // Always reassign queueIndex and status for all items, starting from 1
+        // Assign queueIndex and status based on the previous order
         itemsOfSelectedEquipment.forEach((client, idx) => {
-            client.queueIndex = idx + 1;
-            if (idx === 0) {
-                // First position: In-Progress unless On-Hold
-                if (client.status !== "On-Hold") {
-                    client.status = "In-Progress";
-                }
-            } else {
-                client.status = "Waiting";
-            }
+            client.queueIndex = prevOrder[idx]?.queueIndex || (idx + 1);
+            client.status = prevOrder[idx]?.status || "Waiting";
         });
 
         // Build the new optimistic state
@@ -321,21 +319,21 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
         // Optimistically update UI
         setAllClients(newAllClients);
-        console.log('[allClients] set in moveTile (optimistic):', newAllClients);
-        // console.log("Optimistically updated clients:", newAllClients);
+        console.log("Optimistically updated clients:", newAllClients);
 
-        // Prepare new queue order for backend
+        // Prepare new queue order for backend (send both queueIndex and status)
         const queueOrder = itemsOfSelectedEquipment.map(client => ({
             id: client.id,
-            queueIndex: client.queueIndex
+            queueIndex: client.queueIndex,
+            status: client.status
         }));
-        // console.log("New queue order for backend:", queueOrder);
 
         // Call backend to update order
         await UpdateQueueOrder(companyName, selectedEquipment, queueOrder);
 
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
+        console.log("API Clients:", apiClients);
         // Only update UI if backend data differs from optimistic state (for selected rateCard only)
         const getQueue = (clients) =>
             clients
@@ -356,11 +354,12 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             return false;
         };
         if (isDifferent(backendQueue, optimisticQueue)) {
-            // console.log("Data mismatch, updating...");
+            console.log("Data mismatch, updating...");
             setAllClients(apiClients);
-            console.log('[allClients] set in moveTile (backend correction):', apiClients);
         }
     };
+
+    console.log('allClients', allClients)
 
     const modifyClientList = (action) => {
         let updatedAllClients = [...allClients];
@@ -385,7 +384,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('[allClients] set in closeToken:', apiClients);
     };
 
     const completeToken = async (displayedIndex) => {
@@ -394,7 +392,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('[allClients] set in completeToken:', apiClients);
     };
 
     const doneAndHold = async (displayedIndex) => {
@@ -403,7 +400,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('[allClients] set in doneAndHold:', apiClients);
     };
     
     const callNext = async (displayedIndex) => {
@@ -412,7 +408,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('[allClients] set in callNext:', apiClients);
     };
 
     const continueToken = async (displayedIndex) => {
@@ -421,7 +416,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('[allClients] set in continueToken:', apiClients);
     };
 
     const handleFilterChange = (status) => {
@@ -445,7 +439,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('[allClients] set in handleStartQueue:', apiClients);
         const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
         setQueueStarted(newQueueStarted);
     };
@@ -457,7 +450,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const undo = () => {};
     const redo = () => {};
 
-
+    // console.log(allClients);
 
     return (
         <DndProvider backend={HTML5Backend}>
@@ -644,9 +637,7 @@ export default function QueueSystem() {
         async function fetchInitialClients() {
             try {
                 const apiClients = await FetchQueueDashboardData();
-                console.log('[allClients] set in useEffect (initial mount):', apiClients);
                 setAllClients(apiClients);
-
                 // Generate equipment list from API data
                 const eqList = Array.from(new Set(apiClients.map(c => c.rateCard)));
                 setEquipmentList(eqList);
