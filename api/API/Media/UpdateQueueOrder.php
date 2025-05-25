@@ -30,25 +30,12 @@ try {
 
     // Now, update QueueIndex and Status for each item in the new order
     foreach ($queueOrder as $idx => $item) {
-        if (!isset($item['queueIndex'], $item['id'])) {
-            echo json_encode(['success' => false, 'message' => 'Each queue item must have id and queueIndex.']);
+        if (!isset($item['queueIndex'], $item['id'], $item['status'])) {
+            echo json_encode(['success' => false, 'message' => 'Each queue item must have id, queueIndex, and status.']);
             exit;
         }
-
-        // Determine new status: first item is In-Progress (unless On-Hold), others are Waiting
-        $newStatus = "";
-        // Check if this client is On-Hold
-        $stmtCheck = $pdo->prepare("SELECT Status FROM queue_table WHERE ID = ? AND RateCard = ?");
-        $stmtCheck->execute([$item['id'], $rateCard]);
-        $row = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-        if ($idx === 0 && $row && $row['Status'] !== 'On-Hold') {
-            $newStatus = "In-Progress";
-        } elseif ($row && $row['Status'] === 'On-Hold') {
-            $newStatus = "On-Hold";
-        }
-
         $stmt = $pdo->prepare("UPDATE queue_table SET QueueIndex = ?, Status = ? WHERE ID = ? AND RateCard = ?");
-        $stmt->execute([$item['queueIndex'], $newStatus, $item['id'], $rateCard]);
+        $stmt->execute([$item['queueIndex'], $item['status'], $item['id'], $rateCard]);
     }
 
     echo json_encode(['success' => true]);
