@@ -561,3 +561,31 @@ export const QueueDashboardAction = async (DBName, action, params = {}) => {
     });
     return response.data;
 };
+
+// Save a snapshot
+export const SaveQueueSnapshot = async (DBName, rateCard, snapshot) => {
+    return await api.post("SaveQueueSnapshot.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        JsonSnapshot: snapshot
+    });
+};
+
+// Get previous/next snapshot
+export const GetQueueSnapshot = async (DBName, rateCard, direction, currentId) => {
+    return await api.post("GetQueueSnapshot.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        direction,
+        currentId
+    });
+};
+
+// Restore a snapshot
+export const RestoreQueueSnapshot = async (DBName, rateCard, snapshot) => {
+    return await api.post("RestoreQueueSnapshot.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        JsonSnapshot: snapshot
+    });
+};

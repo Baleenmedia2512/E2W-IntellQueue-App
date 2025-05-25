@@ -12,6 +12,7 @@ import { cartReducer } from "./features/cart-slice";
 import { reportReducer } from "./features/report-slice";
 import { filterReducer } from "./features/lead-filter-slice";
 import { queueReducer } from "./features/queue-slice";
+import { queueDashboardReducer } from "./features/queue-dashboard-slice";
 
 const createNoopStorage = () => {
   return {
@@ -98,6 +99,12 @@ const queuePersistConfig = {
   whitelist: ["phoneNumber", "language", "queueStatus"], // Add queueStatus to persist
 };
 
+const queueDashboardPersistConfig = {
+  key: "queueDashboard",
+  storage: storage,
+  whitelist: ["historyId"],
+};
+
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedClientReducer = persistReducer(clientPersistConfig, clientReducer);
 const persistedQuoteReducer = persistReducer(quotePersistConfig, quoteReducer);
@@ -108,6 +115,7 @@ const persistedEmployeeReducer = persistReducer(employeePersistConfig, employeeR
 const persistedReportReducer = persistReducer(reportPersistConfig, reportReducer);
 const persistedFilterReducer = persistReducer(filterPersistConfig, filterReducer);
 const persistedQueueReducer = persistReducer(queuePersistConfig, queueReducer);
+const persistedQueueDashboardReducer = persistReducer(queueDashboardPersistConfig, queueDashboardReducer);
 
 const rootReducer = combineReducers({
   authSlice: persistedAuthReducer,
@@ -120,6 +128,7 @@ const rootReducer = combineReducers({
   reportSlice: persistedReportReducer,
   filterSlice: persistedFilterReducer,
   queueSlice: persistedQueueReducer,
+  queueDashboardSlice: persistedQueueDashboardReducer,
 });
 
 export const store = configureStore({
