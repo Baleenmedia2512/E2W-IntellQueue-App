@@ -8,7 +8,7 @@ import { FetchQueueDashboardData, QueueDashboardAction, UpdateQueueOrder, SaveQu
 import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
 import { setHistoryId } from '@/redux/features/queue-dashboard-slice';
- //latest changes here
+
 const ItemType = "CLIENT";
 // --- Helper: Equipment Icon ---
 function EquipmentIcon({ equipmentName }) {
