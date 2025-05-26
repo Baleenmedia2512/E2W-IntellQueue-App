@@ -526,7 +526,7 @@ export const checkAndRegisterQueue = async (DBName, ClientContact, ClientName) =
     }
 };
 
-export const FetchQueueDashboardData = async (DBName = 'Baleen Test') => {
+export const FetchQueueDashboardData = async (DBName) => {
     try {
         const response = await api.get("FetchQueueDashboardData.php", {
             headers: { 'Content-Type': 'application/json; charset=utf-8' },

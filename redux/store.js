@@ -102,7 +102,7 @@ const queuePersistConfig = {
 const queueDashboardPersistConfig = {
   key: "queueDashboard",
   storage: storage,
-  whitelist: ["historyId"],
+  whitelist: ["historyId", "historyStack", "currentHistoryIndex"],
 };
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);

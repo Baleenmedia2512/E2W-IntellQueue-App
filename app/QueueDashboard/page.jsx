@@ -220,11 +220,32 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
 // --- Queue Dashboard Component ---
 function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackToSelection, queueStarted, setQueueStarted }) {
     const companyName = useAppSelector(state => state.authSlice.companyName);
-    const dispatch = useDispatch();
+    const dispatch = useDispatch();    
     const historyId = useAppSelector(state => state.queueDashboardSlice.historyId);
+    const historyStack = useAppSelector(state => state.queueDashboardSlice.historyStack);
+    const currentHistoryIndex = useAppSelector(state => state.queueDashboardSlice.currentHistoryIndex);
     const [filter, setFilter] = useState("All");
-    const [animationDirection, setAnimationDirection] = useState("");
-    const [isRestoring, setIsRestoring] = useState(false); // Prevent double restore
+    const [animationDirection, setAnimationDirection] = useState("");    
+    const [isRestoring, setIsRestoring] = useState(false);
+
+    console.log("historyStack", historyStack);
+
+    // Save a snapshot to history
+    const saveSnapshot = async (snapshot) => {
+        console.log("saving snapshot", snapshot);
+        const res = await SaveQueueSnapshot(companyName, selectedEquipment, snapshot);
+        console.log("[History] Snapshot saved:", res.data);
+        if (res.data && res.data.success) {
+            // Get the latest history ID and update the stack
+            const latestRes = await GetQueueSnapshot(companyName, selectedEquipment, "undo", null);
+            if (latestRes.data && latestRes.data.success && latestRes.data.id) {
+                // Use the updateHistoryStack action which handles the stack properly
+                dispatch({ type: 'queueDashboard/updateHistoryStack', payload: latestRes.data.id });
+                dispatch(setHistoryId(latestRes.data.id));
+                console.log("[History] Updated history with ID:", latestRes.data.id);
+            }
+        }
+    };
 
     // This function processes the master client list and applies status rules.
     // Rule: One "In-Progress" client at the head of each equipment's queue, unless "On-Hold".
@@ -315,21 +336,29 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     };
     console.log('all clients', allClients)
 
-    // Save a snapshot to history
-    const saveSnapshot = async (snapshot) => {
-        const res = await SaveQueueSnapshot(companyName, selectedEquipment, snapshot);
-        console.log("Snapshot saved:", res.data);
-        // No need to update historyId here; do it after the change is confirmed
-    };
-
-    // Helper to fetch and update latest historyId after a change
-    const updateLatestHistoryId = async () => {
-        const res = await GetQueueSnapshot(companyName, selectedEquipment, "undo", null);
-        if (res.data && res.data.success && res.data.id) {
-            dispatch(setHistoryId(res.data.id));
-        } else {
-            dispatch(setHistoryId(null));
-        }
+    const saveSnapshotWithUpdatedState = async () => {
+        // Get latest state
+        const apiClients = await FetchQueueDashboardData(companyName);
+        // Update local state
+        setAllClients(apiClients);
+        // Wait for 300ms to ensure queue table update is complete
+        await new Promise(resolve => setTimeout(resolve, 300));
+        // Build the snapshot from the latest apiClients, not from allClients
+        const snapshot = apiClients
+            .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+            .sort((a, b) => a.queueIndex - b.queueIndex)
+            .map(c => ({
+                id: c.id,
+                queueIndex: c.queueIndex,
+                entryDateTime: c.entryDateTime,
+                name: c.name,
+                contact: c.contact,
+                rateCard: c.rateCard,
+                rateType: c.rateType,
+                status: c.status,
+                remarks: c.remarks
+            }));
+        await saveSnapshot(snapshot);
     };
 
     // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
@@ -360,22 +389,10 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
         // Optimistically update UI
         setAllClients(newAllClients);
-        await saveSnapshot(
-            newAllClients
-                .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
-                .sort((a, b) => a.queueIndex - b.queueIndex)
-                .map(c => ({
-                    id: c.id,
-                    queueIndex: c.queueIndex,
-                    entryDateTime: c.entryDateTime,
-                    name: c.name,
-                    contact: c.contact,
-                    rateCard: c.rateCard,
-                    rateType: c.rateType,
-                    status: c.status,
-                    remarks: c.remarks
-                }))
-        );
+        
+        // Save snapshot for history
+        await saveSnapshot(getCurrentSnapshot());
+
         // Call backend to update order
         const queueOrder = itemsOfSelectedEquipment.map(client => ({
             id: client.id,
@@ -387,7 +404,8 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
         // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
-        // Only update UI if backend data differs from optimistic state (for selected rateCard only)
+        
+        // Only update UI if backend data differs from optimistic state
         const getQueue = (clients) =>
             clients
                 .filter(c => c.rateCard === selectedEquipment)
@@ -406,12 +424,11 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             }
             return false;
         };
+
         if (isDifferent(backendQueue, optimisticQueue)) {
             console.log("Data mismatch, updating...");
             setAllClients(apiClients);
         }
-        // After move, update latest historyId
-        await updateLatestHistoryId();
     };
 
 
@@ -430,103 +447,104 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             operation(newAllClients, clientGlobalIndex, clientIdToActOn);
         }
         processAndCommitClientList(newAllClients);
-    };
-
-    const closeToken = async (displayedIndex) => {
+    };    
+      const closeToken = async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'closeToken', { JsonClientId: clientId });
-        const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
-        await saveSnapshot(getCurrentSnapshot());
-        await updateLatestHistoryId();
+        await saveSnapshotWithUpdatedState();
     };
 
     const completeToken = async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'completeToken', { JsonClientId: clientId });
-        const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
-        await saveSnapshot(getCurrentSnapshot());
-        await updateLatestHistoryId();
+        await saveSnapshotWithUpdatedState();
     };
 
     const doneAndHold = async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'doneAndHold', { JsonClientId: clientId });
-        const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
-        await saveSnapshot(getCurrentSnapshot());
-        await updateLatestHistoryId();
+        await saveSnapshotWithUpdatedState();
     };
+
     const callNext = async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'callNext', { JsonClientId: clientId });
-        const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
-        await saveSnapshot(getCurrentSnapshot());
-        await updateLatestHistoryId();
+        await saveSnapshotWithUpdatedState();
     };
+
     const continueToken = async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'continueToken', { JsonClientId: clientId });
-        const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
-        await saveSnapshot(getCurrentSnapshot());
-        await updateLatestHistoryId();
+        await saveSnapshotWithUpdatedState();
     };
-    const handleStartQueue = async () => {
+      const handleStartQueue = async () => {
         const firstClient = displayedClients[0];
         if (!firstClient) return;
         await QueueDashboardAction(companyName, 'startQueue', { JsonClientId: firstClient.id });
-        const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
-        const newQueueStarted = { ...queueStarted, [selectedEquipment]: true };
-        setQueueStarted(newQueueStarted);
-        await saveSnapshot(getCurrentSnapshot());
-        await updateLatestHistoryId();
+        await saveSnapshotWithUpdatedState();
     };
+
 
     // Undo/Redo logic
     const undo = async () => {
-        if (isRestoring) return;
-        console.log("[UNDO] Undo button clicked. Current historyId:", historyId);
+        if (isRestoring || currentHistoryIndex <= 0) return;
+        console.log("[UNDO] Undo button clicked. Current index:", currentHistoryIndex);
         setIsRestoring(true);
-        const res = await GetQueueSnapshot(companyName, selectedEquipment, "undo", historyId);
+
+        // Get the target history ID from the stack
+        const targetId = historyStack[currentHistoryIndex - 1];
+        console.log("[UNDO] Getting snapshot for ID:", targetId);
+
+        // Note: direction is no longer needed since we're fetching by exact ID
+        const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
         console.log("[UNDO] GetQueueSnapshot response:", res);
+        
         if (res.data && res.data.success) {
-            console.log("[UNDO] Undo snapshot:", res.data.snapshot);
+            console.log("[UNDO] Restoring snapshot:", res.data.snapshot);
             const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             console.log("[UNDO] RestoreQueueSnapshot result:", resQ.data);
-            dispatch(setHistoryId(res.data.id));
+            dispatch(setHistoryId(targetId));
+            dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex - 1 });
+            
             const apiClients = await FetchQueueDashboardData(companyName);
             setAllClients(apiClients);
         } else {
-            console.warn("[UNDO] No snapshot to undo or error in response:", res);
-        }
-        setIsRestoring(false);
-    };
-    const redo = async () => {
-        if (isRestoring) return;
-        console.log("[REDO] Redo button clicked. Current historyId:", historyId);
-        setIsRestoring(true);
-        const res = await GetQueueSnapshot(companyName, selectedEquipment, "redo", historyId);
-        console.log("[REDO] GetQueueSnapshot response:", res);
-        if (res.data && res.data.success) {
-            console.log("[REDO] Redo snapshot:", res.data.snapshot);
-            const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
-            console.log("[REDO] RestoreQueueSnapshot result:", resQ.data);
-            dispatch(setHistoryId(res.data.id));
-            const apiClients = await FetchQueueDashboardData(companyName);
-            setAllClients(apiClients);
-        } else {
-            console.warn("[REDO] No snapshot to redo or error in response:", res);
+            console.warn("[UNDO] Error restoring snapshot:", res);
         }
         setIsRestoring(false);
     };
 
-    // Disable undo/redo if no historyId
-    const undoDisabled = !historyId;
-    const redoDisabled = !historyId;
+    const redo = async () => {
+        if (isRestoring || currentHistoryIndex >= historyStack.length - 1) return;
+        console.log("[REDO] Redo button clicked. Current index:", currentHistoryIndex);
+        setIsRestoring(true);
+
+        // Get the target history ID from the stack
+        const targetId = historyStack[currentHistoryIndex + 1];
+        console.log("[REDO] Getting snapshot for ID:", targetId);
+
+        // Note: direction is no longer needed since we're fetching by exact ID
+        const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
+        console.log("[REDO] GetQueueSnapshot response:", res);
+
+        if (res.data && res.data.success) {
+            console.log("[REDO] Restoring snapshot:", res.data.snapshot);
+            const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
+            console.log("[REDO] RestoreQueueSnapshot result:", resQ.data);
+            dispatch(setHistoryId(targetId));
+            dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex + 1 });
+            
+            const apiClients = await FetchQueueDashboardData(companyName);
+            setAllClients(apiClients);
+        } else {
+            console.warn("[REDO] Error restoring snapshot:", res);
+        }
+        setIsRestoring(false);
+    };
+
+    // Update undo/redo button disabled states
+    const undoDisabled = currentHistoryIndex <= 0;
+    const redoDisabled = currentHistoryIndex >= historyStack.length - 1;
 
     const handleFilterChange = (status) => {
         const currentIndex = statuses.indexOf(filter);
@@ -639,6 +657,7 @@ function useEquipmentStatus(equipmentList, allClients) {
         });
         return equipmentCounts;
     });
+
     useEffect(() => {
         const equipmentCounts = {};
         equipmentList.forEach(eq => {
@@ -719,53 +738,97 @@ function RateCardSelectionPage({ onSelectRateCard, equipmentList, allClients }) 
 
 // --- Main Application Component ---
 export default function QueueSystem() {
-    const [selectedEquipment, setSelectedEquipment] = useState(null);
+    const [selectedEquipment, setSelectedEquipment] = useState(() => {
+        // Try to get the saved equipment from localStorage on initial load
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('selectedEquipment');
+        }
+        return null;
+    });
     const [allClients, setAllClients] = useState([]);
     const [equipmentList, setEquipmentList] = useState([]);
     const [isInitialized, setIsInitialized] = useState(false);
+    const [hasInitializedHistory, setHasInitializedHistory] = useState(false);
     const [queueStarted, setQueueStarted] = useState({});
+    const dispatch = useDispatch();
+    const companyName = useAppSelector(state => state.authSlice.companyName);
 
-    // On mount, fetch initial data from backend
     useEffect(() => {
         async function fetchInitialClientsAndHistory() {
             try {
-                const apiClients = await FetchQueueDashboardData();
+                const apiClients = await FetchQueueDashboardData(companyName);
                 setAllClients(apiClients);
                 // Generate equipment list from API data
                 const eqList = Array.from(new Set(apiClients.map(c => c.rateCard)));
                 setEquipmentList(eqList);
-                // Check for queue history for the selected equipment (or first equipment if not selected)
-                const initialEquipment = eqList[0];
-                if (initialEquipment) {
-                    // Fetch the latest snapshot for this equipment
-                    const res = await GetQueueSnapshot(
-                        useAppSelector(state => state.authSlice.companyName),
-                        initialEquipment,
-                        "undo",
-                        null
-                    );
-                    if (res.data && res.data.success && res.data.id) {
-                        // Set historyId in redux
-                        dispatch(setHistoryId(res.data.id));
-                    } else {
-                        // No history, set to null
-                        dispatch(setHistoryId(null));
+
+                // Only save initial snapshot if history hasn't been initialized and we have a selected equipment
+                if (!hasInitializedHistory && selectedEquipment) {
+                    console.log("[History] Initializing first snapshot");
+                    const initialSnapshot = apiClients
+                        .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+                        .sort((a, b) => a.queueIndex - b.queueIndex)
+                        .map(c => ({
+                            id: c.id,
+                            queueIndex: c.queueIndex,
+                            entryDateTime: c.entryDateTime,
+                            name: c.name,
+                            contact: c.contact,
+                            rateCard: c.rateCard,
+                            rateType: c.rateType,
+                            status: c.status,
+                            remarks: c.remarks
+                        }));
+
+                    if (!hasInitializedHistory && selectedEquipment && historyStack.length === 0) {
+                    const res = await SaveQueueSnapshot(companyName, selectedEquipment, initialSnapshot);
+                    if (res.data && res.data.success) {
+                        const latestRes = await GetQueueSnapshot(companyName, selectedEquipment, "undo", null);                        
+                        if (latestRes.data?.success && latestRes.data.id) {
+                            dispatch({ type: 'queueDashboard/setHistoryStack', payload: [latestRes.data.id] });
+                            dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: 0 });
+                            dispatch(setHistoryId(latestRes.data.id));
+                            setHasInitializedHistory(true);
+                        }
                     }
                 }
+            }
                 setIsInitialized(true);
             } catch (error) {
+                console.error("[History] Error initializing:", error);
                 setIsInitialized(true);
             }
         }
+        
         fetchInitialClientsAndHistory();
-    }, []);
+    }, [selectedEquipment, companyName, hasInitializedHistory]);
+
+    // Handler for equipment selection that resets history
+    const handleEquipmentSelection = (equipment) => {
+        // // Reset history state first
+        // dispatch({ type: 'queueDashboard/resetHistory' });
+        // Reset history initialization flag
+        // setHasInitializedHistory(false);
+        // Save the selected equipment to localStorage
+        localStorage.setItem('selectedEquipment', equipment);
+        // Then set the selected equipment
+        setSelectedEquipment(equipment);
+    };
+
+    // Handler for back button that clears selected equipment
+    const handleBackToSelection = () => {
+        // Clear from localStorage
+        localStorage.removeItem('selectedEquipment');
+        // Clear from state
+        setSelectedEquipment(null);
+    };    // We don't need this effect anymore since initialization is handled in QueueSystem component
 
     if (!isInitialized) {
         return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-xl">Loading Dashboard...</p></div>;
     }
 
     if (!selectedEquipment) {
-        return <RateCardSelectionPage onSelectRateCard={setSelectedEquipment} equipmentList={equipmentList} allClients={allClients} />;
+        return <RateCardSelectionPage onSelectRateCard={handleEquipmentSelection} equipmentList={equipmentList} allClients={allClients} />;
     }
 
     return (
@@ -773,7 +836,7 @@ export default function QueueSystem() {
             selectedEquipment={selectedEquipment}
             allClients={allClients}
             setAllClients={setAllClients}
-            onBackToSelection={() => setSelectedEquipment(null)}
+            onBackToSelection={handleBackToSelection}
             queueStarted={queueStarted}
             setQueueStarted={setQueueStarted}
         />

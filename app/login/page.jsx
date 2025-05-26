@@ -119,6 +119,7 @@ const handleLogin = (event) => {
                     dispatch(resetQuotesData());
                     dispatch(resetOrderData());
                     dispatch(resetDateRange());
+                    dispatch({ type: 'queueDashboard/resetHistory' })
                     sessionStorage.removeItem("unitPrices");
                     sessionStorage.clear();
                     localStorage.clear();

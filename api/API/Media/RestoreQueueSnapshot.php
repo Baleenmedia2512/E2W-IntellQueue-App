@@ -26,7 +26,7 @@ try {
       try {
 
                 // If no row updated, try insert
-                $stmt = $pdo->prepare("INSERT INTO queue_table (ID, QueueIndex, EntryDateTime, ClientName, ClientContact, RateCard, RateType, Status, Remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO queue_table (QueueIndex, EntryDateTime, ClientName, ClientContact, RateCard, RateType, Status, Remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
                     $client['queueIndex'],
                     $client['entryDateTime'],
