@@ -53,6 +53,43 @@ export default function WaitingScreen() {
         router.push("/QueueSystem/ThankYouScreen");
         return null;
     }
+    if (queueStatus === "Remote") {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">
+                <div className="w-full max-w-sm md:max-w-md lg:bg-white lg:rounded-2xl lg:shadow lg:p-8 flex flex-col items-center text-center">
+                  
+                    <div className="border-2 border-blue-500 rounded-xl px-6 py-5 mb-6 bg-blue-50">
+                    <p className="text-blue-600 font-semibold text-4xl">
+                        {waitingTime === null || waitingTime === undefined ? "--" : waitingTime}
+                    </p>
+                    <p className="text-blue-500 text-xl">
+                        {language === "en" ? "Mins" : "நிமிடங்கள்"}
+                    </p>
+                </div>
+                <p className="text-gray-700 font-medium text-2xl mb-6">
+                    {language === "en" ? "Approx. Waiting Time" : "தற்காலிக காத்திருப்பு நேரம்"}
+                </p>
+                    <div className="my-8">
+                        <img src="/images/WaitingImage.png" alt="Waiting" className="w-48 h-48 object-contain opacity-80" />
+                    </div>
+                    <button
+                        className="mt-4 flex items-center justify-center px-6 py-3 rounded-full bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all text-lg gap-2"
+                        onClick={() => window.open('tel:+91-7010198963', '_self')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15 .621 0 1.125-.504 1.125-1.125v-3.375a1.125 1.125 0 0 0-1.125-1.125c-1.636 0-3.21-.26-4.687-.75a1.125 1.125 0 0 0-1.125.27l-2.25 2.25a12.042 12.042 0 0 1-5.25-5.25l2.25-2.25a1.125 1.125 0 0 0 .27-1.125c-.49-1.477-.75-3.051-.75-4.687A1.125 1.125 0 0 0 5.25 2.25H1.875C1.254 2.25.75 2.754.75 3.375z" />
+                        </svg>
+                        {language === "en" ? "Call Reception" : "கவுண்டரை அழைக்கவும்"}
+                    </button>
+                    <p className="text-gray-500 text-sm mt-6">
+                        {language === "en"
+                            ? "You are a remote user. You can view your estimated waiting time, but you are not in the queue until you call the clinic."
+                            : "நீங்கள் தற்காலிக பயனர். உங்கள் மதிப்பிடப்பட்ட காத்திருப்பு நேரத்தை காணலாம், ஆனால் வரிசையில் சேர கிளினிக்கிற்கு அழைக்க வேண்டும்."}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">

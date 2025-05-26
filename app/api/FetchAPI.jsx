@@ -589,3 +589,31 @@ export const RestoreQueueSnapshot = async (DBName, rateCard, snapshot) => {
         JsonSnapshot: snapshot
     });
 };
+
+export const AddRemoteQueueUser = async (DBName, ClientContact, ClientName, RateCard) => {
+    console.log(DBName, ClientContact, ClientName, RateCard); // Debugging log to check parameters
+    try {
+        const response = await api.post(
+            "AddRemoteQueueUser.php",
+            {
+                JsonDBName: DBName,
+                JsonClientContact: ClientContact,
+                JsonClientName: ClientName,
+                JsonRateCard: RateCard, // Ensure RateCard is defined in your context
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",  // Set content type to JSON
+                },
+            }
+        );
+        console.log("Remote queue user added successfully:", response.data); // Show response data
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+        }
+        throw error;
+    }
+};
