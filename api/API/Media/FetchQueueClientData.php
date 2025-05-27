@@ -58,7 +58,7 @@ try {
 
     // Fetch today's queue with eligible statuses
     $queueQuery = "SELECT QueueIndex, ClientContact, EntryDateTime, Status FROM queue_table 
-                   WHERE RateCard = ? AND DATE(EntryDateTime) = ? AND Status IN ('Waiting', 'In-Progress', 'On-Hold', 'Remote')";
+                   WHERE RateCard = ? AND DATE(EntryDateTime) = ? AND Status IN ('Waiting', 'In-Progress', 'On-Hold', 'Remote', 'Completed')";
     $queueStmt = $pdo->prepare($queueQuery);
     $queueStmt->execute([$rateCard, $currentDate]);
     $queue = $queueStmt->fetchAll(PDO::FETCH_ASSOC);
