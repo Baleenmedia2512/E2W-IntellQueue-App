@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
@@ -24,11 +24,11 @@ import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
 import { useRouter } from "next/navigation";
-// import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
 import { useDispatch } from "react-redux";
 import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 import { GetCRUD } from "./api/fetch-data";
 
+// Helper functions at the top level
 export const statusColors = {
   New: "bg-green-200 text-green-800",
   Unreachable: "bg-red-200 text-red-800",
@@ -74,6 +74,7 @@ const parseFollowupDate = (dateStr) => {
   return new Date(2000 + parseInt(year, 10), monthIndex, parseInt(day, 10));
 };
 
+// Main EventCards component
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1029,39 +1030,37 @@ const formatUnreachableTime = (timeStr) => {
 };
   
 const handleStatusClick = async(row) => {
-  setShowModal(true);
+    setShowModal(true);
 
-  // Set followup date and time if available
-  if (row.FollowupDate !== "No Followup Date") {
-    console.log("Followup date and time is updated: " + row.FollowupDate + row.FollowupTime)
-    setFollowupDate(row.FollowupDate);
-    setFollowupTime(row.FollowupTime);
-  }else{
-    console.log("Followup date time is skipped " + row.FollowupDate)
-  }
+    // Set followup date and time if available
+    if (row.FollowupDate !== "No Followup Date") {
+      console.log("Followup date and time is updated: " + row.FollowupDate + row.FollowupTime)
+      setFollowupDate(row.FollowupDate);
+      setFollowupTime(row.FollowupTime);
+    }else{
+      console.log("Followup date time is skipped " + row.FollowupDate)
+    }
 
-  // Update the current call information
-  setCurrentCall({
-    phone: row.Phone,
-    name: row.Name,
-    sNo: row.SNo,
-    Platform: row.Platform,
-    Enquiry: row.Enquiry,
-    LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
-    quoteSent: row.QuoteSent,
-    rowData: row,
-  });
+    // Update the current call information
+    setCurrentCall({
+      phone: row.Phone,
+      name: row.Name,
+      sNo: row.SNo,
+      Platform: row.Platform,
+      Enquiry: row.Enquiry,
+      LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
+      quoteSent: row.QuoteSent,
+      rowData: row,
+    });
 
-  // Set various status and remarks values
-  
-  setRemarks(row.Remarks);
-  setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
-  setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
-  setSelectedStatus(row.Status);
-};
+    // Set various status and remarks values
+    setRemarks(row.Remarks);
+    setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
+    setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+    setSelectedStatus(row.Status);
+  };
 
   return (
-
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
@@ -1773,19 +1772,18 @@ const handleStatusClick = async(row) => {
               </div> 
             }
             
-            {/* Remarks */}
-            {!followupOnly &&
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Remarks</label>
-              <textarea
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                className="w-full border border-gray-500 rounded-lg p-2"
-                rows={3}
-                onFocus={e => e.target.select()}
-              />
-            </div>
-            }
+            {/* Remarks */}            {!followupOnly && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Remarks</label>
+                <textarea
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  className="w-full border border-gray-500 rounded-lg p-2"
+                  rows={3}
+                  onFocus={e => e.target.select()}
+                />
+              </div>
+            )}
             {/* Lead Status Buttons */}
             {selectedStatus === "Call Followup" && (
             <div className="mb-4 flex justify-center gap-4">
@@ -1943,7 +1941,7 @@ export default function Page({ params, searchParams }) {
 
   return (
     <article>
-      <EventCards params = {params} searchParams = {searchParams}/>
+      <EventCards params={params} searchParams={searchParams}/>
     </article>
   );
 }
