@@ -64,7 +64,7 @@ try {
     $queue = $queueStmt->fetchAll(PDO::FETCH_ASSOC);
 
     $totalOrders = count($queue);
-    $walkinStatuses = ['Waiting', 'In-Progress', 'On-Hold'];
+    $walkinStatuses = ['Waiting', 'In-Progress', 'On-Hold', 'Completed'];
     $remoteStatus = 'Remote';
 
     // Separate walk-in and remote queues

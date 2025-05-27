@@ -56,7 +56,7 @@ console.log("queueStatus", queueStatus);
                     <img src="/GS/GSTitleMidLogo600x200.png" alt="Grace Scans Logo" className="w-40 h-auto object-contain" />
                 </div>
                 <div className="mb-4">
-                    <img src="/images/Thankyou.png" alt="Thank you" className="w-64 h-auto object-contain" />
+                    <img src="/images/ThankYou.png" alt="Thank you" className="w-64 h-auto object-contain" />
                 </div>
                 <p className="text-gray-600 text-base mb-6">
                     {language === "en"
