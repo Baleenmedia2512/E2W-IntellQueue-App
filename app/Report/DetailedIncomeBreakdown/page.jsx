@@ -255,14 +255,22 @@ export default function DetailedIncomeBreakdown() {
                               <div className="text-sm font-medium text-gray-700">
                                 R.Order #{order.rateWiseOrderNumber}
                               </div>
+                              
                               {order.otherPayments?.some(p => p.amount > 0) && (
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-gray-500 mt-2">
+                                  <div className="text-xs font-medium text-gray-500 mb-2">Other Payments</div>
                                   {order.otherPayments
                                     .filter(p => p.amount > 0)
                                     .map((p, i) => (
-                                      <div key={i} className="flex items-center gap-1">
-                                        <span>{p.mode}:</span>
-                                        <span className="text-emerald-600">₹{p.amount.toLocaleString('en-IN')}</span>
+                                      // <div key={i} className="flex items-center gap-1">
+                                      //   <span>{p.mode}:</span>
+                                      //   <span className="text-emerald-600">₹{p.amount.toLocaleString('en-IN')}</span>
+                                      // </div>
+                                      <div key={i} className="flex items-center gap-1 px-3 py-1.5 bg-white rounded-full border-gray-100 border max-w-[100px] whitespace-nowrap overflow-hidden text-ellipsis">
+                                        <span className="text-xs font-medium text-gray-700">{p.mode}:</span>
+                                        <span className="text-xs text-emerald-600 font-medium">
+                                          ₹{p.amount.toLocaleString('en-IN')}
+                                        </span>
                                       </div>
                                     ))}
                                 </div>
@@ -275,7 +283,7 @@ export default function DetailedIncomeBreakdown() {
                                 {order.rateCard}
                               </div>
                               {order.type !== 'N/A' && (
-                                <div className="text-xs text-gray-600">{order.type}</div>
+                                <div className="text-xs text-gray-600 mt-2">{order.type}</div>
                               )}
                             </div>
                           </div>
