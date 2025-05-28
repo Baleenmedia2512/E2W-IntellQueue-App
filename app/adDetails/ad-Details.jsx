@@ -58,6 +58,7 @@ const AdDetailsPage = () => {
     isEditMode: isQuoteEditMode,
     editIndex,
     editQuoteNumber,
+    validityDate: ValidityDate,
     isNewCartOnEdit,
     checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
@@ -104,11 +105,11 @@ const AdDetailsPage = () => {
   ];
    // Filter data and extract relevant item
    const leadDay = datas.ratesData?.find(item => Number(item.rateId) === Number(rateId)) || {};
-
+  // console.log(ValidityDate)
    // Extract or default values from leadDay
    const minimumCampaignDuration = leadDay['CampaignDuration(in Days)'] || 1;
    const campaignDurationVisibility = leadDay.campaignDurationVisibility || 0;
-   const ValidityDate = leadDay.ValidityDate || 0;
+  //  const ValidityDate = leadDay.ValidityDate || 0;
 
    // Calculate base cost
 let baseCost = (unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration);
@@ -147,7 +148,7 @@ const basePrice = baseCost + parseInt(margin);
     try {
       const rateData = await FetchSpecificRateData(companyName, rateId);
       const firstRate = rateData[0];
-
+      console.log(firstRate, "First Rate Data");
       // Update quote data in Redux
       dispatch(
         setQuotesData({
@@ -256,10 +257,11 @@ const basePrice = baseCost + parseInt(margin);
       }
       
       const hasChecked =
-        isChecked.bold === true ||
-        isChecked.semibold === true ||
-        isChecked.tick === true ||  
-        isChecked.color === true;
+  isChecked &&
+  (isChecked.bold === true ||
+    isChecked.semibold === true ||
+    isChecked.tick === true ||  
+    isChecked.color === true);
       
       if(hasChecked){
         setChecked(isChecked)
@@ -719,7 +721,7 @@ const items = [
       JsonBold: checked.bold ? 1 : 0,
       JsonSemibold: checked.semibold ? 1 : 0,
       JsonTick: checked.tick ? 1 : 0,
-      JsonColor: checked.color ? 1 : 0,
+      JsonColor: checked.color ? checked.colorPercentage : 0,
       JsonAmountWithoutGST: basePrice,
       JsonAmount: (basePrice * (1 + rateGST / 100)).toFixed(2),
       JsonGSTAmount: ((rateGST / 100) * basePrice).toFixed(2),

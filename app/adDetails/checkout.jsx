@@ -108,7 +108,7 @@ const CheckoutPage = () => {
   const month = months[inputDate.getMonth()]; // Get month abbreviation from the array
   const year = inputDate.getFullYear();
 
-  // const formattedDate = `${day}-${month}-${year}`;
+  const formattedDate = `${day}-${month}-${year}`;
 
   const routers = useRouter();
 

@@ -16,7 +16,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const minDate = new Date(Math.min(...validityDaysArray));
 
     // Extract year, month, and day from the minimum date
-    const year = minDate.getFullYear();
+    const year = minDate.getFullYear(); 
     const month = monthNames[minDate.getMonth()]; // Get month abbreviation
     const day = String(minDate.getDate()).padStart(2, '0');
 
@@ -88,8 +88,9 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const proposedMonth = months[today.getMonth()];
     const proposedYear = today.getFullYear();
     const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
+    
 
-
+ 
     textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
     xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
     pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 165)
@@ -211,7 +212,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     const hasPosition = items.some(item => item.position && item.position !== "");
     const isNewspaper = items.some(item => item.adMedium === 'Newspaper');
     const hasRemarks = items.some(item => item.remarks && item.remarks !== "NA");
-    const hasColor = items.some(item => (item.color && parseInt(item.colorPercentage) > -1))
+    const hasColor = items.some(item => (item.color > -1))
     const hasChecked = items.some(
       (item) =>
         (item.bold && parseInt(item.boldPercentage) > -1) ||
@@ -258,7 +259,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     
       // Build Color or B/W column (if newspaper)
       const colorOrBW = isNewspaper
-        ? (hasColor ? `Color(${item.colorPercentage}%)` : 'B/W')
+        ? (hasColor ? `Color(${item.color}%)` : 'B/W')
         : '';
     
       // Build Highlights column
@@ -338,7 +339,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     };
     
     if (isNewspaper) {
-      columnWidths["Color or B/W"] = 45;
+      columnWidths["Color or B/W"] = 65;
     }
     if (hasChecked) {
       columnWidths["Highlights"] = 45;
