@@ -89,7 +89,7 @@ const Report = () => {
   const [invoiceData, setInvoiceData] = useState([]);
   const [isDIRSentToday, setIsDIRSentToday] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
-  const [distinctOrderValueStats, setDistinctOrderValueStats] = useState({});
+  // const [distinctOrderValueStats, setDistinctOrderValueStats] = useState({});
 
   const checkIfDIRSentToday = async (companyName) => {
     try {
@@ -1623,50 +1623,50 @@ const handleExport = async () => {
     applyFilters(); 
   }, [filterModel, orderDetails]); // Reapply filters on change
 
-  const calculateDistinctOrderValueStats = () => {
-    const stats = {};
+  // const calculateDistinctOrderValueStats = () => {
+  //   const stats = {};
   
-    // Filter out rows where RateWiseOrderNumber <= 0
-    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+  //   // Filter out rows where RateWiseOrderNumber <= 0
+  //   const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
   
-    // Iterate over the filtered rows to calculate the stats
-    filteredRows.forEach(order => {
-      const orderValue = Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0;
-      const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+  //   // Iterate over the filtered rows to calculate the stats
+  //   filteredRows.forEach(order => {
+  //     const orderValue = Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0;
+  //     const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
   
-      // Calculate the distinct order value (Order Value +/- Adjustment)
-      const distinctOrderValue = Math.round(orderValue + adjustedOrderAmount);
+  //     // Calculate the distinct order value (Order Value +/- Adjustment)
+  //     const distinctOrderValue = Math.round(orderValue + adjustedOrderAmount);
       
-      // Format the distinct order value as a key
-      const distinctValueKey = distinctOrderValue.toString();
+  //     // Format the distinct order value as a key
+  //     const distinctValueKey = distinctOrderValue.toString();
   
-      const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0);
+  //     const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0);
 
-      const adjustedValue = 
-        adjustedOrderAmount >= 0 
-          ? orderValue + adjustedOrderAmount 
-          : orderValue - Math.abs(adjustedOrderAmount);
+  //     const adjustedValue = 
+  //       adjustedOrderAmount >= 0 
+  //         ? orderValue + adjustedOrderAmount 
+  //         : orderValue - Math.abs(adjustedOrderAmount);
   
-      if (stats[distinctValueKey]) {
-        stats[distinctValueKey].orderCount += 1;
-        stats[distinctValueKey].totalOrderValue += adjustedValue;
-        stats[distinctValueKey].totalIncome += income;
-      } else {
-        stats[distinctValueKey] = {
-          orderCount: 1,
-          distinctValue: distinctOrderValue,
-          totalOrderValue: adjustedValue,
-          totalIncome: income,
-        };
-      }
-    });
+  //     if (stats[distinctValueKey]) {
+  //       stats[distinctValueKey].orderCount += 1;
+  //       stats[distinctValueKey].totalOrderValue += adjustedValue;
+  //       stats[distinctValueKey].totalIncome += income;
+  //     } else {
+  //       stats[distinctValueKey] = {
+  //         orderCount: 1,
+  //         distinctValue: distinctOrderValue,
+  //         totalOrderValue: adjustedValue,
+  //         totalIncome: income,
+  //       };
+  //     }
+  //   });
   
-    setDistinctOrderValueStats(stats);
-  };
+  //   setDistinctOrderValueStats(stats);
+  // };
 
   useEffect(() => {
     calculateRateStats();
-    calculateDistinctOrderValueStats();
+    // calculateDistinctOrderValueStats();
   }, [filteredData]); // Recalculate when filteredData changes
   
 
@@ -1871,7 +1871,7 @@ const handleExport = async () => {
       </div>
     ))}
     {/* Distinct Order Value Stats Box - Only shown when filters are applied */}
-{filterModel.items.length > 0 && filterModel.items.some(item => item.value) && Object.keys(distinctOrderValueStats).length > 0 && (
+{/* {filterModel.items.length > 0 && filterModel.items.some(item => item.value) && Object.keys(distinctOrderValueStats).length > 0 && (
   <>
       {Object.keys(distinctOrderValueStats)
         .sort((a, b) => distinctOrderValueStats[b].orderCount - distinctOrderValueStats[a].orderCount)
@@ -1908,7 +1908,7 @@ const handleExport = async () => {
           </div>
         ))}
   </>
-)}
+)} */}
   </div>
   
 </div>
