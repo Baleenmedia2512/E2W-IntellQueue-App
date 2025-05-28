@@ -89,7 +89,7 @@ const Report = () => {
   const [invoiceData, setInvoiceData] = useState([]);
   const [isDIRSentToday, setIsDIRSentToday] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
-  const [distinctOrderValueStats, setDistinctOrderValueStats] = useState({});
+  // const [distinctOrderValueStats, setDistinctOrderValueStats] = useState({});
 
   const checkIfDIRSentToday = async (companyName) => {
     try {
@@ -1623,50 +1623,50 @@ const handleExport = async () => {
     applyFilters(); 
   }, [filterModel, orderDetails]); // Reapply filters on change
 
-  const calculateDistinctOrderValueStats = () => {
-    const stats = {};
+  // const calculateDistinctOrderValueStats = () => {
+  //   const stats = {};
   
-    // Filter out rows where RateWiseOrderNumber <= 0
-    const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
+  //   // Filter out rows where RateWiseOrderNumber <= 0
+  //   const filteredRows = filteredData.filter(order => order.RateWiseOrderNumber > 0);
   
-    // Iterate over the filtered rows to calculate the stats
-    filteredRows.forEach(order => {
-      const orderValue = Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0;
-      const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
+  //   // Iterate over the filtered rows to calculate the stats
+  //   filteredRows.forEach(order => {
+  //     const orderValue = Number(order.Receivable.replace(/[₹,]/g, '').trim()) || 0;
+  //     const adjustedOrderAmount = Number(order.AdjustedOrderAmount.replace(/[₹,]/g, '').trim()) || 0;
   
-      // Calculate the distinct order value (Order Value +/- Adjustment)
-      const distinctOrderValue = Math.round(orderValue + adjustedOrderAmount);
+  //     // Calculate the distinct order value (Order Value +/- Adjustment)
+  //     const distinctOrderValue = Math.round(orderValue + adjustedOrderAmount);
       
-      // Format the distinct order value as a key
-      const distinctValueKey = distinctOrderValue.toString();
+  //     // Format the distinct order value as a key
+  //     const distinctValueKey = distinctOrderValue.toString();
   
-      const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0);
+  //     const income = Math.round(Number(order.TotalAmountReceived.replace('₹', '').trim()) || 0);
 
-      const adjustedValue = 
-        adjustedOrderAmount >= 0 
-          ? orderValue + adjustedOrderAmount 
-          : orderValue - Math.abs(adjustedOrderAmount);
+  //     const adjustedValue = 
+  //       adjustedOrderAmount >= 0 
+  //         ? orderValue + adjustedOrderAmount 
+  //         : orderValue - Math.abs(adjustedOrderAmount);
   
-      if (stats[distinctValueKey]) {
-        stats[distinctValueKey].orderCount += 1;
-        stats[distinctValueKey].totalOrderValue += adjustedValue;
-        stats[distinctValueKey].totalIncome += income;
-      } else {
-        stats[distinctValueKey] = {
-          orderCount: 1,
-          distinctValue: distinctOrderValue,
-          totalOrderValue: adjustedValue,
-          totalIncome: income,
-        };
-      }
-    });
+  //     if (stats[distinctValueKey]) {
+  //       stats[distinctValueKey].orderCount += 1;
+  //       stats[distinctValueKey].totalOrderValue += adjustedValue;
+  //       stats[distinctValueKey].totalIncome += income;
+  //     } else {
+  //       stats[distinctValueKey] = {
+  //         orderCount: 1,
+  //         distinctValue: distinctOrderValue,
+  //         totalOrderValue: adjustedValue,
+  //         totalIncome: income,
+  //       };
+  //     }
+  //   });
   
-    setDistinctOrderValueStats(stats);
-  };
+  //   setDistinctOrderValueStats(stats);
+  // };
 
   useEffect(() => {
     calculateRateStats();
-    calculateDistinctOrderValueStats();
+    // calculateDistinctOrderValueStats();
   }, [filteredData]); // Recalculate when filteredData changes
   
 
@@ -1871,7 +1871,7 @@ const handleExport = async () => {
       </div>
     ))}
     {/* Distinct Order Value Stats Box - Only shown when filters are applied */}
-{filterModel.items.length > 0 && filterModel.items.some(item => item.value) && Object.keys(distinctOrderValueStats).length > 0 && (
+{/* {filterModel.items.length > 0 && filterModel.items.some(item => item.value) && Object.keys(distinctOrderValueStats).length > 0 && (
   <>
       {Object.keys(distinctOrderValueStats)
         .sort((a, b) => distinctOrderValueStats[b].orderCount - distinctOrderValueStats[a].orderCount)
@@ -1908,21 +1908,31 @@ const handleExport = async () => {
           </div>
         ))}
   </>
-)}
+)} */}
   </div>
   
 </div>
 <hr className="border-t-1 border-gray-300 mb-3" />
-<div className="flex justify-end px-2">
-
-  <button
+<div className="flex justify-end gap-2 px-2 py-2">  <button    
     name="CloseDayButton"
-    className={`md:mb-0 sm:mr-0 md:mr-2 px-4 py-2 rounded-md font-semibold text-gray-400 bg-white border-2 border-gray-300 transition-all duration-300 ease-in-out hover:bg-blue-400 hover:border-blue-400 hover:text-white hover:scale-105 ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50' : ''}`}
+    className={`flex-1 min-w-[110px] max-w-[120px] flex items-center justify-center px-2 py-2.5 rounded-lg font-medium text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/20 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/40 hover:transform hover:-translate-y-0.5 active:shadow-sm ${isButtonDisabled ? 'disabled cursor-not-allowed opacity-50 grayscale' : ''}`}
     onClick={handleCloseDay}
     disabled={isButtonDisabled}
     title={isButtonDisabled ? "The day is closed" : "Click to close the day"}
   >
-    Close Day
+    <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+    <span className="whitespace-nowrap">Close Day</span>
+  </button>
+  <button
+    className="flex-1 min-w-[120px] max-w-[170px] flex items-center justify-center px-2 py-2.5 rounded-lg font-medium text-xs sm:text-sm bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/20 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-emerald-500/40 hover:transform hover:-translate-y-0.5 active:shadow-sm"
+    onClick={() => router.push('/Report/DetailedIncomeBreakdown')}
+  >
+    <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+    <span className="whitespace-nowrap">Income Breakdown</span>
   </button>
 
   </div>
