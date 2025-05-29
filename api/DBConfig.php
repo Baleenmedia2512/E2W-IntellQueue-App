@@ -19,10 +19,11 @@ return [
         'dbname' => 'baleeed5_easy2work'
     ],
     'Baleen Test' => [
-        'servername' => 'localhost',
-        'username' => 'baleeed5_test',
-        'password' => 'Baleen@789#',
-        'dbname' => 'baleeed5_test_e2w',
+        'servername' => '127.0.0.1',
+        'username' => 'root',
+        'password' => '',
+        'dbname' => 'easy2work',
+        "port" => 3306
     ]
     // Add more database configurations as needed
 ];
