@@ -71,7 +71,7 @@ const CheckoutPage = () => {
     }
   }, [isCleared]);
 
-
+  // console.log(cartItems, "cartItems in checkout page");
   const handleRowClick = (CartID) => {
     const updatedSelectedRows = selectedRows.includes(CartID)
       ? selectedRows.filter((id) => id !== CartID) // Deselect if already selected
@@ -93,7 +93,7 @@ const CheckoutPage = () => {
   // const campaignDuration = useAppSelector(state => state.quoteSlice.campaignDuration);
   // const margin = useAppSelector(state => state.quoteSlice.marginAmount);
   // const extraDiscount = useAppSelector(state => state.quoteSlice.extraDiscount);
-  // const remarks = useAppSelector(state => state.quoteSlice.remarks);
+  // const remarks = useAppSelector(state => state.quoteSlice.remarks);  
   const newData = datas.filter(item => Number(item.rateId) === Number(rateId));
   const leadDay = newData[0];
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.WebApp DB', '8.Online','9.Self', '10.Friends/Relatives'];
@@ -576,10 +576,10 @@ console.log(itemToUpdate.CartID)
                               dispatch(toggleItemSelection(item.CartId))
                             }
                           >
-                            {item.unit === "SCM"
+                            {item.Units === "SCM"
                               ? item.Width + "W" + " x " + item.Quantity + "H"
                               : item.Quantity}{" "}
-                            {item.unit}
+                            {item.Units}
                           </td>
                           {hasCampaignDuration && (
                             <td

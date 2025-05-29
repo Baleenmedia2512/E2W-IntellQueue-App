@@ -156,6 +156,7 @@ export const AdDetails = () => {
     // console.log(item.rateGST)
     const quantityBase =
     item.unit === "SCM" ? item.Quantity * item.Width : item.Quantity;
+    
 
   const unitPrice = (
     item.AmountwithoutGst / quantityBase
@@ -174,7 +175,7 @@ export const AdDetails = () => {
       amountInclGst: formattedRupees(item.Amount),
       leadDays: item.leadDay,
       CampaignDurationUnit: item.campaignDurationVisibility === 1 ? item.CampaignDurationUnit : '',
-      qtyUnit: item.unit ? item.unit : 'Unit',
+      qtyUnit: item.Units ? item.Units : 'Unit',
       adType: item.adType,
       formattedDate: item.ValidityDate,
       remarks: item.Remarks,

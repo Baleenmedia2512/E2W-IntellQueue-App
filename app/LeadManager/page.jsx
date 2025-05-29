@@ -1055,8 +1055,7 @@ const handleStatusClick = async(row) => {
           <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-600" />
           Sheet
         </button>
-        
-        {/* Report Button */}
+          {/* Report Button */}
          <a href="/LeadManager/Report">
           <button
             className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
@@ -1064,7 +1063,17 @@ const handleStatusClick = async(row) => {
             <FaFileAlt className="mr-2 text-lg" />
             Report
           </button>
-        </a> 
+        </a>
+
+        {/* DSR Button */}
+        <a href="/LeadManager/DSR">
+          <button
+            className="flex items-center px-3 py-2 bg-white text-orange-600 rounded-md hover:bg-orange-100 border border-orange-500"
+          >
+            <FaFileAlt className="mr-2 text-lg" />
+            DSR
+          </button>
+        </a>
       </div>
 
     </div>
@@ -1421,7 +1430,7 @@ const handleStatusClick = async(row) => {
             )}
 
       <div className="relative">
-            
+              
             <button
         onClick={() => router.push("/LeadManager/Client2Lead")}
         className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"

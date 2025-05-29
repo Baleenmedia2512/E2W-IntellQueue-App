@@ -37,6 +37,7 @@ export const formattedMargin = (number) => {
 
 const AdDetailsPage = () => {
   // useClickTracker('quote');
+   
   const { companyName, userName } = useAppSelector((state) => state.authSlice);
   const {
     selectedAdMedium: adMedium,
@@ -62,6 +63,7 @@ const AdDetailsPage = () => {
     isNewCartOnEdit,
     checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
+  
   // const cartItems = useAppSelector((state) => state.cartSlice.cart);
   const [cartItems, setCartItems] = useState([]);
   // Local state variables
@@ -705,8 +707,9 @@ const items = [
 
 
   const addToCart = async () => {
+    
 
-    const [edition, packagedata] = adCategory.includes(":") || adCategory.includes("-")  
+    let [altEdition, altPackage] = adCategory.includes(":") || adCategory.includes("-")  
     ? adCategory.split(/[:\-]/).map(str => str.trim())  
     : [adCategory, ""]; // Default to adCategory if no ":" or "-" is present
 
@@ -737,8 +740,8 @@ const items = [
       JsonVendor: selectedVendor,
       JsonCampaignUnits: leadDay.CampaignDurationUnit,
       JsonRateId: rateId,
-      JsonEdition: edition,
-      JsonPackage: packagedata,
+      JsonEdition: edition || altEdition, // Use edition or altEdition
+      JsonPackage: position || altPackage,
       JsonDBName: companyName
     };
   
