@@ -165,7 +165,7 @@ const EventCards = ({params, searchParams}) => {
   .filter((row) => 
     quoteSentFilter === 'All' || 
         (quoteSentFilter === 'Quote Sent' && row.QuoteSent === 'Yes' && row.Status === 'Call Followup') ||
-        (quoteSentFilter === 'Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
+        (quoteSentFilter === ' Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
   )
   .filter((row) =>
     CSEFilter === 'All' || row.HandledBy === CSEFilter
@@ -1042,41 +1042,46 @@ const handleStatusClick = async(row) => {
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-    <h2 className="text-xl font-semibold text-blue-500">
+  <h2 className="text-lg sm:text-xl font-semibold text-blue-500 flex-shrink-0 mr-2">
     {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
   </h2>
 
-      <div className="flex  space-x-4">
-        {/* Sheet Button */}
+  <div className="flex flex-col sm:flex-row sm:space-x-2 md:space-x-4 space-y-1 sm:space-y-0 flex-shrink-0">
+    {/* Top row: Sheet and Report buttons */}
+    <div className="flex space-x-1 sm:space-x-2">
+      {/* Sheet Button */}
+      <button
+        className="flex items-center px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100 text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap"
+        onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
+      >
+        <FaFileExcel className="mr-1 sm:mr-2 text-sm sm:text-base md:text-lg hover:text-green-500 text-green-600 flex-shrink-0" />
+        Sheet
+      </button>
+      
+      {/* Report Button */}
+      <a href="/LeadManager/Report">
         <button
-          className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
-          onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
+          className="flex items-center px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500 text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap"
         >
-          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-600" />
-          Sheet
+          <FaFileAlt className="mr-1 sm:mr-2 text-sm sm:text-base md:text-lg flex-shrink-0" />
+          Report
         </button>
-          {/* Report Button */}
-         <a href="/LeadManager/Report">
-          <button
-            className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
-          >
-            <FaFileAlt className="mr-2 text-lg" />
-            Report
-          </button>
-        </a>
-
-        {/* DSR Button */}
-        <a href="/LeadManager/DSR">
-          <button
-            className="flex items-center px-3 py-2 bg-white text-orange-600 rounded-md hover:bg-orange-100 border border-orange-500"
-          >
-            <FaFileAlt className="mr-2 text-lg" />
-            DSR
-          </button>
-        </a>
-      </div>
-
+      </a>
     </div>
+
+    {/* Bottom row (mobile only): DSR button */}
+    <div className="flex sm:contents">
+      <a href="/LeadManager/DSR" className="sm:ml-0">
+        <button
+          className="flex items-center px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-white text-orange-600 rounded-md hover:bg-orange-100 border border-orange-500 text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap w-full sm:w-auto"
+        >
+          <FaFileAlt className="mr-1 sm:mr-2 text-sm sm:text-base md:text-lg flex-shrink-0" />
+          DSR
+        </button>
+      </a>
+    </div>
+  </div>
+</div>
 
       
        {/* Search Bar */}
