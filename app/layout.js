@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 // import BottomBar from "./BottomBar";
 import { CartProvider } from "./context/CartContext";
 import BottomBarWrapper from "./BottomBarWrapper"; // Import the new client component
+import { ToastContainer } from "./components/ToastContainer";
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
   ssr: false
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
       <ReduxProvider> 
           <CartProvider> 
             {children}
+            <ToastContainer />
             <div>
               <BottomBarWrapper />
             </div>

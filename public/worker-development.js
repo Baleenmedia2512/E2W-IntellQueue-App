@@ -12,11 +12,6 @@ if ('serviceWorker' in navigator) {
     }, function (err) {
       console.log('ServiceWorker registration failed: ', err);
     });
-  });
-}
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
     navigator.serviceWorker.register('/firebase-messaging-sw.js').then(registration => {
       console.log('Service Worker registered with scope:', registration.scope);
     }).catch(err => {

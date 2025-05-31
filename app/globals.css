@@ -110,6 +110,16 @@ body {
   }
 }
 
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(100%); }
+  10% { opacity: 1; transform: translateX(0); }
+  90% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(100%); }
+}
+.animate-fade-in-out {
+  animation: fadeInOut 5s ease-in-out forwards;
+}
+
 
 
 /* Include this in your CSS file */
