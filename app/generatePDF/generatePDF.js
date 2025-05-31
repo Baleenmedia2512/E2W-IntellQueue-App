@@ -84,20 +84,25 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const today = new Date();
+    const validTill = new Date(today);
+    validTill.setDate(validTill.getDate() + 15); // Assuming validity is 15 days from today
     const proposedDay = ('0' + today.getDate()).slice(-2);
     const proposedMonth = months[today.getMonth()];
     const proposedYear = today.getFullYear();
     const formattedDate = `${proposedDay}-${proposedMonth}-${proposedYear}`;
     
+    const validTillDay = ('0' + validTill.getDate()).slice(-2);
+    const validTillMonth = months[validTill.getMonth()];
+    const validTillYear = validTill.getFullYear();
+    const validTillFormatted = `${validTillDay}-${validTillMonth}-${validTillYear}`;
 
- 
     textWidth = pdf.getStringUnitWidth(`Proposal Date: ${formattedDate}`) * 12; // Adjust the font size multiplier as needed
     xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
     pdf.text(`Proposal Date: ${formattedDate}`, xCoordinate, 165)
 
-    textWidth = pdf.getStringUnitWidth(`Validity Date: ${minimumValidityDate}`) * 12; // Adjust the font size multiplier as needed
+    textWidth = pdf.getStringUnitWidth(`Validity Date: ${validTillFormatted}`) * 12; // Adjust the font size multiplier as needed
     xCoordinate = pageWidth - textWidth - 20; // 10 is a margin value, adjust as needed
-    pdf.text(`Validity Date: ${minimumValidityDate}`, xCoordinate, 180);
+    pdf.text(`Validity Date: ${validTillFormatted}`, xCoordinate, 180);
   }
 
   // Calculate GST percentage for each adMedium
