@@ -67,18 +67,20 @@ if (!self.define) {
     });
   };
 }
-
-define(['./workbox-e43f5367'], (function (workbox) { 
-  'use strict';
+define(['./workbox-e43f5367'], (function (workbox) { 'use strict';
 
   importScripts("worker-development.js");
   self.skipWaiting();
   workbox.clientsClaim();
-
   workbox.registerRoute("/", new workbox.NetworkFirst({
     "cacheName": "start-url",
     plugins: [{
-      cacheWillUpdate: async ({ request, response, event, state }) => {
+      cacheWillUpdate: async ({
+        request,
+        response,
+        event,
+        state
+      }) => {
         if (response && response.type === 'opaqueredirect') {
           return new Response(response.body, {
             status: 200,
@@ -90,40 +92,10 @@ define(['./workbox-e43f5367'], (function (workbox) {
       }
     }]
   }), 'GET');
-
   workbox.registerRoute(/.*/i, new workbox.NetworkOnly({
     "cacheName": "dev",
     plugins: []
   }), 'GET');
 
 }));
-
-// ===============================
-// 📣 Firebase Messaging Background Handler
-// ===============================
-importScripts('https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js');
-
-firebase.initializeApp({
-  apiKey: "AIzaSyDrqkBnx4Xf4bDl8017B-6zLTExsh00kew",
-  authDomain: "easy2work-c470d.firebaseapp.com",
-  projectId: "easy2work-c470d",
-  storageBucket: "easy2work-c470d.firebasestorage.app",
-  messagingSenderId: "159467588074",
-  appId: "1:159467588074:web:7a869cc9c27dafc230ca93",
-  measurementId: "G-JM8JD4LPQQ"
-});
-
-const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-
-  const notificationTitle = payload.notification.title || "Background Message Title";
-  const notificationOptions = {
-    body: payload.notification.body || "Background Message Body",
-    icon: '/firebase-logo.png' // Optional: replace with your own icon
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+//# sourceMappingURL=sw.js.map

@@ -1,0 +1,24 @@
+importScripts('https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+    apiKey: "AIzaSyDrqkBnx4Xf4bDl8017B-6zLTExsh00kew",
+    authDomain: "easy2work-c470d.firebaseapp.com",
+    projectId: "easy2work-c470d",
+    storageBucket: "easy2work-c470d.firebasestorage.app",
+    messagingSenderId: "159467588074",
+    appId: "1:159467588074:web:7a869cc9c27dafc230ca93",
+    measurementId: "G-JM8JD4LPQQ",
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage(function(payload) {
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+        body: payload.notification.body,
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
+});

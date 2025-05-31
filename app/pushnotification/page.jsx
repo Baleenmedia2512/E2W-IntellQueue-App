@@ -10,14 +10,6 @@ export default function PushNotificationPage() {
 
   const handleFCMRegister = async () => {
     try {
-      if ('serviceWorker' in navigator) {
-        const swReg = await navigator.serviceWorker.register('/sw.js'); // adjust to your SW path
-        console.log('✅ Service worker registered:', swReg);
-      } else {
-        console.warn('⚠️ Service workers are not supported in this browser.');
-        return;
-      }
-
       const permission = await Notification.requestPermission();
       console.log('🔔 Notification permission:', permission);
 
