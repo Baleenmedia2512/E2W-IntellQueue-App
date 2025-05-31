@@ -31,22 +31,6 @@ function getMaxIds() {
     }
 }
 
-function InsertIntoCart($data) {
-    global $pdo;
-    try {     
-        $stmt = $pdo->prepare("INSERT INTO cart_table (`CartID`, `EntryDateTime`, `AdMedium`, `adType`, `adCategory`, `Quantity`, `Width`, `Units`, `Scheme`, `Bold`, `SemiBold`, `Tick`, `Color`, `Paid%`, `AmountwithoutGst`, `Amount`, `GSTAmount`, `GST%`, `Offers`, `entryUser`, `Valid Status`, `Sent`, `rateperunit`, `ImageId`, `Remarks`, `DateOfRelease`, `CampaignDays`, `SpotsPerDay`, `SpotDuration`, `DiscountAmount`, `Margin`, `Vendor`, `CampaignDurationUnits`, `RateId`) VALUES (null, CURRENT_TIMESTAMP(), :PDORateName, :PDOAdType, :PDOAdCategory, :PDOQuantity, :PDOWidth, :PDOUnits, :PDOScheme, :PDOBold, :PDOSemibold, :PDOTick, :PDOColor, 0, :PDOAmountWithoutGST, :PDOAmount, :PDOGstAmount, :PDOGstPercentage, '', :PDOEntryUser, 'Valid', 1, :PDORatePerUnit, 0, :PDORemarks, '0000-00-00', :PDOCampaignDuration, :PDOSpotsPerDay, :PDOSpotDuration, :PDODiscountAmount, :PDOMargin, :PDOVendor, :PDOCampaignUnits, :PDORateId)");
-
-        foreach ($data as $key => $value) {
-            $stmt->bindValue(":$key", $value);
-        }
-
-        $stmt->execute();
-        return "Cart Inserted Successfully!";
-    } catch (PDOException $e) {
-        return "Error inserting data: " . $e->getMessage();
-    }
-}
-
 function InsertIntoQuote($data) {
     global $pdo, $nextQuoteId;
     try {
@@ -95,35 +79,6 @@ function InsertQuoteCartMapping($data) {
 
 getMaxIds();
 
-$cartParams = [
-    'PDOEntryUser' => $entryUser,
-    'PDORateName' => $_GET['JsonRateName'],
-    'PDOAdType' => $_GET['JsonAdType'],
-    'PDOAdCategory' => $_GET['JsonAdCategory'],
-    'PDOQuantity' => $_GET['JsonQuantity'],
-    'PDOWidth' => isset($_GET['JsonWidth']) ? $_GET['JsonWidth'] : 1,
-    'PDOUnits' => $_GET['JsonUnits'],
-    'PDOScheme' => isset($_GET['JsonScheme']) ? $_GET['JsonScheme'] : '1 + 0',
-    'PDOBold' => isset($_GET['JsonBold']) ? $_GET['JsonBold'] : -1,
-    'PDOSemibold' => isset($_GET['JsonSemibold']) ? $_GET['JsonSemibold'] : -1,
-    'PDOTick' => isset($_GET['JsonTick']) ? $_GET['JsonTick'] : -1,
-    'PDOColor' => isset($_GET['JsonColor']) ? $_GET['JsonColor'] : -1,
-    'PDOAmountWithoutGST' => $_GET['JsonAmountWithoutGST'],
-    'PDOAmount' => $_GET['JsonAmount'],
-    'PDOGstAmount' => $_GET['JsonGSTAmount'],
-    'PDOGstPercentage' => $_GET['JsonGSTPercentage'],
-    'PDORatePerUnit' => $_GET['JsonRatePerUnit'],
-    'PDORemarks' => $_GET['JsonRemarks'],
-    'PDOCampaignDuration' => isset($_GET['JsonCampaignDuration']) ? $_GET['JsonCampaignDuration'] : 0,
-    'PDOSpotsPerDay' => isset($_GET['JsonSpotsPerDay']) ? $_GET['JsonSpotsPerDay'] : 0,
-    'PDOSpotDuration' => isset($_GET['JsonSpotDuration']) ? $_GET['JsonSpotDuration'] : 0,
-    'PDODiscountAmount' => $_GET['JsonDiscountAmount'],
-    'PDOMargin' => isset($_GET['JsonMargin']) ? $_GET['JsonMargin'] : '',
-    'PDOVendor' => isset($_GET['JsonVendor']) ? $_GET['JsonVendor'] : '',
-    'PDOCampaignUnits' => $_GET['JsonCampaignUnits'] ?? "",
-    'PDORateId' => $_GET['JsonRateId'] ?? ""
-];
-
 $quoteParams = [
     'PDOEntryUser' => $entryUser,
     'PDOQuoteID' => $nextQuoteId,
@@ -143,7 +98,6 @@ $mapParams = [
 ];
 
 $quoteResponse = InsertIntoQuote($quoteParams);
-$cartResponse = InsertIntoCart($cartParams);
 $mappingResponse = InsertQuoteCartMapping($mapParams);
 
 $response = [

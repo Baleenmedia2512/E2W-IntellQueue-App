@@ -138,13 +138,13 @@ const basePrice = baseCost + parseInt(margin);
     const inputDate = new Date(date);
     return `${("0" + inputDate.getDate()).slice(-2)}-${months[inputDate.getMonth()]}-${inputDate.getFullYear()}`;
   };
-
+console.log( ValidityDate, "Formatted Date: ", formattedDate(ValidityDate));
   // Helper to format rupees
   const formattedRupees = (number) => {
     const roundedNumber = Math.round(number);
     return roundedNumber.toLocaleString("en-IN");
   };
-
+  
   // Fetch data for a specific rate
   const fetchRate = async (rateId) => {
     try {
@@ -170,13 +170,13 @@ const basePrice = baseCost + parseInt(margin);
           campaignDuration: campaignDuration ? campaignDuration : firstRate['CampaignDuration(in Days)'] || 1
         })
       );
-
+console.log(firstRate, validityDate, firstRate.ValidityDate);
       //set Margin Percentage and Margin
       if (
         isNaN(parseInt(margin)) || parseInt(margin) === 0) {
         handleMarginPercentageChange(firstRate.AgencyCommission);
-      }
-
+        }
+console.log(width , firstRate, qtySlab, firstRate.width);
       // Set width and quantity defaults if necessary
       if (width === 1) dispatch(setQuotesData({ width: firstRate.width }));
       if (qty === 1) dispatch(setQuotesData({ quantity: firstRate.minimumUnit }));
@@ -246,7 +246,7 @@ const basePrice = baseCost + parseInt(margin);
         slabData: sortedSlabData,
         ratesData: filterdata,
       });
-  
+  console.log( firstSelectedSlab , width);
       // Set initial values for slabs
       setQtySlab({ Qty: firstSelectedSlab.StartQty, Width: firstSelectedSlab.Width });
   
@@ -721,10 +721,10 @@ const items = [
       JsonWidth: width,
       JsonUnits: unit,
       JsonScheme: "1 + 0",
-      JsonBold: checked.bold ? 1 : 0,
-      JsonSemibold: checked.semibold ? 1 : 0,
-      JsonTick: checked.tick ? 1 : 0,
-      JsonColor: checked.color ? checked.colorPercentage : 0,
+      JsonBold: checked.bold ? 1 : -1,
+      JsonSemibold: checked.semibold ? 1 : -1,
+      JsonTick: checked.tick ? 1 : -1,
+      JsonColor: checked.color ? checked.colorPercentage : -1,
       JsonAmountWithoutGST: basePrice,
       JsonAmount: (basePrice * (1 + rateGST / 100)).toFixed(2),
       JsonGSTAmount: ((rateGST / 100) * basePrice).toFixed(2),

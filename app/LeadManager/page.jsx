@@ -1046,7 +1046,7 @@ const handleStatusClick = async(row) => {
     {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
   </h2>
 
-  <div className="flex flex-col sm:flex-row sm:space-x-2 md:space-x-4 space-y-1 sm:space-y-0 flex-shrink-0">
+  <div className="flex flex-col sm:flex-row sm:space-x-2 md:space-x-4 space-y-2 sm:space-y-0 flex-shrink-0">
     {/* Top row: Sheet and Report buttons */}
     <div className="flex space-x-1 sm:space-x-2">
       {/* Sheet Button */}
