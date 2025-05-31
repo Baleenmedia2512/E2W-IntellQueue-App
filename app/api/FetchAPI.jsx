@@ -497,15 +497,15 @@ export const verifyOTP = async (DBName, phoneNumber, otpCode) => {
     }
 };
 
-export const FetchQueueClientData = async (DBName, phoneNumber) => {
+export const fetchQueueData = async (DBName, phoneNumber) => {
     try {
-        const response = await api.get("FetchQueueClientData.php", {
+        const response = await api.get("FetchQueueData.php", {
             headers: { "Content-Type": "application/json" },
             params: { JsonDBName: DBName, JsonClientContact: phoneNumber }
         });
 
-        const { position, totalOrders, estimatedTime, remainingTime, status } = response.data;
-        return { position, total: totalOrders, estimatedTime, remainingTime, status };
+        const { position, totalOrders, estimatedTime, remainingTime } = response.data;
+        return { position, total: totalOrders, estimatedTime, remainingTime };
     } catch (error) {
         console.error("Error fetching queue data:", error);
         throw error;

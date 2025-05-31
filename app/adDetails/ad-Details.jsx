@@ -37,6 +37,7 @@ export const formattedMargin = (number) => {
 
 const AdDetailsPage = () => {
   // useClickTracker('quote');
+   
   const { companyName, userName } = useAppSelector((state) => state.authSlice);
   const {
     selectedAdMedium: adMedium,
@@ -58,9 +59,11 @@ const AdDetailsPage = () => {
     isEditMode: isQuoteEditMode,
     editIndex,
     editQuoteNumber,
+    validityDate: ValidityDate,
     isNewCartOnEdit,
     checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
+  
   // const cartItems = useAppSelector((state) => state.cartSlice.cart);
   const [cartItems, setCartItems] = useState([]);
   // Local state variables
@@ -104,11 +107,11 @@ const AdDetailsPage = () => {
   ];
    // Filter data and extract relevant item
    const leadDay = datas.ratesData?.find(item => Number(item.rateId) === Number(rateId)) || {};
-
+  // console.log(ValidityDate)
    // Extract or default values from leadDay
    const minimumCampaignDuration = leadDay['CampaignDuration(in Days)'] || 1;
    const campaignDurationVisibility = leadDay.campaignDurationVisibility || 0;
-   const ValidityDate = leadDay.ValidityDate || 0;
+  //  const ValidityDate = leadDay.ValidityDate || 0;
 
    // Calculate base cost
 let baseCost = (unit !== "SCM" ? qty : qty * width) * unitPrice * (campaignDuration / minimumCampaignDuration);
@@ -135,19 +138,19 @@ const basePrice = baseCost + parseInt(margin);
     const inputDate = new Date(date);
     return `${("0" + inputDate.getDate()).slice(-2)}-${months[inputDate.getMonth()]}-${inputDate.getFullYear()}`;
   };
-
+console.log( ValidityDate, "Formatted Date: ", formattedDate(ValidityDate));
   // Helper to format rupees
   const formattedRupees = (number) => {
     const roundedNumber = Math.round(number);
     return roundedNumber.toLocaleString("en-IN");
   };
-
+  
   // Fetch data for a specific rate
   const fetchRate = async (rateId) => {
     try {
       const rateData = await FetchSpecificRateData(companyName, rateId);
       const firstRate = rateData[0];
-
+      console.log(firstRate, "First Rate Data");
       // Update quote data in Redux
       dispatch(
         setQuotesData({
@@ -167,13 +170,13 @@ const basePrice = baseCost + parseInt(margin);
           campaignDuration: campaignDuration ? campaignDuration : firstRate['CampaignDuration(in Days)'] || 1
         })
       );
-
+console.log(firstRate, validityDate, firstRate.ValidityDate);
       //set Margin Percentage and Margin
       if (
         isNaN(parseInt(margin)) || parseInt(margin) === 0) {
         handleMarginPercentageChange(firstRate.AgencyCommission);
-      }
-
+        }
+console.log(width , firstRate, qtySlab, firstRate.width);
       // Set width and quantity defaults if necessary
       if (width === 1) dispatch(setQuotesData({ width: firstRate.width }));
       if (qty === 1) dispatch(setQuotesData({ quantity: firstRate.minimumUnit }));
@@ -243,7 +246,7 @@ const basePrice = baseCost + parseInt(margin);
         slabData: sortedSlabData,
         ratesData: filterdata,
       });
-  
+  console.log( firstSelectedSlab , width);
       // Set initial values for slabs
       setQtySlab({ Qty: firstSelectedSlab.StartQty, Width: firstSelectedSlab.Width });
   
@@ -256,10 +259,11 @@ const basePrice = baseCost + parseInt(margin);
       }
       
       const hasChecked =
-        isChecked.bold === true ||
-        isChecked.semibold === true ||
-        isChecked.tick === true ||  
-        isChecked.color === true;
+  isChecked &&
+  (isChecked.bold === true ||
+    isChecked.semibold === true ||
+    isChecked.tick === true ||  
+    isChecked.color === true);
       
       if(hasChecked){
         setChecked(isChecked)
@@ -703,8 +707,9 @@ const items = [
 
 
   const addToCart = async () => {
+    
 
-    const [edition, packagedata] = adCategory.includes(":") || adCategory.includes("-")  
+    let [altEdition, altPackage] = adCategory.includes(":") || adCategory.includes("-")  
     ? adCategory.split(/[:\-]/).map(str => str.trim())  
     : [adCategory, ""]; // Default to adCategory if no ":" or "-" is present
 
@@ -716,10 +721,10 @@ const items = [
       JsonWidth: width,
       JsonUnits: unit,
       JsonScheme: "1 + 0",
-      JsonBold: checked.bold ? 1 : 0,
-      JsonSemibold: checked.semibold ? 1 : 0,
-      JsonTick: checked.tick ? 1 : 0,
-      JsonColor: checked.color ? 1 : 0,
+      JsonBold: checked.bold ? 1 : -1,
+      JsonSemibold: checked.semibold ? 1 : -1,
+      JsonTick: checked.tick ? 1 : -1,
+      JsonColor: checked.color ? checked.colorPercentage : -1,
       JsonAmountWithoutGST: basePrice,
       JsonAmount: (basePrice * (1 + rateGST / 100)).toFixed(2),
       JsonGSTAmount: ((rateGST / 100) * basePrice).toFixed(2),
@@ -735,8 +740,8 @@ const items = [
       JsonVendor: selectedVendor,
       JsonCampaignUnits: leadDay.CampaignDurationUnit,
       JsonRateId: rateId,
-      JsonEdition: edition,
-      JsonPackage: packagedata,
+      JsonEdition: edition || altEdition, // Use edition or altEdition
+      JsonPackage: position || altPackage,
       JsonDBName: companyName
     };
   

@@ -89,7 +89,7 @@ const handleLogin = (event) => {
     if (validateFields()) {
         const encodedPassw = encodeURIComponent(password);
 
-        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${'Baleen Test'}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
+        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(response.statusText);
@@ -100,7 +100,7 @@ const handleLogin = (event) => {
                 if (data.status === 'Login Successfully') {
                     setSuccessMessage('Login Successful!');
                     // dispatch(setDBName(companyName));
-                    dispatch(setCompanyName('Baleen Test'))
+                    // dispatch(setCompanyName('Baleen Test'))
                     // dispatch(login(userName));
                     dispatch(setDBName(companyName));
                     setTimeout(() => {
@@ -110,7 +110,7 @@ const handleLogin = (event) => {
 
                     // Dispatch actions and navigate based on conditions
                     
-                    // dispatch(setCompanyName(companyName))
+                    dispatch(setCompanyName(companyName))
                     dispatch(login(userName));
                     
                     dispatch(setAppRights(data.appRights));
@@ -122,7 +122,6 @@ const handleLogin = (event) => {
                     dispatch({ type: 'queueDashboard/resetHistory' })
                     sessionStorage.removeItem("unitPrices");
                     sessionStorage.clear();
-                    localStorage.clear();
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{

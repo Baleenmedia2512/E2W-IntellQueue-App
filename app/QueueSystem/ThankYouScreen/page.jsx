@@ -3,47 +3,18 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
-import { useDispatch } from "react-redux";
-import { setQueueStatus } from "@/redux/features/queue-slice";
-import { FetchQueueClientData } from "@/app/api/FetchAPI";
 
 export default function ThankYouScreen() {
     const companyName = useAppSelector((state) => state.authSlice.companyName);
     const language = useAppSelector((state) => state.queueSlice.language);
-    const phoneNumber = useAppSelector(state => state.queueSlice.phoneNumber);
-    const queueStatus = useAppSelector(state => state.queueSlice.queueStatus);
     const router = useRouter();
-    const dispatch = useDispatch();
-console.log("queueStatus", queueStatus);
+
     useEffect(() => {
         if (!companyName) {
             console.warn("Company name is missing, redirecting...");
             router.push('/QueueSystem/InvalidAccess');
         }
     }, [companyName, router]);
-
-    useEffect(() => {
-        if (!companyName) return;
-        const fetchQueue = async () => {
-            try {
-                const { status } = await FetchQueueClientData(companyName, phoneNumber);
-                dispatch(setQueueStatus(status));
-            } catch (error) {
-                // ignore
-            }
-        };
-        fetchQueue();
-        const interval = setInterval(fetchQueue, 5000);
-        return () => clearInterval(interval);
-    }, [companyName, phoneNumber, dispatch]);
-
-    useEffect(() => {
-        if (queueStatus === "Waiting" || queueStatus === "On-Hold") {
-            router.push("/QueueSystem/WaitingScreen");
-        } else if (queueStatus === "In-Progress") {
-            router.push("/QueueSystem/ReadyScreen");
-        }
-    }, [queueStatus, router]);
 
     if (!companyName) {
         return null; // Prevent rendering if companyName is missing

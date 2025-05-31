@@ -3,46 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
-import { useDispatch } from "react-redux";
-import { setQueueStatus } from "@/redux/features/queue-slice";
-import { FetchQueueClientData } from "@/app/api/FetchAPI";
 
 export default function ReadyScreen() {
     const companyName = useAppSelector((state) => state.authSlice.companyName);
     const language = useAppSelector((state) => state.queueSlice.language);
-    const phoneNumber = useAppSelector(state => state.queueSlice.phoneNumber);
     const router = useRouter();
-    const dispatch = useDispatch();
-    const queueStatus = useAppSelector(state => state.queueSlice.queueStatus);
-console.log("queueStatus", queueStatus);
+
     useEffect(() => {
         if (!companyName) {
             router.push('/QueueSystem/InvalidAccess');
         }
     }, [companyName, router]);
-
-    useEffect(() => {
-        if (!companyName) return;
-        const fetchQueue = async () => {
-            try {
-                const { status } = await FetchQueueClientData(companyName, phoneNumber);
-                dispatch(setQueueStatus(status));
-            } catch (error) {
-                // ignore
-            }
-        };
-        fetchQueue();
-        const interval = setInterval(fetchQueue, 5000);
-        return () => clearInterval(interval);
-    }, [companyName, phoneNumber, dispatch]);
-
-    useEffect(() => {
-        if (queueStatus === "Waiting" || queueStatus === "On-Hold") {
-            router.push("/QueueSystem/WaitingScreen");
-        } else if (queueStatus === "Completed") {
-            router.push("/QueueSystem/ThankYouScreen");
-        }
-    }, [queueStatus, router]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">

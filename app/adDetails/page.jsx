@@ -154,7 +154,14 @@ export const AdDetails = () => {
     // let AmountExclGST = Math.round(((((item.unit === "SCM" ? item.qty * item.width : item.qty) * item.unitPrice * (item.campaignDuration ? (item.campaignDuration / item.minimumCampaignDuration) : 1)) + parseInt(item.margin))));
     let AmountInclGST = Math.round(item.price * ((item.rateGST/100) + 1));
     // console.log(item.rateGST)
-    const unitPrice = (item.price/(item.unit === "SCM" ? item.qty * item.width : item.qty)).toFixed(2)
+    const quantityBase =
+    item.unit === "SCM" ? item.Quantity * item.Width : item.Quantity;
+    
+
+  const unitPrice = (
+    item.AmountwithoutGst / quantityBase
+  ).toFixed(2);   
+  console.log(item);
     return {
       adMedium: item.AdMedium,
       adCategory: item.adCategory,
@@ -162,15 +169,15 @@ export const AdDetails = () => {
       position: item.Package,
       qty: item.Quantity,
       campaignDuration: item.campaignDurationVisibility === 1 ? item.campaignDuration : 'NA',
-      ratePerQty: item.rateperunit,
+      ratePerQty: unitPrice,
       amountExclGst: formattedRupees(item.AmountwithoutGst),
       gst: item['GST%'].toString() + '%',
       amountInclGst: formattedRupees(item.Amount),
       leadDays: item.leadDay,
       CampaignDurationUnit: item.campaignDurationVisibility === 1 ? item.CampaignDurationUnit : '',
-      qtyUnit: item.unit ? item.unit : 'Unit',
+      qtyUnit: item.Units ? item.Units : 'Unit',
       adType: item.adType,
-      formattedDate: item.formattedDate,
+      formattedDate: item.ValidityDate,
       remarks: item.Remarks,
       width: item.Width,
       rateId: item.RateId,

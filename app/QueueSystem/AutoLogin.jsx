@@ -11,7 +11,7 @@ import { resetClientData } from '@/redux/features/client-slice';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { resetDateRange } from "@/redux/features/report-slice";
 import { CircularProgress, Box, Typography } from '@mui/material'; // Import Material-UI components
-import { resetPhoneNumber, resetLanguage, resetQueueStatus } from "@/redux/features/queue-slice";
+import { resetPhoneNumber, resetLanguage } from "@/redux/features/queue-slice";
 
 const QueueSystemAutoLogin = () => {
   const [error, setError] = useState('');
@@ -23,11 +23,6 @@ const QueueSystemAutoLogin = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Reset queue info before auto login
-    dispatch(resetPhoneNumber());
-    dispatch(resetLanguage());
-    dispatch(resetQueueStatus());
-
     const ref = searchParams.get('ref');
 
     if (!ref) {
