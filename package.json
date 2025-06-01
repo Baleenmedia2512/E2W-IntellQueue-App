@@ -20,6 +20,7 @@
     "@fullhuman/postcss-purgecss": "^5.0.0",
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.1.4",
+    "@heroui/alert": "^2.2.19",
     "@internationalized/date": "^3.5.3",
     "@mantine/core": "^7.10.0",
     "@mantine/hooks": "^7.10.0",

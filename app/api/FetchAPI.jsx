@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 export const api = axios.create({
-    baseURL: "https://orders.baleenmedia.com/API/Media/"
-    // baseURL: "http://localhost/easy2work-backend/API/Media/"
+    // baseURL: "https://orders.baleenmedia.com/API/Media/"
+    baseURL: "http://localhost/easy2work-backend/API/Media/"
 })    
 
 export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
@@ -617,4 +617,50 @@ export const AddRemoteQueueUser = async (DBName, ClientContact, ClientName, Rate
         }
         throw error;
     }
+};
+
+export const SaveFcmToken = async (DBName, Token) => {
+    try {
+        const response = await api.post(
+            "SaveFcmToken.php",
+            {
+                JsonDBName: DBName,
+                JsonToken: Token,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        console.log("Save fcm token", response.data)
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+        }
+        throw error;
+    }
+};
+
+export const fetchFcmTokens = async (DBName) => {
+  try {
+    const response = await api.post(
+      "FetchFcmToken.php",
+      { JsonDBName: DBName },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    if (response.data && response.data.success) {
+        console.log("Save fcm token", response.data)
+      return response.data.tokens; // Array of tokens
+    } else {
+      console.error("Fetch tokens failed:", response.data.message);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching tokens:", error);
+    return [];
+  }
 };

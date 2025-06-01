@@ -1,3 +1,6 @@
---Following scripts need to be run to add two new columns to the cart_table in baleeed5_live database
-ALTER TABLE cart_table ADD COLUMN Edition VARCHAR(128); --Create a new column for Edition in cart_table
-ALTER TABLE cart_table ADD COLUMN Package VARCHAR(128); --Create a new column for Package in cart_table
+-- 31-05-2025 - Logesh
+CREATE TABLE fcm_token_table (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    EntryDateTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Token VARCHAR(512) NOT NULL UNIQUE
+);
