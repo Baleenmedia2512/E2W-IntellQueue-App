@@ -230,7 +230,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const [isRestoring, setIsRestoring] = useState(false);
     let notificationTimeoutId = null; // Declare outside or useRef in React
 
-    const handleNotification = async (client = null) => {
+    const handleNotification = async (client = null, rateCard = null, rateType = null) => {
         try {
             if (!client || client.trim() === "") {
                 console.warn("No client name provided, skipping notification.");
@@ -244,6 +244,12 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 return;
             }
 
+            // Compose notification body with rateCard and rateType
+            let extraInfo = "";
+            if (rateCard || rateType) {
+                extraInfo = ` | ${rateCard || ""}${rateType ? ` (${rateType})` : ""}`;
+            }
+
             const clientName = client;
             const response = await fetch("/api/send-notification", {
                 method: "POST",
@@ -253,9 +259,14 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 body: JSON.stringify({
                     token: filteredTokens,
                     icon: "/icon-192x192.png",
-                    title: "Queue Update!",
-                    body: `${clientName} is now In-Progress`,
+                    title: `Queue Update!`,
+                    body: `${clientName} is now IN-PROGRESS${extraInfo}`,
                     link: "/QueueDashboard",
+                    data: {
+                        client: clientName,
+                        rateCard: rateCard,
+                        rateType: rateType
+                    }
                 }),
             });
             const data = await response.json();
@@ -438,7 +449,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
 
         if (changedClient) {
-            await handleNotification(changedClient.name);
+            await handleNotification(changedClient.name, changedClient.rateCard, changedClient.rateType);
         }
     };
   
@@ -474,7 +485,11 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
         // 🔒 Safe call to handleNotification only if nextInProgressClient exists and has a name
         if (nextInProgressClient && nextInProgressClient.name && nextInProgressClient.name.trim() !== "") {
-            await handleNotification(nextInProgressClient.name);
+            await handleNotification(
+                nextInProgressClient.name,
+                nextInProgressClient.rateCard,
+                nextInProgressClient.rateType
+            );
         } else {
             console.warn("No valid next In-Progress client found, skipping notification.");
         }
@@ -485,7 +500,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const clientName = displayedClients[displayedIndex].name;
         await QueueDashboardAction(companyName, 'continueToken', { JsonClientId: clientId });
         const apiClients = await saveSnapshotWithUpdatedState();
-        await handleNotification(clientName);
+        await handleNotification(clientName, displayedClients[displayedIndex].rateCard, displayedClients[displayedIndex].rateType);
     };
 
     const handleStartQueue = async () => {
@@ -493,18 +508,20 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         if (!firstClient) return;
         await QueueDashboardAction(companyName, 'startQueue', { JsonClientId: firstClient.id });
         const apiClients = await saveSnapshotWithUpdatedState();
-        await handleNotification(firstClient.name);
+        await handleNotification(firstClient.name, firstClient.rateCard, firstClient.rateType);
     };
 
     // --- Undo/Redo with notification debounce ---
-    const sendDebouncedNotification = (clientName, delay = 3000) => {
+    const sendDebouncedNotification = (clientObj, delay = 3000) => {
         if (notificationTimer.current) clearTimeout(notificationTimer.current);
-        lastInProgressClientRef.current = clientName;
-        console.log("[sendDebouncedNotification] triggered: lastInProgressClientRef.current", lastInProgressClientRef.current);
+        lastInProgressClientRef.current = clientObj;
         notificationTimer.current = setTimeout(() => {
             if (lastInProgressClientRef.current) {
-                console.log("[sendDebouncedNotification] handle notification triggered: lastInProgressClientRef.current", lastInProgressClientRef.current);
-                handleNotification(lastInProgressClientRef.current);
+                handleNotification(
+                    lastInProgressClientRef.current.name,
+                    lastInProgressClientRef.current.rateCard,
+                    lastInProgressClientRef.current.rateType
+                );
             }
             notificationTimer.current = null;
             lastInProgressClientRef.current = null;
@@ -537,7 +554,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
                 if (changedClient) {
                     console.log("[undo] changedClient is true", changedClient);
-                    sendDebouncedNotification(changedClient.name, 5000);
+                    sendDebouncedNotification(changedClient, 5000);
                 }
             }, 0); // Wait for next tick (React to update state)
         } else {
@@ -574,7 +591,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
                 if (changedClient) {
                     console.log("[redo] changedClient is true", changedClient);
-                    sendDebouncedNotification(changedClient.name, 5000);
+                    sendDebouncedNotification(changedClient, 5000);
                 }
             }, 0); // Wait for next tick (React to update state)
         } else {
