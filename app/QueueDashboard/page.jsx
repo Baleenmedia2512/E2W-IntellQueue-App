@@ -8,7 +8,6 @@ import { FetchQueueDashboardData, QueueDashboardAction, UpdateQueueOrder, SaveQu
 import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
 import { setHistoryId } from '@/redux/features/queue-dashboard-slice';
-import { useGlobalNotification } from '../components/NotificationManager';
 
 const ItemType = "CLIENT";
 // --- Helper: Equipment Icon ---
@@ -228,7 +227,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const [filter, setFilter] = useState("All");
     const [animationDirection, setAnimationDirection] = useState("");    
     const [isRestoring, setIsRestoring] = useState(false);
-    const notify = useGlobalNotification();
 
     console.log("historyStack", historyStack);
 
@@ -273,12 +271,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             if (clientIndex === 0) {
                 // First position can be In-Progress or On-Hold
                 if (client.status !== "On-Hold" && client.status !== "In-Progress") {
-                    // Send fully dynamic notification
-                    notify.notify({
-                        message: `${client.name} (${client.rateCard} - ${client.rateType}) is now In-Progress`,
-                        title: 'Queue Update',
-                        // icon: '/icon-192x192.png', // Optionally add an icon
-                    });
                     return { ...client, status: "In-Progress" };
                 }
             } else {
@@ -568,14 +560,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
     const statuses = ["All", "In-Progress", "On-Hold", "Waiting"];
     const currentDate = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-
-    // Show in-app toast when notification is received
-    useQueueNotificationListener((message) => {
-        // You can replace this with your own toast system
-        if (window && window.dispatchEvent) {
-            window.dispatchEvent(new CustomEvent('queue-toast', { detail: { message } }));
-        }
-    });
 
     return (
         <DndProvider backend={HTML5Backend}>
