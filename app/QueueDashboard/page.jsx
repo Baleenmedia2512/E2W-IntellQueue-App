@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FaUndo, FaRedo, FaChevronLeft } from "react-icons/fa";
@@ -269,128 +269,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         }
     };
 
-
-    // Add this helper function in the QueueDashboard component
-    const compareStatesAndNotify = async (beforeState, afterState, action) => {
-        const before = beforeState.filter(c => c.rateCard === selectedEquipment);
-        const after = afterState.filter(c => c.rateCard === selectedEquipment);
-        
-        const changes = [];
-        
-        // Check for status changes
-        after.forEach(afterClient => {
-            const beforeClient = before.find(b => b.id === afterClient.id);
-            if (beforeClient && beforeClient.status !== afterClient.status) {
-                changes.push({
-                    type: 'status',
-                    client: afterClient,
-                    from: beforeClient.status,
-                    to: afterClient.status
-                });
-            }
-        });
-        
-        // Check for position changes (queue index changes)
-        after.forEach(afterClient => {
-            const beforeClient = before.find(b => b.id === afterClient.id);
-            if (beforeClient && beforeClient.queueIndex !== afterClient.queueIndex) {
-                changes.push({
-                    type: 'position',
-                    client: afterClient,
-                    from: beforeClient.queueIndex,
-                    to: afterClient.queueIndex
-                });
-            }
-        });
-        
-        if (changes.length > 0) {
-            // Delay notification by 5 seconds
-            setTimeout(async () => {
-                await handleDetailedNotification(changes, action);
-            }, 5000);
-        }
-    };
-
-    // Add this detailed notification function
-    const handleDetailedNotification = async (changes, action) => {
-        try {
-            const tokenArray = await fetchFcmTokens(companyName);
-            const filteredTokens = tokenArray.filter(Boolean);
-            if (!filteredTokens.length) {
-                console.warn("No tokens available to send notification.");
-                return;
-            }
-
-            // Generate detailed message
-            let title = `Queue ${action.charAt(0).toUpperCase() + action.slice(1)} Applied`;
-            let body = generateChangeMessage(changes, action);
-
-            const response = await fetch("/api/send-notification", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    token: filteredTokens,
-                    icon: "/icon-192x192.png",
-                    title: title,
-                    body: body,
-                    link: "/QueueDashboard",
-                }),
-            });
-            const data = await response.json();
-            console.log('📡 Backend response:', data);
-        } catch (error) {
-            console.error("Error sending detailed notification:", error);
-        }
-    };
-
-    // Helper to generate human-readable change messages
-    const generateChangeMessage = (changes, action) => {
-        const statusChanges = changes.filter(c => c.type === 'status');
-        const positionChanges = changes.filter(c => c.type === 'position');
-        
-        let messages = [];
-        
-        // Status changes
-        if (statusChanges.length > 0) {
-            const inProgressChanges = statusChanges.filter(c => c.to === 'In-Progress');
-            const waitingChanges = statusChanges.filter(c => c.to === 'Waiting');
-            const holdChanges = statusChanges.filter(c => c.to === 'On-Hold');
-            
-            if (inProgressChanges.length > 0) {
-                const names = inProgressChanges.map(c => c.client.name).join(', ');
-                messages.push(`${names} ${inProgressChanges.length > 1 ? 'are' : 'is'} now In-Progress`);
-            }
-            
-            if (waitingChanges.length > 0) {
-                const names = waitingChanges.map(c => c.client.name).join(', ');
-                messages.push(`${names} ${waitingChanges.length > 1 ? 'are' : 'is'} now Waiting`);
-            }
-            
-            if (holdChanges.length > 0) {
-                const names = holdChanges.map(c => c.client.name).join(', ');
-                messages.push(`${names} ${holdChanges.length > 1 ? 'are' : 'is'} now On-Hold`);
-            }
-        }
-        
-        // Position changes (limit to most significant ones)
-        if (positionChanges.length > 0 && positionChanges.length <= 3) {
-            positionChanges.forEach(change => {
-                const direction = change.to < change.from ? 'moved up' : 'moved down';
-                messages.push(`${change.client.name} ${direction} in queue (${change.from}→${change.to})`);
-            });
-        } else if (positionChanges.length > 3) {
-            messages.push(`${positionChanges.length} clients changed positions`);
-        }
-        
-        if (messages.length === 0) {
-            return `Queue order was ${action === 'undo' ? 'undone' : 'redone'}`;
-        }
-        
-        return messages.join('. ');
-    };
-
     // Save a snapshot to history
     const saveSnapshot = async (snapshot) => {
         console.log("saving snapshot", snapshot);
@@ -479,9 +357,25 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         return apiClients;
     };
 
+    // Add a ref to store previous snapshot for undo/redo comparison
+    const prevSnapshotRef = useRef(getCurrentSnapshot()); // Initial snapshot
+    const notificationTimer = useRef(null);
+    const lastInProgressClientRef = useRef(null);
+
+    // Utility: Compare two snapshots and return the client that just became "In-Progress"
+    const getNewInProgressClient = (prev, next) => {
+        const prevMap = Object.fromEntries(prev.map(c => [c.id, c.status]));
+        return next.find(c =>
+            c.status === "In-Progress" &&
+            prevMap[c.id] !== "In-Progress"
+        );
+    };
+
+
     // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
     const moveTile = async (fromDisplayedIndex, toDisplayedIndex) => {
         if (fromDisplayedIndex === toDisplayedIndex) return;
+        const prevSnapshot = getCurrentSnapshot();
         const masterCopy = [...allClients];
         const itemsOfSelectedEquipment = masterCopy.filter(c => c.rateCard === selectedEquipment);
         const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
@@ -547,6 +441,14 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             console.log("Data mismatch, updating...");
             setAllClients(apiClients);
         }
+
+        // After updating/fetching new state:
+        const newSnapshot = getCurrentSnapshot();
+        const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
+
+        if (changedClient) {
+            await handleNotification(changedClient.name);
+        }
     };
     console.log("displayedClients", displayedClients)
   
@@ -606,11 +508,23 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         await handleNotification(firstClient.name);
     };
 
+    // --- Undo/Redo with notification debounce ---
+    const sendDebouncedNotification = (clientName) => {
+        if (notificationTimer.current) clearTimeout(notificationTimer.current);
+        lastInProgressClientRef.current = clientName;
+        notificationTimer.current = setTimeout(() => {
+            if (lastInProgressClientRef.current)
+                handleNotification(lastInProgressClientRef.current);
+            notificationTimer.current = null;
+            lastInProgressClientRef.current = null;
+        }, 500); // 500ms cooldown
+    };
 
     // Undo/Redo logic
     const undo = async () => {
         if (isRestoring || currentHistoryIndex <= 0) return;
         console.log("[UNDO] Undo button clicked. Current index:", currentHistoryIndex);
+        const prevSnapshot = getCurrentSnapshot();
         setIsRestoring(true);
 
         // Get the target history ID from the stack
@@ -634,11 +548,18 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             console.warn("[UNDO] Error restoring snapshot:", res);
         }
         setIsRestoring(false);
+        // After undo and setting new clients:
+        const newSnapshot = getCurrentSnapshot();
+        const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
+        if (changedClient) {
+            sendDebouncedNotification(changedClient.name);
+        }
     };
 
     const redo = async () => {
         if (isRestoring || currentHistoryIndex >= historyStack.length - 1) return;
         console.log("[REDO] Redo button clicked. Current index:", currentHistoryIndex);
+        const prevSnapshot = getCurrentSnapshot();
         setIsRestoring(true);
 
         // Get the target history ID from the stack
@@ -662,6 +583,12 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             console.warn("[REDO] Error restoring snapshot:", res);
         }
         setIsRestoring(false);
+        // After redo and setting new clients:
+        const newSnapshot = getCurrentSnapshot();
+        const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
+        if (changedClient) {
+            sendDebouncedNotification(changedClient.name);
+        }
     };
 
     // Update undo/redo button disabled states
@@ -705,7 +632,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                             onClick={undo}
                             className={`w-10 h-10 rounded-full flex items-center justify-center group relative bg-red-200 ${undoDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                             title="Undo"
-                            // disabled={undoDisabled}
+                            disabled={undoDisabled}
                         >
                             <FaUndo className="text-red-600" />
                             <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Undo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
@@ -714,7 +641,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                             onClick={redo}
                             className={`w-10 h-10 rounded-full flex items-center justify-center group relative bg-blue-200 ${redoDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                             title="Redo"
-                            // disabled={redoDisabled}
+                            disabled={redoDisabled}
                         >
                             <FaRedo className="text-blue-600" />
                             <span className="absolute top-full mt-2 hidden group-hover:flex items-center justify-center bg-gray-900 text-white text-xs font-medium rounded-lg px-2 py-1 shadow-lg">Redo<span className="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></span></span>
