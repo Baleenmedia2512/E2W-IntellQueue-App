@@ -230,8 +230,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const [isRestoring, setIsRestoring] = useState(false);
     let notificationTimeoutId = null; // Declare outside or useRef in React
 
-    // console.log("historyStack", historyStack)
-
     const handleNotification = async (client = null) => {
         try {
             if (!client || client.trim() === "") {
@@ -245,8 +243,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 console.warn("No tokens available to send notification.");
                 return;
             }
-
-            console.log("handle notifi - client", client);
 
             const clientName = client;
             const response = await fetch("/api/send-notification", {
@@ -271,9 +267,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
     // Save a snapshot to history
     const saveSnapshot = async (snapshot) => {
-        console.log("saving snapshot", snapshot);
         const res = await SaveQueueSnapshot(companyName, selectedEquipment, snapshot);
-        console.log("[History] Snapshot saved:", res.data);
         if (res.data && res.data.success) {
             // Get the latest history ID and update the stack
             const latestRes = await GetQueueSnapshot(companyName, selectedEquipment, "undo", null);
@@ -281,7 +275,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 // Use the updateHistoryStack action which handles the stack properly
                 dispatch({ type: 'queueDashboard/updateHistoryStack', payload: latestRes.data.id });
                 dispatch(setHistoryId(latestRes.data.id));
-                console.log("[History] Updated history with ID:", latestRes.data.id);
             }
         }
     };
@@ -329,7 +322,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 remarks: c.remarks
             }));
     };
-    console.log('all clients', allClients)
 
     const saveSnapshotWithUpdatedState = async () => {
         // Get latest state
@@ -438,7 +430,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         };
 
         if (isDifferent(backendQueue, optimisticQueue)) {
-            console.log("Data mismatch, updating...");
             setAllClients(apiClients);
         }
 
@@ -450,7 +441,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             await handleNotification(changedClient.name);
         }
     };
-    console.log("displayedClients", displayedClients)
   
     const closeToken = async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
@@ -482,8 +472,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             .sort((a, b) => a.queueIndex - b.queueIndex);
         const nextInProgressClient = inProgressClients.find(c => c.id !== clientId);
 
-        console.log("inProgressClients, nextInProgressClient", inProgressClients, nextInProgressClient);
-
         // 🔒 Safe call to handleNotification only if nextInProgressClient exists and has a name
         if (nextInProgressClient && nextInProgressClient.name && nextInProgressClient.name.trim() !== "") {
             await handleNotification(nextInProgressClient.name);
@@ -509,86 +497,90 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     };
 
     // --- Undo/Redo with notification debounce ---
-    const sendDebouncedNotification = (clientName) => {
+    const sendDebouncedNotification = (clientName, delay = 3000) => {
         if (notificationTimer.current) clearTimeout(notificationTimer.current);
         lastInProgressClientRef.current = clientName;
+        console.log("[sendDebouncedNotification] triggered: lastInProgressClientRef.current", lastInProgressClientRef.current);
         notificationTimer.current = setTimeout(() => {
-            if (lastInProgressClientRef.current)
+            if (lastInProgressClientRef.current) {
+                console.log("[sendDebouncedNotification] handle notification triggered: lastInProgressClientRef.current", lastInProgressClientRef.current);
                 handleNotification(lastInProgressClientRef.current);
+            }
             notificationTimer.current = null;
             lastInProgressClientRef.current = null;
-        }, 500); // 500ms cooldown
+        }, delay);
     };
+
 
     // Undo/Redo logic
     const undo = async () => {
         if (isRestoring || currentHistoryIndex <= 0) return;
-        console.log("[UNDO] Undo button clicked. Current index:", currentHistoryIndex);
         const prevSnapshot = getCurrentSnapshot();
         setIsRestoring(true);
 
-        // Get the target history ID from the stack
         const targetId = historyStack[currentHistoryIndex - 1];
-        console.log("[UNDO] Getting snapshot for ID:", targetId);
-
-        // Note: direction is no longer needed since we're fetching by exact ID
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
-        console.log("[UNDO] GetQueueSnapshot response:", res);
-        
+
         if (res.data && res.data.success) {
-            console.log("[UNDO] Restoring snapshot:", res.data.snapshot);
             const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
-            console.log("[UNDO] RestoreQueueSnapshot result:", resQ.data);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex - 1 });
-            
+
             const apiClients = await FetchQueueDashboardData(companyName);
             setAllClients(apiClients);
+
+            // 🕒 Wait for React state update before getting new snapshot
+            setTimeout(() => {
+                const changedClient = getNewInProgressClient(prevSnapshot, apiClients);
+                console.log("[undo] getNewInProgressClient: prevSnapshot, apiClients", prevSnapshot, apiClients);
+                console.log("[undo] After undo and setting new clients: changedClient", changedClient);
+
+                if (changedClient) {
+                    console.log("[undo] changedClient is true", changedClient);
+                    sendDebouncedNotification(changedClient.name, 5000);
+                }
+            }, 0); // Wait for next tick (React to update state)
         } else {
             console.warn("[UNDO] Error restoring snapshot:", res);
         }
+
         setIsRestoring(false);
-        // After undo and setting new clients:
-        const newSnapshot = getCurrentSnapshot();
-        const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
-        if (changedClient) {
-            sendDebouncedNotification(changedClient.name);
-        }
     };
+
 
     const redo = async () => {
         if (isRestoring || currentHistoryIndex >= historyStack.length - 1) return;
-        console.log("[REDO] Redo button clicked. Current index:", currentHistoryIndex);
         const prevSnapshot = getCurrentSnapshot();
         setIsRestoring(true);
 
         // Get the target history ID from the stack
         const targetId = historyStack[currentHistoryIndex + 1];
-        console.log("[REDO] Getting snapshot for ID:", targetId);
-
         // Note: direction is no longer needed since we're fetching by exact ID
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
-        console.log("[REDO] GetQueueSnapshot response:", res);
 
         if (res.data && res.data.success) {
-            console.log("[REDO] Restoring snapshot:", res.data.snapshot);
             const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
-            console.log("[REDO] RestoreQueueSnapshot result:", resQ.data);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex + 1 });
             
             const apiClients = await FetchQueueDashboardData(companyName);
             setAllClients(apiClients);
+
+            // 🕒 Wait for React state update before getting new snapshot
+            setTimeout(() => {
+                const changedClient = getNewInProgressClient(prevSnapshot, apiClients);
+                console.log("[redo] getNewInProgressClient: prevSnapshot, apiClients", prevSnapshot, apiClients);
+                console.log("[redo] After redo and setting new clients: changedClient", changedClient);
+
+                if (changedClient) {
+                    console.log("[redo] changedClient is true", changedClient);
+                    sendDebouncedNotification(changedClient.name, 5000);
+                }
+            }, 0); // Wait for next tick (React to update state)
         } else {
             console.warn("[REDO] Error restoring snapshot:", res);
         }
         setIsRestoring(false);
-        // After redo and setting new clients:
-        const newSnapshot = getCurrentSnapshot();
-        const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
-        if (changedClient) {
-            sendDebouncedNotification(changedClient.name);
-        }
     };
 
     // Update undo/redo button disabled states
@@ -814,7 +806,6 @@ export default function QueueSystem() {
 
                 // Only save initial snapshot if history hasn't been initialized and we have a selected equipment
                 if (!hasInitializedHistory && selectedEquipment) {
-                    console.log("[History] Initializing first snapshot");
                     const initialSnapshot = apiClients
                         .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
                         .sort((a, b) => a.queueIndex - b.queueIndex)

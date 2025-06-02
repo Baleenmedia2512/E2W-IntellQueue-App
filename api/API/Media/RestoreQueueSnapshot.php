@@ -6,10 +6,13 @@ header("Access-Control-Allow-Headers: *");
 
 try {
     $data = json_decode(file_get_contents('php://input'), true);
+
+    // Validate required input
     if (!isset($data['JsonDBName'], $data['JsonRateCard'], $data['JsonSnapshot'])) {
         echo json_encode(['success' => false, 'message' => 'Missing required parameters.']);
         exit;
     }
+
     $dbName = $data['JsonDBName'];
     $rateCard = $data['JsonRateCard'];
     $snapshot = $data['JsonSnapshot'];
@@ -17,28 +20,42 @@ try {
     ConnectionManager::connect($dbName);
     $pdo = ConnectionManager::getConnection();
 
-    // Mark all current queue_table entries for this rateCard for today as Deleted
-    $stmt = $pdo->prepare("UPDATE queue_table SET Status = 'Deleted', QueueIndex = 0 WHERE RateCard = ? AND DATE(EntryDateTime) = CURRENT_DATE");
-    $stmt->execute([$rateCard]);
+    $errors = [];
+    $processed = 0;
 
-    // Insert or update all from snapshot
     foreach ($snapshot as $client) {
-      try {
+        try {
+            // Validate required fields: queueIndex, status, id
+            if (!isset($client['queueIndex'], $client['status'], $client['id'])) {
+                $errors[] = [
+                    'id' => $client['id'] ?? null,
+                    'error' => 'Missing required fields: queueIndex, status, or id.'
+                ];
+                continue;
+            }
 
-                // If no row updated, try insert
-                $stmt = $pdo->prepare("INSERT INTO queue_table (QueueIndex, EntryDateTime, ClientName, ClientContact, RateCard, RateType, Status, Remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([
-                    $client['queueIndex'],
-                    $client['entryDateTime'],
-                    $client['name'],
-                    $client['contact'],
-                    $client['rateCard'],
-                    $client['rateType'],
-                    $client['status'],
-                    $client['remarks']
-                ]);
+            // Update the row with matching ID
+            $updateStmt = $pdo->prepare("
+                UPDATE queue_table 
+                SET QueueIndex = ?, Status = ?
+                WHERE ID = ?
+            ");
+            $updateStmt->execute([
+                $client['queueIndex'],
+                $client['status'],
+                (int)$client['id']
+            ]);
+
+            if ($updateStmt->rowCount() > 0) {
+                $processed++;
+            } else {
+                $errors[] = [
+                    'id' => $client['id'],
+                    'error' => 'No matching record found to update.'
+                ];
+            }
+
         } catch (PDOException $e) {
-            // If an error occurs for this client, record it
             $errors[] = [
                 'id' => $client['id'],
                 'error' => $e->getMessage()
@@ -47,9 +64,13 @@ try {
     }
 
     if (empty($errors)) {
-        echo json_encode(['success' => true, 'message' => 'All records processed successfully.']);
+        echo json_encode(['success' => true, 'message' => "Successfully updated $processed records."]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Some records failed.', 'errors' => $errors]);
+        echo json_encode([
+            'success' => false,
+            'message' => "Updated $processed records, with errors.",
+            'errors' => $errors
+        ]);
     }
 
 } catch (Exception $e) {
