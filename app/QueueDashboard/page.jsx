@@ -368,45 +368,41 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const moveTile = async (fromDisplayedIndex, toDisplayedIndex) => {
         if (fromDisplayedIndex === toDisplayedIndex) return;
         const prevSnapshot = getCurrentSnapshot();
-        const masterCopy = [...allClients];
-        const itemsOfSelectedEquipment = masterCopy.filter(c => c.rateCard === selectedEquipment);
-        const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
+        
+        // 1. Work only on the filtered list
+        const filteredClients = clientsForDisplayGrid.slice(); // shallow copy
+        const [moved] = filteredClients.splice(fromDisplayedIndex, 1);
+        filteredClients.splice(toDisplayedIndex, 0, moved);
 
-        // Sort by queueIndex to get the current order
-        itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
-        // Save the current queueIndex and status order
-        const prevOrder = itemsOfSelectedEquipment.map(c => ({ queueIndex: c.queueIndex, status: c.status }));
-
-        // Remove the dragged item
-        const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
-        // Insert it at the new position
-        itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
-
-        // Assign queueIndex and status based on the previous order
-        itemsOfSelectedEquipment.forEach((client, idx) => {
-            client.queueIndex = prevOrder[idx]?.queueIndex || (idx + 1);
-            client.status = prevOrder[idx]?.status || "Waiting";
+        // 2. Update queueIndex for only the filtered clients
+        // Find the minimum queueIndex among these clients (to preserve global order as much as possible)
+        const minQueueIndex = Math.min(...filteredClients.map(c => c.queueIndex));
+        filteredClients.forEach((client, idx) => {
+            client.queueIndex = minQueueIndex + idx;
         });
 
-        // Build the new optimistic state
-        const newAllClients = [...otherItems, ...itemsOfSelectedEquipment];
+        // 3. Merge back into allClients by id
+        const newAllClients = allClients.map(orig => {
+            const updated = filteredClients.find(fc => fc.id === orig.id);
+            return updated ? { ...orig, queueIndex: updated.queueIndex } : orig;
+        });
 
-        // Optimistically update UI
         setAllClients(newAllClients);
-        
-        // Save snapshot for history
+
+        // 4. Save snapshot, update backend, etc. as before
         await saveSnapshot(getCurrentSnapshot());
 
-        // Call backend to update order
-        const queueOrder = itemsOfSelectedEquipment.map(client => ({
-            id: client.id,
-            queueIndex: client.queueIndex,
-            status: client.status
-        }));
+        const queueOrder = newAllClients
+            .filter(c => c.rateCard === selectedEquipment)
+            .sort((a, b) => a.queueIndex - b.queueIndex)
+            .map(client => ({
+                id: client.id,
+                queueIndex: client.queueIndex,
+                status: client.status
+            }));
 
         await UpdateQueueOrder(companyName, selectedEquipment, queueOrder);
 
-        // Fetch latest data after action
         const apiClients = await FetchQueueDashboardData(companyName);
         
         // Only update UI if backend data differs from optimistic state
