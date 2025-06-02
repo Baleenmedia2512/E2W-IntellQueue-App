@@ -122,16 +122,6 @@ const handleLogin = (event) => {
                     dispatch({ type: 'queueDashboard/resetHistory' })
                     sessionStorage.removeItem("unitPrices");
                     sessionStorage.clear();
-                    // if(elementsToHide.includes("QuoteSenderNavigation")){
-                        
-                    // } else{
-                    //     router.push("/adDetails")
-                    // }
-                    // if (companyName === 'Grace Scans') {
-                    //     router.push("/"); // Navigate to the main screen
-                    // } else {
-                    //     router.push("/adDetails");
-                    // }
                 } else {
                     // Handle invalid credentials scenario
                     //setPassword(''); // Clear password field if needed
