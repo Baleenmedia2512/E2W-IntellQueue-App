@@ -3,17 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
-import { fetchQueueData } from "@/app/api/FetchAPI";
+import { FetchQueueClientData } from "@/app/api/FetchAPI";
+import { useDispatch } from "react-redux";
+import { setQueueStatus } from "@/redux/features/queue-slice";
+import ReadyScreen from "../ReadyScreen/page";
+import ThankYouScreen from "../ThankYouScreen/page";
 
 export default function WaitingScreen() {
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const phoneNumber = useAppSelector(state => state.queueSlice.phoneNumber);
     const language = useAppSelector(state => state.queueSlice.language);
     const router = useRouter();
+    const dispatch = useDispatch();
+    const queueStatus = useAppSelector(state => state.queueSlice.queueStatus);
     const [queuePosition, setQueuePosition] = useState(null);
     const [waitingTime, setWaitingTime] = useState(null);
     const [totalOrders, setTotalOrders] = useState(0);
-    console.log(queuePosition)
+    console.log("queueStatus", queueStatus);
 
     useEffect(() => {
         if (!companyName || !phoneNumber) {
@@ -23,10 +29,11 @@ export default function WaitingScreen() {
 
         const fetchQueue = async () => {
             try {
-                const { position, total, estimatedTime, remainingTime  } = await fetchQueueData(companyName, phoneNumber);
+                const { position, total, estimatedTime, remainingTime, status } = await FetchQueueClientData(companyName, phoneNumber);
                 setQueuePosition(position);
                 setTotalOrders(total);
                 setWaitingTime(estimatedTime);
+                dispatch(setQueueStatus(status));
             } catch (error) {
                 console.error("Error fetching queue data:", error);
             }
