@@ -1067,7 +1067,7 @@ const handleStatusClick = async(row) => {
           Report
         </button>
       </a>
-    </div>
+    </div> 
 
     {/* Bottom row (mobile only): DSR button */}
     {/* <div className="flex sm:contents">
