@@ -23,14 +23,14 @@ try {
                 `CartID`, `EntryDateTime`, `AdMedium`, `adType`, `adCategory`, `Quantity`, `Width`, `Units`, `Scheme`, 
                 `Bold`, `SemiBold`, `Tick`, `Color`, `Paid%`, `AmountwithoutGst`, `Amount`, `GSTAmount`, `GST%`, 
                 `Offers`, `entryUser`, `Valid Status`, `Sent`, `rateperunit`, `ImageId`, `Remarks`, `DateOfRelease`, 
-                `CampaignDays`, `SpotsPerDay`, `SpotDuration`, `DiscountAmount`, `Margin`, `Vendor`, `CampaignDurationUnits`, `RateId`,`Edition`, `Package`, `ValidityDate`
+                `CampaignDays`, `SpotsPerDay`, `SpotDuration`, `DiscountAmount`, `Margin`, `Vendor`, `CampaignDurationUnits`, `RateId`,`Edition`, `Package`
             ) 
             VALUES (
                 NULL, CURRENT_TIMESTAMP(), :PDORateName, :PDOAdType, :PDOAdCategory, :PDOQuantity, :PDOWidth, 
                 :PDOUnits, :PDOScheme, :PDOBold, :PDOSemibold, :PDOTick, :PDOColor, 0, :PDOAmountWithoutGST, 
                 :PDOAmount, :PDOGstAmount, :PDOGstPercentage, '', :PDOEntryUser, 'Valid', 0, :PDORatePerUnit, 
                 0, :PDORemarks, '0000-00-00', :PDOCampaignDuration, :PDOSpotsPerDay, :PDOSpotDuration, 
-                :PDODiscountAmount, :PDOMargin, :PDOVendor, :PDOCampaignUnits, :PDORateId, :PDOEdition, :PDOPackage, :PDOValidityDate
+                :PDODiscountAmount, :PDOMargin, :PDOVendor, :PDOCampaignUnits, :PDORateId, :PDOEdition, :PDOPackage 
             )";
 
     $stmt = $pdo->prepare($sql);
@@ -65,7 +65,7 @@ try {
         ':PDORateId' => $input['JsonRateId'] ?? '',
         ':PDOEdition' => $input['JsonEdition'] ?? '',
         ':PDOPackage' => $input['JsonPackage'] ?? '',
-        ':PDOValidityDate' => $input['JsonValidityDate'] ?? '0000-00-00'
+        
     ]);
 
     echo json_encode(["success" => true, "message" => "Cart Inserted Successfully!"]);
