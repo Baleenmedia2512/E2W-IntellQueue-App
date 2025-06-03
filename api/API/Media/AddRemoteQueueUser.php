@@ -21,7 +21,6 @@ require 'ConnectionManager.php';
 $input = json_decode(file_get_contents('php://input'), true);
 
 $ClientContact = $_POST['JsonClientContact'] ?? $_GET['JsonClientContact'] ?? $input['JsonClientContact'] ?? null;
-$ClientName = $_POST['JsonClientName'] ?? $_GET['JsonClientName'] ?? $input['JsonClientName'] ?? null;
 $RateCard = $_POST['JsonRateCard'] ?? $_GET['JsonRateCard'] ?? $input['JsonRateCard'] ?? null;
 $dbName = $_POST['JsonDBName'] ?? $_GET['JsonDBName'] ?? $input['JsonDBName'] ?? 'Baleen Test';
 
@@ -33,16 +32,16 @@ try {
     exit();
 }
 
-if (!$ClientContact || !$ClientName) {
-    echo json_encode(['error' => 'Client Name and Contact are required.']);
+if (!$ClientContact) {
+    echo json_encode(['error' => 'Client Contact is required.']);
     exit();
 }
 
 try {
     $currentDateTime = date('Y-m-d H:i:s');
-    $insertQuery = "INSERT INTO queue_table (QueueIndex, EntryDateTime, ClientName, ClientContact, RateCard, RateType, Status, Remarks) VALUES (0, ?, ?, ?, ?, 'None', 'Remote', 'None')";
+    $insertQuery = "INSERT INTO queue_table (QueueIndex, EntryDateTime, ClientName, ClientContact, RateCard, RateType, Status, Remarks) VALUES (0, ?,'RemoteUser', ?, ?, 'None', 'Remote', 'None')";
     $stmt = $pdo->prepare($insertQuery);
-    $stmt->execute([$currentDateTime, $ClientName, $ClientContact, $RateCard]);
+    $stmt->execute([$currentDateTime, $ClientContact, $RateCard]);
     echo json_encode(['status' => 'remote_registered']);
 } catch (Exception $e) {
     http_response_code(500);

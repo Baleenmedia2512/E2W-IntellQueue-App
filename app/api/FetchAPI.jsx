@@ -591,15 +591,14 @@ export const RestoreQueueSnapshot = async (DBName, rateCard, snapshot) => {
     });
 };
 
-export const AddRemoteQueueUser = async (DBName, ClientContact, ClientName, RateCard) => {
-    console.log(DBName, ClientContact, ClientName, RateCard); // Debugging log to check parameters
+export const AddRemoteQueueUser = async (DBName, ClientContact, RateCard) => {
+    console.log(DBName, ClientContact, RateCard); // Debugging log to check parameters
     try {
         const response = await api.post(
             "AddRemoteQueueUser.php",
             {
                 JsonDBName: DBName,
                 JsonClientContact: ClientContact,
-                JsonClientName: ClientName,
                 JsonRateCard: RateCard, // Ensure RateCard is defined in your context
             },
             {
