@@ -621,7 +621,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <div className="min-h-screen bg-gray-50 p-6">
+                    <div className="min-h-screen bg-gray-50 p-6 lg:px-16 xl:px-24 2xl:px-32">
 {/* Responsive Top Section: All elements aligned, Undo/Redo far right */}
 <div className="w-full mb-4 pt-2 md:pt-6">
   {/* Header Row: Back, Title/Date, Undo/Redo (undo/redo always far right) */}
@@ -695,7 +695,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     </div>
   </div>
 </div>
-                <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}>
+                 <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}>
                     {clientsForDisplayGrid.map((client, index) => (
                         <DraggableTile
                             key={client.id}
