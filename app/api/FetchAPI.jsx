@@ -497,15 +497,15 @@ export const verifyOTP = async (DBName, phoneNumber, otpCode) => {
     }
 };
 
-export const fetchQueueData = async (DBName, phoneNumber) => {
+export const FetchQueueClientData = async (DBName, phoneNumber) => {
     try {
-        const response = await api.get("FetchQueueData.php", {
+        const response = await api.get("FetchQueueClientData.php", {
             headers: { "Content-Type": "application/json" },
             params: { JsonDBName: DBName, JsonClientContact: phoneNumber }
         });
 
-        const { position, totalOrders, estimatedTime, remainingTime } = response.data;
-        return { position, total: totalOrders, estimatedTime, remainingTime };
+        const { position, totalOrders, estimatedTime, remainingTime, status } = response.data;
+        return { position, total: totalOrders, estimatedTime, remainingTime, status };
     } catch (error) {
         console.error("Error fetching queue data:", error);
         throw error;
@@ -591,15 +591,14 @@ export const RestoreQueueSnapshot = async (DBName, rateCard, snapshot) => {
     });
 };
 
-export const AddRemoteQueueUser = async (DBName, ClientContact, ClientName, RateCard) => {
-    console.log(DBName, ClientContact, ClientName, RateCard); // Debugging log to check parameters
+export const AddRemoteQueueUser = async (DBName, ClientContact, RateCard) => {
+    console.log(DBName, ClientContact, RateCard); // Debugging log to check parameters
     try {
         const response = await api.post(
             "AddRemoteQueueUser.php",
             {
                 JsonDBName: DBName,
                 JsonClientContact: ClientContact,
-                JsonClientName: ClientName,
                 JsonRateCard: RateCard, // Ensure RateCard is defined in your context
             },
             {
@@ -617,4 +616,50 @@ export const AddRemoteQueueUser = async (DBName, ClientContact, ClientName, Rate
         }
         throw error;
     }
+};
+
+export const SaveFcmToken = async (DBName, Token) => {
+    try {
+        const response = await api.post(
+            "SaveFcmToken.php",
+            {
+                JsonDBName: DBName,
+                JsonToken: Token,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        console.log("Save fcm token", response.data)
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+        }
+        throw error;
+    }
+};
+
+export const fetchFcmTokens = async (DBName) => {
+  try {
+    const response = await api.post(
+      "FetchFcmToken.php",
+      { JsonDBName: DBName },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    if (response.data && response.data.success) {
+        console.log("Save fcm token", response.data)
+      return response.data.tokens; // Array of tokens
+    } else {
+      console.error("Fetch tokens failed:", response.data.message);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching tokens:", error);
+    return [];
+  }
 };

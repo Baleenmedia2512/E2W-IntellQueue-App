@@ -99,10 +99,10 @@ const handleLogin = (event) => {
             .then(data => {
                 if (data.status === 'Login Successfully') {
                     setSuccessMessage('Login Successful!');
-                    dispatch(setDBName(companyName));
+                    // dispatch(setDBName(companyName));
                     dispatch(setCompanyName('Baleen Test'))
                     // dispatch(login(userName));
-                    // dispatch(setDBName(companyName));
+                    dispatch(setDBName(companyName));
                     setTimeout(() => {
                         setSuccessMessage('');
                         router.push("/")
@@ -122,6 +122,17 @@ const handleLogin = (event) => {
                     dispatch({ type: 'queueDashboard/resetHistory' })
                     sessionStorage.removeItem("unitPrices");
                     sessionStorage.clear();
+                    localStorage.clear();
+                    // if(elementsToHide.includes("QuoteSenderNavigation")){
+                        
+                    // } else{
+                    //     router.push("/adDetails")
+                    // }
+                    // if (companyName === 'Grace Scans') {
+                    //     router.push("/"); // Navigate to the main screen
+                    // } else {
+                    //     router.push("/adDetails");
+                    // }
                 } else {
                     // Handle invalid credentials scenario
                     //setPassword(''); // Clear password field if needed
@@ -248,7 +259,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version 1.12.3 {/*Commenting for release */}
+                        Version 1.12.4 {/*Commenting for release */}
                     </div>
                 </div>
                 <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">

@@ -96,7 +96,7 @@ const filterPersistConfig = {
 const queuePersistConfig = {
   key: "queue",
   storage: storage,
-  whitelist: ["phoneNumber", "language"],
+  whitelist: ["phoneNumber", "language", "queueStatus"], // Add queueStatus to persist
 };
 
 const queueDashboardPersistConfig = {
