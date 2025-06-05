@@ -421,7 +421,7 @@ export default function BottomBarTest() {
   }
 
   return (
-    <div className="relative mt-24">
+    <div className="relative">
       {/* Main Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-20 z-50 bg-white  shadow-2xl" style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)' }}>
         <div className="flex justify-around  max-w-lg mx-auto relative ">

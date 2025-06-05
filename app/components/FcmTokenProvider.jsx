@@ -2,16 +2,8 @@
 
 import useFcmToken from '@/hooks/useFcmToken';
 import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 
 export default function FcmTokenProvider() {
-  const pathname = usePathname();
-
-  // Check if we are on the login page
-  if (pathname === '/login') {
-    return null; // Don't render anything
-  }
-
   const { token, notificationPermissionStatus } = useFcmToken();
 
   useEffect(() => {

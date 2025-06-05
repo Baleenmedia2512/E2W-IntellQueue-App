@@ -28,9 +28,9 @@ try {
             VALUES (
                 NULL, CURRENT_TIMESTAMP(), :PDORateName, :PDOAdType, :PDOAdCategory, :PDOQuantity, :PDOWidth, 
                 :PDOUnits, :PDOScheme, :PDOBold, :PDOSemibold, :PDOTick, :PDOColor, 0, :PDOAmountWithoutGST, 
-                :PDOAmount, :PDOGstAmount, :PDOGstPercentage, '', :PDOEntryUser, 'Valid', 1, :PDORatePerUnit, 
+                :PDOAmount, :PDOGstAmount, :PDOGstPercentage, '', :PDOEntryUser, 'Valid', 0, :PDORatePerUnit, 
                 0, :PDORemarks, '0000-00-00', :PDOCampaignDuration, :PDOSpotsPerDay, :PDOSpotDuration, 
-                :PDODiscountAmount, :PDOMargin, :PDOVendor, :PDOCampaignUnits, :PDORateId, :PDOEdition, :PDOPackage
+                :PDODiscountAmount, :PDOMargin, :PDOVendor, :PDOCampaignUnits, :PDORateId, :PDOEdition, :PDOPackage 
             )";
 
     $stmt = $pdo->prepare($sql);
@@ -64,7 +64,8 @@ try {
         ':PDOCampaignUnits' => $input['JsonCampaignUnits'] ?? '',
         ':PDORateId' => $input['JsonRateId'] ?? '',
         ':PDOEdition' => $input['JsonEdition'] ?? '',
-        ':PDOPackage' => $input['JsonPackage'] ?? ''
+        ':PDOPackage' => $input['JsonPackage'] ?? '',
+        
     ]);
 
     echo json_encode(["success" => true, "message" => "Cart Inserted Successfully!"]);
