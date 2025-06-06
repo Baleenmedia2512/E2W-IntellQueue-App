@@ -385,19 +385,32 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
         // Sort by queueIndex to get the current order
         itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
-        // Save the current queueIndex and status order
-        const prevOrder = itemsOfSelectedEquipment.map(c => ({ queueIndex: c.queueIndex, status: c.status }));
 
-        // Remove the dragged item
-        const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
-        // Insert it at the new position
-        itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
+        // When a filter is active, we need to respect it
+        const filteredItems = filter !== "All" ?
+            itemsOfSelectedEquipment.filter(c => c.status === filter) :
+            itemsOfSelectedEquipment;
+        
+        // Get the actual client objects being swapped from the filtered list
+        const fromClient = filteredItems[fromDisplayedIndex];
+        const toClient = filteredItems[toDisplayedIndex];
 
-        // Assign queueIndex and status based on the previous order
-        itemsOfSelectedEquipment.forEach((client, idx) => {
-            client.queueIndex = prevOrder[idx]?.queueIndex || (idx + 1);
-            client.status = prevOrder[idx]?.status || "Waiting";
-        });
+        if (!fromClient || !toClient) return;
+
+        // Find their indices in the original full list
+        const fromOriginalIndex = itemsOfSelectedEquipment.findIndex(c => c.id === fromClient.id);
+        const toOriginalIndex = itemsOfSelectedEquipment.findIndex(c => c.id === toClient.id);
+
+        // Swap both queue indices and statuses
+        const tempQueueIndex = fromClient.queueIndex;
+        const tempStatus = fromClient.status;
+        fromClient.queueIndex = toClient.queueIndex;
+        fromClient.status = toClient.status;
+        toClient.queueIndex = tempQueueIndex;
+        toClient.status = tempStatus;
+
+        // Re-sort the full list by queue index
+        itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
 
         // Build the new optimistic state
         const newAllClients = [...otherItems, ...itemsOfSelectedEquipment];
