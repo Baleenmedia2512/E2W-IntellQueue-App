@@ -12,30 +12,19 @@ export async function POST(request) {
   const responses = [];
 
   for (const singleToken of token) {
-    // const payload = {
-    //   token: singleToken,
-    //   notification: {
-    //     title: title,
-    //     body: body,
-    //   },
-    //   webpush: link
-    //     ? {
-    //         fcmOptions: {
-    //           link,
-    //         },
-    //       }
-    //     : undefined,
-    // };
-
     const payload = {
       token: singleToken,
-      data: {
-        title: title || "",
-        body: body || "",
-        link: link || "",
-        icon: icon || "/icon-192x192.png",
-        ...extraData, // Spread custom data fields if present
-      }
+      notification: {
+        title: title,
+        body: body,
+      },
+      webpush: link
+        ? {
+            fcmOptions: {
+              link,
+            },
+          }
+        : undefined,
     };
 
     try {
