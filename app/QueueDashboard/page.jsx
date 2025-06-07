@@ -696,23 +696,27 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
   </div>
 </div>
                  <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}>
-                    {clientsForDisplayGrid.map((client, index) => (
-                        <DraggableTile
-                            key={client.id}
-                            client={client}
-                            displayedClientIndex={index} // This is the index within clientsForDisplayGrid
-                            moveTile={moveTile}
-                            closeToken={closeToken}
-                            completeToken={completeToken}
-                            doneAndHold={doneAndHold}
-                            callNext={callNext}
-                            continueToken={continueToken}
-                            queueStarted={queueStarted[selectedEquipment]} // Add these new props
-                            handleStartQueue={handleStartQueue}
-                            allClients={allClients}
-                            selectedEquipment={selectedEquipment}
-                        />
-                    ))}
+{clientsForDisplayGrid.map((client, index) => {
+    // Find the index in the full equipment queue (displayedClients)
+    const fullIndex = displayedClients.findIndex(c => c.id === client.id);
+    return (
+        <DraggableTile
+            key={client.id}
+            client={client}
+            displayedClientIndex={fullIndex}
+            moveTile={moveTile}
+            closeToken={closeToken}
+            completeToken={completeToken}
+            doneAndHold={doneAndHold}
+            callNext={callNext}
+            continueToken={continueToken}
+            queueStarted={queueStarted[selectedEquipment]}
+            handleStartQueue={handleStartQueue}
+            allClients={allClients}
+            selectedEquipment={selectedEquipment}
+        />
+    );
+})}
                 </div>
                 <style jsx>{`@keyframes slide-in-left {from {transform: translateX(-100%);} to {transform: translateX(0);}} @keyframes slide-in-right {from {transform: translateX(100%);} to {transform: translateX(0);}} .animate-slide-in-left {animation: slide-in-left 0.5s ease-out forwards;} .animate-slide-in-right {animation: slide-in-right 0.5s ease-out forwards;}`}</style>
             </div>
