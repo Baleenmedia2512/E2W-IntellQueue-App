@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 export const api = axios.create({
-    baseURL: "https://orders.baleenmedia.com/API/Media/"
+    // baseURL: "https://orders.baleenmedia.com/API/Media/"
     // baseURL: "http://localhost/Easy2Work/api/API/Media/"
+    baseURL: "http://localhost/easy2work-backend/API/Media/"
 })    
 
 export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
@@ -662,4 +663,30 @@ export const fetchFcmTokens = async (DBName) => {
     console.error("Error fetching tokens:", error);
     return [];
   }
+};
+
+export const SaveQueueClientFcmToken = async (DBName, PhoneNumber, Token) => {
+    try {
+        const response = await api.post(
+            "SaveQueueClientFcmToken.php",
+            {
+                JsonDBName: DBName,
+                JsonPhoneNumber: PhoneNumber,
+                JsonToken: Token,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        console.log("Save fcm token", response.data)
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+        }
+        throw error;
+    }
 };

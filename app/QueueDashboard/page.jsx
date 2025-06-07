@@ -32,6 +32,44 @@ function EquipmentIcon({ equipmentName }) {
     );
 }
 
+// --- Add a new function to send a reminder to a client by their ID ---
+async function sendReminderToClient(clientId, allClients) {
+    // Try to find the client in allClients (already fetched from the DB)
+    const clientRow = allClients.find(c => c.id === clientId);
+
+    if (!clientRow) {
+        console.warn("Client not found for reminder notification.");
+        return;
+    }
+    if (!clientRow.fcmToken || clientRow.fcmToken.trim() === "") {
+        console.warn("No FcmToken for client, skipping reminder notification.");
+        return;
+    }
+
+    // Compose the notification
+    try {
+        const response = await fetch("/api/send-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                token: [clientRow.fcmToken], // Send directly to this token
+                icon: "/icon-192x192.png",
+                title: `Your turn in queue!`,
+                message: `Hi ${clientRow.name}, it's your turn now. Please proceed to the reception. | வணக்கம் ${clientRow.name}, நீங்கள் தான் அடுத்தவர். தயவுசெய்து ரிசப்ஷனுக்கு செல்லவும்.`,
+                data: {
+                    client: clientRow.name,
+                    rateCard: clientRow.rateCard,
+                    rateType: clientRow.rateType
+                }
+            }),
+        });
+        const data = await response.json();
+        console.log("Reminder sent:", data);
+    } catch (err) {
+        console.error("Error sending reminder notification:", err);
+    }
+}
+
 // --- Confirmation Modal (Unchanged) ---
 function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confirmation", color = "blue" }) {
   if (!isOpen) return null;
@@ -236,15 +274,16 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const [isRestoring, setIsRestoring] = useState(false);
     let notificationTimeoutId = null; // Declare outside or useRef in React
 
-        const notifyIfNeeded = async (client, rateCard, rateType) => {
+    const notifyIfNeeded = async (clientObj) => {
         if (
             notificationDeduplicator.shouldAllow({
-                client,
-                rateCard,
-                rateType,
+                client: clientObj.name,
+                rateCard: clientObj.rateCard,
+                rateType: clientObj.rateType,
             })
         ) {
-            await handleNotification(client, rateCard, rateType);
+            await handleNotification(clientObj.name, clientObj.rateCard, clientObj.rateType);
+            await sendReminderToClient(clientObj.id, allClients);
         }
     };
 
@@ -278,7 +317,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                     token: filteredTokens,
                     icon: "/icon-192x192.png",
                     title: `Queue Update!`,
-                    body: `${clientName} is now IN-PROGRESS${extraInfo}`,
+                    message: `${clientName} is now IN-PROGRESS${extraInfo}`,
                     link: "/QueueDashboard",
                     data: {
                         client: clientName,
@@ -288,6 +327,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 }),
             });
             const data = await response.json();
+            console.log(data)
         } catch (error) {
             console.error("Error sending notification:", error);
         }
@@ -466,7 +506,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
 
         if (changedClient) {
-            await notifyIfNeeded(changedClient.name, changedClient.rateCard, changedClient.rateType);
+            await notifyIfNeeded(changedClient);
         }
     };
   
@@ -502,11 +542,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
         // 🔒 Safe call to handleNotification only if nextInProgressClient exists and has a name
         if (nextInProgressClient && nextInProgressClient.name && nextInProgressClient.name.trim() !== "") {
-            await notifyIfNeeded(
-                nextInProgressClient.name,
-                nextInProgressClient.rateCard,
-                nextInProgressClient.rateType
-            );
+            await notifyIfNeeded(nextInProgressClient);
         } else {
             console.warn("No valid next In-Progress client found, skipping notification.");
         }
@@ -517,7 +553,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const clientName = displayedClients[displayedIndex].name;
         await QueueDashboardAction(companyName, 'continueToken', { JsonClientId: clientId });
         const apiClients = await saveSnapshotWithUpdatedState();
-        await notifyIfNeeded(clientName, displayedClients[displayedIndex].rateCard, displayedClients[displayedIndex].rateType);
+        await notifyIfNeeded(displayedClients[displayedIndex]);
     };
 
     const handleStartQueue = async () => {
@@ -525,7 +561,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         if (!firstClient) return;
         await QueueDashboardAction(companyName, 'startQueue', { JsonClientId: firstClient.id });
         const apiClients = await saveSnapshotWithUpdatedState();
-        await notifyIfNeeded(firstClient.name, firstClient.rateCard, firstClient.rateType);
+        await notifyIfNeeded(firstClient);
     };
 
     // --- Undo/Redo with notification debounce ---
@@ -534,11 +570,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         lastInProgressClientRef.current = clientObj;
         notificationTimer.current = setTimeout(() => {
             if (lastInProgressClientRef.current) {
-                notifyIfNeeded(
-                    lastInProgressClientRef.current.name,
-                    lastInProgressClientRef.current.rateCard,
-                    lastInProgressClientRef.current.rateType
-                );
+                notifyIfNeeded(lastInProgressClientRef.current);
             }
             notificationTimer.current = null;
             lastInProgressClientRef.current = null;

@@ -37,8 +37,9 @@ try {
             'inTime' => $inTime,
             'contact' => $row['ClientContact'],
             'status' => $row['Status'],
-	    'entryDateTime' => $row['EntryDateTime'],
-	    'remarks' => $row['Remarks'],
+            'entryDateTime' => $row['EntryDateTime'],
+            'remarks' => $row['Remarks'],
+            'fcmToken' => $row['FcmToken'],
         ];
     }, $rows);
 

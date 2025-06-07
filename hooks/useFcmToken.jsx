@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { getToken, onMessage } from "firebase/messaging";
 import { fetchToken, messaging } from "./../lib/firebase-config";
-import { useRouter } from "next/navigation";
-import { SaveFcmToken } from './../app/api/FetchAPI';
+import { useRouter, usePathname } from "next/navigation";
+import { SaveFcmToken, SaveQueueClientFcmToken } from './../app/api/FetchAPI';
 import { useAppSelector } from '@/redux/store';
 
 async function getNotificationPermissionAndToken() {
@@ -30,11 +30,18 @@ async function getNotificationPermissionAndToken() {
 
 const useFcmToken = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
+  const phoneNumber = useAppSelector(state => state.queueSlice.phoneNumber); //Queue-Client
   const router = useRouter();
+  const pathname = usePathname();
   const [notificationPermissionStatus, setNotificationPermissionStatus] = useState(null);
   const [token, setToken] = useState([]);
   const retryLoadToken = useRef(0);
   const isLoading = useRef(false);
+
+  const isQueueSystemScreen =
+    pathname?.startsWith("/QueueSystem/ReadyScreen") ||
+    pathname?.startsWith("/QueueSystem/ThankYouScreen") ||
+    pathname?.startsWith("/QueueSystem/WaitingScreen");
 
   const loadToken = async () => {
     if (isLoading.current) return;
@@ -102,24 +109,40 @@ const useFcmToken = () => {
     return () => unsubscribe?.();
   }, [token, router]);
 
-useEffect(() => {
-  if (token) {
-    const saveToken = async () => {
-      try {
-        const res = await SaveFcmToken(companyName, token);
-        if (res && res.success) {
-          console.log("Token saved successfully.");
-        } else {
-          console.warn("Token save response:", res);
+  useEffect(() => {
+    if (typeof token === "string" && token.trim() !== "") {
+      const saveToken = async () => {
+        try {
+          if (isQueueSystemScreen) {
+            if (phoneNumber) {
+              const res2 = await SaveQueueClientFcmToken(companyName, phoneNumber, token);
+              if (res2 && res2.success) {
+                console.log("Queue token saved successfully.");
+              } else {
+                console.warn("Queue token save response:", res2);
+              }
+            } else {
+              console.warn("QueueSystem screen but phone number is empty, token will not be saved.");
+            }
+          } else {
+            const res = await SaveFcmToken(companyName, token);
+            if (res && res.success) {
+              console.log("Token saved successfully.");
+            } else {
+              console.warn("Token save response:", res);
+            }
+          }
+        } catch (error) {
+          console.error("Error saving FCM token:", error);
         }
-      } catch (error) {
-        console.error("Error saving FCM token:", error);
-      }
-    };
+      };
 
-    saveToken();
-  }
-}, [token]);
+      saveToken();
+    } else {
+      console.warn("FCM token is empty or invalid, not saving.");
+    }
+
+  }, [token, isQueueSystemScreen, phoneNumber, companyName]);
 
 
   return { token, notificationPermissionStatus };

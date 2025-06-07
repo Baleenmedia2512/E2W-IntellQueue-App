@@ -19,11 +19,16 @@ export default function WaitingScreen() {
     const [queuePosition, setQueuePosition] = useState(null);
     const [waitingTime, setWaitingTime] = useState(null);
     const [totalOrders, setTotalOrders] = useState(0);
-    console.log("queueStatus", queueStatus);
+    console.log("phoneNumber", phoneNumber);
+
 
     useEffect(() => {
         if (!companyName || !phoneNumber) {
             router.push('/QueueSystem/InvalidAccess');
+            return;
+        }
+        if (!phoneNumber) {
+            router.push('/QueueSystem/EnterDetails');
             return;
         }
 

@@ -3,7 +3,8 @@ import { messaging } from "@/lib/firebase-admin";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { token, title, body, link } = await request.json();
+  const { token, title, message, link, icon } = await request.json();
+  
 
   if (!token || !Array.isArray(token) || token.length === 0) {
     return NextResponse.json({ success: false, error: "A non-empty tokens array is required" });
@@ -16,7 +17,7 @@ export async function POST(request) {
       token: singleToken,
       notification: {
         title: title,
-        body: body,
+        body: message,
       },
       webpush: link
         ? {

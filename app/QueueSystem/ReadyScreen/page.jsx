@@ -22,6 +22,12 @@ console.log("queueStatus", queueStatus);
     }, [companyName, router]);
 
     useEffect(() => {
+        if (!phoneNumber) {
+            router.push('/QueueSystem/EnterDetails');
+        }
+    }, [phoneNumber, router]);
+
+    useEffect(() => {
         if (!companyName) return;
         const fetchQueue = async () => {
             try {

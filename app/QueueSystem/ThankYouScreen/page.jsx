@@ -14,13 +14,19 @@ export default function ThankYouScreen() {
     const queueStatus = useAppSelector(state => state.queueSlice.queueStatus);
     const router = useRouter();
     const dispatch = useDispatch();
-console.log("queueStatus", queueStatus);
+
     useEffect(() => {
         if (!companyName) {
             console.warn("Company name is missing, redirecting...");
             router.push('/QueueSystem/InvalidAccess');
         }
     }, [companyName, router]);
+
+        useEffect(() => {
+        if (!phoneNumber) {
+            router.push('/QueueSystem/EnterDetails');
+        }
+    }, [phoneNumber, router]);
 
     useEffect(() => {
         if (!companyName) return;
