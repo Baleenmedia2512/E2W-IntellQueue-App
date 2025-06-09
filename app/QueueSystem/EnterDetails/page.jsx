@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { setPhoneNumber } from "@/redux/features/queue-slice";
+import { setPhoneNumber, resetPhoneNumber, resetQueueStatus } from "@/redux/features/queue-slice";
 import { checkAndRegisterQueue, AddRemoteQueueUser } from "@/app/api/FetchAPI";
 import { useAppSelector } from "@/redux/store";
 import { Listbox } from "@headlessui/react";
@@ -28,7 +28,6 @@ export default function EnterDetails() {
   ];
   const [rateCard, setRateCard] = useState(scanOptions[0].value);
 
-  console.log("rateCard:", rateCard);
   useEffect(() => {
     if (!companyName) {
       console.warn("Company name is missing, redirecting...");
@@ -38,6 +37,19 @@ export default function EnterDetails() {
 
   useEffect(() => {
     inputRef.current?.focus();
+  }, []);
+
+  // Force reset on mount if phoneNumber is set (regardless of navigation type)
+  useEffect(() => {
+    if (phoneNumber) {
+      dispatch(resetPhoneNumber());
+      dispatch(resetQueueStatus());
+      setIsRegistering(false);
+      setMessage("");
+      setError(null);
+      setRateCard(scanOptions[0].value);
+      inputRef.current?.focus();
+    }
   }, []);
 
   const handlePhoneChange = (e) => {

@@ -21,7 +21,7 @@ return [
     'Baleen Test' => [
         'servername' => 'localhost',
         'username' => 'root',
-        'password' => '',
+        'password' => 'Easy@2Work@123#',
         'dbname' => 'baleeed5_test_e2w',  // Replace this with your actual local DB name
         'port' => 3306                // Explicitly define port
     ],

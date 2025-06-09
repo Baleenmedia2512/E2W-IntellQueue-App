@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
 import { FetchQueueClientData } from "@/app/api/FetchAPI";
 import { useDispatch } from "react-redux";
@@ -15,6 +15,7 @@ export default function WaitingScreen() {
     const language = useAppSelector(state => state.queueSlice.language);
     const router = useRouter();
     const dispatch = useDispatch();
+    const pathname = usePathname();
     const queueStatus = useAppSelector(state => state.queueSlice.queueStatus);
     const [queuePosition, setQueuePosition] = useState(null);
     const [waitingTime, setWaitingTime] = useState(null);
@@ -23,7 +24,7 @@ export default function WaitingScreen() {
 
 
     useEffect(() => {
-        if (!companyName || !phoneNumber) {
+        if (!companyName && phoneNumber) {
             router.push('/QueueSystem/InvalidAccess');
             return;
         }
@@ -50,14 +51,36 @@ export default function WaitingScreen() {
         return () => clearInterval(fetchInterval);
     }, [companyName, phoneNumber, router, dispatch]);
 
-    if (queueStatus === "In-Progress") {
-        router.push("/QueueSystem/ReadyScreen");
-        return null;
-    }
-    if (queueStatus === "Completed") {
-        router.push("/QueueSystem/ThankYouScreen");
-        return null;
-    }
+    // Detect browser back/forward navigation
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            if (window.history.state && window.history.state.idx !== undefined && window.history.state.idx < 1) {
+                if (phoneNumber) {
+                    router.replace('/QueueSystem/EnterDetails');
+                } else {
+                    router.replace('/QueueSystem/LanguageSelection');
+                }
+                return;
+            }
+        }
+    }, [phoneNumber, router]);
+
+    useEffect(() => {
+        if (queueStatus === "In-Progress" && pathname !== "/QueueSystem/ReadyScreen") {
+            router.replace("/QueueSystem/ReadyScreen");
+        } else if (queueStatus === "Completed" && pathname !== "/QueueSystem/ThankYouScreen") {
+            router.replace("/QueueSystem/ThankYouScreen");
+        }
+    }, [queueStatus, router, pathname]);
+
+    // if (queueStatus === "In-Progress") {
+    //     router.push("/QueueSystem/ReadyScreen");
+    //     return null;
+    // }
+    // if (queueStatus === "Completed") {
+    //     router.push("/QueueSystem/ThankYouScreen");
+    //     return null;
+    // }
     if (queueStatus === "Remote") {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">
