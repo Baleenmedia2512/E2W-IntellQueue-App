@@ -95,7 +95,13 @@ export default function WaitingScreen() {
                     </p>
                 </div>
                 <p className="text-gray-700 font-medium text-2xl mb-6">
-                    {language === "en" ? "Approx. Waiting Time" : "தற்காலிக காத்திருப்பு நேரம்"}
+                    {language === "en"
+                        ? (<>
+                            Approx. waiting time,<br />if you book your appointment now.
+                          </>)
+                        : (<>
+                            நீங்கள் இப்போது முன்பதிவு செய்தால்,<br />இது உங்களுக்கான தோராயமான காத்திருப்பு நேரம் ஆகும்.
+                          </>)}
                 </p>
                     <div className="my-8">
                         <img src="/images/WaitingImage.png" alt="Waiting" className="w-48 h-48 object-contain opacity-80" />
@@ -107,12 +113,12 @@ export default function WaitingScreen() {
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15 .621 0 1.125-.504 1.125-1.125v-3.375a1.125 1.125 0 0 0-1.125-1.125c-1.636 0-3.21-.26-4.687-.75a1.125 1.125 0 0 0-1.125.27l-2.25 2.25a12.042 12.042 0 0 1-5.25-5.25l2.25-2.25a1.125 1.125 0 0 0 .27-1.125c-.49-1.477-.75-3.051-.75-4.687A1.125 1.125 0 0 0 5.25 2.25H1.875C1.254 2.25.75 2.754.75 3.375z" />
                         </svg>
-                        {language === "en" ? "Call Reception" : "கவுண்டரை அழைக்கவும்"}
+                        {language === "en" ? "Book Appointment" : "முன்பதிவு செய்யவும்"}
                     </button>
                     <p className="text-gray-500 text-sm mt-6">
                         {language === "en"
-                            ? "You are a remote user. You can view your estimated waiting time, but you are not in the queue until you call the clinic."
-                            : "நீங்கள் தற்காலிக பயனர். உங்கள் மதிப்பிடப்பட்ட காத்திருப்பு நேரத்தை காணலாம், ஆனால் வரிசையில் சேர கிளினிக்கிற்கு அழைக்க வேண்டும்."}
+                            ? "You can view your estimated waiting time, but you are not in the queue until you book your appointment by calling the clinic."
+                            : "உங்கள் மதிப்பிடப்பட்ட காத்திருப்பு நேரத்தை காணலாம், ஆனால் நேரம் பதிவு செய்ய கிளினிக்கிற்கு அழைக்க வேண்டும்."}
                     </p>
                 </div>
             </div>
