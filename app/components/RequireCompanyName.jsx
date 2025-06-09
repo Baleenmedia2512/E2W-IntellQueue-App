@@ -12,7 +12,7 @@ export default function RequireCompanyName({ children }) {
   useEffect(() => {
     // Exclude all /QueueSystem/* and /QueueSystem/AutoLogin routes from companyName check
     // const isQueueSystem = pathname?.startsWith('/QueueSystem');
-    const isAutoLogin = pathname === '/QueueSystem/AutoLogin';
+    const isAutoLogin = pathname === '/QueueSystem';
 
     if (!companyName && !isAutoLogin) {
       router.push('/login');
