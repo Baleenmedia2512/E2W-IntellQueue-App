@@ -64,7 +64,6 @@ async function sendReminderToClient(clientId, allClients) {
             }),
         });
         const data = await response.json();
-        console.log("Reminder sent:", data);
     } catch (err) {
         console.error("Error sending reminder notification:", err);
     }
@@ -130,21 +129,35 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
 }
 
 // --- Draggable Tile (Modified to show equipment icon) ---
-function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment }) {
+function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment, hoveredIndex, setHoveredIndex }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
-        item: { index: displayedClientIndex }, // Use index from the displayed (filtered) list
+        item: { index: displayedClientIndex },
         collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     });
 
     const [, drop] = useDrop({
         accept: ItemType,
         hover: (draggedItem) => {
+            if (hoveredIndex !== displayedClientIndex) {
+                setHoveredIndex(displayedClientIndex);
+            }
+        },
+        drop: (draggedItem) => {
+            setHoveredIndex(null);
             if (draggedItem.index !== displayedClientIndex) {
                 moveTile(draggedItem.index, displayedClientIndex);
                 draggedItem.index = displayedClientIndex;
             }
         },
+        collect: (monitor) => {
+            if (!monitor.isOver()) {
+                if (hoveredIndex === displayedClientIndex) {
+                    setHoveredIndex(null);
+                }
+            }
+            return {};
+        }
     });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -200,9 +213,16 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         <>
             <div
                 ref={(node) => ref(drop(node))}
-                className={`bg-white p-4 rounded-lg shadow-md border border-gray-200 relative select-none cursor-move transition-transform duration-300 ${
-                    isDragging ? "opacity-50 scale-105 border-blue-500 shadow-xl" : "hover:shadow-lg"
-                }`}
+                className={`bg-white p-4 rounded-xl shadow-lg border border-gray-200 relative select-none cursor-move transition-transform duration-300 \
+                    ${isDragging ? "opacity-100 scale-105 border-blue-500 shadow-2xl" :
+                      hoveredIndex === displayedClientIndex && !isDragging ? "ring-4 ring-blue-400/40 border-blue-400 bg-gradient-to-br from-blue-50 to-white/80 shadow-xl scale-105 opacity-70 z-20" :
+                      "hover:shadow-xl"}
+                `}
+                style={hoveredIndex === displayedClientIndex && !isDragging ? {
+                    boxShadow: '0 8px 32px 0 rgba(30,64,175,0.10), 0 2px 8px rgba(30,64,175,0.06)',
+                    backdropFilter: 'blur(2px)',
+                    transition: 'box-shadow 0.3s, transform 0.2s',
+                } : {}}
             >
                 <div className="flex justify-between items-start mb-2">
                     <span className="text-gray-500 text-sm font-medium">#{client.queueIndex}</span>
@@ -272,7 +292,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const [filter, setFilter] = useState("All");
     const [animationDirection, setAnimationDirection] = useState("");    
     const [isRestoring, setIsRestoring] = useState(false);
-    let notificationTimeoutId = null; // Declare outside or useRef in React
+    const [hoveredIndex, setHoveredIndex] = useState(null); // Track hovered tile
 
     const notifyIfNeeded = async (clientObj) => {
         if (
@@ -327,7 +347,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 }),
             });
             const data = await response.json();
-            console.log(data)
         } catch (error) {
             console.error("Error sending notification:", error);
         }
@@ -335,6 +354,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
     // Save a snapshot to history
     const saveSnapshot = async (snapshot) => {
+        console.log('[DEBUG] Saving snapshot:', JSON.stringify(snapshot, null, 2));
         const res = await SaveQueueSnapshot(companyName, selectedEquipment, snapshot);
         if (res.data && res.data.success) {
             // Get the latest history ID and update the stack
@@ -376,7 +396,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     // Helper to get the current queue snapshot
     const getCurrentSnapshot = () => {
         return allClients
-            .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+            .filter(c => c.rateCard === selectedEquipment && c.status !== "Deleted") // Only exclude Deleted
             .sort((a, b) => a.queueIndex - b.queueIndex)
             .map(c => ({
                 id: c.id,
@@ -392,15 +412,9 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     };
 
     const saveSnapshotWithUpdatedState = async () => {
-        // Get latest state
-        const apiClients = await FetchQueueDashboardData(companyName);
-        // Update local state
-        setAllClients(apiClients);
-        // Wait for 300ms to ensure queue table update is complete
-        await new Promise(resolve => setTimeout(resolve, 300));
-        // Build the snapshot from the latest apiClients, not from allClients
-        const snapshot = apiClients
-            .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+        // Build the snapshot from the current local state (allClients), not from apiClients
+        const snapshot = allClients
+            .filter(c => c.rateCard === selectedEquipment && c.status !== "Deleted")
             .sort((a, b) => a.queueIndex - b.queueIndex)
             .map(c => ({
                 id: c.id,
@@ -414,6 +428,11 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 remarks: c.remarks
             }));
         await saveSnapshot(snapshot);
+        // Now fetch latest state from API and update local state
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
+        // Wait for 300ms to ensure queue table update is complete
+        await new Promise(resolve => setTimeout(resolve, 300));
         return apiClients;
     };
 
@@ -442,19 +461,36 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
         // Sort by queueIndex to get the current order
         itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
-        // Save the current queueIndex and status order
-        const prevOrder = itemsOfSelectedEquipment.map(c => ({ queueIndex: c.queueIndex, status: c.status }));
+
+        // Save the statuses to swap
+        const fromStatus = itemsOfSelectedEquipment[fromDisplayedIndex].status;
+        const toStatus = itemsOfSelectedEquipment[toDisplayedIndex].status;
 
         // Remove the dragged item
         const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
         // Insert it at the new position
         itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
 
-        // Assign queueIndex and status based on the previous order
+        // Assign new queueIndex in strict order (1,2,3,...)
         itemsOfSelectedEquipment.forEach((client, idx) => {
-            client.queueIndex = prevOrder[idx]?.queueIndex || (idx + 1);
-            client.status = prevOrder[idx]?.status || "Waiting";
+            client.queueIndex = idx + 1;
         });
+
+        // Swap statuses between the two affected tiles (moved and replaced)
+        // The moved client is now at toDisplayedIndex, the replaced client is at fromDisplayedIndex (after the move)
+        const movedClient = itemsOfSelectedEquipment[toDisplayedIndex];
+        let replacedClient;
+        if (fromDisplayedIndex < toDisplayedIndex) {
+            // Dragging down: replaced client is now at toDisplayedIndex - 1
+            replacedClient = itemsOfSelectedEquipment[toDisplayedIndex - 1];
+        } else {
+            // Dragging up: replaced client is now at toDisplayedIndex + 1
+            replacedClient = itemsOfSelectedEquipment[toDisplayedIndex + 1];
+        }
+        if (movedClient && replacedClient) {
+            movedClient.status = toStatus;
+            replacedClient.status = fromStatus;
+        }
 
         // Build the new optimistic state
         const newAllClients = [...otherItems, ...itemsOfSelectedEquipment];
@@ -588,6 +624,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
+            console.log('[DEBUG] Restoring snapshot (UNDO):', JSON.stringify(res.data.snapshot, null, 2));
             const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex - 1 });
@@ -622,6 +659,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
+            console.log('[DEBUG] Restoring snapshot (REDO):', JSON.stringify(res.data.snapshot, null, 2));
             const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex + 1 });
@@ -664,7 +702,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
     return (
         <DndProvider backend={HTML5Backend}>
-                    <div className="min-h-screen bg-gray-50 p-6 lg:px-16 xl:px-24 2xl:px-32">
+            <div className="min-h-screen bg-gray-50 p-6 lg:px-16 xl:px-24 2xl:px-32">
 {/* Responsive Top Section: All elements aligned, Undo/Redo far right */}
 <div className="w-full mb-4 pt-2 md:pt-6">
   {/* Header Row: Back, Title/Date, Undo/Redo (undo/redo always far right) */}
@@ -738,28 +776,30 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     </div>
   </div>
 </div>
-                 <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}>
-{clientsForDisplayGrid.map((client, index) => {
-    // Find the index in the full equipment queue (displayedClients)
-    const fullIndex = displayedClients.findIndex(c => c.id === client.id);
-    return (
-        <DraggableTile
-            key={client.id}
-            client={client}
-            displayedClientIndex={fullIndex}
-            moveTile={moveTile}
-            closeToken={closeToken}
-            completeToken={completeToken}
-            doneAndHold={doneAndHold}
-            callNext={callNext}
-            continueToken={continueToken}
-            queueStarted={queueStarted[selectedEquipment]}
-            handleStartQueue={handleStartQueue}
-            allClients={allClients}
-            selectedEquipment={selectedEquipment}
-        />
-    );
-})}
+                 <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}> 
+                    {clientsForDisplayGrid.map((client, index) => {
+                        // Find the index in the full equipment queue (displayedClients)
+                        const fullIndex = displayedClients.findIndex(c => c.id === client.id);
+                        return (
+                            <DraggableTile
+                                key={client.id}
+                                client={client}
+                                displayedClientIndex={fullIndex}
+                                moveTile={moveTile}
+                                closeToken={closeToken}
+                                completeToken={completeToken}
+                                doneAndHold={doneAndHold}
+                                callNext={callNext}
+                                continueToken={continueToken}
+                                queueStarted={queueStarted[selectedEquipment]}
+                                handleStartQueue={handleStartQueue}
+                                allClients={allClients}
+                                selectedEquipment={selectedEquipment}
+                                hoveredIndex={hoveredIndex}
+                                setHoveredIndex={setHoveredIndex}
+                            />
+                        );
+                    })}
                 </div>
                 <style jsx>{`@keyframes slide-in-left {from {transform: translateX(-100%);} to {transform: translateX(0);}} @keyframes slide-in-right {from {transform: translateX(100%);} to {transform: translateX(0);}} .animate-slide-in-left {animation: slide-in-left 0.5s ease-out forwards;} .animate-slide-in-right {animation: slide-in-right 0.5s ease-out forwards;}`}</style>
             </div>
