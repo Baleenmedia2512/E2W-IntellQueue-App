@@ -34,7 +34,7 @@ export const formattedMargin = (number) => {
   const roundedNumber = (number / 1).toFixed(0);
   return Number((roundedNumber / 1).toFixed(0)); //roundedNumber % 1 === 0.0 ? 0 : roundedNumber % 1 === 0.1 ? 1 :
 };
-
+ 
 const AdDetailsPage = () => {
   // useClickTracker('quote');
    
@@ -82,6 +82,10 @@ const AdDetailsPage = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [changing, setChanging] = useState(false);
+  const [gstPriceInput, setGstPriceInput] = useState('');
+  const [excludingGstPriceInput, setExcludingGstPriceInput] = useState('');
+  const [isEditingGstPrice, setIsEditingGstPrice] = useState(false);
+  const [isEditingExcludingGstPrice, setIsEditingExcludingGstPrice] = useState(false);
   const [checked, setChecked] = useState({
     bold: false,
     semibold: false,
@@ -144,7 +148,8 @@ console.log( ValidityDate, "Formatted Date: ", formattedDate(ValidityDate));
     const roundedNumber = Math.round(number);
     return roundedNumber.toLocaleString("en-IN");
   };
-  
+
+    
   // Fetch data for a specific rate
   const fetchRate = async (rateId) => {
     try {
@@ -365,6 +370,18 @@ console.log(width , firstRate, qtySlab, firstRate.width);
     }
   }, [qtySlab]);
 
+  // Sync price inputs when calculated values change
+  useEffect(() => {
+    if (!isEditingGstPrice && !isEditingExcludingGstPrice) {
+      // Only update if user is not currently editing either field
+      const calculatedGSTPrice = Math.round(parseFloat(basePrice) * parseFloat(1 + rateGST / 100));
+      const calculatedExcludingGSTPrice = Math.round(basePrice);
+      if (calculatedGSTPrice && !isNaN(calculatedGSTPrice) && calculatedExcludingGSTPrice && !isNaN(calculatedExcludingGSTPrice)) {
+        // Values will be shown automatically through the conditional rendering in the inputs
+      }
+    }
+  }, [basePrice, rateGST, isEditingGstPrice, isEditingExcludingGstPrice]);
+
   // Validate fields
   const validateFields = () => {
     const validationErrors = {};
@@ -432,7 +449,90 @@ console.log(width , firstRate, qtySlab, firstRate.width);
     dispatch(setQuotesData({remarks: e.target.value}));
     const suggestions = await FetchQuoteRemarks(e.target.value);
     setDatas({...datas, remarksSuggestion: suggestions});
-  } 
+  }
+
+  /**
+   * Handle GST-inclusive price changes
+   * When user edits the GST-inclusive price:
+   * - Calculate new margin amount and percentage based on the new GST-inclusive price
+   * This ensures that margin calculations remain accurate when GST-inclusive price is edited
+   */
+  const handleGSTInclusivePriceChange = (newGSTInclusivePrice) => {
+    const gstInclusivePrice = parseFloat(newGSTInclusivePrice);
+    
+    // Handle invalid input or empty string
+    if (isNaN(gstInclusivePrice) || gstInclusivePrice < 0) {
+      return;
+    }
+    
+    // Ensure GST rate is valid
+    const gstRate = rateGST || 0;
+    
+    // Calculate what the base price should be to achieve this GST-inclusive price
+    const newBasePrice = gstInclusivePrice / (1 + gstRate / 100);
+    
+    // Calculate the new margin amount (base price - base cost)
+    const newMarginAmount = Math.max(0, newBasePrice - baseCost);
+    
+    // Calculate the new margin percentage
+    const newMarginPercentage = baseCost > 0 
+      ? ((newMarginAmount / (baseCost + newMarginAmount)) * 100)
+      : 0;
+    
+    console.log('GST Inclusive Price Change:', {
+      gstInclusivePrice,
+      gstRate,
+      newBasePrice,
+      baseCost,
+      newMarginAmount,
+      newMarginPercentage
+    });
+    
+    // Update Redux state
+    dispatch(setQuotesData({ 
+      marginAmount: Math.round(newMarginAmount), 
+      marginPercentage: parseFloat(newMarginPercentage.toFixed(2))
+    }));
+  };
+
+  /**
+   * Handle excluding GST price changes
+   * When user edits the excluding GST price:
+   * - Calculate new margin amount and percentage based on the new excluding GST price
+   */
+  const handleExcludingGSTPrice = (newExcludingGSTPrice) => {
+    const excludingGstPrice = parseFloat(newExcludingGSTPrice);
+    
+    // Handle invalid input or empty string
+    if (isNaN(excludingGstPrice) || excludingGstPrice < 0) {
+      return;
+    }
+    
+    // The excluding GST price is the base price
+    const newBasePrice = excludingGstPrice;
+    
+    // Calculate the new margin amount (base price - base cost)
+    const newMarginAmount = Math.max(0, newBasePrice - baseCost);
+    
+    // Calculate the new margin percentage
+    const newMarginPercentage = baseCost > 0 
+      ? ((newMarginAmount / (baseCost + newMarginAmount)) * 100)
+      : 0;
+    
+    console.log('Excluding GST Price Change:', {
+      excludingGstPrice,
+      newBasePrice,
+      baseCost,
+      newMarginAmount,
+      newMarginPercentage
+    });
+    
+    // Update Redux state
+    dispatch(setQuotesData({ 
+      marginAmount: Math.round(newMarginAmount), 
+      marginPercentage: parseFloat(newMarginPercentage.toFixed(2))
+    }));
+  }; 
 
   const vendorOptions = datas.ratesData?.map(option => ({
     value: option.VendorName,
@@ -815,38 +915,122 @@ const items = [
 
 <br/>
 <div className="w-full flex overflow-hidden h-auto space-x-2 p-2 mb-2">
-  {/* <!-- Customer Price Box --> */}
+  {/* <!-- Customer Price Box with Editable Excluding GST Price --> */}
   <div className="flex-shrink-0 w-[50%] bg-blue-50 border  border-blue-200 h-fit rounded-lg p-2">
-    <div className="sm:text-lg text-md font-bold text-blue-500 mb-2">Excluding GST</div>
+    <div className="sm:text-lg text-md font-bold text-blue-500 mb-2">
+      Excluding GST
+      <span className="text-xs text-blue-400 ml-2">(price editable)</span>
+    </div>
     {items[0].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
         <div className={`sm:text-lg text-[16px] font-semibold sm:font-bold text-start text-blue-500`}>
           {item.label}:
         </div>
-        <div 
-          className={`sm:text-xl text-[16px] ml-2 break-words text-start font-semibold sm:font-bold w-1/2 mr-1 text-gray-800`}
-        >
-          {item.value}
-        </div>
-        
+        {item.label === 'Price' ? (
+          // Editable Price field
+          <div className="flex items-center w-1/2 ml-2">
+            <span className="text-gray-800 font-semibold">₹</span>
+            <input
+              type="number"
+              className="ml-1 px-2 py-1 w-full text-sm border border-blue-300 rounded focus:outline-none focus:border-blue-500 bg-white hover:bg-blue-50 transition-colors font-semibold"
+              value={isEditingExcludingGstPrice ? excludingGstPriceInput : Math.round(basePrice) || ''}
+              onChange={(e) => {
+                setExcludingGstPriceInput(e.target.value);
+                if (e.target.value !== '') {
+                  handleExcludingGSTPrice(e.target.value);
+                }
+              }}
+              onFocus={(e) => {
+                setIsEditingExcludingGstPrice(true);
+                setExcludingGstPriceInput(e.target.value);
+                e.target.select();
+              }}
+              onBlur={(e) => {
+                setIsEditingExcludingGstPrice(false);
+                setExcludingGstPriceInput('');
+                // If the field is empty, don't update anything, let it show calculated value
+                if (e.target.value === '') {
+                  // Field is empty, will show calculated value
+                } else {
+                  // Ensure the final value is processed
+                  handleExcludingGSTPrice(e.target.value);
+                }
+              }}
+              step="1"
+              min="0"
+              placeholder="0"
+              title="Click to edit excluding GST price"
+            />
+            <span className="text-xs text-blue-400 ml-1">(editable)</span>
+          </div>
+        ) : (
+          // Non-editable Cost field (display only)
+          <div 
+            className={`sm:text-xl text-[16px] ml-2 break-words text-start font-semibold sm:font-bold w-1/2 mr-1 text-gray-800`}
+          >
+            {item.value}
+          </div>
+        )}
       </div>
     ))}
   </div>
 
-  {/* <!-- Vendor Cost Box --> */}
+  {/* <!-- Vendor Cost Box with Editable GST-Inclusive Prices --> */}
   <div className="flex-shrink-0 w-[50%] bg-green-50 border border-green-200 h-fit rounded-lg p-2">
-    <div className="sm:text-lg text-md font-bold text-green-500 mb-2">Including GST{rateGST && '@' + rateGST + '%'}</div>
+    <div className="sm:text-lg text-md font-bold text-green-500 mb-2">
+      Including GST{rateGST && '@' + rateGST + '%'}
+      <span className="text-xs text-green-400 ml-2">(price editable)</span>
+    </div>
     {items[1].content.map((item, index) => (
       <div key={index} className="mb-2 flex items-center">
         <div className={`sm:text-lg text-[16px] break-words font-semibold sm:font-bold text-green-600`}>
           {item.label}: 
         </div>
-        <div 
-          className={`sm:text-xl text-[16px] break-words w-[50%] ml-2 font-semibold sm:font-bold mr-1 text-gray-800`}
-        >
-         {item.value}
-        </div>
-        
+        {item.label === 'Price' ? (
+          // Editable Price field
+          <div className="flex items-center w-[50%] ml-2">
+            <span className="text-gray-800 font-semibold">₹</span>
+            <input
+              type="number"
+              className="ml-1 px-2 py-1 w-full text-sm border border-green-300 rounded focus:outline-none focus:border-green-500 bg-white hover:bg-green-50 transition-colors font-semibold"
+              value={isEditingGstPrice ? gstPriceInput : Math.round(parseFloat(basePrice) * parseFloat(1 + rateGST / 100)) || ''}
+              onChange={(e) => {
+                setGstPriceInput(e.target.value);
+                if (e.target.value !== '') {
+                  handleGSTInclusivePriceChange(e.target.value);
+                }
+              }}
+              onFocus={(e) => {
+                setIsEditingGstPrice(true);
+                setGstPriceInput(e.target.value);
+                e.target.select();
+              }}
+              onBlur={(e) => {
+                setIsEditingGstPrice(false);
+                setGstPriceInput('');
+                // If the field is empty, don't update anything, let it show calculated value
+                if (e.target.value === '') {
+                  // Field is empty, will show calculated value
+                } else {
+                  // Ensure the final value is processed
+                  handleGSTInclusivePriceChange(e.target.value);
+                }
+              }}
+              step="1"
+              min="0"
+              placeholder="0"
+              title="Click to edit GST-inclusive price"
+            />
+            <span className="text-xs text-green-400 ml-1">(editable)</span>
+          </div>
+        ) : (
+          // Non-editable Cost field (display only)
+          <div 
+            className={`sm:text-xl text-[16px] break-words w-[50%] ml-2 font-semibold sm:font-bold mr-1 text-gray-800`}
+          >
+           {item.value}
+          </div>
+        )}
       </div>
     ))}
   </div>

@@ -156,7 +156,7 @@ export const AdDetails = () => {
     // console.log(item.rateGST)
     const quantityBase =
     item.unit === "SCM" ? item.Quantity * item.Width : item.Quantity;
-    
+    const leadDays = await fetchLeadDays(companyName, item.RateId)
 
   const unitPrice = (
     item.AmountwithoutGst / quantityBase
@@ -173,11 +173,11 @@ export const AdDetails = () => {
       amountExclGst: formattedRupees(item.AmountwithoutGst),
       gst: item['GST%'].toString() + '%',
       amountInclGst: formattedRupees(item.Amount),
-      leadDays: item.leadDay,
+      leadDays: leadDays,
       CampaignDurationUnit: item.campaignDurationVisibility === 1 ? item.CampaignDurationUnit : '',
       qtyUnit: item.Units ? item.Units : 'Unit',
       adType: item.adType,
-      formattedDate: item.ValidityDate,
+      formattedDate: item.ValidityDate, 
       remarks: item.Remarks,
       width: item.Width,
       rateId: item.RateId,
@@ -291,33 +291,27 @@ export const AdDetails = () => {
       setCartItems(response.data || []);
   };
 
-  const handlePdfGeneration = async (e) => {
+ const handlePdfGeneration = async (e) => {
     e.preventDefault();
     const quoteNumber = await fetchNextQuoteNumber(companyName);
 
-    // Fetch cart items
     const params = {
         JsonDBName: companyName,
         JsonEntryUser: username,
     };
     const cartResponse = await PostInsertOrUpdate('FetchCartItems', params);
-    const allCartItems = cartResponse.data; // All cart items from the response
+    const allCartItems = cartResponse.data;
 
-    // Filter cart items based on selectedRows (CartID)
     const selectedCartItems = selectedRows.length > 0
-        ? allCartItems?.filter(item => selectedRows.includes(item.CartID)) // If user selected, filter only matching CartIDs
-        : allCartItems; // If no selection, use all fetched cart items
+        ? allCartItems?.filter(item => selectedRows.includes(item.CartID))
+        : allCartItems;
 
     if (!selectedCartItems || selectedCartItems.length === 0) {
         console.warn("No matching cart items found for PDF generation.");
         return;
     }
 
-    // Insert tracking data before PDF generation
-    // await insertTrackingData(quoteNumber, selectedCartItems.length);
-
-    if (isGeneratingPdf) return; // Prevent duplicate processing
-
+    if (isGeneratingPdf) return;
     isGeneratingPdf = true;
 
     const TnC = await getTnC(companyName);
@@ -352,14 +346,19 @@ export const AdDetails = () => {
                 console.error("Error updating lead:", error);
             }
         }
+ 
+        //  Add quote to DB for each selected cart item
+        for (const item of selectedCartItems) {
+            await addQuoteToDB(item, quoteNumber);
+        }
 
         // Generate PDFs for the selected cart items
         const cart = await Promise.all(selectedCartItems.map(item => pdfGeneration(item)));
         await generatePdf(cart, clientName, clientEmail, clientTitle, quoteNumber, TnC);
 
         setTimeout(() => {
-          dispatch(resetQuotesData());
-          dispatch(setQuotesData({ currentPage: "checkout" }));
+            dispatch(resetQuotesData());
+            dispatch(setQuotesData({ currentPage: "checkout" }));
         }, 200);
     } catch (error) {
         console.error("An unexpected error occurred while processing the lead:", error);
@@ -367,6 +366,7 @@ export const AdDetails = () => {
         isGeneratingPdf = false;
     }
 };
+
 
 
   const handleUpdateAndDownloadQuote = async (e) => {
@@ -413,6 +413,21 @@ export const AdDetails = () => {
     // }
   };
 
+  // Function to fetch lead days from the API
+  const fetchLeadDays = async (dbName = 'Baleen Media', rateId) => {
+    try {
+      const response = await fetch(`/api/API/Media/FetchLeadDays.php?JsonDBName=${encodeURIComponent(dbName)}&rateid=${rateId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch lead days');
+      }
+      const leadDaysData = await response.json();
+      return leadDaysData;
+    } catch (error) {
+      console.error('Error fetching lead days:', error);
+      return [];
+    }
+  };
+  
   const handleClearAll = async () => {
     if (cartItems.length === 0) return;
   
