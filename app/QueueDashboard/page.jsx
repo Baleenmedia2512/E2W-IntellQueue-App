@@ -396,7 +396,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     // Helper to get the current queue snapshot
     const getCurrentSnapshot = () => {
         return allClients
-            .filter(c => c.rateCard === selectedEquipment && c.status !== "Deleted") // Only exclude Deleted
+            .filter(c => c.rateCard === selectedEquipment)
             .sort((a, b) => a.queueIndex - b.queueIndex)
             .map(c => ({
                 id: c.id,
@@ -413,8 +413,14 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
     const saveSnapshotWithUpdatedState = async () => {
         // Build the snapshot from the current local state (allClients), not from apiClients
-        const snapshot = allClients
-            .filter(c => c.rateCard === selectedEquipment && c.status !== "Deleted")
+        // Now fetch latest state from API and update local state
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
+        console.log('[DEBUG] saveSnapshotWithUpdatedState - Fetched API Clients:', JSON.stringify(apiClients, null, 2));
+        // Wait for 300ms to ensure queue table update is complete
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const snapshot = apiClients
+            .filter(c => c.rateCard === selectedEquipment)
             .sort((a, b) => a.queueIndex - b.queueIndex)
             .map(c => ({
                 id: c.id,
@@ -428,11 +434,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 remarks: c.remarks
             }));
         await saveSnapshot(snapshot);
-        // Now fetch latest state from API and update local state
-        const apiClients = await FetchQueueDashboardData(companyName);
-        setAllClients(apiClients);
-        // Wait for 300ms to ensure queue table update is complete
-        await new Promise(resolve => setTimeout(resolve, 300));
+        
         return apiClients;
     };
 
@@ -925,7 +927,7 @@ export default function QueueSystem() {
                 // Only save initial snapshot if history hasn't been initialized and we have a selected equipment
                 if (!hasInitializedHistory && selectedEquipment) {
                     const initialSnapshot = apiClients
-                        .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+                        .filter(c => c.rateCard === selectedEquipment)
                         .sort((a, b) => a.queueIndex - b.queueIndex)
                         .map(c => ({
                             id: c.id,
