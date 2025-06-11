@@ -129,11 +129,37 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
 }
 
 // --- Draggable Tile (Modified to show equipment icon) ---
-function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment, hoveredIndex, setHoveredIndex }) {
+// --- Draggable Tile (Fixed for react-dnd v14+) ---
+function DraggableTile({ 
+    client, 
+    index, 
+    moveTile, 
+    displayedClientIndex, 
+    closeToken, 
+    completeToken, 
+    doneAndHold, 
+    callNext, 
+    continueToken, 
+    queueStarted, 
+    handleStartQueue, 
+    allClients, 
+    selectedEquipment, 
+    hoveredIndex, 
+    setHoveredIndex,
+    draggedIndex, // Add this new prop
+    setDraggedIndex // Add this new prop
+}) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
-        item: { index: displayedClientIndex },
+        item: () => {
+            setDraggedIndex(displayedClientIndex);
+            return { index: displayedClientIndex };
+        },
         collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+        end: () => {
+            setDraggedIndex(null);
+            setHoveredIndex(null);
+        }
     });
 
     const [, drop] = useDrop({
@@ -145,6 +171,7 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         },
         drop: (draggedItem) => {
             setHoveredIndex(null);
+            setDraggedIndex(null);
             if (draggedItem.index !== displayedClientIndex) {
                 moveTile(draggedItem.index, displayedClientIndex);
                 draggedItem.index = displayedClientIndex;
@@ -160,6 +187,83 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         }
     });
 
+    // Calculate preview position
+    const getPreviewPosition = () => {
+        if (draggedIndex === null || hoveredIndex === null) return null;
+        
+        if (draggedIndex === displayedClientIndex) {
+            // This is the dragged item
+            return 'dragged';
+        } else if (hoveredIndex === displayedClientIndex) {
+            // This is the drop target
+            return 'target';
+        } else {
+            // Check if this item would be affected by the move
+            const from = draggedIndex;
+            const to = hoveredIndex;
+            
+            if (from < to) {
+                // Dragging down: items between from+1 and to move up
+                if (displayedClientIndex > from && displayedClientIndex <= to) {
+                    return 'shifting-up';
+                }
+            } else {
+                // Dragging up: items between to and from-1 move down
+                if (displayedClientIndex >= to && displayedClientIndex < from) {
+                    return 'shifting-down';
+                }
+            }
+        }
+        return null;
+    };
+
+    const previewPosition = getPreviewPosition();
+
+    // Enhanced styling based on preview position
+    const getPreviewStyles = () => {
+        if (previewPosition === 'dragged') {
+            return {
+                className: "opacity-50 scale-95 border-blue-500 shadow-xl",
+                style: {
+                    transform: 'rotate(2deg)',
+                    transition: 'all 0.2s ease-out'
+                }
+            };
+        } else if (previewPosition === 'target') {
+            return {
+                className: "ring-4 ring-blue-400/50 border-blue-400 bg-gradient-to-br from-blue-50 to-white/90 shadow-2xl scale-105 z-20",
+                style: {
+                    boxShadow: '0 12px 40px 0 rgba(30,64,175,0.15), 0 4px 16px rgba(30,64,175,0.08)',
+                    backdropFilter: 'blur(4px)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }
+            };
+        } else if (previewPosition === 'shifting-up') {
+            return {
+                className: "transform -translate-y-2 opacity-80 border-green-300 bg-green-50/30",
+                style: {
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 12px rgba(34,197,94,0.1)'
+                }
+            };
+        } else if (previewPosition === 'shifting-down') {
+            return {
+                className: "transform translate-y-2 opacity-80 border-orange-300 bg-orange-50/30",
+                style: {
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 12px rgba(251,146,60,0.1)'
+                }
+            };
+        }
+        return {
+            className: isDragging ? "opacity-100 scale-105 border-blue-500 shadow-2xl" : "hover:shadow-xl",
+            style: {}
+        };
+    };
+
+    const { className: previewClassName, style: previewStyle } = getPreviewStyles();
+
+    // Rest of your existing component logic (modal state, handlers, etc.)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [actionType, setActionType] = useState("");
 
@@ -202,7 +306,6 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         }
     };
 
-    // Determine if all clients for this rateCard are 'Waiting'
     const allWaiting = useMemo(() => {
         return allClients
             .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
@@ -213,31 +316,52 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         <>
             <div
                 ref={(node) => ref(drop(node))}
-                className={`bg-white p-4 rounded-xl shadow-lg border border-gray-200 relative select-none cursor-move transition-transform duration-300 \
-                    ${isDragging ? "opacity-100 scale-105 border-blue-500 shadow-2xl" :
-                      hoveredIndex === displayedClientIndex && !isDragging ? "ring-4 ring-blue-400/40 border-blue-400 bg-gradient-to-br from-blue-50 to-white/80 shadow-xl scale-105 opacity-70 z-20" :
-                      "hover:shadow-xl"}
-                `}
-                style={hoveredIndex === displayedClientIndex && !isDragging ? {
-                    boxShadow: '0 8px 32px 0 rgba(30,64,175,0.10), 0 2px 8px rgba(30,64,175,0.06)',
-                    backdropFilter: 'blur(2px)',
-                    transition: 'box-shadow 0.3s, transform 0.2s',
-                } : {}}
+                className={`bg-white p-4 rounded-xl shadow-lg border border-gray-200 relative select-none cursor-move transition-all duration-300 ${previewClassName}`}
+                style={previewStyle}
             >
+                {/* Add position indicator for better preview */}
+                {previewPosition === 'target' && (
+                    <div className="absolute -top-2 -left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        Drop Here
+                    </div>
+                )}
+                {previewPosition === 'shifting-up' && (
+                    <div className="absolute -top-1 -right-1 text-white text-xs px-1 py-0.5 rounded-full 
+                                    bg-orange-500 flex items-center">
+                        {/* Down arrow for mobile, hidden on desktop */}
+                        <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full">
+                            ↑
+                        </div>
+                        {/* Right arrow for desktop, hidden on mobile */}
+                        <span className="hidden sm:block">←</span>
+                    </div>
+                    
+                )}
+                {previewPosition === 'shifting-down' && (
+                    <div className="absolute -top-1 -right-1 text-white text-xs px-1 py-0.5 rounded-full 
+                                    bg-orange-500 flex items-center">
+                        {/* Down arrow for mobile, hidden on desktop */}
+                        <span className="block sm:hidden">↓</span>
+                        {/* Right arrow for desktop, hidden on mobile */}
+                        <span className="hidden sm:block">→</span>
+                    </div>
+                    )}
+
+                {/* Your existing tile content */}
                 <div className="flex justify-between items-start mb-2">
                     <span className="text-gray-500 text-sm font-medium">#{client.queueIndex}</span>
                 </div>
-                 <span
-                        className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold ${
-                            client.status === "In-Progress"
-                                ? "bg-green-100 text-green-600"
-                                : client.status === "On-Hold"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : "bg-gray-100 text-gray-600"
-                        }`}
-                    >
-                        {client.status}
-                    </span>
+                <span
+                    className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold ${
+                        client.status === "In-Progress"
+                            ? "bg-green-100 text-green-600"
+                            : client.status === "On-Hold"
+                            ? "bg-yellow-100 text-yellow-600"
+                            : "bg-gray-100 text-gray-600"
+                    }`}
+                >
+                    {client.status}
+                </span>
                 <h2 className="text-lg font-bold text-gray-800 mt-1">{client.name}</h2>
                 <p className="text-gray-500 text-sm mb-2">{client.contact}</p>
                 <div className="flex justify-between items-center mt-4">
@@ -245,6 +369,8 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
                     <div><p className="text-gray-500 text-xs">Rate Card</p><p className="text-gray-800 text-sm font-semibold">{client.rateCard || "N/A"}</p></div>
                     <div><p className="text-gray-500 text-xs">Rate Type</p><p className="text-gray-800 text-sm font-semibold">{client.rateType || "N/A"}</p></div>
                 </div>
+
+                {/* Your existing button logic */}
                 {(displayedClientIndex === 0 && allWaiting) || client.status === "Waiting" ? (
                     <div className="flex justify-between mt-4 space-x-2">
                         {displayedClientIndex === 0 && allWaiting && (
@@ -293,6 +419,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const [animationDirection, setAnimationDirection] = useState("");    
     const [isRestoring, setIsRestoring] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState(null); // Track hovered tile
+    const [draggedIndex, setDraggedIndex] = useState(null);
 
     const notifyIfNeeded = async (clientObj) => {
         if (
@@ -778,9 +905,8 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     </div>
   </div>
 </div>
-                 <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}> 
+ <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}> 
                     {clientsForDisplayGrid.map((client, index) => {
-                        // Find the index in the full equipment queue (displayedClients)
                         const fullIndex = displayedClients.findIndex(c => c.id === client.id);
                         return (
                             <DraggableTile
@@ -799,6 +925,8 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                                 selectedEquipment={selectedEquipment}
                                 hoveredIndex={hoveredIndex}
                                 setHoveredIndex={setHoveredIndex}
+                                draggedIndex={draggedIndex} // Add this prop
+                                setDraggedIndex={setDraggedIndex} // Add this prop
                             />
                         );
                     })}
