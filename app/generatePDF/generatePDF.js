@@ -5,6 +5,55 @@ import autoTable from 'jspdf-autotable';
 export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, quoteNumber, TnC) => {
   const ImageUrl = '/images/WHITE PNG.png';
 
+  /**
+   * Lead Days Integration:
+   * - Fetches lead days data from FetchLeadDays.php API
+   * - Uses fetched data to populate Lead Days column in PDF
+   * - Falls back to item-specific lead days or default values if API fails
+   * - Provides medium-specific defaults for better accuracy
+   */
+
+  
+
+  // Fetch lead days data
+  let leadDaysData = [];
+  try {
+    leadDaysData = await fetchLeadDays();
+  } catch (error) {
+    console.warn('Failed to fetch lead days data, using defaults:', error);
+    leadDaysData = [];
+  }
+
+  // Function to get lead days for an item by matching rateId
+  const getLeadDaysForItem = (item) => {
+    // If the item already has leadDays property, use it
+    if (item.leadDays && item.leadDays.LeadDays) {
+      return item.leadDays.LeadDays;
+    }
+
+    // If leadDaysData is available and has data, match by rateId
+    if (leadDaysData && leadDaysData.length > 0) {
+      const matchingLeadDays = leadDaysData.find(ld => {
+        // ld.rateid may be string or number, so use loose equality
+        return ld.rateid == item.rateId;
+      });
+      if (matchingLeadDays && matchingLeadDays.LeadDays) {
+        return matchingLeadDays.LeadDays;
+      }
+    }
+
+    // Default fallback based on ad medium type
+    const defaultLeadDays = {
+      'Newspaper': 3,
+      'Magazine': 7,
+      'Radio': 2,
+      'Television': 5,
+      'Digital': 1,
+      'Outdoor': 10
+    };
+    return defaultLeadDays[item.adMedium] || 2;
+  };
+
   const getMinValidityDays = () => {
     // Define an array of month abbreviations
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -257,7 +306,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
       const unitPrice = `${item.ratePerQty} Per ${item.qtyUnit}`;
     
       // Build Lead Days
-      const leadDays = item.leadDays || 2;
+      const leadDays = getLeadDaysForItem(item);
     
       // Build Remarks column
       const remarks = hasRemarks ? (item.remarks || 'NA') : '';

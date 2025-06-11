@@ -243,7 +243,16 @@ const CheckoutPage = () => {
 
       // // Update the cart with the modified existing items
       // dispatch(addItemsToCart(updatedCartItems));
-      setCartItems(data)
+      // Sort so latest quote comes first (assuming higher QuoteID means latest)
+      const sortedData = data.slice().sort((a, b) => {
+        if (a.QuoteID && b.QuoteID) {
+          return Number(b.QuoteID) - Number(a.QuoteID);
+        } else if (a.CartID && b.CartID) {
+          return Number(b.CartID) - Number(a.CartID);
+        }
+        return 0;
+      });
+      setCartItems(sortedData)
       // data.forEach((item, index) => {
       //   // Use cartItems.length + index to calculate unique index for each item
       //   const newIndex = cartItems.length + index + 1;
@@ -320,7 +329,16 @@ const CheckoutPage = () => {
             }
       const response = await PostInsertOrUpdate('FetchCartItems',params)
       // console.log(response.data, companyName, username, response)
-      setCartItems(response.data || []);
+      // Sort so latest quote comes first (assuming higher QuoteID means latest)
+      const sortedCart = (response.data || []).slice().sort((a, b) => {
+        if (a.QuoteID && b.QuoteID) {
+          return Number(b.QuoteID) - Number(a.QuoteID);
+        } else if (a.CartID && b.CartID) {
+          return Number(b.CartID) - Number(a.CartID);
+        }
+        return 0;
+      });
+      setCartItems(sortedCart);
   };
 
   const handleRemoveRateId = async (index) => {
@@ -451,7 +469,10 @@ console.log(itemToUpdate.CartID)
                 <div className="overflow-x-auto max-h-[40vh]">
                   <table className="mb-8 w-full border-collapse border border-gray-200 table-auto">
                     <thead>
-                      <tr>
+                      <tr> 
+                        <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+                          Select
+                        </th>
                         <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
                           Rate Card ID
                         </th>
@@ -497,6 +518,9 @@ console.log(itemToUpdate.CartID)
                         <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
                           Price (excl. GST)
                         </th>
+                         <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
+      Price (incl. GST)
+    </th> 
                         {/* <th className='p-2 border border-gray-200 text-blue-600 font-semibold'>Remove</th> */}
                         <th className="p-2 border border-gray-200 text-blue-600 font-semibold">
                           Actions
@@ -504,204 +528,157 @@ console.log(itemToUpdate.CartID)
                       </tr>
                     </thead>
                     <tbody>
-                    {cartItems.map((item) => (
-            <tr
-              key={item.CartId}
-              className={`cursor-pointer ${
-                selectedRows.includes(item.CartID) ? "bg-blue-200" : "hover:bg-gray-100"
-              }`}
-              onClick={() => handleRowClick(item.CartID)}
-                        >
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              handleRowClick(item.CartID)
-                            }
-                          >
-                            {item.RateId}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              handleRowClick(item.CartID)
-                            }
-                          >
-                            {!editQuoteItem
-                              ? nextQuoteNumber
-                              : editQuoteItem.editQuoteNumber}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              handleRowClick(item.CartId)
-                            }
-                          >
-                            {item.AdMedium}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
-                            }
-                          >
-                            {item.adType}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
-                            }
-                          >
-                            {item.adCategory}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
-                            }
-                          >
-                            {item.Edition}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
-                            }
-                          >
-                            {item.Package}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200"
-                            onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
-                            }
-                          >
-                            {item.Units === "SCM"
-                              ? item.Width + "W" + " x " + item.Quantity + "H"
-                              : item.Quantity}{" "}
-                            {item.Units}
-                          </td>
-                          {hasCampaignDuration && (
-                            <td
-                              className="p-1.5 border border-gray-200"
-                              onClick={() =>
-                                dispatch(toggleItemSelection(item.CartId))
-                              }
-                            >
-                              {item.campaignDuration &&
-                              item.CampaignDurationUnit
-                                ? item.campaignDuration +
-                                  " " +
-                                  item.CampaignDurationUnit
-                                : "NA"}
-                            </td>
-                          )}
-                          {hasRemarks && (
-                            <td
-                              className="p-1.5 border border-gray-200 text-nowrap"
-                              onClick={() =>
-                                dispatch(toggleItemSelection(item.CartId))
-                              }
-                            >
-                              {item.remarks}
-                            </td>
-                          )}
-                          {hasChecked && (
-                            <td
-                              className="p-1.5 border border-gray-200"
-                              onClick={() =>
-                                dispatch(toggleItemSelection(item.CartId))
-                              }
-                            >
-                              {(item.bold  && parseInt(item.boldPercentage) > -1) && "Bold: " + item.boldPercentage + "%\n" }
-                              {(item.semibold && parseInt(item.semiboldPercentage) > -1) && "Semibold: " + item.semiboldPercentage + "%\n"}
-                              {(item.color && parseInt(item.colorPercentage) > -1) && "Color: " + item.colorPercentage + "%\n"}
-                              {(item.tick && parseInt(item.tickPercentage) > -1) && "Tick: " + item.tickPercentage + "%\n"}
-                            </td>
-                          )}
-                          <td
-                            className="p-1.5 border border-gray-200 w-fit text-nowrap"
-                            onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
-                            }
-                          >
-                            ₹{" "}
-                            {formattedRupees(
-                              (item.AmountwithoutGst) /
-                                (item.unit === "SCM"
-                                  ? item.Quantity * item.Width
-                                  : item.Quantity)
-                            )}{" "}
-                            per {item.unit}
-                          </td>
-                          <td
-                            className="p-1.5 border border-gray-200 text-nowrap"
-                            onClick={() =>
-                              dispatch(toggleItemSelection(item.CartId))
-                            }
-                          >
-                            ₹{" "}
-                            {formattedRupees(
-                              Math.round(
-                                item.AmountwithoutGst
-                              )
-                            )}
-                          </td>
+                   {cartItems.map((item) => (
+  <tr
+    key={item.CartId}
+    className={`cursor-pointer ${
+      selectedRows.includes(item.CartID) ? "bg-blue-50" : "hover:bg-gray-50"
+    }`}
+    onClick={e => {
+      // Prevent row click from triggering when clicking on action buttons or checkbox
+      if (
+        e.target.tagName !== 'BUTTON' &&
+        e.target.tagName !== 'INPUT' &&
+        !e.target.closest('.IconButton')
+      ) {
+        handleRowClick(item.CartID);
+      }
+    }}
+  >
+    {/* Checkbox column */}
+    <td className="p-3 border border-gray-200">
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          checked={selectedRows.includes(item.CartID)}
+          onChange={() => handleRowClick(item.CartID)}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+          onClick={e => e.stopPropagation()} // Prevent row click when clicking checkbox
+        />
+      </div>
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {item.RateId}
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {!editQuoteItem ? nextQuoteNumber : editQuoteItem.editQuoteNumber}
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {item.AdMedium}
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {item.adType}
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {item.adCategory}
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {item.Edition}
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {item.Package}
+    </td>
+    
+    <td className="p-3 border border-gray-200">
+      {item.Units === "SCM"
+        ? item.Width + "W" + " x " + item.Quantity + "H"
+        : item.Quantity}{" "}
+      {item.Units}
+    </td>
+    
+    {hasCampaignDuration && (
+      <td className="p-3 border border-gray-200">
+        {item.campaignDuration && item.CampaignDurationUnit
+          ? item.campaignDuration + " " + item.CampaignDurationUnit
+          : "NA"}
+      </td>
+    )}
+    
+    {hasRemarks && (
+      <td className="p-3 border border-gray-200 text-nowrap">
+        {item.remarks}
+      </td>
+    )}
+    
+    {hasChecked && (
+      <td className="p-3 border border-gray-200">
+        {(item.bold && parseInt(item.boldPercentage) > -1) && "Bold: " + item.boldPercentage + "%\n"}
+        {(item.semibold && parseInt(item.semiboldPercentage) > -1) && "Semibold: " + item.semiboldPercentage + "%\n"}
+        {(item.color && parseInt(item.colorPercentage) > -1) && "Color: " + item.colorPercentage + "%\n"}
+        {(item.tick && parseInt(item.tickPercentage) > -1) && "Tick: " + item.tickPercentage + "%\n"}
+      </td>
+    )}
+    
+    <td className="p-3 border border-gray-200 w-fit text-nowrap">
+      ₹{" "}
+      {formattedRupees(
+        (item.AmountwithoutGst) /
+        (item.unit === "SCM"
+          ? item.Quantity * item.Width
+          : item.Quantity)
+      )}{" "}
+      per {item.unit}
+    </td>
+    
+    <td className="p-3 border border-gray-200 text-nowrap">
+      ₹{" "}
+      {formattedRupees(
+        Math.round(item.AmountwithoutGst)
+      )}
+    </td>
+    
+    <td className="p-3 border border-gray-200 text-nowrap">
+      ₹ {formattedRupees(Math.round(item.Amount))}
+    </td>
 
-                          <td className="p-1.5 border border-gray-200">
-                            <div className="flex space-x-3 items-center">
-                              <IconButton
-                                aria-label="Edit"
-                                className="IconButton m-0 h-full"
-                                onClick={() => handleEditRow(item)}
-                                disabled={item.isCartRemoved}
-                                // style={{ height: '100%', width: 'auto', padding: '4px' }} // Adjust padding as needed
-                              >
-                                <EditIcon
-                                  className="text-blue-500 hover:text-blue-700"
-                                  fontSize="small"
-                                />
-                              </IconButton>
-                              {/* Remove or Undo Button */}
-                              {item.isCartRemoved ? (
-                                <IconButton
-                                  aria-label="Undo"
-                                  className="IconButton m-0 h-full"
-                                  onClick={() => handleUndoRemove(item.CartId)}
-                                >
-                                  <UndoIcon
-                                    className="text-green-500 hover:text-green-700 opacity-100"
-                                    fontSize="small"
-                                  />
-                                </IconButton>
-                              ) : (
-                                <IconButton
-                                  aria-label="Remove"
-                                  className="IconButton m-0 h-full"
-                                  onClick={() =>
-                                    handleRemoveRateId(
-                                      item.index,
-                                    )
-                                  }
-                                >
-                                  <RemoveCircleOutline
-                                    className="text-red-500 hover:text-red-700"
-                                    fontSize="small"
-                                  />
-                                </IconButton>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* <td className='p-1.5 border border-gray-200'>
-                <IconButton aria-label="Remove" className='align-top self-center bg-blue-500 border-blue-500' 
-                  onClick={() => handleRemoveRateId(item.index)}
-                >
-                  <RemoveCircleOutline color='primary' fontSize='small'/>
-                </IconButton>
-              </td> */}
-                        </tr>
-                      ))}
+    <td className="p-3 border border-gray-200">
+      <div className="flex space-x-3 items-center">
+        <IconButton
+          aria-label="Edit"
+          className="IconButton m-0 h-full"
+          onClick={() => handleEditRow(item)}
+          disabled={item.isCartRemoved}
+        >
+          <EditIcon
+            className="text-blue-500 hover:text-blue-700"
+            fontSize="small"
+          />
+        </IconButton>
+        
+        {item.isCartRemoved ? (
+          <IconButton
+            aria-label="Undo"
+            className="IconButton m-0 h-full"
+            onClick={() => handleUndoRemove(item.CartId)}
+          >
+            <UndoIcon
+              className="text-green-500 hover:text-green-700 opacity-100"
+              fontSize="small"
+            />
+          </IconButton>
+        ) : (
+          <IconButton
+            aria-label="Remove"
+            className="IconButton m-0 h-full"
+            onClick={() => handleRemoveRateId(item.index)}
+          >
+            <RemoveCircleOutline
+              className="text-red-500 hover:text-red-700"
+              fontSize="small"
+            />
+          </IconButton>
+        )}
+      </div>
+    </td>
+  </tr>
+))}
                     </tbody>
                   </table>
                   {/* <h1 className='mb-4 font-bold text-center'>Grand Total: {calculateGrandTotal()}</h1> */}
