@@ -243,7 +243,16 @@ const CheckoutPage = () => {
 
       // // Update the cart with the modified existing items
       // dispatch(addItemsToCart(updatedCartItems));
-      setCartItems(data)
+      // Sort so latest quote comes first (assuming higher QuoteID means latest)
+      const sortedData = data.slice().sort((a, b) => {
+        if (a.QuoteID && b.QuoteID) {
+          return Number(b.QuoteID) - Number(a.QuoteID);
+        } else if (a.CartID && b.CartID) {
+          return Number(b.CartID) - Number(a.CartID);
+        }
+        return 0;
+      });
+      setCartItems(sortedData)
       // data.forEach((item, index) => {
       //   // Use cartItems.length + index to calculate unique index for each item
       //   const newIndex = cartItems.length + index + 1;
@@ -320,7 +329,16 @@ const CheckoutPage = () => {
             }
       const response = await PostInsertOrUpdate('FetchCartItems',params)
       // console.log(response.data, companyName, username, response)
-      setCartItems(response.data || []);
+      // Sort so latest quote comes first (assuming higher QuoteID means latest)
+      const sortedCart = (response.data || []).slice().sort((a, b) => {
+        if (a.QuoteID && b.QuoteID) {
+          return Number(b.QuoteID) - Number(a.QuoteID);
+        } else if (a.CartID && b.CartID) {
+          return Number(b.CartID) - Number(a.CartID);
+        }
+        return 0;
+      });
+      setCartItems(sortedCart);
   };
 
   const handleRemoveRateId = async (index) => {
@@ -516,6 +534,16 @@ console.log(itemToUpdate.CartID)
     className={`cursor-pointer ${
       selectedRows.includes(item.CartID) ? "bg-blue-50" : "hover:bg-gray-50"
     }`}
+    onClick={e => {
+      // Prevent row click from triggering when clicking on action buttons or checkbox
+      if (
+        e.target.tagName !== 'BUTTON' &&
+        e.target.tagName !== 'INPUT' &&
+        !e.target.closest('.IconButton')
+      ) {
+        handleRowClick(item.CartID);
+      }
+    }}
   >
     {/* Checkbox column */}
     <td className="p-3 border border-gray-200">
@@ -525,6 +553,7 @@ console.log(itemToUpdate.CartID)
           checked={selectedRows.includes(item.CartID)}
           onChange={() => handleRowClick(item.CartID)}
           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+          onClick={e => e.stopPropagation()} // Prevent row click when clicking checkbox
         />
       </div>
     </td>
