@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 export const api = axios.create({
-    // baseURL: "https://orders.baleenmedia.com/API/Media/"
+    baseURL: "https://orders.baleenmedia.com/API/Media/"
     // baseURL: "http://localhost/Easy2Work/api/API/Media/"
-    baseURL: "http://localhost/easy2work-backend/API/Media/"
+    // baseURL: "http://localhost/easy2work-backend/API/Media/"
 })    
 
 export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
