@@ -14,6 +14,24 @@ if($dbName === 'No DB'){
     exit;
 } 
 
+function UpdateCart($conn, $params){
+    try {     
+        $stmt = $conn->prepare("UPDATE cart_table SET `AdMedium` = :PDORateName, `adType` = :PDOAdType, `adCategory` = :PDOAdCategory, `Quantity` = :PDOQuantity, `Width` = :PDOWidth, `Units` = :PDOUnits, `Scheme` = :PDOScheme, `Bold` = :PDOBold, `SemiBold` = :PDOSemiBold, `Tick` = :PDOTick, `Color` = :PDOColor, `AmountwithoutGst` = :PDOAmountWithoutGST, `Amount` = :PDOAmount, `GSTAmount` = :PDOGstAmount, `GST%` = :PDOGstPercentage, `Offers` = :PDOOffers, `Sent` = 1, `rateperunit` = :PDORatePerUnit, `Remarks` = :PDORemarks, `CampaignDays` = :PDOCampaignDuration, `SpotsPerDay` = :PDOSpotsPerDay, `SpotDuration` = :PDOSpotDuration, `DiscountAmount` = :PDODiscountAmount, `Margin` = :PDOMargin, `Vendor` = :PDOVendor, `CampaignDurationUnits` = :PDOCampaignUnit, `RateId` = :PDORateId, `Bold` = :PDOBold, `SemiBold` = :PDOSemiBold, `Color` = :PDOColor, `Tick` = :PDOTick WHERE `CartID` = :PDOCartId");
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+
+        $stmt->execute();
+        return ["success" => true, "message" => "Cart Updated Successfully!"];
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Unable to update cart data!"]);
+        error_log("\nError updating data: " . $e->getMessage(), 3, './Error Logs/Update Error.txt');
+        exit;
+    }
+}
+
 function UpdateQuote($conn, $params){
     try{
      
@@ -28,6 +46,20 @@ function UpdateQuote($conn, $params){
     }catch(PDOException $e){
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Unable to update quote data"]);
+        error_log("\nError updating data: " . $e->getMessage(), 3, './Error Logs/Update Error.txt');
+        exit;
+    }
+}
+
+function RemoveCart($conn, $CartID){
+    try{
+        $stmt = $conn->prepare("UPDATE cart_table SET `Valid Status` = 'Invalid' WHERE `CartID` = :PDOCartId");
+        $stmt->bindParam(':PDOCartId', $CartID);
+        $stmt->execute();
+        return ["success" => true, "message" => "Cart Removed Successfully!"];
+    }catch(PDOException $e){
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Unable to remove the item from cart!"]);
         error_log("\nError updating data: " . $e->getMessage(), 3, './Error Logs/Update Error.txt');
         exit;
     }
@@ -57,7 +89,35 @@ try{
         exit;
     }
 
-
+    $cartParams = [
+    'PDORateName' => $_GET['JsonRateName'] ?? "",
+    'PDOAdType' => $_GET['JsonAdType'] ?? "",
+    'PDOAdCategory' => $_GET['JsonAdCategory'] ?? "",
+    'PDOQuantity' => $_GET['JsonQuantity'] ?? 0,
+    'PDOWidth' => $_GET['JsonWidth'] ?? 1,
+    'PDOUnits' => $_GET['JsonUnits'] ?? "",
+    'PDOScheme' => $_GET['JsonScheme'] ?? '1 + 0',
+    'PDOBold' => $_GET['JsonBold'] ?? -1,
+    'PDOSemiBold' => $_GET['JsonSemiBold'] ?? -1,
+    'PDOTick' => $_GET['JsonTick'] ?? -1,
+    'PDOColor' => $_GET['JsonColor'] ?? -1,
+    'PDOAmountWithoutGST' => $_GET['JsonAmountWithoutGST'] ?? 0,
+    'PDOAmount' => $_GET['JsonAmount'] ?? 0,
+    'PDOGstAmount' => $_GET['JsonGSTAmount'] ?? 0,
+    'PDOGstPercentage' => $_GET['JsonGSTPercentage'] ?? 0,
+    'PDORatePerUnit' => $_GET['JsonRatePerUnit'] ?? 0,
+    'PDOOffers' => $_GET['JsonOffers'] ?? "",
+    'PDORemarks' => $_GET['JsonRemarks'] ?? "",
+    'PDOCampaignDuration' => $_GET['JsonCampaignDuration'] ?? 0,
+    'PDOSpotsPerDay' => $_GET['JsonSpotsPerDay'] ?? 0,
+    'PDOSpotDuration' => $_GET['JsonSpotDuration'] ?? 0,
+    'PDODiscountAmount' => $_GET['JsonDiscountAmount'] ?? 0,
+    'PDOMargin' => $_GET['JsonMargin'] ?? "",
+    'PDOVendor' => $_GET['JsonVendor'] ?? "",
+    'PDOCampaignUnit' => $_GET['JsonCampaignUnits'] ?? "",
+    'PDORateId' => $_GET['JsonRateId'] ?? 0,
+    'PDOCartId' => $CartID
+];
 
     $quoteParams = [
         'PDOQuoteId' => $QuoteID,
@@ -86,9 +146,19 @@ try{
         $response = [
             "quoteResponse" => $quoteResponse
         ];
+    }else if($CartOnly){
+        $cartResponse = UpdateCart($pdo, $cartParams);
+        $response = [
+            "cartResponse" => $cartResponse
+        ];
+    }else if($CartRemove){
+        $removeResponse = RemoveCart($pdo, $CartID);
+        $response = [
+            "removeResponse" => $removeResponse
+        ];
     }else{
         $quoteResponse = UpdateQuote($pdo, $quoteParams);
-        // $cartResponse = UpdateCart($pdo, $cartParams);
+        $cartResponse = UpdateCart($pdo, $cartParams);
         $response = [
             "quoteResponse" => $quoteResponse,
             "cartResponse" => $cartResponse

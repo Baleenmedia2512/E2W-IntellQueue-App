@@ -16,7 +16,6 @@ try {
 }
 
 $ClientContact = isset($_GET['JsonClientContact']) ? $_GET['JsonClientContact'] : null;
-
 if (!$ClientContact) {
     echo json_encode(['error' => 'Client Contact is required.']);
     exit();
@@ -24,18 +23,32 @@ if (!$ClientContact) {
 
 try {
     $currentDate = date('Y-m-d');
-    
-    // Find the current user's RateCard, QueueIndex, EntryDateTime, and Status
-    $userQuery = "SELECT RateCard, QueueIndex, EntryDateTime, Status FROM queue_table 
+
+    // Fetch all entries for this client today
+    $userQuery = "SELECT ID, RateCard, QueueIndex, EntryDateTime, Status FROM queue_table 
                   WHERE ClientContact = ? AND DATE(EntryDateTime) = ? 
-                  ORDER BY ID DESC LIMIT 1";
+                  ORDER BY ID DESC";
     $userStmt = $pdo->prepare($userQuery);
     $userStmt->execute([$ClientContact, $currentDate]);
-    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+    $entries = $userStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!$user) {
+    if (!$entries) {
         echo json_encode(['error' => 'Client not found in the queue.']);
         exit();
+    }
+
+    // Prefer latest joined (non-remote) entry
+    $user = null;
+    foreach ($entries as $entry) {
+        if ($entry['Status'] !== 'Remote' && $entry['QueueIndex'] != 0) {
+            $user = $entry;
+            break;
+        }
+    }
+
+    // If no joined entry found, fallback to remote
+    if (!$user) {
+        $user = $entries[0];
     }
 
     $rateCard = $user['RateCard'];
@@ -43,37 +56,52 @@ try {
     $entryDateTime = $user['EntryDateTime'];
     $status = $user['Status'];
 
-    // Get all records for the same RateCard and eligible status
-    $queueQuery = "SELECT QueueIndex, ClientContact, EntryDateTime FROM queue_table 
-                   WHERE RateCard = ? AND DATE(EntryDateTime) = ? AND Status IN ('Waiting', 'In-Progress', 'On-Hold')
-                   ORDER BY QueueIndex ASC";
+    // Fetch today's queue with eligible statuses
+    $queueQuery = "SELECT QueueIndex, ClientContact, EntryDateTime, Status FROM queue_table 
+                   WHERE RateCard = ? AND DATE(EntryDateTime) = ? AND Status IN ('Waiting', 'In-Progress', 'On-Hold', 'Remote', 'Completed')";
     $queueStmt = $pdo->prepare($queueQuery);
     $queueStmt->execute([$rateCard, $currentDate]);
     $queue = $queueStmt->fetchAll(PDO::FETCH_ASSOC);
 
     $totalOrders = count($queue);
+    $walkinStatuses = ['Waiting', 'In-Progress', 'On-Hold', 'Completed'];
+    $remoteStatus = 'Remote';
 
-    // Find the position in queue
-    $position = array_search($ClientContact, array_column($queue, 'ClientContact')) + 1;
+    // Separate walk-in and remote queues
+    $walkinQueue = array_filter($queue, fn($row) => in_array($row['Status'], $walkinStatuses));
+    $remoteQueue = array_filter($queue, fn($row) => $row['Status'] === $remoteStatus);
 
-    if ($position === 0) {
-        echo json_encode(['error' => 'Client not found in the queue.']);
+    // Sort walk-ins by QueueIndex ASC
+    usort($walkinQueue, fn($a, $b) => $a['QueueIndex'] - $b['QueueIndex']);
+
+    // Sort remote queue by EntryDateTime ASC
+    usort($remoteQueue, fn($a, $b) => strtotime($a['EntryDateTime']) - strtotime($b['EntryDateTime']));
+
+    if (in_array($status, $walkinStatuses)) {
+        // Find position in walk-in queue
+        $walkinContacts = array_column($walkinQueue, 'ClientContact');
+        $position = array_search($ClientContact, $walkinContacts) + 1;
+    } elseif ($status === $remoteStatus) {
+        // Find position in remote queue (ordered by join time)
+        $remoteContacts = array_column($remoteQueue, 'ClientContact');
+        $walkinCount = count($walkinQueue);
+        $remotePosition = array_search($ClientContact, $remoteContacts) + 1;
+        $position = $walkinCount + $remotePosition;
+    } else {
+        echo json_encode(['error' => 'Invalid client status.']);
         exit();
     }
 
-    $peopleAhead = max(0, $position);
     $averageTimePerOrder = 10; // minutes
     $estimatedTime = $position * $averageTimePerOrder;
 
-    // Calculate elapsed and remaining time
     $entryTime = new DateTime($entryDateTime);
     $now = new DateTime();
-    $elapsedTime = ($now->getTimestamp() - $entryTime->getTimestamp()) / 60; // minutes
-
+    $elapsedTime = ($now->getTimestamp() - $entryTime->getTimestamp()) / 60;
     $remainingTime = max(0, $estimatedTime - floor($elapsedTime));
 
     echo json_encode([
-        'position' => $peopleAhead,
+        'position' => $position,
         'totalOrders' => $totalOrders,
         'estimatedTime' => $estimatedTime,
         'remainingTime' => $remainingTime,

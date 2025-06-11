@@ -2,6 +2,8 @@ import axios from 'axios';
 
 export const api = axios.create({
     baseURL: "https://orders.baleenmedia.com/API/Media/"
+    // baseURL: "http://localhost/Easy2Work/api/API/Media/"
+    // baseURL: "http://localhost/easy2work-backend/API/Media/"
 })    
 
 export const FetchRateSeachTerm = async(DBName, SearchTerm, showInvalid) => {
@@ -496,15 +498,15 @@ export const verifyOTP = async (DBName, phoneNumber, otpCode) => {
     }
 };
 
-export const fetchQueueData = async (DBName, phoneNumber) => {
+export const FetchQueueClientData = async (DBName, phoneNumber) => {
     try {
-        const response = await api.get("FetchQueueData.php", {
+        const response = await api.get("FetchQueueClientData.php", {
             headers: { "Content-Type": "application/json" },
             params: { JsonDBName: DBName, JsonClientContact: phoneNumber }
         });
 
-        const { position, totalOrders, estimatedTime, remainingTime } = response.data;
-        return { position, total: totalOrders, estimatedTime, remainingTime };
+        const { position, totalOrders, estimatedTime, remainingTime, status } = response.data;
+        return { position, total: totalOrders, estimatedTime, remainingTime, status };
     } catch (error) {
         console.error("Error fetching queue data:", error);
         throw error;
@@ -522,6 +524,169 @@ export const checkAndRegisterQueue = async (DBName, ClientContact, ClientName) =
         return response.data;
     } catch (error) {
         console.error("Error checking and registering queue:", error);
+        throw error;
+    }
+};
+
+export const FetchQueueDashboardData = async (DBName) => {
+    try {
+        const response = await api.get("FetchQueueDashboardData.php", {
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            params: { JsonDBName: DBName }
+        });
+        // API returns { success: true, data: [...] }
+        if (response.data && response.data.success) {
+            return response.data.data;
+        } else {
+            throw new Error(response.data?.message || 'Failed to fetch queue dashboard data');
+        }
+    } catch (error) {
+        console.error("Error fetching queue dashboard data:", error);
+        throw error;
+    }
+};
+
+export const UpdateQueueOrder = async (DBName, rateCard, queueOrder) => {
+    const response = await api.post("UpdateQueueOrder.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        JsonQueueOrder: queueOrder
+    });
+    return response.data;
+};
+
+export const QueueDashboardAction = async (DBName, action, params = {}) => {
+    const response = await api.post("QueueDashboardAction.php", {
+        JsonDBName: DBName,
+        JsonAction: action,
+        ...params
+    });
+    return response.data;
+};
+
+// Save a snapshot
+export const SaveQueueSnapshot = async (DBName, rateCard, snapshot) => {
+    return await api.post("SaveQueueSnapshot.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        JsonSnapshot: snapshot
+    });
+};
+
+// Get previous/next snapshot
+export const GetQueueSnapshot = async (DBName, rateCard, direction, currentId) => {
+    return await api.post("GetQueueSnapshot.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        direction,
+        currentId
+    });
+};
+
+// Restore a snapshot
+export const RestoreQueueSnapshot = async (DBName, rateCard, snapshot) => {
+    return await api.post("RestoreQueueSnapshot.php", {
+        JsonDBName: DBName,
+        JsonRateCard: rateCard,
+        JsonSnapshot: snapshot
+    });
+};
+
+export const AddRemoteQueueUser = async (DBName, ClientContact, RateCard) => {
+    console.log(DBName, ClientContact, RateCard); // Debugging log to check parameters
+    try {
+        const response = await api.post(
+            "AddRemoteQueueUser.php",
+            {
+                JsonDBName: DBName,
+                JsonClientContact: ClientContact,
+                JsonRateCard: RateCard, // Ensure RateCard is defined in your context
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",  // Set content type to JSON
+                },
+            }
+        );
+        console.log("Remote queue user added successfully:", response.data); // Show response data
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+        }
+        throw error;
+    }
+};
+
+export const SaveFcmToken = async (DBName, Token) => {
+    try {
+        const response = await api.post(
+            "SaveFcmToken.php",
+            {
+                JsonDBName: DBName,
+                JsonToken: Token,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        console.log("Save fcm token", response.data)
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+        }
+        throw error;
+    }
+};
+
+export const fetchFcmTokens = async (DBName) => {
+  try {
+    const response = await api.post(
+      "FetchFcmToken.php",
+      { JsonDBName: DBName },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    if (response.data && response.data.success) {
+        console.log("Save fcm token", response.data)
+      return response.data.tokens; // Array of tokens
+    } else {
+      console.error("Fetch tokens failed:", response.data.message);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching tokens:", error);
+    return [];
+  }
+};
+
+export const SaveQueueClientFcmToken = async (DBName, PhoneNumber, Token) => {
+    try {
+        const response = await api.post(
+            "SaveQueueClientFcmToken.php",
+            {
+                JsonDBName: DBName,
+                JsonPhoneNumber: PhoneNumber,
+                JsonToken: Token,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        console.log("Save fcm token", response.data)
+        return response.data;
+    } catch (error) {
+        console.error("Error checking and registering queue:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+        }
         throw error;
     }
 };

@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   phoneNumber: "",
   language: "en", // Default language
+  queueStatus: "", // Add queueStatus to state
 };
 
 export const queueSlice = createSlice({
@@ -21,8 +22,14 @@ export const queueSlice = createSlice({
     resetLanguage: (state) => {
       state.language = "en"; // Reset to default language
     },
+    setQueueStatus: (state, action) => {
+      state.queueStatus = action.payload;
+    },
+    resetQueueStatus: (state) => {
+      state.queueStatus = "";
+    },
   },
 });
 
-export const { setPhoneNumber, resetPhoneNumber, setLanguage, resetLanguage } = queueSlice.actions;
+export const { setPhoneNumber, resetPhoneNumber, setLanguage, resetLanguage, setQueueStatus, resetQueueStatus } = queueSlice.actions;
 export const queueReducer = queueSlice.reducer;

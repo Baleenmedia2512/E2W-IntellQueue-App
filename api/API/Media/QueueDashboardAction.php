@@ -20,7 +20,7 @@ $pdo = ConnectionManager::getConnection();
 
 function renumberQueueIndexes($pdo, $rateCard) {
     // Get all clients for this RateCard and today, not Completed or Deleted, order by QueueIndex
-    $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE RateCard = ? AND Status NOT IN ('Completed', 'Deleted') AND Date(EntryDateTime) = CURRENT_DATE ORDER BY QueueIndex ASC, ID ASC");
+    $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE RateCard = ? AND Status NOT IN ('Completed', 'Deleted', 'Remote') AND Date(EntryDateTime) = CURRENT_DATE ORDER BY QueueIndex ASC, ID ASC");
     $stmt->execute([$rateCard]);
     $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $i = 1;

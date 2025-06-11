@@ -1,19 +1,71 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
+import { useDispatch } from "react-redux";
+import { setQueueStatus } from "@/redux/features/queue-slice";
+import { FetchQueueClientData } from "@/app/api/FetchAPI";
 
 export default function ReadyScreen() {
     const companyName = useAppSelector((state) => state.authSlice.companyName);
     const language = useAppSelector((state) => state.queueSlice.language);
+    const phoneNumber = useAppSelector(state => state.queueSlice.phoneNumber);
     const router = useRouter();
-
+    const dispatch = useDispatch();
+    const queueStatus = useAppSelector(state => state.queueSlice.queueStatus);
+    const pathname = usePathname();
+    
     useEffect(() => {
-        if (!companyName) {
+        // Only check for companyName if phoneNumber is present (to avoid redirecting to InvalidAccess when phoneNumber is missing)
+        if (!companyName && phoneNumber) {
             router.push('/QueueSystem/InvalidAccess');
         }
-    }, [companyName, router]);
+    }, [companyName, phoneNumber, router]);
+
+    useEffect(() => {
+        if (!phoneNumber) {
+            router.push('/QueueSystem/EnterDetails');
+        }
+    }, [phoneNumber, router]);
+
+    useEffect(() => {
+        if (!companyName) return;
+        const fetchQueue = async () => {
+            try {
+                const { status } = await FetchQueueClientData(companyName, phoneNumber);
+                dispatch(setQueueStatus(status));
+            } catch (error) {
+                // ignore
+            }
+        };
+        fetchQueue();
+        const interval = setInterval(fetchQueue, 5000);
+        return () => clearInterval(interval);
+    }, [companyName, phoneNumber, dispatch]);
+
+    useEffect(() => {
+        // Detect browser back/forward navigation
+        if (typeof window !== "undefined") {
+            // If the navigation is not a new entry (idx < 1), treat as back/forward
+            if (window.history.state && window.history.state.idx !== undefined && window.history.state.idx < 1) {
+                if (phoneNumber) {
+                    router.replace('/QueueSystem/EnterDetails');
+                } else {
+                    router.replace('/QueueSystem/LanguageSelection');
+                }
+                return;
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if ((queueStatus === "Waiting" || queueStatus === "On-Hold") && pathname !== "/QueueSystem/WaitingScreen") {
+            router.replace("/QueueSystem/WaitingScreen");
+        } else if (queueStatus === "Completed" && pathname !== "/QueueSystem/ThankYouScreen") {
+            router.replace("/QueueSystem/ThankYouScreen");
+        }
+    }, [queueStatus, router, pathname]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">

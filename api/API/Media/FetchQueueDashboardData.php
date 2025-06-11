@@ -19,7 +19,7 @@ try {
             queue_table 
         WHERE 
             DATE(EntryDateTime) = CURRENT_DATE
-            AND (Status = 'Waiting' OR Status = 'On-Hold' OR Status = 'In-Progress')
+            AND Status NOT IN ('Remote')
     ");
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -37,6 +37,9 @@ try {
             'inTime' => $inTime,
             'contact' => $row['ClientContact'],
             'status' => $row['Status'],
+            'entryDateTime' => $row['EntryDateTime'],
+            'remarks' => $row['Remarks'],
+            'fcmToken' => $row['FcmToken'],
         ];
     }, $rows);
 
