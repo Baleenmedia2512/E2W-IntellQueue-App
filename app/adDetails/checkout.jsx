@@ -620,11 +620,11 @@ console.log(itemToUpdate.CartID)
       ₹{" "}
       {formattedRupees(
         (item.AmountwithoutGst) /
-        (item.unit === "SCM"
+        (item.Units === "SCM"
           ? item.Quantity * item.Width
           : item.Quantity)
       )}{" "}
-      per {item.unit}
+      per {item.Units}
     </td>
     
     <td className="p-3 border border-gray-200 text-nowrap">
