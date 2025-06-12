@@ -474,7 +474,6 @@ export const sendOTP = async (DBName, phoneNumber) => {
         }, {
             headers: { "Content-Type": "application/json" },
         });
-        console.log("OTP sent successfully:", response.data); // Debugging log
         return response.data;
     } catch (error) {
         console.error("Error sending OTP:", error);
@@ -593,7 +592,6 @@ export const RestoreQueueSnapshot = async (DBName, rateCard, snapshot) => {
 };
 
 export const AddRemoteQueueUser = async (DBName, ClientContact, RateCard) => {
-    console.log(DBName, ClientContact, RateCard); // Debugging log to check parameters
     try {
         const response = await api.post(
             "AddRemoteQueueUser.php",
@@ -608,7 +606,6 @@ export const AddRemoteQueueUser = async (DBName, ClientContact, RateCard) => {
                 },
             }
         );
-        console.log("Remote queue user added successfully:", response.data); // Show response data
         return response.data;
     } catch (error) {
         console.error("Error checking and registering queue:", error);
@@ -633,7 +630,6 @@ export const SaveFcmToken = async (DBName, Token) => {
                 },
             }
         );
-        console.log("Save fcm token", response.data)
         return response.data;
     } catch (error) {
         console.error("Error checking and registering queue:", error);
@@ -653,7 +649,6 @@ export const fetchFcmTokens = async (DBName) => {
     );
 
     if (response.data && response.data.success) {
-        console.log("Save fcm token", response.data)
       return response.data.tokens; // Array of tokens
     } else {
       console.error("Fetch tokens failed:", response.data.message);
@@ -680,7 +675,6 @@ export const SaveQueueClientFcmToken = async (DBName, PhoneNumber, Token) => {
                 },
             }
         );
-        console.log("Save fcm token", response.data)
         return response.data;
     } catch (error) {
         console.error("Error checking and registering queue:", error);

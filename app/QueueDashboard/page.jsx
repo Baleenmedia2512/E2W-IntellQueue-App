@@ -469,7 +469,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
     // Save a snapshot to history
     const saveSnapshot = async (snapshot) => {
-        console.log('[DEBUG] Saving snapshot:', JSON.stringify(snapshot, null, 2));
         const res = await SaveQueueSnapshot(companyName, selectedEquipment, snapshot);
         if (res.data && res.data.success) {
             // Get the latest history ID and update the stack
@@ -531,7 +530,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         // Now fetch latest state from API and update local state
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('[DEBUG] saveSnapshotWithUpdatedState - Fetched API Clients:', JSON.stringify(apiClients, null, 2));
         // Wait for 300ms to ensure queue table update is complete
         await new Promise(resolve => setTimeout(resolve, 300));
         const snapshot = apiClients
@@ -741,7 +739,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
-            console.log('[DEBUG] Restoring snapshot (UNDO):', JSON.stringify(res.data.snapshot, null, 2));
             const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex - 1 });
@@ -776,7 +773,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
-            console.log('[DEBUG] Restoring snapshot (REDO):', JSON.stringify(res.data.snapshot, null, 2));
             const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex + 1 });

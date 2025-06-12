@@ -24,7 +24,6 @@ async function getNotificationPermissionAndToken() {
     }
   }
 
-  console.log("Notification permission not granted.");
   return null;
 }
 
@@ -88,11 +87,10 @@ const useFcmToken = () => {
       if (!m) return;
 
       const unsubscribe = onMessage(m, (payload) => {
-        console.log("Foreground push notification received:", payload);
 
-        const link = payload.fcmOptions?.link || payload.data?.link;
-        const title = payload.notification?.title || "New Message";
-        const body = payload.notification?.body || "You have a new message";
+        const link = payload.data?.link || payload.fcmOptions.link;
+        const title = payload.data?.title || payload.notification.title || "New Message";
+        const body = payload.data?.body || payload.notification?.body || "You have a new message";
 
         // Show the toast via the global function
         window.showCustomToast(title, body, link, router);
@@ -117,7 +115,6 @@ const useFcmToken = () => {
             if (phoneNumber) {
               const res2 = await SaveQueueClientFcmToken(companyName, phoneNumber, token);
               if (res2 && res2.success) {
-                console.log("Queue token saved successfully.");
               } else {
                 console.warn("Queue token save response:", res2);
               }
@@ -127,7 +124,6 @@ const useFcmToken = () => {
           } else {
             const res = await SaveFcmToken(companyName, token);
             if (res && res.success) {
-              console.log("Token saved successfully.");
             } else {
               console.warn("Token save response:", res);
             }

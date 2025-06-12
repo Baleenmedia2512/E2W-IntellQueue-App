@@ -14,7 +14,6 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function(payload) {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
     
     let notificationTitle;
     let notificationOptions;
@@ -36,6 +35,7 @@ messaging.onBackgroundMessage(function(payload) {
             icon: "/icon-192x192.png",
             data: { url: payload.data.link || '/' },
         };
+
     }
 
     if (notificationTitle) {
@@ -44,18 +44,15 @@ messaging.onBackgroundMessage(function(payload) {
 });
 
 self.addEventListener("notificationclick", function (event) {
-    console.log('[firebase-messaging-sw.js] Received notification click');
     event.notification.close();
 
     const urlToOpen = event.notification.data?.url || '/';
-    console.log('URL to open:', urlToOpen);
 
     event.waitUntil(
         clients.matchAll({
             type: 'window',
             includeUncontrolled: true
         }).then(function(clientList) {
-            console.log('Found clients:', clientList.length);
             
             // Normalize the target URL
             const targetUrl = new URL(urlToOpen, self.location.origin);
@@ -65,20 +62,13 @@ self.addEventListener("notificationclick", function (event) {
                 // Normalize the client URL
                 const clientUrl = new URL(client.url);
                 const clientPath = clientUrl.pathname + clientUrl.search;
-                
-                console.log('Comparing paths:', {
-                    targetPath,
-                    clientPath
-                });
 
                 // Check if paths match (ignoring origin)
                 if (clientPath === targetPath && 'focus' in client) {
-                    console.log('Found matching client, focusing');
                     return client.focus();
                 }
             }
             
-            console.log('No matching client found, opening new window');
             return clients.openWindow(urlToOpen);
         })
     );

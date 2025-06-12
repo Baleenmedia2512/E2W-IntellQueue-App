@@ -187,8 +187,16 @@ const ToastItem = ({
         </div>
         <div className="text-gray-600 text-xs sm:text-sm leading-relaxed">{message}</div>
         {link && (
-          <button
-            onClick={() => router.push(link)}
+          <button              
+          onClick={() => {
+              const currentPath = window.location.pathname;
+              if (currentPath === link) {
+                router.push(link);
+              } else {
+                window.open(link, '_blank');
+              }
+              setTimeout(() => onDismiss(), 1000);
+            }}
             className="mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 flex items-center gap-1 group/link"
           >
             More info
