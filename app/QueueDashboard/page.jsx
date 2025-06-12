@@ -56,11 +56,6 @@ async function sendReminderToClient(clientId, allClients) {
                 icon: "/icon-192x192.png",
                 title: `Your turn in queue!`,
                 message: `Hi ${clientRow.name}, it's your turn now. Please proceed to the reception. | வணக்கம் ${clientRow.name}, நீங்கள் தான் அடுத்தவர். தயவுசெய்து ரிசப்ஷனுக்கு செல்லவும்.`,
-                data: {
-                    client: clientRow.name,
-                    rateCard: clientRow.rateCard,
-                    rateType: clientRow.rateType
-                }
             }),
         });
         const data = await response.json();
@@ -128,8 +123,6 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
   );
 }
 
-// --- Draggable Tile (Modified to show equipment icon) ---
-// --- Draggable Tile (Fixed for react-dnd v14+) ---
 function DraggableTile({ 
     client, 
     index, 
@@ -466,11 +459,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                     title: `Queue Update!`,
                     message: `${clientName} is now IN-PROGRESS${extraInfo}`,
                     link: "/QueueDashboard",
-                    data: {
-                        client: clientName,
-                        rateCard: rateCard,
-                        rateType: rateType
-                    }
                 }),
             });
             const data = await response.json();

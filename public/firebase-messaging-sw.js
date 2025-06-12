@@ -16,45 +16,70 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function(payload) {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
     
-    // Skip custom notification if it contains notification payload
+    let notificationTitle;
+    let notificationOptions;
+    let link;
+
     if (payload.notification) {
-        console.log("Notification already handled by Firebase");
-        return;
+        // Handle notification payload
+        notificationTitle = payload.notification.title;
+        notificationOptions = {
+            body: payload.notification.body,
+            icon: "/icon-192x192.png",
+            data: { url: payload.fcmOptions?.link || payload.data?.link || '/' },
+        };
+    } else if (payload.data) {
+        // Handle data payload
+        notificationTitle = payload.data.title;
+        notificationOptions = {
+            body: payload.data.body,
+            icon: "/icon-192x192.png",
+            data: { url: payload.data.link || '/' },
+        };
     }
 
-    const link = payload.fcmOptions?.link || payload.data?.link;
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: "/icon-192x192.png",
-        data: { url: link },
-    };
-
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    if (notificationTitle) {
+        return self.registration.showNotification(notificationTitle, notificationOptions);
+    }
 });
 
 self.addEventListener("notificationclick", function (event) {
     console.log('[firebase-messaging-sw.js] Received notification click');
-
     event.notification.close();
 
-    event.waitUntil(
-        clients
-        .matchAll({ type: "window", includeUncontrolled: true })
-        .then(function (clientList) {
-            const url = event.notification.data.url;
-            if (!url) return;
+    const urlToOpen = event.notification.data?.url || '/';
+    console.log('URL to open:', urlToOpen);
 
-            for (const client of clientList) {
-                if (client.url === url && "focus" in client) {
+    event.waitUntil(
+        clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        }).then(function(clientList) {
+            console.log('Found clients:', clientList.length);
+            
+            // Normalize the target URL
+            const targetUrl = new URL(urlToOpen, self.location.origin);
+            const targetPath = targetUrl.pathname + targetUrl.search;
+            
+            for (let client of clientList) {
+                // Normalize the client URL
+                const clientUrl = new URL(client.url);
+                const clientPath = clientUrl.pathname + clientUrl.search;
+                
+                console.log('Comparing paths:', {
+                    targetPath,
+                    clientPath
+                });
+
+                // Check if paths match (ignoring origin)
+                if (clientPath === targetPath && 'focus' in client) {
+                    console.log('Found matching client, focusing');
                     return client.focus();
                 }
             }
-
-            if (clients.openWindow) {
-                console.log("OPENWINDOW ON CLIENT");
-                return clients.openWindow(url);
-            }
+            
+            console.log('No matching client found, opening new window');
+            return clients.openWindow(urlToOpen);
         })
     );
 });

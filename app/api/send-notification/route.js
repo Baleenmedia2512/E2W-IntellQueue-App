@@ -15,17 +15,11 @@ export async function POST(request) {
   for (const singleToken of token) {
     const payload = {
       token: singleToken,
-      notification: {
+      data: {
         title: title,
         body: message,
-      },
-      webpush: link
-        ? {
-            fcmOptions: {
-              link,
-            },
-          }
-        : undefined,
+        link: link
+      }
     };
 
     try {
