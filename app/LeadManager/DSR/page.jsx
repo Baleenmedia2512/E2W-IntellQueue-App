@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, Download, Calendar, Filter, RefreshCw, Users, TrendingUp, Clock, Award, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/redux/store';
-import { FetchActiveCSE } from '@/app/api/FetchAPI';
+import { FetchActiveCSE, FetchExistingLeads, FetchLeadsData } from '@/app/api/FetchAPI';
 import * as XLSX from 'xlsx';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -103,25 +103,75 @@ const DSRPage = () => {
     }
   }, []);
 
-  // Fetch leads data
+  // Fetch leads data (including Client2lead data)
   const fetchData = useCallback(async () => {
     try {
+      // Fetch original DSR leads
       const response = await fetch("https://leads.baleenmedia.com/api/fetchLeads");
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       if (!data.rows || !Array.isArray(data.rows)) throw new Error("Invalid data format received");
+      const dsrLeads = data.rows.map(transformRow).filter((lead) => lead !== null);
 
-      // Transform every row using transformRow
-      const allLeads = data.rows.map(transformRow).filter((lead) => lead !== null);
+      // Fetch Client2lead data
+      let client2Leads = [];
+      try {
+        // Use the same DB name as the logged-in user
+        const dbName = UserCompanyName;
+        const [existingLeads, leadsData] = await Promise.all([
+          FetchExistingLeads(dbName, ''),
+          FetchLeadsData(dbName, '')
+        ]);
+        // Merge and process Client2lead data
+        const processClient2Lead = (row) => {
+        // Map Client2lead fields to DSR structure
+        return {
+        SNo: row.Lead_ID || row.OrderNumber || Date.now().toString() + Math.random(),
+        LeadDate: row.LeadDate || row.DateOfFirstRelease || 'N/A',
+        LeadTime: row.LeadTime || '',
+        Status: row.Status || 'N/A',
+        Source: row.Source || row.Platform || 'N/A',
+        Name: row.ClientName || row.ContactPerson || 'N/A',
+        Phone: row.ClientContact || 'N/A',
+        Email: row.ClientAuthorizedPerson || row.ClientEmail || 'N/A',
+        Company: row.ClientCompanyName || row.ClientName || 'N/A',
+        BusinessCategory: row.EnquiryDescription || row.ProspectType || 'N/A',
+        FollowupDate: row.NextFollowupDate || '',
+        Remarks: row.Remarks || '',
+        HandledBy: row.HandledBy || row.CSE || 'N/A',
+        leadDate: row.LeadDate ? getStartOfDay(new Date(row.LeadDate)) : (row.DateOfFirstRelease ? getStartOfDay(new Date(row.DateOfFirstRelease)) : null),
+        statusChangeDate: row.NextFollowupDate ? new Date(row.NextFollowupDate) : null,
+        unattended: false,
+        isExistingLead: true, // Mark as existing lead from Client2Lead
+        };
+        };
+        client2Leads = [...leadsData, ...existingLeads].map(processClient2Lead).filter((lead) => lead !== null);
+      } catch (client2Err) {
+        console.error("Error fetching Client2lead data:", client2Err);
+      }
+
+      // Mark DSR leads as not existing by default
+      const dsrLeadsWithFlag = dsrLeads.map(lead => ({ ...lead, isExistingLead: false }));
+      // Merge DSR and Client2lead leads
+      const allLeads = [...dsrLeadsWithFlag, ...client2Leads];
+      // Deduplicate: prefer Client2Lead version if duplicate by Phone (or Email if Phone missing)
+      const dedupedLeadsMap = new Map();
+      for (const lead of allLeads) {
+        const key = (lead.Phone && lead.Phone !== 'N/A') ? lead.Phone : (lead.Email && lead.Email !== 'N/A' ? lead.Email : lead.SNo);
+        // Prefer Client2Lead (isExistingLead true) if duplicate
+        if (!dedupedLeadsMap.has(key) || lead.isExistingLead) {
+          dedupedLeadsMap.set(key, lead);
+        }
+      }
+      const dedupedLeads = Array.from(dedupedLeadsMap.values());
       // Sort leads based on leadDate in descending order (newest first)
-      allLeads.sort((a, b) => {
+      dedupedLeads.sort((a, b) => {
         if (!a.leadDate && !b.leadDate) return 0;
         if (!a.leadDate) return 1;
         if (!b.leadDate) return -1;
         return b.leadDate.getTime() - a.leadDate.getTime();
       });
-      
-      setLeads(allLeads);
+      setLeads(dedupedLeads);
       setError(null);
     } catch (err) {
       console.error("Fetch error:", err);
@@ -129,7 +179,7 @@ const DSRPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [transformRow]);
+  }, [transformRow, UserCompanyName]);
 
   useEffect(() => {
     if (!userName || !UserCompanyName) {
@@ -460,6 +510,31 @@ const DSRPage = () => {
     }
   };
 
+  // Bottom bar scroll logic
+  const [showBottomBar, setShowBottomBar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            setShowBottomBar(false); // Hide on scroll down
+          } else {
+            setShowBottomBar(true); // Show on scroll up
+          }
+          setLastScrollY(currentScrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -614,6 +689,7 @@ const DSRPage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="">All CSE</option>
+                <option value="Siva">Siva</option>
                 {CSENames.map((cse, idx) => (
                   <option key={idx} value={toTitleCase(cse.username)}>
                     {toTitleCase(cse.username)}
@@ -713,6 +789,7 @@ const DSRPage = () => {
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enquiry</th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Handled By</th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Existing Lead</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -769,6 +846,9 @@ const DSRPage = () => {
                           {item.Remarks || 'No remarks'}
                         </div>
                       </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                        {item.isExistingLead ? 'Yes' : ''}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -784,6 +864,29 @@ const DSRPage = () => {
             )}
           </div>
         )}
+      </div>
+    {/* Bottom Bar */}
+      <div
+        className={`fixed bottom-0 left-0 w-full z-50 transition-transform duration-300 ease-in-out ${showBottomBar ? 'translate-y-0' : 'translate-y-full'}`}
+        style={{ pointerEvents: showBottomBar ? 'auto' : 'none' }}
+      >
+        <div className="flex justify-center items-center bg-white border-t border-gray-200 py-3 shadow-lg md:rounded-t-xl">
+          <button
+            onClick={downloadData}
+            disabled={loading || filteredData.length === 0}
+            className="mx-2 px-6 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Download className="w-4 h-4 mr-2 inline-block align-middle" />
+            Export Data
+          </button>
+          <button
+            onClick={() => router.push('/LeadManager/Report')}
+            className="mx-2 px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <FileText className="w-4 h-4 mr-2 inline-block align-middle" />
+            Report
+          </button>
+        </div>
       </div>
     </div>
   );

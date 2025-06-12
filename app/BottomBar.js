@@ -416,6 +416,30 @@ export default function BottomBarTest() {
   };
   
 
+  // Scroll direction logic for show/hide
+  const [showBar, setShowBar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            setShowBar(false); // Hide on scroll down
+          } else {
+            setShowBar(true); // Show on scroll up
+          }
+          setLastScrollY(currentScrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   if (currentPath === '/login') {
     return null; // Conditionally return null
   }
@@ -423,7 +447,7 @@ export default function BottomBarTest() {
   return (
     <div className="relative">
       {/* Main Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-20 z-50 bg-white  shadow-2xl" style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)' }}>
+      <div className={`fixed bottom-0 left-0 right-0 h-20 z-50 bg-white shadow-2xl transition-transform duration-300 ease-in-out ${showBar ? 'translate-y-0' : 'translate-y-full'}`} style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)', pointerEvents: showBar ? 'auto' : 'none' }}>
         <div className="flex justify-around  max-w-lg mx-auto relative ">
 
           {Menus.map((menu, i) => (
