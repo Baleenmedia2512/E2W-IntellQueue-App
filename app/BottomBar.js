@@ -542,7 +542,7 @@ export default function BottomBarTest() {
             additionalClasses="hover:bg-blue-50"
             dataTag="LeadManager"
           />
-          <SubNavItem
+          {/* <SubNavItem
             icon={<DemographicTargetingIcon className="text-gray-600" />}
             label="Predictive Targeting"
             onClick={() => { setSelected('PredictiveDemographicTargeting'); setShowMoreOptions(false); router.push('/LeadManager/PredictiveDemographicTargeting'); }}
@@ -559,7 +559,7 @@ export default function BottomBarTest() {
             }}
             additionalClasses="hover:bg-blue-50"
             dataTag="QueueDashboard"
-          />
+          /> */}
           <SubNavItem
             icon={<LogoutIcon className="text-gray-600" />}
             label={<span className="text-red-600">Log Out</span>}
