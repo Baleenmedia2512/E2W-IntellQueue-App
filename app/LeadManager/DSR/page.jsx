@@ -75,9 +75,9 @@ const DSRPage = () => {
   const transformRow = useCallback((row) => {
     try {
       const leadDate = row.LeadDate ? getStartOfDay(new Date(row.LeadDate)) : null;
-      const statusChangeDate = row.DateOfStatusChange ? new Date(row.DateOfStatusChange) : null;
+      const statusChangeDate = row.DateOfStatusChange ? new Date(row.DateOfStatusChange) : row.ArrivedDateTime ? new Date(row.ArrivedDateTime) : null;
       const leadDateTime = row.LeadTime ? new Date(convertTimeToTimestamp(row.LeadTime, leadDate)) : null;
-      const statusChangeDateTime = row.LastStatusChangeTime ? new Date(convertTimeToTimestamp(row.LastStatusChangeTime, statusChangeDate)) : null;
+      const statusChangeDateTime = row.LastStatusChangeTime ? new Date(convertTimeToTimestamp(row.LastStatusChangeTime, statusChangeDate)) : row.ArrivedDateTime ? new Date(convertTimeToTimestamp(row.ArrivedDateTime, statusChangeDate)) : null;
       
       return {
         SNo: row.SNo || Date.now().toString(),
@@ -95,6 +95,7 @@ const DSRPage = () => {
         HandledBy: row.HandledBy || "N/A",
         leadDate,
         statusChangeDate,
+        statusChangeTime: statusChangeDateTime,
         unattended: statusChangeDate === null,
       };
     } catch (err) {
@@ -140,11 +141,13 @@ const DSRPage = () => {
         Remarks: row.Remarks || '',
         HandledBy: row.HandledBy || row.CSE || 'N/A',
         leadDate: row.LeadDate ? getStartOfDay(new Date(row.LeadDate)) : (row.DateOfFirstRelease ? getStartOfDay(new Date(row.DateOfFirstRelease)) : null),
-        statusChangeDate: row.NextFollowupDate ? new Date(row.NextFollowupDate) : null,
+        statusChangeDate: row.DateOfStatusChange ? new Date(row.DateOfStatusChange) : row.ArrivedDateTime ? new Date(row.ArrivedDateTime) : null,
         unattended: false,
+        statusChangeTime: row.LastStatusChangeTime ? new Date(convertTimeToTimestamp(row.LastStatusChangeTime, row.DateOfStatusChange ? new Date(row.DateOfStatusChange) : row.ArrivedDateTime ? new Date(row.ArrivedDateTime) : null)) : null,
         isExistingLead: true, // Mark as existing lead from Client2Lead
         };
         };
+        console.log(leadsData, existingLeads)
         client2Leads = [...leadsData, ...existingLeads].map(processClient2Lead).filter((lead) => lead !== null);
       } catch (client2Err) {
         console.error("Error fetching Client2lead data:", client2Err);
@@ -509,7 +512,7 @@ const DSRPage = () => {
       default: return '📱';
     }
   };
-
+  console.log(filteredData)
   // Bottom bar scroll logic
   const [showBottomBar, setShowBottomBar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -535,6 +538,7 @@ const DSRPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  console.log("Filtered Data:", filteredData);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -803,14 +807,18 @@ const DSRPage = () => {
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                        {item.LeadDate !== "N/A" ? new Date(item.LeadDate).toLocaleDateString('en-US', { 
+                        {item.statusChangeDate !== "N/A" ? new Date(item.statusChangeDate).toLocaleDateString('en-US', { 
                           month: 'short', 
                           day: 'numeric', 
                           year: 'numeric' 
                         }) : 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {item.LeadTime}
+                        {item.statusChangeTime ? new Date(item.statusChangeTime).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                        }) : 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {item.Name}
