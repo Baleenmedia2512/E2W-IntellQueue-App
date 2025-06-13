@@ -155,7 +155,7 @@ export const AdDetails = () => {
     let AmountInclGST = Math.round(item.price * ((item.rateGST/100) + 1));
     // console.log(item.rateGST)
     const quantityBase =
-    item.unit === "SCM" ? item.Quantity * item.Width : item.Quantity;
+    item.Units === "SCM" ? item.Quantity * item.Width : item.Quantity;
     const leadDays = await fetchLeadDays(companyName, item.RateId)
 
   const unitPrice = (
