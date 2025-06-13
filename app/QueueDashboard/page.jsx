@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FaUndo, FaRedo, FaChevronLeft } from "react-icons/fa";
@@ -17,20 +17,6 @@ const notificationDeduplicator = createDeduplicator({
 });
 
 const ItemType = "CLIENT";
-// --- Helper: Equipment Icon ---
-function EquipmentIcon({ equipmentName }) {
-    let icon = <FiUsers className="w-4 h-4 text-gray-500" />; // Default
-    if (equipmentName?.includes("USG")) icon = <FiMic className="w-4 h-4 text-blue-500" />;
-    else if (equipmentName?.includes("CT")) icon = <FiChevronsRight className="w-4 h-4 text-green-500" />;
-    else if (equipmentName?.includes("X-Ray")) icon = <FiPauseCircle className="w-4 h-4 text-purple-500" />; // Placeholder
-
-    return (
-        <div className="flex items-center space-x-1" title={equipmentName}>
-            {icon}
-            <span className="text-xs font-medium text-gray-600">{equipmentName}</span>
-        </div>
-    );
-}
 
 // --- Add a new function to send a reminder to a client by their ID ---
 async function sendReminderToClient(clientId, allClients) {
@@ -123,24 +109,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
   );
 }
 
-function DraggableTile({ 
-    client, 
-    index, 
-    moveTile, 
-    displayedClientIndex, 
-    closeToken, 
-    completeToken, 
-    doneAndHold, 
-    callNext, 
-    continueToken, 
-    queueStarted, 
-    handleStartQueue, 
-    allClients, 
-    selectedEquipment, 
-    hoveredIndex, 
-    setHoveredIndex,
-    draggedIndex, // Add this new prop
-    setDraggedIndex // Add this new prop
+function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment, hoveredIndex, setHoveredIndex, draggedIndex, setDraggedIndex
 }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
@@ -305,6 +274,7 @@ function DraggableTile({
             .every(c => c.status === "Waiting");
     }, [allClients, selectedEquipment]);
 
+
     return (
         <>
             <div
@@ -320,25 +290,20 @@ function DraggableTile({
                 )}
                 {previewPosition === 'shifting-up' && (
                     <div className="absolute -top-1 -right-1 text-white text-xs px-1 py-0.5 rounded-full 
-                                    bg-orange-500 flex items-center">
-                        {/* Down arrow for mobile, hidden on desktop */}
-                        <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full">
-                            ↑
-                        </div>
-                        {/* Right arrow for desktop, hidden on mobile */}
+                                    bg-green-500 flex items-center">
+                        <span className="block sm:hidden">↑</span>
                         <span className="hidden sm:block">←</span>
                     </div>
-                    
                 )}
+
                 {previewPosition === 'shifting-down' && (
                     <div className="absolute -top-1 -right-1 text-white text-xs px-1 py-0.5 rounded-full 
                                     bg-orange-500 flex items-center">
-                        {/* Down arrow for mobile, hidden on desktop */}
                         <span className="block sm:hidden">↓</span>
-                        {/* Right arrow for desktop, hidden on mobile */}
                         <span className="hidden sm:block">→</span>
                     </div>
-                    )}
+                )}
+
 
                 {/* Your existing tile content */}
                 <div className="flex justify-between items-start mb-2">
@@ -413,6 +378,12 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const [isRestoring, setIsRestoring] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState(null); // Track hovered tile
     const [draggedIndex, setDraggedIndex] = useState(null);
+    const [isUserActive, setIsUserActive] = useState(false);
+    const [lastActivityTime, setLastActivityTime] = useState(Date.now());
+    const autoRefreshTimer = useRef(null);
+    const activityTimeoutRef = useRef(null);
+    const isPerformingActionRef = useRef(false);
+    
 
     const notifyIfNeeded = async (clientObj) => {
         if (
@@ -550,6 +521,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         
         return apiClients;
     };
+    
 
     // Add a ref to store previous snapshot for undo/redo comparison
     const prevSnapshotRef = useRef(getCurrentSnapshot()); // Initial snapshot
@@ -565,121 +537,264 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         );
     };
 
+        // Activity detection hook
+    const useActivityDetection = () => {
+        const markActivity = useCallback(() => {
+            setIsUserActive(true);
+            setLastActivityTime(Date.now());
+            
+            // Clear existing timeout
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
+            }
+            
+            // Set user as inactive after 3 seconds of no activity
+            activityTimeoutRef.current = setTimeout(() => {
+                setIsUserActive(false);
+            }, 3000);
+        }, []);
+
+        useEffect(() => {
+            const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'dragstart', 'dragover'];
+            
+            events.forEach(event => {
+                document.addEventListener(event, markActivity, { passive: true });
+            });
+
+            return () => {
+                events.forEach(event => {
+                    document.removeEventListener(event, markActivity);
+                });
+                if (activityTimeoutRef.current) {
+                    clearTimeout(activityTimeoutRef.current);
+                }
+            };
+        }, [markActivity]);
+
+        return { isUserActive, lastActivityTime };
+    };
+
+    // Auto-refresh logic
+    const startAutoRefresh = useCallback(() => {
+        if (autoRefreshTimer.current) {
+            clearInterval(autoRefreshTimer.current);
+        }
+        
+        autoRefreshTimer.current = setInterval(async () => {
+            // Don't refresh if user is active or performing actions
+            if (isUserActive || isPerformingActionRef.current) {
+                return;
+            }
+            
+            try {
+                const apiClients = await FetchQueueDashboardData(companyName);
+                
+                // Only update if data actually changed
+                const currentSnapshot = getCurrentSnapshot();
+                const newSnapshot = apiClients
+                    .filter(c => c.rateCard === selectedEquipment)
+                    .sort((a, b) => a.queueIndex - b.queueIndex)
+                    .map(c => ({
+                        id: c.id,
+                        queueIndex: c.queueIndex,
+                        entryDateTime: c.entryDateTime,
+                        name: c.name,
+                        contact: c.contact,
+                        rateCard: c.rateCard,
+                        rateType: c.rateType,
+                        status: c.status,
+                        remarks: c.remarks
+                    }));
+                
+                // Compare snapshots to detect changes
+                const hasChanged = JSON.stringify(currentSnapshot) !== JSON.stringify(newSnapshot);
+                
+                if (hasChanged) {
+                    setAllClients(apiClients);
+                }
+            } catch (error) {
+                console.error('Auto-refresh failed:', error);
+            }
+        }, 10000); // 10 seconds
+    }, [isUserActive, companyName, selectedEquipment, getCurrentSnapshot]);
+
+    // Initialize activity detection
+    useActivityDetection();
+
+    // Start auto-refresh when component mounts
+    useEffect(() => {
+        startAutoRefresh();
+        
+        return () => {
+            if (autoRefreshTimer.current) {
+                clearInterval(autoRefreshTimer.current);
+            }
+        };
+    }, [startAutoRefresh]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (autoRefreshTimer.current) {
+                clearInterval(autoRefreshTimer.current);
+            }
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    // Wrapper function for actions to pause auto-refresh
+    const withActionLock = useCallback((actionFn) => {
+        return async (...args) => {
+            isPerformingActionRef.current = true;
+            try {
+                await actionFn(...args);
+            } finally {
+                // Resume auto-refresh after a brief delay
+                setTimeout(() => {
+                    isPerformingActionRef.current = false;
+                }, 2000);
+            }
+        };
+    }, []);
+
 
     // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
-    const moveTile = async (fromDisplayedIndex, toDisplayedIndex) => {
-        if (fromDisplayedIndex === toDisplayedIndex) return;
-        const prevSnapshot = getCurrentSnapshot();
-        const masterCopy = [...allClients];
-        const itemsOfSelectedEquipment = masterCopy.filter(c => c.rateCard === selectedEquipment);
-        const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
+    // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
+// Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
+const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => {
+    if (fromDisplayedIndex === toDisplayedIndex) return;
+    
+    // Save snapshot for history BEFORE making changes (includes all statuses)
+    const prevSnapshot = getCurrentSnapshot();
+    await saveSnapshot(prevSnapshot);
+    
+    const masterCopy = [...allClients];
+    
+    // For UI update: exclude Completed/Deleted from the equipment items
+    const itemsOfSelectedEquipment = masterCopy.filter(
+        c => c.rateCard === selectedEquipment && 
+        c.status !== "Completed" && 
+        c.status !== "Deleted"
+    );
+    
+    // Keep Completed/Deleted items separate for UI state
+    const completedDeletedItems = masterCopy.filter(
+        c => c.rateCard === selectedEquipment && 
+        (c.status === "Completed" || c.status === "Deleted")
+    );
+    
+    const otherItems = masterCopy.filter(c => c.rateCard !== selectedEquipment);
 
-        // Sort by queueIndex to get the current order
-        itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
+    // Sort by queueIndex to get the current order
+    itemsOfSelectedEquipment.sort((a, b) => a.queueIndex - b.queueIndex);
 
-        // Save the statuses to swap
-        const fromStatus = itemsOfSelectedEquipment[fromDisplayedIndex].status;
-        const toStatus = itemsOfSelectedEquipment[toDisplayedIndex].status;
+    // Remove the dragged item
+    const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
+    // Insert it at the new position
+    itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
 
-        // Remove the dragged item
-        const [movedClientObj] = itemsOfSelectedEquipment.splice(fromDisplayedIndex, 1);
-        // Insert it at the new position
-        itemsOfSelectedEquipment.splice(toDisplayedIndex, 0, movedClientObj);
+    // Assign new queueIndex in strict order (1,2,3,...)
+    itemsOfSelectedEquipment.forEach((client, idx) => {
+        client.queueIndex = idx + 1;
+    });
 
-        // Assign new queueIndex in strict order (1,2,3,...)
-        itemsOfSelectedEquipment.forEach((client, idx) => {
-            client.queueIndex = idx + 1;
-        });
+    // Check if all clients are in "Waiting" status
+    const allWaiting = itemsOfSelectedEquipment.every(c => c.status === "Waiting");
 
-        // Swap statuses between the two affected tiles (moved and replaced)
-        // The moved client is now at toDisplayedIndex, the replaced client is at fromDisplayedIndex (after the move)
-        const movedClient = itemsOfSelectedEquipment[toDisplayedIndex];
-        let replacedClient;
-        if (fromDisplayedIndex < toDisplayedIndex) {
-            // Dragging down: replaced client is now at toDisplayedIndex - 1
-            replacedClient = itemsOfSelectedEquipment[toDisplayedIndex - 1];
-        } else {
-            // Dragging up: replaced client is now at toDisplayedIndex + 1
-            replacedClient = itemsOfSelectedEquipment[toDisplayedIndex + 1];
-        }
-        if (movedClient && replacedClient) {
-            movedClient.status = toStatus;
-            replacedClient.status = fromStatus;
-        }
-
-        // Build the new optimistic state
-        const newAllClients = [...otherItems, ...itemsOfSelectedEquipment];
-
-        // Optimistically update UI
-        setAllClients(newAllClients);
+    if (!allWaiting) {
+        // Ensure the client at queueIndex 1 has "In-Progress" or "On-Hold" status
+        const firstClient = itemsOfSelectedEquipment[0]; // queueIndex 1
         
-        // Save snapshot for history
-        await saveSnapshot(getCurrentSnapshot());
-
-        // Call backend to update order
-        const queueOrder = itemsOfSelectedEquipment.map(client => ({
-            id: client.id,
-            queueIndex: client.queueIndex,
-            status: client.status
-        }));
-
-        await UpdateQueueOrder(companyName, selectedEquipment, queueOrder);
-
-        // Fetch latest data after action
-        const apiClients = await FetchQueueDashboardData(companyName);
-        
-        // Only update UI if backend data differs from optimistic state
-        const getQueue = (clients) =>
-            clients
-                .filter(c => c.rateCard === selectedEquipment)
-                .sort((a, b) => a.queueIndex - b.queueIndex)
-                .map(c => ({ id: c.id, queueIndex: c.queueIndex, status: c.status }));
-
-        const optimisticQueue = getQueue(newAllClients);
-        const backendQueue = getQueue(apiClients);
-
-        const isDifferent = (a, b) => {
-            if (a.length !== b.length) return true;
-            for (let i = 0; i < a.length; i++) {
-                if (a[i].id !== b[i].id || a[i].queueIndex !== b[i].queueIndex || a[i].status !== b[i].status) {
-                    return true;
-                }
+        // If the first client is in "Waiting" status, find the first non-waiting client and swap statuses
+        if (firstClient && firstClient.status === "Waiting") {
+            const nonWaitingClient = itemsOfSelectedEquipment.find(c => 
+                c.status === "In-Progress" || c.status === "On-Hold"
+            );
+            
+            if (nonWaitingClient) {
+                // Swap statuses
+                const tempStatus = firstClient.status;
+                firstClient.status = nonWaitingClient.status;
+                nonWaitingClient.status = tempStatus;
             }
-            return false;
-        };
-
-        if (isDifferent(backendQueue, optimisticQueue)) {
-            setAllClients(apiClients);
         }
+    }
 
-        // After updating/fetching new state:
-        const newSnapshot = getCurrentSnapshot();
-        const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
+    // Build the new optimistic state (include Completed/Deleted for UI state)
+    const newAllClients = [...otherItems, ...itemsOfSelectedEquipment, ...completedDeletedItems];
 
-        if (changedClient) {
-            await notifyIfNeeded(changedClient);
+    // Optimistically update UI
+    setAllClients(newAllClients);
+
+    // Call backend to update order - ONLY send non-Completed/Deleted clients
+    const queueOrder = itemsOfSelectedEquipment.map(client => ({
+        id: client.id,
+        queueIndex: client.queueIndex,
+        status: client.status
+    }));
+
+    await UpdateQueueOrder(companyName, selectedEquipment, queueOrder);
+
+    // Fetch latest data after action
+    const apiClients = await FetchQueueDashboardData(companyName);
+    
+    // Only update UI if backend data differs from optimistic state
+    const getQueue = (clients) =>
+        clients
+            .filter(c => c.rateCard === selectedEquipment && 
+                    c.status !== "Completed" && 
+                    c.status !== "Deleted")
+            .sort((a, b) => a.queueIndex - b.queueIndex)
+            .map(c => ({ id: c.id, queueIndex: c.queueIndex, status: c.status }));
+
+    const optimisticQueue = getQueue(newAllClients);
+    const backendQueue = getQueue(apiClients);
+
+    const isDifferent = (a, b) => {
+        if (a.length !== b.length) return true;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i].id !== b[i].id || a[i].queueIndex !== b[i].queueIndex || a[i].status !== b[i].status) {
+                return true;
+            }
         }
+        return false;
     };
+
+    if (isDifferent(backendQueue, optimisticQueue)) {
+        setAllClients(apiClients);
+    }
+
+    // After updating/fetching new state:
+    const newSnapshot = getCurrentSnapshot();
+    const changedClient = getNewInProgressClient(prevSnapshot, newSnapshot);
+
+    if (changedClient) {
+        await notifyIfNeeded(changedClient);
+    }
+});
+
   
-    const closeToken = async (displayedIndex) => {
+    const closeToken = withActionLock(async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'closeToken', { JsonClientId: clientId });
         const apiClients = await saveSnapshotWithUpdatedState();;
-    };
+    });
 
-    const completeToken = async (displayedIndex) => {
+    const completeToken = withActionLock(async (displayedIndex)  => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'completeToken', { JsonClientId: clientId });
         const apiClients = await saveSnapshotWithUpdatedState();
-    };
+    });
 
-    const doneAndHold = async (displayedIndex) => {
+    const doneAndHold = withActionLock(async (displayedIndex)  => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'doneAndHold', { JsonClientId: clientId });
         const apiClients = await saveSnapshotWithUpdatedState();
-    };
+    });
 
-    const callNext = async (displayedIndex) => {
+    const callNext = withActionLock(async (displayedIndex)  => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'callNext', { JsonClientId: clientId });
         
@@ -697,23 +812,23 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         } else {
             console.warn("No valid next In-Progress client found, skipping notification.");
         }
-    };
+    });
 
-    const continueToken = async (displayedIndex) => {
+    const continueToken = withActionLock(async (displayedIndex)  => {
         const clientId = displayedClients[displayedIndex].id;
         const clientName = displayedClients[displayedIndex].name;
         await QueueDashboardAction(companyName, 'continueToken', { JsonClientId: clientId });
         const apiClients = await saveSnapshotWithUpdatedState();
         await notifyIfNeeded(displayedClients[displayedIndex]);
-    };
+    });
 
-    const handleStartQueue = async () => {
+    const handleStartQueue = withActionLock(async () => {
         const firstClient = displayedClients[0];
         if (!firstClient) return;
         await QueueDashboardAction(companyName, 'startQueue', { JsonClientId: firstClient.id });
         const apiClients = await saveSnapshotWithUpdatedState();
         await notifyIfNeeded(firstClient);
-    };
+    });
 
     // --- Undo/Redo with notification debounce ---
     const sendDebouncedNotification = (clientObj, delay = 3000) => {
@@ -730,7 +845,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
 
     // Undo/Redo logic
-    const undo = async () => {
+    const undo = withActionLock(async () => {
         if (isRestoring || currentHistoryIndex <= 0) return;
         const prevSnapshot = getCurrentSnapshot();
         setIsRestoring(true);
@@ -759,10 +874,10 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
         }
 
         setIsRestoring(false);
-    };
+    });
 
 
-    const redo = async () => {
+    const redo = withActionLock(async () => {
         if (isRestoring || currentHistoryIndex >= historyStack.length - 1) return;
         const prevSnapshot = getCurrentSnapshot();
         setIsRestoring(true);
@@ -792,7 +907,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
             console.warn("[REDO] Error restoring snapshot:", res);
         }
         setIsRestoring(false);
-    };
+    });
 
     // Update undo/redo button disabled states
     const undoDisabled = currentHistoryIndex <= 0;
