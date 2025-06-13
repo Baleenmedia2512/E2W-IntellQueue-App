@@ -11,8 +11,6 @@ import { setHistoryId } from '@/redux/features/queue-dashboard-slice';
 import useFcmToken from "@/hooks/useFcmToken";
 import createDeduplicator from "./../components/Deduplicator";
 
-
-
 // Auto-scroll hook for drag and drop
 const useAutoScroll = () => {
     const scrollTimeoutRef = useRef(null);
