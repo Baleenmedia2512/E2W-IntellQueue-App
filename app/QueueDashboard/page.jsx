@@ -9,7 +9,68 @@ import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
 import { setHistoryId } from '@/redux/features/queue-dashboard-slice';
 import useFcmToken from "@/hooks/useFcmToken";
-import createDeduplicator from "./../components/Deduplicator"; 
+import createDeduplicator from "./../components/Deduplicator";
+
+
+
+// Auto-scroll hook for drag and drop
+const useAutoScroll = () => {
+    const scrollTimeoutRef = useRef(null);
+    const isScrollingRef = useRef(false);
+
+    const handleAutoScroll = useCallback((clientY) => {
+        const viewport = window.innerHeight;
+        const scrollThreshold = 100; // Distance from edge to trigger scroll
+        const scrollSpeed = 8; // Pixels per scroll step
+
+        if (clientY < scrollThreshold) {
+            // Scroll up
+            if (!isScrollingRef.current) {
+                isScrollingRef.current = true;
+                const scrollUp = () => {
+                    window.scrollBy(0, -scrollSpeed);
+                    scrollTimeoutRef.current = setTimeout(scrollUp, 16); // ~60fps
+                };
+                scrollUp();
+            }
+        } else if (clientY > viewport - scrollThreshold) {
+            // Scroll down
+            if (!isScrollingRef.current) {
+                isScrollingRef.current = true;
+                const scrollDown = () => {
+                    window.scrollBy(0, scrollSpeed);
+                    scrollTimeoutRef.current = setTimeout(scrollDown, 16); // ~60fps
+                };
+                scrollDown();
+            }
+        } else {
+            // Stop scrolling
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+                scrollTimeoutRef.current = null;
+                isScrollingRef.current = false;
+            }
+        }
+    }, []);
+
+    const stopAutoScroll = useCallback(() => {
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = null;
+            isScrollingRef.current = false;
+        }
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    return { handleAutoScroll, stopAutoScroll };
+};
 
 const notificationDeduplicator = createDeduplicator({
     windowMs: 2000,
@@ -109,7 +170,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
   );
 }
 
-function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment, hoveredIndex, setHoveredIndex, draggedIndex, setDraggedIndex
+function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment, hoveredIndex, setHoveredIndex, draggedIndex, setDraggedIndex, handleAutoScroll, stopAutoScroll
 }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
@@ -121,6 +182,10 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         end: () => {
             setDraggedIndex(null);
             setHoveredIndex(null);
+            // Stop auto-scroll when drag ends
+            if (typeof stopAutoScroll === 'function') {
+                stopAutoScroll();
+            }
         }
     });
 
@@ -274,6 +339,33 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
             .every(c => c.status === "Waiting");
     }, [allClients, selectedEquipment]);
 
+    // Add this useEffect inside DraggableTile component
+    useEffect(() => {
+        const handleDragOver = (e) => {
+            if (isDragging && typeof handleAutoScroll === 'function') {
+                handleAutoScroll(e.clientY);
+            }
+        };
+
+        const handleDragEnd = () => {
+            if (typeof stopAutoScroll === 'function') {
+                stopAutoScroll();
+            }
+        };
+
+        if (isDragging) {
+            document.addEventListener('dragover', handleDragOver);
+            document.addEventListener('dragend', handleDragEnd);
+            document.addEventListener('drop', handleDragEnd);
+        }
+
+        return () => {
+            document.removeEventListener('dragover', handleDragOver);
+            document.removeEventListener('dragend', handleDragEnd);
+            document.removeEventListener('drop', handleDragEnd);
+        };
+    }, [isDragging, handleAutoScroll, stopAutoScroll]);
+
 
     return (
         <>
@@ -383,7 +475,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const autoRefreshTimer = useRef(null);
     const activityTimeoutRef = useRef(null);
     const isPerformingActionRef = useRef(false);
-    
+    const { handleAutoScroll, stopAutoScroll } = useAutoScroll();
 
     const notifyIfNeeded = async (clientObj) => {
         if (
@@ -660,9 +752,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     }, []);
 
 
-    // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
-    // Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
-// Move tile logic: Optimistically update UI, then call backend, then fetch and correct if needed
 const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => {
     if (fromDisplayedIndex === toDisplayedIndex) return;
     
@@ -931,106 +1020,108 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
     return (
         <DndProvider backend={HTML5Backend}>
             <div className="min-h-screen bg-gray-50 p-6 lg:px-16 xl:px-24 2xl:px-32">
-{/* Responsive Top Section: All elements aligned, Undo/Redo far right */}
-<div className="w-full mb-4 pt-2 md:pt-6">
-  {/* Header Row: Back, Title/Date, Undo/Redo (undo/redo always far right) */}
-  <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-2 w-full">
-    {/* Left: Back + Title/Date */}
-    <div className="flex items-center min-w-0 gap-2 md:gap-4 flex-1">
-      <button
-        onClick={onBackToSelection}
-        className="p-2 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
-        title="Back to Equipment Selection"
-      >
-        <FaChevronLeft className="text-blue-600 h-5 w-5 md:h-6 md:w-6" />
-      </button>
-      <div className="flex flex-col min-w-0 leading-tight">
-        <span className="text-base sm:text-lg md:text-2xl font-bold text-blue-600 truncate">
-          Queue for {selectedEquipment}
-        </span>
-        <span className="text-xs md:text-sm text-gray-500 mt-0.5">{currentDate}</span>
-      </div>
-    </div>
-    {/* Right: Undo/Redo */}
-    <div className="flex gap-2 md:gap-2 flex-shrink-0">
-      <button
-        onClick={undo}
-        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-red-200 ${undoDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title="Undo"
-        disabled={undoDisabled}
-      >
-        <FaUndo className="text-red-600 text-base md:text-lg" />
-      </button>
-      <button
-        onClick={redo}
-        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-blue-200 ${redoDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title="Redo"
-        disabled={redoDisabled}
-      >
-        <FaRedo className="text-blue-600 text-base md:text-lg" />
-      </button>
-    </div>
-  </div>
-
-  {/* Filter Tabs (fit-width on desktop, scrollable on mobile) */}
-  <div className="w-full mt-3">
-    <div className="
-        flex flex-nowrap items-center border border-gray-300 rounded-xl p-1 gap-1 min-w-0
-        md:inline-flex md:w-auto md:min-w-0
-        overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200
-      ">
-      {statuses.map((status) => (
-        <button
-          key={status}
-          onClick={() => handleFilterChange(status)}
-          className={`flex items-center gap-1 px-2 md:px-4 py-1 md:py-2 rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
-            filter === status
-              ? "bg-blue-600 text-white shadow"
-              : "text-gray-600 hover:bg-blue-100"
-          }`}
-        >
-          <span>{status}</span>
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs ${
-              filter === status
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-600"
-            }`}
-          >
-            {statusCounts[status]}
-          </span>
-        </button>
-      ))}
-    </div>
-  </div>
-</div>
- <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}> 
-                    {clientsForDisplayGrid.map((client, index) => {
-                        const fullIndex = displayedClients.findIndex(c => c.id === client.id);
-                        return (
-                            <DraggableTile
-                                key={client.id}
-                                client={client}
-                                displayedClientIndex={fullIndex}
-                                moveTile={moveTile}
-                                closeToken={closeToken}
-                                completeToken={completeToken}
-                                doneAndHold={doneAndHold}
-                                callNext={callNext}
-                                continueToken={continueToken}
-                                queueStarted={queueStarted[selectedEquipment]}
-                                handleStartQueue={handleStartQueue}
-                                allClients={allClients}
-                                selectedEquipment={selectedEquipment}
-                                hoveredIndex={hoveredIndex}
-                                setHoveredIndex={setHoveredIndex}
-                                draggedIndex={draggedIndex} // Add this prop
-                                setDraggedIndex={setDraggedIndex} // Add this prop
-                            />
-                        );
-                    })}
+                {/* Responsive Top Section: All elements aligned, Undo/Redo far right */}
+                <div className="w-full mb-4 pt-2 md:pt-6">
+                {/* Header Row: Back, Title/Date, Undo/Redo (undo/redo always far right) */}
+                <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-2 w-full">
+                    {/* Left: Back + Title/Date */}
+                    <div className="flex items-center min-w-0 gap-2 md:gap-4 flex-1">
+                    <button
+                        onClick={onBackToSelection}
+                        className="p-2 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
+                        title="Back to Equipment Selection"
+                    >
+                        <FaChevronLeft className="text-blue-600 h-5 w-5 md:h-6 md:w-6" />
+                    </button>
+                    <div className="flex flex-col min-w-0 leading-tight">
+                        <span className="text-base sm:text-lg md:text-2xl font-bold text-blue-600 truncate">
+                        Queue for {selectedEquipment}
+                        </span>
+                        <span className="text-xs md:text-sm text-gray-500 mt-0.5">{currentDate}</span>
+                    </div>
+                    </div>
+                    {/* Right: Undo/Redo */}
+                    <div className="flex gap-2 md:gap-2 flex-shrink-0">
+                    <button
+                        onClick={undo}
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-red-200 ${undoDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title="Undo"
+                        disabled={undoDisabled}
+                    >
+                        <FaUndo className="text-red-600 text-base md:text-lg" />
+                    </button>
+                    <button
+                        onClick={redo}
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-blue-200 ${redoDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title="Redo"
+                        disabled={redoDisabled}
+                    >
+                        <FaRedo className="text-blue-600 text-base md:text-lg" />
+                    </button>
+                    </div>
                 </div>
-                <style jsx>{`@keyframes slide-in-left {from {transform: translateX(-100%);} to {transform: translateX(0);}} @keyframes slide-in-right {from {transform: translateX(100%);} to {transform: translateX(0);}} .animate-slide-in-left {animation: slide-in-left 0.5s ease-out forwards;} .animate-slide-in-right {animation: slide-in-right 0.5s ease-out forwards;}`}</style>
+
+                {/* Filter Tabs (fit-width on desktop, scrollable on mobile) */}
+                <div className="w-full mt-3">
+                    <div className="
+                        flex flex-nowrap items-center border border-gray-300 rounded-xl p-1 gap-1 min-w-0
+                        md:inline-flex md:w-auto md:min-w-0
+                        overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200
+                    ">
+                    {statuses.map((status) => (
+                        <button
+                        key={status}
+                        onClick={() => handleFilterChange(status)}
+                        className={`flex items-center gap-1 px-2 md:px-4 py-1 md:py-2 rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
+                            filter === status
+                            ? "bg-blue-600 text-white shadow"
+                            : "text-gray-600 hover:bg-blue-100"
+                        }`}
+                        >
+                        <span>{status}</span>
+                        <span
+                            className={`px-2 py-0.5 rounded-full text-xs ${
+                            filter === status
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-600"
+                            }`}
+                        >
+                            {statusCounts[status]}
+                        </span>
+                        </button>
+                    ))}
+                    </div>
+                </div>
+                </div>
+                <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-transform duration-500 ${animationDirection === "slide-in-right" ? "translate-x-full animate-slide-in-right" : animationDirection === "slide-in-left" ? "-translate-x-full animate-slide-in-left" : ""}`} onAnimationEnd={() => setAnimationDirection("")}> 
+                                    {clientsForDisplayGrid.map((client, index) => {
+                                        const fullIndex = displayedClients.findIndex(c => c.id === client.id);
+                                        return (
+                                            <DraggableTile
+                                                key={client.id}
+                                                client={client}
+                                                displayedClientIndex={fullIndex}
+                                                moveTile={moveTile}
+                                                closeToken={closeToken}
+                                                completeToken={completeToken}
+                                                doneAndHold={doneAndHold}
+                                                callNext={callNext}
+                                                continueToken={continueToken}
+                                                queueStarted={queueStarted[selectedEquipment]}
+                                                handleStartQueue={handleStartQueue}
+                                                allClients={allClients}
+                                                selectedEquipment={selectedEquipment}
+                                                hoveredIndex={hoveredIndex}
+                                                setHoveredIndex={setHoveredIndex}
+                                                draggedIndex={draggedIndex} // Add this prop
+                                                setDraggedIndex={setDraggedIndex} // Add this prop
+                                                handleAutoScroll={handleAutoScroll}
+                                                stopAutoScroll={stopAutoScroll}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                                <style jsx>{`@keyframes slide-in-left {from {transform: translateX(-100%);} to {transform: translateX(0);}} @keyframes slide-in-right {from {transform: translateX(100%);} to {transform: translateX(0);}} .animate-slide-in-left {animation: slide-in-left 0.5s ease-out forwards;} .animate-slide-in-right {animation: slide-in-right 0.5s ease-out forwards;}`}</style>
             </div>
         </DndProvider>
     );
