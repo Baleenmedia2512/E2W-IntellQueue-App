@@ -88,7 +88,10 @@ export default function ThankYouScreen() {
                         ? "We’d love to hear your thoughts! Kindly share your feedback on our services."
                         : "உங்கள் கருத்துகளை பகிர விரும்புகிறோம்! எங்கள் சேவைகள் குறித்த உங்கள் கருத்துகளை பகிரவும்."}
                 </p>
-                <button className="px-8 py-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md">
+                <button
+                    className="px-8 py-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md"
+                    onClick={() => window.open("https://g.co/kgs/Jf23Q1Q", "_blank")}
+                >
                     {language === "en" ? "Share your review!" : "உங்கள் மதிப்பீட்டை பகிரவும்!"}
                 </button>
             </div>
