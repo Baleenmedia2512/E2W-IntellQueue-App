@@ -25,7 +25,7 @@ messaging.onBackgroundMessage(function(payload) {
         notificationOptions = {
             body: payload.notification.body,
             icon: "/icon-192x192.png",
-            data: { url: payload.fcmOptions?.link || payload.data?.link || '/' },
+            data: { url: payload.fcmOptions?.link || payload.data?.link || "" },
         };
     } else if (payload.data) {
         // Handle data payload
@@ -33,7 +33,7 @@ messaging.onBackgroundMessage(function(payload) {
         notificationOptions = {
             body: payload.data.body,
             icon: "/icon-192x192.png",
-            data: { url: payload.data.link || '/' },
+            data: { url: payload.data?.link || "" },
         };
 
     }

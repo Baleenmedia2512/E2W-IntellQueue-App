@@ -88,7 +88,7 @@ const useFcmToken = () => {
 
       const unsubscribe = onMessage(m, (payload) => {
 
-        const link = payload.data?.link || payload.fcmOptions.link;
+        const link = payload.data?.link || payload.fcmOptions?.link || "";
         const title = payload.data?.title || payload.notification.title || "New Message";
         const body = payload.data?.body || payload.notification?.body || "You have a new message";
 

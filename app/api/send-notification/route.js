@@ -18,7 +18,7 @@ export async function POST(request) {
       data: {
         title: title,
         body: message,
-        link: link
+        link: String(link || "")
       }
     };
 
