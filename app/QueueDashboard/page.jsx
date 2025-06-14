@@ -752,10 +752,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
 
 const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => {
     if (fromDisplayedIndex === toDisplayedIndex) return;
-    
-    // Save snapshot for history BEFORE making changes (includes all statuses)
     const prevSnapshot = getCurrentSnapshot();
-    await saveSnapshot(prevSnapshot);
     
     const masterCopy = [...allClients];
     
@@ -815,6 +812,8 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
     // Optimistically update UI
     setAllClients(newAllClients);
 
+    await saveSnapshot(getCurrentSnapshot());
+
     // Call backend to update order - ONLY send non-Completed/Deleted clients
     const queueOrder = itemsOfSelectedEquipment.map(client => ({
         id: client.id,
@@ -866,7 +865,7 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
     const closeToken = withActionLock(async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'closeToken', { JsonClientId: clientId });
-        const apiClients = await saveSnapshotWithUpdatedState();;
+        const apiClients = await saveSnapshotWithUpdatedState();
     });
 
     const completeToken = withActionLock(async (displayedIndex)  => {
@@ -1130,7 +1129,9 @@ function useEquipmentStatus(equipmentList, allClients) {
     const [counts, setCounts] = useState(() => {
         const equipmentCounts = {};
         equipmentList.forEach(eq => {
-            equipmentCounts[eq] = allClients.filter(c => c.rateCard === eq).length;
+            equipmentCounts[eq] = allClients.filter(
+                c => c.rateCard === eq && c.status !== "Completed" && c.status !== "Deleted"
+            ).length;
         });
         return equipmentCounts;
     });
@@ -1138,12 +1139,16 @@ function useEquipmentStatus(equipmentList, allClients) {
     useEffect(() => {
         const equipmentCounts = {};
         equipmentList.forEach(eq => {
-            equipmentCounts[eq] = allClients.filter(c => c.rateCard === eq).length;
+            equipmentCounts[eq] = allClients.filter(
+                c => c.rateCard === eq && c.status !== "Completed" && c.status !== "Deleted"
+            ).length;
         });
         setCounts(equipmentCounts);
     }, [equipmentList, allClients]);
+
     return counts;
 }
+
 
 function RateCardSelectionPage({ onSelectRateCard, equipmentList, allClients }) {
     const queueCounts = useEquipmentStatus(equipmentList, allClients);

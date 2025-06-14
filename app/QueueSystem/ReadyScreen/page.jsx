@@ -64,6 +64,8 @@ export default function ReadyScreen() {
             router.replace("/QueueSystem/WaitingScreen");
         } else if (queueStatus === "Completed" && pathname !== "/QueueSystem/ThankYouScreen") {
             router.replace("/QueueSystem/ThankYouScreen");
+        } else if ((queueStatus === "Deleted" || queueStatus === undefined) && pathname !== "/QueueSystem/InvalidAccess") {
+            router.replace("/QueueSystem/InvalidAccess");
         }
     }, [queueStatus, router, pathname]);
 
