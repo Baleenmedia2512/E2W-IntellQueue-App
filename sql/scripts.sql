@@ -98,3 +98,8 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+-- Only in Baleen Media DB
+INSERT INTO visibility_table (ElementName)
+VALUES ('QueueDashboard');
+
