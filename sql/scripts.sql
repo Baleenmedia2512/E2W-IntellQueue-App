@@ -62,7 +62,7 @@ BEGIN
         NEW.Card,
         NEW.AdType,
         'Waiting',
-        ''
+        'None'
     );
   END IF;
 END$$
