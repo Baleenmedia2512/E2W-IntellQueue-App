@@ -38,6 +38,7 @@ export default function WaitingScreen() {
                 setTotalOrders(total);
                 setWaitingTime(estimatedTime);
                 dispatch(setQueueStatus(status));
+                console.log(position, total, estimatedTime, remainingTime, status)
             } catch (error) {
                 console.error("Error fetching queue data:", error);
             }
