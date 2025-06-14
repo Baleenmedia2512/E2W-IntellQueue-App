@@ -918,19 +918,26 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
 
     // --- Undo/Redo with notification debounce ---
     const sendDebouncedNotification = (clientObj, delay = 3000) => {
-        if (notificationTimer.current) clearTimeout(notificationTimer.current);
-        lastInProgressClientRef.current = clientObj;
-        notificationTimer.current = setTimeout(() => {
-            if (lastInProgressClientRef.current) {
-                notifyIfNeeded(lastInProgressClientRef.current);
-            }
+        if (notificationTimer.current) {
+            clearTimeout(notificationTimer.current);
             notificationTimer.current = null;
+        }
+
+        if (clientObj) {
+            lastInProgressClientRef.current = clientObj;
+            notificationTimer.current = setTimeout(() => {
+                if (lastInProgressClientRef.current) {
+                    notifyIfNeeded(lastInProgressClientRef.current);
+                }
+                notificationTimer.current = null;
+                lastInProgressClientRef.current = null;
+            }, delay);
+        } else {
             lastInProgressClientRef.current = null;
-        }, delay);
+        }
     };
 
-
-    // Undo/Redo logic
+    // Undo logic
     const undo = withActionLock(async () => {
         if (isRestoring || currentHistoryIndex <= 0) return;
         const prevSnapshot = getCurrentSnapshot();
@@ -940,60 +947,48 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
-            const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
+            await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex - 1 });
 
             const apiClients = await FetchQueueDashboardData(companyName);
             setAllClients(apiClients);
 
-            // 🕒 Wait for React state update before getting new snapshot
             setTimeout(() => {
                 const changedClient = getNewInProgressClient(prevSnapshot, apiClients);
-
-                if (changedClient) {
-                    sendDebouncedNotification(changedClient, 5000);
-                }
-            }, 0); // Wait for next tick (React to update state)
-        } else {
-            console.warn("[UNDO] Error restoring snapshot:", res);
+                sendDebouncedNotification(changedClient, 5000);
+            }, 0);
         }
 
         setIsRestoring(false);
     });
 
-
+    // Redo logic
     const redo = withActionLock(async () => {
         if (isRestoring || currentHistoryIndex >= historyStack.length - 1) return;
         const prevSnapshot = getCurrentSnapshot();
         setIsRestoring(true);
 
-        // Get the target history ID from the stack
         const targetId = historyStack[currentHistoryIndex + 1];
-        // Note: direction is no longer needed since we're fetching by exact ID
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
-            const resQ = await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
+            await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex + 1 });
-            
+
             const apiClients = await FetchQueueDashboardData(companyName);
             setAllClients(apiClients);
 
-            // 🕒 Wait for React state update before getting new snapshot
             setTimeout(() => {
                 const changedClient = getNewInProgressClient(prevSnapshot, apiClients);
-
-                if (changedClient) {
-                    sendDebouncedNotification(changedClient, 5000);
-                }
-            }, 0); // Wait for next tick (React to update state)
-        } else {
-            console.warn("[REDO] Error restoring snapshot:", res);
+                sendDebouncedNotification(changedClient, 5000);
+            }, 0);
         }
+
         setIsRestoring(false);
     });
+
 
     // Update undo/redo button disabled states
     const undoDisabled = currentHistoryIndex <= 0;
