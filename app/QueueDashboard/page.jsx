@@ -1216,7 +1216,6 @@ function RateCardSelectionPage({ onSelectRateCard, equipmentList, allClients }) 
 // --- Main Application Component ---
 export default function QueueSystem() {
     const [selectedEquipment, setSelectedEquipment] = useState(() => {
-        // Try to get the saved equipment from localStorage on initial load
         if (typeof window !== 'undefined') {
             return localStorage.getItem('selectedEquipment');
         }
@@ -1227,16 +1226,23 @@ export default function QueueSystem() {
     const [isInitialized, setIsInitialized] = useState(false);
     const [hasInitializedHistory, setHasInitializedHistory] = useState(false);
     const [queueStarted, setQueueStarted] = useState({});
+    const [lastSelectedEquipment, setLastSelectedEquipment] = useState(null); // Track previous selection
     const dispatch = useDispatch();
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const historyStack = useAppSelector(state => state.queueDashboardSlice.historyStack);
+
+    // Track the previous equipment selection
+    useEffect(() => {
+        if (selectedEquipment) {
+            setLastSelectedEquipment((prev) => prev === selectedEquipment ? prev : selectedEquipment);
+        }
+    }, [selectedEquipment]);
 
     useEffect(() => {
         async function fetchInitialClientsAndHistory() {
             try {
                 const apiClients = await FetchQueueDashboardData(companyName);
                 setAllClients(apiClients);
-                // Generate equipment list from API data
                 const eqList = Array.from(new Set(apiClients.map(c => c.rateCard)));
                 setEquipmentList(eqList);
 
@@ -1258,50 +1264,48 @@ export default function QueueSystem() {
                         }));
 
                     if (!hasInitializedHistory && selectedEquipment && historyStack.length === 0) {
-                    const res = await SaveQueueSnapshot(companyName, selectedEquipment, initialSnapshot);
-                    if (res.data && res.data.success) {
-                        const latestRes = await GetQueueSnapshot(companyName, selectedEquipment, "undo", null);                        
-                        if (latestRes.data?.success && latestRes.data.id) {
-                            dispatch({ type: 'queueDashboard/setHistoryStack', payload: [latestRes.data.id] });
-                            dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: 0 });
-                            dispatch(setHistoryId(latestRes.data.id));
-                            setHasInitializedHistory(true);
+                        const res = await SaveQueueSnapshot(companyName, selectedEquipment, initialSnapshot);
+                        if (res.data && res.data.success) {
+                            const latestRes = await GetQueueSnapshot(companyName, selectedEquipment, "undo", null);                        
+                            if (latestRes.data?.success && latestRes.data.id) {
+                                dispatch({ type: 'queueDashboard/setHistoryStack', payload: [latestRes.data.id] });
+                                dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: 0 });
+                                dispatch(setHistoryId(latestRes.data.id));
+                                setHasInitializedHistory(true);
+                            }
                         }
                     }
                 }
-            }
                 setIsInitialized(true);
             } catch (error) {
                 console.error("[History] Error initializing:", error);
                 setIsInitialized(true);
             }
         }
-        
         fetchInitialClientsAndHistory();
     }, [selectedEquipment, companyName, hasInitializedHistory]);
 
-    // Handler for equipment selection that resets history
+    // Handler for equipment selection that resets history if new equipment is chosen
     const handleEquipmentSelection = (equipment) => {
-        // // Reset history state first
-        // dispatch({ type: 'queueDashboard/resetHistory' });
-        // Reset history initialization flag
-        // setHasInitializedHistory(false);
-        // Save the selected equipment to localStorage
+        // Only reset if switching to a different equipment
+        if (equipment !== lastSelectedEquipment) {
+            dispatch({ type: 'queueDashboard/resetHistory' });
+            setHasInitializedHistory(false);
+        }
         localStorage.setItem('selectedEquipment', equipment);
-        // Then set the selected equipment
         setSelectedEquipment(equipment);
     };
 
     // Handler for back button that clears selected equipment
     const handleBackToSelection = () => {
-        // Clear from localStorage
         localStorage.removeItem('selectedEquipment');
-        // Clear from state
         setSelectedEquipment(null);
-    };    // We don't need this effect anymore since initialization is handled in QueueSystem component
+    };
 
     if (!isInitialized) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-xl">Loading Dashboard...</p></div>;
+        return <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                    <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 sm:border-b-3 border-blue-500"></div>
+                </div>;
     }
 
     if (!selectedEquipment) {
