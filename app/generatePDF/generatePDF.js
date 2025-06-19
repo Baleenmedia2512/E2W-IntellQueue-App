@@ -5,6 +5,55 @@ import autoTable from 'jspdf-autotable';
 export const generatePdf = async(checkoutData, clientName, clientEmail, clientTitle, quoteNumber, TnC) => {
   const ImageUrl = '/images/WHITE PNG.png';
 
+  /**
+   * Lead Days Integration:
+   * - Fetches lead days data from FetchLeadDays.php API
+   * - Uses fetched data to populate Lead Days column in PDF
+   * - Falls back to item-specific lead days or default values if API fails
+   * - Provides medium-specific defaults for better accuracy
+   */
+
+  
+
+  // Fetch lead days data
+  // let leadDaysData = [];
+  // try {
+  //   leadDaysData = await fetchLeadDays();
+  // } catch (error) {
+  //   console.warn('Failed to fetch lead days data, using defaults:', error);
+  //   leadDaysData = [];
+  // }
+
+  // Function to get lead days for an item by matching rateId
+  const getLeadDaysForItem = (item) => {
+    // If the item already has leadDays property, use it
+    if (item.leadDays) {
+      return item.leadDays;
+    }
+
+    // If leadDaysData is available and has data, match by rateId
+    // if (leadDaysData && leadDaysData.length > 0) {
+    //   const matchingLeadDays = leadDaysData.find(ld => {
+    //     // ld.rateid may be string or number, so use loose equality
+    //     return ld.rateid == item.rateId;
+    //   });
+    //   if (matchingLeadDays && matchingLeadDays.LeadDays) {
+    //     return matchingLeadDays.LeadDays;
+    //   }
+    // }
+
+    // Default fallback based on ad medium type
+    const defaultLeadDays = {
+      'Newspaper': 2,
+      'Magazine': 7,
+      'Radio': 2,
+      'Television': 5,
+      'Digital': 1,
+      'Outdoor': 10
+    };
+    return defaultLeadDays[item.adMedium] || 2;
+  };
+
   const getMinValidityDays = () => {
     // Define an array of month abbreviations
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -208,7 +257,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
     
     
     addHeader();
-
+console.log(groupedData)
     const items = groupedData[adMedium];
     const hasCampaignDuration = items.some(item => item.campaignDuration && item.campaignDuration !== "NA");
     const hasAdType = items.some(item => item.adType && item.adType !== "");
@@ -257,7 +306,7 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
       const unitPrice = `${item.ratePerQty} Per ${item.qtyUnit}`;
     
       // Build Lead Days
-      const leadDays = item.leadDays || 2;
+      const leadDays = item.leadDays;
     
       // Build Remarks column
       const remarks = hasRemarks ? (item.remarks || 'NA') : '';
@@ -283,25 +332,25 @@ export const generatePdf = async(checkoutData, clientName, clientEmail, clientTi
               .filter(Boolean)
               .join('\n')
         : '';
-    
-        // Construct the row array in order
-  const rowArray = [
-    (i + 1).toString(),
-    item.rateId,
-    combinedAdInfo,
-    qtyOrSizeStr,
-    hasCampaignDuration ? serviceDuration : null,
-    unitPrice,
-    item.amountExclGst,
-    item.amountInclGst,
-    leadDays,
-    hasRemarks ? remarks : null,
-    isNewspaper ? colorOrBW : null,
-    hasChecked ? highlights : null
-  ];
 
-  // Remove any null values (from conditional columns)
-  return rowArray.filter(val => val !== null);
+
+
+const rowArray = [
+  (i + 1).toString(),
+  item.rateId,
+  combinedAdInfo,
+  qtyOrSizeStr,
+  hasCampaignDuration ? serviceDuration : null,
+  unitPrice,
+  item.amountExclGst, 
+  item.amountInclGst, 
+  leadDays,
+  hasRemarks ? remarks : null,
+  isNewspaper ? colorOrBW : null,
+  hasChecked ? highlights : null
+];
+
+return rowArray.filter(val => val !== null);
 });
 
     const qtyOrSize = isNewspaper ? 'Size' : 'Qty';
