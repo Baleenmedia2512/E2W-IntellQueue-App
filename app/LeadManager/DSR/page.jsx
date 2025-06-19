@@ -7,7 +7,6 @@ import { FetchActiveCSE, FetchExistingLeads, FetchLeadsData } from '@/app/api/Fe
 import * as XLSX from 'xlsx';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { GetInsertOrUpdate } from '@/app/api/InsertUpdateAPI';
 
 // Utility functions to get start and end of day as Date objects
 const getStartOfDay = (date) => {
@@ -105,14 +104,6 @@ const DSRPage = () => {
     }
   }, []);
 
-  function formatToYMD(dateString) {
-    const date = new Date(dateString);
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
   // Fetch leads data (including Client2lead data)
   const fetchData = useCallback(async () => {
     try {
@@ -130,14 +121,8 @@ const DSRPage = () => {
         const dbName = UserCompanyName;
         const [existingLeads, leadsData] = await Promise.all([
           FetchExistingLeads(dbName, ''),
-      
-          GetInsertOrUpdate('FetchLeadsTrackingData', {
-            JsonDBName: dbName,
-            JsonStartDate: formatToYMD(fromDate),
-            JsonEndDate: formatToYMD(toDate)
-          })
+          FetchLeadsData(dbName, '')
         ]);
-
         // Merge and process Client2lead data
         const processClient2Lead = (row) => {
         // Map Client2lead fields to DSR structure

@@ -34,8 +34,24 @@ try {
             echo json_encode(['success' => false, 'message' => 'Each queue item must have id, queueIndex, and status.']);
             exit;
         }
-        $stmt = $pdo->prepare("UPDATE queue_table SET QueueIndex = ?, Status = ? WHERE ID = ? AND RateCard = ?");
-        $stmt->execute([$item['queueIndex'], $item['status'], $item['id'], $rateCard]);
+       // Fetch previous status and QueueOutTime
+        $stmtPrev = $pdo->prepare("SELECT Status, QueueOutTime FROM queue_table WHERE ID = ? AND RateCard = ?");
+        $stmtPrev->execute([$item['id'], $rateCard]);
+        $rowPrev = $stmtPrev->fetch(PDO::FETCH_ASSOC);
+
+        if (
+            $rowPrev &&
+            $rowPrev['Status'] !== 'In-Progress' &&
+            $item['status'] === 'In-Progress' &&
+            (empty($rowPrev['QueueOutTime']) || $rowPrev['QueueOutTime'] === null)
+        ) {
+            // Only set QueueOutTime if it is currently NULL or empty
+            $stmt = $pdo->prepare("UPDATE queue_table SET QueueIndex = ?, Status = ?, QueueOutTime = NOW() WHERE ID = ? AND RateCard = ?");
+            $stmt->execute([$item['queueIndex'], $item['status'], $item['id'], $rateCard]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE queue_table SET QueueIndex = ?, Status = ? WHERE ID = ? AND RateCard = ?");
+            $stmt->execute([$item['queueIndex'], $item['status'], $item['id'], $rateCard]);
+        }
     }
 
     echo json_encode(['success' => true]);

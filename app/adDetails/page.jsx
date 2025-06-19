@@ -17,7 +17,7 @@ import { ClientSearchSuggestions, elementsToHideList, fetchQuoteClientData, Fetc
 // import { resetQuoteCount, resetCartCount } from '/redux/features/count-slice';
 // import useTimerTracker from './Dashboard/useTimerTracker';
 // import { resetQuotePageTime, resetCartPageTime } from '/redux/features/time-slice';
-import { GetInsertOrUpdate, PostInsertOrUpdate } from '../api/InsertUpdateAPI';
+import { PostInsertOrUpdate } from '../api/InsertUpdateAPI';
 import { useCart } from "../context/CartContext"; 
 
 export const CartContext = createContext()
@@ -161,7 +161,7 @@ export const AdDetails = () => {
   const unitPrice = (
     item.AmountwithoutGst / quantityBase
   ).toFixed(2);   
-  console.log(item, unitPrice, leadDays, leadDays.LeadDays);
+  console.log(item);
     return {
       adMedium: item.AdMedium,
       adCategory: item.adCategory,
@@ -173,7 +173,7 @@ export const AdDetails = () => {
       amountExclGst: formattedRupees(item.AmountwithoutGst),
       gst: item['GST%'].toString() + '%',
       amountInclGst: formattedRupees(item.Amount),
-      leadDays: leadDays ? leadDays.LeadDays : 'NA',
+      leadDays: leadDays,
       CampaignDurationUnit: item.campaignDurationVisibility === 1 ? item.CampaignDurationUnit : '',
       qtyUnit: item.Units ? item.Units : 'Unit',
       adType: item.adType,
@@ -416,12 +416,11 @@ export const AdDetails = () => {
   // Function to fetch lead days from the API
   const fetchLeadDays = async (dbName = 'Baleen Media', rateId) => {
     try {
-      
-      const leadDaysData = await GetInsertOrUpdate("FetchLeadDays", {
-        JsonDBName: dbName,
-        JsonRateID: rateId
-      });
-
+      const response = await fetch(`/api/API/Media/FetchLeadDays.php?JsonDBName=${encodeURIComponent(dbName)}&rateid=${rateId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch lead days');
+      }
+      const leadDaysData = await response.json();
       return leadDaysData;
     } catch (error) {
       console.error('Error fetching lead days:', error);

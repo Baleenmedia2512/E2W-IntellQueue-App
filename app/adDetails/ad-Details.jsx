@@ -61,8 +61,7 @@ const AdDetailsPage = () => {
     editQuoteNumber,
     validityDate: ValidityDate,
     isNewCartOnEdit,
-    checked: isChecked,
-    leadDays
+    checked: isChecked
   } = useAppSelector((state) => state.quoteSlice);
   
   // const cartItems = useAppSelector((state) => state.cartSlice.cart);
@@ -827,8 +826,8 @@ const items = [
       JsonTick: checked.tick ? 1 : -1,
       JsonColor: checked.color ? checked.colorPercentage : -1,
       JsonAmountWithoutGST: basePrice,
-      JsonAmount: (basePrice * (1 + rateGST / 100)).toFixed(0),
-      JsonGSTAmount: ((rateGST / 100) * basePrice).toFixed(0),
+      JsonAmount: (basePrice * (1 + rateGST / 100)).toFixed(2),
+      JsonGSTAmount: ((rateGST / 100) * basePrice).toFixed(2),
       JsonGSTPercentage: rateGST,
       JsonEntryUser: userName, // Replace with actual user
       JsonRatePerUnit: unitPrice,
@@ -1392,7 +1391,7 @@ const items = [
                     Quote Valid till {ValidityDate ? formattedDate(ValidityDate) : "0000-00-00"}
                   </p>
                   <p className="font-medium text-gray-600 text-base mt-2 text-center">
-                    Note: Lead time is {(leadDays) ? leadDays : 0} days from the date of payment received or the date of design approved, whichever is higher.
+                    Note: Lead time is {(leadDay && leadDay.LeadDays) ? leadDay.LeadDays : 0} days from the date of payment received or the date of design approved, whichever is higher.
                   </p>
                 </div>
 

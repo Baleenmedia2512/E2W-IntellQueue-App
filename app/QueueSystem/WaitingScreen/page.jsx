@@ -1,32 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
-import { fetchQueueData } from "@/app/api/FetchAPI";
+import { FetchQueueClientData } from "@/app/api/FetchAPI";
+import { useDispatch } from "react-redux";
+import { setQueueStatus } from "@/redux/features/queue-slice";
+import ReadyScreen from "../ReadyScreen/page";
+import ThankYouScreen from "../ThankYouScreen/page";
 
 export default function WaitingScreen() {
     const companyName = useAppSelector(state => state.authSlice.companyName);
     const phoneNumber = useAppSelector(state => state.queueSlice.phoneNumber);
     const language = useAppSelector(state => state.queueSlice.language);
     const router = useRouter();
+    const dispatch = useDispatch();
+    const pathname = usePathname();
+    const queueStatus = useAppSelector(state => state.queueSlice.queueStatus);
     const [queuePosition, setQueuePosition] = useState(null);
     const [waitingTime, setWaitingTime] = useState(null);
     const [totalOrders, setTotalOrders] = useState(0);
-    console.log(queuePosition)
 
     useEffect(() => {
-        if (!companyName || !phoneNumber) {
+        if (!companyName && phoneNumber) {
             router.push('/QueueSystem/InvalidAccess');
+            return;
+        }
+        if (!phoneNumber) {
+            router.push('/QueueSystem/EnterDetails');
             return;
         }
 
         const fetchQueue = async () => {
             try {
-                const { position, total, estimatedTime, remainingTime  } = await fetchQueueData(companyName, phoneNumber);
+                const { position, total, estimatedTime, remainingTime, status } = await FetchQueueClientData(companyName, phoneNumber);
                 setQueuePosition(position);
                 setTotalOrders(total);
                 setWaitingTime(estimatedTime);
+                dispatch(setQueueStatus(status));
+                console.log(position, total, estimatedTime, remainingTime, status)
             } catch (error) {
                 console.error("Error fetching queue data:", error);
             }
@@ -38,14 +50,38 @@ export default function WaitingScreen() {
         return () => clearInterval(fetchInterval);
     }, [companyName, phoneNumber, router, dispatch]);
 
-    if (queueStatus === "In-Progress") {
-        router.push("/QueueSystem/ReadyScreen");
-        return null;
-    }
-    if (queueStatus === "Completed") {
-        router.push("/QueueSystem/ThankYouScreen");
-        return null;
-    }
+    // Detect browser back/forward navigation
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            if (window.history.state && window.history.state.idx !== undefined && window.history.state.idx < 1) {
+                if (phoneNumber) {
+                    router.replace('/QueueSystem/EnterDetails');
+                } else {
+                    router.replace('/QueueSystem/LanguageSelection');
+                }
+                return;
+            }
+        }
+    }, [phoneNumber, router]);
+
+    useEffect(() => {
+        if (queueStatus === "In-Progress" && pathname !== "/QueueSystem/ReadyScreen") {
+            router.replace("/QueueSystem/ReadyScreen");
+        } else if (queueStatus === "Completed" && pathname !== "/QueueSystem/ThankYouScreen") {
+            router.replace("/QueueSystem/ThankYouScreen");
+        } else if ((queueStatus === "Deleted" || queueStatus === undefined) && pathname !== "/QueueSystem/InvalidAccess") {
+            router.replace("/QueueSystem/InvalidAccess");
+        }
+    }, [queueStatus, router, pathname]);
+
+    // if (queueStatus === "In-Progress") {
+    //     router.push("/QueueSystem/ReadyScreen");
+    //     return null;
+    // }
+    // if (queueStatus === "Completed") {
+    //     router.push("/QueueSystem/ThankYouScreen");
+    //     return null;
+    // }
     if (queueStatus === "Remote") {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white p-6 space-y-6">
@@ -60,7 +96,13 @@ export default function WaitingScreen() {
                     </p>
                 </div>
                 <p className="text-gray-700 font-medium text-2xl mb-6">
-                    {language === "en" ? "Approx. Waiting Time" : "தற்காலிக காத்திருப்பு நேரம்"}
+                    {language === "en"
+                        ? (<>
+                            Approx. waiting time,<br />if you book your appointment now.
+                          </>)
+                        : (<>
+                            நீங்கள் இப்போது முன்பதிவு செய்தால்,<br />இது உங்களுக்கான தோராயமான காத்திருப்பு நேரம் ஆகும்.
+                          </>)}
                 </p>
                     <div className="my-8">
                         <img src="/images/WaitingImage.png" alt="Waiting" className="w-48 h-48 object-contain opacity-80" />
@@ -72,12 +114,12 @@ export default function WaitingScreen() {
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15 .621 0 1.125-.504 1.125-1.125v-3.375a1.125 1.125 0 0 0-1.125-1.125c-1.636 0-3.21-.26-4.687-.75a1.125 1.125 0 0 0-1.125.27l-2.25 2.25a12.042 12.042 0 0 1-5.25-5.25l2.25-2.25a1.125 1.125 0 0 0 .27-1.125c-.49-1.477-.75-3.051-.75-4.687A1.125 1.125 0 0 0 5.25 2.25H1.875C1.254 2.25.75 2.754.75 3.375z" />
                         </svg>
-                        {language === "en" ? "Call Reception" : "கவுண்டரை அழைக்கவும்"}
+                        {language === "en" ? "Book Appointment" : "முன்பதிவு செய்யவும்"}
                     </button>
                     <p className="text-gray-500 text-sm mt-6">
                         {language === "en"
-                            ? "You are a remote user. You can view your estimated waiting time, but you are not in the queue until you call the clinic."
-                            : "நீங்கள் தற்காலிக பயனர். உங்கள் மதிப்பிடப்பட்ட காத்திருப்பு நேரத்தை காணலாம், ஆனால் வரிசையில் சேர கிளினிக்கிற்கு அழைக்க வேண்டும்."}
+                            ? "You can view your estimated waiting time, but you are not in the queue until you book your appointment by calling the clinic."
+                            : "உங்கள் மதிப்பிடப்பட்ட காத்திருப்பு நேரத்தை காணலாம், ஆனால் நேரம் பதிவு செய்ய கிளினிக்கிற்கு அழைக்க வேண்டும்."}
                     </p>
                 </div>
             </div>

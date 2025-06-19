@@ -7,7 +7,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Leaddiv from "./leadDiv";
 import {
   ComposedChart,
-  Bar,
+  Bar, 
   Line,
   XAxis,
   YAxis,

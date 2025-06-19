@@ -46,19 +46,20 @@ try {
         }
     }
 
-    // If no joined entry found, fallback to remote
+    // If no joined entry found, fallback to latest (could be remote)
     if (!$user) {
         $user = $entries[0];
     }
 
+    $clientID = $user['ID'];
     $rateCard = $user['RateCard'];
     $clientQueueIndex = (int)$user['QueueIndex'];
     $entryDateTime = $user['EntryDateTime'];
     $status = $user['Status'];
 
-    // Fetch today's queue with eligible statuses
+    // Fetch today's queue for same rate card
     $queueQuery = "SELECT QueueIndex, ClientContact, EntryDateTime, Status FROM queue_table 
-                   WHERE RateCard = ? AND DATE(EntryDateTime) = ? AND Status IN ('Waiting', 'In-Progress', 'On-Hold', 'Remote', 'Completed')";
+                   WHERE RateCard = ? AND DATE(EntryDateTime) = ? AND Status IN ('Waiting', 'In-Progress', 'On-Hold', 'Remote')";
     $queueStmt = $pdo->prepare($queueQuery);
     $queueStmt->execute([$rateCard, $currentDate]);
     $queue = $queueStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -78,21 +79,31 @@ try {
     usort($remoteQueue, fn($a, $b) => strtotime($a['EntryDateTime']) - strtotime($b['EntryDateTime']));
 
     if (in_array($status, $walkinStatuses)) {
-        // Find position in walk-in queue
-        $walkinContacts = array_column($walkinQueue, 'ClientContact');
-        $position = array_search($ClientContact, $walkinContacts) + 1;
+        // Find exact match position in walk-in queue
+        $position = 0;
+        foreach ($walkinQueue as $index => $row) {
+            if ($row['ClientContact'] == $ClientContact && $row['EntryDateTime'] == $entryDateTime) {
+                $position = $index + 1;
+                break;
+            }
+        }
     } elseif ($status === $remoteStatus) {
-        // Find position in remote queue (ordered by join time)
-        $remoteContacts = array_column($remoteQueue, 'ClientContact');
-        $walkinCount = count($walkinQueue);
-        $remotePosition = array_search($ClientContact, $remoteContacts) + 1;
-        $position = $walkinCount + $remotePosition;
+        // Find exact match position in remote queue
+        $remotePosition = 0;
+        foreach ($remoteQueue as $index => $row) {
+            if ($row['ClientContact'] == $ClientContact && $row['EntryDateTime'] == $entryDateTime) {
+                $remotePosition = $index + 1;
+                break;
+            }
+        }
+        $position = count($walkinQueue) + $remotePosition;
     } else {
         echo json_encode(['error' => 'Invalid client status.']);
         exit();
     }
 
-    $averageTimePerOrder = 10; // minutes
+    // Estimated timing
+    $averageTimePerOrder = 10; // in minutes
     $estimatedTime = $position * $averageTimePerOrder;
 
     $entryTime = new DateTime($entryDateTime);

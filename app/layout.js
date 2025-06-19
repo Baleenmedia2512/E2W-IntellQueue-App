@@ -4,6 +4,9 @@ import dynamic from "next/dynamic";
 // import BottomBar from "./BottomBar";
 import { CartProvider } from "./context/CartContext";
 import BottomBarWrapper from "./BottomBarWrapper"; // Import the new client component
+import { ToastContainer } from "./components/ToastContainer";
+import ConditionalFcmWrapper from "./ConditionalFcmWrapper";
+import RequireCompanyName from "./components/RequireCompanyName";
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
   ssr: false
@@ -35,7 +38,11 @@ export default function RootLayout({ children }) {
       <body className={`${poppins.variable} ${montserrat.variable} ${inter.className}`}>
       <ReduxProvider> 
           <CartProvider> 
-            {children}
+             <ConditionalFcmWrapper />
+            <RequireCompanyName>
+              {children}
+            </RequireCompanyName>
+            <ToastContainer />
             <div>
               <BottomBarWrapper />
             </div>

@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FiCalendar, FiCheckCircle, FiFilter, FiXCircle } from "react-icons/fi";
 import CustomButton from './filterButton'
 import { FiPhoneCall } from "react-icons/fi";
-import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineCustomerService, AiOutlineGroup, AiOutlineHistory, AiOutlineInteraction, AiOutlinePlus, AiOutlineTeam, AiOutlineApi } from "react-icons/ai";
 import { FaFileExcel } from "react-icons/fa";
 import { GiCampfire } from "react-icons/gi";
 import { MdOutlineWbSunny } from "react-icons/md";
@@ -18,17 +18,17 @@ import { faPerson, faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { useAppSelector } from "@/redux/store";
-import { PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
+import { GetInsertOrUpdate, PostInsertOrUpdate } from "@/app/api/InsertUpdateAPI";
 import { FaFileAlt } from "react-icons/fa";
 import { Timer } from "@mui/icons-material";
 import { formatDBDate, formatDBTime } from "../utils/commonFunctions";
 import { FetchActiveCSE } from "../api/FetchAPI";
 import { useRouter } from "next/navigation";
-// import { requestNotificationPermission, scheduleFollowupNotifications } from "../utils/notifications";
 import { useDispatch } from "react-redux";
 import { setStatusFilter, setFromDate, setToDate, setProspectTypeFilter, setCSEFilter, setQuoteSentFilter, setSearchQuery , resetFilters, toggleFiltersVisible} from "@/redux/features/lead-filter-slice";
 import { GetCRUD } from "./api/fetch-data";
 
+// Helper functions at the top level
 export const statusColors = {
   New: "bg-green-200 text-green-800",
   Unreachable: "bg-red-200 text-red-800",
@@ -74,6 +74,7 @@ const parseFollowupDate = (dateStr) => {
   return new Date(2000 + parseInt(year, 10), monthIndex, parseInt(day, 10));
 };
 
+// Main EventCards component
 const EventCards = ({params, searchParams}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -165,7 +166,7 @@ const EventCards = ({params, searchParams}) => {
   .filter((row) => 
     quoteSentFilter === 'All' || 
         (quoteSentFilter === 'Quote Sent' && row.QuoteSent === 'Yes' && row.Status === 'Call Followup') ||
-        (quoteSentFilter === ' Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
+        (quoteSentFilter === 'Yet To Send' && row.QuoteSent !== 'Yes' && row.Status === 'Call Followup')
   )
   .filter((row) =>
     CSEFilter === 'All' || row.HandledBy === CSEFilter
@@ -462,6 +463,7 @@ const formatUnreachableTime = (timeStr) => {
     // Extract only the 10-digit number
     const cleanedPhone = row.Phone.replace(/^(\+91\s?)/, '').trim();
 
+    //lead data params
     const leadData = {
         JsonDBName: alternateCompanyName,
         JsonEntryUser: toTitleCase(userName),
@@ -943,7 +945,14 @@ const formatUnreachableTime = (timeStr) => {
       throw new Error(`Invalid serial number format from server ${nextSNoResponse.error}`);
     }
 
+    // Validate email if provided
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
     const payload = {
+      sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
       sNo: nextSNoResponse.data.maxSNo + 1, // Use the incremented serial number
       date: formData.date,
       time: formData.time,
@@ -957,6 +966,7 @@ const formatUnreachableTime = (timeStr) => {
       consultantNumber: formData.consultantNumber,
       dbCompanyName: UserCompanyName
     };
+
 
     const apiUrl = "https://leads.baleenmedia.com/api/insertLeads";
     try {
@@ -1003,85 +1013,82 @@ const formatUnreachableTime = (timeStr) => {
     
     alert(`Failed to save lead:\n${errorMessage}`);
   }
-};
+      // ERROR CASE - Detailed error message
+      let errorMessage = error.message;
+    
+    // Handle specific error cases
+    if (error.message.includes('Network Error')) {
+      errorMessage = "Network error - Please check your internet connection";
+    } else if (error.message.includes('timeout')) {
+      errorMessage = "Request timeout - Please try again";
+    } else if (error.message.includes('Failed to get next ID')) {
+      errorMessage = "Couldn't generate a new ID - Please try again";
+    }
+    
+    alert(`Failed to save lead:\n${errorMessage}`);
+  }
   
 const handleStatusClick = async(row) => {
-  setShowModal(true);
+    setShowModal(true);
 
-  // Set followup date and time if available
-  if (row.FollowupDate !== "No Followup Date") {
-    console.log("Followup date and time is updated: " + row.FollowupDate + row.FollowupTime)
-    setFollowupDate(row.FollowupDate);
-    setFollowupTime(row.FollowupTime);
-  }else{
-    console.log("Followup date time is skipped " + row.FollowupDate)
-  }
+    // Set followup date and time if available
+    if (row.FollowupDate !== "No Followup Date") {
+      console.log("Followup date and time is updated: " + row.FollowupDate + row.FollowupTime)
+      setFollowupDate(row.FollowupDate);
+      setFollowupTime(row.FollowupTime);
+    }else{
+      console.log("Followup date time is skipped " + row.FollowupDate)
+    }
 
-  // Update the current call information
-  setCurrentCall({
-    phone: row.Phone,
-    name: row.Name,
-    sNo: row.SNo,
-    Platform: row.Platform,
-    Enquiry: row.Enquiry,
-    LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
-    quoteSent: row.QuoteSent,
-    rowData: row,
-  });
+    // Update the current call information
+    setCurrentCall({
+      phone: row.Phone,
+      name: row.Name,
+      sNo: row.SNo,
+      Platform: row.Platform,
+      Enquiry: row.Enquiry,
+      LeadDateTime: `${row.LeadDate} ${row.LeadTime}`,
+      quoteSent: row.QuoteSent,
+      rowData: row,
+    });
 
-  // Set various status and remarks values
-  
-  setRemarks(row.Remarks);
-  setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
-  setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
-  setSelectedStatus(row.Status);
-};
+    // Set various status and remarks values
+    setRemarks(row.Remarks);
+    setCompanyName(row.CompanyName !== "No Company Name" ? row.CompanyName : '');
+    setSelectedLeadStatus(row.ProspectType === "Unknown" ? "" : row.ProspectType);
+    setSelectedStatus(row.Status);
+  }; // <-- Added closing brace to end handleStatusClick function
 
   return (
-
     <div className="p-4 text-black">
       {/* Top Bar with Filter and Report Buttons */}
     <div className="flex justify-between items-center mb-4 sticky top-0 left-0 right-0 z-10 bg-white p-3">
-  <h2 className="text-lg sm:text-xl font-semibold text-blue-500 flex-shrink-0 mr-2">
+    <h2 className="text-xl font-semibold text-blue-500">
     {UserCompanyName === "Baleen Test" ? "Lead Manager Test" : "Lead Manager"}
   </h2>
 
-  <div className="flex flex-col sm:flex-row sm:space-x-2 md:space-x-4 space-y-2 sm:space-y-0 flex-shrink-0">
-    {/* Top row: Sheet and Report buttons */}
-    <div className="flex space-x-1 sm:space-x-2">
-      {/* Sheet Button */}
-      <button
-        className="flex items-center px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100 text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap"
-        onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
-      >
-        <FaFileExcel className="mr-1 sm:mr-2 text-sm sm:text-base md:text-lg hover:text-green-500 text-green-600 flex-shrink-0" />
-        Sheet
-      </button>
-      
-      {/* Report Button */}
-      <a href="/LeadManager/Report">
+      <div className="flex  space-x-4">
+        {/* Sheet Button */}
         <button
-          className="flex items-center px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500 text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap"
+          className="flex items-center px-4 py-2 bg-transparent text-green-600 rounded-md border border-green-500 hover:bg-green-100"
+          onClick={() => window.open("https://docs.google.com/spreadsheets/d/19gpuyAkdMFZIYwaDXaaKtPWAZqMvcIZld6EYkb4_xjw/", "_blank")}
         >
-          <FaFileAlt className="mr-1 sm:mr-2 text-sm sm:text-base md:text-lg flex-shrink-0" />
-          Report
+          <FaFileExcel className="mr-2 text-lg hover:text-green-500 text-green-600" />
+          Sheet
         </button>
-      </a>
-    </div> 
+        
+        {/* Report Button */}
+         <a href="/LeadManager/DSR">
+          <button
+            className="flex items-center px-3 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-100 border border-blue-500"
+          >
+            <FaFileAlt className="mr-2 text-lg" />
+            DSR
+          </button>
+        </a> 
+      </div>
 
-    {/* Bottom row (mobile only): DSR button */}
-    {/* <div className="flex sm:contents">
-      <a href="/LeadManager/DSR" className="sm:ml-0">
-        <button
-          className="flex items-center px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-white text-orange-600 rounded-md hover:bg-orange-100 border border-orange-500 text-xs sm:text-sm md:text-base lg:text-lg whitespace-nowrap w-full sm:w-auto"
-        >
-          <FaFileAlt className="mr-1 sm:mr-2 text-sm sm:text-base md:text-lg flex-shrink-0" />
-          DSR
-        </button>
-      </a>
-    </div> */}
-  </div>
-</div>
+    </div>
 
       
        {/* Search Bar */}
@@ -1435,8 +1442,15 @@ const handleStatusClick = async(row) => {
             )}
 
       <div className="relative">
-              
-            <button
+            
+            {/* <button
+        onClick={() => router.push("/LeadManager/LeadIntegration")}
+        className="fixed right-4 bottom-56 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-60 z-50"
+        title="Multi-Platform Lead Integration"
+      >
+        <AiOutlineApi size={24} />
+      </button> */}
+                  <button
         onClick={() => router.push("/LeadManager/Client2Lead")}
         className="fixed right-4 bottom-40 p-3 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700 lg:right-8 lg:bottom-44 z-50"
       >
@@ -1732,19 +1746,18 @@ const handleStatusClick = async(row) => {
               </div> 
             }
             
-            {/* Remarks */}
-            {!followupOnly &&
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Remarks</label>
-              <textarea
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                className="w-full border border-gray-500 rounded-lg p-2"
-                rows={3}
-                onFocus={e => e.target.select()}
-              />
-            </div>
-            }
+            {/* Remarks */}            {!followupOnly && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Remarks</label>
+                <textarea
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  className="w-full border border-gray-500 rounded-lg p-2"
+                  rows={3}
+                  onFocus={e => e.target.select()}
+                />
+              </div>
+            )}
             {/* Lead Status Buttons */}
             {selectedStatus === "Call Followup" && (
             <div className="mb-4 flex justify-center gap-4">
@@ -1782,20 +1795,16 @@ const handleStatusClick = async(row) => {
             )}
 
             <div className="flex justify-end">
-            <button
-              className={`px-4 py-2 rounded-md text-white ${
-                isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
-              }`}
-              onClick={handleSave}
-              disabled={!selectedStatus || isLoading} // Disable button during loading..
-            >
-              {isLoading ? (
-                <span>Loading...</span> // Change text when loading
-              ) : (
-                "Save"
-              )}
-            </button>
-          </div>
+              <button
+                onClick={() => handleSave(currentCall?.sNo)}
+                className={`px-4 py-2 rounded-md text-white ${
+                  isLoading ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
 
           </div>
           {toast && <ToastMessage message={toastMessage} type="error"/>}
@@ -1807,7 +1816,7 @@ const handleStatusClick = async(row) => {
       
     </div>
   );
-}
+};
 async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRights) {
   const apiUrl = `https://leads.baleenmedia.com/api/fetchLeads`; // replace with the actual endpoint URL
 
@@ -1895,18 +1904,19 @@ async function fetchDataFromAPI(queryId, filters, userName, dbCompanyName, appRi
     }
   
     // Sort by follow-up date as a tiebreaker if both have the same status priority
-    return bFollowupDate - aFollowupDate;
-  });  
+    return bFollowupDate - aFollowupDate;  });  
 
   return sortedRows;
 }
 
+// Close the EventCards component
+// export { EventCards };
 
 export default function Page({ params, searchParams }) {
-
   return (
     <article>
-      <EventCards params = {params} searchParams = {searchParams}/>
+      <EventCards params={params} searchParams={searchParams}/>
     </article>
   );
 }
+export { EventCards };
