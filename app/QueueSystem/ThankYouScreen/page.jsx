@@ -70,6 +70,13 @@ export default function ThankYouScreen() {
         }
     }, [queueStatus, router, pathname]);
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            window.open("https://search.google.com/local/writereview?placeid=ChIJfejrKbcUBzsRBUnAq58f87M", "_blank");
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, []);
+
     if (!companyName) {
         return null; // Prevent rendering if companyName is missing
     }
@@ -90,7 +97,7 @@ export default function ThankYouScreen() {
                 </p>
                 <button
                     className="px-8 py-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md"
-                    onClick={() => window.open("https://g.co/kgs/Jf23Q1Q", "_blank")}
+                    onClick={() => window.open("https://search.google.com/local/writereview?placeid=ChIJfejrKbcUBzsRBUnAq58f87M", "_blank")}
                 >
                     {language === "en" ? "Share your review!" : "உங்கள் மதிப்பீட்டை பகிரவும்!"}
                 </button>
