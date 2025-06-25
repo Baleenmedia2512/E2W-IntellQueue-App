@@ -38,7 +38,6 @@ export default function WaitingScreen() {
                 setTotalOrders(total);
                 setWaitingTime(estimatedTime);
                 dispatch(setQueueStatus(status));
-                console.log(position, total, estimatedTime, remainingTime, status)
             } catch (error) {
                 console.error("Error fetching queue data:", error);
             }
@@ -144,7 +143,7 @@ export default function WaitingScreen() {
                     <img src="/images/WaitingImage.png" alt="Waiting" className="w-64 h-64 object-contain" />
                 </div>
                 <p className="text-black font-semibold text-2xl mb-4">
-                    {language === "en" ? "You’re almost there!" : "நீங்கள் அருகில் இருக்கிறீர்கள்!"}
+                    {language === "en" ? "You’re almost there!" : "உங்க முறை கிட்டத்தட்ட வந்துவிட்டது!"}
                 </p>
                 {/* <p className="text-gray-500 text-lg mb-6">
                     {language === "en" ? "Relax, we’ll notify you when it’s your turn." : "தயவுசெய்து அமைதியாக இருங்கள், உங்கள் முறை வந்தவுடன் நாங்கள் உங்களை அறிவிப்போம்."}
@@ -155,12 +154,30 @@ export default function WaitingScreen() {
                             ? `${queuePosition} ${language === "en" ? "more ahead of you" : "முன் உள்ளவர்கள்"}`
                             : language === "en" ? "Loading..." : "ஏற்றுகிறது..."}
                     </p> */}
-                    <div className="w-full h-5 bg-gray-300 rounded-full overflow-hidden">
+                <div className="relative w-full h-5 bg-gray-300 rounded-full overflow-hidden">
+                    {/* Progress bar */}
+                    <div
+                        className="h-full bg-green-500 transition-all duration-500 ease-in-out"
+                        style={{ width: `${queuePosition !== null ? ((totalOrders - queuePosition) / totalOrders) * 100 : 0}%` }}
+                    ></div>
+
+                    {/* Centered text inside bar */}
+                    {queuePosition === 1 && (
                         <div
-                            className="h-full bg-green-500 transition-all duration-500 ease-in-out"
-                            style={{ width: `${queuePosition !== null ? ((totalOrders - queuePosition) / totalOrders) * 100 : 0}%` }}
-                        ></div>
-                    </div>
+                            className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[8px] sm:text-[10px] md:text-xs lg:text-sm font-medium transition-all duration-300 whitespace-nowrap"
+                            style={{
+                                color:
+                                    ((totalOrders - queuePosition) / totalOrders) * 100 > 40
+                                        ? 'white'
+                                        : '#16a34a' // Tailwind green-600
+                            }}
+                        >
+                            {language === "en"
+                                ? "🎉 You're First in Queue!"
+                                : "🎉 வரிசையில் முதலில் நீங்கள் தான்!"}
+                        </div>
+                    )}
+                </div>
                     <p className="text-sm text-right text-gray-400 mt-2">
                         {language === "en" ? "Your turn" : "உங்கள் முறை"}
                     </p>

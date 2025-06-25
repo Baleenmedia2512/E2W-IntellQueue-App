@@ -19,8 +19,8 @@ ConnectionManager::connect($dbName);
 $pdo = ConnectionManager::getConnection();
 
 function renumberQueueIndexes($pdo, $rateCard) {
-    // Get all clients for this RateCard and today, not Completed or Deleted, order by QueueIndex
-    $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE RateCard = ? AND Status NOT IN ('Completed', 'Deleted', 'Remote') AND Date(EntryDateTime) = CURRENT_DATE ORDER BY QueueIndex ASC, ID ASC");
+    // Get all clients for this RateCard and today, not Completed or Deleted or Remote or Skipped, order by QueueIndex
+    $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE RateCard = ? AND QueueIndex != 0 AND Date(EntryDateTime) = CURRENT_DATE ORDER BY QueueIndex ASC, ID ASC");
     $stmt->execute([$rateCard]);
     $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $i = 1;
@@ -157,6 +157,52 @@ try {
         }
         renumberQueueIndexes($pdo, $rateCard);
 
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    if ($action === 'skipToken') {
+        $stmt = $pdo->prepare("SELECT RateCard, Status FROM queue_table WHERE ID = ?");
+        $stmt->execute([$clientId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $rateCard = $row ? $row['RateCard'] : null;
+        $currentStatus = $row ? $row['Status'] : null;
+
+        if (!$rateCard || !in_array($currentStatus, ['In-Progress', 'On-Hold'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid client/status']);
+            exit;
+        }
+
+        // Find the next Waiting client in queue for this rateCard today
+        $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE RateCard = ? AND Status = 'Waiting' AND Date(EntryDateTime) = CURRENT_DATE ORDER BY QueueIndex ASC LIMIT 1");
+        $stmt->execute([$rateCard]);
+        $nextRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        $nextId = $nextRow ? $nextRow['ID'] : null;
+
+        $pdo->beginTransaction();
+
+        // 1. If there IS a next client, update their status
+        if ($nextId) {
+            if ($currentStatus === 'In-Progress') {
+                $stmtQOT = $pdo->prepare("SELECT QueueOutTime FROM queue_table WHERE ID = ?");
+                $stmtQOT->execute([$nextId]);
+                $currentQOT = $stmtQOT->fetchColumn();
+                if ($currentQOT === null) {
+                    $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress', QueueOutTime = NOW() WHERE ID = ?")->execute([$nextId]);
+                } else {
+                    $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress' WHERE ID = ?")->execute([$nextId]);
+                }
+            } else if ($currentStatus === 'On-Hold') {
+                $pdo->prepare("UPDATE queue_table SET Status = 'On-Hold' WHERE ID = ?")->execute([$nextId]);
+            }
+        }
+
+        // 2. Mark the skipped client as Skipped and remove from queue
+        $pdo->prepare("UPDATE queue_table SET Status = 'Skipped', QueueIndex = 0 WHERE ID = ?")->execute([$clientId]);
+
+        renumberQueueIndexes($pdo, $rateCard);
+
+        $pdo->commit();
         echo json_encode(['success' => true]);
         exit;
     }

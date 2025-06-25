@@ -10,7 +10,7 @@ header("Access-Control-Allow-Origin: *");
 
 // Function to connect to the database
 function connectToDB($DBName) {
-    if ($DBName !== 'Grace Scans' && $DBName !== 'Baleen Test') {
+    if ($DBName !== 'Grace Scans' && $DBName !== 'Baleen Test' && $DBName !== 'test' && $DBName !== 'gracescans') {
         echo json_encode(["message" => "Configuration for your company is not yet added"]);
         exit();
     }
@@ -68,8 +68,10 @@ $template = 'order_adjustment_amt_template';
 
 // Assign mobile numbers based on the database name
 $mobileNumbersMap = [
-    'Grace Scans' => ['7010198963', '9994443607', '9944084854'],
+    'Grace Scans' => ['9994443607', '9944084854'],
     'Baleen Test' => ['7010198963'],
+    'gracescans' => ['9994443607', '9944084854'],
+    'test' => ['7010198963'],
 ];
 
 $mobileNumbers = isset($mobileNumbersMap[$DBName]) ? $mobileNumbersMap[$DBName] : [];

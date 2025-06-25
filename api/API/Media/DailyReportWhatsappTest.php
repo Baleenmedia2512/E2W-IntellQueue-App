@@ -10,7 +10,7 @@ header("Access-Control-Allow-Origin: *");
 
 // Function to connect to the database
 function connectToDB($DBName) {
-    if ($DBName !== 'Grace Scans' && $DBName !== 'Baleen Test') {
+    if ($DBName !== 'Grace Scans' && $DBName !== 'Baleen Test' && $DBName !== 'test' && $DBName !== 'gracescans') {
         echo json_encode(["message" => "Configuration for your company is not yet added"]);
         exit();
     }
@@ -74,6 +74,7 @@ $api = 'WmwZrVceAsHoft59dv1pM2xP8';
 $incomeTemplate = 'new_dir_template';
 $mobileNumbersMap = [
     'Baleen Test' => ['7010198963'],
+    'test' => ['7010198963'],
 ];
 
 // Assign mobile numbers based on the database name

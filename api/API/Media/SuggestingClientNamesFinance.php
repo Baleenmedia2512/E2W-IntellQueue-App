@@ -11,12 +11,8 @@ try {
     // Get the search term from the React app
     $search_term = $_GET['suggestion'];
 
-    if($dbName === 'Grace Scans'){
-        // Prepare the SQL statement to fetch client names based on the search term
-        $sql = "SELECT DISTINCT ClientName, ClientContact FROM order_table WHERE ClientName LIKE :suggestion LIMIT 10";
-    } else{
-        $sql = "SELECT DISTINCT ClientName, ClientContact FROM order_table WHERE ClientName LIKE :suggestion LIMIT 10";
-    }
+    $sql = "SELECT DISTINCT ClientName, ClientContact FROM order_table WHERE ClientName LIKE :suggestion LIMIT 10";
+    
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':suggestion', '%' . $search_term . '%');
     $stmt->execute();

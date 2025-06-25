@@ -134,6 +134,13 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
       bg: "bg-red-600",
       hover: "hover:bg-red-700",
       ring: "focus:ring-red-400"
+    },
+    orange: {
+      border: "border-orange-300",
+      text: "text-orange-700",
+      bg: "bg-orange-600",
+      hover: "hover:bg-orange-700",
+      ring: "focus:ring-orange-400"
     }
   };
   const c = colorMap[color] || colorMap.blue;
@@ -168,7 +175,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, message, title = "Confi
   );
 }
 
-function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, queueStarted, handleStartQueue, allClients, selectedEquipment, hoveredIndex, setHoveredIndex, draggedIndex, setDraggedIndex, handleAutoScroll, stopAutoScroll
+function DraggableTile({ client, index, moveTile, displayedClientIndex, closeToken, completeToken, doneAndHold, callNext, continueToken, skipToken, queueStarted, handleStartQueue, allClients, selectedEquipment, hoveredIndex, setHoveredIndex, draggedIndex, setDraggedIndex, handleAutoScroll, stopAutoScroll
 }) {
     const [{ isDragging }, ref] = useDrag({
         type: ItemType,
@@ -305,16 +312,18 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
         else if (actionType === "callNext") callNext(displayedClientIndex);
         else if (actionType === "continue") continueToken(displayedClientIndex);
         else if (actionType === "startQueue") handleStartQueue();
+        else if (actionType === "skip") skipToken(displayedClientIndex);
     };
 
     const getActionMessage = () => {
         switch (actionType) {
             case "complete": return `Are you sure you want to **complete** the token for **${client.name}**?`;
-            case "close": return `Are you sure you want to **close** the token for **${client.name}**?`;
+            case "close": return `Are you sure you want to **remove** the token for **${client.name}**?`;
             case "doneAndHold": return `Are you sure you want to mark as **done and hold** for **${client.name}**?`;
             case "callNext": return `Are you sure you want to call the **next** client after **${client.name}**?`;
             case "continue": return `Are you sure you want to **continue** the token for **${client.name}**?`;
             case "startQueue": return `Are you sure you want to **start** the queue for **${client.rateCard}**?`;
+            case "skip": return `Are you sure you want to **remove** **${client.name}**?`;
             default: return "";
         }
     };
@@ -327,6 +336,7 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
             case "callNext": return "green";
             case "continue": return "green";
             case "startQueue": return "green";
+            case "skip": return "orange";
             default: return "blue";
         }
     };
@@ -436,7 +446,7 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
                                 className="flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-3 text-sm font-medium transition-colors border border-red-100"
                             >
                                 <FiXCircle /> 
-                                <span>Close</span>
+                                <span>Remove</span>
                             </button>
                         )}
                     </div>
@@ -444,11 +454,26 @@ function DraggableTile({ client, index, moveTile, displayedClientIndex, closeTok
                 {client.status === "In-Progress" && (
                     <div className="flex justify-between mt-4 space-x-2">
                         <button onClick={() => handleAction("doneAndHold")} className="flex-1 flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-blue-100"><FiCheckCircle /> <span>Done & Hold</span></button>
-                        <button onClick={() => handleAction("callNext")} className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-green-100"><FiChevronsRight /> <span>Call Next</span></button>
+                        <button onClick={() => handleAction("callNext")} className="flex-1 flex items-center justify-center space-x-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-green-100"><FiChevronsRight /> <span>Done & Call Next</span></button>
+                        <button onClick={() => handleAction("skip")} className="flex-1 flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-orange-100"><FiXCircle /> <span>Remove</span>
+                        </button>
                     </div>
                 )}
                 {client.status === "On-Hold" && (
-                    <div className="mt-4"><button onClick={() => handleAction("continue")} className="w-full flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-4 text-sm font-medium transition-colors border border-blue-100"><FiPlayCircle /> <span>Continue</span></button></div>
+                    <div className="flex justify-between mt-4 space-x-2">
+                        <button 
+                            onClick={() => handleAction("continue")}
+                            className="flex-1 flex items-center justify-center space-x-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-blue-100"
+                        >
+                            <FiPlayCircle /> <span>Continue</span>
+                        </button>
+                        <button 
+                            onClick={() => handleAction("skip")}
+                            className="flex-1 flex items-center justify-center space-x-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-2 px-2 text-sm font-medium transition-colors border border-orange-100"
+                        >
+                            <FiXCircle /> <span>Remove</span>
+                        </button>
+                    </div>
                 )}
             </div>
             <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirm} message={getActionMessage()} color={getActionColor()} />
@@ -546,7 +571,7 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const displayedClients = useMemo(() => {
         // Only show clients that are not Completed or Deleted
         return allClients
-            .filter(c => c.rateCard === selectedEquipment && c.status !== "Completed" && c.status !== "Deleted")
+            .filter(c => c.rateCard === selectedEquipment && !['Completed', 'Deleted', 'Skipped'].includes(c.status))
             .sort((a, b) => a.queueIndex - b.queueIndex); // Sort by queueIndex in ascending order
     }, [allClients, selectedEquipment]);
 
@@ -1088,6 +1113,24 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
         await notifyIfNeeded(firstClient);
     });
 
+    const skipToken = withActionLock(async (displayedIndex) => {
+        const client = displayedClients[displayedIndex];
+        if (!(client.status === "In-Progress" || client.status === "On-Hold")) return;
+
+        await QueueDashboardAction(companyName, 'skipToken', { JsonClientId: client.id });
+        await saveSnapshotWithUpdatedState();
+
+        // Optionally: notify the new client who just got skipped to
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
+        const nextClient = apiClients
+            .filter(c => c.rateCard === selectedEquipment && (c.status === "In-Progress" || c.status === "On-Hold") && c.id !== client.id)
+            .sort((a, b) => a.queueIndex - b.queueIndex)[0];
+        if (nextClient) {
+            await notifyIfNeeded(nextClient);
+        }
+    });
+
     // --- Undo/Redo with notification debounce ---
     const sendDebouncedNotification = (clientObj, delay = 3000) => {
         if (notificationTimer.current) {
@@ -1273,6 +1316,7 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
                                                 doneAndHold={doneAndHold}
                                                 callNext={callNext}
                                                 continueToken={continueToken}
+                                                skipToken={skipToken}
                                                 queueStarted={queueStarted[selectedEquipment]}
                                                 handleStartQueue={handleStartQueue}
                                                 allClients={allClients}
