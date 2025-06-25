@@ -20,7 +20,7 @@ $pdo = ConnectionManager::getConnection();
 
 function renumberQueueIndexes($pdo, $rateCard) {
     // Get all clients for this RateCard and today, not Completed or Deleted, order by QueueIndex
-    $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE RateCard = ? AND Status NOT IN ('Completed', 'Deleted') AND Date(EntryDateTime) = CURRENT_DATE ORDER BY QueueIndex ASC, ID ASC");
+    $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE RateCard = ? AND Status NOT IN ('Completed', 'Deleted', 'Remote') AND Date(EntryDateTime) = CURRENT_DATE ORDER BY QueueIndex ASC, ID ASC");
     $stmt->execute([$rateCard]);
     $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $i = 1;
@@ -43,7 +43,7 @@ try {
         $rateCard = $row['RateCard'];
 
         $pdo->prepare("UPDATE queue_table SET Status = 'Waiting' WHERE RateCard = ? AND (Status = 'Waiting' OR Status = 'On-Hold') AND Date(EntryDateTime) = CURRENT_DATE")->execute([$rateCard]);
-        $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress' WHERE ID = ?")->execute([$clientId]);
+        $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress', QueueOutTime = NOW() WHERE ID = ?")->execute([$clientId]);
         renumberQueueIndexes($pdo, $rateCard);
 
         echo json_encode(['success' => true]);
@@ -56,7 +56,16 @@ try {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $rateCard = $row ? $row['RateCard'] : null;
 
-        $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0 WHERE ID = ?")->execute([$clientId]);
+        // Only set ProcedureCompleteTime if it's currently null
+        $stmt = $pdo->prepare("SELECT ProcedureCompleteTime FROM queue_table WHERE ID = ?");
+        $stmt->execute([$clientId]);
+        $currentPCT = $stmt->fetchColumn();
+        if ($currentPCT === null) {
+            $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0, ProcedureCompleteTime = NOW() WHERE ID = ?")->execute([$clientId]);
+        } else {
+            $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0 WHERE ID = ?")->execute([$clientId]);
+        }
+
         $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE Status = 'Waiting' AND Date(EntryDateTime) = CURRENT_DATE AND RateCard = ? ORDER BY QueueIndex ASC LIMIT 1");
         $stmt->execute([$rateCard]);
         $next = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -75,12 +84,29 @@ try {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $rateCard = $row ? $row['RateCard'] : null;
 
-        $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0 WHERE ID = ?")->execute([$clientId]);
+        // Only set ProcedureCompleteTime if it's currently null
+        $stmt = $pdo->prepare("SELECT ProcedureCompleteTime FROM queue_table WHERE ID = ?");
+        $stmt->execute([$clientId]);
+        $currentPCT = $stmt->fetchColumn();
+        if ($currentPCT === null) {
+            $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0, ProcedureCompleteTime = NOW() WHERE ID = ?")->execute([$clientId]);
+        } else {
+            $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0 WHERE ID = ?")->execute([$clientId]);
+        }
+
         $stmt = $pdo->prepare("SELECT ID FROM queue_table WHERE Status = 'Waiting' AND Date(EntryDateTime) = CURRENT_DATE AND RateCard = ? ORDER BY QueueIndex ASC LIMIT 1");
         $stmt->execute([$rateCard]);
         $next = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($next) {
-            $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress' WHERE ID = ?")->execute([$next['ID']]);
+            // Only set QueueOutTime if it's currently null
+            $stmtQOT = $pdo->prepare("SELECT QueueOutTime FROM queue_table WHERE ID = ?");
+            $stmtQOT->execute([$next['ID']]);
+            $currentQOT = $stmtQOT->fetchColumn();
+            if ($currentQOT === null) {
+                $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress', QueueOutTime = NOW() WHERE ID = ?")->execute([$next['ID']]);
+            } else {
+                $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress' WHERE ID = ?")->execute([$next['ID']]);
+            }
         }
         renumberQueueIndexes($pdo, $rateCard);
 
@@ -107,7 +133,7 @@ try {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $rateCard = $row ? $row['RateCard'] : null;
 
-        $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0 WHERE ID = ?")->execute([$clientId]);
+        $pdo->prepare("UPDATE queue_table SET Status = 'Completed', QueueIndex = 0, ProcedureCompleteTime = NOW() WHERE ID = ?")->execute([$clientId]);
         renumberQueueIndexes($pdo, $rateCard);
 
         echo json_encode(['success' => true]);
@@ -120,13 +146,20 @@ try {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $rateCard = $row ? $row['RateCard'] : null;
 
-        $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress' WHERE ID = ?")->execute([$clientId]);
+        // Only set QueueOutTime if it's currently null
+        $stmt = $pdo->prepare("SELECT QueueOutTime FROM queue_table WHERE ID = ?");
+        $stmt->execute([$clientId]);
+        $currentQOT = $stmt->fetchColumn();
+        if ($currentQOT === null) {
+            $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress', QueueOutTime = NOW() WHERE ID = ?")->execute([$clientId]);
+        } else {
+            $pdo->prepare("UPDATE queue_table SET Status = 'In-Progress' WHERE ID = ?")->execute([$clientId]);
+        }
         renumberQueueIndexes($pdo, $rateCard);
 
         echo json_encode(['success' => true]);
         exit;
     }
-
     echo json_encode(['success' => false, 'message' => 'Unknown action']);
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

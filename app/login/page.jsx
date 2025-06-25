@@ -25,10 +25,16 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
+    useEffect(() => {
     dispatch(logout());
-    
-  },[])
+
+    const host = window.location.hostname;
+    const subdomain = host.split('.')[0];
+
+    if (subdomain) {
+        dispatch(setCompanyName(subdomain));
+    }
+    }, []);
 
 //   useEffect(()=>{
 //     elementsToHideList();
@@ -258,7 +264,7 @@ const handleLogin = (event) => {
                         </button>
                     </form>
                     <div className="text-gray-600 text-xs mt-4">
-                        Version: 1.14.0 {/*Commenting for release */}
+                        Version: 1.14.3 {/*Commenting for release */}
                     </div>
                 </div>
                 <div className="hidden md:block bg-blue-500 rounded-lg w-full min-h-96 md:w-1/2 p-8">

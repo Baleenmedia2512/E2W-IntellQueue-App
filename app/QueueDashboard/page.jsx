@@ -582,7 +582,10 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 rateCard: c.rateCard,
                 rateType: c.rateType,
                 status: c.status,
-                remarks: c.remarks
+                remarks: c.remarks,
+                queueInTime: c.queueInTime,
+                queueOutTime: c.queueOutTime,
+                procedureCompleteTime: c.procedureCompleteTime
             }));
     };
 
@@ -605,12 +608,103 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                 rateCard: c.rateCard,
                 rateType: c.rateType,
                 status: c.status,
-                remarks: c.remarks
+                remarks: c.remarks,
+                queueInTime: c.queueInTime,
+                queueOutTime: c.queueOutTime,
+                procedureCompleteTime: c.procedureCompleteTime // Always NULL in this snapshot
             }));
         await saveSnapshot(snapshot);
         
         return apiClients;
     };
+
+    // Generalized snapshot saver: preserveTimeFields is an object like { queueOutTime: true, procedureCompleteTime: true }
+    // Only clients whose IDs are in updatedIds[] will have the real values for these fields; all others get null
+    const saveSnapshotWithSelectiveTimes = async (updatedIds = [], preserveTimeFields = {}) => {
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
+        console.log('FetchQueueDashboardData', apiClients)
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const snapshot = apiClients
+            .filter(c => c.rateCard === selectedEquipment)
+            .sort((a, b) => a.queueIndex - b.queueIndex)
+            .map(c => {
+                const preserve = updatedIds.includes(c.id);
+                console.log(preserve, preserveTimeFields, c.name, c.queueInTime)
+                return {
+                    id: c.id,
+                    queueIndex: c.queueIndex,
+                    entryDateTime: c.entryDateTime,
+                    name: c.name,
+                    contact: c.contact,
+                    rateCard: c.rateCard,
+                    rateType: c.rateType,
+                    status: c.status,
+                    remarks: c.remarks,
+                    queueInTime: c.queueInTime,
+                    queueOutTime: preserve && preserveTimeFields.queueOutTime ? c.queueOutTime : null,
+                    procedureCompleteTime: preserve && preserveTimeFields.procedureCompleteTime ? c.procedureCompleteTime : null
+                };
+            });
+            console.log(snapshot)
+        await saveSnapshot(snapshot);
+        return apiClients;
+    };
+
+    //     const saveSnapshotWithQueueOutTime = async () => {
+    //     // Build the snapshot from the current local state (allClients), not from apiClients
+    //     // Now fetch latest state from API and update local state
+    //     const apiClients = await FetchQueueDashboardData(companyName);
+    //     setAllClients(apiClients);
+    //     // Wait for 300ms to ensure queue table update is complete
+    //     await new Promise(resolve => setTimeout(resolve, 300));
+    //     const snapshot = apiClients
+    //         .filter(c => c.rateCard === selectedEquipment)
+    //         .sort((a, b) => a.queueIndex - b.queueIndex)
+    //         .map(c => ({
+    //             id: c.id,
+    //             queueIndex: c.queueIndex,
+    //             entryDateTime: c.entryDateTime,
+    //             name: c.name,
+    //             contact: c.contact,
+    //             rateCard: c.rateCard,
+    //             rateType: c.rateType,
+    //             status: c.status,
+    //             remarks: c.remarks,
+    //             queueInTime: c.queueInTime,
+    //             queueOutTime: c.queueOutTime,
+    //             procedureCompleteTime: null // Always NULL in this snapshot
+    //         }));
+    //     await saveSnapshot(snapshot);
+        
+    //     return apiClients;
+    // };
+
+    //  // Use this function for actions that should store completedOn in snapshot
+    // const saveSnapshotWithProcedureCompleteTime = async () => {
+    //     const apiClients = await FetchQueueDashboardData(companyName);
+    //     setAllClients(apiClients);
+    //     await new Promise(resolve => setTimeout(resolve, 300));
+    //     const snapshot = apiClients
+    //         .filter(c => c.rateCard === selectedEquipment)
+    //         .sort((a, b) => a.queueIndex - b.queueIndex)
+    //         .map(c => ({
+    //             id: c.id,
+    //             queueIndex: c.queueIndex,
+    //             entryDateTime: c.entryDateTime,
+    //             name: c.name,
+    //             contact: c.contact,
+    //             rateCard: c.rateCard,
+    //             rateType: c.rateType,
+    //             status: c.status,
+    //             remarks: c.remarks,
+    //             queueInTime: c.queueInTime,
+    //             queueOutTime: c.queueOutTime,
+    //             procedureCompleteTime: c.procedureCompleteTime
+    //         }));
+    //     await saveSnapshot(snapshot);
+    //     return apiClients;
+    // };
     
 
     // Add a ref to store previous snapshot for undo/redo comparison
@@ -693,7 +787,10 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                         rateCard: c.rateCard,
                         rateType: c.rateType,
                         status: c.status,
-                        remarks: c.remarks
+                        remarks: c.remarks,
+                        queueInTime: c.queueInTime,
+                        queueOutTime: c.queueOutTime,
+                        procedureCompleteTime: c.procedureCompleteTime
                     }));
                 
                 // Compare snapshots to detect changes
@@ -812,7 +909,9 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
     // Optimistically update UI
     setAllClients(newAllClients);
 
-    await saveSnapshot(getCurrentSnapshot());
+    // console.log('Move Tile Snapshot:', getCurrentSnapshot());
+
+    // await saveSnapshot(getCurrentSnapshot());
 
     // Call backend to update order - ONLY send non-Completed/Deleted clients
     const queueOrder = itemsOfSelectedEquipment.map(client => ({
@@ -825,6 +924,40 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
 
     // Fetch latest data after action
     const apiClients = await FetchQueueDashboardData(companyName);
+
+    const snapshot = apiClients
+        .filter(c => c.rateCard === selectedEquipment)
+        .sort((a, b) => a.queueIndex - b.queueIndex)
+        .map(c => ({
+            id: c.id,
+            queueIndex: c.queueIndex,
+            entryDateTime: c.entryDateTime,
+            name: c.name,
+            contact: c.contact,
+            rateCard: c.rateCard,
+            rateType: c.rateType,
+            status: c.status,
+            remarks: c.remarks,
+            queueInTime: c.queueInTime,
+            queueOutTime: c.queueOutTime, // <-- now has the correct value
+            procedureCompleteTime: c.procedureCompleteTime
+        }));
+
+    await saveSnapshot(snapshot);
+
+    // // 1. Find the client(s) who just became "In-Progress"
+    // const prevMap = Object.fromEntries(prevSnapshot.map(c => [c.id, c.status]));
+    // const justBecameInProgress = apiClients.filter(c =>
+    //     c.rateCard === selectedEquipment &&
+    //     c.status === "In-Progress" &&
+    //     prevMap[c.id] !== "In-Progress"
+    // );
+
+    // // 2. Prepare list of IDs to preserve queueOutTime for
+    // const updatedIds = justBecameInProgress.map(c => c.id);
+
+    // // 3. Save snapshot: Only preserve queueOutTime for the new In-Progress client(s)
+    // await saveSnapshotWithUpdatedState(updatedIds, { queueOutTime: true });
     
     // Only update UI if backend data differs from optimistic state
     const getQueue = (clients) =>
@@ -865,46 +998,83 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
     const closeToken = withActionLock(async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'closeToken', { JsonClientId: clientId });
-        const apiClients = await saveSnapshotWithUpdatedState();
+        await saveSnapshotWithUpdatedState();
+        // await saveSnapshotWithSelectiveTimes();
     });
 
     const completeToken = withActionLock(async (displayedIndex)  => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'completeToken', { JsonClientId: clientId });
-        const apiClients = await saveSnapshotWithUpdatedState();
+        // Only preserve procedureCompleteTime for this client
+        await saveSnapshotWithUpdatedState();
+        // await saveSnapshotWithSelectiveTimes([clientId], { queueOutTime: true, procedureCompleteTime: true });
     });
 
     const doneAndHold = withActionLock(async (displayedIndex)  => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'doneAndHold', { JsonClientId: clientId });
-        const apiClients = await saveSnapshotWithUpdatedState();
+        // Only preserve procedureCompleteTime for this client
+        await saveSnapshotWithUpdatedState();
+        // await saveSnapshotWithSelectiveTimes([clientId], { queueOutTime: true, procedureCompleteTime: true });
     });
 
-    const callNext = withActionLock(async (displayedIndex)  => {
+    const callNext = withActionLock(async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
         await QueueDashboardAction(companyName, 'callNext', { JsonClientId: clientId });
-        
-        const apiClients = await saveSnapshotWithUpdatedState();
 
-        // Find in-progress clients excluding the just-called client
-        const inProgressClients = apiClients
-            .filter(c => c.rateCard === selectedEquipment && c.status === "In-Progress")
-            .sort((a, b) => a.queueIndex - b.queueIndex);
-        const nextInProgressClient = inProgressClients.find(c => c.id !== clientId);
+        // After callNext, both the just-completed and the new in-progress client may have updated times
+        const apiClients = await FetchQueueDashboardData(companyName);
+        setAllClients(apiClients);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const inProgressClient = apiClients.find(c =>
+            c.rateCard === selectedEquipment && c.status === 'In-Progress'
+        );
+        // Completed: procedureCompleteTime, In-Progress: queueOutTime
+        const updatedIds = [clientId];
+        if (inProgressClient) updatedIds.push(inProgressClient.id);
 
-        // 🔒 Safe call to handleNotification only if nextInProgressClient exists and has a name
-        if (nextInProgressClient && nextInProgressClient.name && nextInProgressClient.name.trim() !== "") {
-            await notifyIfNeeded(nextInProgressClient);
+        const preserveTimeFields = {};
+        preserveTimeFields[clientId] = { procedureCompleteTime: true };
+        if (inProgressClient) preserveTimeFields[inProgressClient.id] = { queueOutTime: true };
+
+        // Build snapshot with the correct times for each
+        const snapshot = apiClients
+            .filter(c => c.rateCard === selectedEquipment)
+            .sort((a, b) => a.queueIndex - b.queueIndex)
+            .map(c => {
+                const preserve = preserveTimeFields[c.id] || {};
+                return {
+                    id: c.id,
+                    queueIndex: c.queueIndex,
+                    entryDateTime: c.entryDateTime,
+                    name: c.name,
+                    contact: c.contact,
+                    rateCard: c.rateCard,
+                    rateType: c.rateType,
+                    status: c.status,
+                    remarks: c.remarks,
+                    queueInTime: c.queueInTime,
+                    queueOutTime: c.queueOutTime,
+                    procedureCompleteTime: c.procedureCompleteTime
+                };
+            });
+        await saveSnapshot(snapshot);
+
+        // Notification logic
+        if (inProgressClient && inProgressClient.name && inProgressClient.name.trim() !== "") {
+            await notifyIfNeeded(inProgressClient);
         } else {
             console.warn("No valid next In-Progress client found, skipping notification.");
         }
+        return apiClients;
     });
 
-    const continueToken = withActionLock(async (displayedIndex)  => {
+    const continueToken = withActionLock(async (displayedIndex) => {
         const clientId = displayedClients[displayedIndex].id;
-        const clientName = displayedClients[displayedIndex].name;
         await QueueDashboardAction(companyName, 'continueToken', { JsonClientId: clientId });
-        const apiClients = await saveSnapshotWithUpdatedState();
+        // Only preserve queueOutTime for this client
+        await saveSnapshotWithUpdatedState();
+        // await saveSnapshotWithSelectiveTimes([clientId], { queueOutTime: true });
         await notifyIfNeeded(displayedClients[displayedIndex]);
     });
 
@@ -912,7 +1082,9 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
         const firstClient = displayedClients[0];
         if (!firstClient) return;
         await QueueDashboardAction(companyName, 'startQueue', { JsonClientId: firstClient.id });
-        const apiClients = await saveSnapshotWithUpdatedState();
+        // Only preserve queueOutTime for this client
+        await saveSnapshotWithUpdatedState();
+        // await saveSnapshotWithSelectiveTimes([firstClient.id], { queueOutTime: true });
         await notifyIfNeeded(firstClient);
     });
 
@@ -947,6 +1119,7 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
+            console.log('UNDO DATA', res.data)
             await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex - 1 });
@@ -973,6 +1146,7 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
+            console.log('REDO DATA', res.data)
             await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex + 1 });
@@ -1260,7 +1434,10 @@ export default function QueueSystem() {
                             rateCard: c.rateCard,
                             rateType: c.rateType,
                             status: c.status,
-                            remarks: c.remarks
+                            remarks: c.remarks,
+                            queueInTime: c.queueInTime,
+                            queueOutTime: c.queueOutTime,
+                            procedureCompleteTime: c.procedureCompleteTime,
                         }));
 
                     if (!hasInitializedHistory && selectedEquipment && historyStack.length === 0) {

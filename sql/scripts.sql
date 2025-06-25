@@ -1,3 +1,10 @@
+-- 19-06-2025 - Logesh - test, gracescans and baleen media DBs
+-- Add new columns for in-time and out-time of the queue
+ALTER TABLE queue_table 
+ADD COLUMN QueueInTime DATETIME NULL,
+ADD COLUMN QueueOutTime DATETIME NULL,
+ADD COLUMN ProcedureCompleteTime DATETIME NULL;
+
 -- 14-06-2025 - Logesh - gracescans and baleen media DBs -- Live Release
 CREATE TABLE fcm_token_table (
     ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

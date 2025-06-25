@@ -63,7 +63,9 @@ const ClientsData = () => {
   const [isEmpty, setIsEmpty] = useState(true);
   const [error, setError] = useState('');
   const [isNewClient, setIsNewClient] = useState(true);
-  const sources = companyName === 'Grace Scans' ? gssources : bmsources;
+  const sources = elementsToHide.includes('QuoteSenderNavigation') 
+  ? gssources 
+  : bmsources;
   const [contactWarning, setContactWarning] = useState('');
   const [consulantWarning, setConsulantWarning] = useState('');
   // const [clientID, setClientID] = useState('');
@@ -574,10 +576,11 @@ const ClientsData = () => {
   //   setContactDialogOpen(false);
   // };
 
+
   const submitDetails = async(event) => {
       event.preventDefault();
     
-    if(companyName !== 'Grace Scans' && dbName !== 'Grace Scans'){
+    if(!elementsToHide.includes('QuoteSenderNavigation')){
       if (isEmpty === true){
       router.push('/adDetails')
     }
