@@ -110,7 +110,30 @@ body {
   }
 }
 
+.fade-text {
+  position: relative;
+  height: 24px;
+  overflow: hidden;
+}
 
+.fade-text span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-text span.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-text span.inactive {
+  opacity: 0;
+  transform: translateY(-20px);
+}
 
 /* Include this in your CSS file */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');

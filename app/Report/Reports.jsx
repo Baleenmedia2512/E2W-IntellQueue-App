@@ -30,9 +30,47 @@ import { SaveAlt as SaveAltIcon } from '@mui/icons-material';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
+const LoadingOverlay = ({ taglines = [] }) => {
+  const [currentTagline, setCurrentTagline] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTagline((current) => (current + 1) % taglines.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [taglines.length]);
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/30 backdrop-blur-xl">
+      <div className="flex flex-col items-center space-y-6">
+        {/* Modern gradient spinner */}
+        <div className="relative w-16 h-16">
+          <div className="w-16 h-16 rounded-full absolute border-4 border-solid border-blue-500 opacity-20"></div>
+          <div className="w-16 h-16 rounded-full animate-spin absolute border-4 border-solid border-blue-600 border-t-transparent shadow-lg"></div>
+        </div>
+
+        <div className="relative w-64 text-center">
+          <div className="fade-text text-base font-medium text-gray-800">
+            {taglines.map((line, index) => (
+              <span
+                key={index}
+                className={index === currentTagline ? 'active' : 'inactive'}
+              >
+                {line}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Report = () => {
     const dbName = useAppSelector(state => state.authSlice.dbName);
     const companyName = useAppSelector(state => state.authSlice.companyName);
+    const gridRef = React.useRef(null);
+    const [isDataRendered, setIsDataRendered] = useState(false);
     const username = useAppSelector(state => state.authSlice.userName);
     const appRights = useAppSelector(state => state.authSlice.appRights);
     const [value, setValue] = useState(0);
@@ -50,6 +88,8 @@ const Report = () => {
      const [successMessage, setSuccessMessage] = useState('');
      const [toast, setToast] = useState(false);
   const [severity, setSeverity] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadStartTime, setLoadStartTime] = useState(0);
   const { dateRange } = useAppSelector(state => state.reportSlice);
    const startDateForDisplay = new Date(dateRange.startDate);
    const endDateForDisplay = new Date(dateRange.endDate);
@@ -90,6 +130,13 @@ const Report = () => {
   const [isDIRSentToday, setIsDIRSentToday] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   // const [distinctOrderValueStats, setDistinctOrderValueStats] = useState({});
+  const taglines = [
+    'Loading your data...',
+    'Analyzing insights...',
+    'Crunching numbers...',
+    'Almost there...',
+    'Preparing reports...',
+  ];
 
   const checkIfDIRSentToday = async (companyName) => {
     try {
@@ -225,10 +272,25 @@ const processCloseDay = async () => {
     };
 
     useEffect(()=>{
+      // Set loading state immediately on mount
+      setIsLoading(true);
+      setLoadStartTime(Date.now());
+      setIsDataRendered(false);
+
       if (!username || dbName === "") {
         router.push('/login');
+        return;
       }
-      // fetchCurrentDateConsultants();
+
+      // Clear all data states to ensure loading UI shows
+      setOrderDetails([]);
+      setFinanceDetails([]);
+      setSumOfFinance([]);
+      setRateBaseIncome([]);
+      setTotalIncome('');
+      setTotalExpense('');
+      setMarginResult('');
+      
       if(dbName){
         elementsToHideList()
         const fetchSubscriptions = async () => {
@@ -245,9 +307,16 @@ const processCloseDay = async () => {
     },[])
     
     useEffect(() => {
+      let isSubscribed = true;
+      
       const fetchData = async () => {
           try {
-              await Promise.all([
+              // Set loading state and reset data rendered flag when fetching starts
+              setIsLoading(true);
+              setLoadStartTime(Date.now());
+              setIsDataRendered(false);
+
+              const results = await Promise.all([
                   fetchMarginAmount(),
                   fetchOrderDetails(),
                   fetchFinanceDetails(),
@@ -257,13 +326,90 @@ const processCloseDay = async () => {
                   FetchCurrentBalanceAmount(),
                   // fetchAmounts()
               ]);
+              
+              // Only update state if component is still mounted
+              if (isSubscribed) {
+                  // Data fetching is complete, isDataRendered will be updated by its own effect
+                  setIsDataRendered(false);
+              }
           } catch (error) {
               console.error("Error fetching data:", error);
+              if (isSubscribed) {
+                  setIsLoading(false); // Clear loading on error
+              }
           }
       };
   
-      fetchData();
+      if (dateRange.startDate && dateRange.endDate) {
+          fetchData();
+      }
+
+      // Cleanup function to prevent updates if component unmounts
+      return () => {
+          isSubscribed = false;
+      };
   }, [dateRange.startDate, dateRange.endDate]);
+
+  // Separate useEffect to update loading state when data is actually available
+  // Effect to detect when data is actually rendered
+  useEffect(() => {
+    if (orderDetails.length > 0 && 
+        financeDetails.length > 0 && 
+        totalIncome !== '' && 
+        totalExpense !== '' && 
+        marginResult !== '') {
+      // Set a small delay to ensure the UI has updated
+      const timer = setTimeout(() => {
+        setIsDataRendered(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setIsDataRendered(false);
+    }
+  }, [orderDetails, financeDetails, totalIncome, totalExpense, marginResult]);
+
+  // Effect to control loading state based on rendered data and data availability
+  useEffect(() => {
+    if (isLoading) {
+      // Set different timeouts based on data state
+      const maxLoadingTime = setTimeout(() => {
+        setIsLoading(false);
+      }, 20000); // Extended max timeout for very large datasets
+
+      // Clear loading immediately if we know there's no data to wait for
+      if (orderDetails.length === 0 && financeDetails.length === 0 && 
+          totalIncome === '' && totalExpense === '' && marginResult === '') {
+        const emptyDataTimer = setTimeout(() => {
+          setIsLoading(false);
+        }, 1000); // Quick timeout for empty data
+        return () => clearTimeout(emptyDataTimer);
+      }
+
+      // If data is rendered, clear loading state after a small delay
+      if (isDataRendered) {
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 500); // Slightly longer delay to ensure UI updates are complete
+        return () => {
+          clearTimeout(timer);
+          clearTimeout(maxLoadingTime);
+        };
+      }
+
+      // If we have partial data but not fully rendered, wait longer
+      if (orderDetails.length > 0 || financeDetails.length > 0) {
+        const partialDataTimer = setTimeout(() => {
+          setIsLoading(false);
+        }, 15000); // Extended timeout for partial data
+        return () => {
+          clearTimeout(partialDataTimer);
+          clearTimeout(maxLoadingTime);
+        };
+      }
+
+      return () => clearTimeout(maxLoadingTime);
+    }
+  }, [isLoading, isDataRendered, orderDetails.length, financeDetails.length, totalIncome, totalExpense, marginResult]);
   
 
 
@@ -1410,6 +1556,19 @@ const formatIndianNumber = (number) => {
 };
 
 const handleDateChange = (range) => {
+  // Set loading and reset data rendered state before changing dates
+  setIsLoading(true);
+  setIsDataRendered(false);
+  
+  // Clear existing data to trigger loading UI
+  setOrderDetails([]);
+  setFinanceDetails([]);
+  setSumOfFinance([]);
+  setRateBaseIncome([]);
+  setTotalIncome('');
+  setTotalExpense('');
+  setMarginResult('');
+  
   setSelectedRange({
     startDate: range.startDate,
     endDate: range.endDate,
@@ -1671,9 +1830,10 @@ const handleExport = async () => {
   
 
     return (
-      
-        <Box sx={{ width: '100%'}}>
-          
+      <>
+        <Box sx={{ width: '100%', position: 'relative', minHeight: '100vh' }}>
+            
+            <div style={{ opacity: isLoading ? 0.9 : 1, pointerEvents: isLoading ? 'none' : 'auto' }}>
             <Tabs
                 value={value}
                 onChange={handleChange}
@@ -1791,6 +1951,25 @@ const handleExport = async () => {
             <Box>
             {value === 0 && (
               <div style={{ width: '100%' }}>
+                {isLoading && (
+                <div style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  right: 0, 
+                  bottom: 0, 
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+                  zIndex: 1000,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
+                  {/* Hide loading UI after 10 seconds if data is empty */}
+                  {(orderDetails.length === 0 || filteredData.length > 0 || Date.now() - loadStartTime < 10000) && (
+                    <LoadingOverlay taglines={taglines} />
+                  )}
+                </div>
+              )}
   <div>
     <RestoreOrderDialog
       open={restoredialogOpen}
@@ -1813,6 +1992,7 @@ const handleExport = async () => {
         startDate={selectedRange.startDate}
         endDate={selectedRange.endDate}
         onDateChange={handleDateChange}
+        isLoading={isLoading}
       />
     </div>
 
@@ -1942,7 +2122,14 @@ const handleExport = async () => {
     
     <div style={{ flex: 1, width: '100%'}}>
       <DataGrid
+         ref={gridRef}
          rows={filteredData.length > 0 ? filteredData : orderDetails}
+         onStateChange={(params) => {
+           // Check if the grid has finished its initial render
+           if (params.isInited && !isDataRendered) {
+             setIsDataRendered(true);
+           }
+         }}
         columns={orderColumns}
         columnVisibilityModel={{ Margin: elementsToHide.includes('RateWiseOrderNumberText'), ClientAge: elementsToHide.includes('QuoteSenderNavigation') }}
         pageSize={10}
@@ -2005,6 +2192,22 @@ const handleExport = async () => {
 
         {value === 1 && (
           <div style={{ width: '100%' }}>
+            {isLoading && (
+              <div style={{ 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                right: 0, 
+                bottom: 0, 
+                backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+                zIndex: 1000,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <LoadingOverlay taglines={taglines} />
+              </div>
+            )}
           <h1 className="text-xl sm:text-2xl font-bold text-start text-blue-500 py-3 px-4">Reports</h1>
           <hr className="border-t-1 border-gray-300 mb-4"/>
           <div className="flex flex-grow text-black mb-4 px-4 items-end">
@@ -2294,7 +2497,14 @@ const handleExport = async () => {
              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '54px', padding: '0 15px' }}>
              <div style={{ flex: 1, width: '100%'}}>
                  <DataGrid
+                     ref={gridRef}
                      rows={filteredFinanceDetails}
+                     onStateChange={(params) => {
+                       // Check if the grid has finished its initial render
+                       if (params.isInited && !isDataRendered) {
+                         setIsDataRendered(true);
+                       }
+                     }}
                      columns={financeColumns}
                      initialState={{
                       sorting: {
@@ -2336,11 +2546,12 @@ const handleExport = async () => {
          </div>
         )}
       </Box>
+      </div>
       {successMessage && <SuccessToast message={successMessage} />}
-  {toast && <ToastMessage message={toastMessage} type="error"/>}
-  {toast && <ToastMessage message={toastMessage} type="warning"/>}
+      {toast && <ToastMessage message={toastMessage} type="error"/>}
+      {toast && <ToastMessage message={toastMessage} type="warning"/>}
     </Box>
-    
+    </>
     );
 }
 
