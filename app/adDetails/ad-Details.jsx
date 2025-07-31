@@ -178,8 +178,8 @@ console.log( ValidityDate, "Formatted Date: ", formattedDate(ValidityDate));
       );
 console.log(firstRate, validityDate, firstRate.ValidityDate);
       //set Margin Percentage and Margin
-      if (
-        isNaN(parseInt(margin)) || parseInt(margin) === 0) {
+      if (!isQuoteEditMode && (
+        isNaN(parseInt(margin)) || parseInt(margin) === 0)) {
         handleMarginPercentageChange(firstRate.AgencyCommission);
         }
 console.log(width , firstRate, qtySlab, firstRate.width);
@@ -256,11 +256,11 @@ console.log(width , firstRate, qtySlab, firstRate.width);
       // Set initial values for slabs
       setQtySlab({ Qty: firstSelectedSlab.StartQty, Width: firstSelectedSlab.Width });
   
-      // Update width and quantity if they are default
-      if (width === 1) {
+      // Update width and quantity if they are default and not in edit mode
+      if (!isQuoteEditMode && width === 1) {
         dispatch(setQuotesData({ width: firstSelectedSlab.Width }));
       }
-      if (qty === 1) {
+      if (!isQuoteEditMode && qty === 1) {
         dispatch(setQuotesData({ quantity: firstSelectedSlab.StartQty }));
       }
       
@@ -356,14 +356,14 @@ console.log(width , firstRate, qtySlab, firstRate.width);
   }, [rateId, adMedium]);
 
   useEffect(() => {
-    if((isNaN(margin) || parseFloat(margin) === 0) && marginPercentage > 0){
+    if(!isQuoteEditMode && (isNaN(margin) || parseFloat(margin) === 0) && marginPercentage > 0){
       handleMarginPercentageChange(marginPercentage); //setting margin amount if there is no margin amount
     };
 
-    if((isNaN(marginPercentage) || parseFloat(marginPercentage) === 0) && margin > 0){
+    if(!isQuoteEditMode && (isNaN(marginPercentage) || parseFloat(marginPercentage) === 0) && margin > 0){
       handleMarginChange(margin) // setting margin percent if there is no margin percent
     }
-  },[margin, marginPercentage]);
+  },[margin, marginPercentage, isQuoteEditMode]);
 
   useEffect(() => {
     if (!isQuoteEditMode && qtySlab) {
@@ -696,12 +696,15 @@ const items = [
 
     const handleCompleteEdit = async () => {
       if (validateFields()) {
-        // Find the CartID corresponding to the selected item
-        const cartItem = cartItems.find(item => item.CartID); 
+        // Find the CartID corresponding to the item being edited
+        // Use rateId to find the correct cart item since that's what uniquely identifies the rate
+        const cartItem = cartItems.find(item => 
+          item.RateId === rateId || item.RateID === rateId
+        ); 
         const cartID = cartItem ? cartItem.CartID : null; 
     
         if (!cartID) {
-          setToastMessage("CartID not found.");
+          setToastMessage("CartID not found for the item being edited.");
           setSeverity("error");
           setToast(true);
           setTimeout(() => setToast(false), 2000);
@@ -709,6 +712,9 @@ const items = [
         }
     
         // Prepare the updated item
+        const gstAmount = basePrice * (rateGST / 100);
+        const totalAmountWithGST = basePrice + gstAmount;
+        
         const updatedItem = {
           JsonDBName: companyName,
           JsonEntryUser: userName,
@@ -724,15 +730,17 @@ const items = [
           JsonUnits: unit,
           JsonRatePerUnit: unitPrice,
           JsonAmountWithoutGST: basePrice,
-          JsonAmount: baseCost,
-          JsonGSTAmount: rateGST,
-          JsonGSTPercentage: rateGST ? (rateGST / baseCost) * 100 : 0,
-          JsonCampaignDurationUnits: campaignDurationVisibility,
-          JsonBold: checked.bold ? 1 : 0,
-          JsonSemiBold: checked.semibold ? 1 : 0,
-          JsonColor: checked.color ? 1 : 0,
-          JsonTick: checked.tick ? 1 : 0,
-          JsonRemarks: remarks
+          JsonAmount: totalAmountWithGST,
+          JsonGSTAmount: gstAmount,
+          JsonGSTPercentage: rateGST,
+          JsonCampaignDurationUnits: leadDay ? leadDay.CampaignDurationUnit : "",
+          JsonBold: checked.bold ? checked.boldPercentage : -1,
+          JsonSemiBold: checked.semibold ? checked.semiboldPercentage : -1,
+          JsonColor: checked.color ? checked.colorPercentage : -1,
+          JsonTick: checked.tick ? checked.tickPercentage : -1,
+          JsonRemarks: remarks,
+          JsonCampaignDuration: campaignDuration,
+          JsonMargin: margin
         };
     
         try {

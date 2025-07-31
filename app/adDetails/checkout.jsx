@@ -71,6 +71,13 @@ const CheckoutPage = () => {
     }
   }, [isCleared]);
 
+  // Refresh cart data when returning from edit mode
+  useEffect(() => {
+    if (previousPage === "adDetails") {
+      fetchCartData();
+    }
+  }, [previousPage]);
+
   // console.log(cartItems, "cartItems in checkout page");
   const handleRowClick = (CartID) => {
     const updatedSelectedRows = selectedRows.includes(CartID)
@@ -129,48 +136,61 @@ const CheckoutPage = () => {
   //   }
   // };
   const handleEditRow = (item) => {
+    // Calculate margin amount from the cart data
+    const basePrice = parseFloat(item.AmountwithoutGst) || 0;
+    const unitPrice = parseFloat(item.rateperunit) || 0;
+    const quantity = parseFloat(item.Quantity) || 1;
+    const width = parseFloat(item.Width) || 1;
+    const campaignDays = parseFloat(item.CampaignDays) || 1;
+    
+    // Calculate base cost without margin
+    let baseCost = (item.Units !== "SCM" ? quantity : quantity * width) * unitPrice * campaignDays;
+    
+    // Add feature costs if they exist
+    if (item.Bold > 0) baseCost += baseCost * (item.Bold / 100);
+    if (item.SemiBold > 0) baseCost += baseCost * (item.SemiBold / 100);
+    if (item.Color > 0) baseCost += baseCost * (item.Color / 100);
+    if (item.Tick > 0) baseCost += baseCost * (item.Tick / 100);
+
+    // Calculate actual margin amount and percentage from cart data
+    const actualMarginAmount = Math.max(0, basePrice - baseCost);
+    const actualMarginPercentage = baseCost > 0 ? (actualMarginAmount / baseCost) * 100 : 0;
+    
     dispatch(setQuotesData({ 
     selectedAdMedium: item.AdMedium,
     selectedAdType: item.adType,
     selectedAdCategory: item.adCategory,
     selectedEdition: item.Edition,
     selectedPosition: item.Package,
-    selectedVendor: {label: item.selectedVendor, value: item.selectedVendor},
-    // selectedSlab: "",
+    selectedVendor: { label: item.selectedVendor || item.VendorName || item.selectedVendorName || item.Vendor, value: item.selectedVendor || item.VendorName || item.selectedVendorName || item.Vendor },
     quantity: item.Quantity,
     width: item.Width,
-    ratePerUnit: parseInt(item.AmountwithoutGst)/parseInt(item.Quantity)*parseInt(item.Width),
-    unit: item.unit,
-    rateId: item.RateId,
-    validityDate: item.formattedDate,
-    leadDays: item.leadDay,
-    minimumUnit: item.minimumCampaignDuration,
-    campaignDuration: item.campaignDuration,
-    marginAmount: item.margin,
-    // extraDiscount: 0,
-    remarks: item.Remarks,
+    ratePerUnit: item.rateperunit || (parseInt(item.AmountwithoutGst) / (parseInt(item.Quantity) * (item.Width ? parseInt(item.Width) : 1))),
+    unit: item.Units || item.unit,
+    rateId: item.RateId || item.RateID,
+    validityDate: item.formattedDate || item.ValidityDate,
+    leadDays: item.leadDay || item.LeadDays,
+    minimumUnit: item.minimumCampaignDuration || item.MinimumCampaignDuration || 1,
+    campaignDuration: item.campaignDuration || item.CampaignDays || 1,
+    marginAmount: actualMarginAmount,
+    marginPercentage: parseFloat(actualMarginPercentage.toFixed(2)),
+    remarks: item.Remarks || item.remarks || '',
     currentPage: "adDetails",
-    // validRates: [],
     isDetails: true,
     previousPage: 'checkout',
-    // history: [],
-    rateGST: item.rateGST,
-    // qtySlab: {
-    //   Qty: 1,
-    //   Width: 1
-    // }
+    rateGST: item.rateGST || item['GST%'] || 0,
     isEditMode: true,
     editIndex: item.index,
-    editQuoteNumber: item.editQuoteNumber,
+    editQuoteNumber: item.editQuoteNumber || item.QuoteID,
     checked: {
-      bold: item.bold,
-      semibold: item.semibold,
-      color: item.color,
-      tick: item.tick,
-      boldPercentage: item.boldPercentage,
-      semiboldPercentage: item.semiboldPercentage,
-      colorPercentage: item.colorPercentage,
-      tickPercentage: item.tickPercentage
+      bold: (item.Bold && parseInt(item.Bold) > -1) || false,
+      semibold: (item.SemiBold && parseInt(item.SemiBold) > -1) || false,
+      color: (item.Color && parseInt(item.Color) > -1) || false,
+      tick: (item.Tick && parseInt(item.Tick) > -1) || false,
+      boldPercentage: item.Bold || -1,
+      semiboldPercentage: item.SemiBold || -1,
+      colorPercentage: item.Color || -1,
+      tickPercentage: item.Tick || -1
     }
   }));
   };
@@ -341,8 +361,8 @@ const CheckoutPage = () => {
       setCartItems(sortedCart);
   };
 
-  const handleRemoveRateId = async (index) => {
-  const itemToUpdate = cartItems.find(item => item.index === index);
+  const handleRemoveRateId = async (cartId) => {
+  const itemToUpdate = cartItems.find(item => item.CartID === cartId);
   
   if (!itemToUpdate) {
     console.error("Item not found in cart.");
@@ -667,7 +687,7 @@ console.log(itemToUpdate.CartID)
           <IconButton
             aria-label="Remove"
             className="IconButton m-0 h-full"
-            onClick={() => handleRemoveRateId(item.index)}
+            onClick={() => handleRemoveRateId(item.CartID)}
           >
             <RemoveCircleOutline
               className="text-red-500 hover:text-red-700"

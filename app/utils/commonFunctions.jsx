@@ -8,31 +8,16 @@ export const calculateMarginAmount = (
   marginPercentage,
   color, tick, bold, semibold
 ) => {
-  // Calculate the base cost
-  let cost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
+  // Calculate the base cost without additional costs
+  let baseCost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
 
-  // Add additional costs (color, tick, bold, semi-bold)
-  if (color) {
-    cost += cost * (color / 100);
-  }
-  if (tick) {
-    cost += cost * (tick / 100);
-  }
-  if (bold) {
-    cost += cost * (bold / 100);
-  }
-  if (semibold) {
-    cost += cost * (semibold / 100);
+  // Handle marginPercentage >= 100 or invalid values
+  if (marginPercentage >= 100 || marginPercentage <= 0) {
+    return 0;
   }
 
-  // Handle marginPercentage >= 100
-  if (marginPercentage >= 100) {
-    return cost;
-  }
-
-  // Calculate margin amount using inverse formula
-  let marginPerUnit =(((cost /(unit === "SCM" ? qty * width : qty))/(100 - marginPercentage))*100) - (unitPrice);
-  const marginAmount = (marginPerUnit * (unit === "SCM" ? qty * width : qty));
+  // Calculate margin amount based on base cost before additional costs
+  const marginAmount = baseCost * (marginPercentage / 100);
 
   return parseFloat(marginAmount.toFixed(2)); // Keeping precision
 };
@@ -47,30 +32,16 @@ export const calculateMarginPercentage = (
   marginAmount,
   color, tick, bold, semibold
 ) => {
-  // Calculate the base cost
-  let cost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
-
-  // Add additional costs (color, tick, bold, semi-bold)
-  if (color) {
-    cost += cost * (color / 100);
-  }
-  if (tick) {
-    cost += cost * (tick / 100);
-  }
-  if (bold) {
-    cost += cost * (bold / 100);
-  }
-  if (semibold) {
-    cost += cost * (semibold / 100);
-  }
+  // Calculate the base cost without additional costs
+  let baseCost = parseFloat((unit === "SCM" ? qty * width : qty) * unitPrice * (campaignDuration / minimumCampaignDuration));
 
   // Avoid division by zero
-  if (cost + parseFloat(marginAmount) === 0) return 0;
+  if (baseCost === 0) return 0;
 
-  // Calculate margin percentage using the correct formula
-  const marginPercentage = ((parseFloat(marginAmount) / (cost + parseFloat(marginAmount))) * 100).toFixed(1);
-
-  return parseFloat(marginPercentage);
+  // Calculate margin percentage based on base cost before additional costs
+  const marginPercentage = (parseFloat(marginAmount) / baseCost) * 100;
+  
+  return parseFloat(marginPercentage.toFixed(2));
 };
 
 export const formatDBDate = (followupDate) => {
