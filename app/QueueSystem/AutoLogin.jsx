@@ -5,11 +5,8 @@ import { AutoLogin } from '../api/FetchAPI';
 import { useDispatch } from 'react-redux';
 import { login, logout, setCompanyName, setAppRights, setDBName } from '@/redux/features/auth-slice';
 import { useAppSelector } from '@/redux/store';
-import { resetRatesData } from '@/redux/features/rate-slice';
-import { resetQuotesData } from '@/redux/features/quote-slice';
 import { resetClientData } from '@/redux/features/client-slice';
 import { resetOrderData } from '@/redux/features/order-slice';
-import { resetDateRange } from "@/redux/features/report-slice";
 import { CircularProgress, Box, Typography } from '@mui/material'; // Import Material-UI components
 import { resetPhoneNumber, resetLanguage, resetQueueStatus } from "@/redux/features/queue-slice";
 
@@ -64,10 +61,7 @@ const QueueSystemAutoLogin = () => {
             dispatch(login(loginResult.userName));
             dispatch(setAppRights(loginResult.appRights));
             dispatch(resetClientData());
-            dispatch(resetRatesData());
-            dispatch(resetQuotesData());
             dispatch(resetOrderData());
-            dispatch(resetDateRange());
             dispatch(resetPhoneNumber());
             dispatch(resetLanguage());
             sessionStorage.removeItem("unitPrices");

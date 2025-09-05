@@ -648,14 +648,12 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
     const saveSnapshotWithSelectiveTimes = async (updatedIds = [], preserveTimeFields = {}) => {
         const apiClients = await FetchQueueDashboardData(companyName);
         setAllClients(apiClients);
-        console.log('FetchQueueDashboardData', apiClients)
         await new Promise(resolve => setTimeout(resolve, 300));
         const snapshot = apiClients
             .filter(c => c.rateCard === selectedEquipment)
             .sort((a, b) => a.queueIndex - b.queueIndex)
             .map(c => {
                 const preserve = updatedIds.includes(c.id);
-                console.log(preserve, preserveTimeFields, c.name, c.queueInTime)
                 return {
                     id: c.id,
                     queueIndex: c.queueIndex,
@@ -671,7 +669,6 @@ function QueueDashboard({ selectedEquipment, allClients, setAllClients, onBackTo
                     procedureCompleteTime: preserve && preserveTimeFields.procedureCompleteTime ? c.procedureCompleteTime : null
                 };
             });
-            console.log(snapshot)
         await saveSnapshot(snapshot);
         return apiClients;
     };
@@ -1162,7 +1159,6 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
-            console.log('UNDO DATA', res.data)
             await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex - 1 });
@@ -1189,7 +1185,6 @@ const moveTile = withActionLock(async (fromDisplayedIndex, toDisplayedIndex) => 
         const res = await GetQueueSnapshot(companyName, selectedEquipment, null, targetId);
 
         if (res.data && res.data.success) {
-            console.log('REDO DATA', res.data)
             await RestoreQueueSnapshot(companyName, selectedEquipment, res.data.snapshot);
             dispatch(setHistoryId(targetId));
             dispatch({ type: 'queueDashboard/setCurrentHistoryIndex', payload: currentHistoryIndex + 1 });

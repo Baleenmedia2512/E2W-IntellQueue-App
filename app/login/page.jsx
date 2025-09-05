@@ -4,14 +4,11 @@ import { useRouter } from 'next/navigation';
 import { login, logout, setCompanyName, setAppRights, setDBName } from '@/redux/features/auth-slice';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/redux/store';
-import { resetRatesData } from '@/redux/features/rate-slice';
-import { resetQuotesData } from '@/redux/features/quote-slice';
 import { resetClientData } from '@/redux/features/client-slice';
 import { resetOrderData } from '@/redux/features/order-slice';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { resetDateRange } from "@/redux/features/report-slice";
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -121,10 +118,7 @@ const handleLogin = (event) => {
                     
                     dispatch(setAppRights(data.appRights));
                     dispatch(resetClientData());
-                    dispatch(resetRatesData());
-                    dispatch(resetQuotesData());
                     dispatch(resetOrderData());
-                    dispatch(resetDateRange());
                     dispatch({ type: 'queueDashboard/resetHistory' })
                     sessionStorage.removeItem("unitPrices");
                     sessionStorage.clear();

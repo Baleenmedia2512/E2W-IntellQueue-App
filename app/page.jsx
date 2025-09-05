@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
-import { resetQuotesData, setQuotesData } from '@/redux/features/quote-slice';
 import ToastMessage from './components/ToastMessage';
 import SuccessToast from './components/SuccessToast';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
@@ -74,7 +73,6 @@ const ClientsData = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [clientContactToRestore, setClientContactToRestore] = useState('');
-  const isDetails = useAppSelector(state => state.quoteSlice.isDetails)
   const [editMode, setEditMode] = useState(false);
   const [displayClientName, setDisplayClientName] = useState(clientName);
   const [displayClientNumber, setDisplayClientNumber] = useState('');
@@ -429,14 +427,6 @@ const ClientsData = () => {
           router.push('/login');
         }
         
-        // if(!clientName){
-        //   dispatch(resetClientData());
-        //   dispatch(resetQuotesData());
-        // }
-        // if (!isDetails) {
-        // dispatch(resetClientData());
-        // }
-        // dispatch(resetQuotesData());
         // MP-72-Fix - Source is empty on start up.
 
         // dispatch(setClientData({clientSource: sources[0]}))
@@ -612,21 +602,13 @@ const ClientsData = () => {
                 dispatch(setClientData({ consultantId: data.CId }));
                 setTimeout(() => {
                 setSuccessMessage('');
-                if (isDetails) {
-                  router.push('/adDetails')
-                  dispatch(setQuotesData({currentPage: "checkout"}))
-                } else {
-                  if (!elementsToHide.includes('QuoteSenderNavigation')) {
-                    router.push('/adDetails')
-                    dispatch(setQuotesData({currentPage: ""}))
-                  }
-                }
+                // Redirect to Create Order page for mobile app
+                router.push('/Create-Order');
               }, 2000);
             // router.push('/adDetails')
             
             
-          // window.location.reload();
-          // dispatch(resetQuotesData())
+          // Redirect handled after success message
           
           
         // setMessage(data.message);

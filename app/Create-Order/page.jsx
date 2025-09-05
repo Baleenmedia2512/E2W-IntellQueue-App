@@ -1,14 +1,12 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
 import { setOrderData, resetOrderData, setIsOrderExist, setIsOrderUpdate} from '@/redux/features/order-slice';
 import { resetClientData } from '@/redux/features/client-slice';
-import { setSelectedValues, setRateId, setSelectedUnit, setRateGST, setSlabData, setStartQty, resetRatesData} from '@/redux/features/rate-slice';
 // import { TextField } from '@mui/material';
-import { formattedMargin } from '../adDetails/ad-Details';
 import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { Dropdown } from 'primereact/dropdown';
@@ -85,12 +83,23 @@ const CreateOrder = () => {
     
     const dispatch = useDispatch();
     const router = useRouter();
-    const selectedValues = useAppSelector(state => state.rateSlice.selectedValues);
-    const rateId = useAppSelector(state => state.rateSlice.rateId);
-    const selectedUnit = useAppSelector(state => state.rateSlice.selectedUnit); 
-    const slabData = useAppSelector(state => state.rateSlice.slabData); 
-    const rateGST = useAppSelector(state => state.rateSlice.rateGST);
-    const startQty = useAppSelector(state => state.rateSlice.startQty);
+    
+    // Local state to replace removed rate slice
+    const [selectedValues, setSelectedValues] = useState({
+        rateName: '',
+        adType: '',
+        typeOfAd: '',
+        Location: '',
+        Package: '',
+        vendorName: ''
+    });
+    const [rateId, setRateId] = useState('');
+    const [selectedUnit, setSelectedUnit] = useState(''); 
+    const [slabData, setSlabData] = useState([]); 
+    const [rateGST, setRateGST] = useState({label: '', value: ''});
+    const [startQty, setStartQty] = useState(1);
+    const lastFetchedRateId = useRef(null);
+    const lastCalculatedValues = useRef({ unitPrice: 0, rateGST: '' });
 
     
     const [qty, setQty] = useState(startQty);
@@ -133,7 +142,7 @@ const CreateOrder = () => {
       elementsToHideList(); 
       fetchRates();
       fetchCampaignUnits();
-      calculateReceivable();
+      // calculateReceivable(); // Removed - will be called when unitPrice and rateGST are set
     },[])
 
     useEffect(() => {
@@ -160,7 +169,7 @@ const CreateOrder = () => {
     }, [orderNumberRP]);
 
     useEffect(() => {
-      calculateReceivable();
+      // calculateReceivable(); // Removed - redundant with unitPrice/rateGST useEffect
     },[unitPrice, marginAmount])
 
     // MP-99    
@@ -168,9 +177,16 @@ const CreateOrder = () => {
 useEffect(() => {
   // if(!isOrderUpdate) {
   if(rateId > 0){
-    handleRateId()
-    fetchQtySlab()
+    // Prevent duplicate API calls for the same rateId
+    if (lastFetchedRateId.current !== rateId) {
+      lastFetchedRateId.current = rateId;
+      handleRateId()
+      fetchQtySlab()
+    } else {
+      console.log('Same rateId as last fetch, skipping API calls');
+    }
   } else {
+    lastFetchedRateId.current = null;
     setUnitPrice(0);
     setOriginalUnitPrice(0);
     setDisplayUnitPrice(0);
@@ -189,22 +205,27 @@ const [filters, setFilters] = useState({
 });
 
 const fetchQtySlab = async () => {
+  if (!rateId || rateId <= 0) {
+    return;
+  }
+  
   try {
     const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/FetchQtySlab.php/?JsonRateId=${rateId}&JsonDBName=${companyName}`);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
-    dispatch(setSlabData(data));
+    setSlabData(data);
     // const sortedData = data.sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
     const sortedData = [...data].sort((a, b) => Number(a.StartQty) - Number(b.StartQty));
     const firstSelectedSlab = sortedData[0];
     if(firstSelectedSlab){
-      dispatch(setStartQty(firstSelectedSlab.StartQty));
+      setStartQty(firstSelectedSlab.StartQty);
       setQty(firstSelectedSlab.StartQty);
       setUnitPrice(firstSelectedSlab.UnitPrice);
       setOriginalUnitPrice(firstSelectedSlab.UnitPrice);
       setDisplayUnitPrice(firstSelectedSlab.UnitPrice);
+      // Remove setTimeout and let useEffect handle the calculation
     }
   }  catch (error) {
     console.error(error);
@@ -317,7 +338,7 @@ const handleRateId = async () => {
       //   locationValues = data.location.split(':')[0].trim()
       //   packageValues = data.packages.split(':')[1].trim()
       // } 
-      dispatch(setSelectedValues({
+      setSelectedValues({
         rateName: {
           label:  data.rateName ,
           value:  data.rateName 
@@ -342,10 +363,10 @@ const handleRateId = async () => {
           label:  data.vendorName ,
           value:  data.vendorName 
         }
-      }))
+      })
 
       // dispatch(setRateId(data.RateID));
-      dispatch(setSelectedUnit({label: data.Units, value: data.Units}));
+      setSelectedUnit({label: data.Units, value: data.Units});
 
     // setCampaignDuration(data['CampaignDuration(in Days)']);
     // if(data.campaignDurationVisibility === 1){
@@ -355,7 +376,7 @@ const handleRateId = async () => {
     // }
     // setSelectedCampaignUnits({label: data.CampaignDurationUnit, value: data.CampaignDurationUnit})
     // setRateGST({label: data.rategst, value: data.rategst})
-    dispatch(setRateGST({label: data.rategst, value: data.rategst}));
+    setRateGST({label: data.rategst, value: data.rategst});
     // setLeadDays(data.LeadDays);
     // setValidTill(data.ValidityDate)
     // setValidityDate(data.ValidityDate)
@@ -392,6 +413,11 @@ const getOptions = (filterKey, previousKey) => {
   var filteredData = []; 
 
   if (selectedValues["rateName"] !== '' && !elementsToHide.includes("RatesCategorySelect") && filterKey === "typeOfAd") {
+    filteredData = ratesData.filter(item => 
+      !selectedValues["rateName"]['value'] || item["rateName"] === selectedValues["rateName"]['value']
+    );
+  } else if (selectedValues["rateName"] !== '' && filterKey === "adType" && previousKey === "rateName") {
+    // Allow adType to be selected directly after rateName (skip typeOfAd for mobile)
     filteredData = ratesData.filter(item => 
       !selectedValues["rateName"]['value'] || item["rateName"] === selectedValues["rateName"]['value']
     );
@@ -439,10 +465,19 @@ const getOptions = (filterKey, previousKey) => {
 
 // Function to handle dropdown selection
 const handleSelectChange = (selectedOption, filterKey) => {
-  dispatch(setRateId(""));
+  setRateId("");
   // setIsNewRate(true);
+  
+  // Clear the error for this field when a value is selected
+  if (selectedOption && selectedOption.value) {
+    setErrors(prev => ({
+      ...prev,
+      [filterKey]: undefined
+    }));
+  }
+  
   if (filterKey === 'rateName'){
-    dispatch(setSelectedValues({
+    setSelectedValues({
       [filterKey]: selectedOption,
       adType: "",
       adCategory: "",
@@ -450,10 +485,24 @@ const handleSelectChange = (selectedOption, filterKey) => {
       Package: "",
       Location: "",
       typeOfAd:""
+    });
+    // Clear rateName error specifically
+    setErrors(prev => ({
+      ...prev,
+      rateName: undefined
     }));
+  } else if(filterKey === 'adType'){
+    // Allow adType to be selected directly after rateName (skip typeOfAd)
+    setSelectedValues(prev => ({
+      ...prev,
+      [filterKey]: selectedOption,
+      vendorName: "",
+      Package: "",
+      Location: ""
+    }))
   } else if(filterKey === 'typeOfAd'){
-    dispatch(setSelectedValues({
-      ...selectedValues,
+    setSelectedValues(prev => ({
+      ...prev,
       [filterKey]: selectedOption,
       adType: "",
       adCategory: "",
@@ -461,32 +510,24 @@ const handleSelectChange = (selectedOption, filterKey) => {
       Package: "",
       Location: ""
     }))
-  } else if(filterKey === 'adType'){
-    dispatch(setSelectedValues({
-      ...selectedValues,
-      [filterKey]: selectedOption,
-      vendorName: "",
-      Package: "",
-      Location: ""
-    }))
   } else if(filterKey === 'Location'){
-    dispatch(setSelectedValues({
-      ...selectedValues,
+    setSelectedValues(prev => ({
+      ...prev,
       [filterKey]: selectedOption,
       Package: "",
       vendorName: "",
       
     }))
   } else if(filterKey === 'Package'){
-    dispatch(setSelectedValues({
-      ...selectedValues,
+    setSelectedValues(prev => ({
+      ...prev,
       [filterKey]: selectedOption,
       vendorName: ""
     }))
   } else {
     // Update the selected values
-    dispatch(setSelectedValues({
-    ...selectedValues,
+    setSelectedValues(prev => ({
+    ...prev,
     [filterKey]: selectedOption
   }));
   }
@@ -500,7 +541,14 @@ const handleSelectChange = (selectedOption, filterKey) => {
 var selectedRate = '';
   // Add logic to fetch rateId after selecting Vendor
 if (filterKey === 'adType' && selectedOption) {
-  if(elementsToHide.includes("RatesCategorySelect")){
+  
+  // Force simplified lookup for mobile app since Category field is commented out
+  // Check if we're in mobile mode by looking for hidden elements or use simplified logic
+  const isMobileMode = elementsToHide.includes("RatesCategorySelect") || 
+                       selectedValues.typeOfAd === '' || 
+                       selectedValues.typeOfAd === undefined;
+  
+  if(isMobileMode){
     selectedRate = ratesData.find(item =>
       item.rateName === selectedValues.rateName.value &&
       item.adType === selectedOption.value 
@@ -538,17 +586,25 @@ if (filterKey === 'Location' && selectedOption) {
       );}
 
   if (selectedRate) {
-    dispatch(setRateId(selectedRate.RateID));
+    setRateId(selectedRate.RateID);
     setCampaignDuration(selectedRate['CampaignDuration(in Days)']);
     if(selectedRate.campaignDurationVisibility === 1){
       setShowCampaignDuration(true)
     }
     setSelectedCampaignUnits({label: selectedRate.CampaignDurationUnit, value: selectedRate.CampaignDurationUnit})
-    // // setRateGST({label: selectedRate.rategst, value: selectedRate.rategst})
+    setRateGST({label: selectedRate.rategst, value: selectedRate.rategst})
     // dispatch(setRateGST({label: selectedRate.rategst, value: selectedRate.rategst}));
     setLeadDays(selectedRate.LeadDays);
     // setValidTill(selectedRate.ValidityDate)
     // setValidityDate(selectedRate.ValidityDate)
+  } else {
+    // Reset all rate-related values when no rate is found
+    setRateId('');
+    setUnitPrice(0);
+    setOriginalUnitPrice(0);
+    setDisplayUnitPrice(0);
+    setReceivable(0);
+    setRateGST({label: '', value: ''});
   }
 
 if (filterKey !== 'vendorName'){
@@ -598,6 +654,34 @@ const fetchRates = async () => {
       setDisplayUnitPrice(newUnitPrice);
       // }
     }, [qty])
+
+    // Calculate receivable when unitPrice or rateGST changes
+    useEffect(() => {
+      const currentValues = {
+        unitPrice: unitPrice,
+        rateGST: rateGST?.value || ''
+      };
+      
+      // Check if values have changed
+      const valuesChanged = 
+        lastCalculatedValues.current.unitPrice !== currentValues.unitPrice ||
+        lastCalculatedValues.current.rateGST !== currentValues.rateGST;
+      
+      if (valuesChanged) {
+        lastCalculatedValues.current = currentValues;
+        
+        // If unitPrice is 0 or rateGST is empty, reset receivable to 0
+        if (unitPrice <= 0 || !rateGST || rateGST.value === '') {
+          setReceivable(0);
+          dispatch(setOrderData({ receivable: 0 }));
+        } else {
+          // Valid values - calculate receivable
+          calculateReceivable();
+        }
+      } else {
+        console.log('Skipping calculation - values unchanged:', currentValues);
+      }
+    }, [unitPrice, rateGST]);
 
     const handleSearchTermChange = (event) => {
         const newName = event.target.value;
@@ -719,7 +803,7 @@ const fetchRates = async () => {
               // handleSelectChange(clientDetails.rateName, "rateName");
               // handleSelectChange(clientDetails.adType, "adType");
               
-              dispatch(setRateId(clientDetails.rateID));
+              setRateId(clientDetails.rateID);
               setHasPreviousOrder(true);
             } else {
               setHasPreviousOrder(false); // Set to false if there are no details
@@ -749,7 +833,7 @@ const fetchRates = async () => {
           setDisplayOrderDate(formattedDate);
           setUnitPrice(data.receivable);
           setUpdateRateWiseOrderNumber(data.rateWiseOrderNumber);
-          dispatch(setRateId(data.rateId));
+          setRateId(data.rateId);
           setHasOrderDetails(true);
           setClientID(data.clientID);
           setConsultantID(data.consultantId);
@@ -856,15 +940,15 @@ const fetchRates = async () => {
             JsonPayable: payable,
             JsonRatePerUnit: unitPrice,
             JsonConsultantName: consultantName,
-            JsonMarginAmount: marginAmount,
+            JsonMarginAmount: marginAmount || 0, // Default to 0 for hidden field
             JsonRateName: selectedValues.rateName.value,
-            JsonVendorName: selectedValues.vendorName.value,
-            JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
+            JsonVendorName: selectedValues.vendorName?.value || 'N/A', // Default for hidden field
+            JsonCategory: `${selectedValues.Location?.value || 'N/A'} : ${selectedValues.Package?.value || 'N/A'}`, // Default for hidden fields
             JsonType: selectedValues.adType.value,
-            JsonHeight: qty,
+            JsonHeight: qty || 1, // Default quantity to 1 for hidden field
             JsonWidth: 1,
-            JsonLocation: selectedValues.Location.value,
-            JsonPackage: selectedValues.Package.value,
+            JsonLocation: selectedValues.Location?.value || 'N/A', // Default for hidden field
+            JsonPackage: selectedValues.Package?.value || 'N/A', // Default for hidden field
             JsonGST: rateGST.value,
             JsonClientGST: clientGST,
             JsonClientPAN: clientPAN,
@@ -874,7 +958,7 @@ const fetchRates = async () => {
             JsonMinPrice: unitPrice,
             JsonRemarks: remarks,
             JsonContactPerson: clientContactPerson,
-            JsonReleaseDates: releaseDates,
+            JsonReleaseDates: releaseDates.length > 0 ? releaseDates : [], // Default empty array for hidden field
             JsonDBName: companyName,
             JsonClientAuthorizedPersons: clientEmail,
             JsonOrderDate: formattedOrderDate,
@@ -910,7 +994,7 @@ const fetchRates = async () => {
                 setTimeout(() => {
                 setSuccessMessage('');
                 setIsButtonDisabled(false);
-                router.push('/FinanceEntry');
+                // router.push('/FinanceEntry');
               }, 2000);
                 
             } else {
@@ -965,15 +1049,15 @@ const updateNewOrder = async (event) => {
       JsonPayable: payable.toString(),
       JsonRatePerUnit: unitPrice.toString(),
       JsonConsultantName: consultantName,
-      JsonMarginAmount: marginAmount.toString(),
+      JsonMarginAmount: (marginAmount || 0).toString(), // Default to 0 for hidden field
       JsonRateName: selectedValues.rateName.value,
-      JsonVendorName: selectedValues.vendorName.value,
-      JsonCategory: `${selectedValues.Location.value} : ${selectedValues.Package.value}`,
+      JsonVendorName: selectedValues.vendorName?.value || 'N/A', // Default for hidden field
+      JsonCategory: `${selectedValues.Location?.value || 'N/A'} : ${selectedValues.Package?.value || 'N/A'}`, // Default for hidden fields
       JsonType: selectedValues.adType.value,
-      JsonHeight: qty.toString(),
+      JsonHeight: (qty || 1).toString(), // Default quantity to 1 for hidden field
       JsonWidth: '1',
-      JsonLocation: selectedValues.Location.value,
-      JsonPackage: selectedValues.Package.value,
+      JsonLocation: selectedValues.Location?.value || 'N/A', // Default for hidden field
+      JsonPackage: selectedValues.Package?.value || 'N/A', // Default for hidden field
       JsonGST: rateGST.value.toString(),
       JsonClientGST: clientGST,
       JsonClientPAN: clientPAN,
@@ -983,7 +1067,7 @@ const updateNewOrder = async (event) => {
       JsonMinPrice: unitPrice.toString(),
       JsonRemarks: updateReason,
       JsonContactPerson: clientContactPerson,
-      JsonReleaseDates: releaseDates,
+      JsonReleaseDates: releaseDates.length > 0 ? releaseDates : [], // Default empty array for hidden field
       JsonDBName: companyName,
       JsonClientAuthorizedPersons: clientEmail,
       JsonOrderDate: formattedOrderDate,
@@ -1037,9 +1121,9 @@ const updateNewOrder = async (event) => {
         setTimeout(() => {
           setSuccessMessage('');
           // Only navigate if orderNumberRP satisfies the condition
-          if (orderNumberRP) { // Replace this condition with your actual logic
-            router.push('/Report');
-          }
+          // if (orderNumberRP) { // Replace this condition with your actual logic
+          //   router.push('/Report');
+          // }
         }, 3000);
       } else {
         alert(`The following error occurred while updating data: ${data}`);
@@ -1077,7 +1161,9 @@ const updateNewOrder = async (event) => {
         try{
           fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
             .then((response) => response.json())
-            .then((data) => setElementsToHide(data));
+            .then((data) => {
+              setElementsToHide(data);
+            });
         } catch(error){
           console.error("Error showing element names: " + error)
         }
@@ -1095,16 +1181,17 @@ const updateNewOrder = async (event) => {
         });
       }, [elementsToHide])
   const calculateReceivable = () => {
-    // Ensure qty, unitPrice, marginAmount, and rateGST are accessible in the scope of this function
-    const validQty = Number(qty);
+    // Simplified calculation for mobile app - margin and quantity fields are hidden
+    // const validQty = Number(qty);
     const validUnitPrice = Number(unitPrice);
-    const validMarginAmount = marginAmount ? Number(marginAmount) : 0; // Default to 0 if marginAmount is empty or undefined
+    // const validMarginAmount = marginAmount ? Number(marginAmount) : 0; // Default to 0 if marginAmount is empty or undefined
     const validRateGST = rateGST && !isNaN(rateGST.value) ? Number(rateGST.value) : 0; // Default to 0 if rateGST.value is not a number
   
-  
-    const subtotalWithoutGST = validQty * validUnitPrice + validMarginAmount;
+    // Simplified calculation: just unit price with GST (no margin, qty defaults to 1)
+    const subtotalWithoutGST = validUnitPrice; // + validMarginAmount;
     const gstAmount = subtotalWithoutGST * (validRateGST / 100);
     const amountInclGST = subtotalWithoutGST + gstAmount;
+    
     // Set the state with amountInclGST
     setReceivable(amountInclGST);
     // Dispatch action to set order data with receivable amount
@@ -1113,6 +1200,8 @@ const updateNewOrder = async (event) => {
   
 
 
+  // Margin handlers commented out since margin fields are hidden in mobile app
+  /*
   const handleMarginPercentageChange = (e) => {
     const newMarginPercent = parseFloat(e.target.value) || 0;
     setMarginPercentage(newMarginPercent);
@@ -1140,37 +1229,39 @@ const updateNewOrder = async (event) => {
       setErrors((prevErrors) => ({ ...prevErrors, marginAmount: undefined }));
     }
   };
+  */
   const validateFields = () => {
     let errors = {};
 
     if (!clientName) errors.clientName = 'Client Name is required';
     if (!selectedValues.rateName) errors.rateName = 'Rate Card Name is required';
-    if (elementsToHide.includes("OrderMarginAmount") === false) {
-    if (!selectedValues.typeOfAd) errors.typeOfAd = 'Category is required';
-    }
+    // Hidden fields validations commented out
+    // if (elementsToHide.includes("OrderMarginAmount") === false) {
+    // if (!selectedValues.typeOfAd) errors.typeOfAd = 'Category is required';
+    // }
     if (!selectedValues.adType) errors.adType = 'Type is required';
 
-    if (elementsToHide.includes("OrderQuantityText") === false) {
-      if (!qty || isNaN(qty)) errors.qty = 'Quantity is required';
-    }
-    if (elementsToHide.includes("OrderMarginAmount") === false) {
-      if (!marginAmount || isNaN(marginAmount)) errors.marginAmount = 'Valid Margin Amount is required';
-    }
-    if (!isOrderUpdate && !elementsToHide.includes("RatesVendorSelect")) {
-      if (!selectedValues.vendorName) {
-          errors.vendorName = 'Vendor is required';
-      }
-  }
+    // if (elementsToHide.includes("OrderQuantityText") === false) {
+    //   if (!qty || isNaN(qty)) errors.qty = 'Quantity is required';
+    // }
+    // if (elementsToHide.includes("OrderMarginAmount") === false) {
+    //   if (!marginAmount || isNaN(marginAmount)) errors.marginAmount = 'Valid Margin Amount is required';
+    // }
+    // if (!isOrderUpdate && !elementsToHide.includes("RatesVendorSelect")) {
+    //   if (!selectedValues.vendorName) {
+    //       errors.vendorName = 'Vendor is required';
+    //   }
+    // }
   
-    if (elementsToHide.includes("RatesPackageSelect") === false) {
-      if (!selectedValues.Location) errors.Package = 'Package is required';
-    }
-    if (elementsToHide.includes("RatesLocationSelect") === false) {
-      if (!selectedValues.Location) errors.Location = 'Location is required';
-    }
-    if (elementsToHide.includes("OrderMarginPercentage") === false) {
-      if (!marginPercentage || isNaN(marginPercentage)) errors.marginPercentage = 'Valid Margin % is required';
-    }
+    // if (elementsToHide.includes("RatesPackageSelect") === false) {
+    //   if (!selectedValues.Location) errors.Package = 'Package is required';
+    // }
+    // if (elementsToHide.includes("RatesLocationSelect") === false) {
+    //   if (!selectedValues.Location) errors.Location = 'Location is required';
+    // }
+    // if (elementsToHide.includes("OrderMarginPercentage") === false) {
+    //   if (!marginPercentage || isNaN(marginPercentage)) errors.marginPercentage = 'Valid Margin % is required';
+    // }
 
     // if (isConsultantWaiverChecked) {
     //   if (!waiverAmount) {
@@ -1566,8 +1657,6 @@ const notifyOrderAdjustment = async (clientNam, adjustedOrderAmt, remarks, rateW
       );
 
       const resultData = response.data;
-      console.log("API Response:", resultData);
-
       if (resultData[0]?.success) {
           console.log('✅ Message sent successfully!');
       } else {
@@ -1878,7 +1967,7 @@ return (
     <div>
       <label className='block text-gray-700 font-semibold mb-2'>Order Amount</label>
       <div className="bg-gray-100 p-2 rounded-lg border border-gray-200 relative">
-        <p className="text-gray-700">₹ {Math.floor(displayUnitPrice)}</p>
+        <p className="text-gray-700">₹ {Math.floor(receivable || 0)}</p>
       </div>
 
     </div>
@@ -2023,7 +2112,7 @@ return (
           </div>
 
           {/* Category */}
-          <div name="RatesCategorySelect" id="17">
+          {/* <div name="RatesCategorySelect" id="17">
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Category</label>
             <Dropdown
@@ -2043,7 +2132,7 @@ return (
             />
             {errors.typeOfAd && <span className="text-red-500 text-sm">{errors.typeOfAd}</span>}
           </div>
-          </div>
+          </div> */}
             {/* Type */}
           <div>
             <label className='block text-gray-700 font-semibold mb-2'>Type</label>
@@ -2062,7 +2151,7 @@ return (
               placeholder="Select Type"
               value={selectedValues.adType.value}
               onChange={(selectedOption) => handleSelectChange(selectedOption, 'adType')}
-              options={getOptions('adType', 'typeOfAd')}
+              options={getOptions('adType', 'rateName')}
               //disabled={isOrderUpdate && !elementsToHide.includes("ClientAgeInput")}
             />
             {errors.adType && <span className="text-red-500 text-sm">{errors.adType}</span>}
@@ -2074,7 +2163,7 @@ return (
         <div id="19" name="RatesLocationSelect">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Location */}
-          <div>
+          {/* <div>
             <label className='block text-gray-700 font-semibold mb-2'>Location</label>
             <Dropdown
               className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Location ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
@@ -2090,9 +2179,9 @@ return (
               options={getOptions('Location', 'adType')}
             />
             {errors.Location && <span className="text-red-500 text-sm">{errors.Location}</span>}
-          </div>
+          </div> */}
           {/* Package */}
-          <div>
+          {/* <div>
             <label className='block text-gray-700 font-semibold mb-2'>Package</label>
             <Dropdown
               className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Package ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
@@ -2108,10 +2197,10 @@ return (
               options={getOptions('Package', 'Location')}
             />
             {errors.Package && <span className="text-red-500 text-sm">{errors.Package}</span>}
-          </div>
+          </div> */}
 
           {/* Vendor */}
-          <div>
+          {/* <div>
             <label className='block text-gray-700 font-semibold mb-2'>Vendor</label>
             <Dropdown
               className={`w-full border rounded-lg text-black focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.Vendor ? 'border-red-400' : ''}`}
@@ -2132,11 +2221,11 @@ return (
               disabled={isOrderUpdate} 
             />
             {errors.vendorName && <span className="text-red-500 text-sm">{errors.vendorName}</span>}
-          </div>
+          </div> */}
         </div>
 
         {/* Margin Amount and Margin Percentage */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Margin Amount</label>
             <input 
@@ -2161,8 +2250,9 @@ return (
               onFocus={e => e.target.select()}
             />
             {errors.marginPercentage && <span className="text-red-500 text-sm">{errors.marginPercentage}</span>}
-          </div>
-          <div id="25" name='OrderQuantityText'>
+          </div> */}
+          {/* Quantity */}
+          {/* <div id="25" name='OrderQuantityText'>
                     <label className="block mb-2 text-gray-700 font-semibold">Quantity</label>
                       <input 
                         // required = {elementsToHide.includes("OrderQuantityText") ? false : true}
@@ -2177,55 +2267,10 @@ return (
                       }}  
                         onFocus={(e) => {e.target.select()}}/>
                         </div>
-                        {errors.qty && <span className="text-red-500 text-sm">{errors.qty}</span>}
+                        {errors.qty && <span className="text-red-500 text-sm">{errors.qty}</span>} */}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-4">
-       
-                    <div name="OrderReleaseDate">
-                    {/* <label className="block text-gray-700 font-semibold mb-2" name="OrderReleaseDate">Release Date</label>
-                    <input 
-                        type='date' 
-                        className={`w-full px-4 py-2 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.releaseDates ? 'border-red-400' : ''}`}
-                        value={releaseDates}
-                        onChange={e => setReleaseDates([...releaseDates, e.target.value])}  
-                      /> */}
-                      <div>
-                    <label className="block mb-1 font-medium">Release Dates</label>
-                    <div>
-                  <div>
-                    <Calendar
-                      type="date"
-                      value={displayReleaseDate}
-                      onChange={handleReleaseDatesChange}
-                      // onChange={(e) => setReleaseDates(e.value)}
-                      selectionMode="multiple"
-                      placeholder="dd-M-yyyy"
-                      showIcon
-                      dateFormat='dd-M-yy'
-                      className={`w-full px-4 h-12 border text-black rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-300 focus:ring focus:ring-blue-300 ${errors.orderDate ? 'border-red-400' : isOrderUpdate ? 'border-yellow-500' :''}`}
-                      inputClassName="p-inputtext-lg"
-                    />
-                  </div>
-                   </div>
-                  </div>
-                    </div>
-                    {/* <div className='text-center justify-start' name="OrderReleaseDate">
-                    {releaseDates.length > 0 ? <h2 className='mt-4 mb-4 font-bold'>Release-Dates</h2> : <></>}
-                    <ul className='mb-4'>
-                    {releaseDates.map((data, index) => (
-                      <div key={index} className='flex'>
-                        <option key={data} className="mt-1.5" 
-                          >
-                            {data}
-                          </option>
-                          <IconButton aria-label="Remove" className='align-top' onClick={() => removeQtySlab(data.StartQty, index)}>
-                          <RemoveCircleOutline color='secondary' fontSize='small'/>
-                        </IconButton>
-                          </div>
-))}
-</ul>
-                  </div> */}
-                  </div>
+          {/* All fields commented out for mobile app - Category, Location, Package, Vendor, Margin Amount, Margin %, Quantity, Release Dates */}
         </div>
         
       </form>
