@@ -21,37 +21,20 @@ const Login = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
+  const dispatch = useDispatch();
+  const router = useRouter();
 
-    useEffect(() => {
+  useEffect(() => {
+    console.log('Login page mounted');
     dispatch(logout());
 
     const host = window.location.hostname;
     const subdomain = host.split('.')[0];
 
-    if (subdomain) {
+    if (subdomain && subdomain !== 'localhost') {
         dispatch(setCompanyName(subdomain));
     }
-    }, []);
-
-//   useEffect(()=>{
-//     elementsToHideList();
-//   },[companyName])
-
-//   const elementsToHideList = async() => {
-//     try{
-//       const response = await fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${companyName}`)
-//         if(!response.ok){
-//             return
-//         }
-//        const data = await response.json();
-//        setElementsToHide(data);
-//     } catch(error){
-//       console.error("Error showing element names: " + error)
-//     }
-//   }
-
-  const router = useRouter();
-  const dispatch = useDispatch();
+  }, [dispatch]);
   const toggleShowPassword = () => {setShowPassword(!showPassword)};
 
   const handleSearchTermChange = (event) => {

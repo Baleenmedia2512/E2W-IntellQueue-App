@@ -7,6 +7,8 @@ import BottomBarWrapper from "./BottomBarWrapper"; // Import the new client comp
 import { ToastContainer } from "./components/ToastContainer";
 import ConditionalFcmWrapper from "./ConditionalFcmWrapper";
 import RequireCompanyName from "./components/RequireCompanyName";
+import MobileAppProvider from "./components/MobileAppProvider"; // Mobile app initialization
+import ErrorBoundary from "./components/ErrorBoundary"; // Error boundary for mobile
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
   ssr: false
@@ -27,8 +29,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata = {
-  title: 'Easy2Work(T)',
-  description: 'A wonderful CRM which will make work of a business, easy and fast',
+  title: 'IntellQueue',
+  description: 'Intelligent Queue Management System - Making queue management easy and efficient',
   manifest: '/manifest.json'
 };
 
@@ -36,18 +38,22 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${poppins.variable} ${montserrat.variable} ${inter.className}`}>
-      <ReduxProvider> 
-          <CartProvider> 
-             <ConditionalFcmWrapper />
-            <RequireCompanyName>
-              {children}
-            </RequireCompanyName>
-            <ToastContainer />
-            <div>
-              <BottomBarWrapper />
-            </div>
-          </CartProvider>
-        </ReduxProvider>
+        <ErrorBoundary>
+          <ReduxProvider> 
+            <CartProvider> 
+              <MobileAppProvider>
+                <ConditionalFcmWrapper />
+                <RequireCompanyName>
+                  {children}
+                </RequireCompanyName>
+                <ToastContainer />
+                <div>
+                  <BottomBarWrapper />
+                </div>
+              </MobileAppProvider>
+            </CartProvider>
+          </ReduxProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

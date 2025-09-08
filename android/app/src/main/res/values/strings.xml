@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">IntellQueue</string>
+    <string name="title_activity_main">IntellQueue</string>
+    <string name="package_name">com.easy2work.intellqueue</string>
+    <string name="custom_url_scheme">com.easy2work.intellqueue</string>
+</resources>

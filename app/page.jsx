@@ -423,12 +423,10 @@ const ClientsData = () => {
   };
 
   useEffect(() => {    
-        if (!loggedInUser || dbName === "") {
-          router.push('/login');
-        }
+        // Authentication is now handled by RequireCompanyName wrapper
+        // Removed redundant auth check to prevent redirect loops
         
         // MP-72-Fix - Source is empty on start up.
-
         // dispatch(setClientData({clientSource: sources[0]}))
         if(dbName){
           elementsToHideList()
