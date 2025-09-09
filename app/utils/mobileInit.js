@@ -7,7 +7,15 @@ import { App } from '@capacitor/app';
 // import { PushNotifications } from '@capacitor/push-notifications';
 
 export class MobileAppInitializer {
+  static isInitialized = false;
+  
   static async initialize() {
+    // Prevent multiple initializations
+    if (this.isInitialized) {
+      console.log('Mobile app already initialized - skipping');
+      return;
+    }
+    
     console.log('Starting mobile app initialization...');
     console.log('Current URL:', window.location.href);
     console.log('User Agent:', navigator.userAgent);
@@ -18,6 +26,7 @@ export class MobileAppInitializer {
     }
 
     console.log('Running on native platform:', Capacitor.getPlatform());
+    this.isInitialized = true;
 
     // Check if we have any stored authentication data
     try {
@@ -83,9 +92,16 @@ export class MobileAppInitializer {
 
   static async initializeAppListeners() {
     try {
+      // Add error handler for Capacitor bridge
+      window.addEventListener('capacitorBridgeError', (error) => {
+        console.error('Capacitor bridge error:', error);
+      });
+      
       // Handle app state changes
       App.addListener('appStateChange', ({ isActive }) => {
         console.log('App state changed. Is active?', isActive);
+      }).catch(error => {
+        console.error('Error adding appStateChange listener:', error);
       });
 
       // Handle back button
@@ -95,6 +111,8 @@ export class MobileAppInitializer {
         } else {
           window.history.back();
         }
+      }).catch(error => {
+        console.error('Error adding backButton listener:', error);
       });
 
       // Handle app URL open

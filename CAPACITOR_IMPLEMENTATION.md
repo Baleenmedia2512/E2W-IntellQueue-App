@@ -18,7 +18,6 @@
   - @capacitor/app@7.1.0 (Hardware back button, app state)
   - @capacitor/status-bar@7.0.3 (Status bar customization)
   - @capacitor/splash-screen@7.0.3 (App launch screen)
-  - @capacitor/push-notifications@7.0.3 (FCM integration)
   - @capacitor/network@7.0.2 (Network status)
   - @capacitor/preferences@7.0.2 (Local storage)
   - @capacitor/haptics@7.0.2 (Touch feedback)

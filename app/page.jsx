@@ -14,6 +14,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import '@mui/x-date-pickers/DatePicker';
 import { Calendar } from 'primereact/calendar';
+import { Capacitor } from '@capacitor/core';
 
 
 const titleOptions = [
@@ -33,6 +34,34 @@ const ClientsData = () => {
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
+  const router = useRouter();
+  
+  // Early return if not authenticated - don't render anything
+  if (!loggedInUser || !companyName) {
+    console.log('ClientsData - Not authenticated, not rendering');
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="text-lg font-semibold text-gray-600">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Authentication is handled by MobileAuthRedirect and RequireCompanyName components
+  // No need for additional auth checks here to prevent redirect loops
+  useEffect(() => {
+    // Initialize component state only if user is authenticated
+    // Auth redirects are handled by wrapper components
+    console.log('=== ClientsData Debug ===');
+    console.log('ClientsData component mounted');
+    console.log('Current URL:', window.location.href);
+    console.log('Current pathname:', window.location.pathname);
+    console.log('User:', loggedInUser);
+    console.log('Company:', companyName);
+    console.log('========================');
+  }, [loggedInUser]);
+  
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
   const bmsources = ['1.JustDial', '2.IndiaMart', '3.Sulekha','4.LG','5.Consultant','6.Own','7.Web App DB', '8.Online','9.Self', '10.Friends/Relatives'];
@@ -87,7 +116,7 @@ const ClientsData = () => {
   const [shouldCheckForSimilarConsultantNames, setShouldCheckForSimilarConsultantNames] = useState(true);
   
   const dispatch = useDispatch();
-  const router = useRouter()
+  // router already declared above
 
 
   useEffect(() => {

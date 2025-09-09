@@ -3,8 +3,28 @@
 import { Provider } from "react-redux";
 import { store } from "./store";
 import { persistStore } from "redux-persist";
+import { PersistGate } from 'redux-persist/integration/react';
 
-persistStore(store);
+const persistor = persistStore(store);
+
 export default function ReduxProvider({ children }) {
-  return <Provider store={store}>{children}</Provider>;
+  console.log('🔍 ReduxProvider mounting');
+  
+  return (
+    <Provider store={store}>
+      <PersistGate 
+        loading={
+          <div className="flex justify-center items-center min-h-screen">
+            <div>Redux Loading...</div>
+          </div>
+        } 
+        persistor={persistor}
+        onBeforeLift={() => {
+          console.log('🔍 Redux persistence restored');
+        }}
+      >
+        {children}
+      </PersistGate>
+    </Provider>
+  );
 };

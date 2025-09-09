@@ -25,8 +25,15 @@ const Login = () => {
   const router = useRouter();
 
   useEffect(() => {
-    console.log('Login page mounted');
+    console.log('🔍 LOGIN PAGE COMPONENT MOUNTED! 🔍');
+    console.log('🔍 This confirms the login page is loading properly 🔍');
     dispatch(logout());
+
+    // Clear any persistent authentication data for testing
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+      localStorage.removeItem('persist:root');
+    }
 
     const host = window.location.hostname;
     const subdomain = host.split('.')[0];
@@ -85,26 +92,25 @@ const handleLogin = (event) => {
             .then(data => {
                 if (data.status === 'Login Successfully') {
                     setSuccessMessage('Login Successful!');
-                    // dispatch(setDBName(companyName));
-                    // dispatch(setCompanyName('Baleen Test'))
-                    // dispatch(login(userName));
-                    dispatch(setDBName(companyName));
-                    setTimeout(() => {
-                        setSuccessMessage('');
-                        router.push("/")
-                    }, 2000);
-
-                    // Dispatch actions and navigate based on conditions
                     
+                    // Dispatch all Redux actions first
+                    dispatch(setDBName(companyName));
                     dispatch(setCompanyName(companyName))
                     dispatch(login(userName));
-                    
                     dispatch(setAppRights(data.appRights));
                     dispatch(resetClientData());
                     dispatch(resetOrderData());
                     dispatch({ type: 'queueDashboard/resetHistory' })
+                    
+                    // Clean up storage
                     sessionStorage.removeItem("unitPrices");
-                    sessionStorage.clear();
+                    sessionStorage.setItem("userName", userName);
+                    
+                    // For mobile, redirect immediately after state is set
+                    setTimeout(() => {
+                        setSuccessMessage('');
+                        router.replace("/"); // Use replace to prevent back navigation to login
+                    }, 1000); // Reduced timeout for faster redirect
                     // if(elementsToHide.includes("QuoteSenderNavigation")){
                         
                     // } else{
