@@ -10,6 +10,24 @@ import ToastMessage from '../components/ToastMessage';
 import SuccessToast from '../components/SuccessToast';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
+// Dynamic imports to prevent SSR issues
+let CapacitorStorage = null;
+let CapacitorNavigation = null;
+
+if (typeof window !== 'undefined') {
+  import('../utils/capacitorStorage').then(module => {
+    CapacitorStorage = module.CapacitorStorage;
+  }).catch(error => {
+    console.warn('CapacitorStorage import failed:', error);
+  });
+  
+  import('../utils/capacitorNavigation').then(module => {
+    CapacitorNavigation = module.CapacitorNavigation;
+  }).catch(error => {
+    console.warn('CapacitorNavigation import failed:', error);
+  });
+}
+
 const Login = () => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -27,19 +45,46 @@ const Login = () => {
   useEffect(() => {
     console.log('🔍 LOGIN PAGE COMPONENT MOUNTED! 🔍');
     console.log('🔍 This confirms the login page is loading properly 🔍');
-    dispatch(logout());
+    
+    // Add error boundary for debugging
+    try {
+      dispatch(logout());
 
-    // Clear any persistent authentication data for testing
-    if (typeof window !== 'undefined') {
-      sessionStorage.clear();
-      localStorage.removeItem('persist:root');
-    }
+      // Clear any persistent authentication data for testing using Capacitor storage
+      const clearStorage = async () => {
+        if (typeof window !== 'undefined') {
+          try {
+            // Only use Capacitor storage if it's available
+            if (typeof CapacitorStorage !== 'undefined') {
+              await CapacitorStorage.clearSession();
+              await CapacitorStorage.removeItem('persist:root');
+            } else {
+              // Fallback to regular web storage
+              localStorage.clear();
+              sessionStorage.clear();
+            }
+          } catch (error) {
+            console.error('🔍 Storage clearing error:', error);
+            // Fallback to localStorage if Capacitor storage fails
+            try {
+              localStorage.clear();
+              sessionStorage.clear();
+            } catch (fallbackError) {
+              console.error('🔍 Fallback storage clear failed:', fallbackError);
+            }
+          }
+        }
+      };
+      clearStorage();
 
-    const host = window.location.hostname;
-    const subdomain = host.split('.')[0];
+      const host = window.location.hostname;
+      const subdomain = host.split('.')[0];
 
-    if (subdomain && subdomain !== 'localhost') {
-        dispatch(setCompanyName(subdomain));
+      if (subdomain && subdomain !== 'localhost') {
+          dispatch(setCompanyName(subdomain));
+      }
+    } catch (error) {
+      console.error('🔍 LOGIN PAGE MOUNT ERROR:', error);
     }
   }, [dispatch]);
   const toggleShowPassword = () => {setShowPassword(!showPassword)};
@@ -76,7 +121,7 @@ const Login = () => {
     return Object.keys(errors).length === 0;
 };
 
-const handleLogin = (event) => {
+const handleLogin = async (event) => {
     event.preventDefault();
 
     if (validateFields()) {
@@ -89,7 +134,7 @@ const handleLogin = (event) => {
                 }
                 return response.json();
             })
-            .then(data => {
+            .then(async data => {
                 if (data.status === 'Login Successfully') {
                     setSuccessMessage('Login Successful!');
                     
@@ -102,28 +147,52 @@ const handleLogin = (event) => {
                     dispatch(resetOrderData());
                     dispatch({ type: 'queueDashboard/resetHistory' })
                     
-                    // Clean up storage
-                    sessionStorage.removeItem("unitPrices");
-                    sessionStorage.setItem("userName", userName);
+                    // Clean up storage using Capacitor storage utilities
+                    try {
+                      if (typeof CapacitorStorage !== 'undefined') {
+                        CapacitorStorage.removeSessionItem("unitPrices");
+                        CapacitorStorage.setSessionItem("userName", userName);
+                      } else {
+                        // Fallback to regular storage
+                        sessionStorage.removeItem("unitPrices");
+                        sessionStorage.setItem("userName", userName);
+                      }
+                    } catch (storageError) {
+                      console.error('🔍 Storage operation error:', storageError);
+                      // Continue with navigation even if storage fails
+                    }
                     
-                    // For mobile, redirect immediately after state is set
+                    // For mobile, use proper navigation method after state is set
                     setTimeout(() => {
-                        setSuccessMessage('');
-                        router.replace("/"); // Use replace to prevent back navigation to login
+                        try {
+                            setSuccessMessage('');
+                            console.log('🔍 LOGIN SUCCESS - Attempting navigation to home');
+                            
+                            if (typeof CapacitorNavigation !== 'undefined') {
+                              CapacitorNavigation.navigate(router, "/", { replace: true });
+                            } else {
+                              // Prefer SPA navigation to avoid early full reloads on native
+                              console.log('🔍 Using router-based fallback navigation');
+                              try {
+                                if (router && typeof router.replace === 'function') {
+                                  router.replace('/');
+                                } else if (router && typeof router.push === 'function') {
+                                  router.push('/');
+                                } else {
+                                  window.location.replace('/');
+                                }
+                              } catch {
+                                window.location.replace('/');
+                              }
+                            }
+                        } catch (navError) {
+                            console.error('🔍 LOGIN NAVIGATION ERROR:', navError);
+                            // Fallback navigation
+                            window.location.href = '/';
+                        }
                     }, 1000); // Reduced timeout for faster redirect
-                    // if(elementsToHide.includes("QuoteSenderNavigation")){
-                        
-                    // } else{
-                    //     router.push("/adDetails")
-                    // }
-                    // if (companyName === 'Grace Scans') {
-                    //     router.push("/"); // Navigate to the main screen
-                    // } else {
-                    //     router.push("/adDetails");
-                    // }
                 } else {
                     // Handle invalid credentials scenario
-                    //setPassword(''); // Clear password field if needed
                     setToastMessage('Invalid credentials. Please check your User Name, Password and Company Name.');
                     setSeverity('error');
                     setToast(true);

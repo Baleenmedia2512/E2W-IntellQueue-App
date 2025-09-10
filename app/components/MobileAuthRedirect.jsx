@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { useAppSelector } from '@/redux/store';
+import { CapacitorNavigation } from '../utils/capacitorNavigation';
 
 export default function MobileAuthRedirect() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   
   // Use Redux state instead of sessionStorage for more reliable auth check
@@ -35,9 +37,9 @@ export default function MobileAuthRedirect() {
     // If we're on the root path and not logged in, redirect to login
     if (pathname === '/' && !loggedInUser) {
       console.log('Mobile app on root path and not logged in - redirecting to login');
-      window.location.replace('/login');
+      CapacitorNavigation.navigate(router, '/login', { replace: true });
     }
-  }, [pathname, loggedInUser, companyName, isReady]);
+  }, [pathname, loggedInUser, companyName, isReady, router]);
 
   return null; // This component doesn't render anything
 }

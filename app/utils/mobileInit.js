@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App } from '@capacitor/app';
+import { CapacitorStorage } from './capacitorStorage';
 // Note: PushNotifications removed to prevent Firebase crashes on Android
 // import { PushNotifications } from '@capacitor/push-notifications';
 
@@ -30,7 +31,7 @@ export class MobileAppInitializer {
 
     // Check if we have any stored authentication data
     try {
-      const storedAuth = localStorage.getItem('persist:root');
+      const storedAuth = await CapacitorStorage.getItem('persist:root');
       console.log('Stored authentication data:', storedAuth ? 'Found' : 'Not found');
       if (storedAuth) {
         const parsedAuth = JSON.parse(storedAuth);
@@ -106,10 +107,18 @@ export class MobileAppInitializer {
 
       // Handle back button
       App.addListener('backButton', ({ canGoBack }) => {
+        console.log('Back button pressed, canGoBack:', canGoBack);
+        
         if (!canGoBack) {
           App.exitApp();
         } else {
-          window.history.back();
+          // Use proper navigation for back button
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            // If no proper history, navigate to home instead of exiting
+            window.location.href = '/';
+          }
         }
       }).catch(error => {
         console.error('Error adding backButton listener:', error);

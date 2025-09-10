@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setLanguage } from "@/redux/features/queue-slice";
 import { useAppSelector } from "@/redux/store";
+import { CapacitorNavigation } from '../../utils/capacitorNavigation';
 
 export default function LanguageSelection() {
     const companyName = useAppSelector((state) => state.authSlice.companyName);
@@ -13,13 +14,13 @@ export default function LanguageSelection() {
 
     const handleLanguageSelect = (language) => {
         dispatch(setLanguage(language));
-        router.push('/QueueSystem/EnterDetails');
+        CapacitorNavigation.navigate(router, '/QueueSystem/EnterDetails');
     };
 
     useEffect(() => {
         if (!companyName) {
             console.warn("Company name is missing, redirecting...");
-            router.push('/QueueSystem/InvalidAccess');
+            CapacitorNavigation.navigate(router, '/QueueSystem/InvalidAccess');
         }
     }, [companyName, router]);
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { CapacitorNavigation } from "../utils/capacitorNavigation";
 
 const TOAST_HEIGHT = 72; // px
 const COLLAPSED_GAP = 2; // px
@@ -191,7 +192,7 @@ const ToastItem = ({
           onClick={() => {
               const currentPath = window.location.pathname;
               if (currentPath === link) {
-                router.push(link);
+                CapacitorNavigation.navigate(router, link);
               } else {
                 window.open(link, '_blank');
               }

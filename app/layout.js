@@ -9,6 +9,7 @@ import ConditionalFcmWrapper from "./ConditionalFcmWrapper";
 import RequireCompanyName from "./components/RequireCompanyName";
 import MobileAppProvider from "./components/MobileAppProvider"; // Mobile app initialization
 import ErrorBoundary from "./components/ErrorBoundary"; // Error boundary for mobile
+import TrailingSlash from "./components/TrailingSlash";
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
   ssr: false
@@ -42,6 +43,7 @@ export default function RootLayout({ children }) {
           <ReduxProvider> 
             <CartProvider> 
               <MobileAppProvider>
+                <TrailingSlash />
                 <ConditionalFcmWrapper />
                 <RequireCompanyName>
                   {children}

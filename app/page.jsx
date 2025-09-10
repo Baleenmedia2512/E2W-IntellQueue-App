@@ -1,7 +1,7 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { resetClientData, setClientData } from '@/redux/features/client-slice';
 import { useAppSelector } from '@/redux/store';
@@ -16,6 +16,17 @@ import '@mui/x-date-pickers/DatePicker';
 import { Calendar } from 'primereact/calendar';
 import { Capacitor } from '@capacitor/core';
 
+// Dynamic import to prevent SSR and timing issues
+let CapacitorNavigation = null;
+
+if (typeof window !== 'undefined') {
+  import('./utils/capacitorNavigation').then(module => {
+    CapacitorNavigation = module.CapacitorNavigation;
+  }).catch(error => {
+    console.warn('CapacitorNavigation import failed:', error);
+  });
+}
+
 
 const titleOptions = [
   { label: 'Mr.', value: 'Mr.', gender: 'Male' },
@@ -29,24 +40,13 @@ const titleOptions = [
 ];
     
 const ClientsData = () => {
+  const pathname = usePathname();
   const loggedInUser = useAppSelector(state => state.authSlice.userName);
   const dbName = useAppSelector(state => state.authSlice.dbName);
   const companyName = useAppSelector(state => state.authSlice.companyName);
   const clientDetails = useAppSelector(state => state.clientSlice)
   const {clientName, clientContact, clientEmail, clientSource, clientID} = clientDetails;
   const router = useRouter();
-  
-  // Early return if not authenticated - don't render anything
-  if (!loggedInUser || !companyName) {
-    console.log('ClientsData - Not authenticated, not rendering');
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <div className="text-lg font-semibold text-gray-600">Loading...</div>
-        </div>
-      </div>
-    );
-  }
   
   // Authentication is handled by MobileAuthRedirect and RequireCompanyName components
   // No need for additional auth checks here to prevent redirect loops
@@ -60,7 +60,7 @@ const ClientsData = () => {
     console.log('User:', loggedInUser);
     console.log('Company:', companyName);
     console.log('========================');
-  }, [loggedInUser]);
+  }, [loggedInUser, companyName]);
   
   const [title, setTitle] = useState('Mr.');
   const [clientContactPerson, setClientContactPerson] = useState("")
@@ -109,7 +109,7 @@ const ClientsData = () => {
   const nameInputRef = useRef(null);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [proceed, setProceed] = useState(false);
-  const genderOptions = ['Male', 'Female', 'Others'];
+  const genderOptions = useMemo(() => ['Male', 'Female', 'Others'], []);
   const [gender, setGender] = useState(genderOptions[1]);
   const [similarConsultantNames, setSimilarConsultantNames] = useState([]);
   const [similarConsultantDialogOpen, setSimilarConsultantDialogOpen] = useState(false);
@@ -138,7 +138,7 @@ const ClientsData = () => {
       setSelectedOption(titleOptions[3].value);
       setGender(genderOptions[1]);
     }
-  }, [elementsToHide]);
+  }, [elementsToHide, genderOptions]);
 
 
   const handleSearchTermChange = (event) => {
@@ -206,7 +206,7 @@ const ClientsData = () => {
   }
   };
 
-  const elementsToHideList = () => {
+  const elementsToHideList = useCallback(() => {
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
@@ -214,7 +214,7 @@ const ClientsData = () => {
     } catch(error){
       console.error("Error showing element names: " + error)
     }
-  }
+  }, [dbName]);
 
   const handleConsultantNameChange = (event) => {
     const newName = event.target.value;
@@ -460,7 +460,7 @@ const ClientsData = () => {
         if(dbName){
           elementsToHideList()
         }
-  }, []);
+  }, [dbName, elementsToHideList]);
 
   useEffect(() => {
     //searching elements to Hide from database
@@ -599,7 +599,11 @@ const ClientsData = () => {
     
     if(!elementsToHide.includes('QuoteSenderNavigation')){
       if (isEmpty === true){
-      router.push('/adDetails')
+      if (CapacitorNavigation) {
+        CapacitorNavigation.navigate(router, '/adDetails');
+      } else {
+        router.push('/adDetails');
+      }
     }
     const isValid = BMvalidateFields();
     if (isValid) {
@@ -630,7 +634,11 @@ const ClientsData = () => {
                 setTimeout(() => {
                 setSuccessMessage('');
                 // Redirect to Create Order page for mobile app
-                router.push('/Create-Order');
+                if (CapacitorNavigation) {
+                  CapacitorNavigation.navigate(router, '/Create-Order');
+                } else {
+                  router.push('/Create-Order');
+                }
               }, 2000);
             // router.push('/adDetails')
             
@@ -693,7 +701,11 @@ const ClientsData = () => {
     }, 3000);
     setIsNewClient(false);
     // fetchClientDetails(clientContact, clientName);
-    router.push('/Create-Order');
+    if (CapacitorNavigation) {
+      CapacitorNavigation.navigate(router, '/Create-Order');
+    } else {
+      router.push('/Create-Order');
+    }
           // window.location.reload();
         
         //setMessage(data.message);
@@ -879,7 +891,7 @@ useEffect(() => {
 }, [selectedOption]);
 
 // Function to check if any of the fields are empty
-const checkEmptyFields = () => {
+const checkEmptyFields = useCallback(() => {
   if (
     clientName !== '' ||
     clientContact !== '' ||
@@ -891,13 +903,13 @@ const checkEmptyFields = () => {
     setIsEmpty(true); // Set isEmpty to true if any field is empty
   }
 
-};
+}, [clientName, clientContact, selectedOption]);
 
 // useEffect to check empty fields whenever any relevant state changes
 useEffect(() => {
   checkEmptyFields();
   
-}, [clientName, clientContact, clientEmail, address, clientAge, DOB]);
+}, [clientName, clientContact, clientEmail, address, clientAge, DOB, checkEmptyFields]);
 
 //MP-39-Warning message should be shown for GST Field (<15 characters)
 const handleGSTChange = (e) => {
@@ -1077,7 +1089,7 @@ const BMvalidateFields = () => {
   // }
   if (!clientName) errors.clientName = 'Client Name is required';
   if (!isValidEmail(clientEmail) && clientEmail) errors.clientEmail = 'Invalid email format';
-  if (clientSource === 'Consultant' || clientSource === '5.Consultant' && !consultantName) errors.consultantName = 'Consultant Name is required';
+  if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && !consultantName) errors.consultantName = 'Consultant Name is required';
   // if ((clientSource === 'Consultant' || clientSource === '5.Consultant') && (!consultantNumber || consultantNumber.length !== 10)) {
   //   if (!consultantNumber) {
   //     errors.consultantNumber = 'Consultant contact is required.';
@@ -1149,6 +1161,21 @@ const BMvalidateFields = () => {
     }, 0);  
   };
 
+  // If unauthenticated, do not render root page UI. But don't block /login.
+  if (!loggedInUser || !companyName) {
+    console.log('ClientsData - Not authenticated, not rendering');
+    // When the user is on the login route, skip rendering anything from the root page
+    if (pathname === '/login') {
+      return null;
+    }
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="text-lg font-semibold text-gray-600">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
     return (
       <div className='min-h-screen bg-gray-100 mb-14 p-2'>

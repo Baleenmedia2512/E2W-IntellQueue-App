@@ -12,6 +12,7 @@ import {
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import './globals.css';
+import { CapacitorNavigation } from './utils/capacitorNavigation';
 
 
 export default function BottomBarTest() {
@@ -100,16 +101,16 @@ export default function BottomBarTest() {
     setValue(newValue); // Update the value state variable
     switch (newValue) {
       case 0:
-        router.push('/');
+        CapacitorNavigation.navigate(router, '/');
         break;
       case 1:
-        router.push('/Create-Order');
+        CapacitorNavigation.navigate(router, '/Create-Order');
         break;
       case 2:
-        router.push('/QueueDashboard');
+        CapacitorNavigation.navigate(router, '/QueueDashboard');
         break;
       case 3:
-        router.push('/login');
+        CapacitorNavigation.navigate(router, '/login');
         break; 
       default:
         break;

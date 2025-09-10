@@ -19,6 +19,7 @@ import { isValid, format } from 'date-fns';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import { TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { CapacitorNavigation } from '../utils/capacitorNavigation';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FetchOrderSeachTerm, FetchCommissionData } from '../api/FetchAPI';
 import { CircularProgress } from '@mui/material';
@@ -136,7 +137,7 @@ const CreateOrder = () => {
     
     useEffect(() => {
       if (!loggedInUser || dbName === "" ) {
-        router.push('/login');
+        CapacitorNavigation.navigate(router, '/login');
       }
       fetchMaxOrderNumber();
       elementsToHideList(); 
@@ -1936,7 +1937,7 @@ return (
         New Client? 
         <span 
             className='underline text-sky-500 hover:text-sky-600 p-1' 
-            onClick={() => router.push('/')}
+            onClick={() => CapacitorNavigation.navigate(router, '/')}
         >
             Click Here
         </span>
