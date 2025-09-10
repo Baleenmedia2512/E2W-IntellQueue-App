@@ -12,5 +12,11 @@ export default function BottomBarWrapper() {
     return null; // Do not render the bottom bar for QueueSystem
   }
 
-  return <div><BottomBar /></div>;
+  return (
+    <>
+      {/* Spacer so content above isn't hidden by the fixed bar */}
+      <div style={{ height: `calc(64px + env(safe-area-inset-bottom))` }} />
+      <BottomBar />
+    </>
+  );
 }

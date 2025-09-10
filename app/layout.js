@@ -35,10 +35,18 @@ export const metadata = {
   manifest: '/manifest.json'
 };
 
+// Ensure safe-area env() works (especially on Android) and set theme color for the OS chrome
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#f69435'
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} ${montserrat.variable} ${inter.className}`}>
+  <body className={`${poppins.variable} ${montserrat.variable} ${inter.className} app-safe`}>
         <ErrorBoundary>
           <ReduxProvider> 
             <CartProvider> 
@@ -46,7 +54,10 @@ export default function RootLayout({ children }) {
                 <TrailingSlash />
                 <ConditionalFcmWrapper />
                 <RequireCompanyName>
-                  {children}
+                  {/* Reserve bottom safe area so content doesn't sit under nav bar */}
+                  <div className="app-content-safe">
+                    {children}
+                  </div>
                 </RequireCompanyName>
                 <ToastContainer />
                 <div>

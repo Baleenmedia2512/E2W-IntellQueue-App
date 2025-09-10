@@ -21,16 +21,18 @@ const config = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000, // Increased to 3 seconds for better loading
-      backgroundColor: "#f69435",
-      showSpinner: false,
-      splashFullScreen: true,
-      splashImmersive: true,
-      androidScaleType: "CENTER_CROP"
+  launchShowDuration: 3000, // Increased to 3 seconds for better loading
+  backgroundColor: "#f69435",
+  showSpinner: false,
+  // Avoid immersive/fullscreen so content doesn't draw under system bars
+  splashFullScreen: false,
+  splashImmersive: false,
+  androidScaleType: "CENTER_CROP"
     },
     StatusBar: {
-      style: 'DEFAULT',
-      backgroundColor: "#f69435"
+  style: 'DEFAULT',
+  backgroundColor: "#00000000", // transparent, we'll pad content via CSS safe areas
+  overlaysWebView: false
     },
     // PushNotifications disabled for Android to prevent Firebase crashes
     // Use native Android notifications or enable only for web

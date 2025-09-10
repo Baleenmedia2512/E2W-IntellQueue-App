@@ -260,7 +260,7 @@ export default function BottomBarTest() {
   return (
     <div className="relative">
       {/* Main Navigation Bar */}
-      <div className={`fixed bottom-0 left-0 right-0 h-20 z-50 bg-white shadow-2xl transition-transform duration-300 ease-in-out ${showBar ? 'translate-y-0' : 'translate-y-full'}`} style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)', pointerEvents: showBar ? 'auto' : 'none' }}>
+  <div className={`fixed bottom-0 left-0 right-0 h-20 z-50 bg-white shadow-2xl transition-transform duration-300 ease-in-out ${showBar ? 'translate-y-0' : 'translate-y-full'}`} style={{ boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)', pointerEvents: showBar ? 'auto' : 'none', paddingBottom: 'calc(env(safe-area-inset-bottom))' }}>
         <div className="flex justify-around  max-w-lg mx-auto relative ">
 
           {Menus.map((menu, i) => (

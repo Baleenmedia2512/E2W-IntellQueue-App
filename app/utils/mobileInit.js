@@ -72,9 +72,11 @@ export class MobileAppInitializer {
 
   static async initializeStatusBar() {
     try {
-      await StatusBar.setStyle({ style: Style.Default });
-      await StatusBar.setBackgroundColor({ color: '#f69435' });
-      await StatusBar.setOverlaysWebView({ overlay: false });
+  // Use dark icons (for light content backgrounds); adjust to Style.Dark if using dark header
+  await StatusBar.setStyle({ style: Style.Dark });
+  // Transparent bars; CSS safe-areas will create visual padding
+  await StatusBar.setBackgroundColor({ color: '#00000000' });
+  await StatusBar.setOverlaysWebView({ overlay: false });
     } catch (error) {
       console.error('Status bar initialization error:', error);
     }

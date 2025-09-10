@@ -20,42 +20,24 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
-
-.nav-item {
-  transform: translateX(calc(var(--translate-value)));
+/* Safe area support for devices with notches/gesture bars */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
 }
 
-@media (max-width: 320px) {
-  .nav-item {
-    --translate-value: calc(
-      ${activeIndex === 0 ? '-10px' : activeIndex === 1 ? '30px' : activeIndex === 2 ? '10px' : activeIndex === 3 ? '94px' : '300px'}
-    );
-  }
+.app-safe {
+  /* Ensure at least a small inset so content never tucks under the status bar */
+  padding-top: max(var(--safe-area-inset-top), 24px);
 }
 
-@media (min-width: 321px) and (max-width: 425px) {
-  .nav-item {
-    --translate-value: calc(
-      ${activeIndex === 0 ? '-10px' : activeIndex === 1 ? '-10px' : activeIndex === 2 ? '20px' : activeIndex === 3 ? '80px' : '0px'}
-    );
-  }
+/* Reserve space so page content isn't hidden behind fixed bottom bar */
+.app-content-safe {
+  padding-bottom: calc(80px + var(--safe-area-inset-bottom));
 }
 
-@media (min-width: 426px) and (max-width: 768px) {
-  .nav-item {
-    --translate-value: calc(
-      ${activeIndex === 0 ? '-170px' : activeIndex === 1 ? '-90px' : activeIndex === 2 ? '10px' : activeIndex === 3 ? '110px' : '300px'}
-    );
-  }
-}
 
-@media (min-width: 769px) {
-  .nav-item {
-    --translate-value: calc(
-      ${activeIndex === 0 ? '-202px' : activeIndex === 1 ? '-95px' : activeIndex === 2 ? '15px' : activeIndex === 3 ? '128px' : '300px'}
-    );
-  }
-}
+/* Removed invalid CSS that referenced JS variables at build time */
 
 /* Loader */ 
 .ld-ripple {
