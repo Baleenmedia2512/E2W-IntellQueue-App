@@ -1678,7 +1678,7 @@ const notifyOrderAdjustment = async (clientNam, adjustedOrderAmt, remarks, rateW
 
 
 return (
-  <div className="flex items-center justify-center min-h-screen bg-gray-100 mb-14 p-4">
+  <div className="bg-gray-100 p-2">
 <Dialog open={consultantDialogOpen} onClose={handleCloseDialog} fullWidth={true} maxWidth='sm'>
 <DialogTitle>Change Consultant</DialogTitle>
         <DialogContent>
@@ -2278,7 +2278,7 @@ return (
     </div>
     {/* Order Details */}
 <div className="bg-white rounded-lg shadow-lg mt-2">
-<div className="p-4 md:p-8" >
+<div className="p-2 md:p-4" >
     <div className="flex justify-between items-center rounded-lg text-blue-500">
       <div>
         <h3 className="text-lg md:text-xl font-bold mb-2">Client Details</h3>
@@ -2319,7 +2319,7 @@ return (
     <label className={`text-gray-500 text-sm hover:cursor-pointer p-1 ${isOrderUpdate ? 'text-yellow-500' : ''}`}>Change Consultant? <span className='underline text-sky-500 hover:text-sky-600' onClick={consultantDialog}>Click Here</span></label>
   </div>
   {isExpanded && (
-    <form className="space-y-6 p-4 md:p-8">
+    <form className="space-y-6 p-2 md:p-4">
       <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
         {/* Left section */}
         <div className="md:col-span-1">

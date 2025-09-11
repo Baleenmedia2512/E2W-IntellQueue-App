@@ -136,13 +136,12 @@ export default function RequireCompanyName({ children }) {
   // Show loading while checking authentication
   if (isChecking) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <div className="text-lg font-semibold text-gray-600">
-            Checking authentication...
-          </div>
+      <section className='flex justify-center items-center h-screen'>
+        <div className='ld-ripple'>
+          <div></div>
+          <div></div>
         </div>
-      </div>
+      </section>
     );
   }
   

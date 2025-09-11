@@ -4,8 +4,24 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App } from '@capacitor/app';
 import { CapacitorStorage } from './capacitorStorage';
-// Note: PushNotifications removed to prevent Firebase crashes on Android
-// import { PushNotifications } from '@capacitor/push-notifications';
+
+// Import new plugins for proper Android status bar handling
+let EdgeToEdgeSupport, NavigationBar;
+
+// Dynamically import the new plugins to prevent errors on non-Android platforms
+const initializeEdgeToEdgePlugins = async () => {
+  if (Capacitor.getPlatform() === 'android') {
+    try {
+      const { EdgeToEdgeSupport: EdgeToEdgeSupportPlugin } = await import('@capawesome/capacitor-android-edge-to-edge-support');
+      const { NavigationBar: NavigationBarPlugin } = await import('@capgo/capacitor-navigation-bar');
+      EdgeToEdgeSupport = EdgeToEdgeSupportPlugin;
+      NavigationBar = NavigationBarPlugin;
+      console.log('Edge-to-edge plugins loaded successfully');
+    } catch (error) {
+      console.warn('Could not load edge-to-edge plugins:', error);
+    }
+  }
+};
 
 export class MobileAppInitializer {
   static isInitialized = false;
@@ -29,6 +45,9 @@ export class MobileAppInitializer {
     console.log('Running on native platform:', Capacitor.getPlatform());
     this.isInitialized = true;
 
+    // Load edge-to-edge plugins for Android
+    await initializeEdgeToEdgePlugins();
+
     // Check if we have any stored authentication data
     try {
       const storedAuth = await CapacitorStorage.getItem('persist:root');
@@ -42,9 +61,21 @@ export class MobileAppInitializer {
     }
 
     try {
+      // Initialize Edge-to-Edge support first (Android only)
+      if (Capacitor.getPlatform() === 'android') {
+        console.log('Initializing edge-to-edge support...');
+        await this.initializeEdgeToEdgeSupport();
+      }
+      
       // Initialize Status Bar
       console.log('Initializing status bar...');
       await this.initializeStatusBar();
+      
+      // Initialize Navigation Bar (Android only)
+      if (Capacitor.getPlatform() === 'android') {
+        console.log('Initializing navigation bar...');
+        await this.initializeNavigationBar();
+      }
       
       // Initialize Splash Screen
       console.log('Initializing splash screen...');
@@ -54,15 +85,6 @@ export class MobileAppInitializer {
       console.log('Initializing app listeners...');
       await this.initializeAppListeners();
       
-    //   // Skip push notifications entirely for Android platform
-    //   if (Capacitor.getPlatform() === 'android') {
-    //     console.log('Android platform detected - push notifications disabled');
-    //     console.log('Push notifications are disabled for Android to prevent Firebase crashes');
-    //   } else {
-    //     console.log('Initializing push notifications...');
-    //     await this.initializePushNotifications();
-    //   }
-      
       console.log('Mobile app initialized successfully');
     } catch (error) {
       console.error('Error initializing mobile app:', error);
@@ -70,15 +92,51 @@ export class MobileAppInitializer {
     }
   }
 
+  static async initializeEdgeToEdgeSupport() {
+    if (!EdgeToEdgeSupport) {
+      console.warn('EdgeToEdgeSupport plugin not available');
+      return;
+    }
+
+    try {
+      // Enable edge-to-edge support for Android 15+
+      await EdgeToEdgeSupport.enable({
+        statusBarColor: '#f8fafc', // Light gray to match app theme
+        statusBarStyle: 'light', // Dark icons on light background
+        navigationBarColor: '#ffffff', // White navigation bar
+        navigationBarStyle: 'light'
+      });
+      console.log('Edge-to-edge support enabled');
+    } catch (error) {
+      console.error('Edge-to-edge support initialization error:', error);
+    }
+  }
+
   static async initializeStatusBar() {
     try {
-  // Use dark icons (for light content backgrounds); adjust to Style.Dark if using dark header
-  await StatusBar.setStyle({ style: Style.Dark });
-  // Transparent bars; CSS safe-areas will create visual padding
-  await StatusBar.setBackgroundColor({ color: '#00000000' });
-  await StatusBar.setOverlaysWebView({ overlay: false });
+      // Use light status bar (dark text/icons on light background)
+      await StatusBar.setStyle({ style: Style.Light });
+      console.log('Status bar style set to light');
     } catch (error) {
       console.error('Status bar initialization error:', error);
+    }
+  }
+
+  static async initializeNavigationBar() {
+    if (!NavigationBar) {
+      console.warn('NavigationBar plugin not available');
+      return;
+    }
+
+    try {
+      // Set navigation bar appearance
+      await NavigationBar.setColor({
+        color: '#ffffff', // White background
+        darkButtons: true // Dark icons for better contrast
+      });
+      console.log('Navigation bar configured');
+    } catch (error) {
+      console.error('Navigation bar initialization error:', error);
     }
   }
 
@@ -131,46 +189,9 @@ export class MobileAppInitializer {
         console.log('App opened with URL:', event.url);
         // Handle deep links here
       });
+      
     } catch (error) {
       console.error('App listeners initialization error:', error);
-    }
-  }
-
-  static async initializePushNotifications() {
-    try {
-      console.log('Push notifications disabled for Android platform');
-      console.log('Firebase-based push notifications can cause crashes without proper configuration');
-      console.log('For production Android app, implement native Android push notification services');
-      console.log('Firebase push notifications remain available for web platform only');
-      
-      // For future implementation:
-      // 1. For Android: Use native Android notification services or FCM with proper setup
-      // 2. For Web: Can re-enable Firebase push notifications with proper configuration
-      // 3. For iOS: Use APNs (Apple Push Notification service)
-      
-      return;
-    } catch (error) {
-      console.error('Push notifications initialization error:', error);
-      // Don't throw error to prevent app crashes
-    }
-  }
-
-  static isFirebaseConfigured() {
-    // Simple check to determine if Firebase is likely configured
-    // This prevents the app from crashing when trying to initialize push notifications
-    // without proper Firebase setup
-    try {
-      // Check if we're in a development environment without Firebase
-      const isDevelopment = window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1' ||
-                           window.location.protocol === 'capacitor:';
-      
-      // For now, return false to disable push notifications until proper Firebase setup
-      // This can be changed to true once google-services.json is properly configured
-      return false;
-    } catch (error) {
-      console.error('Error checking Firebase configuration:', error);
-      return false;
     }
   }
 

@@ -223,8 +223,8 @@ const handleLogin = async (event) => {
 
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-            <div className="max-w-screen-lg min-w-fit min-h-fit bg-white shadow-md rounded-lg overflow-hidden p-8 md:flex md:items-center md:justify-center md:space-x-8">
+        <div className="flex justify-center items-center h-screen bg-gray-100 p-4 pb-16">
+            <div className="max-w-screen-lg min-w-fit bg-white shadow-md rounded-lg overflow-hidden p-8 md:flex md:items-center md:justify-center md:space-x-8 w-full mx-4">
                 {/* Sign-in form */}
                 <div className="w-full md:w-1/2">
                 <h2 className="text-2xl font-bold font-inter text-gray-800">WELCOME TO</h2>

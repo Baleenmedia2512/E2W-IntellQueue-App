@@ -30,9 +30,9 @@ const config = {
   androidScaleType: "CENTER_CROP"
     },
     StatusBar: {
-  style: 'DEFAULT',
-  backgroundColor: "#00000000", // transparent, we'll pad content via CSS safe areas
-  overlaysWebView: false
+      style: 'LIGHT'
+      // Removed overlaysWebView due to Android 15 Edge-to-Edge bug
+      // Will be handled by @capawesome/capacitor-android-edge-to-edge-support plugin
     },
     // PushNotifications disabled for Android to prevent Firebase crashes
     // Use native Android notifications or enable only for web

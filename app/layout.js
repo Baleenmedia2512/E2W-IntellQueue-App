@@ -46,7 +46,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-  <body className={`${poppins.variable} ${montserrat.variable} ${inter.className} app-safe`}>
+  <body className={`${poppins.variable} ${montserrat.variable} ${inter.className}`}>
         <ErrorBoundary>
           <ReduxProvider> 
             <CartProvider> 

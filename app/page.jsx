@@ -1169,20 +1169,21 @@ const BMvalidateFields = () => {
       return null;
     }
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <div className="text-lg font-semibold text-gray-600">Loading...</div>
+      <section className='flex justify-center items-center h-screen'>
+        <div className='ld-ripple'>
+          <div></div>
+          <div></div>
         </div>
-      </div>
+      </section>
     );
   }
 
     return (
-      <div className='min-h-screen bg-gray-100 mb-14 p-2'>
-        <div className="flex items-center justify-center">
+      <div className='bg-gray-100 p-2'>
+        <div className="flex justify-center">
           <div className="w-full max-w-6xl">
             <div className="text-start">
-              <h2 className="text-2xl mt-3 sm:mt-20 font-bold text-blue-500 mb-1">Client Manager</h2>
+              <h2 className="text-2xl mt-2 font-bold text-blue-500 mb-1">Client Manager</h2>
               <div className="border-2 w-10 mb-6 border-blue-500"></div>
             </div>
                 {/* Buttons */}

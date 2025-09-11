@@ -14,9 +14,12 @@ export default function ReduxProvider({ children }) {
     <Provider store={store}>
       <PersistGate 
         loading={
-          <div className="flex justify-center items-center min-h-screen">
-            <div>Redux Loading...</div>
-          </div>
+          <section className='flex justify-center items-center h-screen'>
+            <div className='ld-ripple'>
+              <div></div>
+              <div></div>
+            </div>
+          </section>
         } 
         persistor={persistor}
         onBeforeLift={() => {

@@ -14,8 +14,6 @@ export default function BottomBarWrapper() {
 
   return (
     <>
-      {/* Spacer so content above isn't hidden by the fixed bar */}
-      <div style={{ height: `calc(64px + env(safe-area-inset-bottom))` }} />
       <BottomBar />
     </>
   );
