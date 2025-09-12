@@ -5,22 +5,36 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setLanguage } from "@/redux/features/queue-slice";
 import { useAppSelector } from "@/redux/store";
-import { CapacitorNavigation } from '../../utils/capacitorNavigation';
+// Dynamic import to avoid early Capacitor usage
+let CapacitorNavigation = null;
+if (typeof window !== 'undefined') {
+    import('../../utils/capacitorNavigation')
+        .then(mod => { CapacitorNavigation = mod.CapacitorNavigation; })
+        .catch(err => console.warn('CapacitorNavigation import failed:', err));
+}
 
 export default function LanguageSelection() {
     const companyName = useAppSelector((state) => state.authSlice.companyName);
     const router = useRouter();
     const dispatch = useDispatch();
 
-    const handleLanguageSelect = (language) => {
+        const handleLanguageSelect = (language) => {
         dispatch(setLanguage(language));
-        CapacitorNavigation.navigate(router, '/QueueSystem/EnterDetails');
+                if (CapacitorNavigation) {
+                    CapacitorNavigation.navigate(router, '/QueueSystem/EnterDetails');
+                } else {
+                    try { router.push('/QueueSystem/EnterDetails'); } catch { window.location.href = '/QueueSystem/EnterDetails/'; }
+                }
     };
 
     useEffect(() => {
-        if (!companyName) {
+                if (!companyName) {
             console.warn("Company name is missing, redirecting...");
-            CapacitorNavigation.navigate(router, '/QueueSystem/InvalidAccess');
+                        if (CapacitorNavigation) {
+                            CapacitorNavigation.navigate(router, '/QueueSystem/InvalidAccess');
+                        } else {
+                            try { router.replace('/QueueSystem/InvalidAccess'); } catch { window.location.replace('/QueueSystem/InvalidAccess/'); }
+                        }
         }
     }, [companyName, router]);
 

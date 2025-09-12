@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "android:build",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"android:build"
+			],
+			"problemMatcher": [
+				"$eslint - stylish"
+			],
+			"group": "build"
+		}
+	]
+}

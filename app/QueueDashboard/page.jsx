@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { setHistoryId } from '@/redux/features/queue-dashboard-slice';
 import useFcmToken from "@/hooks/useFcmToken";
 import createDeduplicator from "./../components/Deduplicator";
+import { useAuthRedirect } from "../hooks/useAuthRedirect";
 
 // Auto-scroll hook for drag and drop
 const useAutoScroll = () => {
@@ -1428,6 +1429,9 @@ function RateCardSelectionPage({ onSelectRateCard, equipmentList, allClients }) 
 
 // --- Main Application Component ---
 export default function QueueSystem() {
+    // Auth check - redirect to login if no company name
+    useAuthRedirect();
+    
     const [selectedEquipment, setSelectedEquipment] = useState(() => {
         if (typeof window !== 'undefined') {
             return localStorage.getItem('selectedEquipment');

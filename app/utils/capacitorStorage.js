@@ -1,17 +1,45 @@
 // Capacitor Storage utility to fix router navigation issues
-import { Preferences } from '@capacitor/preferences';
-import { Capacitor } from '@capacitor/core';
+// NOTE: Avoid static imports of Capacitor plugins to prevent early native bridge access
+let Capacitor = null;
+let Preferences = null;
+
+async function ensureCapacitorCore() {
+  if (!Capacitor && typeof window !== 'undefined') {
+    try {
+      const mod = await import('@capacitor/core');
+      Capacitor = mod.Capacitor;
+    } catch (e) {
+      // Capacitor not available (web or early load)
+      Capacitor = null;
+    }
+  }
+  return Capacitor;
+}
+
+async function ensurePreferences() {
+  if (!Preferences && typeof window !== 'undefined') {
+    try {
+      const mod = await import('@capacitor/preferences');
+      Preferences = mod.Preferences;
+    } catch (e) {
+      Preferences = null;
+    }
+  }
+  return Preferences;
+}
 
 export class CapacitorStorage {
-  static isNative() {
-    return Capacitor.isNativePlatform();
+  static async isNative() {
+    const cap = await ensureCapacitorCore();
+    return !!(cap && cap.isNativePlatform());
   }
 
   // Set item with fallback to localStorage for web
   static async setItem(key, value) {
     try {
-      if (this.isNative()) {
-        await Preferences.set({
+      if (await this.isNative() && await ensurePreferences()) {
+        const prefs = await ensurePreferences();
+        await prefs.set({
           key: key,
           value: typeof value === 'string' ? value : JSON.stringify(value)
         });
@@ -28,8 +56,9 @@ export class CapacitorStorage {
   // Get item with fallback to localStorage for web
   static async getItem(key) {
     try {
-      if (this.isNative()) {
-        const result = await Preferences.get({ key });
+      if (await this.isNative() && await ensurePreferences()) {
+        const prefs = await ensurePreferences();
+        const result = await prefs.get({ key });
         return result.value;
       } else {
         return localStorage.getItem(key);
@@ -44,8 +73,9 @@ export class CapacitorStorage {
   // Remove item with fallback to localStorage for web
   static async removeItem(key) {
     try {
-      if (this.isNative()) {
-        await Preferences.remove({ key });
+      if (await this.isNative() && await ensurePreferences()) {
+        const prefs = await ensurePreferences();
+        await prefs.remove({ key });
       } else {
         localStorage.removeItem(key);
       }
@@ -59,8 +89,9 @@ export class CapacitorStorage {
   // Clear all storage
   static async clear() {
     try {
-      if (this.isNative()) {
-        await Preferences.clear();
+      if (await this.isNative() && await ensurePreferences()) {
+        const prefs = await ensurePreferences();
+        await prefs.clear();
       } else {
         localStorage.clear();
       }

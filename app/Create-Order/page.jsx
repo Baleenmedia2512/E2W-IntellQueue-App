@@ -14,17 +14,31 @@ import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import './styles.css';
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { Calendar } from 'primereact/calendar';
 import { isValid, format } from 'date-fns';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import { TextField } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { CapacitorNavigation } from '../utils/capacitorNavigation';
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons';
+
+// Dynamic import for CapacitorNavigation to prevent static import timing issues
+let CapacitorNavigation = null;
+
+if (typeof window !== 'undefined') {
+  import('../utils/capacitorNavigation').then(module => {
+    CapacitorNavigation = module.CapacitorNavigation;
+  }).catch(error => {
+    console.warn('CapacitorNavigation import failed:', error);
+  });
+}
 import { FetchOrderSeachTerm, FetchCommissionData } from '../api/FetchAPI';
 import { CircularProgress } from '@mui/material';
 
 const CreateOrder = () => {
+    // Auth check - redirect to login if no company name
+    useAuthRedirect();
+    
     const loggedInUser = useAppSelector(state => state.authSlice.userName);
     const clientDetails = useAppSelector(state => state.clientSlice);
     const orderDetails = useAppSelector(state => state.orderSlice);
@@ -137,7 +151,11 @@ const CreateOrder = () => {
     
     useEffect(() => {
       if (!loggedInUser || dbName === "" ) {
-        CapacitorNavigation.navigate(router, '/login');
+        if (CapacitorNavigation) {
+          CapacitorNavigation.navigate(router, '/login');
+        } else {
+          router.push('/login');
+        }
       }
       fetchMaxOrderNumber();
       elementsToHideList(); 
@@ -145,6 +163,11 @@ const CreateOrder = () => {
       fetchCampaignUnits();
       // calculateReceivable(); // Removed - will be called when unitPrice and rateGST are set
     },[])
+
+    // Debug useEffect to track success message changes
+    useEffect(() => {
+      console.log('Success message changed:', successMessage);
+    }, [successMessage]);
 
     useEffect(() => {
       setConsultantID(consultantIdCR || '');
@@ -184,7 +207,7 @@ useEffect(() => {
       handleRateId()
       fetchQtySlab()
     } else {
-      console.log('Same rateId as last fetch, skipping API calls');
+      // Same rateId as last fetch, skipping API calls
     }
   } else {
     lastFetchedRateId.current = null;
@@ -680,7 +703,7 @@ const fetchRates = async () => {
           calculateReceivable();
         }
       } else {
-        console.log('Skipping calculation - values unchanged:', currentValues);
+        // Skipping calculation - values unchanged
       }
     }, [unitPrice, rateGST]);
 
@@ -887,6 +910,20 @@ const fetchRates = async () => {
   
 
       const createNewOrder = async() => {
+        console.log('=== Creating New Order ===');
+        console.log('Order Details:', {
+            clientName,
+            clientNumber,
+            unitPrice,
+            qty,
+            marginAmount,
+            receivable,
+            consultantName,
+            commissionAmount,
+            rateId,
+            selectedValues
+        });
+        
         setIsButtonDisabled(true);
         // If the discount amount has changed and remarks are not filled
         if (discountAmount !== 0 && discountAmount !== '0' && discountAmount !== '' && !remarks.trim()) {
@@ -970,11 +1007,17 @@ const fetchRates = async () => {
             JsonConsultantId: consultantID
           });
           
+          console.log('Sending API request to create order with params:', params.toString());
           const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/CreateNewOrder.php?${params.toString()}`);
           
           const data = await response.json();
+          console.log('API Response for create order:', data);
           
             if (data === "Values Inserted Successfully!") {
+                console.log('✅ Order created successfully!');
+                console.log('Elements to hide:', elementsToHide);
+                console.log('Next rate wise order number:', nextRateWiseOrderNumber);
+                console.log('Next order number:', nextOrderNumber);
                 setToast(false);
                 // dispatch(setIsOrderExist(true));
                 // window.alert('Work Order #'+ maxOrderNumber +' Created Successfully!')
@@ -989,10 +1032,15 @@ const fetchRates = async () => {
 
                 } else if(elementsToHide.includes('RateWiseOrderNumberText')) {
                   setSuccessMessage('Work Order #'+ nextOrderNumber +' Created Successfully!');
+                } else {
+                  // Fallback success message if no specific conditions are met
+                  console.log('Setting fallback success message');
+                  setSuccessMessage('Order Created Successfully!');
                 }
                 dispatch(setIsOrderExist(true));
                 
                 setTimeout(() => {
+                console.log('Clearing success message after 2 seconds');
                 setSuccessMessage('');
                 setIsButtonDisabled(false);
                 // router.push('/FinanceEntry');
@@ -1003,7 +1051,7 @@ const fetchRates = async () => {
               setIsButtonDisabled(false);
             }
           } catch (error) {
-            console.error('Error updating rate:', error);
+            console.error('❌ Error creating order:', error);
             setIsButtonDisabled(false);
           }
         } else {
@@ -1028,6 +1076,22 @@ const handlePlaceOrder = () => {
 
 //update order-SK (02-08-2024)------------------------------------
 const updateNewOrder = async (event) => {
+  console.log('=== Updating Existing Order ===');
+  console.log('Update Order Details:', {
+    orderNumber,
+    clientName,
+    clientNumber,
+    unitPrice,
+    qty,
+    marginAmount,
+    receivable,
+    consultantName,
+    commissionAmount,
+    rateId,
+    selectedValues,
+    updateReason
+  });
+  
   if (event) event.preventDefault();
   const receivable = (unitPrice * qty) + marginAmount;
   const payable = unitPrice * qty;
@@ -1079,6 +1143,7 @@ const updateNewOrder = async (event) => {
       JsonConsultantId: consultantID
     });
     try {
+      console.log('Sending API request to update order with params:', params.toString());
       const response = await fetch(`https://www.orders.baleenmedia.com/API/Media/UpdateNewOrder.php?${params.toString()}`, {
         method: 'GET', // Or 'PUT' depending on your API design
         headers: {
@@ -1087,7 +1152,9 @@ const updateNewOrder = async (event) => {
       });
 
       const data = await response.json();
+      console.log('API Response for update order:', data);
       if (data === "Values Updated Successfully!") {
+        console.log('✅ Order updated successfully!');
         setSuccessMessage('Work Order #' + UpdateRateWiseOrderNumber + ' Updated Successfully!');
         if (discountAmount !== prevData.discountAmount) {
         // Call notifyOrderAdjustment after order update
@@ -1127,10 +1194,11 @@ const updateNewOrder = async (event) => {
           // }
         }, 3000);
       } else {
+        console.log('❌ Order update failed:', data);
         alert(`The following error occurred while updating data: ${data}`);
       }
     } catch (error) {
-      console.error('Error updating order:', error);
+      console.error('❌ Error updating order:', error);
     }
   } else {
     setToastMessage('Please fill all necessary fields.');
@@ -1937,7 +2005,13 @@ return (
         New Client? 
         <span 
             className='underline text-sky-500 hover:text-sky-600 p-1' 
-            onClick={() => CapacitorNavigation.navigate(router, '/')}
+            onClick={() => {
+              if (CapacitorNavigation) {
+                CapacitorNavigation.navigate(router, '/');
+              } else {
+                router.push('/');
+              }
+            }}
         >
             Click Here
         </span>

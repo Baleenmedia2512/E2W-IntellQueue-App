@@ -199,7 +199,7 @@ export async function AutoLogin(companyName) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('AutoLogin API error response:', errorData); // Debugging log
+      // AutoLogin API error response
       throw new Error(errorData.error || `API responded with status ${response.status}`);
     }
 

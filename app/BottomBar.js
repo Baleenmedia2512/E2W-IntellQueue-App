@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from '@/redux/store';
@@ -12,8 +12,17 @@ import {
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import './globals.css';
-import { CapacitorNavigation } from './utils/capacitorNavigation';
 
+// Dynamic import for CapacitorNavigation to prevent static import timing issues
+let CapacitorNavigation = null;
+
+if (typeof window !== 'undefined') {
+  import('./utils/capacitorNavigation').then(module => {
+    CapacitorNavigation = module.CapacitorNavigation;
+  }).catch(error => {
+    console.warn('CapacitorNavigation import failed:', error);
+  });
+}
 
 export default function BottomBarTest() {
     const appRights = useAppSelector(state => state.authSlice.appRights);
@@ -28,7 +37,7 @@ export default function BottomBarTest() {
   const [username, setUsername] = useState(""); // State variable for username
   const [activeIndex, setActiveIndex] = useState(1);
 
-  const elementsToHideList = () => {
+  const elementsToHideList = useCallback(() => {
     try{
       fetch(`https://orders.baleenmedia.com/API/Media/FetchNotVisibleElementName.php/get?JsonDBName=${dbName}`)
         .then((response) => response.json())
@@ -36,7 +45,7 @@ export default function BottomBarTest() {
     } catch(error){
       console.error("Error showing element names: " + error)
     }
-  }
+  }, [dbName]);
 
   // useEffect(() => {
   //   //searching elements to Hide from database
@@ -62,12 +71,25 @@ export default function BottomBarTest() {
   }, [elementsToHide]);
 
 
-  useEffect(()=>{
+  // Separate useEffect for elements to hide
+  useEffect(() => {
     if(dbName){
       elementsToHideList();
     }
-      switch (currentPath) {
+  }, [dbName, elementsToHideList]);
+
+  // Separate useEffect for path-based tab selection
+  useEffect(() => {
+      // Normalize path by removing trailing slash
+      const normalizedPath = currentPath === '/' ? '/' : currentPath.replace(/\/$/, '');
+      switch (normalizedPath) {
         case '/':
+        case '/QueueDashboard':
+          setValue(2);
+          setActiveIndex(2);
+          setSelected('Queue');
+          break;
+        case '/ClientManager':
           setValue(0);
           setActiveIndex(0);
           setSelected('Client');
@@ -77,40 +99,41 @@ export default function BottomBarTest() {
           setActiveIndex(1);
           setSelected('Order');
           break;
-        case '/QueueDashboard':
-          setValue(2);
-          setActiveIndex(2);
-          setSelected('Queue');
-          break;
-        case '/QueueSystem':
-        case '/QueueSystem/LanguageSelection':
-        case '/QueueSystem/EnterDetails':
-        case '/QueueSystem/WaitingScreen':
-        case '/QueueSystem/ReadyScreen':
-        case '/QueueSystem/ThankYouScreen':
-          setValue(2);
-          setActiveIndex(2);
-          setSelected('Queue');
-          break;
         default:
           break;
       }
-  }, [currentPath, dbName, elementsToHideList]); 
+  }, [currentPath]); 
 
   const handleChange = (event, newValue) => {
     setValue(newValue); // Update the value state variable
+    
+    const navigateToRoute = (route) => {
+      if (CapacitorNavigation) {
+        CapacitorNavigation.navigate(router, route);
+      } else {
+        // Fallback for when Capacitor isn't ready
+        setTimeout(() => {
+          if (CapacitorNavigation) {
+            CapacitorNavigation.navigate(router, route);
+          } else {
+            router.push(route);
+          }
+        }, 100);
+      }
+    };
+
     switch (newValue) {
       case 0:
-        CapacitorNavigation.navigate(router, '/');
+        navigateToRoute('/ClientManager');
         break;
       case 1:
-        CapacitorNavigation.navigate(router, '/Create-Order');
+        navigateToRoute('/Create-Order');
         break;
       case 2:
-        CapacitorNavigation.navigate(router, '/QueueDashboard');
+        navigateToRoute('/QueueDashboard');
         break;
       case 3:
-        CapacitorNavigation.navigate(router, '/login');
+        navigateToRoute('/login');
         break; 
       default:
         break;

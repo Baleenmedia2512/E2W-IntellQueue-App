@@ -1,9 +1,8 @@
 // Navigation utility to fix router issues in Capacitor apps
-import { Capacitor } from '@capacitor/core';
 
 export class CapacitorNavigation {
   static isNative() {
-    return Capacitor.isNativePlatform();
+    return !!(typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
   }
 
   // Enhanced navigation for Capacitor apps

@@ -9,7 +9,7 @@ import ConditionalFcmWrapper from "./ConditionalFcmWrapper";
 import RequireCompanyName from "./components/RequireCompanyName";
 import MobileAppProvider from "./components/MobileAppProvider"; // Mobile app initialization
 import ErrorBoundary from "./components/ErrorBoundary"; // Error boundary for mobile
-import TrailingSlash from "./components/TrailingSlash";
+import RouteNormalizer from "./components/RouteNormalizer";
 
 const ReduxProvider = dynamic(() => import("@/redux/provider"), {
   ssr: false
@@ -51,7 +51,7 @@ export default function RootLayout({ children }) {
           <ReduxProvider> 
             <CartProvider> 
               <MobileAppProvider>
-                <TrailingSlash />
+                <RouteNormalizer />
                 <ConditionalFcmWrapper />
                 <RequireCompanyName>
                   {/* Reserve bottom safe area so content doesn't sit under nav bar */}

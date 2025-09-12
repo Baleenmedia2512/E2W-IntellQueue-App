@@ -6,6 +6,19 @@ import { MobileDebugger } from '../utils/mobileDebugger';
 
 export default function MobileAppProvider({ children }) {
   useEffect(() => {
+    // In dev, aggressively unregister any SW to avoid stale caches causing bad bundles
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(reg => reg.unregister().catch(() => {}));
+        }).catch(() => {});
+        if (window.caches && typeof window.caches.keys === 'function') {
+          window.caches.keys().then(keys => keys.forEach(k => window.caches.delete(k))).catch(() => {});
+        }
+      }
+    }
+
     // Initialize mobile debugging first
     MobileDebugger.init();
     

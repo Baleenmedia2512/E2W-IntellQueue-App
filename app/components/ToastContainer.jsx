@@ -3,7 +3,13 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { CapacitorNavigation } from "../utils/capacitorNavigation";
+// Dynamic import to avoid early Capacitor bridge access on native
+let CapacitorNavigation = null;
+if (typeof window !== 'undefined') {
+  import('../utils/capacitorNavigation')
+    .then(mod => { CapacitorNavigation = mod.CapacitorNavigation; })
+    .catch(err => console.warn('CapacitorNavigation import failed:', err));
+}
 
 const TOAST_HEIGHT = 72; // px
 const COLLAPSED_GAP = 2; // px
@@ -192,7 +198,12 @@ const ToastItem = ({
           onClick={() => {
               const currentPath = window.location.pathname;
               if (currentPath === link) {
-                CapacitorNavigation.navigate(router, link);
+                if (CapacitorNavigation) {
+                  CapacitorNavigation.navigate(router, link);
+                } else {
+                  // Fallback navigation if Capacitor not ready
+                  try { router.push(link); } catch { window.location.href = link; }
+                }
               } else {
                 window.open(link, '_blank');
               }

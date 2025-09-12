@@ -1,7 +1,32 @@
 // Mobile-specific API configuration and error handling
 import axios from 'axios';
-import { Capacitor } from '@capacitor/core';
-import { Network } from '@capacitor/network';
+
+let Capacitor = null;
+let Network = null;
+
+async function ensureCapacitorCore() {
+    if (!Capacitor && typeof window !== 'undefined') {
+        try {
+            const mod = await import('@capacitor/core');
+            Capacitor = mod.Capacitor;
+        } catch {
+            Capacitor = null;
+        }
+    }
+    return Capacitor;
+}
+
+async function ensureNetwork() {
+    if (!Network && typeof window !== 'undefined') {
+        try {
+            const mod = await import('@capacitor/network');
+            Network = mod.Network;
+        } catch {
+            Network = null;
+        }
+    }
+    return Network;
+}
 
 // Enhanced API instance for mobile with better error handling
 export const mobileApi = axios.create({
@@ -15,12 +40,15 @@ export const mobileApi = axios.create({
 // Network status checking
 export class NetworkChecker {
     static async checkConnectivity() {
-        if (!Capacitor.isNativePlatform()) {
+        const cap = await ensureCapacitorCore();
+        if (!cap || !cap.isNativePlatform()) {
             return navigator.onLine;
         }
         
         try {
-            const status = await Network.getStatus();
+            const net = await ensureNetwork();
+            if (!net) return navigator.onLine;
+            const status = await net.getStatus();
             return status.connected;
         } catch (error) {
             console.error('Error checking network status:', error);

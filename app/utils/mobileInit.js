@@ -1,12 +1,64 @@
 // Mobile app initialization for Capacitor
-import { Capacitor } from '@capacitor/core';
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { SplashScreen } from '@capacitor/splash-screen';
-import { App } from '@capacitor/app';
+// Avoid static imports of Capacitor plugins to prevent early native bridge access
 import { CapacitorStorage } from './capacitorStorage';
+
+let Capacitor = null;
+let StatusBar = null;
+let Style = null;
+let SplashScreen = null;
+let App = null;
 
 // Import new plugins for proper Android status bar handling
 let EdgeToEdgeSupport, NavigationBar;
+
+async function ensureCapacitorCore() {
+  if (!Capacitor && typeof window !== 'undefined') {
+    try {
+      const mod = await import('@capacitor/core');
+      Capacitor = mod.Capacitor;
+    } catch (e) {
+      Capacitor = null;
+    }
+  }
+  return Capacitor;
+}
+
+async function ensureStatusBar() {
+  if (!StatusBar && typeof window !== 'undefined') {
+    try {
+      const mod = await import('@capacitor/status-bar');
+      StatusBar = mod.StatusBar;
+      Style = mod.Style;
+    } catch (e) {
+      StatusBar = null; Style = null;
+    }
+  }
+  return { StatusBar, Style };
+}
+
+async function ensureSplashScreen() {
+  if (!SplashScreen && typeof window !== 'undefined') {
+    try {
+      const mod = await import('@capacitor/splash-screen');
+      SplashScreen = mod.SplashScreen;
+    } catch (e) {
+      SplashScreen = null;
+    }
+  }
+  return SplashScreen;
+}
+
+async function ensureApp() {
+  if (!App && typeof window !== 'undefined') {
+    try {
+      const mod = await import('@capacitor/app');
+      App = mod.App;
+    } catch (e) {
+      App = null;
+    }
+  }
+  return App;
+}
 
 // Dynamically import the new plugins to prevent errors on non-Android platforms
 const initializeEdgeToEdgePlugins = async () => {
@@ -37,12 +89,13 @@ export class MobileAppInitializer {
     console.log('Current URL:', window.location.href);
     console.log('User Agent:', navigator.userAgent);
     
-    if (!Capacitor.isNativePlatform()) {
+    const cap = await ensureCapacitorCore();
+    if (!cap || !cap.isNativePlatform()) {
       console.log('Running in web browser - skipping native initialization');
       return;
     }
 
-    console.log('Running on native platform:', Capacitor.getPlatform());
+    console.log('Running on native platform:', cap.getPlatform());
     this.isInitialized = true;
 
     // Load edge-to-edge plugins for Android
@@ -62,7 +115,7 @@ export class MobileAppInitializer {
 
     try {
       // Initialize Edge-to-Edge support first (Android only)
-      if (Capacitor.getPlatform() === 'android') {
+      if (cap.getPlatform() === 'android') {
         console.log('Initializing edge-to-edge support...');
         await this.initializeEdgeToEdgeSupport();
       }
@@ -72,7 +125,7 @@ export class MobileAppInitializer {
       await this.initializeStatusBar();
       
       // Initialize Navigation Bar (Android only)
-      if (Capacitor.getPlatform() === 'android') {
+      if (cap.getPlatform() === 'android') {
         console.log('Initializing navigation bar...');
         await this.initializeNavigationBar();
       }
@@ -114,8 +167,10 @@ export class MobileAppInitializer {
 
   static async initializeStatusBar() {
     try {
+      const { StatusBar: SB, Style: ST } = await ensureStatusBar();
+      if (!SB || !ST) throw new Error('StatusBar not available');
       // Use light status bar (dark text/icons on light background)
-      await StatusBar.setStyle({ style: Style.Light });
+      await SB.setStyle({ style: ST.Light });
       console.log('Status bar style set to light');
     } catch (error) {
       console.error('Status bar initialization error:', error);
@@ -142,9 +197,11 @@ export class MobileAppInitializer {
 
   static async initializeSplashScreen() {
     try {
+      const SS = await ensureSplashScreen();
+      if (!SS) throw new Error('SplashScreen not available');
       // Hide splash screen after a delay
       setTimeout(async () => {
-        await SplashScreen.hide();
+        await SS.hide();
       }, 2000);
     } catch (error) {
       console.error('Splash screen initialization error:', error);
@@ -159,18 +216,20 @@ export class MobileAppInitializer {
       });
       
       // Handle app state changes
-      App.addListener('appStateChange', ({ isActive }) => {
+      const app = await ensureApp();
+      if (!app) throw new Error('App plugin not available');
+      app.addListener('appStateChange', ({ isActive }) => {
         console.log('App state changed. Is active?', isActive);
       }).catch(error => {
         console.error('Error adding appStateChange listener:', error);
       });
 
       // Handle back button
-      App.addListener('backButton', ({ canGoBack }) => {
+      app.addListener('backButton', ({ canGoBack }) => {
         console.log('Back button pressed, canGoBack:', canGoBack);
         
         if (!canGoBack) {
-          App.exitApp();
+          app.exitApp();
         } else {
           // Use proper navigation for back button
           if (window.history.length > 1) {
@@ -185,7 +244,7 @@ export class MobileAppInitializer {
       });
 
       // Handle app URL open
-      App.addListener('appUrlOpen', (event) => {
+      app.addListener('appUrlOpen', (event) => {
         console.log('App opened with URL:', event.url);
         // Handle deep links here
       });
@@ -196,10 +255,11 @@ export class MobileAppInitializer {
   }
 
   static isMobile() {
-    return Capacitor.isNativePlatform();
+    // Best-effort check; may be null early
+    return !!(typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   }
 
   static getPlatform() {
-    return Capacitor.getPlatform();
+    return (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.getPlatform) ? window.Capacitor.getPlatform() : 'web';
   }
 }

@@ -43,9 +43,6 @@ const Login = () => {
   const router = useRouter();
 
   useEffect(() => {
-    console.log('🔍 LOGIN PAGE COMPONENT MOUNTED! 🔍');
-    console.log('🔍 This confirms the login page is loading properly 🔍');
-    
     // Add error boundary for debugging
     try {
       dispatch(logout());
@@ -64,13 +61,11 @@ const Login = () => {
               sessionStorage.clear();
             }
           } catch (error) {
-            console.error('🔍 Storage clearing error:', error);
             // Fallback to localStorage if Capacitor storage fails
             try {
               localStorage.clear();
               sessionStorage.clear();
             } catch (fallbackError) {
-              console.error('🔍 Fallback storage clear failed:', fallbackError);
             }
           }
         }
@@ -84,7 +79,7 @@ const Login = () => {
           dispatch(setCompanyName(subdomain));
       }
     } catch (error) {
-      console.error('🔍 LOGIN PAGE MOUNT ERROR:', error);
+      // Error during initialization
     }
   }, [dispatch]);
   const toggleShowPassword = () => {setShowPassword(!showPassword)};
@@ -158,7 +153,6 @@ const handleLogin = async (event) => {
                         sessionStorage.setItem("userName", userName);
                       }
                     } catch (storageError) {
-                      console.error('🔍 Storage operation error:', storageError);
                       // Continue with navigation even if storage fails
                     }
                     
@@ -166,13 +160,11 @@ const handleLogin = async (event) => {
                     setTimeout(() => {
                         try {
                             setSuccessMessage('');
-                            console.log('🔍 LOGIN SUCCESS - Attempting navigation to home');
                             
                             if (typeof CapacitorNavigation !== 'undefined') {
                               CapacitorNavigation.navigate(router, "/", { replace: true });
                             } else {
                               // Prefer SPA navigation to avoid early full reloads on native
-                              console.log('🔍 Using router-based fallback navigation');
                               try {
                                 if (router && typeof router.replace === 'function') {
                                   router.replace('/');
@@ -186,7 +178,6 @@ const handleLogin = async (event) => {
                               }
                             }
                         } catch (navError) {
-                            console.error('🔍 LOGIN NAVIGATION ERROR:', navError);
                             // Fallback navigation
                             window.location.href = '/';
                         }

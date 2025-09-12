@@ -9,7 +9,13 @@ import { resetClientData } from '@/redux/features/client-slice';
 import { resetOrderData } from '@/redux/features/order-slice';
 import { CircularProgress, Box, Typography } from '@mui/material'; // Import Material-UI components
 import { resetPhoneNumber, resetLanguage, resetQueueStatus } from "@/redux/features/queue-slice";
-import { CapacitorNavigation } from '../utils/capacitorNavigation';
+// Dynamic import to avoid early Capacitor usage
+let CapacitorNavigation = null;
+if (typeof window !== 'undefined') {
+  import('../utils/capacitorNavigation')
+    .then(mod => { CapacitorNavigation = mod.CapacitorNavigation; })
+    .catch(err => console.warn('CapacitorNavigation import failed:', err));
+}
 
 const QueueSystemAutoLogin = () => {
   const [error, setError] = useState('');
@@ -67,7 +73,11 @@ const QueueSystemAutoLogin = () => {
             dispatch(resetLanguage());
             sessionStorage.removeItem("unitPrices");
             sessionStorage.clear();
-            CapacitorNavigation.navigate(router, '/QueueSystem/LanguageSelection'); // Redirect to the welcome screen
+            if (CapacitorNavigation) {
+              CapacitorNavigation.navigate(router, '/QueueSystem/LanguageSelection');
+            } else {
+              try { router.push('/QueueSystem/LanguageSelection'); } catch { window.location.href = '/QueueSystem/LanguageSelection/'; }
+            }
           } else {
             throw new Error('Invalid credentials. Please check your User Name, Password and Company Name.');
           }
