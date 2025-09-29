@@ -1172,7 +1172,7 @@ const BMvalidateFields = () => {
   }
 
     return (
-      <div className='bg-gray-100 p-2'>
+      <div className='bg-gray-100 p-2 min-h-screen'>
         <div className="flex justify-center">
           <div className="w-full max-w-6xl">
             <div className="text-start">

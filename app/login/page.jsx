@@ -43,65 +43,102 @@ const Login = () => {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('🔄 Login component initializing...');
     // Add error boundary for debugging
     try {
+      console.log('📤 Dispatching logout to clear previous session');
       dispatch(logout());
 
       // Clear any persistent authentication data for testing using Capacitor storage
       const clearStorage = async () => {
         if (typeof window !== 'undefined') {
           try {
+            console.log('🧹 Clearing storage data...');
             // Only use Capacitor storage if it's available
             if (typeof CapacitorStorage !== 'undefined') {
+              console.log('📱 Using Capacitor storage for cleanup');
               await CapacitorStorage.clearSession();
               await CapacitorStorage.removeItem('persist:root');
             } else {
+              console.log('💻 Using regular web storage for cleanup');
               // Fallback to regular web storage
               localStorage.clear();
               sessionStorage.clear();
             }
+            console.log('✅ Storage cleared successfully');
           } catch (error) {
+            console.error('❌ Capacitor storage cleanup failed:', error);
             // Fallback to localStorage if Capacitor storage fails
             try {
               localStorage.clear();
               sessionStorage.clear();
+              console.log('✅ Fallback storage cleanup successful');
             } catch (fallbackError) {
+              console.error('❌ Fallback storage cleanup failed:', fallbackError);
             }
           }
         }
       };
       clearStorage();
 
+      // Set default company name to 'test'
+      console.log('🏢 Setting default company name to "test"');
+      dispatch(setCompanyName('test'));
+
       const host = window.location.hostname;
       const subdomain = host.split('.')[0];
+      console.log('🌐 Current hostname:', host, 'subdomain:', subdomain);
 
       if (subdomain && subdomain !== 'localhost') {
+          console.log('🔄 Overriding company name with subdomain:', subdomain);
           dispatch(setCompanyName(subdomain));
       }
+      
+      console.log('✅ Login component initialization complete');
     } catch (error) {
-      // Error during initialization
+      console.error('❌ Error during login component initialization:', error);
     }
   }, [dispatch]);
-  const toggleShowPassword = () => {setShowPassword(!showPassword)};
+  const toggleShowPassword = () => {
+    console.log('👁️ Password visibility toggled:', !showPassword ? 'visible' : 'hidden');
+    setShowPassword(!showPassword);
+  };
 
   const handleSearchTermChange = (event) => {
-    const newName = event.target.value
+    const newName = event.target.value;
+    console.log('🔍 Company name search term changed:', newName);
+    
     fetch(`https://orders.baleenmedia.com/API/Media/SuggestCompanyNames.php/get?suggestion=${newName}`)
-      .then((response) => response.json())
-      .then((data) => setCompanyNameSuggestions(data));
-      dispatch(setCompanyName(newName));
+      .then((response) => {
+        console.log('📡 Company suggestions API response status:', response.status);
+        return response.json();
+      })
+      .then((data) => {
+        console.log('📋 Received company suggestions:', data);
+        setCompanyNameSuggestions(data);
+      })
+      .catch((error) => {
+        console.error('❌ Error fetching company suggestions:', error);
+      });
+      
+    dispatch(setCompanyName(newName));
   };
 
   const handleCompanyNameSelection = (event) => {
     const input = event.target.value;
+    console.log('🏢 Company name selected from suggestions:', input);
 
     setCompanyNameSuggestions([]);
     dispatch(setCompanyName(input));
-    
   };
 
 
   const validateFields = () => {
+    console.log('✅ Validating login fields...');
+    console.log('👤 Username:', userName ? '✓ provided' : '❌ empty');
+    console.log('🔒 Password:', password ? '✓ provided' : '❌ empty');
+    console.log('🏢 Company Name:', companyName || 'using default');
+    
     let errors = {};
     if (!userName.trim()) {
         errors.username = 'Username is required';
@@ -109,61 +146,96 @@ const Login = () => {
     if (!password.trim()) {
         errors.password = 'Password is required';
     }
-    if (!companyName.trim()) {
-        errors.companyName = 'Company Name is required';
-    }
+    // Company name validation removed - using default 'test' value
+    // if (!companyName.trim()) {
+    //     errors.companyName = 'Company Name is required';
+    // }
+    
     setErrors(errors);
-    return Object.keys(errors).length === 0;
+    const isValid = Object.keys(errors).length === 0;
+    console.log('📋 Validation result:', isValid ? '✅ Valid' : '❌ Invalid', errors);
+    return isValid;
 };
 
 const handleLogin = async (event) => {
     event.preventDefault();
+    console.log('🚀 Login attempt started');
+    console.log('📋 Login data:', {
+        username: userName,
+        companyName: companyName,
+        passwordProvided: !!password
+    });
 
     if (validateFields()) {
         const encodedPassw = encodeURIComponent(password);
+        const loginUrl = `https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`;
+        
+        console.log('📡 Sending login request to API...');
+        console.log('🌐 Login URL (password hidden):', loginUrl.replace(/JsonPassword=[^&]*/, 'JsonPassword=***'));
 
-        fetch(`https://orders.baleenmedia.com/API/Media/Login.php/get?JsonDBName=${companyName}&JsonUserName=${userName}&JsonPassword=${encodedPassw}`)
+        fetch(loginUrl)
             .then(response => {
+                console.log('📡 Login API response received:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok
+                });
+                
                 if (!response.ok) {
-                    throw new Error(response.statusText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 return response.json();
             })
             .then(async data => {
+                console.log('📊 Login API data received:', data);
+                
                 if (data.status === 'Login Successfully') {
+                    console.log('✅ Login successful!');
+                    console.log('🔑 App rights received:', data.appRights);
+                    
                     setSuccessMessage('Login Successful!');
                     
                     // Dispatch all Redux actions first
+                    console.log('📦 Dispatching Redux actions...');
                     dispatch(setDBName(companyName));
                     dispatch(setCompanyName(companyName))
                     dispatch(login(userName));
                     dispatch(setAppRights(data.appRights));
                     dispatch(resetClientData());
                     dispatch(resetOrderData());
-                    dispatch({ type: 'queueDashboard/resetHistory' })
+                    dispatch({ type: 'queueDashboard/resetHistory' });
+                    console.log('✅ Redux state updated successfully');
                     
                     // Clean up storage using Capacitor storage utilities
                     try {
+                      console.log('🧹 Cleaning up session storage...');
                       if (typeof CapacitorStorage !== 'undefined') {
+                        console.log('📱 Using Capacitor storage');
                         CapacitorStorage.removeSessionItem("unitPrices");
                         CapacitorStorage.setSessionItem("userName", userName);
                       } else {
+                        console.log('💻 Using regular session storage');
                         // Fallback to regular storage
                         sessionStorage.removeItem("unitPrices");
                         sessionStorage.setItem("userName", userName);
                       }
+                      console.log('✅ Session storage updated successfully');
                     } catch (storageError) {
+                      console.error('⚠️ Storage update failed, but continuing:', storageError);
                       // Continue with navigation even if storage fails
                     }
                     
                     // For mobile, use proper navigation method after state is set
+                    console.log('🧭 Preparing navigation to home page...');
                     setTimeout(() => {
                         try {
                             setSuccessMessage('');
                             
                             if (typeof CapacitorNavigation !== 'undefined') {
+                              console.log('📱 Using Capacitor navigation');
                               CapacitorNavigation.navigate(router, "/", { replace: true });
                             } else {
+                              console.log('💻 Using Next.js router navigation');
                               // Prefer SPA navigation to avoid early full reloads on native
                               try {
                                 if (router && typeof router.replace === 'function') {
@@ -177,12 +249,17 @@ const handleLogin = async (event) => {
                                 window.location.replace('/');
                               }
                             }
+                            console.log('✅ Navigation initiated successfully');
                         } catch (navError) {
+                            console.error('❌ Navigation failed, using fallback:', navError);
                             // Fallback navigation
                             window.location.href = '/';
                         }
                     }, 1000); // Reduced timeout for faster redirect
                 } else {
+                    console.log('❌ Login failed - Invalid credentials');
+                    console.log('📊 Server response:', data);
+                    
                     // Handle invalid credentials scenario
                     setToastMessage('Invalid credentials. Please check your User Name, Password and Company Name.');
                     setSeverity('error');
@@ -193,6 +270,8 @@ const handleLogin = async (event) => {
                 }
             })
             .catch(error => {
+                console.error('❌ Login request failed:', error);
+                
                 // Handle fetch or server errors
                 setToastMessage('Error in login ' + error);
                 setSeverity('error');
@@ -202,6 +281,7 @@ const handleLogin = async (event) => {
                 }, 2000);
             });
     } else {
+        console.log('❌ Login validation failed');
         setToastMessage('Please fill all necessary fields!');
         setSeverity('error');
         setToast(true);
@@ -219,7 +299,7 @@ const handleLogin = async (event) => {
                 {/* Sign-in form */}
                 <div className="w-full md:w-1/2">
                 <h2 className="text-2xl font-bold font-inter text-gray-800">WELCOME TO</h2>
-                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">EASY2WORK IBMS</h2>
+                <h2 className="text-2xl font-bold font-inter text-blue-500 mb-3">INTELLQUEUE</h2>
                    <div className="border-2 w-10 inline-block mb-4 border-blue-500 "></div>
                     <form>
                         <div className="mb-4">
@@ -265,6 +345,8 @@ const handleLogin = async (event) => {
                             </div>
                             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                         </div>
+                        {/* Company Name field commented out - using default 'test' value */}
+                        {/* 
                         <div className="mb-6 relative">
                             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="company">
                                 Company Name
@@ -279,7 +361,6 @@ const handleLogin = async (event) => {
                                 onChange={handleSearchTermChange}
                             />
                             {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
-                            {/* Company Name Suggestions */}
                             {(companyNameSuggestions.length > 0 && companyName !== '') && (
                                 <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
                                     {companyNameSuggestions.map((name, index) => (
@@ -297,6 +378,7 @@ const handleLogin = async (event) => {
                                 </ul>
                             )}
                         </div>
+                        */}
                         
                         <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"

@@ -1746,7 +1746,7 @@ const notifyOrderAdjustment = async (clientNam, adjustedOrderAmt, remarks, rateW
 
 
 return (
-  <div className="bg-gray-100 p-2">
+  <div className="flex items-center justify-center bg-gray-100 p-2 min-h-screen">
 <Dialog open={consultantDialogOpen} onClose={handleCloseDialog} fullWidth={true} maxWidth='sm'>
 <DialogTitle>Change Consultant</DialogTitle>
         <DialogContent>
