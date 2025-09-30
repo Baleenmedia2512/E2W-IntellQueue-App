@@ -1,13 +1,13 @@
 # IntellQueue - Signed Bundle Build Report
 
-**Build Date**: 2025-09-29T10:52:13.020Z
+**Build Date**: 2025-09-30T08:32:35.925Z
 **App Name**: IntellQueue
 **Package**: com.easy2work.intellqueue
 **Version**: 1.0 (Build 1)
 
 ## Build Output
 - **AAB File**: `D:\Xampp\htdocs\IntellQueue\E2W-IntellQueue-App\android\app\build\outputs\bundle\release\app-release.aab`
-- **File Size**: 8.83 MB
+- **File Size**: 7.21 MB
 - **Status**: ✅ Successfully Signed
 - **Ready for**: Google Play Store Upload
 
